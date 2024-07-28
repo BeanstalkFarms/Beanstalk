@@ -1891,4 +1891,6 @@ interface IMockFBeanstalk {
         address token,
         uint256 depositId
     ) external view returns (uint256);
+
+    function setRecieverForL1Migration(address owner, address reciever) external;
 }

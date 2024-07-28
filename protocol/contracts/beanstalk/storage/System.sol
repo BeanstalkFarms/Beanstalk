@@ -72,7 +72,7 @@ struct System {
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
-    L2Migration l2migration;
+    L2Migration l2Migration;
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.

@@ -10,9 +10,8 @@ import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol
  */
 contract L1RecieverFacetTest is TestHelper {
     // contracts for testing:
-    address constant TEST_ACCOUNT = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
-
-    uint256 SIG_TEST_ACCOUNT_PK = 123456789;
+    address constant OWNER = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
+    address constant RECIEVER = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
@@ -22,6 +21,8 @@ contract L1RecieverFacetTest is TestHelper {
      * @notice validates that an account verification works, with the correct data.
      */
     function test_valid_migration_data() public {
+        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+
         (
             address owner,
             uint256[] memory depositIds,
@@ -31,6 +32,7 @@ contract L1RecieverFacetTest is TestHelper {
             bytes32[] memory proof
         ) = getMockDepositData();
 
+        vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issueDeposits(
             owner,
             depositIds,

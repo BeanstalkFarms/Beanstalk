@@ -120,9 +120,9 @@ contract L1RecieverFacet is ReentrancyGuard {
             msg.sender == address(BRIDGE) &&
                 IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
         );
-        s.sys.l2migration.migratedL1Beans += amount;
+        s.sys.l2Migration.migratedL1Beans += amount;
         require(
-            EXTERNAL_L1_BEANS >= s.sys.l2migration.migratedL1Beans,
+            EXTERNAL_L1_BEANS >= s.sys.l2Migration.migratedL1Beans,
             "L2Migration: exceeds maximum migrated"
         );
         C.bean().mint(reciever, amount);
@@ -141,7 +141,7 @@ contract L1RecieverFacet is ReentrancyGuard {
                 IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
         );
 
-        s.sys.l2migration.account[owner].reciever = reciever;
+        s.sys.l2Migration.account[owner].reciever = reciever;
 
         emit RecieverApproved(owner, reciever);
     }
@@ -159,7 +159,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256 stalk,
         bytes32[] calldata proof
     ) external mowAll nonReentrant {
-        MigrationData storage account = s.sys.l2migration.account[owner];
+        MigrationData storage account = s.sys.l2Migration.account[owner];
         address reciever = LibTractor._user();
         require(
             account.reciever != address(0) && account.reciever == reciever,
@@ -196,7 +196,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata pods,
         bytes32[] calldata proof
     ) external nonReentrant {
-        MigrationData storage account = s.sys.l2migration.account[owner];
+        MigrationData storage account = s.sys.l2Migration.account[owner];
         address reciever = LibTractor._user();
         require(
             account.reciever != address(0) && account.reciever == reciever,
@@ -226,7 +226,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         bytes32[] calldata proof
     ) external nonReentrant {
-        MigrationData storage account = s.sys.l2migration.account[owner];
+        MigrationData storage account = s.sys.l2Migration.account[owner];
         address reciever = LibTractor._user();
         require(
             account.reciever != address(0) && account.reciever == reciever,
@@ -263,7 +263,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint128 lastBpf,
         bytes32[] calldata proof
     ) external nonReentrant {
-        MigrationData storage account = s.sys.l2migration.account[owner];
+        MigrationData storage account = s.sys.l2Migration.account[owner];
         address reciever = LibTractor._user();
         require(
             account.reciever != address(0) && account.reciever == reciever,
@@ -299,7 +299,14 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) public pure returns (bool) {
         bytes32 leaf = keccak256(
-            bytes.concat(keccak256(abi.encode(owner, depositIds, amounts, bdvs, stalk)))
+            bytes.concat(
+                keccak256(
+                    abi.encode(
+                        owner,
+                        keccak256(abi.encode(owner, depositIds, amounts, bdvs, stalk))
+                    )
+                )
+            )
         );
         return MerkleProof.verify(proof, DEPOSIT_MERKLE_ROOT, leaf);
     }
@@ -313,7 +320,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         bytes32[] calldata proof
     ) public pure returns (bool) {
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, index, amounts))));
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, index, amounts)))))
+        );
         return MerkleProof.verify(proof, PLOT_MERKLE_ROOT, leaf);
     }
 
@@ -326,7 +335,11 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         bytes32[] calldata proof
     ) public pure returns (bool) {
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, tokens, amounts))));
+        bytes32 leaf = keccak256(
+            bytes.concat(
+                keccak256(abi.encode(owner, keccak256(abi.encode(owner, tokens, amounts))))
+            )
+        );
         return MerkleProof.verify(proof, INTERNAL_BALANCE_MERKLE_ROOT, leaf);
     }
 
@@ -341,7 +354,11 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) public pure returns (bool) {
         bytes32 leaf = keccak256(
-            bytes.concat(keccak256(abi.encode(owner, fertIds, amounts, lastBpf)))
+            bytes.concat(
+                keccak256(
+                    abi.encode(owner, keccak256(abi.encode(owner, fertIds, amounts, lastBpf)))
+                )
+            )
         );
         return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
     }
@@ -415,7 +432,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     function getReciever(address owner) external view returns (address) {
-        return s.sys.l2migration.account[owner].reciever;
+        return s.sys.l2Migration.account[owner].reciever;
     }
 
     /**
