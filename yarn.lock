@@ -2108,6 +2108,7 @@ __metadata:
     "@openzeppelin/contracts": 5.0.2
     "@openzeppelin/contracts-upgradeable": 5.0.2
     "@openzeppelin/hardhat-upgrades": ^1.17.0
+    "@openzeppelin/merkle-tree": 1.0.7
     "@prb/math": v2.5.0
     "@uniswap/v3-core": "https://github.com/Uniswap/v3-core.git#0.8"
     "@uniswap/v3-periphery": "https://github.com/Uniswap/v3-periphery#0.8"
@@ -8845,6 +8846,18 @@ __metadata:
   bin:
     migrate-oz-cli-project: dist/scripts/migrate-oz-cli-project.js
   checksum: b37a5eb7c3a5c1fb4ae6754f5fe1d6e93eb6bc143861f57babf5c7d66706ee3e44ca7d57db17ce2ec6c7014f09c269d506f62b3b116897407fdb0d1ff68f4925
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/merkle-tree@npm:1.0.7":
+  version: 1.0.7
+  resolution: "@openzeppelin/merkle-tree@npm:1.0.7"
+  dependencies:
+    "@ethersproject/abi": ^5.7.0
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/constants": ^5.7.0
+    "@ethersproject/keccak256": ^5.7.0
+  checksum: 75ca8ecddcff36964a74222a40abec7def1a873f47b1e15fb905c7daa516c495d2b05bbc8601ea465c7e13baa72546958049c158e94103f3eac7b611882988e8
   languageName: node
   linkType: hard
 

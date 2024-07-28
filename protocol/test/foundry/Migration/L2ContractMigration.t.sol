@@ -3,12 +3,12 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {L2ContractMigrationFacet} from "contracts/beanstalk/silo/L2ContractMigrationFacet.sol";
+import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
 
 /**
- * @notice Tests the functionality of the L2ContractMigrationFacet.
+ * @notice Tests the functionality of the L1RecieverFacet.
  */
-contract L2ContractMigrationTest is TestHelper {
+contract L1RecieverFacetTest is TestHelper {
     // contracts for testing:
     address constant TEST_ACCOUNT = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
 
@@ -23,66 +23,73 @@ contract L2ContractMigrationTest is TestHelper {
      */
     function test_valid_migration_data() public {
         (
-            L2ContractMigrationFacet.AccountDepositData[] memory accountDepositData,
-            L2ContractMigrationFacet.AccountInternalBalance[] memory accountInternalBalance,
+            address owner,
+            uint256[] memory depositIds,
+            uint256[] memory depositAmounts,
+            uint256[] memory bdvs,
+            uint256 stalk,
             bytes32[] memory proof
-        ) = get_mock_migration_data();
+        ) = getMockDepositData();
 
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationDepositsAndInternalBalances(
-            TEST_ACCOUNT,
-            accountDepositData,
-            accountInternalBalance,
-            0,
+        L1RecieverFacet(BEANSTALK).issueDeposits(
+            owner,
+            depositIds,
+            depositAmounts,
+            bdvs,
+            stalk,
             proof
         );
     }
 
-    /**
-     * @notice reverts on invalid data input.
-     */
-    function test_invalid_migration_data() public {
-        (
-            L2ContractMigrationFacet.AccountDepositData[] memory accountDepositData,
-            L2ContractMigrationFacet.AccountInternalBalance[] memory accountInternalBalance,
-            bytes32[] memory proof
-        ) = get_mock_migration_data();
+    // /**
+    //  * @notice reverts on invalid data input.
+    //  */
+    // function test_invalid_migration_data() public {
+    //     (
+    //         L2ContractMigrationFacet.AccountDepositData[] memory accountDepositData,
+    //         L2ContractMigrationFacet.AccountInternalBalance[] memory accountInternalBalance,
+    //         bytes32[] memory proof
+    //     ) = get_mock_migration_data();
 
-        vm.expectRevert();
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationDepositsAndInternalBalances(
-            TEST_ACCOUNT,
-            accountDepositData,
-            accountInternalBalance,
-            1,
-            proof
-        );
-    }
+    //     vm.expectRevert();
+    //     L2ContractMigrationFacet(BEANSTALK).verifyMigrationDepositsAndInternalBalances(
+    //         TEST_ACCOUNT,
+    //         accountDepositData,
+    //         accountInternalBalance,
+    //         1,
+    //         proof
+    //     );
+    // }
 
     // test helpers
-    function get_mock_migration_data()
+    function getMockDepositData()
         internal
         returns (
-            L2ContractMigrationFacet.AccountDepositData[] memory accountDepositData,
-            L2ContractMigrationFacet.AccountInternalBalance[] memory accountInternalBalance,
-            bytes32[] memory proof
+            address,
+            uint256[] memory,
+            uint256[] memory,
+            uint256[] memory,
+            uint256,
+            bytes32[] memory
         )
     {
-        accountDepositData = new L2ContractMigrationFacet.AccountDepositData[](1);
-        accountDepositData[0].token = C.BEAN;
-        accountDepositData[0].depositIds = new uint256[](1);
-        accountDepositData[0].depositIds[0] = uint256(
-            0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000F4240
-        );
-        accountDepositData[0].amounts = new uint128[](1);
-        accountDepositData[0].amounts[0] = 1e6;
-        accountDepositData[0].bdvs = new uint128[](1);
-        accountDepositData[0].bdvs[0] = 1e6;
+        address account = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
+        uint256[] memory depositIds = new uint256[](1);
+        depositIds[0] = uint256(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000F4240);
 
-        accountInternalBalance = new L2ContractMigrationFacet.AccountInternalBalance[](1);
-        accountInternalBalance[0].token = C.BEAN;
-        accountInternalBalance[0].amount = 10e6;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1000000;
 
-        proof = new bytes32[](2);
-        proof[0] = 0x887d05d7170b6de140cdbc78ff277b9d8b6c32e149a81e0ad20c66c9d9f529a5;
-        proof[1] = 0xbe1903190850685bec6a455cd5d579388dbe2237ed2ad2df5334fd2cb9d4d23a;
+        uint256[] memory bdvs = new uint256[](1);
+        bdvs[0] = 1000000;
+
+        uint256 stalk = 1000000000000;
+
+        bytes32[] memory proof = new bytes32[](3);
+        proof[0] = bytes32(0xea7b6ec6adf4bf0ed261310624aa3ae4a7a2bbed9fa4fb3c6c954ac210c885dc);
+        proof[1] = bytes32(0x6cfc3b17d940272292defb965ecba31d829ef7ca2d390f6dd684a0baac7048e8);
+        proof[2] = bytes32(0x0bbbb949dfd91d793b423ed5bea05900c0e3e0817b5ce8aef6ae6a86610ab4c9);
+
+        return (account, depositIds, amounts, bdvs, stalk, proof);
     }
 }

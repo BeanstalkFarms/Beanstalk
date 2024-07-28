@@ -38,13 +38,13 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
+        0x8407837c2fb7fd0936e495cede5f3bd5ae2e1e2aa0057e73749e35b4037538a0;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
+        0x0314c9f403409b3af761d6a7591b62d0d9b7424e5288da3d79de67b3d37507cc;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
+        0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
+        0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
 
     /**
      * @notice emitted when L1 Beans are migrated to L2.
@@ -169,7 +169,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         // verify depositId and amount validity:
         require(
-            verifyDepositMerkleProof(owner, depositIds, amounts, bdvs, proof),
+            verifyDepositMerkleProof(owner, depositIds, amounts, bdvs, stalk, proof),
             "invalid deposits"
         );
 
@@ -295,10 +295,11 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         uint256[] calldata bdvs,
+        uint256 stalk,
         bytes32[] calldata proof
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         bytes32 leaf = keccak256(
-            bytes.concat(keccak256(abi.encode(owner, depositIds, amounts, bdvs)))
+            bytes.concat(keccak256(abi.encode(owner, depositIds, amounts, bdvs, stalk)))
         );
         return MerkleProof.verify(proof, DEPOSIT_MERKLE_ROOT, leaf);
     }
@@ -311,7 +312,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata index,
         uint256[] calldata amounts,
         bytes32[] calldata proof
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, index, amounts))));
         return MerkleProof.verify(proof, PLOT_MERKLE_ROOT, leaf);
     }
@@ -324,7 +325,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         address[] calldata tokens,
         uint256[] calldata amounts,
         bytes32[] calldata proof
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, tokens, amounts))));
         return MerkleProof.verify(proof, INTERNAL_BALANCE_MERKLE_ROOT, leaf);
     }
@@ -338,7 +339,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint128[] calldata amounts,
         uint128 lastBpf,
         bytes32[] calldata proof
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, fertIds, amounts, lastBpf)))
         );
