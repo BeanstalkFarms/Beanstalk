@@ -41,9 +41,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         0x8407837c2fb7fd0936e495cede5f3bd5ae2e1e2aa0057e73749e35b4037538a0;
     bytes32 internal constant PLOT_MERKLE_ROOT =
         0x0314c9f403409b3af761d6a7591b62d0d9b7424e5288da3d79de67b3d37507cc;
-    bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
+        0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
+    bytes32 internal constant FERTILIZER_MERKLE_ROOT =
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
 
     /**
@@ -170,7 +170,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         // verify depositId and amount validity:
         require(
             verifyDepositMerkleProof(owner, depositIds, amounts, bdvs, stalk, proof),
-            "invalid deposits"
+            "L2Migration: Invalid deposits"
         );
 
         // add migrated deposits to the account.

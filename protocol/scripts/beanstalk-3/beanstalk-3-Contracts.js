@@ -28,18 +28,26 @@ function getDepositMerkleRoot(verbose = false) {
   console.log("Deposit Merkle Root:", tree.root);
 
   // (4)
-  fs.writeFileSync(
-    "./scripts/beanstalk-3/data/merkle/deposit_tree.json",
-    JSON.stringify(tree.dump())
-  );
+  const treeData = tree.dump();
+  const treeWithProofs = {
+    tree: treeData,
+    proofs: {}
+  };
 
-  if (verbose) {
-    for (const [i, v] of tree.entries()) {
-      const proof = tree.getProof(i);
+  for (const [i, v] of tree.entries()) {
+    const proof = tree.getProof(i);
+    treeWithProofs.proofs[v[0]] = proof; // Use the address as the key
+
+    if (verbose) {
       console.log("Value:", v);
       console.log("Proof:", proof);
     }
   }
+
+  fs.writeFileSync(
+    "./scripts/beanstalk-3/data/merkle/deposit_tree.json",
+    JSON.stringify(treeWithProofs, null, 2)
+  );
 }
 
 function getPlotMerkleRoot(verbose = false) {
@@ -61,15 +69,26 @@ function getPlotMerkleRoot(verbose = false) {
   console.log("Plot Merkle Root:", tree.root);
 
   // (4)
-  fs.writeFileSync("./scripts/beanstalk-3/data/merkle/plot_tree.json", JSON.stringify(tree.dump()));
+  const treeData = tree.dump();
+  const treeWithProofs = {
+    tree: treeData,
+    proofs: {}
+  };
 
-  if (verbose) {
-    for (const [i, v] of tree.entries()) {
-      const proof = tree.getProof(i);
+  for (const [i, v] of tree.entries()) {
+    const proof = tree.getProof(i);
+    treeWithProofs.proofs[v[0]] = proof; // Use the address as the key
+
+    if (verbose) {
       console.log("Value:", v);
       console.log("Proof:", proof);
     }
   }
+
+  fs.writeFileSync(
+    "./scripts/beanstalk-3/data/merkle/plot_tree.json",
+    JSON.stringify(treeWithProofs, null, 2)
+  );
 }
 
 function getInternalBalMerkleRoot(verbose = false) {
@@ -91,24 +110,32 @@ function getInternalBalMerkleRoot(verbose = false) {
   console.log("Internal Balance Merkle Root:", tree.root);
 
   // (4)
-  fs.writeFileSync(
-    "./scripts/beanstalk-3/data/merkle/internal_balance_tree.json",
-    JSON.stringify(tree.dump())
-  );
+  const treeData = tree.dump();
+  const treeWithProofs = {
+    tree: treeData,
+    proofs: {}
+  };
 
-  if (verbose) {
-    for (const [i, v] of tree.entries()) {
-      const proof = tree.getProof(i);
+  for (const [i, v] of tree.entries()) {
+    const proof = tree.getProof(i);
+    treeWithProofs.proofs[v[0]] = proof; // Use the address as the key
+
+    if (verbose) {
       console.log("Value:", v);
       console.log("Proof:", proof);
     }
   }
+
+  fs.writeFileSync(
+    "./scripts/beanstalk-3/data/merkle/internal_balance_tree.json",
+    JSON.stringify(treeWithProofs, null, 2)
+  );
 }
 
 function getFertMerkleRoot(verbose = false) {
   const accounts = JSON.parse(fs.readFileSync(FERTILIZERS));
-  data = [];
-  encodedData = "";
+  let data = [];
+  let encodedData = "";
   for (let i = 0; i < accounts.length; i++) {
     encodedData = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256[]", "uint128[]", "uint128"],
@@ -124,18 +151,29 @@ function getFertMerkleRoot(verbose = false) {
   console.log("Fertilizer Merkle Root:", tree.root);
 
   // (4)
-  fs.writeFileSync("./scripts/beanstalk-3/data/merkle/fert_tree.json", JSON.stringify(tree.dump()));
+  const treeData = tree.dump();
+  const treeWithProofs = {
+    tree: treeData,
+    proofs: {}
+  };
 
-  if (verbose) {
-    for (const [i, v] of tree.entries()) {
-      const proof = tree.getProof(i);
+  for (const [i, v] of tree.entries()) {
+    const proof = tree.getProof(i);
+    treeWithProofs.proofs[v[0]] = proof; // Use the address as the key
+
+    if (verbose) {
       console.log("Value:", v);
       console.log("Proof:", proof);
     }
   }
+
+  fs.writeFileSync(
+    "./scripts/beanstalk-3/data/merkle/fert_tree.json",
+    JSON.stringify(treeWithProofs, null, 2)
+  );
 }
 
-getDepositMerkleRoot(true);
+getDepositMerkleRoot(false);
 getPlotMerkleRoot(true);
-getInternalBalMerkleRoot(true);
-getFertMerkleRoot(true);
+getInternalBalMerkleRoot(false);
+getFertMerkleRoot(false);

@@ -1893,4 +1893,6 @@ interface IMockFBeanstalk {
     ) external view returns (uint256);
 
     function setRecieverForL1Migration(address owner, address reciever) external;
+
+    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 }
