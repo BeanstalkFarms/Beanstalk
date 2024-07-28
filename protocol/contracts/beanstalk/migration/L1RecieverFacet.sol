@@ -144,6 +144,8 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice issues deposits to `reciever`. Uses a merkle tree in order to verify deposits.
+     * @dev global silo variables (`totalDeposied` and `totalDepositedBdv`) do not need to be updated,
+     * as the deposits were included in the initial L2 Migration.
      */
     function issueDeposits(
         address owner,
@@ -169,6 +171,9 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         // add migrated deposits to the account.
         addMigratedDepositsToAccount(reciever, depositIds, amounts, bdvs);
+
+        // increment receiver stalk:
+        LibSilo.mintActiveStalk(reciever, stalk);
 
         // set migrated deposits to true.
         account.migratedDeposits = true;
