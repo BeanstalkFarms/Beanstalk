@@ -108,33 +108,33 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   });
 
   // BEAN<>WETH via Basin Well
-  graph.setEdge("BEAN", "WETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(
-        sdk.pools.BEAN_ETH_WELL,
-        sdk.tokens.BEAN,
-        sdk.tokens.WETH,
-        account,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "WETH"
-  });
+  // graph.setEdge("BEAN", "WETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.wellSwap(
+  //       sdk.pools.BEAN_ETH_WELL,
+  //       sdk.tokens.BEAN,
+  //       sdk.tokens.WETH,
+  //       account,
+  //       from,
+  //       to
+  //     ),
+  //   from: "BEAN",
+  //   to: "WETH"
+  // });
 
-  graph.setEdge("WETH", "BEAN", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(
-        sdk.pools.BEAN_ETH_WELL,
-        sdk.tokens.WETH,
-        sdk.tokens.BEAN,
-        account,
-        from,
-        to
-      ),
-    from: "WETH",
-    to: "BEAN"
-  });
+  // graph.setEdge("WETH", "BEAN", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.wellSwap(
+  //       sdk.pools.BEAN_ETH_WELL,
+  //       sdk.tokens.WETH,
+  //       sdk.tokens.BEAN,
+  //       account,
+  //       from,
+  //       to
+  //     ),
+  //   from: "WETH",
+  //   to: "BEAN"
+  // });
 
   // BEAN<>wstETH via Basin Well
   graph.setEdge("BEAN", "wstETH", {
@@ -223,6 +223,38 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
       from: token.symbol,
       to: "BEAN"
     });
+  });
+
+  graph.setEdge("BEAN", "WETH", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwapUniV3(
+        sdk.pools.BEAN_WSTETH_WELL,
+        account,
+        sdk.tokens.BEAN,
+        sdk.tokens.WSTETH,
+        sdk.tokens.WETH,
+        100,
+        from,
+        to
+      ),
+    from: "BEAN",
+    to: "WETH"
+  });
+
+  graph.setEdge("WETH", "BEAN", {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.uniV3WellSwap(
+        sdk.pools.BEAN_WSTETH_WELL,
+        account,
+        sdk.tokens.WETH,
+        sdk.tokens.WSTETH,
+        sdk.tokens.BEAN,
+        100,
+        from,
+        to
+      ),
+    from: "BEAN",
+    to: "WETH"
   });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
