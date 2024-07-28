@@ -35,10 +35,7 @@ contract TractorFacet is Invariable {
     modifier verifyRequisition(LibTractor.Requisition calldata requisition) {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
-        address signer = ECDSA.recover(
-            MessageHashUtils.toEthSignedMessageHash(requisition.blueprintHash),
-            requisition.signature
-        );
+        address signer = ECDSA.recover(requisition.blueprintHash, requisition.signature);
         require(signer == requisition.blueprint.publisher, "TractorFacet: signer mismatch");
         _;
     }

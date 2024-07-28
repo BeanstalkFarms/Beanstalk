@@ -20,11 +20,15 @@ library LibTractor {
     bytes32 private constant TRACTOR_HASHED_NAME = keccak256(bytes("Tractor"));
     bytes32 private constant EIP712_TYPE_HASH =
         keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            bytes(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            )
         );
     bytes32 public constant BLUEPRINT_TYPE_HASH =
         keccak256(
-            "Blueprint(address publisher,bytes data,bytes operatorData,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+            bytes(
+                "Blueprint(address publisher,bytes data,bytes32[] operatorPasteInstrs,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+            )
         );
 
     event TractorVersionSet(string version);
@@ -186,7 +190,7 @@ library LibTractor {
         return
             keccak256(
                 abi.encode(
-                    BLUEPRINT_TYPE_HASH,
+                    EIP712_TYPE_HASH,
                     TRACTOR_HASHED_NAME,
                     keccak256(bytes(_tractorStorage().version)),
                     C.getChainId(),
