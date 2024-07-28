@@ -144,7 +144,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice issues deposits to `reciever`. Uses a merkle tree in order to verify deposits.
-     * @dev global silo variables (`totalDeposied` and `totalDepositedBdv`) do not need to be updated,
+     * @dev global silo variables (`totalDeposited` and `totalDepositedBdv`) do not need to be updated,
      * as the deposits were included in the initial L2 Migration.
      */
     function issueDeposits(
@@ -183,6 +183,8 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice issues plots to `reciever`. Uses a merkle tree in order to verify plots.
+     * @dev global field variables (`totalUnharvested`) do not need to be updated,
+     * as the plots were included in the initial L2 Migration.
      */
     function issuePlots(
         address owner,
@@ -199,7 +201,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         require(!account.migratedPlots, "L2Migration: Plots have been migrated");
 
         // verify index and pods validity:
-        require(verifyPlotMerkleProof(owner, index, pods, proof), "invalid deposits");
+        require(verifyPlotMerkleProof(owner, index, pods, proof), "L2Migration: Invalid plots");
 
         // add migrated plots to the account.
         addMigratedPlotsToAccount(reciever, index, pods);
@@ -211,6 +213,8 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice issues InternalBalances to `reciever`. Uses a merkle tree in order to verify plots.
+     * @dev global internal balance variables (`internalTokenBalanceTotal`) do not need to be updated,
+     * as the internal balances were included in the initial L2 Migration.
      */
     function issueInternalBalances(
         address owner,
@@ -224,12 +228,15 @@ contract L1RecieverFacet is ReentrancyGuard {
             account.reciever != address(0) && account.reciever == reciever,
             "L2Migration: Invalid Reciever"
         );
-        require(!account.migratedInternalBalances, "L2Migration: Plots have been migrated");
+        require(
+            !account.migratedInternalBalances,
+            "L2Migration: Internal Balances have been migrated"
+        );
 
         // verify internal balances validity:
         require(
             verifyInternalBalanceMerkleProof(owner, tokens, amounts, proof),
-            "invalid deposits"
+            "L2Migration: Invalid internal balances"
         );
 
         // add migrated internal balances to the account.
@@ -242,6 +249,8 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice issues Fertilizer to `reciever`. Uses a merkle tree in order to verify plots.
+     * @dev global internal balance variables (`fertilizer, unfertilizedIndex`, etc) do not need to be updated,
+     * as the internal balances were included in the initial L2 Migration.
      */
     function issueFertilizer(
         address owner,
@@ -256,12 +265,12 @@ contract L1RecieverFacet is ReentrancyGuard {
             account.reciever != address(0) && account.reciever == reciever,
             "L2Migration: Invalid Reciever"
         );
-        require(!account.migratedFert, "L2Migration: Plots have been migrated");
+        require(!account.migratedFert, "L2Migration: Fertilizer have been migrated");
 
         // verify internal balances validity:
         require(
             verifyFertilizerMerkleProof(owner, fertIds, amounts, lastBpf, proof),
-            "invalid deposits"
+            "L2Migration: Invalid Fertilizer"
         );
 
         // add migrated internal balances to the account.
@@ -283,7 +292,12 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         uint256[] calldata bdvs,
         bytes32[] calldata proof
-    ) public view returns (bool) {}
+    ) public view returns (bool) {
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(owner, depositIds, amounts, bdvs)))
+        );
+        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+    }
 
     /**
      * @notice verifies the Plot merkle proof is valid.
@@ -293,7 +307,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata index,
         uint256[] calldata amounts,
         bytes32[] calldata proof
-    ) public view returns (bool) {}
+    ) public view returns (bool) {
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, index, amounts))));
+        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+    }
 
     /**
      * @notice verifies the InternalBalance merkle proof is valid.
@@ -303,7 +320,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         address[] calldata tokens,
         uint256[] calldata amounts,
         bytes32[] calldata proof
-    ) public view returns (bool) {}
+    ) public view returns (bool) {
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, tokens, amounts))));
+        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+    }
 
     /**
      * @notice verifies the Fertilizer merkle proof is valid.
@@ -314,7 +334,12 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint128[] calldata amounts,
         uint128 lastBpf,
         bytes32[] calldata proof
-    ) public view returns (bool) {}
+    ) public view returns (bool) {
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(owner, fertIds, amounts, lastBpf)))
+        );
+        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+    }
 
     //////////// MIGRATION HELPERS ////////////
 
