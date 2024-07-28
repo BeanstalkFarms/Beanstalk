@@ -1,5 +1,5 @@
-import { toBNWithDecimals } from '~/util';
 import BigNumber from 'bignumber.js';
+import { toBNWithDecimals } from "../../util/BigNumber";
 
 /**
  * NOTE: Try not to format this file
@@ -81,12 +81,20 @@ const EXCESSIVE_PRICE_THRESHOLD = 1.05;
 
 const DELTA_POD_DEMAND_LOWER_BOUND = 0.95; // 95%
 const DELTA_POD_DEMAND_UPPER_BOUND = 1.05; // 105%
+
 // ---------- L2SR ----------
 
 // Liquidity to supply ratio bounds
 const LP_TO_SUPPLY_RATIO_UPPER_BOUND = 0.8;  // 80%
 const LP_TO_SUPPLY_RATIO_OPTIMAL = 0.4;      // 40%
 const LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12; // 12%
+
+// ---------- MISC ------------
+
+// Max and min are the ranges that the beanToMaxLpGpPerBdvRatioScaled can output.
+const MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
+const MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
+const BEAN_MAX_LP_GP_RATIO_RANGE = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
 // ---------- Beanstalk -----------
 
@@ -327,7 +335,9 @@ export class LibCases {
     return LibCases.casesV2[caseId.toNumber()];
   } 
 
-  // ---------- Main Function ----------
+  static getBeanToMaxLPUnit(bL: BigNumber) {
+    return bL.times(BEAN_MAX_LP_GP_RATIO_RANGE).div(100e18);
+  }
 
   static evaluateBeanstalk(
     caseState: BeanstalkCaseState,
@@ -355,7 +365,10 @@ export class LibCases {
     return {
       delta: {
         temperature: bT,
-        bean2MaxLPGPPerBdv: toBNWithDecimals(bL, 18)
+        bean2MaxLPGPPerBdv: toBNWithDecimals(
+          LibCases.getBeanToMaxLPUnit(bL),
+          18
+        )
       },
       stateDisplay: {
         price: DisplayMaps.price[priceEvaluation.evaluation],
