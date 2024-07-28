@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Link, Stack, Typography } from '@mui/material';
 import useSeedGauge from '~/hooks/beanstalk/useSeedGauge';
 import useSdk from '~/hooks/sdk';
 import TokenIcon from '~/components/Common/TokenIcon';
 import useElementDimensions from '~/hooks/display/useElementDimensions';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import useBeanstalkCaseData from '~/hooks/beanstalk/useBeanstalkCaseData';
+import { displayFullBN } from '~/util';
 
 type IBean2MaxLPRatio = {
   data: ReturnType<typeof useSeedGauge>['data'];
@@ -13,31 +15,105 @@ type IBean2MaxLPRatio = {
 const BAR_WIDTH = 8;
 const BAR_HEIGHT = 55;
 const SELECTED_BAR_HEIGHT = 65;
-const MIN_SPACING = 10; // 1 = 10px;
+const MIN_SPACING = 10;
+const MAX_SPACING = 12;
+
+const Bar = ({
+  isSelected,
+  isFlashing,
+}: {
+  isSelected: boolean;
+  isFlashing: boolean;
+}) => (
+  <Box
+    sx={{
+      borderRadius: 10,
+      height: `${isSelected ? SELECTED_BAR_HEIGHT : BAR_HEIGHT}px`,
+      width: `${BAR_WIDTH}px`,
+      background: BeanstalkPalette.logoGreen,
+      opacity: isSelected || isFlashing ? 1 : 0.3,
+      animation: isFlashing ? 'blink 2500ms linear infinite' : undefined,
+      '@keyframes blink': {
+        '0%': { opacity: 1 },
+        '50%': { opacity: 0.1 },
+        '100%': { opacity: 1 },
+      },
+    }}
+  />
+);
+
+/*
+ * We calculate the number of bars with spacing using the formula:
+ *
+ * w = component width
+ * b = bar width
+ * s = spacing
+ * x = number of bars
+ *
+ * w = b(x) + s(x - 1)
+ * x = Floor((w + s) / (b + s))
+ */
+const calculateNumBarsWithSpacing = (width: number, spacing: number) => {
+  const relativeWidth = width + spacing;
+  const unitWidth = BAR_WIDTH + spacing;
+  return Math.floor(relativeWidth / unitWidth);
+};
 
 const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { width } = useElementDimensions(containerRef);
+  const [minBars, setMinBars] = useState(0);
+  const [maxBars, setMaxBars] = useState(0);
+  const [numBars, setNumBars] = useState(0);
 
-  const maxBars = width / (BAR_WIDTH + MIN_SPACING);
-  const minBars = maxBars - 2;
+  const caseData = useBeanstalkCaseData();
 
-  const increasing = false;
-  const decreasing = true;
+  const setValues = (values: [min: number, max: number, num: number]) => {
+    setMinBars(values[0]);
+    setMaxBars(values[1]);
+    setNumBars(values[2]);
+  };
 
-  // TODO: FIX LOGIC
-  const arr = Array.from({ length: minBars });
+  useEffect(() => {
+    const _maxBars = calculateNumBarsWithSpacing(width, MIN_SPACING);
+    const _minBars = calculateNumBarsWithSpacing(width, MAX_SPACING);
+
+    const values = [_minBars, _maxBars, undefined];
+
+    if (numBars === 0 || maxBars <= _minBars) {
+      values[2] = _maxBars;
+    } else if (minBars >= _maxBars) {
+      values[2] = _minBars;
+    }
+
+    if (values[2] !== undefined) {
+      setValues(values as [number, number, number]);
+    }
+  }, [numBars, width, minBars, maxBars]);
+
+  const arr = Array.from({ length: numBars });
+
+  const bean2MaxLP = data.bean2MaxLPRatio.value;
   const maxIndex = arr.length - 1;
-  const selectedIndex = maxIndex - 2;
-  const addIndex = increasing ? 1 : decreasing ? -1 : 0;
 
-  const neighborIndex = selectedIndex + addIndex;
+  const isAtMax = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.max);
+  const isAtMin = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.min);
+
+  const increasing = !isAtMax && caseData?.delta.bean2MaxLPGPPerBdv.gt(0);
+  const decreasing = !isAtMin && caseData?.delta.bean2MaxLPGPPerBdv.lt(0);
+
+  const selectedIndex =
+    bean2MaxLP && Math.floor(bean2MaxLP.div(100).times(maxIndex).toNumber());
+
+  const addIndex = increasing ? 1 : decreasing ? -1 : 0;
+  const neighborIndex =
+    (increasing || decreasing) && selectedIndex && selectedIndex + addIndex;
 
   return (
     <Stack width="100%" ref={containerRef}>
       <Stack>
         <Typography variant="h3">
-          54.5%{' '}
+          {bean2MaxLP ? displayFullBN(bean2MaxLP, 2) : '--'}%{' '}
           <Typography component="span" variant="h4">
             Bean to Max LP Ratio
           </Typography>
@@ -54,27 +130,17 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
         justifyContent="space-between"
         width="100%"
       >
-        {arr.map((_, i) => (
-          <Box
-            key={`gauge-bar-${i}`}
-            sx={{
-              borderRadius: 10,
-              height: `${i === selectedIndex ? SELECTED_BAR_HEIGHT : BAR_HEIGHT}px`,
-              width: `${BAR_WIDTH}px`,
-              background: BeanstalkPalette.logoGreen,
-              opacity: i === selectedIndex || i === neighborIndex ? 1 : 0.3,
-              animation:
-                i === neighborIndex
-                  ? 'blink 2500ms linear infinite'
-                  : undefined,
-              '@keyframes blink': {
-                '0%': { opacity: 1 },
-                '50%': { opacity: 0.1 },
-                '100%': { opacity: 1 },
-              },
-            }}
-          />
-        ))}
+        {arr.map((_, i) => {
+          const isSelected = selectedIndex === i;
+          const flashing = neighborIndex === i;
+          return (
+            <Bar
+              key={`bar-${i}`}
+              isFlashing={flashing}
+              isSelected={isSelected}
+            />
+          );
+        })}
       </Stack>
       <Stack direction="row" justifyContent="space-between" width="100%">
         <Stack textAlign="left">

@@ -102,6 +102,16 @@ export class LibCases {
 
   // ---------- Constants ----------
 
+  // this will eventually become dynamic
+  static MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18; 
+
+  // this will eventually become dynamic
+  static MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
+
+  static BEAN_MAX_LP_GP_RATIO_RANGE =  
+    LibCases.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - 
+    LibCases.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+
   private static T_PLUS_3_L_MINUS_FIFTY = Buffer.from(
     '05F5E1000300056BC75E2D63100000FFFD4A1C50E94E78000000000000000000',
     'hex'
