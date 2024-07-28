@@ -4,17 +4,18 @@
 
 pragma solidity ^0.8.20;
 
-import "contracts/C.sol";
-import "../ReentrancyGuard.sol";
-import {MigrationData} from "contracts/beanstalk/storage/System.sol";
+import {C} from "contracts/C.sol";
+import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Field} from "contracts/beanstalk/storage/Account.sol";
-import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
+import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
-import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {MigrationData} from "contracts/beanstalk/storage/System.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Brean
@@ -29,10 +30,13 @@ interface IL2Messenger {
 }
 
 contract L1RecieverFacet is ReentrancyGuard {
-    uint256 constant EXTERNAL_L1_BEANS = 0;
+    // todo: update with correct external beans once L1 Beanstalk has been paused.
+    uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
 
     address constant BRIDGE = address(0x4200000000000000000000000000000000000007);
     address constant L1BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+
+    // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
         0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
     bytes32 internal constant PLOT_MERKLE_ROOT =
@@ -296,7 +300,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, depositIds, amounts, bdvs)))
         );
-        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, DEPOSIT_MERKLE_ROOT, leaf);
     }
 
     /**
@@ -309,7 +313,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) public view returns (bool) {
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, index, amounts))));
-        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, PLOT_MERKLE_ROOT, leaf);
     }
 
     /**
@@ -322,7 +326,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) public view returns (bool) {
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(owner, tokens, amounts))));
-        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, INTERNAL_BALANCE_MERKLE_ROOT, leaf);
     }
 
     /**
@@ -338,7 +342,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, fertIds, amounts, lastBpf)))
         );
-        return MerkleProof.verify(proof, MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
     }
 
     //////////// MIGRATION HELPERS ////////////

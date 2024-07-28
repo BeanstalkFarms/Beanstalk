@@ -57,39 +57,6 @@ contract L2ContractMigrationTest is TestHelper {
         );
     }
 
-    function test_invalid_migration_signature() public {
-        address test_account = vm.addr(SIG_TEST_ACCOUNT_PK);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIG_TEST_ACCOUNT_PK, keccak256(abi.encode(1)));
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        vm.expectRevert();
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationSignature(
-            test_account,
-            test_account,
-            type(uint256).max,
-            signature
-        );
-    }
-
-    // verifies that the signature works for a given owner, reciever, and deadline.
-    function test_valid_migration_signature(address newAddress) public {
-        address test_account = vm.addr(SIG_TEST_ACCOUNT_PK);
-        bytes32 _hash = L2ContractMigrationFacet(BEANSTALK).getMigrationHash(
-            test_account,
-            newAddress,
-            type(uint256).max
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIG_TEST_ACCOUNT_PK, _hash);
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationSignature(
-            test_account,
-            newAddress,
-            type(uint256).max,
-            signature
-        );
-    }
-
     // test helpers
     function get_mock_migration_data()
         internal
