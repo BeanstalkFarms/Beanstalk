@@ -132,15 +132,6 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // verify the gaugePoint and liquidityWeight selector.
-        verifyGaugePointSelector(gaugePointSelector);
-        verifyLiquidityWeightSelector(liquidityWeightSelector);
-        verifyOracleImplementation(
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType
-        );
-
         // verify whitelist status of token.
         // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
         verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
@@ -201,15 +192,6 @@ library LibWhitelist {
         Implementation memory lwImplementation
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // verify the gaugePoint and liquidityWeight selector.
-        verifyOracleImplementation(
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType
-        );
-        verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
-        verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
 
         // add whitelist status
         LibWhitelistedTokens.addWhitelistStatus(
