@@ -253,8 +253,8 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
         from,
         to
       ),
-    from: "BEAN",
-    to: "WETH"
+    from: "WETH",
+    to: "BEAN"
   });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
