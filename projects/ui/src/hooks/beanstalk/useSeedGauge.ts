@@ -9,7 +9,8 @@ import { useAppSelector } from '~/state';
 import { useMemo } from 'react';
 import { LibCases } from '~/lib/Beanstalk/LibCases';
 import useSdk from '../sdk';
-import { toBNWithDecimals } from "../../util/BigNumber";
+import { toBNWithDecimals } from '../../util/BigNumber';
+import useSeason from './useSeason';
 
 export type SiloTokenSettingMap = AddressMap<{
   stalkedEarnedPerSeason: BigNumberJS;
@@ -66,12 +67,18 @@ const gaugePointsPerBdvPerTokenCalls = (
 
 const useSeedGauge = () => {
   const sdk = useSdk();
+  const season = useSeason();
   const siloBals = useAppSelector((s) => s._beanstalk.silo.balances);
   const siloLoading = !Object.keys(siloBals).length;
   const whitelist = [...sdk.tokens.siloWhitelist];
 
   const query = useQuery({
-    queryKey: ['beanstalk', 'silo', 'beanstalkSiloTokenSettings'],
+    queryKey: [
+      'beanstalk',
+      'silo',
+      'beanstalkSiloTokenSettings',
+      season.toString(),
+    ],
     queryFn: async () => {
       const calls = makeContractCalls(
         sdk.contracts.beanstalk.address,
