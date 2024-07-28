@@ -928,8 +928,6 @@ interface IMockFBeanstalk {
         uint256 caseId
     ) external view returns (uint32, int8, uint80, int80);
 
-    function getCounter(bytes32 counterId) external view returns (uint256 count);
-
     function getCurrentHumidity() external view returns (uint128 humidity);
 
     function getDeltaPodDemand() external view returns (uint256);

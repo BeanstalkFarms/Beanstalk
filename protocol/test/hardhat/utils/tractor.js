@@ -913,7 +913,7 @@ const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount, ve
 
   // call[1] - Increment counter by 100.
   advancedFarmCalls.push({
-    callData: (await tractorFacetInterface()).encodeFunctionData("updateCounter", [
+    callData: (await tractorFacetInterface()).encodeFunctionData("updatePublisherCounter", [
       counterId,
       CounterUpdateType.INCREASE,
       to6("100")
@@ -923,7 +923,9 @@ const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount, ve
 
   // call[2] - Get counter value (redundant with return of call[1], but illustrative).
   advancedFarmCalls.push({
-    callData: (await tractorFacetInterface()).encodeFunctionData("getCounter", [counterId]),
+    callData: (await tractorFacetInterface()).encodeFunctionData("getPublisherCounter", [
+      counterId
+    ]),
     clipboard: ethers.utils.hexlify("0x000000")
   });
 

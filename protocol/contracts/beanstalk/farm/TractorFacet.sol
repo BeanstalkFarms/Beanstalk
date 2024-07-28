@@ -64,7 +64,9 @@ contract TractorFacet is Invariable {
      * @notice Updates the tractor version used for EIP712 signatures.
      * @dev This function will render all existing blueprints invalid.
      */
-    function updateTractorVersion(string calldata version) fundsSafu noNetFlow noSupplyChange external {
+    function updateTractorVersion(
+        string calldata version
+    ) external fundsSafu noNetFlow noSupplyChange {
         LibDiamond.enforceIsContractOwner();
         LibTractor._setVersion(version);
     }
@@ -142,10 +144,20 @@ contract TractorFacet is Invariable {
     }
 
     /**
-     * @notice Get current counter value.
+     * @notice Get current counter value for any account.
+     * @dev Intended for external access.
      * @return count Counter value
      */
-    function getCounter(bytes32 counterId) public view returns (uint256 count) {
+    function getCounter(address account, bytes32 counterId) external view returns (uint256 count) {
+        return LibTractor._tractorStorage().blueprintCounters[account][counterId];
+    }
+
+    /**
+     * @notice Get current counter value.
+     * @dev Intended for access via Tractor farm call. QoL function.
+     * @return count Counter value
+     */
+    function getPublisherCounter(bytes32 counterId) public view returns (uint256 count) {
         return
             LibTractor._tractorStorage().blueprintCounters[
                 LibTractor._tractorStorage().activePublisher
@@ -154,18 +166,19 @@ contract TractorFacet is Invariable {
 
     /**
      * @notice Update counter value.
+     * @dev Intended for use via Tractor farm call.
      * @return count New value of counter
      */
-    function updateCounter(
+    function updatePublisherCounter(
         bytes32 counterId,
         LibTractor.CounterUpdateType updateType,
         uint256 amount
-    ) external returns (uint256 count) {
+    ) external fundsSafu noNetFlow noSupplyChange returns (uint256 count) {
         uint256 newCount;
         if (updateType == LibTractor.CounterUpdateType.INCREASE) {
-            newCount = getCounter(counterId).add(amount);
+            newCount = getPublisherCounter(counterId).add(amount);
         } else if (updateType == LibTractor.CounterUpdateType.DECREASE) {
-            newCount = getCounter(counterId).sub(amount);
+            newCount = getPublisherCounter(counterId).sub(amount);
         }
         LibTractor._tractorStorage().blueprintCounters[
             LibTractor._tractorStorage().activePublisher
