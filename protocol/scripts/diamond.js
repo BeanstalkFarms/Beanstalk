@@ -71,7 +71,68 @@ async function deployFacets(facets, verbose = false) {
   return deployed;
 }
 
-async function deploy({
+// Deploy only diamond and storage with initDiamond contract if provided
+async function deployDiamond({
+  diamondName,
+  initDiamond,
+  owner,
+  verbose = false,
+  impersonate = false
+}) {
+  if (arguments.length !== 1) {
+    throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
+  }
+  const diamondFactory = await ethers.getContractFactory("Diamond");
+  const diamondCut = [];
+  if (verbose) {
+    console.log("--");
+    console.log("Setting up diamondCut args");
+    console.log("--");
+  }
+  let result;
+  if (typeof initDiamond === "string") {
+    const initDiamondName = initDiamond;
+    if (verbose) console.log(`Deploying ${initDiamondName}`);
+    initDiamond = await ethers.getContractFactory(initDiamond);
+    initDiamond = await initDiamond.deploy();
+    await initDiamond.deployed();
+    result = await initDiamond.deployTransaction.wait();
+    if (!result.status) {
+      throw Error(
+        `Deploying ${initDiamondName} TRANSACTION FAILED!!! -------------------------------------------`
+      );
+    }
+  }
+
+  if (verbose) console.log(`Deploying ${diamondName}`);
+
+  let deployedDiamond;
+  if (!impersonate) {
+    deployedDiamond = await diamondFactory.deploy(owner.address);
+    await deployedDiamond.deployed();
+    result = await deployedDiamond.deployTransaction.wait();
+    if (!result.status) {
+      console.log(
+        "Deploying diamond TRANSACTION FAILED!!! -------------------------------------------"
+      );
+      console.log("See block explorer app for details.");
+      console.log("Transaction hash:" + deployedDiamond.deployTransaction.hash);
+      throw Error("failed to deploy diamond");
+    }
+    if (verbose)
+      console.log("Diamond deploy transaction hash:" + deployedDiamond.deployTransaction.hash);
+
+    if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`);
+    if (verbose) console.log(`Diamond owner: ${owner.address}`);
+  } else {
+    await impersonateBeanstalk(owner.address);
+    deployedDiamond = await ethers.getContractAt("Diamond", BEANSTALK);
+  }
+
+  return deployedDiamond;
+}
+
+async function deploy ({
   diamondName,
   initDiamond,
   facets,
@@ -540,11 +601,11 @@ async function upgradeWithNewFacets({
   return result;
 }
 
-exports.FacetCutAction = FacetCutAction;
-exports.upgrade = upgrade;
-exports.upgradeWithNewFacets = upgradeWithNewFacets;
-exports.getSelectors = getSelectors;
-exports.deployFacets = deployFacets;
-exports.deploy = deploy;
-exports.inFacets = inFacets;
-exports.upgrade = upgrade;
+exports.upgrade = upgrade
+exports.upgradeWithNewFacets = upgradeWithNewFacets
+exports.getSelectors = getSelectors
+exports.deployFacets = deployFacets
+exports.deploy = deploy
+exports.inFacets = inFacets
+exports.upgrade = upgrade
+exports.deployDiamond = deployDiamond

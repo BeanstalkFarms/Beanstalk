@@ -46,7 +46,7 @@ contract ReseedField {
     ) external {
         uint256 calculatedTotalPods;
         for (uint i; i < accountPlots.length; i++) {
-            for (uint j; j < accountPlots[i].plots.length; i++) {
+            for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
                 s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;

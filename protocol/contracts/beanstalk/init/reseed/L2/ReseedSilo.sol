@@ -19,7 +19,7 @@ contract ReseedSilo {
     using LibBytes for uint256;
 
     /**
-     * @notice SiloDeposits is a struct that contains the silo deposits for a given tokens.
+     * @notice SiloDeposits is a struct that contains the silo deposits for a given token.
      */
     struct SiloDeposits {
         address token;
@@ -123,7 +123,9 @@ contract ReseedSilo {
                 // add deposit to account. Add to depositIdList.
                 s.accts[deposits.accounts].deposits[depositId].amount = deposits.dd[j].amount;
                 s.accts[deposits.accounts].deposits[depositId].bdv = deposits.dd[j].bdv;
-                s.accts[deposits.accounts].depositIdList[siloDeposit.token].push(depositId);
+                s.accts[deposits.accounts].depositIdList[siloDeposit.token].depositIds.push(
+                    depositId
+                );
 
                 // increment totalBdvForAccount by bdv of deposit:
                 totalBdvForAccount += deposits.dd[j].bdv;

@@ -29,9 +29,9 @@ const {
   INTERNAL,
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
-} = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/hardhat/utils/constants.js");
-const { to6 } = require("./test/hardhat/utils/helpers.js");
+} = require("./test/utils/balances.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/utils/constants.js");
+const { to6 } = require("./test/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
@@ -97,7 +97,12 @@ task("getTime", async function () {
 })*/
 
 task("reseed", async () => {
-  const account = await impersonateSigner(PUBLIUS);
+  const account = await impersonateSigner(BCM);
+  // mint more eth to the bcm to cover gas costs
+  const mock = true;
+  if (mock) {
+    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  }
   await reseed(account);
 });
 
@@ -359,7 +364,7 @@ module.exports = {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
-      accounts: "remote"
+      accounts: "remote",
     },
     mainnet: {
       chainId: 1,
