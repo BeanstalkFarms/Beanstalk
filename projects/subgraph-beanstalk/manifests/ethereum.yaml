@@ -8,7 +8,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -17,7 +17,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -28,7 +28,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -37,7 +37,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -48,7 +48,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -57,7 +57,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -68,7 +68,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -77,7 +77,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -88,7 +88,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -97,7 +97,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -109,7 +109,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -118,7 +118,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -129,7 +129,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -138,7 +138,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -149,7 +149,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -158,7 +158,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -169,7 +169,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -178,7 +178,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -189,7 +189,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -198,7 +198,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -210,7 +210,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -219,7 +219,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -230,7 +230,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -239,7 +239,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -250,7 +250,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -259,7 +259,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -270,7 +270,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -279,7 +279,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -290,7 +290,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -299,7 +299,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -311,7 +311,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: SiloV3
       startBlock: 17636279 # Placeholder
     mapping:
       kind: ethereum/events
@@ -320,7 +320,7 @@ dataSources:
       entities:
         - Silo-V3
       abis:
-        - name: Beanstalk
+        - name: SiloV3
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP36.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -344,7 +344,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: MarketV2
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -353,7 +353,7 @@ dataSources:
       entities:
         - Silo-Replanted
       abis:
-        - name: Beanstalk
+        - name: MarketV2
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -389,7 +389,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -398,7 +398,7 @@ dataSources:
       entities:
         - Field
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -431,7 +431,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -440,7 +440,7 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -459,7 +459,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -468,7 +468,7 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -495,7 +495,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: Replanted
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -504,7 +504,7 @@ dataSources:
       entities:
         - Marketplace-Replanted
       abis:
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -519,7 +519,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: PreReplant
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -528,7 +528,7 @@ dataSources:
       entities:
         - Diamond
       abis:
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
@@ -550,7 +550,7 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
@@ -572,7 +572,7 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
+        - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
@@ -583,7 +583,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: MarketV2
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -592,7 +592,7 @@ dataSources:
       entities:
         - Replant
       abis:
-        - name: Beanstalk
+        - name: MarketV2
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -607,7 +607,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: BasinBip
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -616,7 +616,7 @@ dataSources:
       entities:
         - Season-Replanted
       abis:
-        - name: Beanstalk
+        - name: BasinBip
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -652,7 +652,7 @@ dataSources:
       abis:
         - name: Fertilizer
           file: ../../subgraph-core/abis/Fertilizer.json
-        - name: Beanstalk
+        - name: MarketV2
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
       eventHandlers:
         - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
@@ -665,7 +665,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: MarketV2
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -674,7 +674,7 @@ dataSources:
       entities:
         - Farm
       abis:
-        - name: Beanstalk
+        - name: MarketV2
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
@@ -687,7 +687,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: Replanted
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -696,7 +696,7 @@ dataSources:
       entities:
         - Silo
       abis:
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
@@ -711,7 +711,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: MarketV2
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -720,7 +720,7 @@ dataSources:
       entities:
         - PodMarketplaceV2
       abis:
-        - name: Beanstalk
+        - name: MarketV2
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -741,7 +741,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: SeedGauge
       startBlock: 19628074
     mapping:
       kind: ethereum/events
@@ -750,7 +750,7 @@ dataSources:
       entities:
         - SeedGauge
       abis:
-        - name: Beanstalk
+        - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
