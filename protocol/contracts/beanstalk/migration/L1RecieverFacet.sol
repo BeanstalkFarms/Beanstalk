@@ -25,10 +25,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
  * in order to migrate their deposits, plots, fertilizer, and internal balances to L2.
  **/
 
-interface IL2Messenger {
-    function xDomainMessageSender() external view returns (address);
-}
-
 contract L1RecieverFacet is ReentrancyGuard {
     // todo: update with correct external beans once L1 Beanstalk has been paused.
     uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
@@ -45,6 +41,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
+
+    uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
     /**
      * @notice emitted when L1 Beans are migrated to L2.
@@ -114,12 +112,8 @@ contract L1RecieverFacet is ReentrancyGuard {
      * issued to `reciever`.
      */
     function recieveL1Beans(address reciever, uint256 amount) external nonReentrant {
-        // verify msg.sender is the cross-chain messenger address, and
-        // the xDomainMessageSender is the L1 Beanstalk contract.
-        require(
-            msg.sender == address(BRIDGE) &&
-                IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
-        );
+        // To check that message came from L1, we check that the sender is the L1 contract's L2 alias.
+        require(msg.sender == applyL1ToL2Alias(L1BEANSTALK), "recieveL1Beans only callable by L1");
         s.sys.l2Migration.migratedL1Beans += amount;
         require(
             EXTERNAL_L1_BEANS >= s.sys.l2Migration.migratedL1Beans,
@@ -134,12 +128,8 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @notice approves a reciever to recieve the beanstalk native assets of a sender.
      */
     function approveReciever(address owner, address reciever) external nonReentrant {
-        // verify msg.sender is the cross-chain messenger address, and
-        // the xDomainMessageSender is the L1 Beanstalk contract.
-        require(
-            msg.sender == address(BRIDGE) &&
-                IL2Messenger(BRIDGE).xDomainMessageSender() == L1BEANSTALK
-        );
+        // To check that message came from L1, we check that the sender is the L1 contract's L2 alias.
+        require(msg.sender == applyL1ToL2Alias(L1BEANSTALK), "approveReciever only callable by L1");
 
         s.sys.l2Migration.account[owner].reciever = reciever;
 
@@ -461,5 +451,18 @@ contract L1RecieverFacet is ReentrancyGuard {
      */
     function getInternalBalanceMerkleRoot() external pure returns (bytes32) {
         return INTERNAL_BALANCE_MERKLE_ROOT;
+    }
+
+    /**
+     * @notice Utility function that converts the address in the L1 that submitted a tx to
+     * the inbox to the msg.sender viewed in the L2
+     * @param l1Address the address in the L1 that triggered the tx to L2
+     * @return l2Address L2 address as viewed in msg.sender
+     * @dev
+     */
+    function applyL1ToL2Alias(address l1Address) internal pure returns (address l2Address) {
+        unchecked {
+            l2Address = address(uint160(l1Address) + OFFSET);
+        }
     }
 }
