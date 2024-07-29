@@ -5384,9 +5384,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:0.69.0":
-  version: 0.69.0
-  resolution: "@graphprotocol/graph-cli@npm:0.69.0"
+"@graphprotocol/graph-cli@npm:0.79.2":
+  version: 0.79.2
+  resolution: "@graphprotocol/graph-cli@npm:0.79.2"
   dependencies:
     "@float-capital/float-subgraph-uncrashable": "npm:^0.0.0-alpha.4"
     "@oclif/core": "npm:2.8.6"
@@ -5408,6 +5408,7 @@ __metadata:
     ipfs-http-client: "npm:55.0.0"
     jayson: "npm:4.0.0"
     js-yaml: "npm:3.14.1"
+    open: "npm:8.4.2"
     prettier: "npm:3.0.3"
     semver: "npm:7.4.0"
     sync-request: "npm:6.1.0"
@@ -5417,7 +5418,7 @@ __metadata:
     yaml: "npm:1.10.2"
   bin:
     graph: bin/run
-  checksum: 10/55c1dcc2396530171ade4dde5444395f0a78755292237a67fdd5122b3390bcbc547bf5509427950ccdfb41ed22de7455aecb4573a4faa643c793633ee8535765
+  checksum: 10/433468c6a747a74f5f3c8e51ee3e287fd7b828fbb39e51ddda3a98d4991e66a015727d87e1308682bda299a62b872c31562a1b09b62ffa3c76d134d67671f822
   languageName: node
   linkType: hard
 
@@ -18968,7 +18969,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "beanft@workspace:projects/subgraph-beanft"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -35943,6 +35944,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"open@npm:8.4.2":
+  version: 8.4.2
+  resolution: "open@npm:8.4.2"
+  dependencies:
+    define-lazy-prop: "npm:^2.0.0"
+    is-docker: "npm:^2.1.1"
+    is-wsl: "npm:^2.2.0"
+  checksum: 10/acd81a1d19879c818acb3af2d2e8e9d81d17b5367561e623248133deb7dd3aefaed527531df2677d3e6aaf0199f84df57b6b2262babff8bf46ea0029aac536c9
+  languageName: node
+  linkType: hard
+
 "open@npm:^7.0.3":
   version: 7.4.2
   resolution: "open@npm:7.4.2"
@@ -41744,7 +41756,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-basin@workspace:projects/subgraph-basin"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -41754,7 +41766,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-bean@workspace:projects/subgraph-bean"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -41764,7 +41776,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-beanstalk@workspace:projects/subgraph-beanstalk"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown

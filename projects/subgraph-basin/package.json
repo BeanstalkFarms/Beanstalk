@@ -18,7 +18,7 @@
     "deploy-local": "echo Using manifest at ./manifests/$1.yaml && yarn codegen && graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 basin_$1 ./manifests/$1.yaml"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.69.0",
+    "@graphprotocol/graph-cli": "0.79.2",
     "@graphprotocol/graph-ts": "0.34.0"
   },
   "devDependencies": {
