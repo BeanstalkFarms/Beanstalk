@@ -75,4 +75,8 @@ contract MockAttackFacet is Invariable {
     function exploitEarnedBeans() public {
         s.sys.silo.earnedBeans = 100_000_000;
     }
+
+    function exploitPodOrderBeans() public {
+        s.sys.orderLockedBeans = 100_000_000;
+    }
 }
