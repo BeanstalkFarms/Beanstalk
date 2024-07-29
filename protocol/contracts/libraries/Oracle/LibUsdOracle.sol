@@ -32,7 +32,12 @@ interface ChainlinkPriceFeedRegistry {
  **/
 library LibUsdOracle {
     using LibRedundantMath256 for uint256;
+
+    // the lookup registry for chainlink price feed given a token address.
+    // the chainlink registry address differs between networks.
     address constant chainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
+
+    uint256 constant CHAINLINK_DENOMINATOR = 1e6;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -57,10 +62,11 @@ library LibUsdOracle {
             return uint256(1e24).div(wstethUsdPrice);
         }
 
-        // 1e18 * 1e6 = 1e24.
         uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
         if (tokenPrice == 0) return 0;
-        return uint256(1e24).div(tokenPrice);
+        // division is a function of the decimals of the token:
+        uint256 decimals = 10 ** IERC20Decimals(token).decimals();
+        return uint256(decimals * CHAINLINK_DENOMINATOR).div(tokenPrice);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -116,29 +122,35 @@ library LibUsdOracle {
                 ); // 0x0348 is the address for USD
             }
 
+            // todo: need to update timeout
             return
-                uint256(1e24).div(
-                    LibChainlinkOracle.getTokenPrice(
-                        chainlinkOraclePriceAddress,
-                        LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
-                        lookback
-                    )
+                LibChainlinkOracle.getTokenPrice(
+                    chainlinkOraclePriceAddress,
+                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
-            // assumes a dollar stablecoin is passed in
             // if the encodeType is type 2, use a uniswap oracle implementation.
+
+            // the uniswap oracle implementation combines the use of the chainlink and uniswap oracles.
+            // the chainlink oracle is used to get the price of the non-oracle token in order to
+
             address chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token0();
-            chainlinkToken = chainlinkToken == token
-                ? IUniswapV3PoolImmutables(oracleImpl.target).token1()
-                : token;
+
+            if (chainlinkToken == token) {
+                chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token1();
+            }
+
+            // get twap from the `chainlinkToken` to `token`
+            // exchange 1 `chainlinkToken` for `token`
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
-                chainlinkToken,
                 token,
-                uint128(10) ** uint128(IERC20Decimals(token).decimals())
+                chainlinkToken,
+                uint128(10 ** IERC20Decimals(token).decimals())
             );
-            // USDC/USD
+
             // call chainlink oracle from the OracleImplmentation contract
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
@@ -156,7 +168,8 @@ library LibUsdOracle {
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 lookback
             );
-            return tokenPrice.mul(chainlinkTokenPrice).div(1e6);
+
+            return tokenPrice.mul(chainlinkTokenPrice).div(CHAINLINK_DENOMINATOR);
         }
 
         // If the oracle implementation address is not set, use the current contract.

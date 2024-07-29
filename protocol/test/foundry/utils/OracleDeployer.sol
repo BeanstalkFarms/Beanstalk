@@ -20,6 +20,7 @@ import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory
 interface ChainlinkPriceFeedRegistry {
     function getFeed(address base, address quote) external view returns (address aggregator);
 }
+
 contract OracleDeployer is Utils {
     ////////// CHAINLINK //////////
     address constant USDC_USD_CHAINLINK_PRICE_AGGREGATOR =
@@ -60,7 +61,7 @@ contract OracleDeployer is Utils {
     ];
 
     // oracles must be initalized at some price. Assumes index matching with pools.
-    uint256[][] public priceData = [[uint256(1e18), 18], [uint256(50000e2), 6]];
+    uint256[][] public priceData = [[uint256(1e18), 18], [uint256(500e6), 8]];
 
     /**
      * @notice initializes chainlink oracles.
@@ -157,6 +158,8 @@ contract OracleDeployer is Utils {
             x = 1e18;
         } else if (decimal == 18) {
             x = 1e36;
+        } else if (decimal == 8) {
+            x = 1e14;
         }
         price = x / (_price + 1);
     }
