@@ -288,12 +288,15 @@ export class LibCases {
     if (ts.soilSoldOut) {
       if (
         !ls.soilSoldOut || // Didn't sow all last season
-        thisSowTime.lt(SOW_TIME_DEMAND_INCR) || //  // Sow'd all instantly this Season
-        (lastSowTime.gt(SOW_TIME_STEADY) && 
-          thisSowTime.lt(lastSowTime.minus(SOW_TIME_STEADY)))  // Sow'd all fastesr
+        thisSowTime.lt(SOW_TIME_DEMAND_INCR) || // Sow'd all within 10 minutes
+        (lastSowTime.gt(SOW_TIME_STEADY) && // Time to sell out soil last season is greater than 1 minute
+          thisSowTime.lt(lastSowTime.minus(SOW_TIME_STEADY))) // Sow'd all within 1 minute of last seasons' time to sell out soil
       ) {
-        deltaPodDemand = ONE_BN; // is this right? 
-      } else if (thisSowTime.lte(lastSowTime.plus(SOW_TIME_STEADY))) {
+        deltaPodDemand = new BigNumber(1e36);
+      } else if (
+        // Sow'd all within 1 minute of last seasons' time to sell out soil
+        thisSowTime.lte(lastSowTime.plus(SOW_TIME_STEADY))
+      ) { 
         deltaPodDemand = ONE_BN;
       } else {
         deltaPodDemand = ZERO_BN;
@@ -305,7 +308,7 @@ export class LibCases {
       if (dSoil.eq(0)) {
         deltaPodDemand = ZERO_BN;
       } else if (lastDSoil.eq(0)) {
-        deltaPodDemand = ONE_BN;
+        deltaPodDemand = new BigNumber(1e36);
       } else {
         deltaPodDemand = dSoil.div(lastDSoil);
       }
