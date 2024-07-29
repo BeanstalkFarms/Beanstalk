@@ -25,19 +25,31 @@ import {IBean} from "contracts/interfaces/IBean.sol";
  *
  **/
 
-interface IL2Bridge {
-    function sendMessage(address _target, bytes memory _message, uint32 _minGasLimit) external;
-}
-
 interface IL1RecieverFacet {
     function recieveL1Beans(address reciever, uint256 amount) external;
 
     function approveReciever(address owner, address reciever) external;
 }
 
+interface IInbox {
+    function createRetryableTicket(
+        address to,
+        uint256 callValue,
+        uint256 maxSubmissionCost,
+        address excessFeeRefundAddress,
+        address callValueRefundAddress,
+        uint256 maxGas,
+        uint256 gasPriceBid,
+        bytes calldata data
+    ) external payable returns (uint256);
+}
+
 contract L2MigrationFacet is Invariable, ReentrancyGuard {
-    address constant BRIDGE = address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa);
+    // Arbitrum Delayed inbox.
+    address constant BRIDGE = address(0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f);
     address constant L1_BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+
+    event RetryableTicketCreated(uint256 indexed ticketId);
 
     /**
      * @notice migrates `amount` of Beans to L2,
@@ -47,16 +59,32 @@ contract L2MigrationFacet is Invariable, ReentrancyGuard {
         address reciever,
         address L2Beanstalk,
         uint256 amount,
-        uint32 gasLimit
-    ) external nonReentrant {
+        uint256 maxSubmissionCost,
+        uint256 maxGas,
+        uint256 gasPriceBid
+    ) external payable nonReentrant returns (uint256 ticketID) {
+        // burn the migrated beans.
         IBean(L1_BEAN).burnFrom(msg.sender, amount);
 
-        // send data to L2Beanstalk via the bridge contract.
-        IL2Bridge(BRIDGE).sendMessage(
-            L2Beanstalk,
-            abi.encodeCall(IL1RecieverFacet(L2Beanstalk).recieveL1Beans, (reciever, amount)),
-            gasLimit
+        bytes memory data = abi.encodeCall(
+            IL1RecieverFacet(L2Beanstalk).recieveL1Beans,
+            (reciever, amount)
         );
+
+        // send data to L2Beanstalk via the bridge.
+        ticketID = IInbox(BRIDGE).createRetryableTicket{value: msg.value}(
+            L2Beanstalk,
+            0,
+            maxSubmissionCost,
+            msg.sender,
+            msg.sender,
+            maxGas,
+            gasPriceBid,
+            data
+        );
+
+        emit RetryableTicketCreated(ticketID);
+        return ticketID;
     }
 
     /**
@@ -67,18 +95,33 @@ contract L2MigrationFacet is Invariable, ReentrancyGuard {
     function approveL2Reciever(
         address reciever,
         address L2Beanstalk,
-        uint32 gasLimit
-    ) external nonReentrant {
+        uint256 maxSubmissionCost,
+        uint256 maxGas,
+        uint256 gasPriceBid
+    ) external payable nonReentrant returns (uint256 ticketID) {
         // verify msg.sender is a contract.
         require(hasCode(msg.sender), "L2MigrationFacet: must be a contract");
         require(reciever != address(0), "L2MigrationFacet: invalid reciever");
 
-        // send data to L2Beanstalk via the bridge contract.
-        IL2Bridge(BRIDGE).sendMessage(
-            L2Beanstalk,
-            abi.encodeCall(IL1RecieverFacet(L2Beanstalk).approveReciever, (msg.sender, reciever)),
-            gasLimit
+        bytes memory data = abi.encodeCall(
+            IL1RecieverFacet(L2Beanstalk).approveReciever,
+            (msg.sender, reciever)
         );
+
+        // send data to L2Beanstalk via the bridge.
+        ticketID = IInbox(BRIDGE).createRetryableTicket{value: msg.value}(
+            L2Beanstalk,
+            0,
+            maxSubmissionCost,
+            msg.sender,
+            msg.sender,
+            maxGas,
+            gasPriceBid,
+            data
+        );
+
+        emit RetryableTicketCreated(ticketID);
+        return ticketID;
     }
 
     /**

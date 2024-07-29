@@ -36,11 +36,10 @@ contract reeseedMigrateL2 is TestHelper {
         mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 19976370);
 
         // fork base.
-        l2ForkId = vm.createFork(vm.envString("BASE_FORKING_RPC"), 15104866);
+        l2ForkId = vm.createFork(vm.envString("ARBITRUM_FORKING_RPC"), 15104866);
         vm.selectFork(mainnetForkId);
-        vm.label(address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa), "Base L1 Bridge");
+        vm.label(address(0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f), "Arbitrum L1 Bridge");
         vm.label(BEANSTALK, "Beanstalk");
-        vm.label(C.BEAN, "BEAN");
 
         // perform step 1 of the migration process. (transferring assets to the BCM).
         // this is done on L1.
@@ -151,11 +150,27 @@ contract reeseedMigrateL2 is TestHelper {
         assertEq(bs.getInternalBalance(address(100010), token), 1e6);
     }
 
-    // verifies that the user is able to migrate external beans to L2.
+    // verifies that the user is able to migrate external beans to L2 and approve a reciever on L2.
     function test_bean_l2_migration() public {
         vm.startPrank(BS_FARMS);
         IERC20(C.BEAN).approve(BEANSTALK, 1e6);
-        L2MigrationFacet(BEANSTALK).migrateL2Beans(BS_FARMS, L2_BEANSTALK, 1e6, 1000000);
+        L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            1e6,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+
+        vm.startPrank(BS_FARMS);
+        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
     }
 
     //////// MIGRATION HELPERS ////////
