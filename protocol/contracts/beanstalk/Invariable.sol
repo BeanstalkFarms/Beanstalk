@@ -15,7 +15,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @author funderbrker
@@ -41,9 +40,6 @@ abstract contract Invariable {
             uint256[] memory balances
         ) = getTokenEntitlementsAndBalances(tokens);
         for (uint256 i; i < tokens.length; i++) {
-            console.log("tokens[i]:", tokens[i]);
-            console.log("entitlements[i]: ", entitlements[i]);
-            console.log("balances[i]: ", balances[i]);
             require(balances[i] >= entitlements[i], "INV: Insufficient token balance");
         }
     }
