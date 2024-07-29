@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { toBNWithDecimals } from "../../util/BigNumber";
+import { ONE_BN, ZERO_BN } from '~/constants';
+import { toBNWithDecimals } from "~/util/BigNumber";
 
 /**
  * NOTE: Try not to format this file
@@ -7,10 +8,10 @@ import { toBNWithDecimals } from "../../util/BigNumber";
 
 const DisplayMaps = {
   quadCase: {
-    ExcessivelyHigh: 'Excessively High',
-    ReasonablyHigh: 'Reasonably High',
-    ReasonablyLow: 'Reasonably Low',
-    ExcessivelyLow: 'Excessively Low',
+    ExcessivelyHigh: 'Excessively High', // 80% - 100%
+    ReasonablyHigh: 'Reasonably High', // 40% - 80%
+    ReasonablyLow: 'Reasonably Low', // 12% - 40%
+    ExcessivelyLow: 'Excessively Low', // 0% - 12%
   },
   deltaPodDemand: {
     Decreasing: 'Decreasing',
@@ -28,9 +29,9 @@ type CaseEvaluationDisplay = keyof typeof DisplayMaps.quadCase;
 type DeltaPodDemandDisplay = keyof typeof DisplayMaps.deltaPodDemand;
 type BeanPriceStateDisplay = keyof typeof DisplayMaps.price;
 
-type CaseEvaluation<T> = {
+type CaseEvaluation = {
   id: number;
-  evaluation: T;
+  evaluation: string;
 }
 
 type CaseData = {
@@ -45,9 +46,11 @@ type CaseData = {
 };
 
 export type BeanstalkEvaluation = {
+  caseId: BigNumber;
   delta: {
     temperature: BigNumber;
     bean2MaxLPGPPerBdv: BigNumber;
+    bean2MaxLPGPPerBdvScalar: BigNumber;
   };
   stateDisplay: {
     price: string;
@@ -55,15 +58,21 @@ export type BeanstalkEvaluation = {
     deltaPodDemand: string;
     l2sr: string;
   };
-}
+};
 
 export type BeanstalkCaseState = {
   deltaPodDemand: BigNumber;
   l2sr: BigNumber;
   podRate: BigNumber;
   largestLiqWell: string;
-  oracleFailure: boolean;
+  oracleFailure: boolean; 
 };
+
+export type CalcDeltaPodDemandProps = {
+  soilSoldOut: boolean;
+  blocksToSoldOutSoil: BigNumber;
+  sownBeans: BigNumber;
+}
 
 // Constants
 
@@ -94,9 +103,21 @@ const LP_TO_SUPPLY_RATIO_LOWER_BOUND = 0.12; // 12%
 // Max and min are the ranges that the beanToMaxLpGpPerBdvRatioScaled can output.
 const MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
 const MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO = 50e18;
-const BEAN_MAX_LP_GP_RATIO_RANGE = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+const BEAN_MAX_LP_GP_RATIO_RANGE = 
+  MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO - 
+  MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
 
-// ---------- Beanstalk -----------
+
+// TODO: Chain dependent
+const SECONDS_PER_BLOCK = 12;
+
+const SECONDS_PER_SEASON = new BigNumber(3600);
+
+/// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
+const SOW_TIME_DEMAND_INCR = 600; // seconds
+
+const SOW_TIME_STEADY = 60; // seconds
+
 
 export class LibCases {
 
@@ -238,9 +259,64 @@ export class LibCases {
     LibCases.T_PLUS_0_L_MINUS_FIFTY, LibCases.T_MINUS_1_L_MINUS_FIFTY, LibCases.T_MINUS_3_L_MINUS_FIFTY // P > Q
   ];
 
+  // ---------- Calculations ----------
+
+  static calcDeltaPodDemand(
+    data: [
+      thisSeason: CalcDeltaPodDemandProps, 
+      lastSeason: CalcDeltaPodDemandProps
+    ]
+  ) {
+    if (data.length !== 2) {
+      throw new Error(`[LibCases/calcDeltaPodDemand]: expected 2 data points but got ${data.length}`);
+    }
+
+    const [ts, ls] = data;
+
+    let deltaPodDemand: BigNumber = ZERO_BN;
+
+    const dSoil = ts.sownBeans;
+    const thisSowTime = ts.soilSoldOut 
+      ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
+      : SECONDS_PER_SEASON; // 3600 seconds in an hour
+
+    const lastSowTime = ts.soilSoldOut 
+      ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
+      : SECONDS_PER_SEASON; // 3600 seconds in an hour
+    
+    // 
+    if (ts.soilSoldOut) {
+      if (
+        !ls.soilSoldOut || // Didn't sow all last season
+        thisSowTime.lt(SOW_TIME_DEMAND_INCR) || //  // Sow'd all instantly this Season
+        (lastSowTime.gt(SOW_TIME_STEADY) && 
+          thisSowTime.lt(lastSowTime.minus(SOW_TIME_STEADY)))  // Sow'd all fastesr
+      ) {
+        deltaPodDemand = ONE_BN; // is this right? 
+      } else if (thisSowTime.lte(lastSowTime.plus(SOW_TIME_STEADY))) {
+        deltaPodDemand = ONE_BN;
+      } else {
+        deltaPodDemand = ZERO_BN;
+      }
+    } else {
+      // Soil didn't sell out
+      const lastDSoil = ls.sownBeans;
+
+      if (dSoil.eq(0)) {
+        deltaPodDemand = ZERO_BN;
+      } else if (lastDSoil.eq(0)) {
+        deltaPodDemand = ONE_BN;
+      } else {
+        deltaPodDemand = dSoil.div(lastDSoil);
+      }
+      
+      return deltaPodDemand;
+    }
+  }
+
   // ---------- Evaluation Functions ----------
 
-  static evaluatePodRate(podRate: BigNumber): CaseEvaluation<CaseEvaluationDisplay> {
+  static evaluatePodRate(podRate: BigNumber): CaseEvaluation {
     let caseId = 0;
     let ev: CaseEvaluationDisplay = "ExcessivelyLow";
   
@@ -258,16 +334,17 @@ export class LibCases {
     
     return {
       id: caseId,
-      evaluation: ev,
+      evaluation: DisplayMaps.quadCase[ev],
     }
   }
 
-  static evaluatePrice(deltaB: BigNumber, largestLiquidityWellBeanPrice: BigNumber): CaseEvaluation<BeanPriceStateDisplay> {
+  static evaluatePrice(deltaB: BigNumber, largestLiquidityWellBeanPrice: BigNumber): CaseEvaluation {
     let caseId = 0;
     let ev: BeanPriceStateDisplay = "PLt1";
     // p > 1;
     if (deltaB.gt(0)) {
       if (largestLiquidityWellBeanPrice.gt(1)) {
+        // P > Q (1.05)
         if (largestLiquidityWellBeanPrice.gt(EXCESSIVE_PRICE_THRESHOLD)) {
           ev = "PGtQ";
           caseId = 5;
@@ -279,11 +356,11 @@ export class LibCases {
     // p < 1;
     return {
       id: caseId,
-      evaluation: ev,
+      evaluation: DisplayMaps.price[ev],
     }
   }
 
-  static evaluateDeltaPodDemand(deltaPodDemand: BigNumber): CaseEvaluation<DeltaPodDemandDisplay> {
+  static evaluateDeltaPodDemand(deltaPodDemand: BigNumber): CaseEvaluation {
     let caseId = 0;
     let ev: DeltaPodDemandDisplay = "Steady";
     if (deltaPodDemand.gte(DELTA_POD_DEMAND_UPPER_BOUND)) {
@@ -296,11 +373,11 @@ export class LibCases {
   
     return {
       id: caseId,
-      evaluation: ev,
+      evaluation: DisplayMaps.deltaPodDemand[ev],
     }
   }
 
-  static evaludateL2SR(l2sr: BigNumber): CaseEvaluation<CaseEvaluationDisplay> {
+  static evaludateL2SR(l2sr: BigNumber): CaseEvaluation {
     let caseId = 0;
     let ev: CaseEvaluationDisplay = "ExcessivelyLow";
   
@@ -317,7 +394,7 @@ export class LibCases {
   
     return {
       id: caseId,
-      evaluation: ev,
+      evaluation: DisplayMaps.quadCase[ev],
     }
   }
 
@@ -345,8 +422,26 @@ export class LibCases {
     return LibCases.casesV2[caseId.toNumber()];
   } 
 
-  static getBeanToMaxLPUnit(bL: BigNumber) {
+  private static getBeanToMaxLPUnit(bL: BigNumber) {
     return bL.times(BEAN_MAX_LP_GP_RATIO_RANGE).div(100e18);
+  }
+
+  static evaluateWithCaseId(caseId: BigNumber) {
+    const { bT, bL } = LibCases.decodeBytes32Data(
+      LibCases.getCaseWithCaseId(caseId)
+    );
+
+    const bean2MaxLPGPPerBdvScalar = toBNWithDecimals(bL, 18);
+    const bean2MaxLPGPPerBdv = toBNWithDecimals(
+      LibCases.getBeanToMaxLPUnit(bL), 
+      18
+    );
+
+    return {
+      bean2MaxLPGPPerBdvScalar,
+      bean2MaxLPGPPerBdv,
+      deltaTemperature: bT
+    }
   }
 
   static evaluateBeanstalk(
@@ -368,24 +463,25 @@ export class LibCases {
       throw new Error(`Expected caseId to be within [0,144] , but got ${caseId.toString()}`);
     }
 
-    const { bT, bL } = LibCases.decodeBytes32Data(
-      LibCases.getCaseWithCaseId(caseId)
-    );
+    const {
+      deltaTemperature, 
+      bean2MaxLPGPPerBdv, 
+      bean2MaxLPGPPerBdvScalar
+    } = LibCases.evaluateWithCaseId(caseId);
 
     return {
+      caseId,
       delta: {
-        temperature: bT,
-        bean2MaxLPGPPerBdv: toBNWithDecimals(
-          LibCases.getBeanToMaxLPUnit(bL),
-          18
-        )
+        temperature: deltaTemperature,
+        bean2MaxLPGPPerBdv,
+        bean2MaxLPGPPerBdvScalar,
       },
       stateDisplay: {
-        price: DisplayMaps.price[priceEvaluation.evaluation],
-        podRate: DisplayMaps.quadCase[podRateEvaluation.evaluation],
-        deltaPodDemand: DisplayMaps.deltaPodDemand[deltaPodDemandEvaluation.evaluation],
-        l2sr: DisplayMaps.quadCase[l2srEvaluation.evaluation],
-      }
-    }
+        price: priceEvaluation.evaluation,
+        podRate: podRateEvaluation.evaluation,
+        deltaPodDemand: deltaPodDemandEvaluation.evaluation,
+        l2sr: l2srEvaluation.evaluation,
+      },
+    };
   }
 }
