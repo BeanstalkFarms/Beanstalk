@@ -12,105 +12,84 @@ jest.setTimeout(30000);
 
 const happyPaths: Record<string, string> = {
   "ETH:BEAN": "ETH -> WETH -> BEAN -> BEAN:SILO",
-  "ETH:BEAN3CRV": "ETH -> WETH -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
   "ETH:BEANETH": "ETH -> WETH -> BEANETH -> BEANETH:SILO",
-
-  "ETH:BEANwstETH": "ETH -> WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO", 
-  "WETH:BEANwstETH": "WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO", 
+  "ETH:BEANwstETH": "ETH -> WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO",
 
   "WETH:BEAN": "WETH -> BEAN -> BEAN:SILO",
-  "WETH:BEAN3CRV": "WETH -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
   "WETH:BEANETH": "WETH -> BEANETH -> BEANETH:SILO",
+  "WETH:BEANwstETH": "WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO",
 
   "wstETH:BEANETH": "wstETH -> WETH -> BEANETH -> BEANETH:SILO",
-  "wstETH:BEAN": "wstETH -> WETH -> BEAN -> BEAN:SILO",
+  "wstETH:BEAN": "wstETH -> BEAN -> BEAN:SILO",
   "wstETH:BEANwstETH": "wstETH -> BEANwstETH -> BEANwstETH:SILO",
 
   "BEAN:BEAN": "BEAN -> BEAN:SILO",
-  "BEAN:BEAN3CRV": "BEAN -> BEAN3CRV -> BEAN3CRV:SILO",
   "BEAN:BEANETH": "BEAN -> BEANETH -> BEANETH:SILO",
   "BEAN:BEANwstETH": "BEAN -> BEANwstETH -> BEANwstETH:SILO",
 
   "3CRV:BEAN": "3CRV -> USDC -> BEAN -> BEAN:SILO",
-  "3CRV:BEAN3CRV": "3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
   "3CRV:BEANETH": "3CRV -> USDC -> BEANETH -> BEANETH:SILO",
+  "3CRV:BEANwstETH": "3CRV -> USDC -> BEANwstETH -> BEANwstETH:SILO",
 
   "DAI:BEAN": "DAI -> BEAN -> BEAN:SILO",
-  "DAI:BEAN3CRV": "DAI -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
   "DAI:BEANETH": "DAI -> BEANETH -> BEANETH:SILO",
-  "DAI:BEANwstETH": "DAI -> BEAN -> BEANwstETH -> BEANwstETH:SILO",
+  "DAI:BEANwstETH": "DAI -> BEANwstETH -> BEANwstETH:SILO",
 
   "USDC:BEAN": "USDC -> BEAN -> BEAN:SILO",
-  "USDC:BEAN3CRV": "USDC -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
   "USDC:BEANETH": "USDC -> BEANETH -> BEANETH:SILO",
-  "USDC:BEANwstETH": "USDC -> BEAN -> BEANwstETH -> BEANwstETH:SILO",
+  "USDC:BEANwstETH": "USDC -> BEANwstETH -> BEANwstETH:SILO",
 
-  "USDT:BEAN": "USDT -> WETH -> BEAN -> BEAN:SILO",
-  "USDT:BEAN3CRV": "USDT -> 3CRV -> BEAN3CRV -> BEAN3CRV:SILO",
+  "USDT:BEAN": "USDT -> BEAN -> BEAN:SILO",
   "USDT:BEANETH": "USDT -> BEANETH -> BEANETH:SILO",
-  "USDT:BEANwstETH": "USDT -> WETH -> wstETH -> BEANwstETH -> BEANwstETH:SILO",
+  "USDT:BEANwstETH": "USDT -> BEANwstETH -> BEANwstETH:SILO"
 };
 
 describe("Silo Deposit", function () {
   const builder = new DepositBuilder(sdk);
 
-  const bean3crvlp = sdk.tokens.BEAN_CRV3_LP;
-  const beanWstethLP = sdk.tokens.BEAN_WSTETH_WELL_LP;
-
+  // filter out bean_3crv_lp
   const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist).filter(
-    (t) => t.address !== bean3crvlp.address && t.address !== beanWstethLP.address
-  ); // filter out bean_3crv_lp & bean_wsteth lp
+    (t) => t.address !== sdk.tokens.BEAN_CRV3_LP.address
+  );
   const whiteListedTokensRipe = whiteListedTokens.filter((t) => !t.isUnripe);
 
-  const beanEthDepositable = [
+  const depositableTokens = [
     sdk.tokens.ETH,
     sdk.tokens.WETH,
+    sdk.tokens.WSTETH,
     sdk.tokens.BEAN,
     sdk.tokens.DAI,
     sdk.tokens.USDC,
-    sdk.tokens.USDT
+    sdk.tokens.USDT,
+    sdk.tokens.CRV3
   ];
-  
-  sdk.tokens.BEAN.rewards = { 
-    stalk: sdk.tokens.STALK.amount(1), 
-    seeds: sdk.tokens.SEEDS.amount(1) 
-  };
-  sdk.tokens.BEAN_ETH_WELL_LP.rewards = { 
-    stalk: sdk.tokens.STALK.amount(1), 
-    seeds: sdk.tokens.SEEDS.amount(1) 
-  };
-  sdk.tokens.BEAN_WSTETH_WELL_LP.rewards = { 
-    stalk: sdk.tokens.STALK.amount(1), 
-    seeds: sdk.tokens.SEEDS.amount(1) 
-  };
-  sdk.tokens.BEAN_CRV3_LP.rewards = { 
-    stalk: sdk.tokens.STALK.amount(1), 
-    seeds: sdk.tokens.SEEDS.amount(1) 
-  };
-  
+
   beforeAll(async () => {
     await utils.resetFork();
     await utils.setAllBalances(account, "20000");
   });
 
   describe("Routes correctly", () => {
-    describe.each(beanEthDepositable)("Whitelist Token", (token: Token) => {
-      it.each(whiteListedTokensRipe.map((t) => [t.symbol, t]))(`Deposit ${token.symbol} into %s`, async (symbol: string, silo: Token) => {
-        const op = builder.buildDeposit(silo, account);
-        op.setInputToken(token);
+    describe.each(depositableTokens)("Whitelist Token", (token: Token) => {
+      it.each(whiteListedTokensRipe.map((t) => [t.symbol, t]))(
+        `Deposit ${token.symbol} into %s`,
+        async (symbol: string, silo: Token) => {
+          const op = builder.buildDeposit(silo, account);
+          op.setInputToken(token);
 
-        // need to run an estimate first to generate the route
-        await op.estimate(token.amount(10));
-        const path = op.route.toString();
+          // need to run an estimate first to generate the route
+          await op.estimate(token.amount(10));
+          const path = op.route.toString();
 
-        const goodPath = happyPaths[`${token.symbol}:${silo.symbol}`];
-        expect(path).toBe(goodPath);
-      });
+          const goodPath = happyPaths[`${token.symbol}:${silo.symbol}`];
+          expect(path).toBe(goodPath);
+        }
+      );
     });
   });
 
   it("Estimates", async () => {
-    const op = builder.buildDeposit(sdk.tokens.BEAN_ETH_WELL_LP, account);
+    const op = builder.buildDeposit(sdk.tokens.BEAN_WSTETH_WELL_LP, account);
     op.setInputToken(sdk.tokens.WETH);
 
     const estimate = await op.estimate(sdk.tokens.WETH.amount(1));
@@ -131,8 +110,16 @@ describe("Silo Deposit", function () {
     });
   });
 
-  describe.each(beanEthDepositable)("Deposit BEAN_ETH_LP", (token: Token) => {
+  describe.each(depositableTokens)("Deposit BEAN_ETH_LP", (token: Token) => {
     const dest = sdk.tokens.BEAN_ETH_WELL_LP;
+    const op = builder.buildDeposit(dest, account);
+    it(`${token.symbol} -> ${dest.symbol}`, async () => {
+      await testDeposit(op, token, dest);
+    });
+  });
+
+  describe.each(depositableTokens)("Deposit BEAN_wstETH_LP", (token: Token) => {
+    const dest = sdk.tokens.BEAN_WSTETH_WELL_LP;
     const op = builder.buildDeposit(dest, account);
     it(`${token.symbol} -> ${dest.symbol}`, async () => {
       await testDeposit(op, token, dest);

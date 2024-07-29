@@ -16,19 +16,7 @@ export class LibraryPresets {
   static sdk: BeanstalkSDK;
   public readonly weth2usdt: ActionBuilder;
   public readonly usdt2weth: ActionBuilder;
-
-  public readonly usdt2bean: ActionBuilder;
-  public readonly bean2usdt: ActionBuilder;
-
-  public readonly weth2bean: ActionBuilder;
-  public readonly bean2weth: ActionBuilder;
   public readonly weth2bean3crv: ActionBuilder;
-
-  public readonly usdc2bean: ActionBuilder;
-  public readonly bean2usdc: ActionBuilder;
-
-  public readonly dai2bean: ActionBuilder;
-  public readonly bean2dai: ActionBuilder;
 
   public readonly dai2usdt: ActionBuilder;
   public readonly usdc2usdt: ActionBuilder;
@@ -47,6 +35,11 @@ export class LibraryPresets {
   public readonly uniV3AddLiquidity;
   public readonly uniV3WellSwap;
   public readonly wellSwapUniV3;
+
+  public readonly stable2Bean;
+  public readonly bean2Stable;
+  public readonly stable2beanWstETH;
+  public readonly stable2wstETH;
 
   /**
    * Load the Pipeline in preparation for a set Pipe actions.
@@ -145,6 +138,8 @@ export class LibraryPresets {
   constructor(sdk: BeanstalkSDK) {
     LibraryPresets.sdk = sdk;
 
+    const stables = [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
+
     ///////// WETH <> USDT ///////////
     this.weth2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
       new Exchange(
@@ -165,74 +160,6 @@ export class LibraryPresets {
         fromMode,
         toMode
       );
-
-    ///////// USDT <> BEAN ///////////
-    this.usdt2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.USDT,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.USDT,
-        fromMode,
-        toMode
-      );
-
-    ///////// USDC <> BEAN ///////////
-    this.usdc2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.USDC,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2usdc = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.USDC,
-        fromMode,
-        toMode
-      );
-
-    ///////// DAI <> BEAN ///////////
-    this.dai2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.DAI,
-        sdk.tokens.BEAN,
-        fromMode,
-        toMode
-      );
-
-    this.bean2dai = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new ExchangeUnderlying(
-        sdk.contracts.curve.pools.beanCrv3.address,
-        sdk.tokens.BEAN,
-        sdk.tokens.DAI,
-        fromMode,
-        toMode
-      );
-
-    //////// WETH <> BEAN
-    this.weth2bean = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2bean(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
-
-    this.bean2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.bean2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
 
     ///////// WETH  -> 3CRV ///////////
     this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
@@ -270,18 +197,6 @@ export class LibraryPresets {
         toMode
       );
 
-    ///////// DAI -> WETH ///////////
-    this.dai2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.dai2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
-
-    ///////// USDC -> WETH ///////////
-    this.usdc2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.usdc2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt2weth(FarmFromMode.INTERNAL, toMode) as StepGenerator
-    ];
-
     ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
     this.usdc2beaneth = (
       well: BasinWell,
@@ -306,6 +221,115 @@ export class LibraryPresets {
       fromMode?: FarmFromMode,
       toMode?: FarmToMode
     ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)];
+
+    ///////// BEAN:wstETH Well ///////////
+    // STABLE -> BEAN:wstETH LP
+    this.stable2beanWstETH = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      _toMode?: FarmToMode
+    ) => {
+      if (!stables.some((t) => t.equals(fromToken))) {
+        throw new Error(
+          `[stable2wstETH] expected tokenIn to be DAI, USDC, USDT, but got ${fromToken.symbol}`
+        );
+      }
+
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniV3AddLiquidity(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT
+        )
+      ];
+    };
+
+    // BEAN->USDC/USDT/DAI via Pipeline
+    // shortest path is BEAN:WETH(well) => WETH:STABLE(uniV3)
+    // but we want to route swap through bean:wstETH b/c that's where the liquidity is
+    // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
+    // thus the path for the best price is BEAN->wstETH(well) => wstETH->WETH(univ3) => WETH->STABLE(univ3)
+    this.bean2Stable = (
+      toToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      return [
+        this.wellSwapUniV3(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.BEAN,
+          sdk.tokens.WSTETH,
+          sdk.tokens.WETH,
+          100,
+          fromMode,
+          FarmToMode.INTERNAL
+        ),
+        this.uniswapV3Swap(sdk.tokens.WETH, toToken, account, 500, FarmFromMode.INTERNAL, toMode)
+      ];
+    };
+
+    // USDC/USDT/DAI->BEAN via Pipeline
+    // shortest path is // shortest path is WETH:STABLE(uniV3) => BEAN:WETH(well)
+    // but we want to route swap through bean:wstETH b/c that's where the liquidity is
+    // eventually we'd want to have a router that will allow the user to pick a path / choose the best route
+    // thus the path for the best price is STABLE->WETH(univ3) => WETH->wstETH(univ3) => wstETH->BEAN(well)
+    this.stable2Bean = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniV3WellSwap(
+          sdk.pools.BEAN_WSTETH_WELL,
+          account,
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          sdk.tokens.BEAN,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT,
+          toMode
+        )
+      ];
+    };
+
+    ///////// USDC/USDT/DAI -> WstETH ///////////
+    this.stable2wstETH = (
+      fromToken: ERC20Token,
+      account: string,
+      fromMode?: FarmFromMode,
+      toMode?: FarmToMode
+    ) => {
+      const validInputs = [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
+
+      if (!validInputs.some((t) => t.equals(fromToken))) {
+        throw new Error(
+          `[stable2wstETH] expected tokenIn to be DAI, USDC, USDT, but got ${fromToken.symbol}`
+        );
+      }
+
+      return [
+        this.uniswapV3Swap(fromToken, sdk.tokens.WETH, account, 500, fromMode, FarmToMode.INTERNAL),
+        this.uniswapV3Swap(
+          sdk.tokens.WETH,
+          sdk.tokens.WSTETH,
+          account,
+          100,
+          FarmFromMode.INTERNAL_TOLERANT,
+          toMode
+        )
+      ];
+    };
+
+    // ETH/WETH -> wstETH
 
     ///////// BEAN <> WETH ///////////
     this.wellSwap = (
