@@ -34,6 +34,7 @@ import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
   tickFormatPercentage,
+  tickFormatSmallBN,
   tickFormatTruncated,
   tickFormatUSD,
   valueFormatBeanAmount,
@@ -473,7 +474,6 @@ export function useChartSetupData() {
           'The number of stalk issued per Season for each bean in the Silo.',
         shortDescription: 'Grown Stalk per BDV',
         timeScaleKey: 'createdAt',
-        // priceScaleKey: 'grownStalkPerSeason',
         priceScaleKey: 'grownStalkPerBDV',
         valueAxisType: 'stalk',
         document: GrownStalkPerBdvSnapshotsDocument,
@@ -486,8 +486,8 @@ export function useChartSetupData() {
         },
         valueFormatter: (value: any) =>
           Number(formatUnits(value, stalk.decimals)),
-        tickFormatter: tickFormatBeanAmount,
-        shortTickFormatter: tickFormatTruncated,
+        tickFormatter: tickFormatSmallBN(4),
+        shortTickFormatter: tickFormatSmallBN(4),
         dataFormatter: (v: any) => {
           const grownStalkPerSeason =
             exists(v.grownStalkPerSeason) && v.grownStalkPerSeason;

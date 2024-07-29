@@ -3,12 +3,15 @@ import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
 import { useChartSetupData } from '~/components/Analytics/useChartSetupData';
 import { apolloClient } from '~/graph/client';
 import { exists } from '~/util/UI';
+import { FetchPolicy } from '@apollo/client';
 import useSeason from './useSeason';
 
 export type UseSeasonsQueryV2Props = {
   chartName: string;
   preventFetch?: boolean;
   getAllData?: boolean;
+  fetchPolicy?: FetchPolicy;
+  filterZeroValues?: boolean;
 };
 
 /**
@@ -23,6 +26,8 @@ function useSeasonsQueryV2({
   chartName,
   preventFetch,
   getAllData,
+  fetchPolicy,
+  filterZeroValues,
 }: UseSeasonsQueryV2Props): readonly [
   data: {
     seriesData: ChartQueryData[];
@@ -59,7 +64,7 @@ function useSeasonsQueryV2({
 
       const maxRetries = 4;
       for (let retries = 0; retries < maxRetries; retries += 1) {
-        console.debug('[AdvancedChart] Fetching data...');
+        console.debug('[useSeasonsQueryV2] Fetching data...');
         const chartProps = chartId ? chartSetupData[chartId] : undefined;
         try {
           if (!chartProps) {
@@ -88,7 +93,8 @@ function useSeasonsQueryV2({
                     season_lte: startSeason,
                   },
                   notifyOnNetworkStatusChange: true,
-                  fetchPolicy: queryConfig?.fetchPolicy || 'network-only',
+                  fetchPolicy:
+                    fetchPolicy || queryConfig?.fetchPolicy || 'network-only',
                 })
                 .then((r) => {
                   r.data[entity].forEach((seasonData: any) => {
@@ -108,10 +114,6 @@ function useSeasonsQueryV2({
                     // same timestamp, here we ensure we only have one datapoint per timestamp
                     if (nextTS === currTS || prevTS === currTS) return;
 
-                    if (seasonData.season === 6074) {
-                      console.log('seasonData: ', seasonData);
-                    }
-
                     const fmt = chartProps.dataFormatter;
                     const _seasonData = fmt ? fmt(seasonData) : seasonData;
                     if (!exists(_seasonData)) return;
@@ -119,7 +121,9 @@ function useSeasonsQueryV2({
                     const formattedValue = chartProps.valueFormatter(
                       _seasonData[chartProps.priceScaleKey]
                     );
+
                     if (currTS > 0 && exists(formattedValue)) {
+                      if (filterZeroValues && formattedValue === 0) return;
                       outputMap[_seasonData.season] = {
                         time: currTS,
                         value: formattedValue,
@@ -137,13 +141,14 @@ function useSeasonsQueryV2({
 
           const values = Object.values(outputMap).filter(Boolean);
           values.sort((a, b) => Number(a.time) - Number(b.time));
-
           setQueryData(values);
-          console.log(values.slice(0, 20));
-          console.debug('[AdvancedChart] Fetched data successfully!');
+          console.debug('[useSeasonsQueryV2] Fetched data successfully!', {
+            first5: values.slice(0, 5),
+            iterations: iterations,
+          });
           break;
         } catch (e) {
-          console.debug('[AdvancedChart] Failed to fetch data.');
+          console.debug('[useSeasonsQueryV2] Failed to fetch data.');
           console.error(e);
           if (retries === maxRetries - 1) {
             setError(true);
@@ -156,7 +161,14 @@ function useSeasonsQueryV2({
     getSeasonData(getAllData ?? true);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartSetupData, season, chartId, preventFetch]);
+  }, [
+    chartSetupData,
+    season,
+    chartId,
+    preventFetch,
+    fetchPolicy,
+    filterZeroValues,
+  ]);
 
   return [{ seriesData: queryData, chartId }, loading, error] as const;
 }
