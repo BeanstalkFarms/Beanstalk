@@ -7,8 +7,13 @@ import {
   Typography,
 } from '@mui/material';
 import SingleAdvancedChart from '~/components/Analytics/SingleAdvancedChart';
+import useSeasonsQueryV2 from '~/hooks/beanstalk/useSeasonsQueryV2';
 
-const SeasonsToCatchUpInfo = () => (
+type SeasonsToCatchUpInfoProps = {
+  query: ReturnType<typeof useSeasonsQueryV2>;
+};
+
+const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
   <Stack>
     <Stack gap={1} py={2} px={1.5}>
       <Box>
@@ -34,8 +39,8 @@ const SeasonsToCatchUpInfo = () => (
       </MuiLink>
     </Stack>
     <Divider />
-    <Stack p={1} position="relative" width="100%">
-      <SingleAdvancedChart chartName="Grown Stalk per BDV" />
+    <Stack p={1.5} position="relative" width="100%">
+      <SingleAdvancedChart query={props.query} drawPegLine={false} />
     </Stack>
   </Stack>
 );
