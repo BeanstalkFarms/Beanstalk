@@ -11,21 +11,6 @@ export type UseSeasonsQueryV2Props = {
   getAllData?: boolean;
 };
 
-type MinViableTimeFields =
-  | {
-      timestamp: string;
-      createdAt?: never | string;
-    }
-  | {
-      timestamp?: never | string;
-      createdAt: string;
-    };
-
-export type MinimumViableSnapshotV2 = {
-  id: string;
-  season: number;
-} & MinViableTimeFields;
-
 /**
  * Integrates w/ useChartSetupData
  * Logic from useAdvancedChart.tsx & modified to use for 1 gql document
@@ -34,7 +19,6 @@ export type MinimumViableSnapshotV2 = {
  *  - Will default to fetching all the data. To prevent, set getAllData to false
  *  - Pass in preventFetch to
  */
-
 function useSeasonsQueryV2({
   chartName,
   preventFetch,
