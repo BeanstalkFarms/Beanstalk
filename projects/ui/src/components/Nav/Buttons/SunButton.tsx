@@ -13,16 +13,21 @@ import { useSelector } from 'react-redux';
 import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
 import SunriseButton from '~/components/Sun/SunriseButton';
-import { SunButtonQuery, useSunButtonQuery } from '~/generated/graphql';
+import {
+  SunButtonQuery,
+  useSeasonalLiquidityQuery,
+  useSunButtonQuery,
+} from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { toTokenUnitsBN } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import { NEW_BN } from '~/constants';
 import { AppState } from '~/state';
-import FolderMenu from '../FolderMenu';
-import SeasonCard from '../../Sun/SeasonCard';
 import usePeg from '~/hooks/beanstalk/usePeg';
 import { FC } from '~/types';
+import useSdk from '~/hooks/sdk';
+import FolderMenu from '../FolderMenu';
+import SeasonCard from '../../Sun/SeasonCard';
 
 const castField = (data: SunButtonQuery['fields'][number]) => ({
   season: new BigNumber(data.season),
@@ -44,10 +49,21 @@ const MAX_ITEMS = 8;
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   /// DATA
   const season = useSeason();
+  const sdk = useSdk();
   const awaiting = useSelector<AppState, boolean>(
     (state) => state._beanstalk.sun.sunrise.awaiting
   );
   const { data } = useSunButtonQuery({ fetchPolicy: 'cache-and-network' });
+
+  const { data: liquidity } = useSeasonalLiquidityQuery({
+    fetchPolicy: 'cache-and-network',
+    variables: {
+      first: 24,
+      season_gt: 0,
+      season_lte: season.toNumber(),
+    },
+  });
+
   const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
     (state) => state._beanstalk.field
   );
@@ -125,7 +141,24 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
               <Typography variant="bodySmall">Season</Typography>
             </Grid>
             <Grid item xs={3} md={2} textAlign="right">
-              <Typography variant="bodySmall">New Beans</Typography>
+              <Stack>
+                <Typography
+                  variant="bodySmall"
+                  lineHeight="normal"
+                  fontWeight={500}
+                >
+                  New Beans
+                </Typography>
+                <Typography
+                  letterSpacing="-0.25px"
+                  variant="bodySmall"
+                  color="text.tertiary"
+                  lineHeight="normal"
+                  fontWeight={300}
+                >
+                  Beans minted
+                </Typography>
+              </Stack>
             </Grid>
             <Grid item xs={3} md={2} textAlign="right">
               <Typography variant="bodySmall">Max Soil</Typography>

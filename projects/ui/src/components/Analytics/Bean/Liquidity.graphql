@@ -9,5 +9,6 @@ query SeasonalLiquidity($season_lte: Int, $first: Int, $season_gt: Int) {
     season
     timestamp
     liquidityUSD
+    supply
   }
 }

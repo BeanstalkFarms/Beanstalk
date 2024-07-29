@@ -1,27 +1,29 @@
 query SunButton {
-  seasons(
-    first: 24,
-    orderBy: season,
-    orderDirection: desc
-  ) {
+  seasons(first: 24, orderBy: season, orderDirection: desc) {
     id
     season
     price
-    deltaBeans # total change in supply
-    rewardBeans # amount from Reward on Sunrise
+    deltaBeans
+    rewardBeans
   }
   fields: fieldHourlySnapshots(
-    first: 24,
-    where: { 
-      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
-    }
-    orderBy: season,
+    first: 24
+    where: { field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" }
+    orderBy: season
     orderDirection: desc
   ) {
     id
     season
     issuedSoil
-		temperature
+    temperature
     podRate
+    soilSoldOut
+    blocksToSoldOutSoil
+    sownBeans
+  }
+  silo: siloHourlySnapshots(first: 24, orderBy: season, orderDirection: desc) {
+    id
+    season
+    caseId
   }
 }
