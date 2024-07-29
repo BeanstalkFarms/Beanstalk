@@ -8,6 +8,7 @@ import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title Depot Facet
@@ -16,7 +17,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
-contract DepotFacet is Invariable {
+contract DepotFacet is Invariable, ReentrancyGuard {
     // Pipeline V1.0.1
     address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
 
