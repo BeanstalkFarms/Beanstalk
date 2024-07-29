@@ -42,7 +42,7 @@ library LibChainlinkOracle {
         uint256 lookback
     ) internal view returns (uint256 price) {
         return
-            lookback > 0
+            lookback == 0
                 ? getPrice(priceAggregatorAddress, maxTimeout)
                 : getTwap(priceAggregatorAddress, maxTimeout, lookback);
     }
