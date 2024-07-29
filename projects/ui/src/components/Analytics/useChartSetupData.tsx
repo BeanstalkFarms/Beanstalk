@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import {
+  GrownStalkPerBdvSnapshotsDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -28,6 +29,7 @@ import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
 import { DocumentNode } from 'graphql';
 import { OperationVariables, QueryOptions } from '@apollo/client';
 import { Typography } from '@mui/material';
+import { exists } from '~/util/UI';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -96,6 +98,10 @@ type ChartSetupBase = {
    * price scales.
    */
   shortTickFormatter: (v: number) => string | undefined;
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
 };
 
 type ChartSetup = ChartSetupBase & {
@@ -467,11 +473,13 @@ export function useChartSetupData() {
           'The number of stalk issued per Season for each bean in the Silo.',
         shortDescription: 'Grown Stalk per BDV',
         timeScaleKey: 'createdAt',
-        priceScaleKey: 'stalk',
+        // priceScaleKey: 'grownStalkPerSeason',
+        priceScaleKey: 'grownStalkPerBDV',
         valueAxisType: 'stalk',
-        document: SeasonalStalkDocument,
+        document: GrownStalkPerBdvSnapshotsDocument,
         documentEntity: 'seasons',
         queryConfig: {
+          fetchPolicy: 'network-only',
           variables: {
             season_gt: 6073,
           },
@@ -480,6 +488,21 @@ export function useChartSetupData() {
           Number(formatUnits(value, stalk.decimals)),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
+        dataFormatter: (v: any) => {
+          const grownStalkPerSeason =
+            exists(v.grownStalkPerSeason) && v.grownStalkPerSeason;
+          const depositedBDV = exists(v.depositedBDV) && v.depositedBDV;
+
+          const grownStalkPerBDV =
+            grownStalkPerSeason && depositedBDV
+              ? BigInt(grownStalkPerSeason) / BigInt(depositedBDV)
+              : null;
+
+          return {
+            ...v,
+            grownStalkPerBDV: grownStalkPerBDV,
+          };
+        },
       },
       ...apyCharts,
     ];
