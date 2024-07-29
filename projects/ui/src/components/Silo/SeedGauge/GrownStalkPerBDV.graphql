@@ -1,13 +1,18 @@
-query GrownStalkPerBDVSeasonQuery($season_gt: Int, $first: Int) {
-  siloHourlySnapshots(
+query GrownStalkPerBDVSnapshots($season_lte: Int, $season_gt: Int, $first: Int) {
+  seasons: siloHourlySnapshots(
     first: $first
     orderBy: season
     orderDirection: desc
-    where: { season_gt: $season_gt }
+    where: { 
+      season_gt: $season_gt,
+      season_lte: $season_lte,
+      grownStalkPerSeason_gt: 0
+    }
   ) {
     id
     season
     grownStalkPerSeason
     depositedBDV
+    createdAt
   }
 }
