@@ -182,6 +182,14 @@ export function loadSiloAssetDailySnapshot(account: Address, token: Address, tim
 
 /* ===== Whitelist Token Settings Entities ===== */
 
+export function addToSiloWhitelist(siloAddress: Address, token: Address): void {
+  let silo = loadSilo(siloAddress);
+  let currentList = silo.whitelistedTokens;
+  currentList.push(token.toHexString());
+  silo.whitelistedTokens = currentList;
+  silo.save();
+}
+
 export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting {
   let setting = WhitelistTokenSetting.load(token);
   if (setting == null) {

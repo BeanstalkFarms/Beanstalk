@@ -34,7 +34,8 @@ import {
   loadSiloDepositV3,
   loadWhitelistTokenSetting,
   loadWhitelistTokenHourlySnapshot,
-  loadWhitelistTokenDailySnapshot
+  loadWhitelistTokenDailySnapshot,
+  addToSiloWhitelist
 } from "./utils/SiloEntities";
 import {
   AddDeposit as AddDepositEntity,
@@ -903,11 +904,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 }
 
 export function handleWhitelistToken(event: WhitelistToken): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-  currentList.push(event.params.token.toHexString());
-  silo.whitelistedTokens = currentList;
-  silo.save();
+  addToSiloWhitelist(event.address, event.params.token);
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
@@ -933,12 +930,7 @@ export function handleWhitelistToken(event: WhitelistToken): void {
 }
 
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-
-  currentList.push(event.params.token.toHexString());
-  silo.whitelistedTokens = currentList;
-  silo.save();
+  addToSiloWhitelist(event.address, event.params.token);
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
