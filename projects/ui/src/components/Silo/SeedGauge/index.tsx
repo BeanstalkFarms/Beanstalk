@@ -1,5 +1,5 @@
 import { Box, Card, Grid, Stack, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DropdownIcon from '~/components/Common/DropdownIcon';
 import useSeedGauge, {
   TokenSeedGaugeInfo,
@@ -9,6 +9,7 @@ import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { Token } from '@beanstalk/sdk';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
+import useSeasonsQueryV2 from '~/hooks/beanstalk/useSeasonsQueryV2';
 import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
 import SeedGaugeTable from './SeedGaugeTable';
 import Bean2MaxLPRatio from './Bean2MaxLPRatio';
@@ -193,11 +194,27 @@ const SeedGaugeInfoSelected = ({
   activeIndex: number;
   data: ReturnType<typeof useSeedGauge>['data'];
 }) => {
+  // load the data at the top level
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const query = useSeasonsQueryV2({
+    chartName: 'Grown Stalk per BDV',
+    preventFetch: !shouldFetch,
+    fetchPolicy: 'cache-first',
+    filterZeroValues: true,
+  });
+
+  useEffect(() => {
+    // Fetch only if we open the seasonsToCatchUp Tab
+    if (activeIndex === 0 && !shouldFetch) {
+      setShouldFetch(true);
+    }
+  }, [activeIndex, shouldFetch]);
+
   if (activeIndex === -1) return null;
 
   return (
     <Card>
-      {activeIndex === 0 ? <SeasonsToCatchUpInfo /> : null}
+      {activeIndex === 0 ? <SeasonsToCatchUpInfo query={query} /> : null}
       {activeIndex === 1 ? <Bean2MaxLPRatio data={data} /> : null}
       {activeIndex === 2 ? <SeedGaugeTable data={data} /> : null}
     </Card>
