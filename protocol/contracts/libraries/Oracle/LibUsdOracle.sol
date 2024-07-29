@@ -111,9 +111,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                    token,
-                    0x0000000000000000000000000000000000000348
-                ); // 0x0348 is the address for USD
+                        token,
+                        0x0000000000000000000000000000000000000348
+                    ); // 0x0348 is the address for USD
             }
 
             return
@@ -134,8 +134,8 @@ library LibUsdOracle {
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
-                chainlinkToken,
                 token,
+                chainlinkToken,
                 uint128(10) ** uint128(IERC20Decimals(token).decimals())
             );
             // USDC/USD
@@ -146,9 +146,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                    chainlinkToken,
-                    0x0000000000000000000000000000000000000348
-                ); // 0x0348 is the address for USD
+                        chainlinkToken,
+                        0x0000000000000000000000000000000000000348
+                    ); // 0x0348 is the address for USD
             }
 
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(

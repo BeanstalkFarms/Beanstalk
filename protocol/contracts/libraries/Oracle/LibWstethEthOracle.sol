@@ -82,10 +82,13 @@ library LibWstethEthOracle {
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
             lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
             C.WSTETH_ETH_UNIV3_01_POOL,
-            C.WSTETH,
             C.WETH,
+            C.WSTETH,
             ONE
         );
+
+        // uniswap price is a 1e6, need to convert to 1e18, multiply by 1e12
+        uniswapPrice = uniswapPrice * PRECISION_DENOMINATOR;
 
         // Check if the uniswapPrice oracle fails.
         if (uniswapPrice == 0) return 0;
