@@ -197,7 +197,7 @@ library LibGauge {
 
         (bool success, bytes memory data) = target.staticcall(
             abi.encodeWithSelector(
-                ss.gaugePointImplementation.selector,
+                selector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
                 percentDepositedBdv
