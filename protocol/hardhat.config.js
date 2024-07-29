@@ -29,9 +29,9 @@ const {
   INTERNAL,
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
-} = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/utils/constants.js");
-const { to6 } = require("./test/utils/helpers.js");
+} = require("./test/hardhat/utils/balances.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
+const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
