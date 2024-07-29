@@ -17,7 +17,7 @@ export type UseSeasonsQueryV2Props = {
  * @notes
  *  - Recommended to place this at the parent level
  *  - Will default to fetching all the data. To prevent, set getAllData to false
- *  - Pass in preventFetch to
+ *  - Pass in preventFetch to prevent fetching data
  */
 function useSeasonsQueryV2({
   chartName,
@@ -28,7 +28,6 @@ function useSeasonsQueryV2({
     seriesData: ChartQueryData[];
     chartId: number | undefined;
   },
-
   loading: boolean,
   error: boolean,
 ] {
@@ -109,6 +108,10 @@ function useSeasonsQueryV2({
                     // same timestamp, here we ensure we only have one datapoint per timestamp
                     if (nextTS === currTS || prevTS === currTS) return;
 
+                    if (seasonData.season === 6074) {
+                      console.log('seasonData: ', seasonData);
+                    }
+
                     const fmt = chartProps.dataFormatter;
                     const _seasonData = fmt ? fmt(seasonData) : seasonData;
                     if (!exists(_seasonData)) return;
@@ -136,6 +139,7 @@ function useSeasonsQueryV2({
           values.sort((a, b) => Number(a.time) - Number(b.time));
 
           setQueryData(values);
+          console.log(values.slice(0, 20));
           console.debug('[AdvancedChart] Fetched data successfully!');
           break;
         } catch (e) {
