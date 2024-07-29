@@ -15,6 +15,7 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @author funderbrker
@@ -40,6 +41,9 @@ abstract contract Invariable {
             uint256[] memory balances
         ) = getTokenEntitlementsAndBalances(tokens);
         for (uint256 i; i < tokens.length; i++) {
+            console.log("tokens[i]:", tokens[i]);
+            console.log("entitlements[i]: ", entitlements[i]);
+            console.log("balances[i]: ", balances[i]);
             require(balances[i] >= entitlements[i], "INV: Insufficient token balance");
         }
     }
@@ -184,8 +188,7 @@ abstract contract Invariable {
                     (s.sys.fert.fertilizedIndex -
                         s.sys.fert.fertilizedPaidIndex +
                         s.sys.fert.leftoverBeans) + // unrinsed rinsable beans
-                    s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying + // unchopped underlying beans
-                    s.sys.silo.earnedBeans;
+                    s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying; // unchopped underlying beans
                 for (uint256 j; j < s.sys.fieldCount; j++) {
                     entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].harvested); // unharvested harvestable beans
                 }
