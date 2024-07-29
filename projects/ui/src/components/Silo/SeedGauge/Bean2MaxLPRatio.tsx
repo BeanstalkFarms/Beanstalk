@@ -7,6 +7,7 @@ import useElementDimensions from '~/hooks/display/useElementDimensions';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useBeanstalkCaseData from '~/hooks/beanstalk/useBeanstalkCaseData';
 import { displayFullBN } from '~/util';
+import { ZERO_BN } from '~/constants';
 
 type IBean2MaxLPRatio = {
   data: ReturnType<typeof useSeedGauge>['data'];
@@ -109,6 +110,11 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const neighborIndex =
     (increasing || decreasing) && selectedIndex && selectedIndex + addIndex;
 
+  const deltaPct =
+    isAtMax || isAtMin
+      ? ZERO_BN
+      : caseData?.delta.bean2MaxLPGPPerBdv || ZERO_BN;
+
   return (
     <Stack width="100%" ref={containerRef}>
       <Stack>
@@ -119,7 +125,8 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
           </Typography>
         </Typography>
         <Typography color="text.secondary">
-          Expected increase of X% next Season
+          Expected {!increasing ? 'increase' : 'decrease'} of{' '}
+          {deltaPct.eq(0) ? '0' : displayFullBN(deltaPct, 2)}% next Season
         </Typography>
       </Stack>
       <Stack
