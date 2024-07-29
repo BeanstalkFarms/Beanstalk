@@ -89,17 +89,19 @@ const MiniCharts: FC<{}> = () => {
                             Number(seasonData[chartSetupData[chartId].timeScaleKey])
                           );
                         }
-                        const formattedTime = timestamps.get(seasonData.season);
+                        const fmt = chartSetupData[chartId]?.dataFormatter
+                        const _seasonData = fmt?.(seasonData) || seasonData;
+                        const formattedTime = timestamps.get(_seasonData);
                         const formattedValue = chartSetupData[
                           chartId
                         ].valueFormatter(
-                          seasonData[chartSetupData[chartId].priceScaleKey]
+                          _seasonData[chartSetupData[chartId].priceScaleKey]
                         );
-                        output[chartId][seasonData.season] = {
+                        output[chartId][_seasonData.season] = {
                           time: formattedTime,
                           value: formattedValue,
                           customValues: {
-                            season: seasonData.season
+                            season: _seasonData.season
                           }
                         };
                       }
