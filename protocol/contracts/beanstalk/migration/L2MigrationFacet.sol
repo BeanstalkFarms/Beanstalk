@@ -71,10 +71,7 @@ contract L2MigrationFacet is Invariable, ReentrancyGuard {
     ) external nonReentrant {
         // verify msg.sender is a contract.
         require(hasCode(msg.sender), "L2MigrationFacet: must be a contract");
-        require(
-            reciever != address(0) || reciever != address(type(uint160).max),
-            "L2MigrationFacet: invalid reciever"
-        );
+        require(reciever != address(0), "L2MigrationFacet: invalid reciever");
 
         // send data to L2Beanstalk via the bridge contract.
         IL2Bridge(BRIDGE).sendMessage(
