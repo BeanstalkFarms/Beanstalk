@@ -6,22 +6,29 @@ const { impersonateSigner, mintEth } = require("../utils");
  * @dev account: the account to deploy the beanstalk with.
  * Todo: facets should be added post-migration to prevent users from interacting.
  */
-async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
+async function reseedDeployL2Beanstalk(account, diamondDeployerAccount, verbose = true, mock) {
+
+  console.log("Deployer address: " + diamondDeployerAccount)
   // impersonate `account`:
   let signer;
-  if (mock) {
-    await mintEth(account.address);
-    signer = await ethers.provider.getSigner(account.address);
+  if (!mock) {
+    await mintEth(diamondDeployerAccount);
+    signer = await impersonateSigner(diamondDeployerAccount , true);
   } else {
-    signer = await impersonateSigner(account.address);
+    signer = await ethers.provider.getSigner();
   }
+
+  console.log("Signer Address: " + await signer.getAddress());
+  console.log("Signer Nonce: " + await signer.getTransactionCount());
 
   const beanstalkDiamond = await deployDiamond({
       diamondName: "L2BeanstalkDiamond",
-      owner: account,
+      owner: account, // owner should always be the L2 BCM address.
       args: [],
       verbose: verbose
     });
+
+  await impersonateSigner(account.address);
   
   return beanstalkDiamond.address;
 }
