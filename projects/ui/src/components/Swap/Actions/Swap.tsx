@@ -132,11 +132,7 @@ const SwapForm: FC<
   const [balanceFromOut, setBalanceFromOut] = useState<BalanceFrom>(
     BalanceFrom.EXTERNAL
   );
-<<<<<<< HEAD
-  // This tracks whether this is an exact input or an exact output swap 
-=======
   // This tracks whether this is an exact input or an exact output swap
->>>>>>> master
   const [userInputMode, setUserInputMode] = useState<string>('');
 
   /// Derived values
@@ -420,9 +416,6 @@ const SwapForm: FC<
       });
       setFieldValue('tokenOut.token', tokenIn);
     }
-<<<<<<< HEAD
-  }, [modeIn, modeOut, setFieldValue, tokenIn, tokenOut, amountOut, tokensMatch]);
-=======
   }, [
     modeIn,
     modeOut,
@@ -432,7 +425,6 @@ const SwapForm: FC<
     amountOut,
     tokensMatch,
   ]);
->>>>>>> master
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -469,15 +461,9 @@ const SwapForm: FC<
       getAmountOut(tokenIn, amountIn);
     } else if (userInputMode === 'exact-output' && amountOut) {
       getMinAmountIn(tokenOut, amountOut);
-<<<<<<< HEAD
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIn, tokenOut])
-=======
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenIn, tokenOut]);
->>>>>>> master
 
   const handleMax = useCallback(() => {
     setFieldValue('tokensIn.0.amount', balanceInMax);

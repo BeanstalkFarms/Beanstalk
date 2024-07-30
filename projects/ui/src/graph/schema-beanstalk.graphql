@@ -225,14 +225,11 @@ enum AddDeposit_orderBy {
   token
 }
 
-<<<<<<< HEAD
-=======
 enum Aggregation_interval {
   day
   hour
 }
 
->>>>>>> master
 type Beanstalk {
   """ Array of the addresses for all active farmers in the silo """
   activeFarmers: [String!]!
@@ -2301,24 +2298,18 @@ enum Field_orderBy {
 }
 
 type Germinating {
-<<<<<<< HEAD
-=======
   """Address of the token or account which is germinating"""
   address: String!
 
->>>>>>> master
   """Germinating bdv. This only applies to a Token address"""
   bdv: BigInt!
 
   """Address-(EVEN|ODD)"""
   id: ID!
 
-<<<<<<< HEAD
-=======
   """True when the address is a farmer account"""
   isFarmer: Boolean!
 
->>>>>>> master
   """The season in which the germination started"""
   season: Int!
 
@@ -2327,19 +2318,14 @@ type Germinating {
 
   """Germinating tokens. This only applies to a Token address"""
   tokenAmount: BigInt!
-<<<<<<< HEAD
-=======
 
   """EVEN or ODD"""
   type: String!
->>>>>>> master
 }
 
 input Germinating_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
-<<<<<<< HEAD
-=======
   address: String
   address_contains: String
   address_contains_nocase: String
@@ -2360,7 +2346,6 @@ input Germinating_filter {
   address_not_starts_with_nocase: String
   address_starts_with: String
   address_starts_with_nocase: String
->>>>>>> master
   and: [Germinating_filter]
   bdv: BigInt
   bdv_gt: BigInt
@@ -2378,13 +2363,10 @@ input Germinating_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
-<<<<<<< HEAD
-=======
   isFarmer: Boolean
   isFarmer_in: [Boolean!]
   isFarmer_not: Boolean
   isFarmer_not_in: [Boolean!]
->>>>>>> master
   or: [Germinating_filter]
   season: Int
   season_gt: Int
@@ -2410,16 +2392,6 @@ input Germinating_filter {
   tokenAmount_lte: BigInt
   tokenAmount_not: BigInt
   tokenAmount_not_in: [BigInt!]
-<<<<<<< HEAD
-}
-
-enum Germinating_orderBy {
-  bdv
-  id
-  season
-  stalk
-  tokenAmount
-=======
   type: String
   type_contains: String
   type_contains_nocase: String
@@ -2451,7 +2423,6 @@ enum Germinating_orderBy {
   stalk
   tokenAmount
   type
->>>>>>> master
 }
 
 type Harvest implements FieldEvent {
@@ -2772,12 +2743,9 @@ enum Incentive_orderBy {
   protocol__subgraphVersion
 }
 
-<<<<<<< HEAD
-=======
 "8 bytes signed integer\n"
 scalar Int8
 
->>>>>>> master
 enum MarketStatus {
   ACTIVE
   CANCELLED
@@ -3078,24 +3046,15 @@ enum OrderDirection {
 }
 
 type Plot {
-<<<<<<< HEAD
-  """Beans used to sow, if any"""
-  beans: BigInt!
-=======
   """
   Number of beans spent for each pod, whether through sowing or on the marketplace
   """
   beansPerPod: BigInt!
->>>>>>> master
 
   """Timestamp of creation"""
   createdAt: BigInt!
 
-<<<<<<< HEAD
-  """Creation transaction hash"""
-=======
   """Transaction hash of when this plot entity was created"""
->>>>>>> master
   creationHash: String!
 
   """Farmer who owns this plot"""
@@ -3128,23 +3087,6 @@ type Plot {
   """Season when created"""
   season: Int!
 
-<<<<<<< HEAD
-  """Transaction source for this plot"""
-  source: PlotSource!
-
-  """Total pods that were sown, if any"""
-  sownPods: BigInt!
-
-  """Temperature when the plot was sown"""
-  temperature: Int!
-
-  """Timestamp when updated"""
-  updatedAt: BigInt!
-}
-
-enum PlotSource {
-  HARVEST
-=======
   """
   Transaction source for this plot. Not the same as creationHash which can include plots splitting from transfer or harvest without the owner changing
   """
@@ -3162,7 +3104,6 @@ enum PlotSource {
 
 enum PlotSource {
   MARKET
->>>>>>> master
   SOW
   TRANSFER
 }
@@ -3171,16 +3112,6 @@ input Plot_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Plot_filter]
-<<<<<<< HEAD
-  beans: BigInt
-  beans_gt: BigInt
-  beans_gte: BigInt
-  beans_in: [BigInt!]
-  beans_lt: BigInt
-  beans_lte: BigInt
-  beans_not: BigInt
-  beans_not_in: [BigInt!]
-=======
   beansPerPod: BigInt
   beansPerPod_gt: BigInt
   beansPerPod_gte: BigInt
@@ -3189,7 +3120,6 @@ input Plot_filter {
   beansPerPod_lte: BigInt
   beansPerPod_not: BigInt
   beansPerPod_not_in: [BigInt!]
->>>>>>> master
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -3335,28 +3265,6 @@ input Plot_filter {
   season_not: Int
   season_not_in: [Int!]
   source: PlotSource
-<<<<<<< HEAD
-  source_in: [PlotSource!]
-  source_not: PlotSource
-  source_not_in: [PlotSource!]
-  sownPods: BigInt
-  sownPods_gt: BigInt
-  sownPods_gte: BigInt
-  sownPods_in: [BigInt!]
-  sownPods_lt: BigInt
-  sownPods_lte: BigInt
-  sownPods_not: BigInt
-  sownPods_not_in: [BigInt!]
-  temperature: Int
-  temperature_gt: Int
-  temperature_gte: Int
-  temperature_in: [Int!]
-  temperature_lt: Int
-  temperature_lte: Int
-  temperature_not: Int
-  temperature_not_in: [Int!]
-  updatedAt: BigInt
-=======
   sourceHash: String
   sourceHash_contains: String
   sourceHash_contains_nocase: String
@@ -3389,7 +3297,6 @@ input Plot_filter {
   updatedAtBlock_lte: BigInt
   updatedAtBlock_not: BigInt
   updatedAtBlock_not_in: [BigInt!]
->>>>>>> master
   updatedAt_gt: BigInt
   updatedAt_gte: BigInt
   updatedAt_in: [BigInt!]
@@ -3400,11 +3307,7 @@ input Plot_filter {
 }
 
 enum Plot_orderBy {
-<<<<<<< HEAD
-  beans
-=======
   beansPerPod
->>>>>>> master
   createdAt
   creationHash
   farmer
@@ -3430,10 +3333,6 @@ enum Plot_orderBy {
   index
   listing
   listing__amount
-<<<<<<< HEAD
-  listing__cancelledAmount
-=======
->>>>>>> master
   listing__createdAt
   listing__creationHash
   listing__filled
@@ -3456,15 +3355,9 @@ enum Plot_orderBy {
   pods
   season
   source
-<<<<<<< HEAD
-  sownPods
-  temperature
-  updatedAt
-=======
   sourceHash
   updatedAt
   updatedAtBlock
->>>>>>> master
 }
 
 type PodFill {
@@ -3472,20 +3365,12 @@ type PodFill {
   amount: BigInt!
 
   """Total beans used to fill listing/order"""
-<<<<<<< HEAD
-  costInBeans: BigInt
-=======
   costInBeans: BigInt!
->>>>>>> master
 
   """Creation timestamp"""
   createdAt: BigInt!
 
-<<<<<<< HEAD
-  """Account fulfilling the order"""
-=======
   """Account that is sending pods"""
->>>>>>> master
   from: String!
 
   """Beanstalk address - Order/Listing index - transaction hash"""
@@ -3500,23 +3385,16 @@ type PodFill {
   """Associated order, if any"""
   order: PodOrder
 
-<<<<<<< HEAD
-=======
   """Where these pods were in line when filled"""
   placeInLine: BigInt!
 
->>>>>>> master
   """Marketplace associated with this fill"""
   podMarketplace: PodMarketplace!
 
   """Start of plot transferred"""
   start: BigInt!
 
-<<<<<<< HEAD
-  """Account filling the order"""
-=======
   """Account that is receiving pods"""
->>>>>>> master
   to: Farmer!
 }
 
@@ -3627,8 +3505,6 @@ input PodFill_filter {
   order_not_starts_with_nocase: String
   order_starts_with: String
   order_starts_with_nocase: String
-<<<<<<< HEAD
-=======
   placeInLine: BigInt
   placeInLine_gt: BigInt
   placeInLine_gte: BigInt
@@ -3637,7 +3513,6 @@ input PodFill_filter {
   placeInLine_lte: BigInt
   placeInLine_not: BigInt
   placeInLine_not_in: [BigInt!]
->>>>>>> master
   podMarketplace: String
   podMarketplace_: PodMarketplace_filter
   podMarketplace_contains: String
@@ -3699,10 +3574,6 @@ enum PodFill_orderBy {
   index
   listing
   listing__amount
-<<<<<<< HEAD
-  listing__cancelledAmount
-=======
->>>>>>> master
   listing__createdAt
   listing__creationHash
   listing__filled
@@ -3731,29 +3602,12 @@ enum PodFill_orderBy {
   order__id
   order__maxPlaceInLine
   order__minFillAmount
-<<<<<<< HEAD
-  order__podAmount
-=======
->>>>>>> master
   order__podAmountFilled
   order__pricePerPod
   order__pricingFunction
   order__pricingType
   order__status
   order__updatedAt
-<<<<<<< HEAD
-  podMarketplace
-  podMarketplace__availableListedPods
-  podMarketplace__beanVolume
-  podMarketplace__cancelledListedPods
-  podMarketplace__cancelledOrderedPods
-  podMarketplace__expiredListedPods
-  podMarketplace__filledListedPods
-  podMarketplace__filledOrderedPods
-  podMarketplace__id
-  podMarketplace__listedPods
-  podMarketplace__orderedPods
-=======
   placeInLine
   podMarketplace
   podMarketplace__availableListedPods
@@ -3768,7 +3622,6 @@ enum PodFill_orderBy {
   podMarketplace__id
   podMarketplace__listedPods
   podMarketplace__orderBeans
->>>>>>> master
   podMarketplace__podVolume
   podMarketplace__season
   start
@@ -3780,12 +3633,6 @@ type PodListing {
   "The maximum amount of Pods remaining to be sold by *this* PodListing.\n\nWhen this PodListing is Filled or Cancelled, `amount` does NOT change.\n"
   amount: BigInt!
 
-<<<<<<< HEAD
-  "The number of Pods that were remaining in *this* PodListing when it was Cancelled.\n"
-  cancelledAmount: BigInt!
-
-=======
->>>>>>> master
   """Timestamp of PodListing creation."""
   createdAt: BigInt!
 
@@ -3884,12 +3731,9 @@ type PodListingCancelled implements MarketplaceEvent {
   """
   logIndex: Int!
 
-<<<<<<< HEAD
-=======
   """Where these pods were in line when cancelled"""
   placeInLine: BigInt!
 
->>>>>>> master
   """ The protocol this transaction belongs to """
   protocol: Beanstalk!
 }
@@ -3999,8 +3843,6 @@ input PodListingCancelled_filter {
   logIndex_not: Int
   logIndex_not_in: [Int!]
   or: [PodListingCancelled_filter]
-<<<<<<< HEAD
-=======
   placeInLine: BigInt
   placeInLine_gt: BigInt
   placeInLine_gte: BigInt
@@ -4009,7 +3851,6 @@ input PodListingCancelled_filter {
   placeInLine_lte: BigInt
   placeInLine_not: BigInt
   placeInLine_not_in: [BigInt!]
->>>>>>> master
   protocol: String
   protocol_: Beanstalk_filter
   protocol_contains: String
@@ -4042,10 +3883,7 @@ enum PodListingCancelled_orderBy {
   id
   index
   logIndex
-<<<<<<< HEAD
-=======
   placeInLine
->>>>>>> master
   protocol
   protocol__id
   protocol__lastSeason
@@ -4095,12 +3933,9 @@ type PodListingCreated implements MarketplaceEvent {
   """Claim to location"""
   mode: Int!
 
-<<<<<<< HEAD
-=======
   """Where these pods were in line when listed"""
   placeInLine: BigInt!
 
->>>>>>> master
   """Price per pod"""
   pricePerPod: Int!
 
@@ -4254,8 +4089,6 @@ input PodListingCreated_filter {
   mode_not: Int
   mode_not_in: [Int!]
   or: [PodListingCreated_filter]
-<<<<<<< HEAD
-=======
   placeInLine: BigInt
   placeInLine_gt: BigInt
   placeInLine_gte: BigInt
@@ -4264,7 +4097,6 @@ input PodListingCreated_filter {
   placeInLine_lte: BigInt
   placeInLine_not: BigInt
   placeInLine_not_in: [BigInt!]
->>>>>>> master
   pricePerPod: Int
   pricePerPod_gt: Int
   pricePerPod_gte: Int
@@ -4335,10 +4167,7 @@ enum PodListingCreated_orderBy {
   maxHarvestableIndex
   minFillAmount
   mode
-<<<<<<< HEAD
-=======
   placeInLine
->>>>>>> master
   pricePerPod
   pricingFunction
   pricingType
@@ -4386,12 +4215,9 @@ type PodListingFilled implements MarketplaceEvent {
   """
   logIndex: Int!
 
-<<<<<<< HEAD
-=======
   """Where these pods were in line when filled"""
   placeInLine: BigInt!
 
->>>>>>> master
   """ The protocol this transaction belongs to """
   protocol: Beanstalk!
 
@@ -4523,8 +4349,6 @@ input PodListingFilled_filter {
   logIndex_not: Int
   logIndex_not_in: [Int!]
   or: [PodListingFilled_filter]
-<<<<<<< HEAD
-=======
   placeInLine: BigInt
   placeInLine_gt: BigInt
   placeInLine_gte: BigInt
@@ -4533,7 +4357,6 @@ input PodListingFilled_filter {
   placeInLine_lte: BigInt
   placeInLine_not: BigInt
   placeInLine_not_in: [BigInt!]
->>>>>>> master
   protocol: String
   protocol_: Beanstalk_filter
   protocol_contains: String
@@ -4596,10 +4419,7 @@ enum PodListingFilled_orderBy {
   id
   index
   logIndex
-<<<<<<< HEAD
-=======
   placeInLine
->>>>>>> master
   protocol
   protocol__id
   protocol__lastSeason
@@ -4625,17 +4445,6 @@ input PodListing_filter {
   amount_not: BigInt
   amount_not_in: [BigInt!]
   and: [PodListing_filter]
-<<<<<<< HEAD
-  cancelledAmount: BigInt
-  cancelledAmount_gt: BigInt
-  cancelledAmount_gte: BigInt
-  cancelledAmount_in: [BigInt!]
-  cancelledAmount_lt: BigInt
-  cancelledAmount_lte: BigInt
-  cancelledAmount_not: BigInt
-  cancelledAmount_not_in: [BigInt!]
-=======
->>>>>>> master
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -4899,10 +4708,6 @@ input PodListing_filter {
 
 enum PodListing_orderBy {
   amount
-<<<<<<< HEAD
-  cancelledAmount
-=======
->>>>>>> master
   createdAt
   creationHash
   farmer
@@ -4914,10 +4719,7 @@ enum PodListing_orderBy {
   fill__from
   fill__id
   fill__index
-<<<<<<< HEAD
-=======
   fill__placeInLine
->>>>>>> master
   fill__start
   filled
   filledAmount
@@ -4930,11 +4732,7 @@ enum PodListing_orderBy {
   originalAmount
   originalIndex
   plot
-<<<<<<< HEAD
-  plot__beans
-=======
   plot__beansPerPod
->>>>>>> master
   plot__createdAt
   plot__creationHash
   plot__fullyHarvested
@@ -4945,22 +4743,6 @@ enum PodListing_orderBy {
   plot__pods
   plot__season
   plot__source
-<<<<<<< HEAD
-  plot__sownPods
-  plot__temperature
-  plot__updatedAt
-  podMarketplace
-  podMarketplace__availableListedPods
-  podMarketplace__beanVolume
-  podMarketplace__cancelledListedPods
-  podMarketplace__cancelledOrderedPods
-  podMarketplace__expiredListedPods
-  podMarketplace__filledListedPods
-  podMarketplace__filledOrderedPods
-  podMarketplace__id
-  podMarketplace__listedPods
-  podMarketplace__orderedPods
-=======
   plot__sourceHash
   plot__updatedAt
   plot__updatedAtBlock
@@ -4977,7 +4759,6 @@ enum PodListing_orderBy {
   podMarketplace__id
   podMarketplace__listedPods
   podMarketplace__orderBeans
->>>>>>> master
   podMarketplace__podVolume
   podMarketplace__season
   pricePerPod
@@ -4990,8 +4771,6 @@ enum PodListing_orderBy {
 }
 
 type PodMarketplace {
-<<<<<<< HEAD
-=======
   """
   Information about the active pod listings. Each entry of the form 'account-index-expiry'
   """
@@ -5002,7 +4781,6 @@ type PodMarketplace {
   """
   activeOrders: [String!]!
 
->>>>>>> master
   """All historical listings"""
   allListings(first: Int = 100, orderBy: PodListing_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PodListing_filter): [PodListing!]!
 
@@ -5012,25 +4790,17 @@ type PodMarketplace {
   """Current amount of total pods listed"""
   availableListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Current amount of total beans in pod orders"""
   availableOrderBeans: BigInt!
 
->>>>>>> master
   """Cumulative bean volume between listings and orders"""
   beanVolume: BigInt!
 
   """Current cumulative pod listings that were cancelled"""
   cancelledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Current cumulative pod orders cancelled"""
-  cancelledOrderedPods: BigInt!
-=======
   """Current cumulative beans in pod orders cancelled"""
   cancelledOrderBeans: BigInt!
->>>>>>> master
 
   """Link to daily snapshot data"""
   dailySnapshots(first: Int = 100, orderBy: PodMarketplaceDailySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PodMarketplaceDailySnapshot_filter): [PodMarketplaceDailySnapshot!]!
@@ -5041,12 +4811,9 @@ type PodMarketplace {
   """Current cumulative pod listings filled"""
   filledListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Current cumulative filled beans in pod orders"""
   filledOrderBeans: BigInt!
 
->>>>>>> master
   """Current cumulative pod orders filled"""
   filledOrderedPods: BigInt!
 
@@ -5062,19 +4829,8 @@ type PodMarketplace {
   """Current cumulative pods listed for sale"""
   listedPods: BigInt!
 
-<<<<<<< HEAD
-  """Indexes of actively listed plots"""
-  listingIndexes: [BigInt!]!
-
-  """Current cumulative pod orders created"""
-  orderedPods: BigInt!
-
-  """Active pod order IDs"""
-  orders(first: Int = 100, orderBy: PodOrder_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PodOrder_filter): [PodOrder!]!
-=======
   """Current cumulative beans in pod orders created"""
   orderBeans: BigInt!
->>>>>>> master
 
   """Cumulative pod volume between listings and orders"""
   podVolume: BigInt!
@@ -5087,12 +4843,9 @@ type PodMarketplaceDailySnapshot {
   """Point in time current amount of total pods listed"""
   availableListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Current amount of total beans in pod orders"""
   availableOrderBeans: BigInt!
 
->>>>>>> master
   """
   Point in time current cumulative bean volume between listings and orders
   """
@@ -5101,13 +4854,8 @@ type PodMarketplaceDailySnapshot {
   """Point in time current cumulative pod listings that were cancelled"""
   cancelledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders cancelled"""
-  cancelledOrderedPods: BigInt!
-=======
   """Current cumulative beans in pod orders cancelled"""
   cancelledOrderBeans: BigInt!
->>>>>>> master
 
   """Timestamp of initial snapshot creation"""
   createdAt: BigInt!
@@ -5115,25 +4863,17 @@ type PodMarketplaceDailySnapshot {
   """Point in time current delta of total pods listed"""
   deltaAvailableListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Point in time current delta available ordered beans in pod orders"""
   deltaAvailableOrderBeans: BigInt!
 
->>>>>>> master
   """Point in time current delta bean volume between listings and orders"""
   deltaBeanVolume: BigInt!
 
   """Point in time current delta pod listings that were cancelled"""
   deltaCancelledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current delta pod orders cancelled"""
-  deltaCancelledOrderedPods: BigInt!
-=======
   """Point in time current delta cancelled ordered beans in pod orders"""
   deltaCancelledOrderBeans: BigInt!
->>>>>>> master
 
   """Point in time current delta pod listings that expired"""
   deltaExpiredListedPods: BigInt!
@@ -5141,25 +4881,17 @@ type PodMarketplaceDailySnapshot {
   """Point in time current delta pod listings filled"""
   deltaFilledListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Point in time current delta filled ordered beans in pod orders"""
   deltaFilledOrderBeans: BigInt!
 
->>>>>>> master
   """Point in time current delta pod orders filled"""
   deltaFilledOrderedPods: BigInt!
 
   """Point in time current delta pods listed for sale"""
   deltaListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current delta pod orders created"""
-  deltaOrderedPods: BigInt!
-=======
   """Point in time current delta ordered beans in pod orders created"""
   deltaOrderBeans: BigInt!
->>>>>>> master
 
   """Point in time current delta pod volume between listings and orders"""
   deltaPodVolume: BigInt!
@@ -5170,14 +4902,10 @@ type PodMarketplaceDailySnapshot {
   """Point in time current cumulative pod listings filled"""
   filledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders filled"""
-=======
   """Current cumulative filled beans in pod orders"""
   filledOrderBeans: BigInt!
 
   """Current cumulative pod orders filled"""
->>>>>>> master
   filledOrderedPods: BigInt!
 
   """Marketplace ID - Unix Timestamp"""
@@ -5186,13 +4914,8 @@ type PodMarketplaceDailySnapshot {
   """Point in time current cumulative pods listed for sale"""
   listedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders created"""
-  orderedPods: BigInt!
-=======
   """Current cumulative beans in pod orders created"""
   orderBeans: BigInt!
->>>>>>> master
 
   """Marketplace associated with snapshot"""
   podMarketplace: PodMarketplace!
@@ -5221,8 +4944,6 @@ input PodMarketplaceDailySnapshot_filter {
   availableListedPods_lte: BigInt
   availableListedPods_not: BigInt
   availableListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   availableOrderBeans: BigInt
   availableOrderBeans_gt: BigInt
   availableOrderBeans_gte: BigInt
@@ -5231,7 +4952,6 @@ input PodMarketplaceDailySnapshot_filter {
   availableOrderBeans_lte: BigInt
   availableOrderBeans_not: BigInt
   availableOrderBeans_not_in: [BigInt!]
->>>>>>> master
   beanVolume: BigInt
   beanVolume_gt: BigInt
   beanVolume_gte: BigInt
@@ -5248,16 +4968,6 @@ input PodMarketplaceDailySnapshot_filter {
   cancelledListedPods_lte: BigInt
   cancelledListedPods_not: BigInt
   cancelledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  cancelledOrderedPods: BigInt
-  cancelledOrderedPods_gt: BigInt
-  cancelledOrderedPods_gte: BigInt
-  cancelledOrderedPods_in: [BigInt!]
-  cancelledOrderedPods_lt: BigInt
-  cancelledOrderedPods_lte: BigInt
-  cancelledOrderedPods_not: BigInt
-  cancelledOrderedPods_not_in: [BigInt!]
-=======
   cancelledOrderBeans: BigInt
   cancelledOrderBeans_gt: BigInt
   cancelledOrderBeans_gte: BigInt
@@ -5266,7 +4976,6 @@ input PodMarketplaceDailySnapshot_filter {
   cancelledOrderBeans_lte: BigInt
   cancelledOrderBeans_not: BigInt
   cancelledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -5283,8 +4992,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaAvailableListedPods_lte: BigInt
   deltaAvailableListedPods_not: BigInt
   deltaAvailableListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   deltaAvailableOrderBeans: BigInt
   deltaAvailableOrderBeans_gt: BigInt
   deltaAvailableOrderBeans_gte: BigInt
@@ -5293,7 +5000,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaAvailableOrderBeans_lte: BigInt
   deltaAvailableOrderBeans_not: BigInt
   deltaAvailableOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaBeanVolume: BigInt
   deltaBeanVolume_gt: BigInt
   deltaBeanVolume_gte: BigInt
@@ -5310,16 +5016,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaCancelledListedPods_lte: BigInt
   deltaCancelledListedPods_not: BigInt
   deltaCancelledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  deltaCancelledOrderedPods: BigInt
-  deltaCancelledOrderedPods_gt: BigInt
-  deltaCancelledOrderedPods_gte: BigInt
-  deltaCancelledOrderedPods_in: [BigInt!]
-  deltaCancelledOrderedPods_lt: BigInt
-  deltaCancelledOrderedPods_lte: BigInt
-  deltaCancelledOrderedPods_not: BigInt
-  deltaCancelledOrderedPods_not_in: [BigInt!]
-=======
   deltaCancelledOrderBeans: BigInt
   deltaCancelledOrderBeans_gt: BigInt
   deltaCancelledOrderBeans_gte: BigInt
@@ -5328,7 +5024,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaCancelledOrderBeans_lte: BigInt
   deltaCancelledOrderBeans_not: BigInt
   deltaCancelledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaExpiredListedPods: BigInt
   deltaExpiredListedPods_gt: BigInt
   deltaExpiredListedPods_gte: BigInt
@@ -5345,8 +5040,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaFilledListedPods_lte: BigInt
   deltaFilledListedPods_not: BigInt
   deltaFilledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   deltaFilledOrderBeans: BigInt
   deltaFilledOrderBeans_gt: BigInt
   deltaFilledOrderBeans_gte: BigInt
@@ -5355,7 +5048,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaFilledOrderBeans_lte: BigInt
   deltaFilledOrderBeans_not: BigInt
   deltaFilledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaFilledOrderedPods: BigInt
   deltaFilledOrderedPods_gt: BigInt
   deltaFilledOrderedPods_gte: BigInt
@@ -5372,16 +5064,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaListedPods_lte: BigInt
   deltaListedPods_not: BigInt
   deltaListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  deltaOrderedPods: BigInt
-  deltaOrderedPods_gt: BigInt
-  deltaOrderedPods_gte: BigInt
-  deltaOrderedPods_in: [BigInt!]
-  deltaOrderedPods_lt: BigInt
-  deltaOrderedPods_lte: BigInt
-  deltaOrderedPods_not: BigInt
-  deltaOrderedPods_not_in: [BigInt!]
-=======
   deltaOrderBeans: BigInt
   deltaOrderBeans_gt: BigInt
   deltaOrderBeans_gte: BigInt
@@ -5390,7 +5072,6 @@ input PodMarketplaceDailySnapshot_filter {
   deltaOrderBeans_lte: BigInt
   deltaOrderBeans_not: BigInt
   deltaOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaPodVolume: BigInt
   deltaPodVolume_gt: BigInt
   deltaPodVolume_gte: BigInt
@@ -5415,8 +5096,6 @@ input PodMarketplaceDailySnapshot_filter {
   filledListedPods_lte: BigInt
   filledListedPods_not: BigInt
   filledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   filledOrderBeans: BigInt
   filledOrderBeans_gt: BigInt
   filledOrderBeans_gte: BigInt
@@ -5425,7 +5104,6 @@ input PodMarketplaceDailySnapshot_filter {
   filledOrderBeans_lte: BigInt
   filledOrderBeans_not: BigInt
   filledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   filledOrderedPods: BigInt
   filledOrderedPods_gt: BigInt
   filledOrderedPods_gte: BigInt
@@ -5451,16 +5129,6 @@ input PodMarketplaceDailySnapshot_filter {
   listedPods_not: BigInt
   listedPods_not_in: [BigInt!]
   or: [PodMarketplaceDailySnapshot_filter]
-<<<<<<< HEAD
-  orderedPods: BigInt
-  orderedPods_gt: BigInt
-  orderedPods_gte: BigInt
-  orderedPods_in: [BigInt!]
-  orderedPods_lt: BigInt
-  orderedPods_lte: BigInt
-  orderedPods_not: BigInt
-  orderedPods_not_in: [BigInt!]
-=======
   orderBeans: BigInt
   orderBeans_gt: BigInt
   orderBeans_gte: BigInt
@@ -5469,7 +5137,6 @@ input PodMarketplaceDailySnapshot_filter {
   orderBeans_lte: BigInt
   orderBeans_not: BigInt
   orderBeans_not_in: [BigInt!]
->>>>>>> master
   podMarketplace: String
   podMarketplace_: PodMarketplace_filter
   podMarketplace_contains: String
@@ -5519,39 +5186,6 @@ input PodMarketplaceDailySnapshot_filter {
 
 enum PodMarketplaceDailySnapshot_orderBy {
   availableListedPods
-<<<<<<< HEAD
-  beanVolume
-  cancelledListedPods
-  cancelledOrderedPods
-  createdAt
-  deltaAvailableListedPods
-  deltaBeanVolume
-  deltaCancelledListedPods
-  deltaCancelledOrderedPods
-  deltaExpiredListedPods
-  deltaFilledListedPods
-  deltaFilledOrderedPods
-  deltaListedPods
-  deltaOrderedPods
-  deltaPodVolume
-  expiredListedPods
-  filledListedPods
-  filledOrderedPods
-  id
-  listedPods
-  orderedPods
-  podMarketplace
-  podMarketplace__availableListedPods
-  podMarketplace__beanVolume
-  podMarketplace__cancelledListedPods
-  podMarketplace__cancelledOrderedPods
-  podMarketplace__expiredListedPods
-  podMarketplace__filledListedPods
-  podMarketplace__filledOrderedPods
-  podMarketplace__id
-  podMarketplace__listedPods
-  podMarketplace__orderedPods
-=======
   availableOrderBeans
   beanVolume
   cancelledListedPods
@@ -5589,7 +5223,6 @@ enum PodMarketplaceDailySnapshot_orderBy {
   podMarketplace__id
   podMarketplace__listedPods
   podMarketplace__orderBeans
->>>>>>> master
   podMarketplace__podVolume
   podMarketplace__season
   podVolume
@@ -5601,12 +5234,9 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current amount of total pods listed"""
   availableListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Current amount of total beans in pod orders"""
   availableOrderBeans: BigInt!
 
->>>>>>> master
   """
   Point in time current cumulative bean volume between listings and orders
   """
@@ -5615,13 +5245,8 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current cumulative pod listings that were cancelled"""
   cancelledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders cancelled"""
-  cancelledOrderedPods: BigInt!
-=======
   """Current cumulative beans in pod orders cancelled"""
   cancelledOrderBeans: BigInt!
->>>>>>> master
 
   """Timestamp of initial snapshot creation"""
   createdAt: BigInt!
@@ -5629,25 +5254,17 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current delta of total pods listed"""
   deltaAvailableListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Point in time current delta available ordered beans in pod orders"""
   deltaAvailableOrderBeans: BigInt!
 
->>>>>>> master
   """Point in time current delta bean volume between listings and orders"""
   deltaBeanVolume: BigInt!
 
   """Point in time current delta pod listings that were cancelled"""
   deltaCancelledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current delta pod orders cancelled"""
-  deltaCancelledOrderedPods: BigInt!
-=======
   """Point in time current delta cancelled ordered beans in pod orders"""
   deltaCancelledOrderBeans: BigInt!
->>>>>>> master
 
   """Point in time current delta pod listings that expired"""
   deltaExpiredListedPods: BigInt!
@@ -5655,25 +5272,17 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current delta pod listings filled"""
   deltaFilledListedPods: BigInt!
 
-<<<<<<< HEAD
-=======
   """Point in time current delta filled ordered beans in pod orders"""
   deltaFilledOrderBeans: BigInt!
 
->>>>>>> master
   """Point in time current delta pod orders filled"""
   deltaFilledOrderedPods: BigInt!
 
   """Point in time current delta pods listed for sale"""
   deltaListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current delta pod orders created"""
-  deltaOrderedPods: BigInt!
-=======
   """Point in time current delta ordered beans in pod orders created"""
   deltaOrderBeans: BigInt!
->>>>>>> master
 
   """Point in time current delta pod volume between listings and orders"""
   deltaPodVolume: BigInt!
@@ -5684,14 +5293,10 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current cumulative pod listings filled"""
   filledListedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders filled"""
-=======
   """Current cumulative filled beans in pod orders"""
   filledOrderBeans: BigInt!
 
   """Current cumulative pod orders filled"""
->>>>>>> master
   filledOrderedPods: BigInt!
 
   """Marketplace ID - Unix Timestamp"""
@@ -5700,13 +5305,8 @@ type PodMarketplaceHourlySnapshot {
   """Point in time current cumulative pods listed for sale"""
   listedPods: BigInt!
 
-<<<<<<< HEAD
-  """Point in time current cumulative pod orders created"""
-  orderedPods: BigInt!
-=======
   """Current cumulative beans in pod orders created"""
   orderBeans: BigInt!
->>>>>>> master
 
   """Marketplace associated with snapshot"""
   podMarketplace: PodMarketplace!
@@ -5735,8 +5335,6 @@ input PodMarketplaceHourlySnapshot_filter {
   availableListedPods_lte: BigInt
   availableListedPods_not: BigInt
   availableListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   availableOrderBeans: BigInt
   availableOrderBeans_gt: BigInt
   availableOrderBeans_gte: BigInt
@@ -5745,7 +5343,6 @@ input PodMarketplaceHourlySnapshot_filter {
   availableOrderBeans_lte: BigInt
   availableOrderBeans_not: BigInt
   availableOrderBeans_not_in: [BigInt!]
->>>>>>> master
   beanVolume: BigInt
   beanVolume_gt: BigInt
   beanVolume_gte: BigInt
@@ -5762,16 +5359,6 @@ input PodMarketplaceHourlySnapshot_filter {
   cancelledListedPods_lte: BigInt
   cancelledListedPods_not: BigInt
   cancelledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  cancelledOrderedPods: BigInt
-  cancelledOrderedPods_gt: BigInt
-  cancelledOrderedPods_gte: BigInt
-  cancelledOrderedPods_in: [BigInt!]
-  cancelledOrderedPods_lt: BigInt
-  cancelledOrderedPods_lte: BigInt
-  cancelledOrderedPods_not: BigInt
-  cancelledOrderedPods_not_in: [BigInt!]
-=======
   cancelledOrderBeans: BigInt
   cancelledOrderBeans_gt: BigInt
   cancelledOrderBeans_gte: BigInt
@@ -5780,7 +5367,6 @@ input PodMarketplaceHourlySnapshot_filter {
   cancelledOrderBeans_lte: BigInt
   cancelledOrderBeans_not: BigInt
   cancelledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   createdAt: BigInt
   createdAt_gt: BigInt
   createdAt_gte: BigInt
@@ -5797,8 +5383,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaAvailableListedPods_lte: BigInt
   deltaAvailableListedPods_not: BigInt
   deltaAvailableListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   deltaAvailableOrderBeans: BigInt
   deltaAvailableOrderBeans_gt: BigInt
   deltaAvailableOrderBeans_gte: BigInt
@@ -5807,7 +5391,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaAvailableOrderBeans_lte: BigInt
   deltaAvailableOrderBeans_not: BigInt
   deltaAvailableOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaBeanVolume: BigInt
   deltaBeanVolume_gt: BigInt
   deltaBeanVolume_gte: BigInt
@@ -5824,16 +5407,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaCancelledListedPods_lte: BigInt
   deltaCancelledListedPods_not: BigInt
   deltaCancelledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  deltaCancelledOrderedPods: BigInt
-  deltaCancelledOrderedPods_gt: BigInt
-  deltaCancelledOrderedPods_gte: BigInt
-  deltaCancelledOrderedPods_in: [BigInt!]
-  deltaCancelledOrderedPods_lt: BigInt
-  deltaCancelledOrderedPods_lte: BigInt
-  deltaCancelledOrderedPods_not: BigInt
-  deltaCancelledOrderedPods_not_in: [BigInt!]
-=======
   deltaCancelledOrderBeans: BigInt
   deltaCancelledOrderBeans_gt: BigInt
   deltaCancelledOrderBeans_gte: BigInt
@@ -5842,7 +5415,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaCancelledOrderBeans_lte: BigInt
   deltaCancelledOrderBeans_not: BigInt
   deltaCancelledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaExpiredListedPods: BigInt
   deltaExpiredListedPods_gt: BigInt
   deltaExpiredListedPods_gte: BigInt
@@ -5859,8 +5431,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaFilledListedPods_lte: BigInt
   deltaFilledListedPods_not: BigInt
   deltaFilledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   deltaFilledOrderBeans: BigInt
   deltaFilledOrderBeans_gt: BigInt
   deltaFilledOrderBeans_gte: BigInt
@@ -5869,7 +5439,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaFilledOrderBeans_lte: BigInt
   deltaFilledOrderBeans_not: BigInt
   deltaFilledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaFilledOrderedPods: BigInt
   deltaFilledOrderedPods_gt: BigInt
   deltaFilledOrderedPods_gte: BigInt
@@ -5886,16 +5455,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaListedPods_lte: BigInt
   deltaListedPods_not: BigInt
   deltaListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  deltaOrderedPods: BigInt
-  deltaOrderedPods_gt: BigInt
-  deltaOrderedPods_gte: BigInt
-  deltaOrderedPods_in: [BigInt!]
-  deltaOrderedPods_lt: BigInt
-  deltaOrderedPods_lte: BigInt
-  deltaOrderedPods_not: BigInt
-  deltaOrderedPods_not_in: [BigInt!]
-=======
   deltaOrderBeans: BigInt
   deltaOrderBeans_gt: BigInt
   deltaOrderBeans_gte: BigInt
@@ -5904,7 +5463,6 @@ input PodMarketplaceHourlySnapshot_filter {
   deltaOrderBeans_lte: BigInt
   deltaOrderBeans_not: BigInt
   deltaOrderBeans_not_in: [BigInt!]
->>>>>>> master
   deltaPodVolume: BigInt
   deltaPodVolume_gt: BigInt
   deltaPodVolume_gte: BigInt
@@ -5929,8 +5487,6 @@ input PodMarketplaceHourlySnapshot_filter {
   filledListedPods_lte: BigInt
   filledListedPods_not: BigInt
   filledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   filledOrderBeans: BigInt
   filledOrderBeans_gt: BigInt
   filledOrderBeans_gte: BigInt
@@ -5939,7 +5495,6 @@ input PodMarketplaceHourlySnapshot_filter {
   filledOrderBeans_lte: BigInt
   filledOrderBeans_not: BigInt
   filledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   filledOrderedPods: BigInt
   filledOrderedPods_gt: BigInt
   filledOrderedPods_gte: BigInt
@@ -5965,16 +5520,6 @@ input PodMarketplaceHourlySnapshot_filter {
   listedPods_not: BigInt
   listedPods_not_in: [BigInt!]
   or: [PodMarketplaceHourlySnapshot_filter]
-<<<<<<< HEAD
-  orderedPods: BigInt
-  orderedPods_gt: BigInt
-  orderedPods_gte: BigInt
-  orderedPods_in: [BigInt!]
-  orderedPods_lt: BigInt
-  orderedPods_lte: BigInt
-  orderedPods_not: BigInt
-  orderedPods_not_in: [BigInt!]
-=======
   orderBeans: BigInt
   orderBeans_gt: BigInt
   orderBeans_gte: BigInt
@@ -5983,7 +5528,6 @@ input PodMarketplaceHourlySnapshot_filter {
   orderBeans_lte: BigInt
   orderBeans_not: BigInt
   orderBeans_not_in: [BigInt!]
->>>>>>> master
   podMarketplace: String
   podMarketplace_: PodMarketplace_filter
   podMarketplace_contains: String
@@ -6033,39 +5577,6 @@ input PodMarketplaceHourlySnapshot_filter {
 
 enum PodMarketplaceHourlySnapshot_orderBy {
   availableListedPods
-<<<<<<< HEAD
-  beanVolume
-  cancelledListedPods
-  cancelledOrderedPods
-  createdAt
-  deltaAvailableListedPods
-  deltaBeanVolume
-  deltaCancelledListedPods
-  deltaCancelledOrderedPods
-  deltaExpiredListedPods
-  deltaFilledListedPods
-  deltaFilledOrderedPods
-  deltaListedPods
-  deltaOrderedPods
-  deltaPodVolume
-  expiredListedPods
-  filledListedPods
-  filledOrderedPods
-  id
-  listedPods
-  orderedPods
-  podMarketplace
-  podMarketplace__availableListedPods
-  podMarketplace__beanVolume
-  podMarketplace__cancelledListedPods
-  podMarketplace__cancelledOrderedPods
-  podMarketplace__expiredListedPods
-  podMarketplace__filledListedPods
-  podMarketplace__filledOrderedPods
-  podMarketplace__id
-  podMarketplace__listedPods
-  podMarketplace__orderedPods
-=======
   availableOrderBeans
   beanVolume
   cancelledListedPods
@@ -6103,7 +5614,6 @@ enum PodMarketplaceHourlySnapshot_orderBy {
   podMarketplace__id
   podMarketplace__listedPods
   podMarketplace__orderBeans
->>>>>>> master
   podMarketplace__podVolume
   podMarketplace__season
   podVolume
@@ -6114,8 +5624,6 @@ enum PodMarketplaceHourlySnapshot_orderBy {
 input PodMarketplace_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
-<<<<<<< HEAD
-=======
   activeListings: [String!]
   activeListings_contains: [String!]
   activeListings_contains_nocase: [String!]
@@ -6128,7 +5636,6 @@ input PodMarketplace_filter {
   activeOrders_not: [String!]
   activeOrders_not_contains: [String!]
   activeOrders_not_contains_nocase: [String!]
->>>>>>> master
   allListings_: PodListing_filter
   allOrders_: PodOrder_filter
   and: [PodMarketplace_filter]
@@ -6140,8 +5647,6 @@ input PodMarketplace_filter {
   availableListedPods_lte: BigInt
   availableListedPods_not: BigInt
   availableListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   availableOrderBeans: BigInt
   availableOrderBeans_gt: BigInt
   availableOrderBeans_gte: BigInt
@@ -6150,7 +5655,6 @@ input PodMarketplace_filter {
   availableOrderBeans_lte: BigInt
   availableOrderBeans_not: BigInt
   availableOrderBeans_not_in: [BigInt!]
->>>>>>> master
   beanVolume: BigInt
   beanVolume_gt: BigInt
   beanVolume_gte: BigInt
@@ -6167,16 +5671,6 @@ input PodMarketplace_filter {
   cancelledListedPods_lte: BigInt
   cancelledListedPods_not: BigInt
   cancelledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  cancelledOrderedPods: BigInt
-  cancelledOrderedPods_gt: BigInt
-  cancelledOrderedPods_gte: BigInt
-  cancelledOrderedPods_in: [BigInt!]
-  cancelledOrderedPods_lt: BigInt
-  cancelledOrderedPods_lte: BigInt
-  cancelledOrderedPods_not: BigInt
-  cancelledOrderedPods_not_in: [BigInt!]
-=======
   cancelledOrderBeans: BigInt
   cancelledOrderBeans_gt: BigInt
   cancelledOrderBeans_gte: BigInt
@@ -6185,7 +5679,6 @@ input PodMarketplace_filter {
   cancelledOrderBeans_lte: BigInt
   cancelledOrderBeans_not: BigInt
   cancelledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   dailySnapshots_: PodMarketplaceDailySnapshot_filter
   expiredListedPods: BigInt
   expiredListedPods_gt: BigInt
@@ -6203,8 +5696,6 @@ input PodMarketplace_filter {
   filledListedPods_lte: BigInt
   filledListedPods_not: BigInt
   filledListedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-=======
   filledOrderBeans: BigInt
   filledOrderBeans_gt: BigInt
   filledOrderBeans_gte: BigInt
@@ -6213,7 +5704,6 @@ input PodMarketplace_filter {
   filledOrderBeans_lte: BigInt
   filledOrderBeans_not: BigInt
   filledOrderBeans_not_in: [BigInt!]
->>>>>>> master
   filledOrderedPods: BigInt
   filledOrderedPods_gt: BigInt
   filledOrderedPods_gte: BigInt
@@ -6240,30 +5730,6 @@ input PodMarketplace_filter {
   listedPods_lte: BigInt
   listedPods_not: BigInt
   listedPods_not_in: [BigInt!]
-<<<<<<< HEAD
-  listingIndexes: [BigInt!]
-  listingIndexes_contains: [BigInt!]
-  listingIndexes_contains_nocase: [BigInt!]
-  listingIndexes_not: [BigInt!]
-  listingIndexes_not_contains: [BigInt!]
-  listingIndexes_not_contains_nocase: [BigInt!]
-  or: [PodMarketplace_filter]
-  orderedPods: BigInt
-  orderedPods_gt: BigInt
-  orderedPods_gte: BigInt
-  orderedPods_in: [BigInt!]
-  orderedPods_lt: BigInt
-  orderedPods_lte: BigInt
-  orderedPods_not: BigInt
-  orderedPods_not_in: [BigInt!]
-  orders: [String!]
-  orders_: PodOrder_filter
-  orders_contains: [String!]
-  orders_contains_nocase: [String!]
-  orders_not: [String!]
-  orders_not_contains: [String!]
-  orders_not_contains_nocase: [String!]
-=======
   or: [PodMarketplace_filter]
   orderBeans: BigInt
   orderBeans_gt: BigInt
@@ -6273,7 +5739,6 @@ input PodMarketplace_filter {
   orderBeans_lte: BigInt
   orderBeans_not: BigInt
   orderBeans_not_in: [BigInt!]
->>>>>>> master
   podVolume: BigInt
   podVolume_gt: BigInt
   podVolume_gte: BigInt
@@ -6293,17 +5758,6 @@ input PodMarketplace_filter {
 }
 
 enum PodMarketplace_orderBy {
-<<<<<<< HEAD
-  allListings
-  allOrders
-  availableListedPods
-  beanVolume
-  cancelledListedPods
-  cancelledOrderedPods
-  dailySnapshots
-  expiredListedPods
-  filledListedPods
-=======
   activeListings
   activeOrders
   allListings
@@ -6317,19 +5771,12 @@ enum PodMarketplace_orderBy {
   expiredListedPods
   filledListedPods
   filledOrderBeans
->>>>>>> master
   filledOrderedPods
   fills
   hourlySnapshots
   id
   listedPods
-<<<<<<< HEAD
-  listingIndexes
-  orderedPods
-  orders
-=======
   orderBeans
->>>>>>> master
   podVolume
   season
 }
@@ -6365,12 +5812,6 @@ type PodOrder {
   """Minimum number of Pods required to perform a Fill."""
   minFillAmount: BigInt!
 
-<<<<<<< HEAD
-  "The original number of Pods requested by this PodOrder.\n\nDoes NOT change as Fills occur.\nNot deterministic for PodOrders with pricingType = DYNAMIC.\n\nIf pricingType = FIXED:\n  Set to the number of Pods which can be purchased by the Order.\n  If FIXED (V1): `amount` field emitted in PodOrderCreated.\n  If FIXED (V2): `amount / pricePerPod` fields emitted in PodOrderCreated.\n\nIf pricingType = DYNAMIC:\n  Set to `0`. The number of Pods that will be provided is unknown, since\n  the price is calculated based on the place in line of supplied Pods.\n"
-  podAmount: BigInt!
-
-=======
->>>>>>> master
   "The current number of Pods that have been purchased by this PodOrder.\n\nIncreases during each subsequent Fill.\nIf pricingType = FIXED: `0 <= podAmountFilled <= podAmount`\nIf pricingType = DYNAMIC: No constraint, since `podAmount` is unknown.\n\nUpon PodOrder cancellation, this value is locked.\n"
   podAmountFilled: BigInt!
 
@@ -6869,12 +6310,9 @@ type PodOrderFilled implements MarketplaceEvent {
   """
   logIndex: Int!
 
-<<<<<<< HEAD
-=======
   """Where these pods were in line when filled"""
   placeInLine: BigInt!
 
->>>>>>> master
   """ The protocol this transaction belongs to """
   protocol: Beanstalk!
 
@@ -7006,8 +6444,6 @@ input PodOrderFilled_filter {
   logIndex_not: Int
   logIndex_not_in: [Int!]
   or: [PodOrderFilled_filter]
-<<<<<<< HEAD
-=======
   placeInLine: BigInt
   placeInLine_gt: BigInt
   placeInLine_gte: BigInt
@@ -7016,7 +6452,6 @@ input PodOrderFilled_filter {
   placeInLine_lte: BigInt
   placeInLine_not: BigInt
   placeInLine_not_in: [BigInt!]
->>>>>>> master
   protocol: String
   protocol_: Beanstalk_filter
   protocol_contains: String
@@ -7079,10 +6514,7 @@ enum PodOrderFilled_orderBy {
   id
   index
   logIndex
-<<<<<<< HEAD
-=======
   placeInLine
->>>>>>> master
   protocol
   protocol__id
   protocol__lastSeason
@@ -7217,10 +6649,6 @@ input PodOrder_filter {
   minFillAmount_not: BigInt
   minFillAmount_not_in: [BigInt!]
   or: [PodOrder_filter]
-<<<<<<< HEAD
-  podAmount: BigInt
-=======
->>>>>>> master
   podAmountFilled: BigInt
   podAmountFilled_gt: BigInt
   podAmountFilled_gte: BigInt
@@ -7229,16 +6657,6 @@ input PodOrder_filter {
   podAmountFilled_lte: BigInt
   podAmountFilled_not: BigInt
   podAmountFilled_not_in: [BigInt!]
-<<<<<<< HEAD
-  podAmount_gt: BigInt
-  podAmount_gte: BigInt
-  podAmount_in: [BigInt!]
-  podAmount_lt: BigInt
-  podAmount_lte: BigInt
-  podAmount_not: BigInt
-  podAmount_not_in: [BigInt!]
-=======
->>>>>>> master
   podMarketplace: String
   podMarketplace_: PodMarketplace_filter
   podMarketplace_contains: String
@@ -7312,21 +6730,6 @@ enum PodOrder_orderBy {
   id
   maxPlaceInLine
   minFillAmount
-<<<<<<< HEAD
-  podAmount
-  podAmountFilled
-  podMarketplace
-  podMarketplace__availableListedPods
-  podMarketplace__beanVolume
-  podMarketplace__cancelledListedPods
-  podMarketplace__cancelledOrderedPods
-  podMarketplace__expiredListedPods
-  podMarketplace__filledListedPods
-  podMarketplace__filledOrderedPods
-  podMarketplace__id
-  podMarketplace__listedPods
-  podMarketplace__orderedPods
-=======
   podAmountFilled
   podMarketplace
   podMarketplace__availableListedPods
@@ -7341,7 +6744,6 @@ enum PodOrder_orderBy {
   podMarketplace__id
   podMarketplace__listedPods
   podMarketplace__orderBeans
->>>>>>> master
   podMarketplace__podVolume
   podMarketplace__season
   pricePerPod
@@ -9446,12 +8848,9 @@ type Season {
 
   """ Season number in Int form for sorting """
   season: Int!
-<<<<<<< HEAD
-=======
 
   """ Block in which the season start was triggered by the sunrise call """
   sunriseBlock: BigInt!
->>>>>>> master
 }
 
 input Season_filter {
@@ -9568,8 +8967,6 @@ input Season_filter {
   season_lte: Int
   season_not: Int
   season_not_in: [Int!]
-<<<<<<< HEAD
-=======
   sunriseBlock: BigInt
   sunriseBlock_gt: BigInt
   sunriseBlock_gte: BigInt
@@ -9578,7 +8975,6 @@ input Season_filter {
   sunriseBlock_lte: BigInt
   sunriseBlock_not: BigInt
   sunriseBlock_not_in: [BigInt!]
->>>>>>> master
 }
 
 enum Season_orderBy {
@@ -9602,10 +8998,7 @@ enum Season_orderBy {
   price
   rewardBeans
   season
-<<<<<<< HEAD
-=======
   sunriseBlock
->>>>>>> master
 }
 
 type SeedChange implements SiloEvent {
@@ -13399,12 +12792,9 @@ type Subscription {
   ): [WhitelistToken!]!
 }
 
-<<<<<<< HEAD
-=======
 "A string representation of microseconds UNIX timestamp (16 digits)\n"
 scalar Timestamp
 
->>>>>>> master
 type TokenYield {
   """Bean APY for season"""
   beanAPY: BigDecimal!
@@ -14446,12 +13836,9 @@ type _Block_ {
   """The block number"""
   number: Int!
 
-<<<<<<< HEAD
-=======
   """The hash of the parent block"""
   parentHash: Bytes
 
->>>>>>> master
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int
 }

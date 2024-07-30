@@ -19,11 +19,7 @@ export const useMultiFlowPumpTWAReserves = () => {
     queryKey: ["wells", "multiFlowPumpTWAReserves"],
 
     queryFn: async () => {
-<<<<<<< HEAD
-      const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well));
-=======
       const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well) && getIsWhitelisted(well) );
->>>>>>> master
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
         sdk.contracts.beanstalk.time(),

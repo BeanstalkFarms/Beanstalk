@@ -302,8 +302,6 @@ export const parseActionMessage = (a: Action) => {
         a.tokenOut.symbol !== CRV3[1].symbol &&
         !a.tokenOut.isUnripe
       ) {
-<<<<<<< HEAD
-=======
         const bySource = a.amountsBySource;
         const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
 
@@ -317,7 +315,6 @@ export const parseActionMessage = (a: Action) => {
           return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
         }
 
->>>>>>> master
         return `Add ${displayTokenAmount(
           a.amountIn,
           a.tokenIn

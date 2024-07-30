@@ -7,11 +7,8 @@ import { useAccount } from "wagmi";
 import { useTokens } from "./TokenProvider";
 import { Log } from "src/utils/logger";
 import { config } from "src/utils/wagmi/config";
-<<<<<<< HEAD
-=======
 import { ContractFunctionParameters } from "viem";
 import { queryKeys } from "src/utils/query/queryKeys";
->>>>>>> master
 
 const TokenBalanceABI = [
   {
@@ -61,16 +58,6 @@ export const useAllTokensBalance = () => {
   }, [address, tokensToLoad.map((t) => t.symbol).join()]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-<<<<<<< HEAD
-    queryKey: ["token", "balance"],
-
-    queryFn: async () => {
-      if (!address) return {};
-      const res = (await multicall(config, {
-        contracts: calls,
-        allowFailure: false
-      })) as unknown as BigNumber[];
-=======
     queryKey: queryKeys.tokenBalancesAll,
     queryFn: async () => {
       if (!address) return {};
@@ -85,7 +72,6 @@ export const useAllTokensBalance = () => {
       ]);
 
       const res = results.flat();
->>>>>>> master
       const balances: Record<string, TokenValue> = {};
 
       if (ethBalance) {
@@ -100,31 +86,14 @@ export const useAllTokensBalance = () => {
         balances[token.symbol] = token.fromBlockchain(value);
 
         // set the balance in the query cache too
-<<<<<<< HEAD
-        queryClient.setQueryData(["token", "balance", token.symbol], { [token.symbol]: balances[token.symbol] });
-
-      }
-
-      const ETH = tokens.ETH;
-      if (ETH) {
-        const ethBalance = await ETH.getBalance(address);
-        Log.module("app").debug(`ETH balance: `, ethBalance.toHuman());
-        queryClient.setQueryData(["token", "balance", "ETH"], { ETH: ethBalance });
-        balances.ETH = ethBalance;
-=======
         queryClient.setQueryData(queryKeys.tokenBalance(token.symbol), {
           [token.symbol]: balances[token.symbol]
         });
->>>>>>> master
       }
 
       return balances;
     },
-<<<<<<< HEAD
-
-=======
     enabled: !!address && !!tokensToLoad.length,
->>>>>>> master
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 30
   });

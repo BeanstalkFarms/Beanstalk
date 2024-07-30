@@ -168,11 +168,7 @@ export class Tokens {
       providerOrSigner
     );
     this.UNRIPE_BEAN.rewards = {
-<<<<<<< HEAD
-      stalk: this.STALK.amount(0),
-=======
       stalk: this.STALK.amount(1),
->>>>>>> master
       seeds: TokenValue.ZERO
     };
     this.UNRIPE_BEAN.isUnripe = true;

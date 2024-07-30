@@ -10,15 +10,6 @@ const useBasinStats = () => {
     queryFn: async () => {
         let output: BasinAPIResponse[] = [];
         try {
-<<<<<<< HEAD
-            const apiQuery = await fetch('https://api.bean.money/basin/tickers', {
-                    headers: {
-                    'accept': 'application/json'
-                    }
-                })
-            
-            output = await apiQuery.json() as BasinAPIResponse[];
-=======
             const apiQuery = await fetch("https://api.bean.money/basin/tickers", {
               headers: { accept: "application/json" }
             });
@@ -31,7 +22,6 @@ const useBasinStats = () => {
                 throw new Error(result);
               }
             }
->>>>>>> master
         } catch (e) {
             Log.module("useBasinStats").error("Failed to fetch data from Basin API :",  e)
         };

@@ -211,16 +211,8 @@ const AddLiquidityContent = ({
   const { data: quote } = useQuery({
     queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
 
-<<<<<<< HEAD
-  const { data: quote } = useQuery({
-    queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
-
-    queryFn: async () => {
-      if (!atLeastOneAmountNonZero) {
-=======
     queryFn: async () => {
       if ((someWellReservesEmpty && areSomeInputsZero) || !atLeastOneAmountNonZero) {
->>>>>>> master
         setShowQuoteDetails(false);
         return null;
       }

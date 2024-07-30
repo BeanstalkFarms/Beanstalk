@@ -68,11 +68,7 @@ const ProposalContent: FC<{
                   fontSize: FontSize.xs,
                 }}
               >
-<<<<<<< HEAD
-                {parseInt(Math.min(pctOfQuorum * 100, 100).toString(), 10)}%
-=======
                 {quorumBNToFixed.toString()}%
->>>>>>> master
               </Box>
             </Box>
           </Tooltip>
