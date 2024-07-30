@@ -12,9 +12,9 @@ import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, transform } from '~/util';
 import { BEAN, STALK } from '~/constants/tokens';
 import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
+import useSdk from '~/hooks/sdk';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from './index';
-import useSdk from '~/hooks/sdk';
 
 export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
@@ -36,6 +36,7 @@ export const useFetchBeanstalkSilo = () => {
       whitelistedAssetTotals,
       // 5
       stemTips,
+      // 6
     ] = await Promise.all([
       // 0
       sdk.contracts.beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
@@ -73,6 +74,9 @@ export const useFetchBeanstalkSilo = () => {
             sdk.contracts.beanstalk
               .getTotalDepositedBdv(token.address)
               .then(tokenResult(BEAN)),
+            sdk.contracts.beanstalk
+              .getGerminatingTotalDeposited(token.address)
+              .then((v) => transform(v, 'bnjs', token)),
           ]).then((data) => ({
             address: token.address.toLowerCase(),
             deposited: data[0],
@@ -80,6 +84,7 @@ export const useFetchBeanstalkSilo = () => {
             bdvPerToken: data[2],
             stemTip: data[3],
             depositedBdv: data[4],
+            totalGerminating: data[5],
           }))
         )
       ),
@@ -119,6 +124,10 @@ export const useFetchBeanstalkSilo = () => {
         withdrawn: {
           amount: curr.withdrawn,
         },
+        germinating: {
+          amount: curr.totalGerminating,
+        },
+        TVD: curr.deposited.plus(curr.totalGerminating),
       };
 
       return agg;

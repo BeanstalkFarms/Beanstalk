@@ -3,7 +3,7 @@ import { TokenInput } from "../../components/Swap/TokenInput";
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { AddLiquidityETH, Well } from "@beanstalk/sdk/Wells";
+import { AddLiquidityETH, Well } from "@beanstalk/sdk-wells";
 import { useQuery } from "@tanstack/react-query";
 import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
 import { Button } from "../Swap/Button";
@@ -19,6 +19,8 @@ import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { PriceLookups } from "src/utils/price/priceLookups";
+import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { queryKeys } from "src/utils/query/queryKeys";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -74,9 +76,10 @@ const AddLiquidityContent = ({
     staleTime: 15 * 1000,
     refetchOnWindowFocus: "always",
     select: (data) => {
-      return [data[token1.symbol] || null, data[token2.symbol] || null];
+      return [data[token1.symbol] || null, data[token2.symbol] || null]; // price indexed by token symbol
     }
   });
+  const invalidate = useInvalidateScopedQueries();
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
@@ -87,11 +90,6 @@ const AddLiquidityContent = ({
 
   const someWellReservesEmpty = Boolean(wellReserves && wellReserves.some((reserve) => reserve.eq(0)));
   const areSomeInputsZero = Boolean(inputs.some((amt) => amt.value.eq("0")));
-
-  useEffect(() => {
-    console.log({ someWellReservesEmpty, areSomeInputsZero });
-    
-  }, [someWellReservesEmpty, areSomeInputsZero])
 
   const atLeastOneAmountNonZero = useMemo(() => {
     if (!well.tokens || well.tokens.length === 0) return false;
@@ -221,7 +219,6 @@ const AddLiquidityContent = ({
         let estimate;
         let gas;
         quote = await well.addLiquidityQuote(inputs);
-        console.log("quote: ", quote.toHuman());
 
         if (allTokensHaveMinAllowance && tokenAllowance.length) {
           if (useNativeETH) {
@@ -291,7 +288,12 @@ const AddLiquidityContent = ({
         toast.error(error);
         setIsSubmitting(false);
       }
+      invalidate(queryKeys.tokenBalance(token1.address));
+      invalidate(queryKeys.tokenBalance(token2.address));
+      invalidate(queryKeys.lpSummaryAll);
+
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     quote,
     address,

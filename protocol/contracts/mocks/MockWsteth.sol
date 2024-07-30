@@ -27,5 +27,7 @@ contract MockWsteth is MockToken {
         return _stEthPerToken;
     }
 
-
+    function getWstETHByStETH(uint256 __stAmount) external view returns (uint256) {
+        return __stAmount * 1e18 / _stEthPerToken;
+    }
 }

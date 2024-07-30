@@ -10,12 +10,13 @@ export const addresses = {
   // ----------------------------------------
   // Ecosystem Contracts
   // ----------------------------------------
-  BEANSTALK_PRICE: Address.make("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"),
+  BEANSTALK_PRICE: Address.make("0x4BEd6cb142b7d474242d87F4796387DEB9E1E1B4"),
   MATH: Address.make("0x16a903b66403d3de69db50e6d1ad0b07490b740a"),
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
-  USD_ORACLE: Address.make("0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"),
+  USD_ORACLE: Address.make("0xE0AdBED7e2ac72bc7798c5DC33aFD77B068db7Fd"),
+  UNWRAP_AND_SEND_ETH_JUNCTION: Address.make("0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"),
 
   // ----------------------------------------
   // BeaNFT Contracts
@@ -30,8 +31,8 @@ export const addresses = {
   UNRIPE_BEAN:
     // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
     Address.make("0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449"),
-  UNRIPE_BEAN_WETH:
-    // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
+  UNRIPE_BEAN_WSTETH:
+    // "Unripe BEAN:WSTETH LP": Unripe vesting asset for the BEAN:WSTETH LP token, Localhost
     Address.make("0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D"),
 
   // ----------------------------------------
@@ -56,6 +57,7 @@ export const addresses = {
   // Wells Contracts
   // ----------------------------------------
   BEANWETH_WELL: Address.make("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"),
+  BEANWSTETH_WELL: Address.make("0xBeA0000113B0d182f4064C86B71c315389E4715D"),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
@@ -66,6 +68,12 @@ export const addresses = {
   USDT: Address.make("0xdAC17F958D2ee523a2206206994597C13D831ec7"),
   CRV3: Address.make("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"),
   LUSD: Address.make("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"),
+
+  // ----------------------------------------
+  // Lido
+  // ----------------------------------------
+  STETH: Address.make("0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"),
+  WSTETH: Address.make("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"),
 
   // ----------------------------------------
   // Curve Pools: Other

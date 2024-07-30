@@ -6,6 +6,7 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
+import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
 import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
@@ -17,7 +18,6 @@ import {
   updateSeasonResult,
   updateSeasonTime,
 } from './actions';
-import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
 
 export const useSun = () => {
   const dispatch = useDispatch();
