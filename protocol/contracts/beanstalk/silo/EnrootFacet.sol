@@ -122,6 +122,28 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk.toUint128());
     }
 
+    function balanceOfRevitalizedStalk(
+        address account,
+        address[] calldata tokens,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) external view returns (uint256 stalk) {
+        for (uint256 i; i < tokens.length; i++) {
+            uint256 depositId = LibBytes.packAddressAndStem(tokens[i], stems[i]);
+            uint256 ogBDV = s.accts[account].deposits[depositId].bdv;
+            uint256 newBDV = LibTokenSilo.beanDenominatedValue(tokens[i], amounts[i]);
+            uint256 deltaBDV = newBDV.sub(ogBDV);
+
+            stalk += deltaBDV.mul(s.sys.silo.assetSettings[tokens[i]].stalkIssuedPerBdv).add(
+                LibSilo.stalkReward(
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(tokens[i]),
+                    uint128(deltaBDV)
+                )
+            );
+        }
+    }
+
     /**
      * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
      * as the BDV of Unripe tokens increases during the Barn Raise.

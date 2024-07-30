@@ -114,6 +114,12 @@ contract SeasonGettersFacet {
         }
     }
 
+    function cumulativeCurrentDeltaB(address[] pools) external view returns (int256 deltaB) {
+        for (uint256 i; i < pools.length; i++) {
+            deltaB += poolCurrentDeltaB(pools[i]);
+        }
+    }
+
     /**
      * @notice Returns the last Well Oracle Snapshot for a given `well`.
      * @return snapshot The encoded cumulative balances the last time the Oracle was captured.

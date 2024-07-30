@@ -489,6 +489,19 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @dev Get the number of Stalk per BDV per Season for a set of whitelisted tokens.
+     * 6 decimal precision: 1e10 units = 1 stalk per season
+     */
+    function stalkEarnedPerSeason(
+        address[] calldata tokens
+    ) external view returns (uint256[] stalkEarnedPerSeasons) {
+        stalkEarnedPerSeasons = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            stalkEarnedPerSeasons[i] = LibTokenSilo.stalkEarnedPerSeason(tokens[i]);
+        }
+    }
+
+    /**
      * @notice Return the balance of Deposited BDV of `token` for a given `account`.
      */
     function balanceOfDepositedBdv(
