@@ -21,22 +21,21 @@ async function printBeanstalk() {
 let reseeds;
 async function reseed(
   account,
-  diamondDeployerAccount,
   mock = true,
   log = false,
   start = 0,
   end = 9
 ) {
   reseeds = [
-    // reseed1,
+    reseed1,
     reseedDeployL2Beanstalk,
-    // reseed3,
-    // reseed4,
-    // reseed5,
-    // reseed6,
+    reseed3,
+    reseed4,
+    reseed5,
+    reseed6,
     // reseed7,
-    // reseed8,
-    // reseed9
+    reseed8,
+    reseed9
   ];
   let l2BeanstalkAddress;
   console.clear();
@@ -48,7 +47,7 @@ async function reseed(
       await reseeds[0](account);
     } else if (i == 1 && mock == true) {
       // deploy L2 beanstalk with predetermined address.
-      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, diamondDeployerAccount, true, mock);
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, true, mock);
       console.log("L2 Beanstalk:", l2BeanstalkAddress);
     } else {
       // initialize beanstalk state.

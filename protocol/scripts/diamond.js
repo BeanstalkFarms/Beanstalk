@@ -75,7 +75,8 @@ async function deployFacets(facets, verbose = false) {
 async function deployDiamond({
   diamondName,
   initDiamond,
-  owner,
+  ownerAddress,
+  deployer,
   verbose = false,
   impersonate = false
 }) {
@@ -108,7 +109,7 @@ async function deployDiamond({
 
   let deployedDiamond;
   if (!impersonate) {
-    deployedDiamond = await diamondFactory.deploy(owner.address);
+    deployedDiamond = await diamondFactory.connect(deployer).deploy(ownerAddress);
     await deployedDiamond.deployed();
     result = await deployedDiamond.deployTransaction.wait();
     if (!result.status) {
@@ -123,9 +124,9 @@ async function deployDiamond({
       console.log("Diamond deploy transaction hash:" + deployedDiamond.deployTransaction.hash);
 
     if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`);
-    if (verbose) console.log(`Diamond owner: ${owner.address}`);
+    if (verbose) console.log(`Diamond owner: ${ownerAddress}`);
   } else {
-    await impersonateBeanstalk(owner.address);
+    await impersonateBeanstalk(ownerAddress);
     deployedDiamond = await ethers.getContractAt("Diamond", BEANSTALK);
   }
 

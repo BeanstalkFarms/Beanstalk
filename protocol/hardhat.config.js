@@ -99,14 +99,13 @@ task("getTime", async function () {
 task("reseed", async (mock = true) => {
   // mint more eth to the bcm to cover gas costs
   let account;
-  const diamondDeployerAccount = "0xC8cD8aEb4eBb773d41642A01E614F2635aA266CF" 
   if (mock) {
     account = await impersonateSigner(BCM);
     await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
   } else {
     // account = BCM signer
   }
-  await reseed(account, diamondDeployerAccount);
+  await reseed(account);
 });
 
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
@@ -367,7 +366,7 @@ module.exports = {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
-      accounts: [process.env.DIAMOND_DEPLOYER_PRIVATE_KEY]
+      accounts: "remote"
     },
     mainnet: {
       chainId: 1,
