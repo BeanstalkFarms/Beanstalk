@@ -82,8 +82,8 @@ library LibWstethEthOracle {
         uint256 uniswapPrice = LibUniswapOracle.getTwap(
             lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
             C.WSTETH_ETH_UNIV3_01_POOL,
-            C.WETH,
             C.WSTETH,
+            C.WETH,
             ONE
         );
 
