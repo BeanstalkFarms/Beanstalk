@@ -946,7 +946,7 @@ interface IMockFBeanstalk {
 
     function getEndBpf() external view returns (uint128 endBpf);
 
-    function getEthUsdPrice() external view returns (uint256);
+    function getUsdEthPrice() external view returns (uint256);
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256);
 

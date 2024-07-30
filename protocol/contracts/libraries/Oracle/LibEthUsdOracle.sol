@@ -12,13 +12,15 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
 
 /**
  * @title Eth Usd Oracle Library
- * @notice Contains functionalty to fetch a manipulation resistant ETH/USD price.
+ * @notice Contains functionalty to fetch a manipulation resistant ETH/USD or USD/ETH price.
  * @dev
- * The Oracle uses the ETH/USD Chainlink Oracle to fetch the price.
+ * The Oracle uses the ETH/USD or USD/ETH Chainlink Oracle to fetch the price.
  * The oracle will fail (return 0) if the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
  **/
 library LibEthUsdOracle {
     using LibRedundantMath256 for uint256;
+
+    uint256 constant ETH_DECIMALS = 18;
 
     function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -32,16 +34,37 @@ library LibEthUsdOracle {
     }
 
     /**
+     * @dev Returns the instantaneous USD/ETH price
+     * Return value has 6 decimal precision.
+     * Returns 0 if the USD/ETH Chainlink Oracle is broken or frozen.
+     **/
+    function getUsdEthPrice() internal view returns (uint256) {
+        return getUsdEthPrice(0);
+    }
+
+    /**
+     * @dev Returns the USD/ETH price with the option of using a TWA lookback.
+     * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
+     * Return value has 6 decimal precision.
+     * Returns 0 if the USD/ETH Chainlink Oracle is broken or frozen.
+     **/
+    function getUsdEthPrice(uint256 lookback) internal view returns (uint256) {
+        return
+            LibChainlinkOracle.getTokenPrice(
+                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                ETH_DECIMALS,
+                lookback
+            );
+    }
+
+    /**
      * @dev Returns the instantaneous ETH/USD price
      * Return value has 6 decimal precision.
      * Returns 0 if the ETH/USD Chainlink Oracle is broken or frozen.
      **/
     function getEthUsdPrice() internal view returns (uint256) {
-        return
-            LibChainlinkOracle.getPrice(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
-            );
+        return getEthUsdPrice(0);
     }
 
     /**
@@ -52,15 +75,11 @@ library LibEthUsdOracle {
      **/
     function getEthUsdPrice(uint256 lookback) internal view returns (uint256) {
         return
-            lookback > 0
-                ? LibChainlinkOracle.getTwap(
-                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
-                    lookback
-                )
-                : LibChainlinkOracle.getPrice(
-                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT
-                );
+            LibChainlinkOracle.getTokenPrice(
+                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
+                lookback
+            );
     }
 }

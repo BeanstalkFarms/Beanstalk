@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracle, IERC20Decimals} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @author pizzaman1337
@@ -57,6 +57,11 @@ contract OracleFacet is Invariable, ReentrancyGuard {
         address token,
         uint256 lookback
     ) external view returns (uint256 tokenPrice) {
-        return LibUsdOracle.getTokenPriceFromExternal(token, lookback);
+        return
+            LibUsdOracle.getTokenPriceFromExternal(
+                token,
+                IERC20Decimals(token).decimals(),
+                lookback
+            );
     }
 }
