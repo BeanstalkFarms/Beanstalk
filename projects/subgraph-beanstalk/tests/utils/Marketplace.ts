@@ -70,8 +70,8 @@ export function fillListing_v1(
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
   assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + event.params.index.toString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -97,8 +97,8 @@ export function fillListing_v2(
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
   assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + event.params.index.toString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -125,8 +125,8 @@ export function fillOrder_v1(
   // Assert PodFill
   const podFillId = getPodFillId(index, event);
   assert.fieldEquals("PodFill", podFillId, "order", event.params.id.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -153,8 +153,8 @@ export function fillOrder_v2(
   // Assert PodFill
   const podFillId = getPodFillId(index, event);
   assert.fieldEquals("PodFill", podFillId, "order", event.params.id.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());

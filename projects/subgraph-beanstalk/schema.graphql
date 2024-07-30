@@ -600,7 +600,7 @@ type Farmer @entity {
   plots: [Plot!]! @derivedFrom(field: "farmer")
   listings: [PodListing!]! @derivedFrom(field: "farmer")
   orders: [PodOrder!]! @derivedFrom(field: "farmer")
-  fills: [PodFill!]! @derivedFrom(field: "to")
+  fills: [PodFill!]! @derivedFrom(field: "toFarmer")
   fertilizers: [FertilizerBalance!]! @derivedFrom(field: "farmer")
 }
 
@@ -1153,7 +1153,7 @@ type PodFill @entity {
   "Account that is sending pods"
   fromFarmer: String! # These are already referenced via the listing and order entities.
   "Account that is receiving pods"
-  to: Farmer!
+  toFarmer: Farmer!
   "Number of pods filled"
   amount: BigInt!
   "Where these pods were in line when filled"
@@ -1296,7 +1296,7 @@ type PodTransfer implements FieldEvent @entity(immutable: true) {
   " The protocol this transaction belongs to "
   protocol: Beanstalk!
   " Address that received the pods "
-  to: String!
+  toFarmer: String!
   " Address that sent the pods "
   fromFarmer: String!
   " Index of the pods sent"
@@ -1588,7 +1588,7 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   "Account selling pods"
   fromFarmer: String!
   "Account buying pods"
-  to: String!
+  toFarmer: String!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"
@@ -1677,7 +1677,7 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   "Account selling pods"
   fromFarmer: String!
   "Account buying pods"
-  to: String!
+  toFarmer: String!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"

@@ -455,8 +455,8 @@ function podListingFilled(params: MarketFillParams): void {
   let fill = loadPodFill(params.event.address, params.index, params.event.transaction.hash.toHexString());
   fill.createdAt = params.event.block.timestamp;
   fill.listing = listing.id;
-  fill.from = params.from.toHexString();
-  fill.to = params.to.toHexString();
+  fill.fromFarmer = params.from.toHexString();
+  fill.toFarmer = params.to.toHexString();
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
@@ -476,8 +476,8 @@ function podListingFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = originalHistoryID;
-  rawEvent.from = params.from.toHexString();
-  rawEvent.to = params.to.toHexString();
+  rawEvent.fromFarmer = params.from.toHexString();
+  rawEvent.toFarmer = params.to.toHexString();
   rawEvent.placeInLine = fill.placeInLine;
   rawEvent.index = params.index;
   rawEvent.start = params.start;
@@ -550,8 +550,8 @@ function podOrderFilled(params: MarketFillParams): void {
 
   fill.createdAt = params.event.block.timestamp;
   fill.order = order.id;
-  fill.from = params.from.toHexString();
-  fill.to = params.to.toHexString();
+  fill.fromFarmer = params.from.toHexString();
+  fill.toFarmer = params.to.toHexString();
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
@@ -574,8 +574,8 @@ function podOrderFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
-  rawEvent.from = params.from.toHexString();
-  rawEvent.to = params.to.toHexString();
+  rawEvent.fromFarmer = params.from.toHexString();
+  rawEvent.toFarmer = params.to.toHexString();
   rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   rawEvent.index = params.index;
   rawEvent.start = params.start;
