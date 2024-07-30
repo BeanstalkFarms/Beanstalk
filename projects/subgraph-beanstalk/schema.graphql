@@ -328,7 +328,7 @@ type SiloYield @entity {
   "Sortable int field for season"
   season: Int!
   "Window used for vAPY calc"
-  window: EmaWindow!
+  emaWindow: EmaWindow!
   "Beta used for EMA"
   beta: BigDecimal!
   "u used for EMA"
@@ -1212,7 +1212,7 @@ type FertilizerYield @entity {
   "Current season"
   season: Int!
   "Bean EMA Window"
-  window: EmaWindow!
+  emaWindow: EmaWindow!
   "Current humidity"
   humidity: BigDecimal!
   "Current outstanding fert"

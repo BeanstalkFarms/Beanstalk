@@ -344,11 +344,11 @@ export function loadSiloYield(season: i32, window: i32): SiloYield {
     siloYield.createdAt = ZERO_BI;
 
     if (window == 24) {
-      siloYield.window = "ROLLING_24_HOUR";
+      siloYield.emaWindow = "ROLLING_24_HOUR";
     } else if (window == 168) {
-      siloYield.window = "ROLLING_7_DAY";
+      siloYield.emaWindow = "ROLLING_7_DAY";
     } else if (window == 720) {
-      siloYield.window = "ROLLING_30_DAY";
+      siloYield.emaWindow = "ROLLING_30_DAY";
     }
     siloYield.save();
   }

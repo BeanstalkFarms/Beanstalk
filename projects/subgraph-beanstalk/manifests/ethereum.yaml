@@ -778,8 +778,8 @@ dataSources:
         - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
           handler: handleUpdateGaugeSettings
       file: ../src/GaugeHandler.ts
-features:
-  - grafting
-graft:
-  base: QmPUvGdePV2maZCQ9hKvBVUrdFVBtkBXvpTLEsvxyzR3HG
-  block: 15289930
+# features:
+#   - grafting
+# graft:
+#   base: QmPUvGdePV2maZCQ9hKvBVUrdFVBtkBXvpTLEsvxyzR3HG
+#   block: 15289930
