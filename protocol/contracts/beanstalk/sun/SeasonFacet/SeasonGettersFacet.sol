@@ -105,7 +105,7 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
-    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB) {
+    function poolCurrentDeltaB(address pool) public view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
             (deltaB) = LibDeltaB.currentDeltaB(pool);
             return deltaB;
@@ -114,7 +114,7 @@ contract SeasonGettersFacet {
         }
     }
 
-    function cumulativeCurrentDeltaB(address[] pools) external view returns (int256 deltaB) {
+    function cumulativeCurrentDeltaB(address[] calldata pools) external view returns (int256 deltaB) {
         for (uint256 i; i < pools.length; i++) {
             deltaB += poolCurrentDeltaB(pools[i]);
         }

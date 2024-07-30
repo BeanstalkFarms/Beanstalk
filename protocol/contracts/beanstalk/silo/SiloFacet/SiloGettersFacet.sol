@@ -82,7 +82,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
      * @dev does not include germinating tokens.
      */
-    function getTotalDeposited(address token) external view returns (uint256) {
+    function getTotalDeposited(address token) public view returns (uint256) {
         return s.sys.silo.balances[token].deposited;
     }
 
@@ -102,7 +102,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
      * @dev does not include germinating bdv.
      */
-    function getTotalDepositedBdv(address token) external view returns (uint256) {
+    function getTotalDepositedBdv(address token) public view returns (uint256) {
         return s.sys.silo.balances[token].depositedBdv;
     }
 
@@ -110,7 +110,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total bdv of all whitelisted tokens in the Silo across all users.
      * @dev does not include germinating bdv.
      */
-    function getTotalDepositedBdv() external view returns (uint256[] depositedBdvs) {
+    function getTotalDepositedBdv() external view returns (uint256[] memory depositedBdvs) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
         depositedBdvs = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
@@ -182,7 +182,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice returns the bean denominated value ("bdv") of a token amount.
      */
-    function bdv(address token, uint256 amount) external view returns (uint256 _bdv) {
+    function bdv(address token, uint256 amount) public view returns (uint256 _bdv) {
         _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
     }
 
@@ -420,7 +420,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      *
      * @dev This passes in the last stem the user mowed at and the current stem
      */
-    function balanceOfGrownStalk(address account, address token) external view returns (uint256) {
+    function balanceOfGrownStalk(address account, address token) public view returns (uint256) {
         return
             LibSilo._balanceOfGrownStalk(
                 s.accts[account].mowStatuses[token].lastStem, //last stem farmer mowed
@@ -494,7 +494,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function stalkEarnedPerSeason(
         address[] calldata tokens
-    ) external view returns (uint256[] stalkEarnedPerSeasons) {
+    ) external view returns (uint256[] memory stalkEarnedPerSeasons) {
         stalkEarnedPerSeasons = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             stalkEarnedPerSeasons[i] = LibTokenSilo.stalkEarnedPerSeason(tokens[i]);
@@ -529,7 +529,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getMowStatus(
         address account,
         address token
-    ) external view returns (MowStatus memory mowStatus) {
+    ) public view returns (MowStatus memory mowStatus) {
         mowStatus = s.accts[account].mowStatuses[token];
     }
 

@@ -128,11 +128,13 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts
     ) external view returns (uint256 stalk) {
+        uint256 ogBDV;
+        uint256 newBDV;
+        uint256 deltaBDV;
         for (uint256 i; i < tokens.length; i++) {
-            uint256 depositId = LibBytes.packAddressAndStem(tokens[i], stems[i]);
-            uint256 ogBDV = s.accts[account].deposits[depositId].bdv;
-            uint256 newBDV = LibTokenSilo.beanDenominatedValue(tokens[i], amounts[i]);
-            uint256 deltaBDV = newBDV.sub(ogBDV);
+            ogBDV = s.accts[account].deposits[LibBytes.packAddressAndStem(tokens[i], stems[i])].bdv;
+            newBDV = LibTokenSilo.beanDenominatedValue(tokens[i], amounts[i]);
+            deltaBDV = newBDV.sub(ogBDV);
 
             stalk += deltaBDV.mul(s.sys.silo.assetSettings[tokens[i]].stalkIssuedPerBdv).add(
                 LibSilo.stalkReward(

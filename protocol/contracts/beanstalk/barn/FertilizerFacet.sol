@@ -189,10 +189,6 @@ contract FertilizerFacet is Invariable {
         return LibFertilizer.remainingRecapitalization();
     }
 
-    function getRemainingBpf(uint256 id) external view returns (uint128) {
-        return LibFertilizer.getRemainingBpf(id);
-    }
-
     function balanceOfUnfertilized(
         address account,
         uint256[] memory ids
