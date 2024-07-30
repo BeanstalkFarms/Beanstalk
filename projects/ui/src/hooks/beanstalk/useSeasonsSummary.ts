@@ -41,7 +41,7 @@ type SeasonalLiquidityAndPrice = {
 };
 
 type SummaryItem = {
-  value?: BigNumber;
+  value: BigNumber | undefined;
   delta?: BigNumber;
   display?: string;
 };
@@ -319,6 +319,7 @@ const useSeasonsSummary = () => {
           display: stateDisplay.podRate,
         },
         deltaPodDemand: {
+          value: deltaPodDemand,
           display: stateDisplay.deltaPodDemand,
         },
       });
