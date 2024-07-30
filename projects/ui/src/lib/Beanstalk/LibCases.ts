@@ -64,8 +64,8 @@ export type BeanstalkCaseState = {
   deltaPodDemand: BigNumber;
   l2sr: BigNumber;
   podRate: BigNumber;
-  largestLiqWell: string;
-  oracleFailure: boolean; 
+  largestLiqWell?: string;
+  oracleFailure?: boolean; 
 };
 
 
@@ -115,12 +115,9 @@ const SECONDS_PER_BLOCK = 12;
 const SECONDS_PER_SEASON = 3600; // 1 hour
 
 /// If all Soil is Sown faster than this (10m), Beanstalk considers demand for Soil to be increasing.
-const SOW_TIME_DEMAND_INCR = 600; // seconds
+const SOW_TIME_DEMAND_INCR = 600;
 
-const SOW_TIME_STEADY = 60; // 1m
-
-// some really large number. The contract uses 1e36, but we will just use this for now.
-const SOIL_DEMAND_HIGH = 99999999;
+const SOW_TIME_STEADY = 60;
 
 export class LibCases {
 
@@ -304,19 +301,11 @@ export class LibCases {
 
     const [ts, ls] = data; // [this season, last season]
 
-    const dSoil = ts.sownBeans;
-
     const soilNotSoldOutSeconds = new BigNumber(SECONDS_PER_SEASON + 1);
-
-    const thisSowTime = ts.soilSoldOut 
-    ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
-    : soilNotSoldOutSeconds; // max number
+    const thisSowTime = ts.soilSoldOut ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) : soilNotSoldOutSeconds;    
+    const lastSowTime = ts.soilSoldOut ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) : soilNotSoldOutSeconds; 
     
-    const lastSowTime = ts.soilSoldOut 
-    ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
-    : soilNotSoldOutSeconds; // 
-    
-    let deltaPodDemand: BigNumber = ZERO_BN;
+    let deltaPodDemand: BigNumber = ZERO_BN;    
 
     // 
     if (ts.soilSoldOut) {
@@ -335,7 +324,7 @@ export class LibCases {
         deltaPodDemand = ZERO_BN;
       }
     } else {
-      // Soil didn't sell out
+      const dSoil = ts.sownBeans;
       const lastDSoil = ls.sownBeans;
 
       if (dSoil.eq(0)) { // No soil sown this season
@@ -359,7 +348,6 @@ export class LibCases {
     if (podRate.gte(POD_RATE_UPPER_BOUND)) {
       caseId = 27;
       ev = "ExcessivelyHigh";
-
     } else if (podRate.gte(POD_RATE_OPTIMAL)) {
       caseId = 18;
       ev = "ReasonablyHigh";
@@ -382,8 +370,10 @@ export class LibCases {
       if (largestLiquidityWellBeanPrice.gt(1)) {
         // P > Q (1.05)
         if (largestLiquidityWellBeanPrice.gt(EXCESSIVE_PRICE_THRESHOLD)) {
-          ev = "PGtQ";
-          caseId = 5;
+          return {
+            id: 5,
+            evaluation: DisplayMaps.price.PGtQ,
+          }
         }
       }
       ev = "PGt1"

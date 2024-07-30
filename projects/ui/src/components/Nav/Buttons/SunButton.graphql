@@ -1,14 +1,26 @@
-query SunButton {
-  seasons(first: 24, orderBy: season, orderDirection: desc) {
+query SunButton($season_lte: Int!) {
+  seasons(
+    # 25 to get data for the 24th
+    first: 25
+    orderBy: season
+    orderDirection: desc
+    where: { season_lte: $season_lte }
+  ) {
     id
     season
     price
     deltaBeans
     rewardBeans
+    beans
+    deltaB
   }
   fields: fieldHourlySnapshots(
-    first: 24
-    where: { field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" }
+    first: 25
+    where: {
+      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
+      season_lte: $season_lte
+      caseId_not: null
+    }
     orderBy: season
     orderDirection: desc
   ) {
@@ -20,10 +32,6 @@ query SunButton {
     soilSoldOut
     blocksToSoldOutSoil
     sownBeans
-  }
-  silo: siloHourlySnapshots(first: 24, orderBy: season, orderDirection: desc) {
-    id
-    season
     caseId
   }
 }
