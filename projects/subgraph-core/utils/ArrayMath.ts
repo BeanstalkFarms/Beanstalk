@@ -55,8 +55,6 @@ export function BigDecimal_min(a: BigDecimal[]): BigDecimal {
   }
   return retval;
 }
-<<<<<<< HEAD
-=======
 
 export function BigDecimal_indexOfMin(a: BigDecimal[]): u32 {
   let retval = 0;
@@ -87,4 +85,3 @@ export function f64_max(arr: f64[]): f64 {
   }
   return max;
 }
->>>>>>> master

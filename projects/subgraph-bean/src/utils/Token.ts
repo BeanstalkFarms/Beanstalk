@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-=======
 import { BigDecimal } from "@graphprotocol/graph-ts";
->>>>>>> master
 import { Token } from "../../generated/schema";
 import { ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { getTokenInfo } from "../constants/PooledTokens";

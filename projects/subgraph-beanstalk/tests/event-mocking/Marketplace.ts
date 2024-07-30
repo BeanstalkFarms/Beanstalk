@@ -17,11 +17,7 @@ import {
 } from "../../generated/BIP29-PodMarketplace/Beanstalk";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
-<<<<<<< HEAD
-/* V1 Marketplace events */
-=======
 /** ===== Marketplace V1 Events ===== */
->>>>>>> master
 export function createPodListingCreatedEvent(
   account: string,
   index: BigInt,
@@ -29,15 +25,6 @@ export function createPodListingCreatedEvent(
   amount: BigInt,
   pricePerPod: BigInt,
   maxHarvestableIndex: BigInt,
-<<<<<<< HEAD
-  toWallet: Boolean
-): void {}
-export function createPodListingCancelledEvent(account: string, index: BigInt): void {}
-export function createPodListingFilledEvent(from: string, to: string, index: BigInt, start: BigInt, amount: BigInt): void {}
-export function createPodOrderCreatedEvent(account: string, id: Bytes, amount: BigInt, pricePerPod: BigInt, maxPlaceInLine: BigInt): void {}
-export function createPodOrderFilledEvent(from: string, to: string, id: Bytes, index: BigInt, start: BigInt, amount: BigInt): void {}
-export function createPodOrderCancelledEvent(account: string, id: Bytes): void {}
-=======
   toWallet: boolean
 ): PodListingCreated_v1 {
   let event = changetype<PodListingCreated_v1>(mockBeanstalkEvent());
@@ -133,7 +120,6 @@ export function createPodOrderFilledEvent(
 
   return event as PodOrderFilled_v1;
 }
->>>>>>> master
 
 /* V1_1 Marketplace events (on replant) */
 export function createPodListingCreatedEvent_v1_1(
@@ -144,9 +130,6 @@ export function createPodListingCreatedEvent_v1_1(
   pricePerPod: BigInt,
   maxHarvestableIndex: BigInt,
   mode: BigInt
-<<<<<<< HEAD
-): void {}
-=======
 ): PodListingCreated_v1_1 {
   let event = changetype<PodListingCreated_v1_1>(mockBeanstalkEvent());
   event.parameters = new Array();
@@ -169,7 +152,6 @@ export function createPodListingCreatedEvent_v1_1(
 
   return event as PodListingCreated_v1_1;
 }
->>>>>>> master
 
 /** ===== Marketplace V2 Events ===== */
 export function createPodListingCreatedEvent_v2(
@@ -184,11 +166,7 @@ export function createPodListingCreatedEvent_v2(
   mode: BigInt,
   pricingType: BigInt
 ): PodListingCreated_v2 {
-<<<<<<< HEAD
-  let event = changetype<PodListingCreated_v2>(newMockEvent());
-=======
   let event = changetype<PodListingCreated_v2>(mockBeanstalkEvent());
->>>>>>> master
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
@@ -223,13 +201,6 @@ export function createPodListingFilledEvent_v2(
   start: BigInt,
   amount: BigInt,
   costInBeans: BigInt
-<<<<<<< HEAD
-): void {}
-export function createPodOrderCreatedEvent_v2(
-  account: string,
-  id: Bytes,
-  amount: BigInt,
-=======
 ): PodListingFilled_v2 {
   let event = changetype<PodListingFilled_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
@@ -255,15 +226,11 @@ export function createPodOrderCreatedEvent_v2(
   account: string,
   id: Bytes,
   beanAmount: BigInt,
->>>>>>> master
   pricePerPod: BigInt,
   maxPlaceInLine: BigInt,
   minFillAmount: BigInt,
   pricingFunction: Bytes,
   pricingType: BigInt
-<<<<<<< HEAD
-): void {}
-=======
 ): PodOrderCreated_v2 {
   let event = changetype<PodOrderCreated_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
@@ -289,7 +256,6 @@ export function createPodOrderCreatedEvent_v2(
   return event as PodOrderCreated_v2;
 }
 
->>>>>>> master
 export function createPodOrderFilledEvent_v2(
   from: string,
   to: string,
@@ -298,9 +264,6 @@ export function createPodOrderFilledEvent_v2(
   start: BigInt,
   amount: BigInt,
   costInBeans: BigInt
-<<<<<<< HEAD
-): void {}
-=======
 ): PodOrderFilled_v2 {
   let event = changetype<PodOrderFilled_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
@@ -350,4 +313,3 @@ export function createPodListingCancelledEvent(account: string, index: BigInt): 
 
   return event as PodListingCancelled;
 }
->>>>>>> master
