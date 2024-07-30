@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { ONE_BN, ZERO_BN } from '~/constants';
+import { ZERO_BN } from '~/constants';
 import { toBNWithDecimals } from "~/util/BigNumber";
 
 /**
@@ -68,7 +68,8 @@ export type BeanstalkCaseState = {
   oracleFailure: boolean; 
 };
 
-export type CalcDeltaPodDemandProps = {
+
+export type SoilDemandParams = {
   soilSoldOut: boolean;
   blocksToSoldOutSoil: BigNumber;
   sownBeans: BigNumber;
@@ -111,13 +112,15 @@ const BEAN_MAX_LP_GP_RATIO_RANGE =
 // TODO: Chain dependent
 const SECONDS_PER_BLOCK = 12;
 
-const SECONDS_PER_SEASON = new BigNumber(3600);
+const SECONDS_PER_SEASON = 3600; // 1 hour
 
-/// @dev If all Soil is Sown faster than this, Beanstalk considers demand for Soil to be increasing.
+/// If all Soil is Sown faster than this (10m), Beanstalk considers demand for Soil to be increasing.
 const SOW_TIME_DEMAND_INCR = 600; // seconds
 
-const SOW_TIME_STEADY = 60; // seconds
+const SOW_TIME_STEADY = 60; // 1m
 
+// some really large number. The contract uses 1e36, but we will just use this for now.
+const SOIL_DEMAND_HIGH = 99999999;
 
 export class LibCases {
 
@@ -261,43 +264,73 @@ export class LibCases {
 
   // ---------- Calculations ----------
 
+  /**
+   * TS translation of calcDeltaPodDemand() in LibEvaluate.sol.
+   * 
+   * The contract uses the Weather Struct & delta soil to calculate deltaPodDemand.
+   * - dSoil: The amount of soil sown in a season
+   * - lastDSoil: The amount of soil sown last season
+   * - thisSowTime: Seconds it took to sow all soil in this season
+   * - lastSowTime: Seconds it took to sow all soil in last season
+   * 
+   * The above fields can be inferred:
+   * where: 
+   * - d[s] = this season, 
+   * - d[p] = previous season
+   * - SPB  = seconds per block = 12
+   * - MAX  = some number above mx seconds per season that represents soil did not sell out
+   * 
+   * such that: 
+   * - dSoil        = d[s].sownBeans
+   * - lastDSoil    = d[p].sownBeans
+   * - thisSowTime  = d[s].soilSoldOut ? d[s].blocksToSoldOutSoil * SPB : MAX
+   * - lastSowTime  = d[p].soilSoldOut ? d[p]blocksToSoldOutSoil * SPB : MAX
+   * 
+   * Check the solidity code for more details.
+   * 
+   * @param data [tuple of soil data]
+   * @returns BigNumber with 18 decimals
+   */
+
   static calcDeltaPodDemand(
     data: [
-      thisSeason: CalcDeltaPodDemandProps, 
-      lastSeason: CalcDeltaPodDemandProps
+      thisSeason: SoilDemandParams, 
+      lastSeason: SoilDemandParams
     ]
   ) {
     if (data.length !== 2) {
       throw new Error(`[LibCases/calcDeltaPodDemand]: expected 2 data points but got ${data.length}`);
     }
 
-    const [ts, ls] = data;
-
-    let deltaPodDemand: BigNumber = ZERO_BN;
+    const [ts, ls] = data; // [this season, last season]
 
     const dSoil = ts.sownBeans;
-    const thisSowTime = ts.soilSoldOut 
-      ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
-      : SECONDS_PER_SEASON; // 3600 seconds in an hour
 
-    const lastSowTime = ts.soilSoldOut 
-      ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
-      : SECONDS_PER_SEASON; // 3600 seconds in an hour
+    const soilNotSoldOutSeconds = new BigNumber(SECONDS_PER_SEASON + 1);
+
+    const thisSowTime = ts.soilSoldOut 
+    ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
+    : soilNotSoldOutSeconds; // max number
     
+    const lastSowTime = ts.soilSoldOut 
+    ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) 
+    : soilNotSoldOutSeconds; // 
+    
+    let deltaPodDemand: BigNumber = ZERO_BN;
+
     // 
     if (ts.soilSoldOut) {
       if (
         !ls.soilSoldOut || // Didn't sow all last season
         thisSowTime.lt(SOW_TIME_DEMAND_INCR) || // Sow'd all within 10 minutes
-        (lastSowTime.gt(SOW_TIME_STEADY) && // Time to sell out soil last season is greater than 1 minute
+        (lastSowTime.gt(SOW_TIME_STEADY) && // Time to sell out soil last season is greater than 1 minute && 
           thisSowTime.lt(lastSowTime.minus(SOW_TIME_STEADY))) // Sow'd all within 1 minute of last seasons' time to sell out soil
       ) {
         deltaPodDemand = new BigNumber(1e36);
-      } else if (
-        // Sow'd all within 1 minute of last seasons' time to sell out soil
-        thisSowTime.lte(lastSowTime.plus(SOW_TIME_STEADY))
+      } else if (        
+        thisSowTime.lte(lastSowTime.plus(SOW_TIME_STEADY)) // Sow'd all in less than 1 minute of last seasons' time to sell out soil
       ) { 
-        deltaPodDemand = ONE_BN;
+        deltaPodDemand = new BigNumber(1e18);
       } else {
         deltaPodDemand = ZERO_BN;
       }
@@ -305,9 +338,9 @@ export class LibCases {
       // Soil didn't sell out
       const lastDSoil = ls.sownBeans;
 
-      if (dSoil.eq(0)) {
+      if (dSoil.eq(0)) { // No soil sown this season
         deltaPodDemand = ZERO_BN;
-      } else if (lastDSoil.eq(0)) {
+      } else if (lastDSoil.eq(0)) { // No soil sown last season
         deltaPodDemand = new BigNumber(1e36);
       } else {
         deltaPodDemand = dSoil.div(lastDSoil);
