@@ -19,7 +19,7 @@ export function handleTransferBatch(event: TransferBatch): void {
 function handleTransfer(from: Address, to: Address, id: BigInt, amount: BigInt, blockNumber: BigInt): void {
   let fertilizer = loadFertilizer(FERTILIZER);
   let fertilizerToken = loadFertilizerToken(fertilizer, id, blockNumber);
-  log.debug("\nFert Transfer: id - {}\n", [id.toString()]);
+  log.debug("\nFert Transfer: id – {}\n", [id.toString()]);
   if (from != ADDRESS_ZERO) {
     let fromFarmer = loadFarmer(from);
     let fromFertilizerBalance = loadFertilizerBalance(fertilizerToken, fromFarmer);

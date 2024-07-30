@@ -641,7 +641,7 @@ dataSources:
     network: mainnet
     source:
       address: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6"
-      abi: Replanted
+      abi: Fertilizer
       startBlock: 14910573
     mapping:
       kind: ethereum/events
@@ -652,8 +652,8 @@ dataSources:
       abis:
         - name: Fertilizer
           file: ../../subgraph-core/abis/Fertilizer.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: MarketV2
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
       eventHandlers:
         - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
           handler: handleTransferBatch
