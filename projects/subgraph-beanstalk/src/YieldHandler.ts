@@ -403,7 +403,7 @@ export function calculateGaugeVAPYs(
     }
 
     if (gaugeLpPoints.length > 1) {
-      for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++i) {
+      for (let j = 0; j < gaugeLpDepositedBdvCopy.length; ++j) {
         gaugeLpPointsCopy[j] = updateGaugePoints(
           gaugeLpPointsCopy[j],
           currentPercentLpBdv[j],
