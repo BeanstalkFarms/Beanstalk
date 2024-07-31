@@ -41,15 +41,11 @@ export const Home = () => {
                   used by the BEAN:WETH Well.
                 </div>
               </MevInfo>
-<<<<<<< HEAD
-              <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
-=======
               <GetStartedContainer
                 href={links.multiFlowPump}
                 target="_blank"
                 rel="noopener noreferrer"
               >
->>>>>>> master
                 <GetStarted>Read the whitepaper →</GetStarted>
               </GetStartedContainer>
             </MevBannerBG>

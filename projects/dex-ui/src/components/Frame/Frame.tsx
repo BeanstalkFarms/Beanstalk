@@ -11,12 +11,6 @@ import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { LinksNav } from "../Typography";
 import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
-<<<<<<< HEAD
-import { size } from "src/breakpoints";
-import { useAccount } from "wagmi";
-import { Title } from "../PageComponents/Title";
-=======
->>>>>>> master
 import { TokenMarquee } from "./TokenMarquee";
 import { WalletButton } from "src/components/Wallet";
 import { theme } from "src/utils/ui/theme";
@@ -25,11 +19,7 @@ import { useChainId } from "wagmi";
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-<<<<<<< HEAD
-  const { chain } = useAccount();
-=======
   const chain = useChainId();
->>>>>>> master
 
   return (
     <Container id="frame">

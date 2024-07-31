@@ -44,10 +44,7 @@ import stalkIcon from '~/img/beanstalk/stalk-icon.svg';
 import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
 import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
-<<<<<<< HEAD
-=======
 import { roundWithDecimals } from '~/util/UI';
->>>>>>> master
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -209,11 +206,8 @@ const Whitelist: FC<{
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
           const isUnripe = token === urBean || token === urBeanWeth;
-<<<<<<< HEAD
-=======
           const isUnripeLP =
             isUnripe && token.address === UNRIPE_BEAN_WETH[1].address;
->>>>>>> master
           const isDeprecated = checkIfDeprecated(token.address);
 
           // Unripe data
@@ -322,12 +316,6 @@ const Whitelist: FC<{
                         <Tooltip
                           placement="right"
                           title={
-<<<<<<< HEAD
-                            <>
-                              1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
-                              BDV
-                            </>
-=======
                             <Stack gap={0.25}>
                               1 {token.symbol} = {displayFullBN(getBDV(token))}{' '}
                               BDV
@@ -345,7 +333,6 @@ const Whitelist: FC<{
                                 </Typography>
                               </Row>
                             </Stack>
->>>>>>> master
                           }
                         >
                           <Box>
@@ -359,14 +346,7 @@ const Whitelist: FC<{
                               </Typography>
                               <TokenIcon token={SEEDS} />
                               <Typography color="text.primary">
-<<<<<<< HEAD
-                                {Math.round(
-                                  (token.rewards?.seeds || 0 + Number.EPSILON) *
-                                    100
-                                ) / 100}
-=======
                                 {roundWithDecimals(token.rewards?.seeds, 3)}
->>>>>>> master
                               </Typography>
                             </Row>
                           </Box>

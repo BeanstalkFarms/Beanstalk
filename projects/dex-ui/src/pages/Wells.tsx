@@ -21,17 +21,6 @@ import {
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import useBasinStats from "src/wells/useBasinStats";
-<<<<<<< HEAD
-
-export const Wells = () => {
-  const { data: wells, isLoading, error } = useWells();
-  const { data: wellStats } = useBasinStats();
-  const sdk = useSdk();
-
-  const [wellLiquidity, setWellLiquidity] = useState<(TokenValue | undefined)[]>([]);
-  const [wellFunctionNames, setWellFunctionNames] = useState<string[]>([]);
-  const [wellTokenPrices, setWellTokenPrices] = useState<(TokenValue | null)[][]>([]);
-=======
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
 import { BasinAPIResponse } from "src/types";
@@ -44,47 +33,11 @@ export const Wells = () => {
   const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
 
->>>>>>> master
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
-<<<<<<< HEAD
-  // const [isLoadingWellData, setIsLoadingWellData] = useState<boolean>(true);
-
-  useMemo(() => {
-    const run = async () => {
-      if (!wells || !wells.length) return;
-      let _wellsLiquidityUSD = [];
-      let _wellsTokenPrices = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].tokens) return;
-        const _tokenPrices = await Promise.all(wells[i].tokens!.map((token) => getPrice(token, sdk)));
-        _wellsTokenPrices[i] = _tokenPrices;
-        const _reserveValues = wells[i].reserves?.map((tokenReserve, index) =>
-          tokenReserve.mul((_tokenPrices[index] as TokenValue) || TokenValue.ZERO)
-        );
-        let initialValue = TokenValue.ZERO;
-        const _totalWellLiquidity = _reserveValues?.reduce((accumulator, currentValue) => currentValue.add(accumulator), initialValue);
-        _wellsLiquidityUSD[i] = _totalWellLiquidity;
-      }
-      setWellLiquidity(_wellsLiquidityUSD);
-      setWellTokenPrices(_wellsTokenPrices);
-
-      let _wellsFunctionNames = [];
-      for (let i = 0; i < wells.length; i++) {
-        if (!wells[i].wellFunction) return;
-        const _wellName = await wells[i].wellFunction!.contract.name();
-        _wellsFunctionNames[i] = _wellName;
-      }
-      setWellFunctionNames(_wellsFunctionNames);
-      // setIsLoadingWellData(false);
-    };
-
-    run();
-  }, [sdk, wells]);
-=======
   const { data: tokenPrices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
   const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
@@ -101,9 +54,6 @@ export const Wells = () => {
       tokenPricesLoading ||
       wellNamesLoading
   );
->>>>>>> master
-
-  const loading = useLagLoading(isLoading || apysLoading || positionsLoading);
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
@@ -174,25 +124,6 @@ export const Wells = () => {
                   </NoLPRowMobile>
                 </>
               ) : (
-<<<<<<< HEAD
-                wells?.map((well, index) => {
-                  let price = undefined;
-                  let volume = undefined;
-                  if (wellStats && well.tokens && wellTokenPrices[index]) {
-                    price = well.tokens[1].fromHuman(wellStats[index].last_price).mul(wellTokenPrices[index][1] as TokenValue);
-                    volume =  well.tokens[1].fromHuman(wellStats[index].target_volume).mul(wellTokenPrices[index][1] as TokenValue);
-                  };
-                  return tab === 0 ? (
-                    <WellDetailRow
-                      well={well}
-                      liquidity={wellLiquidity?.[index]}
-                      functionName={wellFunctionNames?.[index]}
-                      price={price}
-                      volume={volume}
-                      key={`well-detail-row-${well.address}-${index}`}
-                    />
-                  ) : (
-=======
                 tableData?.map(({ well, baseTokenPrice, liquidityUSD, targetVolume }, index) => {
                   if (tab === 0) {
                     const priceFnName =
@@ -211,7 +142,6 @@ export const Wells = () => {
                   }
 
                   return (
->>>>>>> master
                     <MyWellPositionRow
                       well={well}
                       position={getPositionWithWell(well)}
@@ -357,16 +287,6 @@ const MobileHeader = styled(Th)`
 
 const DesktopHeader = styled(Th)`
   :nth-child(1) {
-<<<<<<< HEAD
-    width: 12em
-  }
-  :nth-child(2) {
-    width: 12em
-  }
-  :nth-child(3) {
-    width: 12em
-  }
-=======
     width: 10em;
   }
   :nth-child(2) {
@@ -376,7 +296,6 @@ const DesktopHeader = styled(Th)`
     width: 12em;
   }
 
->>>>>>> master
   :nth-child(5) {
     @media (max-width: ${size.desktop}) {
       display: none;
@@ -387,15 +306,12 @@ const DesktopHeader = styled(Th)`
       display: none;
     }
   }
-<<<<<<< HEAD
-=======
 
   :nth-child(3) {
     @media (max-width: ${size.tablet}) {
       display: none;
     }
   }
->>>>>>> master
   @media (max-width: ${size.mobile}) {
     display: none;
   }

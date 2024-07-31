@@ -40,13 +40,7 @@ const Deposits: FC<
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.stem?.toString(),
-        mowableStalk: deposit.bdv
-          ?.multipliedBy(deltaStem)
-<<<<<<< HEAD
-          .shiftedBy(decimalShift),
-=======
-          .div(10000),
->>>>>>> master
+        mowableStalk: deposit.bdv?.multipliedBy(deltaStem).div(10000),
         ...deposit,
       })) || [],
     [siloBalance?.deposited.crates, deltaStem]
