@@ -27,6 +27,8 @@ contract L1RecieverFacetTest is TestHelper {
      * @notice validates that an account verification works, with the correct data.
      */
     function test_L2MigrateDeposits() public {
+        // skip sunrises such that stemTip > 0:
+        bs.fastForward(100);
         bs.setRecieverForL1Migration(OWNER, RECIEVER);
 
         (
@@ -34,21 +36,13 @@ contract L1RecieverFacetTest is TestHelper {
             uint256[] memory depositIds,
             uint256[] memory depositAmounts,
             uint256[] memory bdvs,
-            uint256 stalk,
             bytes32[] memory proof
         ) = getMockDepositData();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueDeposits(
-            owner,
-            depositIds,
-            depositAmounts,
-            bdvs,
-            stalk,
-            proof
-        );
+        L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
 
-        assertEq(bs.balanceOfStalk(RECIEVER), stalk);
+        assertEq(bs.balanceOfStalk(RECIEVER), 10199e6);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         (uint256 amount, uint256 bdv) = bs.getDeposit(RECIEVER, token, stem);
         assertEq(amount, depositAmounts[0]);
@@ -57,14 +51,7 @@ contract L1RecieverFacetTest is TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Deposits have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueDeposits(
-            owner,
-            depositIds,
-            depositAmounts,
-            bdvs,
-            stalk,
-            proof
-        );
+        L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
     }
 
     function test_L2MigratePlots() public {
@@ -130,9 +117,25 @@ contract L1RecieverFacetTest is TestHelper {
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
-    function test_L2MigrateInvalidReciever() public {}
+    /**
+     * @notice verifies only the owner or bridge can call the migration functions.
+     */
+    function test_L2MigrateInvalidReciever(address reciever) public {
+        vm.prank(reciever);
+        vm.expectRevert("L1RecieverFacet: Invalid Caller");
+        bs.approveReciever(OWNER, reciever);
 
-    function test_L2MigrateInvalidDeposit() public {}
+        uint256 snapshot = vm.snapshot();
+        address aliasedAddress = applyL1ToL2Alias(BEANSTALK);
+        vm.prank(aliasedAddress);
+        bs.approveReciever(OWNER, reciever);
+        assertEq(bs.getReciever(OWNER), reciever);
+
+        vm.revertTo(snapshot);
+        vm.prank(users[0]);
+        bs.approveReciever(OWNER, reciever);
+        assertEq(bs.getReciever(OWNER), reciever);
+    }
 
     function test_L2MigrateInvalidPlot() public {}
 
@@ -143,18 +146,11 @@ contract L1RecieverFacetTest is TestHelper {
     // test helpers
     function getMockDepositData()
         internal
-        returns (
-            address,
-            uint256[] memory,
-            uint256[] memory,
-            uint256[] memory,
-            uint256,
-            bytes32[] memory
-        )
+        returns (address, uint256[] memory, uint256[] memory, uint256[] memory, bytes32[] memory)
     {
         address account = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
         uint256[] memory depositIds = new uint256[](1);
-        depositIds[0] = uint256(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab000000000000000000F4240);
+        depositIds[0] = uint256(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab0000000000000000000F4240);
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 1000000;
@@ -162,14 +158,12 @@ contract L1RecieverFacetTest is TestHelper {
         uint256[] memory bdvs = new uint256[](1);
         bdvs[0] = 1000000;
 
-        uint256 stalk = 1000000000000;
-
         bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0xea7b6ec6adf4bf0ed261310624aa3ae4a7a2bbed9fa4fb3c6c954ac210c885dc);
-        proof[1] = bytes32(0x6cfc3b17d940272292defb965ecba31d829ef7ca2d390f6dd684a0baac7048e8);
-        proof[2] = bytes32(0x0bbbb949dfd91d793b423ed5bea05900c0e3e0817b5ce8aef6ae6a86610ab4c9);
+        proof[0] = bytes32(0x8ea415839f1072f235336be93f3642bbb931587b0514414f050ba28e44e863ba);
+        proof[1] = bytes32(0xb6a82bb1dbec8f846d882348c50cdc2f98cc3624f3f644d766aee803f3bf54f9);
+        proof[2] = bytes32(0x6bcf3ec8ed0d7643aa6aa7eb4e6355b359c24df28cfaee3ce85ccfaca5948165);
 
-        return (account, depositIds, amounts, bdvs, stalk, proof);
+        return (account, depositIds, amounts, bdvs, proof);
     }
 
     function getMockPlot()
@@ -232,5 +226,19 @@ contract L1RecieverFacetTest is TestHelper {
         proof[2] = bytes32(0x0a2ec57dfd306a0e6b245cde079298f849cda3a3ba90016fa3216aac66a9ede3);
 
         return (account, ids, amounts, lastBpf, proof);
+    }
+
+    /**
+     * @notice Utility function that converts the address in the L1 that submitted a tx to
+     * the inbox to the msg.sender viewed in the L2
+     * @param l1Address the address in the L1 that triggered the tx to L2
+     * @return l2Address L2 address as viewed in msg.sender
+     */
+    function applyL1ToL2Alias(address l1Address) internal pure returns (address l2Address) {
+        unchecked {
+            l2Address = address(
+                uint160(l1Address) + uint160(0x1111000000000000000000000000000000001111)
+            );
+        }
     }
 }

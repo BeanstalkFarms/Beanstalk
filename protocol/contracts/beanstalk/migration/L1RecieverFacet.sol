@@ -16,6 +16,7 @@ import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 
 /**
  * @author Brean
@@ -34,7 +35,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0x8407837c2fb7fd0936e495cede5f3bd5ae2e1e2aa0057e73749e35b4037538a0;
+        0xa1a847b9439cc6a293b68ff7d1ef36cb753e33e94a6d25cbec4369af40764968;
     bytes32 internal constant PLOT_MERKLE_ROOT =
         0x0314c9f403409b3af761d6a7591b62d0d9b7424e5288da3d79de67b3d37507cc;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
@@ -43,6 +44,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
+
+    uint256 internal constant STALK_PRECISION = 1e6;
 
     /**
      * @notice emitted when L1 Beans are migrated to L2.
@@ -126,10 +129,16 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice approves a reciever to recieve the beanstalk native assets of a sender.
+     * @dev only able to be called by a bridge contract, or the diamond owner.
      */
     function approveReciever(address owner, address reciever) external nonReentrant {
-        // To check that message came from L1, we check that the sender is the L1 contract's L2 alias.
-        require(msg.sender == applyL1ToL2Alias(L1BEANSTALK), "approveReciever only callable by L1");
+        // To check that message came from L1, we check that the sender is
+        // 1) the L1 contract's L2 alias (i.e came from the arbitrum bridge)
+        // 2) the diamond owner.
+        require(
+            msg.sender == applyL1ToL2Alias(L1BEANSTALK) || msg.sender == LibDiamond.contractOwner(),
+            "L1RecieverFacet: Invalid Caller"
+        );
 
         s.sys.l2Migration.account[owner].reciever = reciever;
 
@@ -146,7 +155,6 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         uint256[] calldata bdvs,
-        uint256 stalk,
         bytes32[] calldata proof
     ) external mowAll nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
@@ -159,12 +167,13 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         // verify depositId and amount validity:
         require(
-            verifyDepositMerkleProof(owner, depositIds, amounts, bdvs, stalk, proof),
+            verifyDepositMerkleProof(owner, depositIds, amounts, bdvs, proof),
             "L2Migration: Invalid deposits"
         );
 
         // add migrated deposits to the account.
-        addMigratedDepositsToAccount(reciever, depositIds, amounts, bdvs);
+        uint256 stalk = addMigratedDepositsToAccount(reciever, depositIds, amounts, bdvs);
+        console.log("stalk issued:", stalk);
 
         // increment receiver stalk:
         LibSilo.mintActiveStalk(reciever, stalk);
@@ -285,16 +294,12 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         uint256[] calldata bdvs,
-        uint256 stalk,
         bytes32[] calldata proof
     ) public pure returns (bool) {
         bytes32 leaf = keccak256(
             bytes.concat(
                 keccak256(
-                    abi.encode(
-                        owner,
-                        keccak256(abi.encode(owner, depositIds, amounts, bdvs, stalk))
-                    )
+                    abi.encode(owner, keccak256(abi.encode(owner, depositIds, amounts, bdvs)))
                 )
             )
         );
@@ -363,9 +368,13 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         uint256[] calldata bdvs
-    ) internal {
+    ) internal returns (uint256 stalk) {
         for (uint i; i < depositIds.length; i++) {
+            console.log("depositIds[i]", depositIds[i]);
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
+            console.log("token", token);
+            uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
+            int96 stemTip = LibTokenSilo.stemTipForToken(token);
             LibTokenSilo.addDepositToAccount(
                 reciever,
                 token,
@@ -374,6 +383,17 @@ contract L1RecieverFacet is ReentrancyGuard {
                 bdvs[i],
                 LibTokenSilo.Transfer.emitTransferSingle
             );
+            console.log("stalk issued.");
+
+            // calculate the stalk assoicated with the deposit and increment.
+            console.log("stalkIssuedPerBdv", stalkIssuedPerBdv);
+            console.logInt(stemTip);
+            console.logInt(stem);
+            console.log("bdvs[i]", bdvs[i]);
+            console.log(STALK_PRECISION);
+            stalk +=
+                (bdvs[i] * stalkIssuedPerBdv) +
+                (uint256(uint256(uint96(stemTip - stem)) * bdvs[i]) / STALK_PRECISION);
         }
     }
 
@@ -458,7 +478,6 @@ contract L1RecieverFacet is ReentrancyGuard {
      * the inbox to the msg.sender viewed in the L2
      * @param l1Address the address in the L1 that triggered the tx to L2
      * @return l2Address L2 address as viewed in msg.sender
-     * @dev
      */
     function applyL1ToL2Alias(address l1Address) internal pure returns (address l2Address) {
         unchecked {

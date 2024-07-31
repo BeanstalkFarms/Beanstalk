@@ -15,7 +15,7 @@ function getDepositMerkleRoot(verbose = false) {
   encodedData = "";
   for (let i = 0; i < accounts.length; i++) {
     encodedData = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256[]", "uint256[]", "uint256[]", "uint256"],
+      ["address", "uint256[]", "uint256[]", "uint256[]"],
       accounts[i]
     );
     // hash encoded data:
@@ -174,6 +174,6 @@ function getFertMerkleRoot(verbose = false) {
 }
 
 getDepositMerkleRoot(false);
-getPlotMerkleRoot(true);
+getPlotMerkleRoot(false);
 getInternalBalMerkleRoot(false);
 getFertMerkleRoot(false);

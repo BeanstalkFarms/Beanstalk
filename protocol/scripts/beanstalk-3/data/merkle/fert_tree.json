@@ -1,7 +1,10 @@
 {
   "tree": {
     "format": "standard-v1",
-    "leafEncoding": ["address", "bytes32"],
+    "leafEncoding": [
+      "address",
+      "bytes32"
+    ],
     "tree": [
       "0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2",
       "0xb528ed0f88897b6f046752ab18144a86523eed2e9f41dfe10abb58b9f3e590d4",
