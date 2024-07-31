@@ -107,7 +107,7 @@ const ConvertForm: FC<
   const getBDV = useBDV();
   const [isChopping, setIsChopping] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [choppingConfirmed, setChoppingConfirmed] = useState(true);
+  const [choppingConfirmed, setChoppingConfirmed] = useState(false);
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (_state) => _state._bean.unripe
   );
@@ -192,10 +192,6 @@ const ConvertForm: FC<
       ); // seeds lost when converting
     }
   }
-
-  // + 16.84 BEANwstETH
-  // ~2,236.61 BDV   // curr: 587 bdv
-  // + 12,664.01 SEED
 
   useEffect(() => {
     if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
@@ -574,11 +570,6 @@ const ConvertPropProvider: FC<{
       _tokenList?.[0], // tokenOut is the first available token that isn't the fromToken
     ];
   }, [sdk, fromToken]);
-
-  console.log(
-    'tokenlist: ',
-    tokenList.map((tk) => tk.symbol)
-  );
 
   /// Beanstalk
   const season = useSeason();
