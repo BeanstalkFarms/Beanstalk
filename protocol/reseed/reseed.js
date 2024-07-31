@@ -29,19 +29,21 @@ async function reseed(
   reseeds = [
     reseed1,
     reseedDeployL2Beanstalk,
-    reseed3,
-    reseed4,
-    reseed5,
-    reseed6,
+    // reseed3,
+    // reseed4,
+    // reseed5,
+    // reseed6,
     // reseed7,
     reseed8,
-    reseed9
+
+    // reseed9
   ];
   let l2BeanstalkAddress;
   console.clear();
   await printBeanstalk();
   for (let i = start; i < reseeds.length; i++) {
     printStage(i, end, mock, log);
+    console.log("L2 Beanstalk:", l2BeanstalkAddress);
     if (i == 0) {
       // migrate beanstalk L1 assets.
       await reseeds[0](account);

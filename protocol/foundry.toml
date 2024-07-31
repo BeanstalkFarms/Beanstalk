@@ -3,6 +3,7 @@
 # https://book.getfoundry.sh/reference/config/project
 src = 'contracts'
 test = 'test'
+script = 'script'
 no_match_test = "testDiff"
 out = 'out'
 libs = [

@@ -12,6 +12,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {C} from "contracts/C.sol";
+import "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -42,7 +43,7 @@ contract ReseedBean {
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
-    bytes32 internal constant BEAN_SALT =
+    bytes32 internal constant BEAN_SALT = 
         0x0000000000000000000000000000000000000000000000000000000000000000;
     // UNRIPE_BEAN parameters.
     string internal constant UNRIPE_BEAN_NAME = "Unripe Bean";
@@ -107,6 +108,16 @@ contract ReseedBean {
         // deploy new unripe lp contract.
         BeanstalkERC20 urBeanLPERC20 = deployUnripeLP(unripeLpSupply);
 
+        
+        address beanAddress = address(bean);
+        address urBeanAddress = address(urBeanERC20);
+        address urBeanLPAddress = address(urBeanLPERC20);
+
+        console.log("Deployer: %s", address(this));
+        console.log("Bean address: %s", beanAddress);
+        console.log("Unripe Bean address: %s", urBeanAddress);
+        console.log("Unripe LP address: %s", urBeanLPAddress);
+
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
 
         // TODO: UNCOMMENT WHEN WELLS ARE DEPLOYED.
@@ -120,8 +131,8 @@ contract ReseedBean {
         // deployBeanStableWell(bean, beanStableAmounts);
 
         // mint urBean and urBeanLP to external holders:
-        mintUnripeToExternal(address(urBeanERC20), urBean);
-        mintUnripeToExternal(address(urBeanLPERC20), urBeanLP);
+        // mintUnripeToExternal(address(urBeanERC20), urBean);
+        // mintUnripeToExternal(address(urBeanLPERC20), urBeanLP);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
