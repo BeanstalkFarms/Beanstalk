@@ -1,230 +1,311 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   ButtonProps,
   Stack,
-  Typography,
-  useMediaQuery,
-  Box,
   Grid,
   Divider,
+  Breakpoint,
+  GridProps,
+  Typography,
+  Box,
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
 import SunriseButton from '~/components/Sun/SunriseButton';
-import {
-  SunButtonQuery,
-  useSeasonalLiquidityQuery,
-  useSunButtonQuery,
-} from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { toTokenUnitsBN } from '~/util';
-import { BEAN } from '~/constants/tokens';
 import { NEW_BN } from '~/constants';
-import { AppState } from '~/state';
-import usePeg from '~/hooks/beanstalk/usePeg';
+import { useAppSelector } from '~/state';
 import { FC } from '~/types';
-import useSdk from '~/hooks/sdk';
+import useSeasonsSummary, {
+  SeasonSummary,
+} from '~/hooks/beanstalk/useSeasonsSummary';
+import Row from '~/components/Common/Row';
+import { IconSize } from '~/components/App/muiTheme';
 import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 
-const castField = (data: SunButtonQuery['fields'][number]) => ({
-  season: new BigNumber(data.season),
-  issuedSoil: toTokenUnitsBN(data.issuedSoil, BEAN[1].decimals),
-  temperature: new BigNumber(data.temperature),
-  podRate: new BigNumber(data.podRate),
-});
-const castSeason = (data: SunButtonQuery['seasons'][number]) => ({
-  season: new BigNumber(data.season),
-  price: new BigNumber(data.price),
-  rewardBeans: toTokenUnitsBN(
-    data.season <= 6074 ? data.deltaBeans : data.rewardBeans,
-    BEAN[1].decimals
-  ),
-});
+type GridConfigProps = Pick<GridProps, Breakpoint>;
+
+export type SeasonSummaryColumn = {
+  title: string;
+  widths: GridConfigProps;
+  subtitle?: string;
+  align?: 'left' | 'right';
+  render: (d: SeasonSummary) => string | JSX.Element;
+};
+
+const getDelta = (value: BigNumber | undefined) => {
+  if (!value) return '';
+  return value.gte(0) ? '+' : '-';
+};
+
+const colConfig: Record<string, SeasonSummaryColumn> = {
+  season: {
+    title: 'Season',
+    align: 'left',
+    widths: { xs: 0.65 },
+    render: ({ beanMints, season }) => (
+      <Row justifyContent="flex-start" spacing={0.5} height="100%">
+        {beanMints.value && beanMints.value?.lte(0) ? (
+          <img src={drySeasonIcon} height={IconSize.small} alt="" />
+        ) : (
+          <img src={rainySeasonIcon} height={IconSize.small} alt="" />
+        )}
+        <Typography variant="bodySmall">
+          {season.value?.toString() || '-'}
+        </Typography>
+      </Row>
+    ),
+  },
+  beanMints: {
+    title: 'New Beans',
+    subtitle: 'Beans minted',
+    widths: { xs: 1.15 },
+    render: ({ beanMints: { value } }) => (
+      <Stack justifyContent="center" height="100%">
+        <Typography variant="bodySmall" align="right">
+          {`+ ${value?.abs().toFixed(0) || '-'}`}
+        </Typography>
+      </Stack>
+    ),
+  },
+  maxSoil: {
+    title: 'Max Soil',
+    subtitle: 'Max debt to auction',
+    widths: { xs: 1.35 },
+    render: ({ maxSoil }) => (
+      <Typography variant="bodySmall" align="right">
+        {`+ ${maxSoil.value?.abs().toFixed(2) || '-'}`}
+      </Typography>
+    ),
+  },
+  maxTemperature: {
+    title: 'Max Temperature',
+    subtitle: 'Max interest of debt at auction',
+    widths: { xs: 1.65 },
+    render: ({ maxTemperature }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography variant="bodySmall" align="right">
+          {maxTemperature.value?.abs().toFixed(0) || '-'}{' '}
+          <Typography component="span" color="text.secondary">
+            {`( ${getDelta(maxTemperature.delta)} ${maxTemperature?.delta?.abs().toFixed(0) || '-'}% )`}
+          </Typography>
+        </Typography>
+        {maxTemperature.display && (
+          <Typography variant="bodySmall" align="right" color="text.tertiary">
+            {maxTemperature.display}
+          </Typography>
+        )}
+      </Stack>
+    ),
+  },
+  bean2MaxLPScalar: {
+    title: 'Bean:Max LP Scalar',
+    subtitle: 'Relative reward for Dep. Bean',
+    widths: { xs: 1.65 },
+    render: ({ bean2MaxLPScalar }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography variant="bodySmall" align="right">
+          {bean2MaxLPScalar.value?.toFixed(0) || '-'}{' '}
+          {bean2MaxLPScalar.value && (
+            <Typography component="span" color="text.secondary">
+              {`(${getDelta(bean2MaxLPScalar.delta)}${bean2MaxLPScalar?.delta?.abs().toFixed(2) || '-'})`}
+            </Typography>
+          )}
+        </Typography>
+        {bean2MaxLPScalar.display && (
+          <Typography variant="bodySmall" align="right" color="text.tertiary">
+            {bean2MaxLPScalar.display}
+          </Typography>
+        )}
+      </Stack>
+    ),
+  },
+  price: {
+    title: 'Price',
+    subtitle: 'Price of Bean',
+    widths: { xs: 1.5 },
+    render: ({ price }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography align="right">{price.value?.toFixed(2) || '-'}</Typography>
+        <Typography variant="bodySmall" color="text.tertiary" align="right">
+          {price.display || '-'}
+        </Typography>
+      </Stack>
+    ),
+  },
+  l2sr: {
+    title: 'Liquidity to Supply Ratio',
+    subtitle: 'Amount of Liquidity / Supply',
+    widths: { xs: 1.7 },
+    render: ({ l2sr }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography align="right">{l2sr.value?.toFixed(0) || '-'}</Typography>
+        <Typography variant="bodySmall" color="text.tertiary" align="right">
+          {l2sr.display || '-'}
+        </Typography>
+      </Stack>
+    ),
+  },
+  podRate: {
+    title: 'Pod Rate',
+    subtitle: 'Debt ratio',
+    widths: { xs: 1.25 },
+    render: ({ podRate }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography align="right">
+          {`${podRate.value?.times(100).toFixed(0) || '-'}%`}
+        </Typography>
+        <Typography variant="bodySmall" color="text.tertiary" align="right">
+          {podRate.display || '-'}
+        </Typography>
+      </Stack>
+    ),
+  },
+  deltaPodDemand: {
+    title: 'Delta Demand',
+    subtitle: 'Change in Soil',
+    widths: { xs: 1.1 },
+    render: ({ deltaPodDemand }) => (
+      <Stack justifyContent="center" alignItems="flex-end">
+        <Typography color="text.tertiary" align="right">
+          {deltaPodDemand.display || '-'}
+        </Typography>
+      </Stack>
+    ),
+  },
+};
 
 const MAX_ITEMS = 8;
+
+const TABLE_WIDTH = '1568px';
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   /// DATA
   const season = useSeason();
-  const sdk = useSdk();
-  const awaiting = useSelector<AppState, boolean>(
-    (state) => state._beanstalk.sun.sunrise.awaiting
-  );
-  const { data } = useSunButtonQuery({ fetchPolicy: 'cache-and-network' });
+  const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
 
-  const { data: liquidity } = useSeasonalLiquidityQuery({
-    fetchPolicy: 'cache-and-network',
-    variables: {
-      first: 24,
-      season_gt: 0,
-      season_lte: season.toNumber(),
-    },
-  });
-
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
-    (state) => state._beanstalk.field
-  );
-  const peg = usePeg();
-
-  const bySeason = useMemo(() => {
-    if (data?.fields && data?.seasons) {
-      type MergedSeason = ReturnType<typeof castField> &
-        ReturnType<typeof castSeason>;
-
-      // Build mapping of season => data
-      const merged: { [key: number]: MergedSeason } = {};
-      data.fields.forEach((_f) => {
-        // fixme: need intermediate type?
-        // @ts-ignore
-        if (_f) merged[_f.season] = { ...castField(_f) };
-      });
-      data.seasons.forEach((_s) => {
-        if (_s) merged[_s.season] = { ...merged[_s.season], ...castSeason(_s) };
-      });
-
-      // Sort latest season first and return as array
-      return Object.keys(merged)
-        .sort((a, b) => parseInt(b, 10) - parseInt(a, 10))
-        .reduce<MergedSeason[]>((prev, curr) => {
-          prev.push(merged[curr as unknown as number]);
-          return prev;
-        }, []);
-    }
-    return [];
-  }, [data]);
-
-  /// Theme
-  const isTiny = useMediaQuery('(max-width:350px)');
+  const { seasonsSummary, forecast } = useSeasonsSummary();
 
   /// Button Content
   const isLoading = season.eq(NEW_BN);
-  const startIcon = isTiny ? undefined : (
-    <img
-      src={
-        bySeason[0]?.rewardBeans.eq(0) || awaiting
-          ? drySeasonIcon
-          : rainySeasonIcon
-      }
-      css={{
-        width: 25,
-        height: 25,
-        animationName: awaiting ? 'rotate' : 'none',
-        animationTimingFunction: 'linear',
-        animationDuration: '3000ms',
-        animationIterationCount: 'infinite',
+  const startIcon = (
+    <Box
+      sx={{
+        '@media (max-width: 350px)': {
+          display: 'none',
+        },
       }}
-      alt=""
-    />
+    >
+      <img
+        src={
+          seasonsSummary?.[0]?.beanMints.value?.eq(0) || awaiting
+            ? drySeasonIcon
+            : rainySeasonIcon
+        }
+        css={{
+          width: 25,
+          height: 25,
+          animationName: awaiting ? 'rotate' : 'none',
+          animationTimingFunction: 'linear',
+          animationDuration: '3000ms',
+          animationIterationCount: 'infinite',
+        }}
+        alt=""
+      />
+    </Box>
   );
 
   /// Table Content
   const tableContent = (
-    <Box sx={{ overflow: 'hidden' }}>
-      {/* Past Seasons */}
-      <Stack
-        gap={1}
-        sx={{
-          width: '100%',
-          pt: 1,
-          px: 1,
-          maxHeight: `${(37.5 + 10) * MAX_ITEMS - 10}px`,
-          overflowY: 'auto',
-        }}
-      >
-        {/* table header */}
-        <Box px={1}>
-          <Grid container>
-            <Grid item xs={1.5} md={1.25}>
-              <Typography variant="bodySmall">Season</Typography>
-            </Grid>
-            <Grid item xs={3} md={2} textAlign="right">
-              <Stack>
-                <Typography
-                  variant="bodySmall"
-                  lineHeight="normal"
-                  fontWeight={500}
-                >
-                  New Beans
-                </Typography>
-                <Typography
-                  letterSpacing="-0.25px"
-                  variant="bodySmall"
-                  color="text.tertiary"
-                  lineHeight="normal"
-                  fontWeight={300}
-                >
-                  Beans minted
-                </Typography>
-              </Stack>
-            </Grid>
-            <Grid item xs={3} md={2} textAlign="right">
-              <Typography variant="bodySmall">Max Soil</Typography>
-            </Grid>
-            <Grid item xs={4} md={2.75}>
-              <Stack alignItems="flex-end">
-                <Typography variant="bodySmall">Max Temperature</Typography>
-              </Stack>
-            </Grid>
-            <Grid
-              item
-              xs={0}
-              md={2}
-              display={{ xs: 'none', md: 'block' }}
-              textAlign="right"
+    <Box
+      sx={(t) => ({
+        position: 'relative',
+        [t.breakpoints.up('lg')]: {
+          // 40px of padding on each side
+          width: `min(calc(100vw - 40px), ${TABLE_WIDTH})`,
+        },
+      })}
+    >
+      <Stack gap={1}>
+        <Box sx={{ overflowX: 'scroll' }}>
+          {/* Past Seasons */}
+          <Stack px={1} sx={{ minWidth: TABLE_WIDTH }}>
+            {/* table header */}
+            <Box
+              p={1}
+              sx={{
+                position: 'sticky',
+                left: 0,
+                top: 0,
+                backgroundColor: 'white',
+                zIndex: 200,
+              }}
             >
-              <Typography variant="bodySmall">Pod Rate</Typography>
-            </Grid>
-            <Grid
-              item
-              xs={0}
-              md={2}
-              display={{ xs: 'none', md: 'block' }}
-              textAlign="right"
+              <Box>
+                <Grid container>
+                  {Object.values(colConfig).map((col) => (
+                    <Grid
+                      item
+                      key={`sun-button-table-header-${col.title}`}
+                      {...col.widths}
+                    >
+                      <Stack justifyContent="center">
+                        <Typography
+                          variant="bodySmall"
+                          align={col.align || 'right'}
+                        >
+                          {col.title}
+                        </Typography>
+                        {col.subtitle && (
+                          <Typography
+                            color="text.tertiary"
+                            variant="bodySmall"
+                            align={col.align || 'right'}
+                          >
+                            {col.subtitle}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Box>
+            <Stack
+              gap={1}
+              sx={{
+                maxHeight: `${(37.5 + 10) * MAX_ITEMS - 10}px`,
+                overflowY: 'auto',
+              }}
             >
-              <Typography variant="bodySmall">Delta Demand</Typography>
-            </Grid>
-          </Grid>
+              <Box position="relative">
+                <SeasonCard
+                  index={-1}
+                  summary={forecast}
+                  columns={colConfig}
+                  isNew
+                />
+              </Box>
+              {Array.from({ length: 15 }).map((_, i) => (
+                <SeasonCard
+                  index={i}
+                  columns={colConfig}
+                  summary={forecast}
+                  key={`season-card-row-${i}`}
+                />
+              ))}
+            </Stack>
+          </Stack>
+          <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
         </Box>
-        <SeasonCard
-          season={season.plus(1)}
-          rewardBeans={peg.rewardBeans}
-          issuedSoil={peg.soilStart}
-          podRate={NEW_BN}
-          temperature={beanstalkField.temperature.max.plus(
-            peg.deltaTemperature
-          )} // FIXME expected
-          deltaDemand={peg.deltaPodDemand}
-          deltaTemperature={peg.deltaTemperature}
-          isNew
-        />
-        {bySeason.map((s, i) => {
-          const deltaTemperature =
-            bySeason[i + 1]?.temperature && s.temperature
-              ? s.temperature.minus(bySeason[i + 1].temperature)
-              : undefined;
-          return (
-            <SeasonCard
-              key={s.season.toString()}
-              season={s.season}
-              // Season
-              rewardBeans={s.rewardBeans}
-              // Field
-              temperature={s.temperature}
-              deltaTemperature={deltaTemperature}
-              deltaDemand={undefined}
-              issuedSoil={s.issuedSoil}
-              podRate={s.podRate}
-            />
-          );
-        })}
+        <Box
+          sx={{ p: 1, display: 'flex', gap: '5px', flexDirection: 'column' }}
+        >
+          <SunriseButton />
+        </Box>
       </Stack>
-      <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
-      <Box sx={{ p: 1, display: 'flex', gap: '5px', flexDirection: 'column' }}>
-        <SunriseButton />
-      </Box>
     </Box>
   );
 
@@ -235,11 +316,13 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       drawerContent={<Box sx={{ p: 1 }}>{tableContent}</Box>}
       popoverContent={tableContent}
       hideTextOnMobile
-      popperWidth="700px"
+      popperWidth="100%"
       hotkey="opt+2, alt+2"
-      zIndex={997}
+      zIndex={100}
       zeroTopLeftRadius
-      zeroTopRightRadius
+      popperSx={{
+        paddingRight: '20px',
+      }}
       {...props}
     />
   );

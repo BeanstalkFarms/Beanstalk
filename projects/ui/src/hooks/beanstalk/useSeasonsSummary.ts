@@ -40,22 +40,22 @@ type SeasonalLiquidityAndPrice = {
   largestLiquidityWellPrice: BigNumber;
 };
 
-type SummaryItem = {
+export type SeasonSummaryItem = {
   value: BigNumber | undefined;
   delta?: BigNumber;
   display?: string;
 };
 
-type SeasonSummary = {
-  season: SummaryItem;
-  beanMints: SummaryItem;
-  maxSoil: SummaryItem;
-  maxTemperature: SummaryItem;
-  bean2MaxLPScalar: SummaryItem;
-  price: SummaryItem;
-  l2sr: SummaryItem;
-  podRate: SummaryItem;
-  deltaPodDemand: SummaryItem;
+export type SeasonSummary = {
+  season: SeasonSummaryItem;
+  beanMints: SeasonSummaryItem;
+  maxSoil: SeasonSummaryItem;
+  maxTemperature: SeasonSummaryItem;
+  bean2MaxLPScalar: SeasonSummaryItem;
+  price: SeasonSummaryItem;
+  l2sr: SeasonSummaryItem;
+  podRate: SeasonSummaryItem;
+  deltaPodDemand: SeasonSummaryItem;
 };
 
 const castField = (

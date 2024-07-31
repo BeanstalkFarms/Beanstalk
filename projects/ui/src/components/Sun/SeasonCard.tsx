@@ -1,36 +1,27 @@
 import React from 'react';
-import { Typography, Box, Grid } from '@mui/material';
-import BigNumber from 'bignumber.js';
-import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
-import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
-import { displayBN, displayFullBN } from '../../util';
-import { FontSize, IconSize } from '../App/muiTheme';
+import { Typography, Box, Grid, Stack } from '@mui/material';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { SeasonSummary } from '~/hooks/beanstalk/useSeasonsSummary';
+import { FontSize } from '../App/muiTheme';
+import { SeasonSummaryColumn } from '../Nav/Buttons/SunButton';
 
-export interface SeasonCardProps {
-  season: BigNumber;
-  rewardBeans: BigNumber | undefined;
-  issuedSoil: BigNumber | undefined;
-  temperature: BigNumber | undefined;
-  deltaTemperature: BigNumber | undefined;
-  podRate: BigNumber;
-  deltaDemand: BigNumber | undefined;
+export type SeasonCardProps = {
+  // pass in index to ensure that the key is unique
+  index: number;
+  summary: SeasonSummary;
+  columns: Record<string, SeasonSummaryColumn>;
   isNew?: boolean;
-}
+};
 
 const SeasonCard: FC<SeasonCardProps> = ({
-  season,
-  rewardBeans,
-  issuedSoil,
-  podRate,
-  temperature,
-  deltaTemperature,
-  deltaDemand,
+  index,
+  summary,
+  columns,
   isNew = false,
 }) => (
-  <div>
+  <Box>
     <Box
       sx={{
         '&:hover > .next-season': { display: 'block' },
@@ -63,8 +54,8 @@ const SeasonCard: FC<SeasonCardProps> = ({
               textAlign="left"
               color="text.primary"
             >
-              The forecast for Season {season.toString()} is based on data in
-              the current Season.
+              The forecast for Season {summary.season.value?.toString() || '--'}{' '}
+              is based on data in the current Season.
             </Typography>
           </Row>
         </Box>
@@ -80,83 +71,101 @@ const SeasonCard: FC<SeasonCardProps> = ({
         }}
       >
         <Grid container>
-          {/* Season */}
-          <Grid item xs={1.5} md={1.25}>
-            <Row justifyContent="flex-start" spacing={0.5}>
-              {rewardBeans && rewardBeans.lte(0) ? (
-                <img src={drySeasonIcon} height={IconSize.small} alt="" />
-              ) : (
-                <img src={rainySeasonIcon} height={IconSize.small} alt="" />
-              )}
-              <Typography variant="bodySmall">
-                {season?.toString() || '-'}
-              </Typography>
-            </Row>
-          </Grid>
-          {/* New Beans */}
-          <Grid item xs={3} md={2} textAlign="right">
-            <Typography variant="bodySmall">
-              {rewardBeans ? `+ ${displayBN(rewardBeans)}` : '-'}
-            </Typography>
-          </Grid>
-          {/* Soil */}
-          <Grid item xs={3} md={2} textAlign="right">
-            <Typography variant="bodySmall">
-              {issuedSoil
-                ? issuedSoil.lt(0.01)
-                  ? '<0.01'
-                  : displayFullBN(issuedSoil, 2, 2)
-                : '-'}
-            </Typography>
-          </Grid>
-          {/* Temperature */}
-          <Grid item xs={4.5} md={2.75}>
-            <Row justifyContent="flex-end" spacing={0.5}>
-              <Typography variant="bodySmall">
-                {temperature ? `${displayBN(temperature)}%` : '-'}
-              </Typography>
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                (&nbsp;{deltaTemperature && deltaTemperature.lt(0) ? '-' : '+'}
-                {deltaTemperature?.abs().toString() || '0'}%&nbsp;)
-              </Typography>
-            </Row>
-          </Grid>
-          {/* Pod Rate */}
-          <Grid
-            item
-            xs={0}
-            md={2}
-            display={{ xs: 'none', md: 'block' }}
-            textAlign="right"
-          >
-            <Typography color="text.primary" variant="bodySmall">
-              {podRate?.gt(0) ? `${displayBN(podRate.times(100))}%` : '-'}
-            </Typography>
-          </Grid>
-          {/* Delta Demand */}
-          <Grid
-            item
-            xs={0}
-            md={2}
-            display={{ xs: 'none', md: 'block' }}
-            textAlign="right"
-          >
-            <Typography variant="bodySmall">
-              {deltaDemand
-                ? deltaDemand.lt(-10_000 / 100) || deltaDemand.gt(10_000 / 100)
-                  ? `${deltaDemand.lt(0) ? '-' : ''}∞`
-                  : `${displayBN(deltaDemand.div(100), true)}%`
-                : '-'}
-            </Typography>
-          </Grid>
+          {Object.values(columns).map((col, i) => (
+            <Grid key={`season-card-${index}-${i}`} item {...col.widths}>
+              <Stack height="100%" justifyContent="center">
+                {col.render(summary)}
+              </Stack>
+            </Grid>
+          ))}
         </Grid>
       </Box>
     </Box>
-  </div>
+  </Box>
 );
 
 export default SeasonCard;
+
+// <Grid container>
+//             {/* Season */}
+//             <Grid item xs={1.5} md={1.25}>
+//               <Row justifyContent="flex-start" spacing={0.5}>
+//                 {beanMints && beanMints.value?.lte(0) ? (
+//                   <img src={drySeasonIcon} height={IconSize.small} alt="" />
+//                 ) : (
+//                   <img src={rainySeasonIcon} height={IconSize.small} alt="" />
+//                 )}
+//                 <Typography variant="bodySmall">
+//                   {season.value?.toString() || '-'}
+//                 </Typography>
+//               </Row>
+//             </Grid>
+//             // {/* New Beans */}
+//             <Grid item xs={3} md={2} textAlign="right">
+//               <Typography variant="bodySmall">
+//                 {beanMints.value ? `+ ${displayBN(beanMints.value)}` : '-'}
+//               </Typography>
+//             </Grid>
+//             // {/* Soil */}
+//             <Grid item xs={3} md={2} textAlign="right">
+//               <Typography variant="bodySmall">
+//                 {maxSoil.value
+//                   ? maxSoil.value.lt(0.01)
+//                     ? '<0.01'
+//                     : displayFullBN(maxSoil.value, 2, 2)
+//                   : '-'}
+//               </Typography>
+//             </Grid>
+//             // {/* Temperature */}
+//             <Grid item xs={4.5} md={2.75}>
+//               <Row justifyContent="flex-end" spacing={0.5}>
+//                 <Typography variant="bodySmall">
+//                   {maxTemperature.value
+//                     ? `${displayBN(maxTemperature.value)}%`
+//                     : '-'}
+//                 </Typography>
+//                 <Typography
+//                   variant="bodySmall"
+//                   color="text.secondary"
+//                   sx={{ whiteSpace: 'nowrap' }}
+//                 >
+//                   (&nbsp;
+//                   {maxTemperature.delta && maxTemperature.delta.lt(0)
+//                     ? '-'
+//                     : '+'}
+//                   {maxTemperature.delta?.abs().toString() || '0'}%&nbsp;)
+//                 </Typography>
+//               </Row>
+//             </Grid>
+//             // {/* Pod Rate */}
+//             <Grid
+//               item
+//               xs={0}
+//               md={2}
+//               display={{ xs: 'none', md: 'block' }}
+//               textAlign="right"
+//             >
+//               <Typography color="text.primary" variant="bodySmall">
+//                 {podRate.value?.gt(0)
+//                   ? `${displayBN(podRate.value.times(100))}%`
+//                   : '-'}
+//               </Typography>
+//             </Grid>
+//             // {/* Delta Demand */}
+//             <Grid
+//               item
+//               xs={0}
+//               md={2}
+//               display={{ xs: 'none', md: 'block' }}
+//               textAlign="right"
+//             >
+//               <Typography variant="bodySmall">
+//                 {deltaPodDemand.value
+//                   ? deltaPodDemand?.value.lt(-10_000 / 100) ||
+//                     deltaPodDemand.value.gt(10_000 / 100)
+//                     ? `${deltaPodDemand.value.lt(0) ? '-' : ''}∞`
+//                     : `${displayBN(deltaPodDemand.value.div(100), true)}%`
+//                   : '-'}
+//               </Typography>
+//             </Grid>
+//           </Grid>
