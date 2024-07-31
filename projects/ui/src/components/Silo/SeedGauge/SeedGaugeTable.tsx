@@ -48,31 +48,27 @@ const GridConfig: Record<
     advanced: GridConfigProps;
     // basic is optional b/c the default view limits which ones are shown
     basic?: GridConfigProps;
-    hideMobile?: boolean;
   }
 > = {
   token: {
-    advanced: { xs: 4, lg: 2 },
+    advanced: { xs: 2, lg: 2 },
     basic: { xs: 2.5, sm: 5 },
   },
   totalBDV: {
-    advanced: { lg: 2 },
-    hideMobile: true,
+    advanced: { xs: 2 },
   },
   gaugePoints: {
-    advanced: { lg: 2 },
-    hideMobile: true,
+    advanced: { xs: 2 },
   },
   gaugePointsPerBDV: {
-    advanced: { lg: 2 },
-    hideMobile: true,
+    advanced: { xs: 2 },
   },
   optimalBDVPct: {
-    advanced: { xs: 4, lg: 2 },
+    advanced: { xs: 2, lg: 2 },
     basic: { xs: 5, sm: 3 },
   },
   currentLPBDVPct: {
-    advanced: { xs: 4, lg: 2 },
+    advanced: { xs: 2 },
     basic: { xs: 4.5, sm: 4 },
   },
 };
@@ -283,8 +279,6 @@ const GridColumn = ({
 
   if (!(column.key in GridConfig) || !selectedConfig) return null;
 
-  const hideMobile = config.hideMobile || false;
-
   return (
     <Grid
       item
@@ -301,7 +295,6 @@ const GridColumn = ({
             (column.mobileAlign || column.align) === 'left'
               ? 'flex-start'
               : 'flex-end',
-          display: hideMobile ? 'none' : 'flex',
         },
         ...gridProps.sx,
       })}
@@ -360,88 +353,84 @@ const SeedGaugeTable = ({
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;
 
   return (
-    <Stack>
-      <Box sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
-        <Stack px={3}>
-          {/* Show Advanced */}
-          <Stack pt={1.5} direction="row" alignItems="center" gap={1}>
-            <Typography variant="bodySmall">
-              Show additional information
-            </Typography>
-            <Switch
-              size="small"
-              value={isAdvanced}
-              onChange={() => (isAdvanced ? hide : show)()}
-              inputProps={{ 'aria-label': 'controlled' }}
-              sx={(t) => ({
-                [t.breakpoints.down('lg')]: {
-                  display: 'none',
-                },
-              })}
-            />
-          </Stack>
+    <Box sx={{ overflowX: 'scroll' }}>
+      <Stack sx={{ minWidth: isAdvanced ? '1100px' : 0 }}>
+        <Box sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
+          <Stack px={3}>
+            {/* Show Advanced */}
+            <Stack pt={1.5} direction="row" alignItems="center" gap={1}>
+              <Typography variant="bodySmall">
+                Show additional information
+              </Typography>
+              <Switch
+                size="small"
+                value={isAdvanced}
+                onChange={() => (isAdvanced ? hide : show)()}
+                inputProps={{ 'aria-label': 'controlled' }}
+              />
+            </Stack>
 
-          {/* Headers */}
-          <Stack pt={1} pb={1.5}>
-            <Grid container direction="row">
-              {cols.map((column) => (
-                <GridColumn
-                  column={column}
-                  isAdvanced={isAdvanced}
-                  key={`sg-header-${column.key}`}
-                  sx={lastChildSx}
-                >
-                  <Tooltip title={column.headerTooltip || ''}>
-                    <Typography
-                      color="text.secondary"
-                      align="inherit"
-                      textAlign="inherit"
-                    >
-                      {column.header}
-                    </Typography>
-                  </Tooltip>
-                </GridColumn>
-              ))}
-            </Grid>
-          </Stack>
-        </Stack>
-      </Box>
-
-      {/* Rows */}
-      <Stack p={1} gap={1}>
-        {rows.map((row, i) => (
-          <Box
-            key={`seed-gauge-row-${i}-${row.token.symbol}`}
-            component={RouterLink}
-            to={`/silo/${row.token.address}`}
-            sx={{ textDecoration: 'none' }}
-          >
-            <Card>
-              <Box sx={RowSx}>
-                <Stack width="100%">
-                  <Grid container>
-                    {cols.map((column, j) => (
-                      <GridColumn
-                        key={`sgr-${i}-${row.token.symbol}-${j}`}
-                        column={column}
-                        isAdvanced={isAdvanced}
+            {/* Headers */}
+            <Stack pt={1} pb={1.5}>
+              <Grid container direction="row">
+                {cols.map((column) => (
+                  <GridColumn
+                    column={column}
+                    isAdvanced={isAdvanced}
+                    key={`sg-header-${column.key}`}
+                    sx={lastChildSx}
+                  >
+                    <Tooltip title={column.headerTooltip || ''}>
+                      <Typography
+                        color="text.secondary"
+                        align="inherit"
+                        textAlign="inherit"
                       >
-                        <Stack direction="row" alignItems="center">
-                          {column.render(row)}
-                          {j === cols.length - 1 && <ArrowRightAdornment />}
-                        </Stack>
-                      </GridColumn>
-                    ))}
-                  </Grid>
-                  <ExpectedSeedRewardDirection {...row} />
-                </Stack>
-              </Box>
-            </Card>
-            {/* </Button> */}
-          </Box>
-        ))}
+                        {column.header}
+                      </Typography>
+                    </Tooltip>
+                  </GridColumn>
+                ))}
+              </Grid>
+            </Stack>
+          </Stack>
+        </Box>
+
+        {/* Rows */}
+        <Stack p={1} gap={1}>
+          {rows.map((row, i) => (
+            <Box
+              key={`seed-gauge-row-${i}-${row.token.symbol}`}
+              component={RouterLink}
+              to={`/silo/${row.token.address}`}
+              sx={{ textDecoration: 'none' }}
+            >
+              <Card>
+                <Box sx={RowSx}>
+                  <Stack width="100%">
+                    <Grid container>
+                      {cols.map((column, j) => (
+                        <GridColumn
+                          key={`sgr-${i}-${row.token.symbol}-${j}`}
+                          column={column}
+                          isAdvanced={isAdvanced}
+                        >
+                          <Stack direction="row" alignItems="center">
+                            {column.render(row)}
+                            {j === cols.length - 1 && <ArrowRightAdornment />}
+                          </Stack>
+                        </GridColumn>
+                      ))}
+                    </Grid>
+                    <ExpectedSeedRewardDirection {...row} />
+                  </Stack>
+                </Box>
+              </Card>
+            </Box>
+          ))}
+        </Stack>
       </Stack>
-    </Stack>
+    </Box>
   );
 };
 
