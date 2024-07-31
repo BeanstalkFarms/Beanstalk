@@ -47,7 +47,7 @@ export const useUnripe = () => {
                   // bean:3crv, which had 18 decimals
                   return new BigNumber(result.toString()).div(1e18);
                 }
-                return tokenResult(unripeTokens[addr])(result); // Is this correct ?
+                return tokenResult(unripeTokens[addr])(result);
               }),
             ])
           )
