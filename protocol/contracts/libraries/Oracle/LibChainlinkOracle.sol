@@ -164,10 +164,12 @@ library LibChainlinkOracle {
                         return 0;
                     }
                 }
+                if (tokenDecimals > 0) {
+                    answer = int256((10 ** (tokenDecimals + decimals)) / (uint256(answer)));
+                }
                 t.cumulativePrice = t.cumulativePrice.add(
                     uint256(answer).mul(t.lastTimestamp.sub(t.endTimestamp))
                 );
-
                 if (tokenDecimals > 0) {
                     price = t.cumulativePrice.div(lookback);
                 } else {
