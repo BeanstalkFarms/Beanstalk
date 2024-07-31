@@ -19,7 +19,6 @@ import {
   FormStateNew,
   FormTxnsFormState,
   SettingInput,
-  SettingSwitch,
   SmartSubmitButton,
   TxnSettings,
 } from '~/components/Common/Form';
@@ -66,7 +65,6 @@ import { AppState } from '~/state';
 type ConvertFormValues = FormStateNew & {
   settings: {
     slippage: number;
-    allowUnripeConvert: boolean;
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
@@ -78,16 +76,6 @@ type ConvertQuoteHandlerParams = {
 };
 
 // -----------------------------------------------------------------------
-
-const filterTokenList = (
-  fromToken: Token,
-  allowUnripeConvert: boolean,
-  list: Token[]
-): Token[] => {
-  if (allowUnripeConvert || !fromToken.isUnripe) return list;
-
-  return list.filter((token) => token.isUnripe);
-};
 
 const ConvertForm: FC<
   FormikProps<ConvertFormValues> & {
@@ -103,7 +91,7 @@ const ConvertForm: FC<
     plantAndDoX: ReturnType<typeof usePlantAndDoX>;
   }
 > = ({
-  tokenList: tokenListFull,
+  tokenList,
   siloBalances,
   handleQuote,
   plantAndDoX,
@@ -119,27 +107,10 @@ const ConvertForm: FC<
   const getBDV = useBDV();
   const [isChopping, setIsChopping] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [choppingConfirmed, setChoppingConfirmed] = useState(false);
+  const [choppingConfirmed, setChoppingConfirmed] = useState(true);
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (_state) => _state._bean.unripe
   );
-  const [tokenList, setTokenList] = useState(
-    filterTokenList(
-      values.tokens[0].token,
-      values.settings.allowUnripeConvert,
-      tokenListFull
-    )
-  );
-
-  useEffect(() => {
-    setTokenList(
-      filterTokenList(
-        values.tokens[0].token,
-        values.settings.allowUnripeConvert,
-        tokenListFull
-      )
-    );
-  }, [tokenListFull, values.settings.allowUnripeConvert, values.tokens]);
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -222,6 +193,10 @@ const ConvertForm: FC<
     }
   }
 
+  // + 16.84 BEANwstETH
+  // ~2,236.61 BDV   // curr: 587 bdv
+  // + 12,664.01 SEED
+
   useEffect(() => {
     if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
       setChoppingConfirmed(true);
@@ -244,6 +219,7 @@ const ConvertForm: FC<
   }
 
   function showOutputBDV() {
+    if (isChopping) return bdvOut || ZERO_BN;
     return MaxBN(depositsBDV || ZERO_BN, bdvOut || ZERO_BN);
   }
 
@@ -599,6 +575,11 @@ const ConvertPropProvider: FC<{
     ];
   }, [sdk, fromToken]);
 
+  console.log(
+    'tokenlist: ',
+    tokenList.map((tk) => tk.symbol)
+  );
+
   /// Beanstalk
   const season = useSeason();
   const [refetchPools] = useFetchPools();
@@ -636,7 +617,6 @@ const ConvertPropProvider: FC<{
       // Settings
       settings: {
         slippage: 0.05,
-        allowUnripeConvert: false,
       },
       // Token Inputs
       tokens: [
@@ -958,13 +938,6 @@ const ConvertPropProvider: FC<{
               label="Slippage Tolerance"
               endAdornment="%"
             />
-            {/* Only show the switch if we are on an an unripe silo's page */}
-            {fromToken.isUnripe && (
-              <SettingSwitch
-                name="settings.allowUnripeConvert"
-                label="Allow Converts to Ripe (Chop)"
-              />
-            )}
           </TxnSettings>
           <ConvertForm
             handleQuote={handleQuote}
