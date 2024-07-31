@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { ERC20 } from "../../generated/Aquifer/ERC20";
+import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { Token } from "../../generated/schema";
-import { CurvePrice } from "../../generated/templates/Well/CurvePrice";
+import { CurvePrice } from "../../generated/Basin-ABIs/CurvePrice";
 import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanstalkPrice } from "./BeanstalkPrice";

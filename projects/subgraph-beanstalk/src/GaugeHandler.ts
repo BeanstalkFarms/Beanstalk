@@ -9,7 +9,7 @@ import {
   WhitelistToken,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../generated/BIP45-SeedGauge/Beanstalk";
+} from "../generated/Beanstalk-ABIs/SeedGauge";
 import { handleRateChange } from "./utils/Field";
 import {
   loadSilo,
@@ -17,7 +17,8 @@ import {
   loadSiloDailySnapshot,
   loadWhitelistTokenSetting,
   loadWhitelistTokenDailySnapshot,
-  loadWhitelistTokenHourlySnapshot
+  loadWhitelistTokenHourlySnapshot,
+  addToSiloWhitelist
 } from "./utils/SiloEntities";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
@@ -180,6 +181,8 @@ export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedF
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //
 
 export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
+  addToSiloWhitelist(event.address, event.params.token);
+
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
 
   siloSettings.selector = event.params.selector;
