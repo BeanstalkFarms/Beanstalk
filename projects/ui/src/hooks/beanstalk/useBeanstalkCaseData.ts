@@ -19,11 +19,11 @@ const useBeanstalkCaseData = () => {
       deltaB
     );
 
-    console.table({
-      ...stateDisplay,
-      deltaTemperature: delta.temperature?.toString(),
-      deltaBean2MaxLPGPPerBdv: delta.bean2MaxLPGPPerBdv?.toString(),
-    });
+    // console.table({
+    //   ...stateDisplay,
+    //   deltaTemperature: delta.temperature?.toString(),
+    //   deltaBean2MaxLPGPPerBdv: delta.bean2MaxLPGPPerBdv?.toString(),
+    // });
 
     return {
       delta,
