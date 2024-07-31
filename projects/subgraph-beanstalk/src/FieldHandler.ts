@@ -8,7 +8,7 @@ import {
   SupplyIncrease,
   SupplyNeutral,
   WeatherChange
-} from "../generated/Field/Beanstalk";
+} from "../generated/Beanstalk-ABIs/PreReplant";
 import { Harvest as HarvestEntity } from "../generated/schema";
 import { BEANSTALK, BEANSTALK_FARMS } from "../../subgraph-core/utils/Constants";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";

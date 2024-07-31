@@ -35,8 +35,8 @@ query MarketEvents(
     }
     ... on PodListingFilled {
       id
-      from
-      to
+      fromFarmer
+      toFarmer
       amount
       index # of Listing that sold
       placeInLine
@@ -65,8 +65,8 @@ query MarketEvents(
     }
     ... on PodOrderFilled {
       id
-      from
-      to
+      fromFarmer
+      toFarmer
       historyID
       amount
       placeInLine
