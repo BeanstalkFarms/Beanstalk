@@ -8,6 +8,7 @@ import { BeanstalkPalette } from '~/components/App/muiTheme';
 import useBeanstalkCaseData from '~/hooks/beanstalk/useBeanstalkCaseData';
 import { displayFullBN } from '~/util';
 import { ZERO_BN } from '~/constants';
+import BigNumber from 'bignumber.js';
 
 type IBean2MaxLPRatio = {
   data: ReturnType<typeof useSeedGauge>['data'];
@@ -60,6 +61,18 @@ const calculateNumBarsWithSpacing = (width: number, spacing: number) => {
   return Math.floor(relativeWidth / unitWidth);
 };
 
+const getBarIndex = (
+  min: BigNumber,
+  max: BigNumber,
+  value: BigNumber,
+  numBars: number
+) => {
+  const normalizedValue = value.minus(min).div(max.minus(min));
+  const barIndex = normalizedValue.times(numBars);
+
+  return Math.floor(barIndex.toNumber());
+};
+
 const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const { width } = useElementDimensions(containerRef);
@@ -95,7 +108,8 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const arr = Array.from({ length: numBars });
 
   const bean2MaxLP = data.bean2MaxLPRatio.value;
-  const maxIndex = arr.length - 1;
+  const min = data.bean2MaxLPRatio.min;
+  const max = data.bean2MaxLPRatio.max;
 
   const isAtMax = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.max);
   const isAtMin = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.min);
@@ -104,16 +118,16 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const decreasing = !isAtMin && caseData?.delta.bean2MaxLPGPPerBdv.lt(0);
 
   const selectedIndex =
-    bean2MaxLP && Math.floor(bean2MaxLP.div(100).times(maxIndex).toNumber());
+    bean2MaxLP && getBarIndex(min, max, bean2MaxLP, numBars);
 
   const addIndex = increasing ? 1 : decreasing ? -1 : 0;
+
   const neighborIndex =
     (increasing || decreasing) && selectedIndex && selectedIndex + addIndex;
 
-  const deltaPct =
-    isAtMax || isAtMin
-      ? ZERO_BN
-      : caseData?.delta.bean2MaxLPGPPerBdv || ZERO_BN;
+  const bean2MaxLPScalar = caseData?.delta.bean2MaxLPGPPerBdvScalar || ZERO_BN;
+
+  const deltaPct = isAtMax || isAtMin ? ZERO_BN : bean2MaxLPScalar;
 
   return (
     <Stack width="100%" ref={containerRef}>
@@ -125,8 +139,8 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
           </Typography>
         </Typography>
         <Typography color="text.secondary">
-          Expected {!increasing ? 'increase' : 'decrease'} of{' '}
-          {deltaPct.eq(0) ? '0' : displayFullBN(deltaPct, 2)}% next Season
+          Expected {!decreasing ? 'increase' : 'decrease'} of{' '}
+          {deltaPct.eq(0) ? '0' : deltaPct.abs().toFormat(1)}% next Season
         </Typography>
       </Stack>
       <Stack
@@ -151,11 +165,15 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
       </Stack>
       <Stack direction="row" justifyContent="space-between" width="100%">
         <Stack textAlign="left">
-          <Typography variant="subtitle2">50%</Typography>
+          <Typography variant="subtitle2">
+            {data.bean2MaxLPRatio.min.toFormat(0)}%
+          </Typography>
           <Typography color="text.secondary">Minimum</Typography>
         </Stack>
         <Stack textAlign="right">
-          <Typography variant="subtitle2">100%</Typography>
+          <Typography variant="subtitle2">
+            {data.bean2MaxLPRatio.max.toFormat(0)}%
+          </Typography>
           <Typography color="text.secondary">Maximum</Typography>
         </Stack>
       </Stack>
