@@ -44,7 +44,7 @@ contract ReseedBean {
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
     bytes32 internal constant BEAN_SALT = 
-        0x0000000000000000000000000000000000000000000000000000000000000000;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70b115b16c5e1ca208f6ba0715;
     // UNRIPE_BEAN parameters.
     string internal constant UNRIPE_BEAN_NAME = "Unripe Bean";
     string internal constant UNRIPE_BEAN_SYMBOL = "urBEAN";
@@ -107,13 +107,11 @@ contract ReseedBean {
 
         // deploy new unripe lp contract.
         BeanstalkERC20 urBeanLPERC20 = deployUnripeLP(unripeLpSupply);
-
-        
+       
         address beanAddress = address(bean);
         address urBeanAddress = address(urBeanERC20);
         address urBeanLPAddress = address(urBeanLPERC20);
 
-        console.log("Deployer: %s", address(this));
         console.log("Bean address: %s", beanAddress);
         console.log("Unripe Bean address: %s", urBeanAddress);
         console.log("Unripe LP address: %s", urBeanLPAddress);
@@ -136,6 +134,11 @@ contract ReseedBean {
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
+        console.log("Inside deployBean");
+        console.log("msg.sender: %s", msg.sender);
+        console.log("address(this): %s", address(this));
+        console.log("BEAN_NAME: %s", BEAN_NAME);
+        console.log("BEAN_SYMBOL: %s", BEAN_SYMBOL);
         BeanstalkERC20 bean = new BeanstalkERC20{salt: BEAN_SALT}(
             address(this),
             BEAN_NAME,
