@@ -40,6 +40,12 @@ type SeasonalLiquidityAndPrice = {
   largestLiquidityWellPrice: BigNumber;
 };
 
+type mergedQueryData = {
+  season: BigNumber;
+} & SunSeason &
+  SunField &
+  SeasonalLiquidityAndPrice;
+
 export type SeasonSummaryItem = {
   value: BigNumber | undefined;
   delta?: BigNumber;
@@ -120,14 +126,17 @@ const castQueries = (
 
   const beanDecimals = sdk.tokens.BEAN.decimals;
   const currSeason = currentSeason.toNumber();
+  const allSeasons = new Set<number>();
 
   const fieldMap = field.reduce<SeasonMap<SunField>>((memo, curr) => {
     const seasonIndex = curr.season;
+    allSeasons.add(curr.season);
     memo[seasonIndex] = { ...castField(curr, beanDecimals) };
     return memo;
   }, {});
   const seasonFieldMap = seasons.reduce<SeasonMap<SunSeason>>((memo, curr) => {
     const seasonIndex = curr.season;
+    allSeasons.add(curr.season);
     memo[seasonIndex] = { ...castSeason(curr, beanDecimals) };
     return memo;
   }, {});
@@ -135,15 +144,45 @@ const castQueries = (
     priceAndLiquidityByPool
   );
 
-  return Array.from({ length: 25 }).map((_, i) => {
-    const seasonIndex = currSeason - i;
-    return {
-      season: new BigNumber(seasonIndex),
-      ...fieldMap[seasonIndex],
-      ...seasonFieldMap[seasonIndex],
-      ...liquidityAndPriceMap[seasonIndex],
-    };
-  });
+  return Array.from({ length: 25 })
+    .map((_, i) => {
+      const seasonIndex = currSeason - i;
+      if (!allSeasons.has(seasonIndex)) {
+        return;
+      }
+
+      return {
+        season: new BigNumber(seasonIndex),
+        ...fieldMap[seasonIndex],
+        ...seasonFieldMap[seasonIndex],
+        ...liquidityAndPriceMap[seasonIndex],
+      };
+    })
+    .filter(Boolean) as mergedQueryData[];
+};
+
+const displayMergedData = (data: ReturnType<typeof castQueries>) => {
+  const mapped = data.map((d) => ({
+    season: d.season.toString(),
+    price: d.price.toString(),
+    rewardBeans: d.rewardBeans.toString(),
+    beanSupply: d.beanSupply.toString(),
+    deltaB: d.deltaB.toString(),
+
+    issuedSoil: d.issuedSoil.toString(),
+    temperature: d.temperature.toString(),
+
+    podRate: d.podRate.toString(),
+    soilSoldOut: d.soilSoldOut,
+    blocksToSoldOutSoil: d.blocksToSoldOutSoil.toString(),
+    deltaSownBeans: d.deltaSownBeans.toString(),
+    caseId: d.caseId.toString(),
+
+    totalLiquidity: d.totalLiquidity.toString(),
+    largestLiquidityWellPrice: d.largestLiquidityWellPrice.toString(),
+  }));
+
+  return mapped;
 };
 
 const getAdjustmentDisplay = (value: BigNumber | undefined) => {
@@ -154,7 +193,6 @@ const getAdjustmentDisplay = (value: BigNumber | undefined) => {
 
 const useSeasonsSummary = () => {
   const field = useAppSelector((s) => s._beanstalk.field);
-  const beanTokenData = useAppSelector((s) => s._bean.token);
   const { caseState } = useAppSelector((s) => s._beanstalk.case);
   const pools = useAppSelector((s) => s._bean.pools);
   const price = usePrice();
@@ -165,6 +203,7 @@ const useSeasonsSummary = () => {
   const maxPrevSeason = season.minus(25).toNumber();
   const currentSeason = season.toNumber();
   const skipQuery = season.lte(0);
+  const twaDeltaB = evaluation?.twaDeltaB || ZERO_BN;
 
   // Queries
   const { data: seasonsData, loading: seasonsDataLoading } = useSunButtonQuery({
@@ -187,18 +226,28 @@ const useSeasonsSummary = () => {
       skip: skipQuery || !Object.keys(pools).length,
     });
 
-  const twaDeltaB = beanTokenData.deltaB;
-
   const forecast = useMemo(() => {
+    const beansMinted = twaDeltaB.gt(0) ? twaDeltaB : ZERO_BN;
+    const maxTemp = field.temperature.max.plus(
+      evaluation?.delta.temperature || 0
+    );
+
+    // console.log("maxSoil: ", LibCases.calculateMaxSoil(beansMinted, maxTemp, caseState.podRate, twaDeltaB).toString())
+
     const summary: SeasonSummary = {
       season: {
         value: season.plus(1),
       },
       beanMints: {
-        value: twaDeltaB?.gt(0) ? twaDeltaB : undefined,
+        value: twaDeltaB?.gt(0) ? twaDeltaB : ZERO_BN,
       },
       maxSoil: {
-        value: twaDeltaB?.lt(0) ? twaDeltaB : undefined,
+        value: LibCases.calcMaxSoil(
+          beansMinted,
+          maxTemp,
+          caseState.podRate,
+          twaDeltaB
+        ),
       },
       maxTemperature: {
         value: field.temperature.max.plus(evaluation?.delta.temperature || 0),
@@ -249,6 +298,8 @@ const useSeasonsSummary = () => {
       sdk
     );
 
+    console.log('mergedDat: ', displayMergedData(mergedQueryData));
+
     const lastIndex = mergedQueryData.length - 1;
 
     mergedQueryData.forEach((data, i) => {
@@ -256,7 +307,8 @@ const useSeasonsSummary = () => {
 
       if (!prevSeason) return;
 
-      const deltaTemperature = data.temperature.minus(prevSeason.temperature);
+      const deltaTemperature =
+        data.temperature?.minus(prevSeason.temperature) || ZERO_BN;
 
       const l2sr = data.totalLiquidity.div(data.beanSupply || 1);
 
