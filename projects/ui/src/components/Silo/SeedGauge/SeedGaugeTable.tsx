@@ -117,8 +117,8 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'optimalBDVPct',
     header: 'Optimal BDV %',
-    render: ({ optimalPctDepositedBdv, gaugePoints }) => {
-      if (!gaugePoints || gaugePoints.eq(0)) {
+    render: ({ optimalPctDepositedBdv }) => {
+      if (optimalPctDepositedBdv.eq(0)) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
       return (
@@ -133,12 +133,8 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'currentLPBDVPct',
     header: 'Current LP BDV %',
-    render: ({
-      optimalPctDepositedBdv,
-      currentPctDepositedBdv,
-      gaugePoints,
-    }) => {
-      if (!gaugePoints || gaugePoints.eq(0)) {
+    render: ({ optimalPctDepositedBdv, currentPctDepositedBdv }) => {
+      if (optimalPctDepositedBdv.eq(0)) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
       const isOptimal = currentPctDepositedBdv.eq(optimalPctDepositedBdv);
@@ -146,7 +142,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
       return (
         <Chip
           variant="filled"
-          label={`${displayBNValue(currentPctDepositedBdv, '0')}%`}
+          label={`${currentPctDepositedBdv.toFormat(0, BigNumber.ROUND_HALF_CEIL)}%`}
           sx={{
             ...chipSx,
             color: isOptimal ? Palette.logoGreen : Palette.theme.winter.red,

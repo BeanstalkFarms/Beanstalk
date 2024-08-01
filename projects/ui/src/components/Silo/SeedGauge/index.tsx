@@ -112,10 +112,7 @@ const SeedGaugeSelect = ({
       subtitle: (
         <Typography color="text.secondary">
           <Typography component="span" color="text.primary">
-            {data?.bean2MaxLPRatio.value
-              ? displayFullBN(data?.bean2MaxLPRatio.value, 0)
-              : '--'}
-            %
+            {data?.bean2MaxLPRatio.value?.toFormat(1) || '--'}%
           </Typography>{' '}
           Seed reward for Beans vs. the Max LP token
         </Typography>
