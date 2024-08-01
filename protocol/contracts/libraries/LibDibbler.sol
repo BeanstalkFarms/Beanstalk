@@ -88,6 +88,8 @@ library LibDibbler {
             pods = beansToPods(beans, _morningTemperature);
         }
 
+        require(pods > 0, "Pods must be greater than 0");
+
         // In the case of an overflow, its equivalent to having no soil left.
         if (s.sys.soil < beans) {
             s.sys.soil = 0;

@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
  * @param activeField ID of the active Field.
  * @param fieldCount Number of Fields that have ever been initialized.
+ * @param orderLockedBeans The number of Beans locked in Pod Orders.
  * @param _buffer_0 Reserved storage for future additions.
  * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
@@ -52,6 +53,7 @@ struct System {
     uint128 beanSown;
     uint256 activeField;
     uint256 fieldCount;
+    uint256 orderLockedBeans;
     bytes32[16] _buffer_0;
     mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
