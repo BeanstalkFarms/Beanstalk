@@ -168,7 +168,7 @@ library LibUsdOracle {
         if (target == address(0)) target = address(this);
 
         (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, lookback)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback)
         );
 
         if (!success) return 0;
