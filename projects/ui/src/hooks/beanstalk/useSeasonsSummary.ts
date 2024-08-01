@@ -161,29 +161,6 @@ const castQueries = (
     .filter(Boolean) as mergedQueryData[];
 };
 
-const displayMergedData = (data: ReturnType<typeof castQueries>) => {
-  const mapped = data.map((d) => ({
-    season: d.season.toString(),
-    price: d.price.toString(),
-    rewardBeans: d.rewardBeans.toString(),
-    beanSupply: d.beanSupply.toString(),
-    deltaB: d.deltaB.toString(),
-
-    issuedSoil: d.issuedSoil.toString(),
-    temperature: d.temperature.toString(),
-
-    podRate: d.podRate.toString(),
-    soilSoldOut: d.soilSoldOut,
-    blocksToSoldOutSoil: d.blocksToSoldOutSoil.toString(),
-    deltaSownBeans: d.deltaSownBeans.toString(),
-    caseId: d.caseId.toString(),
-
-    totalLiquidity: d.totalLiquidity.toString(),
-    largestLiquidityWellPrice: d.largestLiquidityWellPrice.toString(),
-  }));
-
-  return mapped;
-};
 
 const getAdjustmentDisplay = (value: BigNumber | undefined) => {
   if (!value) return '--';
@@ -226,13 +203,18 @@ const useSeasonsSummary = () => {
       skip: skipQuery || !Object.keys(pools).length,
     });
 
+  const instantaneousDeltaB = sdk.tokens.siloWhitelistedWellLPAddresses
+    .reduce((prev, address) => {
+      const poolDeltaB = pools[address]?.deltaB || ZERO_BN;
+      return prev.plus(poolDeltaB);
+    }, ZERO_BN)
+    .toString();
+
   const forecast = useMemo(() => {
     const beansMinted = twaDeltaB.gt(0) ? twaDeltaB : ZERO_BN;
     const maxTemp = field.temperature.max.plus(
       evaluation?.delta.temperature || 0
     );
-
-    // console.log("maxSoil: ", LibCases.calculateMaxSoil(beansMinted, maxTemp, caseState.podRate, twaDeltaB).toString())
 
     const summary: SeasonSummary = {
       season: {
@@ -246,7 +228,8 @@ const useSeasonsSummary = () => {
           beansMinted,
           maxTemp,
           caseState.podRate,
-          twaDeltaB
+          twaDeltaB,
+          new BigNumber(instantaneousDeltaB)
         ),
       },
       maxTemperature: {
@@ -255,12 +238,12 @@ const useSeasonsSummary = () => {
         display: getAdjustmentDisplay(evaluation?.delta.temperature),
       },
       bean2MaxLPScalar: {
-        value: evaluation?.delta.bean2MaxLPGPPerBdv || ZERO_BN,
-        delta: evaluation?.delta.bean2MaxLPGPPerBdvScalar?.div(100) || ZERO_BN,
+        value: evaluation?.delta.bean2MaxLPGPPerBdvScalar || ZERO_BN,
+        delta: evaluation?.delta.bean2MaxLPGPPerBdv || ZERO_BN,
         display: getAdjustmentDisplay(evaluation?.delta.bean2MaxLPGPPerBdv),
       },
       price: {
-        value: price,
+        value: evaluation?.highestLiquidityWellPrice || ZERO_BN,
         display: evaluation?.stateDisplay.price,
       },
       l2sr: {
@@ -277,7 +260,14 @@ const useSeasonsSummary = () => {
       },
     };
     return summary;
-  }, [caseState, price, season, evaluation, field, twaDeltaB]);
+  }, [
+    twaDeltaB,
+    instantaneousDeltaB,
+    field.temperature.max,
+    evaluation,
+    season,
+    caseState,
+  ]);
 
   const seasonsSummary = useMemo(() => {
     const arr: SeasonSummary[] = [];
@@ -297,8 +287,6 @@ const useSeasonsSummary = () => {
       season,
       sdk
     );
-
-    console.log('mergedDat: ', displayMergedData(mergedQueryData));
 
     const lastIndex = mergedQueryData.length - 1;
 
@@ -351,12 +339,12 @@ const useSeasonsSummary = () => {
           display: getAdjustmentDisplay(deltaTemperature),
         },
         bean2MaxLPScalar: {
-          value: delta.bean2MaxLPGPPerBdv,
-          delta: delta.bean2MaxLPGPPerBdvScalar.div(100),
+          value: delta.bean2MaxLPGPPerBdvScalar,
+          delta: delta.bean2MaxLPGPPerBdv,
           display: getAdjustmentDisplay(delta.bean2MaxLPGPPerBdv),
         },
         price: {
-          value: data.price,
+          value: data.largestLiquidityWellPrice,
           display: stateDisplay.price,
         },
         l2sr: {
@@ -392,13 +380,26 @@ const useSeasonsSummary = () => {
 
 export default useSeasonsSummary;
 
-/**
- * minted beans = twaDeltaB
- * issued soil = twaDeltaSoil
- *
- * for each well
- *    - cap delta B at 1% of supply
- *
- *    well A's delta B => 2% of total bean supply
- *    well B's delta B => .5% of total bean supply
- */
+// const displayMergedData = (data: ReturnType<typeof castQueries>) => {
+//   const mapped = data.map((d) => ({
+//     season: d.season.toString(),
+//     price: d.price.toString(),
+//     rewardBeans: d.rewardBeans.toString(),
+//     beanSupply: d.beanSupply.toString(),
+//     deltaB: d.deltaB.toString(),
+
+//     issuedSoil: d.issuedSoil.toString(),
+//     temperature: d.temperature.toString(),
+
+//     podRate: d.podRate.toString(),
+//     soilSoldOut: d.soilSoldOut,
+//     blocksToSoldOutSoil: d.blocksToSoldOutSoil.toString(),
+//     deltaSownBeans: d.deltaSownBeans.toString(),
+//     caseId: d.caseId.toString(),
+
+//     totalLiquidity: d.totalLiquidity.toString(),
+//     largestLiquidityWellPrice: d.largestLiquidityWellPrice.toString(),
+//   }));
+
+//   return mapped;
+// };

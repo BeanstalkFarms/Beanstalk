@@ -112,14 +112,16 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ bean2MaxLPScalar }) => (
       <Stack justifyContent="center" alignItems="flex-end">
         <Typography variant="bodySmall" align="right">
-          {bean2MaxLPScalar.value?.toFormat() || '-'}{' '}
+          {bean2MaxLPScalar.value?.toFormat() || '-'}%{' '}
           {bean2MaxLPScalar.value && (
             <Typography
               component="span"
               variant="bodySmall"
               color="text.secondary"
             >
-              {`(${getDelta(bean2MaxLPScalar.delta)}${bean2MaxLPScalar?.delta?.abs().toFormat() || '-'})`}
+              {`(${getDelta(bean2MaxLPScalar.delta)}${
+                bean2MaxLPScalar?.delta?.div(100).abs().toFormat() || '-'
+              })`}
             </Typography>
           )}
         </Typography>

@@ -24,18 +24,9 @@ const useBeanstalkCaseData = () => {
       poolState.price,
       twaDeltaB
     );
-    console.table({
-      ...stateDisplay,
-      // twaDeltaB: twaDeltaB.toString(),
-      // poolPrice: poolState.price?.toString(),
-      // deltaTemperature: delta.temperature?.toString(),
-      // deltaBean2MaxLPGPPerBdv: delta.bean2MaxLPGPPerBdv?.toString(),
-      // deltaBean2MaxLPGPPerBdvScalar: delta.bean2MaxLPGPPerBdvScalar?.toString(),
-      podRate: caseState.podRate.toString(),
-      deltaPodDemand: caseState.deltaPodDemand.toString(),
-    });
 
     return {
+      highestLiquidityWellPrice: poolState.price || ZERO_BN,
       twaDeltaB: twaDeltaB,
       delta,
       state: caseState,

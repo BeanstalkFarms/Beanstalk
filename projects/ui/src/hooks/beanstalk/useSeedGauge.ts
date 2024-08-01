@@ -126,8 +126,6 @@ const useSeedGauge = () => {
     enabled: !!whitelist.length,
   });
 
-  // console.log('query: ', query.data);
-
   const gaugeData = useMemo(() => {
     if (!Object.keys(siloBals).length || !query.data?.tokenSettings) return {};
 
@@ -161,8 +159,6 @@ const useSeedGauge = () => {
 
     return map;
   }, [query?.data?.tokenSettings, siloBals, sdk]);
-
-  // console.log('gaugeData: ', gaugeData);
 
   return {
     data: {
