@@ -61,9 +61,32 @@ const tokenSettings = [
   },
 ] as const;
 
+const poolDeltaB = [
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'pool',
+        type: 'address',
+      },
+    ],
+    name: 'poolDeltaB',
+    outputs: [
+      {
+        internalType: 'int256',
+        name: '',
+        type: 'int256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 const BEANSTALK_ABI_SNIPPETS = {
   getGaugePointsPerBdvForToken: getGaugePointsPerBdvForToken,
   tokenSettings: tokenSettings,
+  poolDeltaB: poolDeltaB,
 } as const;
 
 export default BEANSTALK_ABI_SNIPPETS;

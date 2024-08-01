@@ -8,14 +8,13 @@ import {
   GridProps,
   Typography,
   Box,
-  Button,
   useTheme,
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { NEW_BN, ZERO_BN } from '~/constants';
+import { NEW_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import { FC } from '~/types';
 import useSeasonsSummary, {
@@ -23,6 +22,7 @@ import useSeasonsSummary, {
 } from '~/hooks/beanstalk/useSeasonsSummary';
 import Row from '~/components/Common/Row';
 import { IconSize } from '~/components/App/muiTheme';
+import SunriseButton from '~/components/Sun/SunriseButton';
 import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 
@@ -66,7 +66,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ beanMints: { value } }) => (
       <Stack justifyContent="center" height="100%">
         <Typography variant="bodySmall" align="right">
-          {`+ ${value?.abs().toFormat() || 0}`}
+          {`+${value?.abs().toFormat(0) || 0}`}
         </Typography>
       </Stack>
     ),
@@ -194,18 +194,97 @@ const MAX_ITEMS = 5;
 
 const MAX_TABLE_WIDTH = 1568;
 
-const PriceButton: FC<ButtonProps> = ({ ...props }) => {
-  /// DATA
-  const season = useSeason();
+const SeasonTable = ({
+  forecast: nextSeasonForecast,
+  seasonsSummary,
+}: ReturnType<typeof useSeasonsSummary>) => (
+  <Box
+    sx={(t) => ({
+      position: 'relative',
+      width: `min(calc(100vw - 20px), ${MAX_TABLE_WIDTH}px)`,
+      [t.breakpoints.up('lg')]: {
+        width: `min(calc(100vw - 40px), ${MAX_TABLE_WIDTH}px)`,
+      },
+    })}
+  >
+    <Stack gap={1}>
+      <Stack gap={1} px={1} pt={1}>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Stack gap={1} sx={{ minWidth: `${MAX_TABLE_WIDTH - 20}px` }}>
+            {/* Header */}
+            <Box
+              sx={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                background: 'white',
+              }}
+            >
+              <Grid container px={1}>
+                {Object.values(colConfig).map((col) => (
+                  <Grid
+                    item
+                    key={`sun-button-table-header-${col.title}`}
+                    {...col.widths}
+                  >
+                    <Stack justifyContent="center">
+                      <Typography
+                        variant="bodySmall"
+                        align={col.align || 'right'}
+                      >
+                        {col.title}
+                      </Typography>
+                      {col.subtitle && (
+                        <Typography
+                          color="text.tertiary"
+                          variant="bodySmall"
+                          align={col.align || 'right'}
+                        >
+                          {col.subtitle}
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+            {/* Rows */}
+            <Stack
+              gap={1}
+              sx={{
+                maxHeight: `${(57 + 10) * MAX_ITEMS}px`,
+                overflowY: 'auto',
+              }}
+            >
+              <SeasonCard
+                index={-1}
+                summary={nextSeasonForecast}
+                columns={colConfig}
+                isNew
+              />
+              {seasonsSummary.map((summary, i) => (
+                <SeasonCard
+                  key={`season-card-row-${i}`}
+                  index={i}
+                  summary={summary}
+                  columns={colConfig}
+                />
+              ))}
+            </Stack>
+          </Stack>
+        </Box>
+      </Stack>
+      <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
+      <Box px={1} pb={1}>
+        <SunriseButton />
+      </Box>
+    </Stack>
+  </Box>
+);
+
+const SeasonIcon = ({ beanMints }: { beanMints: BigNumber | undefined }) => {
   const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
-
-  const theme = useTheme();
-
-  const { seasonsSummary, forecast } = useSeasonsSummary();
-
-  /// Button Content
-  const isLoading = season.eq(NEW_BN);
-  const startIcon = (
+  return (
     <Box
       sx={{
         '@media (max-width: 350px)': {
@@ -214,11 +293,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       }}
     >
       <img
-        src={
-          seasonsSummary?.[0]?.beanMints.value?.eq(0) || awaiting
-            ? drySeasonIcon
-            : rainySeasonIcon
-        }
+        src={beanMints?.eq(0) || awaiting ? drySeasonIcon : rainySeasonIcon}
         css={{
           width: 25,
           height: 25,
@@ -231,110 +306,29 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       />
     </Box>
   );
+};
 
-  const tableContent = (
-    <Box
-      sx={(t) => ({
-        position: 'relative',
-        width: `min(calc(100vw - 20px), ${MAX_TABLE_WIDTH}px)`,
-        [t.breakpoints.up('lg')]: {
-          width: `min(calc(100vw - 40px), ${MAX_TABLE_WIDTH}px)`,
-        },
-      })}
-    >
-      <Stack gap={1}>
-        <Stack gap={1} px={1} pt={1}>
-          {/* Horizontal scroll container for both header and body */}
-          <Box sx={{ overflowX: 'auto' }}>
-            <Stack gap={1} sx={{ minWidth: `${MAX_TABLE_WIDTH - 20}px` }}>
-              {/* Header */}
-              <Box
-                sx={{
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                  background: 'white',
-                }}
-              >
-                {/* <MaxWidthContainer p={8}> */}
-                <Grid container px={1}>
-                  {Object.values(colConfig).map((col) => (
-                    <Grid
-                      item
-                      key={`sun-button-table-header-${col.title}`}
-                      {...col.widths}
-                    >
-                      <Stack justifyContent="center">
-                        <Typography
-                          variant="bodySmall"
-                          align={col.align || 'right'}
-                        >
-                          {col.title}
-                        </Typography>
-                        {col.subtitle && (
-                          <Typography
-                            color="text.tertiary"
-                            variant="bodySmall"
-                            align={col.align || 'right'}
-                          >
-                            {col.subtitle}
-                          </Typography>
-                        )}
-                      </Stack>
-                    </Grid>
-                  ))}
-                </Grid>
-                {/* </MaxWidthContainer> */}
-              </Box>
+const PriceButton: FC<ButtonProps> = ({ ...props }) => {
+  /// DATA
+  const season = useSeason();
+  const theme = useTheme();
+  const summary = useSeasonsSummary();
 
-              {/* Body with vertical scroll */}
-              <Stack
-                gap={1}
-                sx={{
-                  maxHeight: `${(57 + 10) * MAX_ITEMS}px`,
-                  overflowY: 'auto',
-                }}
-              >
-                <SeasonCard
-                  index={-1}
-                  summary={{
-                    ...forecast,
-                    maxSoil: {
-                      ...forecast.maxSoil,
-                      value: seasonsSummary?.[0]?.maxSoil.value?.plus(
-                        forecast.maxSoil.value || ZERO_BN
-                      ),
-                    },
-                  }}
-                  columns={colConfig}
-                  isNew
-                />
-                {seasonsSummary.map((summary, i) => (
-                  <SeasonCard
-                    key={`season-card-row-${i}`}
-                    index={i}
-                    summary={summary}
-                    columns={colConfig}
-                  />
-                ))}
-              </Stack>
-            </Stack>
-          </Box>
-        </Stack>
-        <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
-        <Box px={1} pb={1}>
-          <Button fullWidth>asdf</Button>
-        </Box>
-      </Stack>
-    </Box>
-  );
+  /// Button Content
+  const isLoading = season.eq(NEW_BN) || summary.loading;
 
   return (
     <FolderMenu
-      startIcon={startIcon}
+      startIcon={
+        <SeasonIcon beanMints={summary.seasonsSummary?.[0]?.beanMints.value} />
+      }
       buttonContent={<>{isLoading ? '0000' : season.toFixed()}</>}
-      drawerContent={<Box sx={{ p: 1 }}>{tableContent}</Box>}
-      popoverContent={tableContent}
+      drawerContent={
+        <Box sx={{ p: 1 }}>
+          <SeasonTable {...summary} />
+        </Box>
+      }
+      popoverContent={<SeasonTable {...summary} />}
       hideTextOnMobile
       popperWidth="100%"
       hotkey="opt+2, alt+2"
