@@ -6,7 +6,7 @@ import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/Te
 import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {StakingEthChainlinkOracle} from "contracts/ecosystem/oracles/StakingEthChainlinkOracle.sol";
+import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -42,7 +42,7 @@ contract OracleTest is TestHelper {
     }
 
     /**
-     * @notice verifies functionality with StakingEthChainlinkOracle.sol.
+     * @notice verifies functionality with LSDChainlinkOracle.sol.
      */
     function test_staking_eth_oracle() public {
         address token = initializeMockStakingEthToken();
@@ -128,7 +128,7 @@ contract OracleTest is TestHelper {
 
         // deploy new staking eth oracle contract
         address oracleAddress = address(
-            new StakingEthChainlinkOracle(
+            new LSDChainlinkOracle(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 3600 * 4,
                 address(oracle),
@@ -143,7 +143,7 @@ contract OracleTest is TestHelper {
             token,
             IMockFBeanstalk.Implementation(
                 oracleAddress,
-                StakingEthChainlinkOracle.getPrice.selector,
+                LSDChainlinkOracle.getPrice.selector,
                 bytes1(0x00)
             )
         );

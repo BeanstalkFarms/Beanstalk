@@ -5,12 +5,12 @@ import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.
 pragma solidity ^0.8.20;
 
 /**
- * @title StakingEthChainlinkOracle
+ * @title LSDChainlinkOracle
  * @author Brean
- * @notice An oracle implementation that returns the price of staking ETH derivatives in USD.
+ * @notice An oracle implementation that returns the price of a ETH LSD in USD.
  * @dev This is done by multiplying the price of xETH/ETH by the price of ETH/USD.
  */
-contract StakingEthChainlinkOracle {
+contract LSDChainlinkOracle {
     address immutable ethChainlinkOracle;
     uint256 immutable ethTimeout;
     address immutable xEthChainlinkOracle;
