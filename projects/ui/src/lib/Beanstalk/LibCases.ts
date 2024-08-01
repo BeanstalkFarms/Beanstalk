@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { ZERO_BN } from '~/constants';
+import { ONE_BN, ZERO_BN } from '~/constants';
+import { MaxBN } from '~/util';
 import { toBNWithDecimals } from "~/util/BigNumber";
 
 /**
@@ -339,6 +340,29 @@ export class LibCases {
     }
   }
 
+  static calcMaxSoil(
+    beansMinted: BigNumber, 
+    maxTemperature: BigNumber,
+    podRate: BigNumber,
+    twaDeltaB: BigNumber,
+  ) {
+    // 1/3 -> silo, 1/3 -> field, 1/3 -> fertilizer
+    const podsHarvested = beansMinted.div(3);
+
+    const maxSoil = podsHarvested.div(maxTemperature.div(100).plus(1));
+
+    let scalar = ONE_BN;
+
+    if (podRate.gte(POD_RATE_UPPER_BOUND)) {
+      scalar = new BigNumber(0.5);
+    } else if (podRate.lt(POD_RATE_LOWER_BOUND)) {
+      scalar = new BigNumber(1.5);
+    }
+
+    return MaxBN(maxSoil.times(scalar), twaDeltaB.negated());
+  }
+
+
   // ---------- Evaluation Functions ----------
 
   static evaluatePodRate(podRate: BigNumber): CaseEvaluation {
@@ -388,13 +412,13 @@ export class LibCases {
 
   static evaluateDeltaPodDemand(deltaPodDemand: BigNumber): CaseEvaluation {
     let caseId = 0;
-    let ev: DeltaPodDemandDisplay = "Steady";
+    let ev: DeltaPodDemandDisplay = "Decreasing";
     if (deltaPodDemand.gte(DELTA_POD_DEMAND_UPPER_BOUND)) {
       caseId = 2;
       ev = "Increasing";
     } else if (deltaPodDemand.gte(DELTA_POD_DEMAND_LOWER_BOUND)) {
       caseId = 1;
-      ev = "Decreasing";
+      ev = "Steady";
     }
   
     return {
