@@ -14,7 +14,6 @@ import { ZERO_BN } from '~/constants';
 import useSdk from '../sdk';
 import useSeason from './useSeason';
 import useBeanstalkCaseData from './useBeanstalkCaseData';
-import usePrice from './usePrice';
 
 type SeasonMap<T> = Record<number, T>;
 
@@ -161,7 +160,6 @@ const castQueries = (
     .filter(Boolean) as mergedQueryData[];
 };
 
-
 const getAdjustmentDisplay = (value: BigNumber | undefined) => {
   if (!value) return '--';
   if (value.eq(0)) return 'No adjustment';
@@ -172,7 +170,6 @@ const useSeasonsSummary = () => {
   const field = useAppSelector((s) => s._beanstalk.field);
   const { caseState } = useAppSelector((s) => s._beanstalk.case);
   const pools = useAppSelector((s) => s._bean.pools);
-  const price = usePrice();
   const evaluation = useBeanstalkCaseData();
   const season = useSeason();
   const sdk = useSdk();
