@@ -41,16 +41,16 @@ contract ReseedField {
         uint256 totalPods,
         uint256 harvestable,
         uint256 harvested,
-        uint256 fieldId,
         uint8 initialTemperature
     ) external {
+        uint256 activeField = s.sys.activeField;
         uint256 calculatedTotalPods;
         for (uint i; i < accountPlots.length; i++) {
             for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
-                s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;
-                s.accts[accountPlots[i].account].fields[fieldId].plotIndexes.push(podIndex);
+                s.accts[accountPlots[i].account].fields[activeField].plots[podIndex] = podAmount;
+                s.accts[accountPlots[i].account].fields[activeField].plotIndexes.push(podIndex);
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
                 calculatedTotalPods += podAmount;
             }
@@ -61,9 +61,9 @@ contract ReseedField {
         require(totalPods >= harvestable, "ReseedField: harvestable mismatch");
         require(harvestable >= harvested, "ReseedField: harvested mismatch");
 
-        s.sys.fields[fieldId].pods = totalPods;
-        s.sys.fields[fieldId].harvestable = harvestable;
-        s.sys.fields[fieldId].harvested = harvested;
+        s.sys.fields[activeField].pods = totalPods;
+        s.sys.fields[activeField].harvestable = harvestable;
+        s.sys.fields[activeField].harvested = harvested;
 
         // soil demand initialization.
         s.sys.weather.thisSowTime = type(uint32).max;
