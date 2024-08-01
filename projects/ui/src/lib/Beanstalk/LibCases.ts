@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { ONE_BN, ZERO_BN } from '~/constants';
-import { MaxBN } from '~/util';
+import { MaxBN, MinBN } from '~/util';
 import { toBNWithDecimals } from "~/util/BigNumber";
 
 /**
@@ -345,6 +345,7 @@ export class LibCases {
     maxTemperature: BigNumber,
     podRate: BigNumber,
     twaDeltaB: BigNumber,
+    instantaneousDeltaB: BigNumber,
   ) {
     // 1/3 -> silo, 1/3 -> field, 1/3 -> fertilizer
     const podsHarvested = beansMinted.div(3);
@@ -358,8 +359,9 @@ export class LibCases {
     } else if (podRate.lt(POD_RATE_LOWER_BOUND)) {
       scalar = new BigNumber(1.5);
     }
+    const minDeltaB = MinBN(twaDeltaB.negated(), instantaneousDeltaB.negated());
 
-    return MaxBN(maxSoil.times(scalar), twaDeltaB.negated());
+    return MaxBN(maxSoil.times(scalar), minDeltaB);
   }
 
 
@@ -481,9 +483,9 @@ export class LibCases {
       LibCases.getCaseWithCaseId(caseId)
     );
 
-    const bean2MaxLPGPPerBdvScalar = toBNWithDecimals(bL, 18);
-    const bean2MaxLPGPPerBdv = toBNWithDecimals(
-      LibCases.getBeanToMaxLPUnit(bL), 
+    const bean2MaxLPGPPerBdv = toBNWithDecimals(bL, 18);
+    const bean2MaxLPGPPerBdvScalar = toBNWithDecimals(
+      LibCases.getBeanToMaxLPUnit(bL),
       18
     );
 
