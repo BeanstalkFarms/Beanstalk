@@ -4,7 +4,7 @@ import {
   BeanstalkPrice,
   BeanstalkPrice__priceResultPPsStruct,
   BeanstalkPrice__priceResultPStruct
-} from "../../../generated/Beanstalk/BeanstalkPrice";
+} from "../../../generated/Bean-ABIs/BeanstalkPrice";
 import { loadBean } from "../Bean";
 import { BEANSTALK_PRICE_1, BEANSTALK_PRICE_2, PRICE_1_BLOCK, PRICE_2_BLOCK } from "../../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
