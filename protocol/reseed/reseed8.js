@@ -73,5 +73,3 @@ async function reseed8(account, L2Beanstalk, mock = false) {
 }
 
 exports.reseed8 = reseed8;
-
-
