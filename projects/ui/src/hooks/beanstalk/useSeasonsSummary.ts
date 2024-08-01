@@ -135,17 +135,15 @@ const castQueries = (
     priceAndLiquidityByPool
   );
 
-  return Array.from({ length: 25 })
-    .map((_, i) => {
-      const seasonIndex = currSeason - i;
-      return {
-        season: new BigNumber(seasonIndex),
-        ...fieldMap[seasonIndex],
-        ...seasonFieldMap[seasonIndex],
-        ...liquidityAndPriceMap[seasonIndex],
-      };
-    })
-    .reverse();
+  return Array.from({ length: 25 }).map((_, i) => {
+    const seasonIndex = currSeason - i;
+    return {
+      season: new BigNumber(seasonIndex),
+      ...fieldMap[seasonIndex],
+      ...seasonFieldMap[seasonIndex],
+      ...liquidityAndPriceMap[seasonIndex],
+    };
+  });
 };
 
 const getAdjustmentDisplay = (value: BigNumber | undefined) => {
@@ -209,7 +207,7 @@ const useSeasonsSummary = () => {
       },
       bean2MaxLPScalar: {
         value: evaluation?.delta.bean2MaxLPGPPerBdv || ZERO_BN,
-        delta: evaluation?.delta.bean2MaxLPGPPerBdvScalar || ZERO_BN,
+        delta: evaluation?.delta.bean2MaxLPGPPerBdvScalar?.div(100) || ZERO_BN,
         display: getAdjustmentDisplay(evaluation?.delta.bean2MaxLPGPPerBdv),
       },
       price: {
@@ -243,7 +241,6 @@ const useSeasonsSummary = () => {
       return arr;
     }
 
-    // ordered: [season, season - n]
     const mergedQueryData = castQueries(
       seasonsArr,
       fieldArr,
@@ -303,7 +300,7 @@ const useSeasonsSummary = () => {
         },
         bean2MaxLPScalar: {
           value: delta.bean2MaxLPGPPerBdv,
-          delta: delta.bean2MaxLPGPPerBdvScalar,
+          delta: delta.bean2MaxLPGPPerBdvScalar.div(100),
           display: getAdjustmentDisplay(delta.bean2MaxLPGPPerBdv),
         },
         price: {
