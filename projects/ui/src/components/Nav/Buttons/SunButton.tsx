@@ -8,13 +8,14 @@ import {
   GridProps,
   Typography,
   Box,
+  Button,
+  useTheme,
 } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
-import SunriseButton from '~/components/Sun/SunriseButton';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { NEW_BN } from '~/constants';
+import { NEW_BN, ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import { FC } from '~/types';
 import useSeasonsSummary, {
@@ -65,7 +66,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ beanMints: { value } }) => (
       <Stack justifyContent="center" height="100%">
         <Typography variant="bodySmall" align="right">
-          {`+ ${value?.abs().toFixed(0) || '-'}`}
+          {`+ ${value?.abs().toFormat() || 0}`}
         </Typography>
       </Stack>
     ),
@@ -76,7 +77,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     widths: { xs: 1.35 },
     render: ({ maxSoil }) => (
       <Typography variant="bodySmall" align="right">
-        {`+ ${maxSoil.value?.abs().toFixed(2) || '-'}`}
+        {maxSoil.value?.abs().toFormat(2) || 0}
       </Typography>
     ),
   },
@@ -87,9 +88,13 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ maxTemperature }) => (
       <Stack justifyContent="center" alignItems="flex-end">
         <Typography variant="bodySmall" align="right">
-          {maxTemperature.value?.abs().toFixed(0) || '-'}{' '}
-          <Typography component="span" color="text.secondary">
-            {`( ${getDelta(maxTemperature.delta)} ${maxTemperature?.delta?.abs().toFixed(0) || '-'}% )`}
+          {maxTemperature.value?.abs().toFormat(0) || '-'}%{' '}
+          <Typography
+            component="span"
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            {`(${getDelta(maxTemperature.delta)}${maxTemperature?.delta?.abs().toFormat() || '-'}%)`}
           </Typography>
         </Typography>
         {maxTemperature.display && (
@@ -107,10 +112,14 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ bean2MaxLPScalar }) => (
       <Stack justifyContent="center" alignItems="flex-end">
         <Typography variant="bodySmall" align="right">
-          {bean2MaxLPScalar.value?.toFixed(0) || '-'}{' '}
+          {bean2MaxLPScalar.value?.toFormat() || '-'}{' '}
           {bean2MaxLPScalar.value && (
-            <Typography component="span" color="text.secondary">
-              {`(${getDelta(bean2MaxLPScalar.delta)}${bean2MaxLPScalar?.delta?.abs().toFixed(2) || '-'})`}
+            <Typography
+              component="span"
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {`(${getDelta(bean2MaxLPScalar.delta)}${bean2MaxLPScalar?.delta?.abs().toFormat() || '-'})`}
             </Typography>
           )}
         </Typography>
@@ -128,7 +137,9 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     widths: { xs: 1.5 },
     render: ({ price }) => (
       <Stack justifyContent="center" alignItems="flex-end">
-        <Typography align="right">{price.value?.toFixed(2) || '-'}</Typography>
+        <Typography variant="bodySmall" align="right">
+          ${price.value?.toFixed(2) || '-'}
+        </Typography>
         <Typography variant="bodySmall" color="text.tertiary" align="right">
           {price.display || '-'}
         </Typography>
@@ -141,7 +152,9 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     widths: { xs: 1.7 },
     render: ({ l2sr }) => (
       <Stack justifyContent="center" alignItems="flex-end">
-        <Typography align="right">{l2sr.value?.toFixed(0) || '-'}</Typography>
+        <Typography variant="bodySmall" align="right">
+          {l2sr.value?.times(100).toFormat(0) || '-'}%
+        </Typography>
         <Typography variant="bodySmall" color="text.tertiary" align="right">
           {l2sr.display || '-'}
         </Typography>
@@ -154,8 +167,8 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     widths: { xs: 1.25 },
     render: ({ podRate }) => (
       <Stack justifyContent="center" alignItems="flex-end">
-        <Typography align="right">
-          {`${podRate.value?.times(100).toFixed(0) || '-'}%`}
+        <Typography variant="bodySmall" align="right">
+          {`${podRate.value?.times(100).toFormat(0) || '-'}%`}
         </Typography>
         <Typography variant="bodySmall" color="text.tertiary" align="right">
           {podRate.display || '-'}
@@ -169,7 +182,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     widths: { xs: 1.1 },
     render: ({ deltaPodDemand }) => (
       <Stack justifyContent="center" alignItems="flex-end">
-        <Typography color="text.tertiary" align="right">
+        <Typography variant="bodySmall" color="text.tertiary" align="right">
           {deltaPodDemand.display || '-'}
         </Typography>
       </Stack>
@@ -177,14 +190,16 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
   },
 };
 
-const MAX_ITEMS = 8;
+const MAX_ITEMS = 5;
 
-const TABLE_WIDTH = '1568px';
+const MAX_TABLE_WIDTH = 1568;
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   /// DATA
   const season = useSeason();
   const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
+
+  const theme = useTheme();
 
   const { seasonsSummary, forecast } = useSeasonsSummary();
 
@@ -217,34 +232,32 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
     </Box>
   );
 
-  /// Table Content
   const tableContent = (
     <Box
       sx={(t) => ({
         position: 'relative',
+        width: `min(calc(100vw - 20px), ${MAX_TABLE_WIDTH}px)`,
         [t.breakpoints.up('lg')]: {
-          // 40px of padding on each side
-          width: `min(calc(100vw - 40px), ${TABLE_WIDTH})`,
+          width: `min(calc(100vw - 40px), ${MAX_TABLE_WIDTH}px)`,
         },
       })}
     >
       <Stack gap={1}>
-        <Box sx={{ overflowX: 'scroll' }}>
-          {/* Past Seasons */}
-          <Stack px={1} sx={{ minWidth: TABLE_WIDTH }}>
-            {/* table header */}
-            <Box
-              p={1}
-              sx={{
-                position: 'sticky',
-                left: 0,
-                top: 0,
-                backgroundColor: 'white',
-                zIndex: 200,
-              }}
-            >
-              <Box>
-                <Grid container>
+        <Stack gap={1} px={1} pt={1}>
+          {/* Horizontal scroll container for both header and body */}
+          <Box sx={{ overflowX: 'auto' }}>
+            <Stack gap={1} sx={{ minWidth: `${MAX_TABLE_WIDTH - 20}px` }}>
+              {/* Header */}
+              <Box
+                sx={{
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                  background: 'white',
+                }}
+              >
+                {/* <MaxWidthContainer p={8}> */}
+                <Grid container px={1}>
                   {Object.values(colConfig).map((col) => (
                     <Grid
                       item
@@ -271,39 +284,46 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
                     </Grid>
                   ))}
                 </Grid>
+                {/* </MaxWidthContainer> */}
               </Box>
-            </Box>
-            <Stack
-              gap={1}
-              sx={{
-                maxHeight: `${(37.5 + 10) * MAX_ITEMS - 10}px`,
-                overflowY: 'auto',
-              }}
-            >
-              <Box position="relative">
+
+              {/* Body with vertical scroll */}
+              <Stack
+                gap={1}
+                sx={{
+                  maxHeight: `${(57 + 10) * MAX_ITEMS}px`,
+                  overflowY: 'auto',
+                }}
+              >
                 <SeasonCard
                   index={-1}
-                  summary={forecast}
+                  summary={{
+                    ...forecast,
+                    maxSoil: {
+                      ...forecast.maxSoil,
+                      value: seasonsSummary?.[0]?.maxSoil.value?.plus(
+                        forecast.maxSoil.value || ZERO_BN
+                      ),
+                    },
+                  }}
                   columns={colConfig}
                   isNew
                 />
-              </Box>
-              {Array.from({ length: 15 }).map((_, i) => (
-                <SeasonCard
-                  index={i}
-                  columns={colConfig}
-                  summary={forecast}
-                  key={`season-card-row-${i}`}
-                />
-              ))}
+                {seasonsSummary.map((summary, i) => (
+                  <SeasonCard
+                    key={`season-card-row-${i}`}
+                    index={i}
+                    summary={summary}
+                    columns={colConfig}
+                  />
+                ))}
+              </Stack>
             </Stack>
-          </Stack>
-          <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
-        </Box>
-        <Box
-          sx={{ p: 1, display: 'flex', gap: '5px', flexDirection: 'column' }}
-        >
-          <SunriseButton />
+          </Box>
+        </Stack>
+        <Divider sx={{ borderBottomWidth: 0, borderColor: 'divider' }} />
+        <Box px={1} pb={1}>
+          <Button fullWidth>asdf</Button>
         </Box>
       </Stack>
     </Box>
@@ -320,8 +340,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       hotkey="opt+2, alt+2"
       zIndex={100}
       zeroTopLeftRadius
+      zeroTopRightRadius
       popperSx={{
-        paddingRight: '20px',
+        [`@media (min-width: ${theme.breakpoints.values.lg - 1}px)`]: {
+          paddingRight: '20px',
+        },
       }}
       {...props}
     />
