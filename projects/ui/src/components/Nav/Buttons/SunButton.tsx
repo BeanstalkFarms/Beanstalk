@@ -66,7 +66,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ beanMints: { value } }) => (
       <Stack justifyContent="center" height="100%">
         <Typography variant="bodySmall" align="right">
-          {`+${value?.abs().toFormat(0) || 0}`}
+          {`${value?.gt(0) ? '+' : ''}${value?.abs().toFormat(0) || 0}`}
         </Typography>
       </Stack>
     ),
@@ -112,7 +112,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     render: ({ bean2MaxLPScalar }) => (
       <Stack justifyContent="center" alignItems="flex-end">
         <Typography variant="bodySmall" align="right">
-          {bean2MaxLPScalar.value?.toFormat() || '-'}%{' '}
+          {bean2MaxLPScalar.value?.toFormat(1) || '-'}{' '}
           {bean2MaxLPScalar.value && (
             <Typography
               component="span"

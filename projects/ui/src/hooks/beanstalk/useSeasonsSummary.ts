@@ -333,12 +333,10 @@ const useSeasonsSummary = () => {
         maxTemperature: {
           value: data.temperature,
           delta: deltaTemperature,
-          display: getAdjustmentDisplay(deltaTemperature),
         },
         bean2MaxLPScalar: {
           value: delta.bean2MaxLPGPPerBdvScalar,
           delta: delta.bean2MaxLPGPPerBdv,
-          display: getAdjustmentDisplay(delta.bean2MaxLPGPPerBdv),
         },
         price: {
           value: data.largestLiquidityWellPrice,
