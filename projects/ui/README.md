@@ -26,7 +26,7 @@ yarn generate
 # See below for environment vars
 yarn start
 
-# Or: run frontend & serverless functions at http://localhost:8888/
+# Or: Run frontend & serverless functions at http://localhost:8888/
 yarn dev
 
 # Build and run a static copy of the site
