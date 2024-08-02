@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-      - run: yarn add prettier 
+      - run: yarn add prettier
       - run: yarn add prettier-plugin-solidity
       # - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
@@ -51,3 +51,16 @@ jobs:
         env:
           FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
         working-directory: protocol
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+      with:
+        version: nightly
+
+      - name: Install dependencies
+        run: forge install
+
+      - name: Run tests
+        run: forge test
+        env:
+          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
