@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../interfaces/IBean.sol";
 import "./LibBalance.sol";
 
@@ -13,7 +14,7 @@ import "./LibBalance.sol";
  */
 library LibTransfer {
     using SafeERC20 for IERC20;
-    using LibRedundantMath256 for uint256;
+    using SafeMath for uint256;
 
     enum From {
         EXTERNAL,
@@ -58,16 +59,26 @@ library LibTransfer {
                 amount,
                 mode != From.INTERNAL
             );
-            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT) return receivedAmount;
+            if (amount == receivedAmount || mode == From.INTERNAL_TOLERANT)
+                return receivedAmount;
         }
         uint256 beforeBalance = token.balanceOf(address(this));
         token.safeTransferFrom(sender, address(this), amount - receivedAmount);
-        return receivedAmount.add(token.balanceOf(address(this)).sub(beforeBalance));
+        return
+            receivedAmount.add(
+                token.balanceOf(address(this)).sub(beforeBalance)
+            );
     }
 
-    function sendToken(IERC20 token, uint256 amount, address recipient, To mode) internal {
+    function sendToken(
+        IERC20 token,
+        uint256 amount,
+        address recipient,
+        To mode
+    ) internal {
         if (amount == 0) return;
-        if (mode == To.INTERNAL) LibBalance.increaseInternalBalance(recipient, token, amount);
+        if (mode == To.INTERNAL)
+            LibBalance.increaseInternalBalance(recipient, token, amount);
         else token.safeTransfer(recipient, amount);
     }
 
@@ -77,7 +88,7 @@ library LibTransfer {
         address sender,
         From mode
     ) internal returns (uint256 burnt) {
-        // burnToken only can be called with Unripe Bean, Unripe LP or Bean token, which are all Beanstalk tokens.
+        // burnToken only can be called with Unripe Bean, Unripe Bean:3Crv or Bean token, which are all Beanstalk tokens.
         // Beanstalk's ERC-20 implementation uses OpenZeppelin's ERC20Burnable
         // which reverts if burnFrom function call cannot burn full amount.
         if (mode == From.EXTERNAL) {
@@ -89,7 +100,12 @@ library LibTransfer {
         }
     }
 
-    function mintToken(IBean token, uint256 amount, address recipient, To mode) internal {
+    function mintToken(
+        IBean token,
+        uint256 amount,
+        address recipient,
+        To mode
+    ) internal {
         if (mode == To.EXTERNAL) {
             token.mint(recipient, amount);
         } else {

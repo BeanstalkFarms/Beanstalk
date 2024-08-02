@@ -2,10 +2,11 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol";
@@ -18,12 +19,17 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
  * The oracle will fail (return 0) if the Chainlink Oracle is broken or frozen (See: {LibChainlinkOracle}).
  **/
 library LibEthUsdOracle {
-    using LibRedundantMath256 for uint256;
+    using SafeMath for uint256;
+
+    /////////////////// ORACLES ///////////////////
+    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    ///////////////////////////////////////////////
 
     function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 priceInStorage = s.sys.usdTokenPrice[C.BEAN_ETH_WELL];
+        uint256 priceInStorage = s.usdTokenPrice[C.BEAN_ETH_WELL];
 
         if (priceInStorage == 1) {
             return getEthUsdPrice();
@@ -37,11 +43,7 @@ library LibEthUsdOracle {
      * Returns 0 if the ETH/USD Chainlink Oracle is broken or frozen.
      **/
     function getEthUsdPrice() internal view returns (uint256) {
-        return
-            LibChainlinkOracle.getPrice(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
-            );
+        return LibChainlinkOracle.getPrice(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, LibChainlinkOracle.FOUR_HOUR_TIMEOUT);
     }
 
     /**
@@ -54,12 +56,12 @@ library LibEthUsdOracle {
         return
             lookback > 0
                 ? LibChainlinkOracle.getTwap(
-                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                    ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                     lookback
                 )
                 : LibChainlinkOracle.getPrice(
-                    C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                    ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT
                 );
     }

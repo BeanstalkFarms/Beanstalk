@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.20;
+pragma experimental ABIEncoderV2;
+pragma solidity =0.7.6;
 
 interface IFertilizer {
     struct Balance {
@@ -13,18 +13,8 @@ interface IFertilizer {
         uint128 bpf
     ) external returns (uint256);
     function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external;
-    function balanceOfFertilized(
-        address account,
-        uint256[] memory ids
-    ) external view returns (uint256);
-    function balanceOfUnfertilized(
-        address account,
-        uint256[] memory ids
-    ) external view returns (uint256);
+    function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256);
+    function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256);
     function lastBalanceOf(address account, uint256 id) external view returns (Balance memory);
-    function lastBalanceOfBatch(
-        address[] memory account,
-        uint256[] memory id
-    ) external view returns (Balance[] memory);
-    function setURI(string calldata newuri) external;
+    function lastBalanceOfBatch(address[] memory account, uint256[] memory id) external view returns (Balance[] memory);
 }

@@ -2,58 +2,107 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {Order} from "./Order.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {C} from "contracts/C.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import "./Order.sol";
 
 /**
  * @author Beanjoyer, Malteasy
+ * @title Pod Marketplace v2
  **/
-
-contract MarketplaceFacet is Invariable, Order {
+ 
+contract MarketplaceFacet is Order {
+    
     /*
-     * Pod Listing
-     */
-
+    * Pod Listing
+    */
+    
+    /*
+    * @notice **LEGACY**
+    */
     function createPodListing(
-        PodListing calldata podListing
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        require(podListing.lister == LibTractor._user(), "Marketplace: Non-user create listing.");
-        _createPodListing(podListing);
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint24 pricePerPod,
+        uint256 maxHarvestableIndex,
+        uint256 minFillAmount,
+        LibTransfer.To mode
+    ) external payable {
+        _createPodListing(
+            index,
+            start,
+            amount,
+            pricePerPod,
+            maxHarvestableIndex,
+            minFillAmount,
+            mode
+        );
+    }
+
+    function createPodListingV2(
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        uint256 maxHarvestableIndex,
+        uint256 minFillAmount,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _createPodListingV2(
+            index,
+            start,
+            amount,
+            maxHarvestableIndex,
+            minFillAmount,
+            pricingFunction, 
+            mode
+        );
     }
 
     // Fill
     function fillPodListing(
-        PodListing calldata podListing,
+        PodListing calldata l,
         uint256 beanAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
+    ) external payable {
         beanAmount = LibTransfer.transferToken(
             C.bean(),
-            LibTractor._user(),
-            podListing.lister,
+            msg.sender,
+            l.account,
             beanAmount,
             mode,
-            podListing.mode
+            l.mode
         );
-        _fillListing(podListing, LibTractor._user(), beanAmount);
+        _fillListing(l, beanAmount);
+    }
+
+    function fillPodListingV2(
+        PodListing calldata l,
+        uint256 beanAmount,
+        bytes calldata pricingFunction,
+        LibTransfer.From mode
+    ) external payable {
+        beanAmount = LibTransfer.transferToken(
+            C.bean(),
+            msg.sender,
+            l.account,
+            beanAmount,
+            mode,
+            l.mode
+        );
+        _fillListingV2(l, beanAmount, pricingFunction);
     }
 
     // Cancel
-    function cancelPodListing(
-        uint256 fieldId,
-        uint256 index
-    ) external payable fundsSafu noNetFlow noSupplyChange {
-        LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
+    function cancelPodListing(uint256 index) external payable {
+        _cancelPodListing(msg.sender, index);
     }
 
-    function getPodListing(uint256 fieldId, uint256 index) external view returns (bytes32 id) {
-        return s.sys.podListings[fieldId][index];
+    // Get
+    function podListing(uint256 index) external view returns (bytes32) {
+        return s.podListings[index];
     }
 
     /*
@@ -62,153 +111,144 @@ contract MarketplaceFacet is Invariable, Order {
 
     // Create
     function createPodOrder(
-        PodOrder calldata podOrder,
         uint256 beanAmount,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange noOutFlow returns (bytes32 id) {
-        require(podOrder.orderer == LibTractor._user(), "Marketplace: Non-user create order.");
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, LibTractor._user(), mode);
-        return _createPodOrder(podOrder, beanAmount);
+    ) external payable returns (bytes32 id) {
+        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        return _createPodOrder(beanAmount, pricePerPod, maxPlaceInLine, minFillAmount);
+    }
+
+    function createPodOrderV2(
+        uint256 beanAmount,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount,
+        bytes calldata pricingFunction,
+        LibTransfer.From mode
+    ) external payable returns (bytes32 id) {
+        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, msg.sender, mode);
+        return _createPodOrderV2(beanAmount, maxPlaceInLine, minFillAmount, pricingFunction);
     }
 
     // Fill
     function fillPodOrder(
-        PodOrder calldata podOrder,
+        PodOrder calldata o,
         uint256 index,
         uint256 start,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        _fillPodOrder(podOrder, LibTractor._user(), index, start, amount, mode);
+    ) external payable {
+        _fillPodOrder(o, index, start, amount, mode);
+    }
+
+    function fillPodOrderV2(
+        PodOrder calldata o,
+        uint256 index,
+        uint256 start,
+        uint256 amount,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _fillPodOrderV2(o, index, start, amount, pricingFunction, mode);
     }
 
     // Cancel
     function cancelPodOrder(
-        PodOrder calldata podOrder,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        require(podOrder.orderer == LibTractor._user(), "Marketplace: Non-user cancel order.");
-        _cancelPodOrder(podOrder, mode);
+    ) external payable {
+        _cancelPodOrder(pricePerPod, maxPlaceInLine, minFillAmount, mode);
+    }
+
+    function cancelPodOrderV2(
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount,
+        bytes calldata pricingFunction,
+        LibTransfer.To mode
+    ) external payable {
+        _cancelPodOrderV2(maxPlaceInLine, minFillAmount, pricingFunction, mode);
     }
 
     // Get
 
-    function getOrderId(PodOrder calldata podOrder) external pure returns (bytes32 id) {
-        return _getOrderId(podOrder);
+    function podOrder(
+        address account,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount
+    ) external view returns (uint256) {
+        return s.podOrders[
+            createOrderId(
+                account, 
+                pricePerPod, 
+                maxPlaceInLine,
+                minFillAmount
+            )
+        ];
     }
 
-    function getPodOrder(bytes32 id) external view returns (uint256) {
-        return s.sys.podOrders[id];
+    function podOrderV2(
+        address account,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount,
+        bytes calldata pricingFunction
+    ) external view returns (uint256) {
+        return s.podOrders[
+            createOrderIdV2(
+                account, 
+                0,
+                maxPlaceInLine, 
+                minFillAmount,
+                pricingFunction
+            )
+        ];
+    }
+
+    function podOrderById(bytes32 id) external view returns (uint256) {
+        return s.podOrders[id];
     }
 
     /*
      * Transfer Plot
      */
 
-    /**
-     * @notice transfers a plot from `sender` to `recipient`.
-     */
     function transferPlot(
         address sender,
         address recipient,
-        uint256 fieldId,
-        uint256 index,
-        uint256 start,
-        uint256 end
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        require(
-            sender != address(0) && recipient != address(0),
-            "Field: Transfer to/from 0 address."
-        );
-        uint256 transferAmount = validatePlotAndReturnPods(fieldId, sender, index, start, end);
-        if (
-            LibTractor._user() != sender &&
-            allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
-        ) {
-            decrementAllowancePods(sender, LibTractor._user(), fieldId, transferAmount);
-        }
-
-        if (s.sys.podListings[fieldId][index] != bytes32(0)) {
-            LibMarket._cancelPodListing(sender, fieldId, index);
-        }
-        _transferPlot(sender, recipient, fieldId, index, start, transferAmount);
-    }
-
-    /**
-     * @notice transfers multiple plots from `sender` to `recipient`.
-     */
-    function transferPlots(
-        address sender,
-        address recipient,
-        uint256 fieldId,
-        uint256[] calldata ids,
-        uint256[] calldata starts,
-        uint256[] calldata ends
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        require(
-            sender != address(0) && recipient != address(0),
-            "Field: Transfer to/from 0 address."
-        );
-        require(
-            ids.length == starts.length && ids.length == ends.length,
-            "Field: Array length mismatch."
-        );
-        uint256 totalAmount = _transferPlots(sender, recipient, fieldId, ids, starts, ends);
-
-        // Decrement allowance is done on totalAmount rather than per plot.
-        if (
-            LibTractor._user() != sender &&
-            allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
-        ) {
-            decrementAllowancePods(sender, LibTractor._user(), totalAmount, fieldId);
-        }
-    }
-
-    /**
-     * @notice internal function to transfer multiple plots from `sender` to `recipient`.
-     * @dev placed in a function due to stack.
-     */
-    function _transferPlots(
-        address sender,
-        address recipient,
-        uint256 fieldId,
-        uint256[] calldata ids,
-        uint256[] calldata starts,
-        uint256[] calldata ends
-    ) internal returns (uint256 totalAmount) {
-        for (uint256 i; i < ids.length; i++) {
-            uint256 amount = validatePlotAndReturnPods(fieldId, sender, ids[i], starts[i], ends[i]);
-            if (s.sys.podListings[fieldId][ids[i]] != bytes32(0)) {
-                LibMarket._cancelPodListing(sender, fieldId, ids[i]);
-            }
-            _transferPlot(sender, recipient, fieldId, ids[i], starts[i], amount);
-            totalAmount += amount;
-        }
-    }
-
-    /**
-     * @notice validates the plot is valid and returns the pod being sent.
-     */
-    function validatePlotAndReturnPods(
-        uint256 fieldId,
-        address sender,
         uint256 id,
         uint256 start,
         uint256 end
-    ) internal view returns (uint256 amount) {
-        amount = s.accts[sender].fields[fieldId].plots[id];
+    ) external payable nonReentrant {
+        require(
+            sender != address(0) && recipient != address(0),
+            "Field: Transfer to/from 0 address."
+        );
+        uint256 amount = s.a[sender].field.plots[id];
         require(amount > 0, "Field: Plot not owned by user.");
         require(end > start && amount >= end, "Field: Pod range invalid.");
-        amount = end - start;
+        amount = end - start; // Note: SafeMath is redundant here.
+        if (msg.sender != sender && allowancePods(sender, msg.sender) != uint256(-1)) {
+                decrementAllowancePods(sender, msg.sender, amount);
+        }
+
+        if (s.podListings[id] != bytes32(0)){
+            _cancelPodListing(sender, id);
+        }
+        _transferPlot(sender, recipient, id, start, amount);
     }
 
-    function approvePods(
-        address spender,
-        uint256 fieldId,
-        uint256 amount
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
+    function approvePods(address spender, uint256 amount)
+        external
+        payable
+        nonReentrant
+    {
         require(spender != address(0), "Field: Pod Approve to 0 address.");
-        setAllowancePods(LibTractor._user(), spender, fieldId, amount);
-        emit PodApproval(LibTractor._user(), spender, fieldId, amount);
+        setAllowancePods(msg.sender, spender, amount);
+        emit PodApproval(msg.sender, spender, amount);
     }
+
 }

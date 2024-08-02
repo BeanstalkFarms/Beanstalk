@@ -1,15 +1,16 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {WellPrice, P, C} from "./WellPrice.sol";
+import "./CurvePrice.sol";
+import {WellPrice, C, SafeMath} from "./WellPrice.sol";
 
 interface IWhitelistFacet {
     function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }
 
-contract BeanstalkPrice is WellPrice {
-    using LibRedundantMath256 for uint256;
+contract BeanstalkPrice is CurvePrice, WellPrice {
+    using SafeMath for uint256;
 
     address immutable _beanstalk;
 
@@ -26,18 +27,21 @@ contract BeanstalkPrice is WellPrice {
 
     /**
      * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
-     * Bean in the following liquidity pools.
+     * Bean in the following liquidity pools:
+     * - Curve Bean:3Crv Metapool
      * - Constant Product Bean:Eth Well
      * - Constant Product Bean:Wsteth Well
      * NOTE: Assumes all whitelisted Wells are CP2 wells. Needs to be updated if this changes.
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
-     **/
+    **/
     function price() external view returns (Prices memory p) {
+
         address[] memory wells = IWhitelistFacet(_beanstalk).getWhitelistedWellLpTokens();
-        p.ps = new P.Pool[](wells.length);
+        p.ps = new P.Pool[](1 + wells.length);
+        p.ps[0] = getCurve();
         for (uint256 i = 0; i < wells.length; i++) {
             // Assume all Wells are CP2 wells.
-            p.ps[i] = getConstantProductWell(wells[i]);
+            p.ps[i + 1] = getConstantProductWell(wells[i]);
         }
 
         // assumes that liquidity and prices on all pools uses the same precision.
@@ -46,6 +50,6 @@ contract BeanstalkPrice is WellPrice {
             p.liquidity += p.ps[i].liquidity;
             p.deltaB += p.ps[i].deltaB;
         }
-        p.price = p.price.div(p.liquidity);
+        p.price =  p.price.div(p.liquidity);
     }
 }

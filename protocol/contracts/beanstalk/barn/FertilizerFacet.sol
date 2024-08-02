@@ -2,31 +2,32 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {C} from "contracts/C.sol";
-import {AppStorage} from "../storage/AppStorage.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
-import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
-import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {AppStorage} from "../AppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
+import {LibSafeMath128} from "contracts/libraries/LibSafeMath128.sol";
+import {C} from "contracts/C.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet is Invariable {
-    using LibRedundantMath256 for uint256;
+contract FertilizerFacet {
+    using SafeMath for uint256;
     using SafeCast for uint256;
-    using LibRedundantMath128 for uint128;
+    using LibSafeMath128 for uint128;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -39,18 +40,18 @@ contract FertilizerFacet is Invariable {
         uint256 supply;
     }
 
+
     /**
      * @notice Rinses Rinsable Sprouts earned from Fertilizer.
      * @param ids The ids of the Fertilizer to rinse.
      * @param mode The balance to transfer Beans to; see {LibTrasfer.To}
      */
-    function claimFertilized(
-        uint256[] calldata ids,
-        LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
-        s.sys.fert.fertilizedPaidIndex += amount;
-        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
+    function claimFertilized(uint256[] calldata ids, LibTransfer.To mode)
+        external
+        payable
+    {
+        uint256 amount = C.fertilizer().beanstalkUpdate(msg.sender, ids, s.bpf);
+        LibTransfer.sendToken(C.bean(), amount, msg.sender, mode);
     }
 
     /**
@@ -64,11 +65,8 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable fundsSafu noOutFlow returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = _getMintFertilizerOut(
-            tokenAmountIn,
-            LibBarnRaise.getBarnRaiseToken()
-        );
+    ) external payable returns (uint256 fertilizerAmountOut) {
+        fertilizerAmountOut = _getMintFertilizerOut(tokenAmountIn, LibBarnRaise.getBarnRaiseToken());
 
         require(fertilizerAmountOut >= minFertilizerOut, "Fertilizer: Not enough bought.");
         require(fertilizerAmountOut > 0, "Fertilizer: None bought.");
@@ -77,29 +75,25 @@ contract FertilizerFacet is Invariable {
         require(fertilizerAmountOut <= remaining, "Fertilizer: Not enough remaining.");
 
         uint128 id = LibFertilizer.addFertilizer(
-            uint128(s.sys.season.current),
+            uint128(s.season.current),
             tokenAmountIn,
             fertilizerAmountOut,
             minLPTokensOut
         );
-        C.fertilizer().beanstalkMint(
-            LibTractor._user(),
-            uint256(id),
-            (fertilizerAmountOut).toUint128(),
-            s.sys.fert.bpf
-        );
+        C.fertilizer().beanstalkMint(msg.sender, uint256(id), (fertilizerAmountOut).toUint128(), s.bpf);
     }
 
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
      */
-    function payFertilizer(
-        address account,
-        uint256 amount
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
+    function payFertilizer(address account, uint256 amount) external payable {
         require(msg.sender == C.fertilizerAddress());
-        s.sys.fert.fertilizedPaidIndex += amount;
-        LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
+        LibTransfer.sendToken(
+            C.bean(),
+            amount,
+            account,
+            LibTransfer.To.INTERNAL
+        );
     }
 
     /**
@@ -107,9 +101,11 @@ contract FertilizerFacet is Invariable {
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
      * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
-    function getMintFertilizerOut(
-        uint256 tokenAmountIn
-    ) external view returns (uint256 fertilizerAmountOut) {
+    function getMintFertilizerOut(uint256 tokenAmountIn)
+        external
+        view
+        returns (uint256 fertilizerAmountOut)
+    {
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
         return _getMintFertilizerOut(tokenAmountIn, barnRaiseToken);
     }
@@ -118,27 +114,27 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         address barnRaiseToken
     ) public view returns (uint256 fertilizerAmountOut) {
-        fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
+        fertilizerAmountOut = tokenAmountIn.div(
+            LibUsdOracle.getUsdPrice(barnRaiseToken)
+        );
     }
 
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
+
     function totalFertilizedBeans() external view returns (uint256 beans) {
-        return s.sys.fert.fertilizedIndex;
+        return s.fertilizedIndex;
     }
 
     function totalUnfertilizedBeans() external view returns (uint256 beans) {
-        return s.sys.fert.unfertilizedIndex - s.sys.fert.fertilizedIndex;
+        return s.unfertilizedIndex - s.fertilizedIndex;
     }
 
     function totalFertilizerBeans() external view returns (uint256 beans) {
-        return s.sys.fert.unfertilizedIndex;
-    }
-
-    function leftoverBeans() external view returns (uint256) {
-        return s.sys.fert.leftoverBeans;
+        return s.unfertilizedIndex;
     }
 
     function getFertilizer(uint128 id) external view returns (uint256) {
-        return s.sys.fert.fertilizer[id];
+        return s.fertilizer[id];
     }
 
     function getNext(uint128 id) external view returns (uint128) {
@@ -146,23 +142,23 @@ contract FertilizerFacet is Invariable {
     }
 
     function getFirst() external view returns (uint128) {
-        return s.sys.fert.fertFirst;
+        return s.fFirst;
     }
 
     function getLast() external view returns (uint128) {
-        return s.sys.fert.fertLast;
+        return s.fLast;
     }
 
     function getActiveFertilizer() external view returns (uint256) {
-        return s.sys.fert.activeFertilizer;
+        return s.activeFertilizer;
     }
 
     function isFertilizing() external view returns (bool) {
-        return s.sys.season.fertilizing;
+        return s.season.fertilizing;
     }
 
     function beansPerFertilizer() external view returns (uint128 bpf) {
-        return s.sys.fert.bpf;
+        return s.bpf;
     }
 
     function getHumidity(uint128 _s) external pure returns (uint128 humidity) {
@@ -170,35 +166,38 @@ contract FertilizerFacet is Invariable {
     }
 
     function getCurrentHumidity() external view returns (uint128 humidity) {
-        humidity = LibFertilizer.getHumidity(s.sys.season.current);
+        humidity = LibFertilizer.getHumidity(s.season.current);
     }
 
     function getEndBpf() external view returns (uint128 endBpf) {
-        endBpf = s.sys.fert.bpf.add(LibFertilizer.getBpf(uint128(s.sys.season.current)));
+        endBpf = s.bpf.add(LibFertilizer.getBpf(uint128(s.season.current)));
     }
 
     function remainingRecapitalization() external view returns (uint256) {
         return LibFertilizer.remainingRecapitalization();
     }
 
-    function balanceOfUnfertilized(
-        address account,
-        uint256[] memory ids
-    ) external view returns (uint256 beans) {
+    function balanceOfUnfertilized(address account, uint256[] memory ids)
+        external
+        view
+        returns (uint256 beans)
+    {
         return C.fertilizer().balanceOfUnfertilized(account, ids);
     }
 
-    function balanceOfFertilized(
-        address account,
-        uint256[] memory ids
-    ) external view returns (uint256 beans) {
+    function balanceOfFertilized(address account, uint256[] memory ids)
+        external
+        view
+        returns (uint256 beans)
+    {
         return C.fertilizer().balanceOfFertilized(account, ids);
     }
 
-    function balanceOfFertilizer(
-        address account,
-        uint256 id
-    ) external view returns (IFertilizer.Balance memory) {
+    function balanceOfFertilizer(address account, uint256 id)
+        external
+        view
+        returns (IFertilizer.Balance memory)
+    {
         return C.fertilizer().lastBalanceOf(account, id);
     }
 
@@ -209,16 +208,20 @@ contract FertilizerFacet is Invariable {
         return C.fertilizer().lastBalanceOfBatch(accounts, ids);
     }
 
-    function getFertilizers() external view returns (Supply[] memory fertilizers) {
+    function getFertilizers()
+        external
+        view
+        returns (Supply[] memory fertilizers)
+    {
         uint256 numFerts = 0;
-        uint128 idx = s.sys.fert.fertFirst;
+        uint128 idx = s.fFirst;
         while (idx > 0) {
             numFerts = numFerts.add(1);
             idx = LibFertilizer.getNext(idx);
         }
         fertilizers = new Supply[](numFerts);
         numFerts = 0;
-        idx = s.sys.fert.fertFirst;
+        idx = s.fFirst;
         while (idx > 0) {
             fertilizers[numFerts].endBpf = idx;
             fertilizers[numFerts].supply = LibFertilizer.getAmount(idx);
@@ -249,5 +252,12 @@ contract FertilizerFacet is Invariable {
     function beginBarnRaiseMigration(address well) external {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
+    }
+
+    /**
+     * @notice returns the total recapitalization dollars needed to recapitalize the Barn Raise.
+     */
+    function getTotalRecapDollarsNeeded() external view returns (uint256) {
+        return LibFertilizer.getTotalRecapDollarsNeeded();
     }
 }

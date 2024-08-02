@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.20;
+pragma experimental ABIEncoderV2;
+pragma solidity =0.7.6;
 // A loupe is a small magnifying glass used to look at diamonds.
 // These functions look at diamonds
 interface IDiamondLoupe {
@@ -19,9 +19,7 @@ interface IDiamondLoupe {
     /// @notice Gets all the function selectors supported by a specific facet.
     /// @param _facet The facet address.
     /// @return facetFunctionSelectors_
-    function facetFunctionSelectors(
-        address _facet
-    ) external view returns (bytes4[] memory facetFunctionSelectors_);
+    function facetFunctionSelectors(address _facet) external view returns (bytes4[] memory facetFunctionSelectors_);
 
     /// @notice Get all the facet addresses used by a diamond.
     /// @return facetAddresses_

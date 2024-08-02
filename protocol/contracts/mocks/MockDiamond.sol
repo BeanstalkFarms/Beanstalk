@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
 /******************************************************************************\
 * Authors: Nick Mudge (https://twitter.com/mudgen)
@@ -7,11 +8,11 @@ pragma solidity ^0.8.20;
 * Implementation of a diamond.
 /******************************************************************************/
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {DiamondCutFacet} from "../beanstalk/diamond/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "../beanstalk/diamond/DiamondLoupeFacet.sol";
-import {AppStorage} from "../beanstalk/storage/AppStorage.sol";
+import {AppStorage} from "../beanstalk/AppStorage.sol";
+import {IERC165} from "../interfaces/IERC165.sol";
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 

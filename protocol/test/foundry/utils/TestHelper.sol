@@ -1,563 +1,385 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
 pragma abicoder v2;
 
+
 import "forge-std/Test.sol";
+import "./Strings.sol";
 
-////// Mocks //////
+import {Utils} from "test/foundry/utils/Utils.sol";
+
+// Diamond setup
+import {Diamond} from "contracts/beanstalk/Diamond.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {MockInitDiamond} from "contracts/mocks/MockInitDiamond.sol";
+
+/// Modules
+// Diamond
+import {DiamondCutFacet} from "contracts/beanstalk/diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
+import {PauseFacet} from "contracts/beanstalk/diamond/PauseFacet.sol";
+import {OwnershipFacet} from "contracts/beanstalk/diamond/OwnershipFacet.sol";
+
+// Silo
+import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
+import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
+import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
+import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet.sol";
+
+// Field
+import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
+import {MockFundraiserFacet} from "contracts/mocks/mockFacets/MockFundraiserFacet.sol";
+
+// Farm
+import {FarmFacet} from "contracts/beanstalk/farm/FarmFacet.sol";
+import {CurveFacet} from "contracts/beanstalk/farm/CurveFacet.sol";
+import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
+
+/// Ecosystem
+import {BeanstalkPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
+
+/// Mocks
+import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
+import {MockMarketplaceFacet} from "contracts/mocks/mockFacets/MockMarketplaceFacet.sol";
+import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
+import {MockFertilizerFacet} from "contracts/mocks/mockFacets/MockFertilizerFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {MockUnripeFacet} from "contracts/mocks/mockFacets/MockUnripeFacet.sol";
+import {Mock3Curve} from "contracts/mocks/curve/Mock3Curve.sol";
+import {MockCurveFactory} from "contracts/mocks/curve/MockCurveFactory.sol";
+import {MockCurveZap} from "contracts/mocks/curve/MockCurveZap.sol";
+import {MockMeta3Curve} from "contracts/mocks/curve/MockMeta3Curve.sol";
+import {MockUniswapV3Pool} from "contracts/mocks/uniswap/MockUniswapV3Pool.sol";
+import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory.sol";
+import {MockWETH} from "contracts/mocks/MockWETH.sol";
 
-///// TEST HELPERS //////
-import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
-import {BasinDeployer} from "test/foundry/utils/BasinDeployer.sol";
-import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
-import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
-import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
-import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
-import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
-import {C} from "contracts/C.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import "contracts/beanstalk/AppStorage.sol";
+import "contracts/libraries/Decimal.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/Token/LibTransfer.sol";
 
-///// COMMON IMPORTED LIBRARIES //////
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
+import "contracts/C.sol";
 
-///// ECOSYSTEM //////
-import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
-import {Pipeline} from "contracts/pipeline/Pipeline.sol";
+// We deploy every facet, even if a facet is unused
+abstract contract TestHelper is Test {
+    using strings for *;
+    
+    Utils internal utils;
+  
+    address payable[] internal users;
 
-/**
- * @title TestHelper
- * @author Brean
- * @notice Test helper contract for Beanstalk tests.
- */
-contract TestHelper is
-    Test,
-    BeanstalkDeployer,
-    BasinDeployer,
-    DepotDeployer,
-    OracleDeployer,
-    FertilizerDeployer,
-    ShipmentDeployer
-{
-    // usdOracle contract.
-    UsdOracle usdOracle;
+    // the cool dudes
+    address internal deployer;
+    address internal publius;
+    address internal brean;
+    address internal siloChad;
+    address internal alice;
+    address internal bob;
+    address internal diamond;
 
-    Pipeline pipeline;
 
-    MockToken bean = MockToken(C.BEAN);
+    // season mocks
+    MockSeasonFacet internal season;
+    MockSiloFacet internal silo;
+    MockFieldFacet internal field;
+    MockConvertFacet internal convert;
+    MockFundraiserFacet internal fundraiser;
+    MockMarketplaceFacet internal marketplace;
+    MockFertilizerFacet internal fertilizer;
+    TokenFacet internal token;
 
-    // ideally, timestamp should be set to 1_000_000.
-    // however, beanstalk rounds down to the nearest hour.
-    // 1_000_000 / 3600 * 3600 = 997200.
-    uint256 constant PERIOD = 3600;
-    uint256 constant START_TIMESTAMP = 1_000_000;
-    uint256 constant INITIAL_TIMESTAMP = (START_TIMESTAMP / PERIOD) * PERIOD;
-
-    // The largest deposit that can occur on the first season.
-    // Given the supply of beans should starts at 0,
-    // this should never occur.
-    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
-
-    struct initERC20params {
-        address targetAddr;
-        string name;
-        string symbol;
-        uint8 decimals;
+    function setupDiamond() public {
+        diamond = address(deployMocks());
+        season = MockSeasonFacet(diamond);
+        silo = MockSiloFacet(diamond);
+        field = MockFieldFacet(diamond);
+        convert = MockConvertFacet(diamond);
+        fundraiser = MockFundraiserFacet(diamond);
+        marketplace = MockMarketplaceFacet(diamond);
+        fertilizer = MockFertilizerFacet(diamond);
+        token = TokenFacet(diamond);
     }
 
-    /**
-     * @notice initializes the state of the beanstalk contracts for testing.
-     */
-    function initializeBeanstalkTestState(bool mock, bool verbose) public {
-        // general mock interface for beanstalk.
-        bs = IMockFBeanstalk(BEANSTALK);
+    function deployMocks() public returns (Diamond d) {
+        // create accounts
+        utils = new Utils();
+        users = utils.createUsers(6);
+        deployer = users[0];
+        publius = users[1];
+        brean = users[2];
+        siloChad = users[3];
+        alice = users[4];
+        bob = users[5];
 
-        // initialize misc contracts.
-        initMisc();
+        vm.label(deployer, "Deployer");
 
-        // sets block.timestamp to 1_000_000,
-        // as starting from an timestamp of 0 can cause issues.
-        vm.warp(INITIAL_TIMESTAMP);
+        // create facet cuts
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](15);
 
-        // initalize mock tokens.
-        initMockTokens(verbose);
+        cut[0] = _cut("BDVFacet", address(new BDVFacet()));
+        cut[1] = _cut("CurveFacet", address(new CurveFacet()));
+        cut[2] = _cut("MockConvertFacet", address(new MockConvertFacet()));
+        cut[3] = _cut("FarmFacet", address(new FarmFacet()));
+        cut[4] = _cut("MockFieldFacet", address(new MockFieldFacet()));
+        cut[5] = _cut("MockFundraiserFacet", address(new MockFundraiserFacet()));
+        cut[6] = _cut("PauseFacet", address(new PauseFacet()));
+        cut[7] = _cut("MockSeasonFacet", address(new MockSeasonFacet()));
+        cut[8] = _cut("MockSiloFacet", address(new MockSiloFacet()));
+        cut[9] = _cut("MockFertilizerFacet", address(new MockFertilizerFacet()));
+        cut[10] = _cut("OwnershipFacet", address(new OwnershipFacet()));
+        cut[11] = _cut("TokenFacet", address(new TokenFacet()));
+        cut[12] = _cut("MockUnripeFacet", address(new MockUnripeFacet()));
+        cut[13] = _cut("WhitelistFacet", address(new WhitelistFacet()));
+        cut[14] = _cut("MockMarketplaceFacet", address(new MockMarketplaceFacet()));
+        console.log("Deployed mock facets.");
+        deployMockTokens();
+        // create diamond    
+        d = new Diamond(deployer);
+        MockInitDiamond i = new MockInitDiamond();
 
-        // initialize Depot:
-        initDepot(verbose);
-
-        // initialize Basin, deploy wells.
-        initBasin(mock, verbose);
-
-        // initialize chainlink oracles (note by default mocks).
-        initChainlink(verbose);
-
-        // initialize uniswap pools.
-        initUniswapPools(verbose);
-
-        // deploy fertilizer contract, and transfer ownership to beanstalk.
-        // note: does not initailize barn raise.
-        initFertilizer(verbose);
-        transferFertilizerOwnership(BEANSTALK);
-
-        // initialize Diamond, initalize users:
-        setupDiamond(mock, verbose);
-
-        // Initialize Shipment Routes and Plans.
-        initShipping(verbose);
-
-        // TODO: upon deployment, setup these state settings
-        initStateSettings();
-
-        vm.prank(BEANSTALK);
-        bs.updateOracleImplementationForToken(
-            WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+        vm.prank(deployer);
+        IDiamondCut(address(d)).diamondCut(
+        cut,
+        address(i), // address of contract with init() function
+        abi.encodeWithSignature("init()")
         );
+
+        console.log("Initialized diamond at", address(d));
     }
 
-    function initStateSettings() public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
-        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
-        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
-        s.sys.seedGaugeSettings.podRateLowerBound = 0.05e18;
-        s.sys.seedGaugeSettings.podRateOptimal = 0.15e18;
-        s.sys.seedGaugeSettings.podRateUpperBound = 0.25e18;
-        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
-        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
-        s.sys.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
+    function deployMockTokens() public {
+        // impersonate tokens and utilities
+        _mockToken("Bean", address(C.bean()));
+        MockToken(address(C.bean())).setDecimals(6);
+        _mockToken("USDC", address(C.usdc()));
+        _mockPrice();
+        _mockCurve(); // only if "reset"
+        _mockUniswap();
+        _mockUnripe();
+        _mockWeth(); // only if "reset"
+        // _mockCurveMetapool();
+        // _mockFertilizer();
     }
 
-    /**
-     * @notice many of fertilizer functionality requires
-     * unripe assets to exist.
-     */
-    function initializeUnripeTokens(
-        address user,
-        uint256 unripeBeanAmount,
-        uint256 unripeLpAmount
-    ) internal {
-        // mint tokens to users.
-        mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
-        mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
+    ///////////////////////// Utilities /////////////////////////
+
+    function _abs(int256 v) pure internal returns (uint256) {
+        return uint256(v < 0 ? 0 : v);
     }
 
-    /**
-     * @notice deploys a list of mock tokens.
-     * @dev each token is deployed with the MockToken.sol contract,
-     * which allows for arbitary minting for testing purposes.
-     */
-    function initMockTokens(bool verbose) internal {
-        initERC20params[8] memory tokens = [
-            initERC20params(C.BEAN, "Bean", "BEAN", 6),
-            initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
-            initERC20params(C.UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
-            initERC20params(C.WETH, "Weth", "WETH", 18),
-            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18),
-            initERC20params(C.USDC, "USDC", "USDC", 6),
-            initERC20params(C.USDT, "USDT", "USDT", 6),
-            initERC20params(WBTC, "WBTC", "WBTC", 8)
-        ];
-
-        for (uint i; i < tokens.length; i++) {
-            address token = tokens[i].targetAddr;
-            string memory name = tokens[i].name;
-            string memory symbol = tokens[i].symbol;
-            uint256 decimals = tokens[i].decimals;
-
-            string memory mock = "MockToken.sol";
-            // unique ERC20s should be appended here.
-            if (token == C.WETH) {
-                mock = "MockWETH.sol";
-            } else if (token == C.WSTETH) {
-                mock = "MockWsteth.sol";
-            }
-            deployCodeTo(mock, abi.encode(name, symbol), token);
-            MockToken(token).setDecimals(decimals);
-            if (verbose) console.log(name, "Deployed at:", token);
-            vm.label(token, name);
-        }
+    function _reset(uint256 _snapId) internal returns (uint256) {
+        vm.revertTo(_snapId);
+        return vm.snapshot();
     }
 
-    /**
-     * @notice max approves bean for beanstalk.
-     */
-    function maxApproveBeanstalk(address[] memory users) public {
-        for (uint i; i < users.length; i++) {
-            vm.prank(users[i]);
-            C.bean().approve(BEANSTALK, type(uint256).max);
-        }
+    //////////////////////// Deploy  /////////////////////////
+
+
+    function _etch(string memory _file, address _address, bytes memory args) internal returns (address) {
+        address codeaddress = deployCode(_file, args);
+        vm.etch(_address, at(codeaddress));
+        return _address;
     }
 
-    /**
-     * @notice Mints tokens to a list of users.
-     * @dev Max approves beanstalk to spend `token`.
-     */
-    function mintTokensToUsers(address[] memory users, address token, uint256 amount) internal {
-        for (uint i; i < users.length; i++) {
-            mintTokensToUser(users[i], token, amount);
-        }
+    function _mockToken(string memory _tokenName, address _tokenAddress) internal returns (MockToken) {
+        return MockToken(_etch("MockToken.sol", _tokenAddress,abi.encode(_tokenName,"")));
     }
 
-    /**
-     * @notice Mints tokens to a list of users.
-     * @dev Max approves beanstalk to spend `token`.
-     */
-    function mintTokensToUser(address user, address token, uint256 amount) internal {
-        MockToken(token).mint(user, amount);
-        vm.prank(user);
-        MockToken(token).approve(BEANSTALK, type(uint256).max);
+    function _mockWeth() internal returns (MockWETH) {
+        address payable weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        return MockWETH(payable(_etch("MockWETH.sol", weth, abi.encode("Wrapped Ether","WETH"))));
     }
 
-    function addLiquidityToWell(
-        address well,
-        uint256 beanAmount,
-        uint256 nonBeanTokenAmount
-    ) internal returns (uint256) {
-        return addLiquidityToWell(users[0], well, beanAmount, nonBeanTokenAmount);
+    function _mockPrice() internal returns (BeanstalkPrice p) {
+        address PRICE_DEPLOYER = 0x884B463E078Ff26C4b83792dB9bEF33619a69767;
+        vm.prank(PRICE_DEPLOYER);
+        p = new BeanstalkPrice();
     }
 
-    /**
-     * @notice assumes a CP2 well with bean as one of the tokens.
-     */
-    function addLiquidityToWell(
-        address user,
-        address well,
-        uint256 beanAmount,
-        uint256 nonBeanTokenAmount
-    ) internal returns (uint256 lpOut) {
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+    function _mockCurve() internal {
+        address THREE_CRV = address(C.threeCrv());
 
-        // mint and sync.
-        MockToken(C.BEAN).mint(well, beanAmount);
-        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        MockToken crv3 = _mockToken("3CRV", THREE_CRV);
+        MockToken(crv3).setDecimals(18);
+        //
+        Mock3Curve pool3 = Mock3Curve(_etch("Mock3Curve.sol", C.curve3PoolAddress(), abi.encode(""))); // 3Curve = 3Pool
+        Mock3Curve(pool3).set_virtual_price(1);
 
-        lpOut = IWell(well).sync(user, 0);
+        //
+        address STABLE_FACTORY = 0xB9fC157394Af804a3578134A6585C0dc9cc990d4;
+        MockCurveFactory stableFactory = MockCurveFactory(_etch("MockCurveFactory.sol", STABLE_FACTORY, abi.encode("")));
 
-        // sync again to update reserves.
-        IWell(well).sync(user, 0);
+
+        // address CRYPTO_REGISTRY = 0x8F942C20D02bEfc377D41445793068908E2250D0;
+        address CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
+        _etch("MockToken.sol", CURVE_REGISTRY, abi.encode("")); // why this interface?
+        stableFactory.set_coins(C.CURVE_BEAN_METAPOOL, [
+            C.BEAN,
+            THREE_CRV,
+            address(0),
+            address(0)
+        ]);
+        //
+        MockCurveZap curveZap = MockCurveZap(_etch("MockCurveZap.sol", C.curveZapAddress(), abi.encode("")));
+        curveZap.approve();
     }
 
-    /**
-     * @notice sets the reserves of a well by adding/removing liquidity.
-     * @dev if the reserves decrease, manually remove liquidity.
-     * if the reserves incerase, add token amounts and sync.
-     */
-    function setReserves(
-        address well,
-        uint256 beanAmount,
-        uint256 nonBeanTokenAmount
-    ) internal prank(users[0]) {
-        uint256[] memory reserves = new uint256[](2);
-        IERC20[] memory tokens = new IERC20[](2);
-        tokens = IWell(well).tokens();
-        reserves = IWell(well).getReserves();
-        uint256 beanIndex = LibWell.getBeanIndex(tokens);
-        uint256 tknIndex = beanIndex == 1 ? 0 : 1;
-
-        uint256[] memory removedTokens = new uint256[](2);
-
-        // calculate amount of tokens to remove.
-        if (reserves[beanIndex] > beanAmount) {
-            removedTokens[beanIndex] = reserves[beanIndex] - beanAmount;
-        }
-
-        if (reserves[tknIndex] > nonBeanTokenAmount) {
-            removedTokens[tknIndex] = reserves[tknIndex] - nonBeanTokenAmount;
-        }
-
-        // liquidity is removed first.
-        if (removedTokens[0] > 0 || removedTokens[1] > 0) {
-            IWell(well).removeLiquidityImbalanced(
-                type(uint256).max,
-                removedTokens,
-                users[0],
-                type(uint256).max
+    function _mockUniswap() internal {
+        //address UNIV3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984; 
+        MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
+        address ethUsdc = 
+            uniFactory.createPool(
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,//weth
+            address(C.usdc()),//usdc
+            3000
             );
-        }
-
-        // mint amount to add to well, call sync.
-        if (reserves[beanIndex] < beanAmount) {
-            C.bean().mint(well, beanAmount - reserves[beanIndex]);
-        }
-        if (reserves[tknIndex] < nonBeanTokenAmount) {
-            MockToken(address(tokens[tknIndex])).mint(
-                well,
-                nonBeanTokenAmount - reserves[tknIndex]
-            );
-        }
-
-        IWell(well).sync(users[0], 0);
-        IWell(well).sync(users[0], 0);
+        bytes memory code = at(ethUsdc);
+        address targetAddr = C.UNIV3_ETH_USDC_POOL;
+        vm.etch(targetAddr, code);
+        MockUniswapV3Pool(C.UNIV3_ETH_USDC_POOL).setOraclePrice(1000e6,18);
     }
 
-    /**
-     * @notice mints `amount` and deposits it to beanstalk.
-     * @dev if 'token' is a well, 'amount' corresponds to the amount of non-bean tokens underlying the output amount.
-     */
-    function depositForUser(
-        address user,
-        address token,
-        uint256 amount
-    ) internal prank(user) returns (uint256 outputAmount) {
-        address[] memory tokens = bs.getWhitelistedWellLpTokens();
-        bool isWell;
-        for (uint i; i < tokens.length; i++) {
-            if (tokens[i] == token) {
-                isWell = true;
-                break;
-            }
-        }
-        if (isWell) {
-            (amount, ) = addLiquidityToWellAtCurrentPrice(user, token, amount);
-        } else {
-            MockToken(token).mint(user, amount);
-        }
-        outputAmount = amount;
-        MockToken(token).approve(BEANSTALK, amount);
-        bs.deposit(token, amount, 0);
+    function _mockCurveMetapool() internal {
+        address THREE_CRV = address(C.threeCrv());
+        MockMeta3Curve p = MockMeta3Curve(_etch("MockMeta3Curve.sol", C.CURVE_BEAN_METAPOOL, abi.encode("")));
+        p.init(C.BEAN, THREE_CRV, C.curve3PoolAddress());
+        p.set_A_precise(1000);
+        p.set_virtual_price(1 wei);
     }
 
-    /**
-     * @notice adds an amount of non-bean tokens in the well,
-     * and adds the amount of beans such that the well matches the price oracles.
-     */
-    function addLiquidityToWellAtCurrentPrice(
-        address well,
-        uint256 amount
-    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
-        (lpAmountOut, tokenInWell) = addLiquidityToWellAtCurrentPrice(users[0], well, amount);
+    function _mockUnripe() internal {
+        MockToken urbean = _mockToken("Unripe BEAN", C.UNRIPE_BEAN);
+        urbean.setDecimals(6);
+        _mockToken("Unripe BEAN:3CRV", C.UNRIPE_LP);
     }
 
-    /**
-     * @notice adds an amount of non-bean tokens in the well,
-     * and adds the amount of beans such that the well matches the price oracles.
-     */
-    function addLiquidityToWellAtCurrentPrice(
-        address user,
-        address well,
-        uint256 amount
-    ) internal returns (uint256 lpAmountOut, address tokenInWell) {
-        (tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        uint256 beanAmount = (amount * 1e6) / usdOracle.getUsdTokenPrice(tokenInWell);
-        lpAmountOut = addLiquidityToWell(user, well, beanAmount, amount);
+    function _printAddresses() internal view {
+        console.log("C: Bean = %s", address(C.bean()));
     }
 
-    function initMisc() internal {
-        usdOracle = UsdOracle(deployCode("UsdOracle"));
-        pipeline = Pipeline(PIPELINE);
+    function _cut(string memory _facetName, address _facetAddress)
+        internal
+        returns (IDiamondCut.FacetCut memory cut) 
+    {
+        bytes4[] memory functionSelectors = _generateSelectors(_facetName);
+        cut = IDiamondCut.FacetCut({
+            facetAddress: _facetAddress,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
     }
 
-    function abs(int256 x) internal pure returns (int256) {
-        return x >= 0 ? x : -x;
+    function _generateSelectors(string memory _facetName)
+        internal
+        returns (bytes4[] memory selectors)
+    {
+        string[] memory cmd = new string[](3);
+        cmd[0] = "node";
+        cmd[1] = "scripts/genSelectors.js";
+        cmd[2] = _facetName;
+        bytes memory res = vm.ffi(cmd);
+        selectors = abi.decode(res, (bytes4[]));
     }
 
-    function initializeChainlinkOraclesForWhitelistedWells() internal noGasMetering {
-        address[] memory lp = bs.getWhitelistedLpTokens();
-        address chainlinkOracle;
-        for (uint i; i < lp.length; i++) {
-            // oracles will need to be added here,
-            // as obtaining the chainlink oracle to well is not feasible on chain.
-            if (lp[i] == C.BEAN_ETH_WELL) {
-                chainlinkOracle = chainlinkOracles[0];
-            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
-                chainlinkOracle = chainlinkOracles[1];
-            }
-            updateChainlinkOracleWithPreviousData(chainlinkOracle);
+    //gets bytecode at specific address (cant use address.code as we're in 0.7.6)
+    function at(address _addr) public view returns (bytes memory o_code) {
+        assembly {
+            // retrieve the size of the code
+            let size := extcodesize(_addr)
+            // allocate output byte array
+            // by using o_code = new bytes(size)
+            o_code := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            // store length in memory
+            mstore(o_code, size)
+            // actually retrieve the code, this needs assembly
+            extcodecopy(_addr, add(o_code, 0x20), 0, size)
         }
     }
 
-    function setDeltaBForWellsWithEntropy(
-        uint256 entropy
-    ) internal returns (int256[] memory deltaBPerWell) {
-        address[] memory lps = bs.getWhitelistedWellLpTokens();
-        deltaBPerWell = new int256[](lps.length);
-        for (uint i; i < lps.length; i++) {
-            // unix time is used to generate an unique deltaB upon every test.
-            int256 deltaB = int256(uint256(keccak256(abi.encode(entropy, i, vm.unixTime()))));
-            deltaB = bound(deltaB, -1000e6, 1000e6);
-            (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
-            setDeltaBforWell(deltaB, lps[i], tokenInWell);
-            deltaBPerWell[i] = deltaB;
-        }
-    }
 
-    /**
-     * @notice update deltaB in wells. excess is minted to the well.
-     * commands are called twice to update pumps, due to mocks and everything
-     * executing in the same block.
-     */
-    function setDeltaBforWell(int256 deltaB, address wellAddress, address tokenInWell) internal {
-        IWell well = IWell(wellAddress);
-        IERC20 tokenOut;
-        int256 initialDeltaB = bs.poolCurrentDeltaB(wellAddress);
 
-        // find difference between initial and final deltaB
-        int256 deltaBdiff = deltaB - initialDeltaB;
+    // function initUser() internal {
+    //     users = new Users();
+    //     address[] memory _user = new address[](2);
+    //     _user = users.createUsers(2);
+    //     user = _user[0];
+    //     user2 = _user[1];
+    // }
 
-        if (deltaBdiff > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(
-                IERC20(tokenInWell),
-                C.bean(),
-                uint256(deltaBdiff)
-            );
-            MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
-            tokenOut = C.bean();
-        } else {
-            C.bean().mint(wellAddress, uint256(-deltaBdiff));
-            tokenOut = IERC20(tokenInWell);
-        }
-        uint256 amountOut = well.shift(tokenOut, 0, users[1]);
-        well.shift(tokenOut, 0, users[1]);
-    }
+    // /// @dev deploy `n` mock ERC20 tokens and sort by address
+    // function deployMockTokens(uint n) internal {
+    //     IERC20[] memory _tokens = new IERC20[](n);
+    //     for (uint i = 0; i < n; i++) {
+    //         IERC20 temp = IERC20(
+    //             new MockToken(
+    //                 string.concat("Token ", i.toString()), // name
+    //                 string.concat("TOKEN", i.toString()), // symbol
+    //                 18 // decimals
+    //             )
+    //         );
+    //         // Insertion sort
+    //         uint j;
+    //         if (i > 0) {
+    //             for (j = i; j >= 1 && temp < _tokens[j - 1]; j--)
+    //                 _tokens[j] = _tokens[j - 1];
+    //             _tokens[j] = temp;
+    //         } else _tokens[0] = temp;
+    //     }
+    //     for (uint i = 0; i < n; i++) tokens.push(_tokens[i]);
+    // }
 
-    /**
-     * @notice adds 'x' fertilizer based on the amount of sprouts.
-     * @dev the amount of sprouts are a function of the humidity,
-     * which is a function of the season of mint.
-     * returns the actual amount of sprouts issued, as fertilizer
-     * is unitless per dollar. ERC1155 is NOT issued here.
-     */
-    function addFertilizerBasedOnSprouts(
-        uint128 season,
-        uint256 sprouts
-    ) public returns (uint256, uint256) {
-        // calculate the amount of fertilizer needed to be issued.
-        // note: fertilizer rounds down.
-        uint256 humidity = bs.getHumidity(season);
-        uint256 fertOut = sprouts / ((1000 + humidity) / 1000);
-        // calculate the amount of the barnRaiseToken needed to equal usdAmount.
-        uint256 tokenAmount = fertOut * usdOracle.getUsdTokenPrice(bs.getBarnRaiseToken());
+    // /// @dev mint mock tokens to each recipient
+    // function mintTokens(address recipient, uint amount) internal {
+    //     for (uint i = 0; i < tokens.length; i++)
+    //         MockToken(address(tokens[i])).mint(recipient, amount);
+    // }
 
-        // add fertilizer.
-        mockAddFertilizer(season, uint128(tokenAmount));
+    // /// @dev approve `spender` to use `owner` tokens
+    // function approveMaxTokens(address owner, address spender) prank(owner) internal {
+    //     for (uint i = 0; i < tokens.length; i++)
+    //         tokens[i].approve(spender, type(uint).max);
+    // }
 
-        // return the amount of sprouts minted.
-        return (fertOut * (1000 + bs.getHumidity(season)) * 1000, fertOut);
-    }
+    // /// @dev add the same `amount` of liquidity for all underlying tokens
+    // function addLiquidityEqualAmount(address from, uint amount) prank(from) internal {
+    //     uint[] memory amounts = new uint[](tokens.length);
+    //     for (uint i = 0; i < tokens.length; i++) amounts[i] = amount;
+    //     well.addLiquidity(amounts, 0, from);
+    // }
 
-    /**
-     * @notice adds fertilizer based on token amount in.
-     * @dev 'season' determine the interest rate and id of the fertilizer.
-     * {see. LibFertilizer.addFertilizer}
-     */
-    function mockAddFertilizer(uint128 season, uint128 tokenAmountIn) internal {
-        // mint tokens to user.
-        address barnRaiseToken = bs.getBarnRaiseToken();
-        mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
-        // add fertilizer.
-        if (tokenAmountIn > 0) {
-            bs.addFertilizer(season, tokenAmountIn, 0);
-        }
-    }
+    // /// @dev gets the first `n` mock tokens
+    // function getTokens(uint n)
+    //     internal
+    //     view
+    //     returns (IERC20[] memory _tokens)
+    // {
+    //     _tokens = new IERC20[](n);
+    //     for (uint i; i < n; ++i) {
+    //         _tokens[i] = tokens[i];
+    //     }
+    // }
 
-    //////////////// CONVERT HELPERS /////////////////
+    // /// @dev get `account` balance of each token, lp token, total lp token supply
+    // function getBalances(address account) internal view returns (Balances memory balances) {
+    //     uint[] memory tokenBalances = new uint[](tokens.length);
+    //     for (uint i = 0; i < tokenBalances.length; ++i) {
+    //         tokenBalances[i] = tokens[i].balanceOf(account);
+    //     }
+    //     balances = Balances(
+    //         tokenBalances,
+    //         well.balanceOf(account),
+    //         well.totalSupply()
+    //     );
+    // }
 
-    function convertEncoder(
-        LibConvertData.ConvertKind kind,
-        address token,
-        uint256 amountIn,
-        uint256 minAmountOut
-    ) internal pure returns (bytes memory) {
-        if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            // lamda_lamda encoding
-            return abi.encode(kind, amountIn, token);
-        } else {
-            // default encoding
-            return abi.encode(kind, amountIn, minAmountOut, token);
-        }
-    }
-
-    function createBeanToLPConvert(
-        address well,
-        uint256 amountIn
-    ) internal pure returns (bytes memory) {
-        return
-            convertEncoder(
-                LibConvertData.ConvertKind.BEANS_TO_WELL_LP,
-                well, // well
-                amountIn, // amountIn
-                0 // minOut
-            );
-    }
-
-    function rand(uint256 lowerBound, uint256 upperBound) internal returns (uint256 rand) {
-        return bound(uint256(keccak256(abi.encode(vm.unixTime()))), lowerBound, upperBound);
-    }
-
-    /**
-     * @notice returns a random number between lowerBound and upperBound,
-     * using unix time and salt as the source of randomness.
-     */
-    function rand(
-        uint256 lowerBound,
-        uint256 upperBound,
-        bytes memory salt
-    ) internal returns (uint256 rand) {
-        return bound(uint256(keccak256(abi.encode(vm.unixTime(), salt))), lowerBound, upperBound);
-    }
-
-    /**
-     * @notice Calls sunrise twice to pass the germination process.
-     */
-    function passGermination() public {
-        // call sunrise twice to end the germination process.
-        bs.siloSunrise(0);
-        bs.siloSunrise(0);
-    }
-
-    /**
-     * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
-     * @param amount The amount of beans to deposit.
-     * @return _amount The actual amount of beans deposited.
-     * @return stem The stem tip for the deposited beans.
-     */
-    function setUpSiloDepositTest(
-        uint256 amount,
-        address[] memory _farmers
-    ) public returns (uint256 _amount, int96 stem) {
-        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
-
-        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
-        stem = bs.stemTipForToken(C.BEAN);
-    }
-
-    /**
-     * @notice Deposit beans to the silo from multiple users.
-     * @param users The users to deposit beans from.
-     * @param token The token to deposit.
-     * @param amount The amount of beans to deposit.
-     * @param mode The deposit mode.
-     */
-    function depositForUsers(
-        address[] memory users,
-        address token,
-        uint256 amount,
-        LibTransfer.From mode
-    ) public {
-        for (uint256 i = 0; i < users.length; i++) {
-            vm.prank(users[i]);
-            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
-        }
-    }
-
-    /**
-     * @notice mints `sowAmount` beans for farmer,
-     * issues `sowAmount` of beans to farmer.
-     * sows `sowAmount` of beans.
-     */
-    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
-        bs.setSoilE(sowAmount);
-        mintTokensToUser(farmer, C.BEAN, sowAmount);
-        vm.prank(farmer);
-        bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
+    /// @dev impersonate `from`
+    modifier prank(address from) {
+        vm.startPrank(from);
+        _;
+        vm.stopPrank();
     }
 }

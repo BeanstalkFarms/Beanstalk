@@ -1,9 +1,27 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.17;
+pragma experimental ABIEncoderV2;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AdvancedFarmCall} from "../libraries/LibFarm.sol";
-import {LibTransfer} from "../libraries/Token/LibTransfer.sol";
+import "@openzeppelin/contracts-upgradeable-8/token/ERC20/IERC20Upgradeable.sol";
+
+enum ConvertKind {
+    BEANS_TO_CURVE_LP,
+    CURVE_LP_TO_BEANS,
+    UNRIPE_BEANS_TO_UNRIPE_LP,
+    UNRIPE_LP_TO_UNRIPE_BEANS,
+    LAMBDA_LAMBDA
+}
+
+enum From {
+    EXTERNAL,
+    INTERNAL,
+    EXTERNAL_INTERNAL,
+    INTERNAL_TOLERANT
+}
+enum To {
+    EXTERNAL,
+    INTERNAL
+}
 
 interface IBeanstalk {
     function balanceOfSeeds(address account) external view returns (uint256);
@@ -45,19 +63,19 @@ interface IBeanstalk {
     function update(address account) external payable;
 
     function transferInternalTokenFrom(
-        IERC20 token,
+        IERC20Upgradeable token,
         address from,
         address to,
         uint256 amount,
-        LibTransfer.To toMode
+        To toMode
     ) external payable;
 
     function transferToken(
-        IERC20 token,
+        IERC20Upgradeable token,
         address recipient,
         uint256 amount,
-        LibTransfer.From fromMode,
-        LibTransfer.To toMode
+        From fromMode,
+        To toMode
     ) external payable;
 
     function permitToken(
@@ -75,36 +93,11 @@ interface IBeanstalk {
         bytes calldata convertData,
         uint32[] memory crates,
         uint256[] memory amounts
-    )
-        external
-        payable
-        returns (
-            uint32 toSeason,
-            uint256 fromAmount,
-            uint256 toAmount,
-            uint256 fromBdv,
-            uint256 toBdv
-        );
-
-    function deposit(
-        address token,
-        uint256 _amount,
-        LibTransfer.From mode
-    ) external payable returns (uint256 amount, uint256 _bdv, int96 stem);
+    ) external payable returns (uint32 toSeason, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv);
 
     function getDeposit(
         address account,
         address token,
         uint32 season
     ) external view returns (uint256, uint256);
-
-    function enrootDeposits(
-        address token,
-        int96[] calldata stems,
-        uint256[] calldata amounts
-    ) external payable;
-
-    function advancedFarm(
-        AdvancedFarmCall[] calldata data
-    ) external payable returns (bytes[] memory results);
 }

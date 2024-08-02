@@ -2,9 +2,10 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.8.20;
+pragma experimental ABIEncoderV2;
+pragma solidity =0.7.6;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @author publius
@@ -14,8 +15,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 library LibApprove {
     using SafeERC20 for IERC20;
 
-    function approveToken(IERC20 token, address spender, uint256 amount) internal {
-        if (token.allowance(address(this), spender) == type(uint256).max) return;
-        token.forceApprove(spender, amount);
+    function approveToken(
+        IERC20 token,
+        address spender,
+        uint256 amount
+    ) internal {
+        if (token.allowance(address(this), spender) == type(uint256).max)
+            return;
+        token.safeApprove(spender, 0);
+        token.safeApprove(spender, amount);
     }
 }

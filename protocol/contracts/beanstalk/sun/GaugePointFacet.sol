@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 
 /**
@@ -12,7 +13,7 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
  * @author Brean
  * @notice Calculates the gaugePoints for whitelisted Silo LP tokens.
  */
-interface IGaugePointFacet {
+ interface IGaugePointFacet {
     function defaultGaugePointFunction(
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
@@ -21,7 +22,7 @@ interface IGaugePointFacet {
 }
 
 contract GaugePointFacet {
-    using LibRedundantMath256 for uint256;
+    using SafeMath for uint256;
 
     uint256 private constant ONE_POINT = 1e18;
     uint256 private constant MAX_GAUGE_POINTS = 1000e18;
@@ -61,7 +62,7 @@ contract GaugePointFacet {
             // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
             if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;
         } else {
-            // If % of deposited BDV is .01% within range of optimal,
+            // If % of deposited BDV is .01% within range of optimal, 
             // keep gauge points the same.
             return currentGaugePoints;
         }

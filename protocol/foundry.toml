@@ -12,18 +12,14 @@ libs = [
 cache = true
 cache_path = 'cache'
 force = false
-evm_version = 'shanghai'
 
 # Compiler
 # https://book.getfoundry.sh/reference/config/solidity-compiler
 libraries = []
 auto_detect_solc = true
-
-# 2462: Visibility for constructor is ignored
-ignored_error_codes = [2462]
-# set optimizer to true when deploying to mainnet
+ignored_error_codes = [1878, 2837]
 optimizer = true
-optimizer_runs = 100
+optimizer_runs = 200
 via_ir = false
 bytecode_hash = 'ipfs'
 
@@ -31,15 +27,9 @@ bytecode_hash = 'ipfs'
 # https://book.getfoundry.sh/reference/config/testing
 verbosity = 0
 ffi = true
-fs_permissions = [
-  { access = "read", path = "../"},
-  { access = "read", path = "./out" }
-]
-ignored_warnings_from = [
-  "test",
-  "contracts/interfaces/IMockFBeanstalk.sol",
-  "contracts/mocks/"
-]
+fs_permissions = [{ access = "read", path = "./out" }]
+sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `msg.sender` in tests.
+tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72' # The value of `tx.origin` in tests.
 gas_reports = ['*']
  # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
 no_storage_caching = false
@@ -48,14 +38,11 @@ no_storage_caching = false
 match_test = "testDiff"
 no_match_test = "a^"
 
+# Formatter
+# https://book.getfoundry.sh/reference/config/formatter
+# ...pass...
 [profile.default.rpc_storage_caching]
 chains = 'all'
 endpoints = 'all'
 
-[rpc_endpoints]
-mainnet = "${FORKING_RPC}" 
 
-[invariant]
-runs = 4
-depth = 2048
-fail_on_revert = true

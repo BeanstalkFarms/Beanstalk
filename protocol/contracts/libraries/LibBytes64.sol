@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
 
 /**
  * @author Brean
@@ -12,8 +12,7 @@ library LibBytes64 {
     /**
      * @dev Base64 Encoding/Decoding Table
      */
-    string internal constant _TABLE =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    string internal constant _TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     /**
      * @dev Converts a `bytes` to its Bytes64 `string` representation.

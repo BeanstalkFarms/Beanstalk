@@ -3,9 +3,10 @@
  *
  */
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Call} from "contracts/interfaces/basin/IWell.sol";
 import {IPump} from "contracts/interfaces/basin/pumps/IPump.sol";
 import {MockToken} from "../MockToken.sol";
@@ -16,10 +17,10 @@ import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
  */
 
 contract MockSetComponentsWell is MockToken {
+
     using SafeERC20 for IERC20;
 
-    bytes32 private constant RESERVES_STORAGE_SLOT =
-        0x4bba01c388049b5ebd30398b65e8ad45b632802c5faf4964e58085ea8ab03715; // bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
+    bytes32 private constant RESERVES_STORAGE_SLOT = 0x4bba01c388049b5ebd30398b65e8ad45b632802c5faf4964e58085ea8ab03715; // bytes32(uint256(keccak256("reserves.storage.slot")) - 1);
     uint256 constant MAX_UINT128 = 340_282_366_920_938_463_463_374_607_431_768_211_455; // type(uint128).max
 
     constructor() MockToken("Mock Well", "MWELL") {
@@ -40,7 +41,13 @@ contract MockSetComponentsWell is MockToken {
     function well()
         external
         pure
-        returns (IERC20[] memory, Call memory, Call[] memory, bytes memory, address)
+        returns (
+            IERC20[] memory, 
+            Call memory, 
+            Call[] memory,
+            bytes memory, 
+            address
+        )
     {
         return (
             new IERC20[](0),
@@ -88,12 +95,12 @@ contract MockSetComponentsWell is MockToken {
         }
         _reserves = reserves;
     }
-
+    
     /**
      * swapFrom is used to test sop.
      * `swapFrom` is a stripped down version of well.sol swap from.
      * does not update pumps.
-     * @dev update if well.sol implementation is updated.
+     * @dev update if well.sol implmentation is updated.
      */
     function swapFrom(
         IERC20 fromToken,
@@ -121,7 +128,7 @@ contract MockSetComponentsWell is MockToken {
         reserves[i] += amountIn;
 
         uint256 reserveJBefore = reserves[j];
-
+        
         // token supply is calculated here rather then queried as
         // often tests mint/burn tokens without adding or removing liquidity.
         reserves[j] = _calcReserve(wellFunction(), reserves, j, tokenSupply);
@@ -167,19 +174,14 @@ contract MockSetComponentsWell is MockToken {
     /**
      * @dev Gets the Well's token reserves by reading from byte storage.
      */
-    function _getReserves(
-        uint256 _numberOfTokens
-    ) internal view returns (uint256[] memory reserves) {
+    function _getReserves(uint256 _numberOfTokens) internal view returns (uint256[] memory reserves) {
         reserves = readUint128(RESERVES_STORAGE_SLOT, _numberOfTokens);
     }
 
     /**
      * @dev Read `n` packed uint128 reserves at storage position `slot`.
      */
-    function readUint128(
-        bytes32 slot,
-        uint256 n
-    ) internal view returns (uint256[] memory reserves) {
+    function readUint128(bytes32 slot, uint256 n) internal view returns (uint256[] memory reserves) {
         // Initialize array with length `n`, fill it in via assembly
         reserves = new uint256[](n);
 
@@ -228,12 +230,7 @@ contract MockSetComponentsWell is MockToken {
         uint256 j,
         uint256 lpTokenSupply
     ) internal view returns (uint256 reserve) {
-        reserve = IWellFunction(__wellFunction.target).calcReserve(
-            reserves,
-            j,
-            lpTokenSupply,
-            __wellFunction.data
-        );
+        reserve = IWellFunction(__wellFunction.target).calcReserve(reserves, j, lpTokenSupply, __wellFunction.data);
     }
 
     /**
@@ -259,10 +256,7 @@ contract MockSetComponentsWell is MockToken {
                 assembly {
                     sstore(
                         add(slot, i),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shl(128, mload(add(reserves, add(iByte, 64))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shl(128, mload(add(reserves, add(iByte, 64)))))
                     )
                 }
             }
@@ -275,10 +269,7 @@ contract MockSetComponentsWell is MockToken {
                 assembly {
                     sstore(
                         add(slot, maxI),
-                        add(
-                            mload(add(reserves, add(iByte, 32))),
-                            shr(128, shl(128, sload(add(slot, maxI))))
-                        )
+                        add(mload(add(reserves, add(iByte, 32))), shr(128, shl(128, sload(add(slot, maxI)))))
                     )
                 }
             }
@@ -296,9 +287,7 @@ contract MockSetComponentsWell is MockToken {
         Call memory __wellFunction,
         uint256[] memory reserves
     ) internal view returns (uint256 lpTokenSupply) {
-        lpTokenSupply = IWellFunction(__wellFunction.target).calcLpTokenSupply(
-            reserves,
-            __wellFunction.data
-        );
+        lpTokenSupply = IWellFunction(__wellFunction.target).calcLpTokenSupply(reserves, __wellFunction.data);
     }
+
 }

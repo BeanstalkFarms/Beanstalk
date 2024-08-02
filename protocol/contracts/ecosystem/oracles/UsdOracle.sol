@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
 import {LibUsdOracle, LibEthUsdOracle, LibWstethUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
@@ -11,6 +12,7 @@ import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.
  * @notice Holds functions to query USD prices of tokens.
  */
 contract UsdOracle {
+    
     // USD : Token
 
     function getUsdTokenPrice(address token) external view returns (uint256) {
@@ -60,4 +62,5 @@ contract UsdOracle {
     function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
         return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
+
 }

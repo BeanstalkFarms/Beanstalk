@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
 
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3PoolDeployer.sol";
+import '@uniswap/v3-core/contracts/interfaces/IUniswapV3PoolDeployer.sol';
 
-import "./MockUniswapV3Pool.sol";
+import './MockUniswapV3Pool.sol';
 
 contract MockUniswapV3PoolDeployer is IUniswapV3PoolDeployer {
     struct Parameters {
@@ -31,13 +31,7 @@ contract MockUniswapV3PoolDeployer is IUniswapV3PoolDeployer {
         uint24 fee,
         int24 tickSpacing
     ) internal returns (address pool) {
-        parameters = Parameters({
-            factory: factory,
-            token0: token0,
-            token1: token1,
-            fee: fee,
-            tickSpacing: tickSpacing
-        });
+        parameters = Parameters({factory: factory, token0: token0, token1: token1, fee: fee, tickSpacing: tickSpacing});
         pool = address(new MockUniswapV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
         delete parameters;
     }

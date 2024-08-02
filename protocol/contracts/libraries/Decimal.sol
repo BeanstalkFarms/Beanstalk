@@ -2,9 +2,10 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity ^0.8.20;
+pragma solidity =0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title Decimal
@@ -13,13 +14,14 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
  * Library that defines a fixed-point number with 18 decimal places.
  */
 library Decimal {
-    using LibRedundantMath256 for uint256;
+    using SafeMath for uint256;
 
     // ============ Constants ============
 
-    uint256 constant BASE = 10 ** 18;
+    uint256 constant BASE = 10**18;
 
     // ============ Structs ============
+
 
     struct D256 {
         uint256 value;
@@ -27,57 +29,114 @@ library Decimal {
 
     // ============ Static Functions ============
 
-    function zero() internal pure returns (D256 memory) {
-        return D256({value: 0});
+    function zero()
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: 0 });
     }
 
-    function one() internal pure returns (D256 memory) {
-        return D256({value: BASE});
+    function one()
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: BASE });
     }
 
-    function from(uint256 a) internal pure returns (D256 memory) {
-        return D256({value: a.mul(BASE)});
+    function from(
+        uint256 a
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: a.mul(BASE) });
     }
 
-    function ratio(uint256 a, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: getPartial(a, BASE, b)});
+    function ratio(
+        uint256 a,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: getPartial(a, BASE, b) });
     }
 
     // ============ Self Functions ============
 
-    function add(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.add(b.mul(BASE))});
+    function add(
+        D256 memory self,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.add(b.mul(BASE)) });
     }
 
-    function sub(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.mul(BASE))});
+    function sub(
+        D256 memory self,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.sub(b.mul(BASE)) });
     }
 
     function sub(
         D256 memory self,
         uint256 b,
         string memory reason
-    ) internal pure returns (D256 memory) {
-        if (b.mul(BASE) > self.value) {
-            revert(reason);
-        }
-        return D256({value: self.value.sub(b.mul(BASE))});
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.sub(b.mul(BASE), reason) });
     }
 
-    function mul(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.mul(b)});
+    function mul(
+        D256 memory self,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.mul(b) });
     }
 
-    function div(D256 memory self, uint256 b) internal pure returns (D256 memory) {
-        return D256({value: self.value.div(b)});
+    function div(
+        D256 memory self,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.div(b) });
     }
 
-    function pow(D256 memory self, uint256 b) internal pure returns (D256 memory) {
+    function pow(
+        D256 memory self,
+        uint256 b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
         if (b == 0) {
             return one();
         }
 
-        D256 memory temp = D256({value: self.value});
+        D256 memory temp = D256({ value: self.value });
         for (uint256 i = 1; i < b; ++i) {
             temp = mul(temp, self);
         }
@@ -85,31 +144,60 @@ library Decimal {
         return temp;
     }
 
-    function add(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: self.value.add(b.value)});
+    function add(
+        D256 memory self,
+        D256 memory b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.add(b.value) });
     }
 
-    function sub(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: self.value.sub(b.value)});
+    function sub(
+        D256 memory self,
+        D256 memory b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.sub(b.value) });
     }
 
     function sub(
         D256 memory self,
         D256 memory b,
         string memory reason
-    ) internal pure returns (D256 memory) {
-        if (greaterThan(b, self)) {
-            revert(reason);
-        }
-        return D256({value: self.value.sub(b.value)});
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: self.value.sub(b.value, reason) });
     }
 
-    function mul(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: getPartial(self.value, b.value, BASE)});
+    function mul(
+        D256 memory self,
+        D256 memory b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: getPartial(self.value, b.value, BASE) });
     }
 
-    function div(D256 memory self, D256 memory b) internal pure returns (D256 memory) {
-        return D256({value: getPartial(self.value, BASE, b.value)});
+    function div(
+        D256 memory self,
+        D256 memory b
+    )
+    internal
+    pure
+    returns (D256 memory)
+    {
+        return D256({ value: getPartial(self.value, BASE, b.value) });
     }
 
     function equals(D256 memory self, D256 memory b) internal pure returns (bool) {
@@ -146,11 +234,22 @@ library Decimal {
         uint256 target,
         uint256 numerator,
         uint256 denominator
-    ) private pure returns (uint256) {
+    )
+    private
+    pure
+    returns (uint256)
+    {
         return target.mul(numerator).div(denominator);
     }
 
-    function compareTo(D256 memory a, D256 memory b) private pure returns (uint256) {
+    function compareTo(
+        D256 memory a,
+        D256 memory b
+    )
+    private
+    pure
+    returns (uint256)
+    {
         if (a.value == b.value) {
             return 1;
         }

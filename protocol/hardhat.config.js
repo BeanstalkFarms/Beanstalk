@@ -12,11 +12,15 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
+
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
   mintBeans,
+  getBeanMetapool,
   getUsdc,
   getBean,
   getBeanstalkAdminControls,
@@ -24,20 +28,14 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const {
-  EXTERNAL,
-  INTERNAL,
-  INTERNAL_EXTERNAL,
-  INTERNAL_TOLERANT
-} = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/hardhat/utils/constants.js");
-const { to6 } = require("./test/hardhat/utils/helpers.js");
-//const { replant } = require("./replant/replant.js")
-const { reseed } = require("./reseed/reseed.js");
+const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16, ebip17 } = require("./scripts/ebips.js");
+const { finishWstethMigration } = require("./scripts/beanWstethMigration.js");
+const { impersonateWsteth, impersonateBean } = require("./scripts/impersonate.js");
+const { deployPriceContract } = require("./scripts/price.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -50,6 +48,32 @@ function getRemappings() {
 }
 
 //////////////////////// TASKS ////////////////////////
+
+task("buyBeans")
+  .addParam("amount", "The amount of USDC to buy with")
+  .setAction(async (args) => {
+    await mintEth(PUBLIUS);
+    await mintUsdc(PUBLIUS, args.amount);
+    const signer = await impersonateSigner(PUBLIUS);
+    await (await getUsdc()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
+    const txn = await (await getBeanMetapool()).connect(signer).exchange_underlying("2", "0", args.amount, "0");
+    const result = await txn.wait();
+    console.log("Done", result);
+  });
+
+task("sellBeans")
+  .addParam("amount", "The amount of Beans to sell")
+  .setAction(async (args) => {
+    await mintBeans(PUBLIUS, args.amount);
+    const signer = await impersonateSigner(PUBLIUS);
+    await (await getBean()).connect(signer).approve(BEAN_3_CURVE, ethers.constants.MaxUint256);
+    await (
+      await getBeanMetapool()
+    )
+      .connect(signer)
+      .connect(await impersonateSigner(PUBLIUS))
+      .exchange_underlying("0", "2", args.amount, "0");
+  });
 
 task("ripen")
   .addParam("amount", "The amount of Pods to ripen")
@@ -78,16 +102,16 @@ task("sunrise", async function () {
 });
 
 task("sunrise2", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
+  const lastTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp/3600 + 1) * 3600
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
 
-  season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
+  season = await ethers.getContractAt('SeasonFacet', BEANSTALK);
   await season.sunrise();
-});
+})
 
 task("getTime", async function () {
-  beanstalk = await ethers.getContractAt("SeasonFacet", BEANSTALK);
+  this.season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
 });
 
@@ -96,17 +120,12 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
-task("reseed", async () => {
-  const account = await impersonateSigner(PUBLIUS);
-  await reseed(account);
-});
-
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
   // The path (relative to the root of `protocol` directory) where all modules sit.
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
+  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun"];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -129,15 +148,12 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      // files.push("contracts/libraries/LibIncentive.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
-      // files.push("contracts/libraries/Silo/LibGerminate.sol");
-      // files.push("contracts/libraries/Minting/LibWellMinting.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
-      files.push("contracts/libraries/LibShipping.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol")
+      files.push("contracts/libraries/LibGauge.sol")
+      files.push("contracts/libraries/Silo/LibLegacyTokenSilo.sol")
+      files.push("contracts/libraries/Silo/LibGerminate.sol")
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol")
+      files.push("contracts/libraries/Minting/LibWellMinting.sol")
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -168,101 +184,7 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   console.log("ABI written to abi/Beanstalk.json");
 });
 
-/**
- * @notice generates mock diamond ABI.
- */
-task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
-  //////////////////////// FACETS ////////////////////////
-
-  // The path (relative to the root of `protocol` directory) where all modules sit.
-  const modulesDir = path.join("contracts", "beanstalk");
-
-  // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
-
-  // The glob returns the full file path like this:
-  // contracts/beanstalk/barn/UnripeFacet.sol
-  // We want the "UnripeFacet" part.
-  const getFacetName = (file) => {
-    return file.split("/").pop().split(".")[0];
-  };
-
-  // Load files across all modules
-  let paths = [];
-  modules.forEach((module) => {
-    const filesInModule = fs.readdirSync(path.join(".", modulesDir, module));
-    paths.push(...filesInModule.map((f) => [module, f]));
-  });
-
-  console.log("Facets:");
-  console.log(paths);
-
-  // Build ABI
-  let abi = [];
-  modules.forEach((module) => {
-    const pattern = path.join(".", modulesDir, module, "**", "*Facet.sol");
-    const files = glob.sync(pattern);
-    if (module == "silo") {
-      // Manually add in libraries that emit events
-      files.push("contracts/libraries/LibIncentive.sol");
-      files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      files.push("contracts/libraries/LibGauge.sol");
-      files.push("contracts/libraries/Silo/LibGerminate.sol");
-    }
-    files.forEach((file) => {
-      const facetName = getFacetName(file);
-      const jsonFileName = `${facetName}.json`;
-      const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
-
-      const json = JSON.parse(fs.readFileSync(jsonFileLoc));
-
-      // Log what's being included
-      console.log(`${module}:`.padEnd(10), file);
-      json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
-      console.log("");
-
-      abi.push(...json.abi);
-    });
-  });
-
-  let string = "./abi/Beanstalk.json";
-
-  ////////////////////////// MOCK ////////////////////////
-  // The path (relative to the root of `protocol` directory) where all modules sit.
-  const mockModulesDir = path.join("contracts", "mocks", "mockFacets");
-
-  // Load files across all mock modules.
-  const filesInModule = fs.readdirSync(path.join(".", mockModulesDir));
-  console.log("Mock Facets:");
-  console.log(filesInModule);
-
-  // Build ABI
-  filesInModule.forEach((module) => {
-    const file = path.join(".", mockModulesDir, module);
-    const facetName = getFacetName(file);
-    const jsonFileName = `${facetName}.json`;
-    const jsonFileLoc = path.join(".", "artifacts", file, jsonFileName);
-    const json = JSON.parse(fs.readFileSync(jsonFileLoc));
-
-    // Log what's being included
-    console.log(`${module}:`.padEnd(10), file);
-    json.abi.forEach((item) => console.log(``.padEnd(10), item.type, item.name));
-    console.log("");
-
-    abi.push(...json.abi);
-  });
-
-  const names = abi.map((a) => a.name);
-  fs.writeFileSync(
-    "./abi/MockBeanstalk.json",
-    JSON.stringify(
-      abi.filter((item, pos) => names.indexOf(item.name) == pos),
-      null,
-      2
-    )
-  );
-});
-
+// BIP //
 task("marketplace", async function () {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
@@ -302,6 +224,26 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
+task("deployWstethMigration", async function () {
+  await bipMigrateUnripeBeanEthToBeanSteth();
+});
+
+
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
+task("UI-deployWstethMigration", async function () {
+  await impersonateBean();
+  wsteth = await ethers.getContractAt("MockWsteth", "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0");
+  const stethPerWsteth = await wsteth.stEthPerToken();
+  await impersonateWsteth();
+  await wsteth.setStEthPerToken(stethPerWsteth);
+  await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true, undefined);
+  await finishWstethMigration(undefined, true);
+  await deployPriceContract();
+});
+
 /// EBIPS /// 
 
 task("ebip17", async function () {
@@ -318,23 +260,23 @@ task("ebip15", async function () {
 
 task("ebip14", async function () {
   await ebip14();
-});
+})
 
 task("ebip13", async function () {
   await ebip13();
-});
+})
 
 task("ebip11", async function () {
   await ebip11();
-});
+})
 
 task("ebip10", async function () {
   await ebip10();
-});
+})
 
 task("ebip9", async function () {
   await ebip9();
-});
+})
 
 //////////////////////// SUBTASK CONFIGURATION ////////////////////////
 
@@ -397,7 +339,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.7.6",
         settings: {
           optimizer: {
             enabled: true,
@@ -406,15 +348,21 @@ module.exports = {
         }
       },
       {
-        version: "0.7.6",
+        version: "0.8.17",
         settings: {
           optimizer: {
-            enabled: true,
-            runs: 100
+            enabled: false,
+            runs: 1000
           }
         }
       }
-    ]
+    ],
+    overrides: {
+      "@uniswap/v3-core/contracts/libraries/TickBitmap.sol": {
+        version: "0.7.6",
+        settings: {}
+      }
+    }
   },
   gasReporter: {
     enabled: false

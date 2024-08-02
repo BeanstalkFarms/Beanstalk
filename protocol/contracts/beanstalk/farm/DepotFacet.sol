@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.7.6;
+pragma experimental ABIEncoderV2;
 
 import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @title Depot Facet
@@ -16,18 +16,22 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
-contract DepotFacet is Invariable {
+contract DepotFacet {
+
     // Pipeline V1.0.1
-    address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
+    address private constant PIPELINE =
+        0xb1bE0000C6B3C62749b5F0c92480146452D15423;
 
     /**
      * @notice Pipe a PipeCall through Pipeline.
      * @param p PipeCall to pipe through Pipeline
      * @return result PipeCall return value
-     **/
-    function pipe(
-        PipeCall calldata p
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    **/
+    function pipe(PipeCall calldata p)
+        external
+        payable
+        returns (bytes memory result)
+    {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
@@ -36,10 +40,12 @@ contract DepotFacet is Invariable {
      * Does not support sending Ether in the call
      * @param pipes list of PipeCalls to pipe through Pipeline
      * @return results list of return values from each PipeCall
-     **/
-    function multiPipe(
-        PipeCall[] calldata pipes
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    **/
+    function multiPipe(PipeCall[] calldata pipes)
+        external
+        payable
+        returns (bytes[] memory results)
+    {
         results = IPipeline(PIPELINE).multiPipe(pipes);
     }
 
@@ -47,11 +53,12 @@ contract DepotFacet is Invariable {
      * @notice Pipe multiple AdvancedPipeCalls through Pipeline.
      * @param pipes list of AdvancedPipeCalls to pipe through Pipeline
      * @return results list of return values from each AdvancedPipeCall
-     **/
-    function advancedPipe(
-        AdvancedPipeCall[] calldata pipes,
-        uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    **/
+    function advancedPipe(AdvancedPipeCall[] calldata pipes, uint256 value)
+        external
+        payable
+        returns (bytes[] memory results)
+    {
         results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
@@ -61,11 +68,12 @@ contract DepotFacet is Invariable {
      * @param p PipeCall to pipe through Pipeline
      * @param value Ether value to send in Pipecall
      * @return result PipeCall return value
-     **/
-    function etherPipe(
-        PipeCall calldata p,
-        uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    **/
+    function etherPipe(PipeCall calldata p, uint256 value)
+        external
+        payable
+        returns (bytes memory result)
+    {
         result = IPipeline(PIPELINE).pipe{value: value}(p);
         LibEth.refundEth();
     }
@@ -74,8 +82,12 @@ contract DepotFacet is Invariable {
      * @notice Return the return value of a PipeCall without executing it.
      * @param p PipeCall to execute with a staticcall
      * @return result PipeCall return value
-     **/
-    function readPipe(PipeCall calldata p) external view returns (bytes memory result) {
+    **/
+    function readPipe(PipeCall calldata p)
+        external
+        view
+        returns (bytes memory result)
+    {
         bool success;
         // Use a static call to ensure no state modification
         (success, result) = p.target.staticcall(p.data);

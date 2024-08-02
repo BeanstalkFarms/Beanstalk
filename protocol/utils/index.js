@@ -1,4 +1,4 @@
-const { getBeanstalk, getBean, getUsdc, getBeanstalkAdminControls, getPrice } = require("./contracts.js");
+const { getBeanstalk, getBean, getBeanMetapool, getUsdc, getBeanstalkAdminControls, getPrice } = require("./contracts.js");
 const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js")
 const { readPrune } = require("./read.js")
@@ -11,6 +11,7 @@ exports.toBN = toBN
 exports.advanceTime = advanceTime
 exports.getBeanstalk = getBeanstalk
 exports.getBean = getBean
+exports.getBeanMetapool = getBeanMetapool
 exports.getUsdc = getUsdc
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls
 exports.impersonateSigner = impersonateSigner

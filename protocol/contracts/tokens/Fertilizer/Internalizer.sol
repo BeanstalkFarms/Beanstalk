@@ -1,21 +1,39 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.7.6;
+pragma experimental ABIEncoderV2;
 
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
-import "contracts/libraries/LibRedundantMath32.sol";
-import "contracts/libraries/LibRedundantMath128.sol";
+import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibSafeMath128.sol";
+import "./FertilizerImage.sol";
+import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 
 /**
- * @author publius
+ * @author publius, deadmanwalking
+ * @title Fertilizer before the Unpause
  */
 
-contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155 {
-    using LibRedundantMath128 for uint128;
+// interface to interact with the Beanstalk contract
+interface IBeanstalk {
+    function payFertilizer(address account, uint256 amount) external;
+    function beansPerFertilizer() external view returns (uint128);
+    function getEndBpf() external view returns (uint128);
+    function remainingRecapitalization() external view returns (uint256);
+    function getFertilizer(uint128) external view returns (uint256);
+}
+
+contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155, FertilizerImage {
+
+    using SafeERC20Upgradeable for IERC20;
+    using LibSafeMath128 for uint128;
+    using LibStrings for uint256;
 
     struct Balance {
         uint128 amount;
@@ -23,7 +41,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
     }
 
     function __Internallize_init(string memory uri_) internal {
-        __Ownable_init(msg.sender);
+        __Ownable_init();
         __ERC1155_init(uri_);
         __ReentrancyGuard_init();
     }
@@ -32,19 +50,76 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
 
     string private _uri;
 
-    function uri(uint256 _id) public view virtual override returns (string memory) {
-        return string(abi.encodePacked(_uri, Strings.toString(_id)));
+    ///////////////////// NEW URI FUNCTION ///////////////////////
+
+    /**
+     * @notice Assembles and returns a base64 encoded json metadata
+     * URI for a given fertilizer ID.
+     * Need to override because the contract indirectly
+     * inherits from ERC1155.
+     * @param _id - the id of the fertilizer
+     * @return - the json metadata URI
+     */
+    function uri(uint256 _id)
+        external
+        view
+        virtual
+        override 
+        returns (string memory)
+    {
+
+        uint128 bpfRemaining = calculateBpfRemaining(_id);
+
+        // generate the image URI
+        string memory imageUri = imageURI(_id , bpfRemaining);
+
+        // assemble and return the json URI
+        return (
+            string(
+                abi.encodePacked(
+                    BASE_JSON_URI,
+                    LibBytes64.encode(
+                        bytes(
+                            abi.encodePacked(
+                                '{"name": "Fertilizer - ',
+                                _id.toString(),
+                                '", "external_url": "https://fert.bean.money/',
+                                _id.toString(),
+                                '.html", ',
+                                '"description": "A trusty constituent of any Farmers toolbox, ERC-1155 FERT has been known to spur new growth on seemingly dead farms. Once purchased and deployed into fertile ground by Farmers, Fertilizer generates new Sprouts: future Beans yet to be repaid by Beanstalk in exchange for doing the work of Replanting the protocol.", "image": "',
+                                imageUri,
+                                '", "attributes": [{ "trait_type": "BPF Remaining","display_type": "boost_number","value": ',
+                                LibStrings.formatUintWith6DecimalsTo2(bpfRemaining),
+                                " }]}"
+                            )
+                        )
+                    )
+                )
+            )
+        );
     }
 
-    function setURI(string calldata newuri) public onlyOwner {
-        _uri = newuri;
-    }
+    /**
+     * @notice Returns the beans per fertilizer remaining for a given fertilizer Id.
+     * @param id - the id of the fertilizer
+     * Formula: bpfRemaining = id - s.bpf
+     * Calculated here to avoid uint underflow 
+     * Solidity 0.8.0 has underflow protection and the tx would revert but we are using 0.7.6
+     */
+    function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
+        // make sure it does not underflow
+        if (uint128(id) >= IBeanstalk(BEANSTALK).beansPerFertilizer()) {
+            return uint128(id) - IBeanstalk(BEANSTALK).beansPerFertilizer() ;
+        } else {
+            return 0;
+        }
+    } 
 
-    function name() public pure returns (string memory) {
+    function name() external pure returns (string memory) {
         return "Fertilizer";
     }
 
-    function symbol() public pure returns (string memory) {
+    function symbol() external pure returns (string memory) {
         return "FERT";
     }
 
@@ -58,10 +133,7 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
         return _balances[id][account];
     }
 
-    function lastBalanceOfBatch(
-        address[] memory accounts,
-        uint256[] memory ids
-    ) external view returns (Balance[] memory balances) {
+    function lastBalanceOfBatch(address[] memory accounts, uint256[] memory ids) external view returns (Balance[] memory balances) {
         balances = new Balance[](accounts.length);
         for (uint256 i; i < accounts.length; ++i) {
             balances[i] = lastBalanceOf(accounts[i], ids[i]);
