@@ -25,9 +25,7 @@ type BeaNFTUser {
 }
 
 input BeaNFTUser_filter {
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [BeaNFTUser_filter]
   barnRaise: [Int!]
@@ -95,9 +93,7 @@ type CollectionData {
 }
 
 input CollectionData_filter {
-  """
-  Filter for the block changed event.
-  """
+  """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [CollectionData_filter]
   id: ID
@@ -257,24 +253,16 @@ type Subscription {
 scalar Timestamp
 
 type _Block_ {
-  """
-  The hash of the block
-  """
+  """The hash of the block"""
   hash: Bytes
 
-  """
-  The block number
-  """
+  """The block number"""
   number: Int!
 
-  """
-  The hash of the parent block
-  """
+  """The hash of the parent block"""
   parentHash: Bytes
 
-  """
-  Integer representation of the timestamp stored in blocks for the chain
-  """
+  """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int
 }
 
