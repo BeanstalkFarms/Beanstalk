@@ -27,12 +27,21 @@ jobs:
       - name: Install The Graph CLI
         run: npm install -g @graphprotocol/graph-cli
 
-      - name: Set environment variables for verbose logging
-        run: echo "YARN_ENABLE_INLINE_BUILDS=true" >> $GITHUB_ENV
-      - name: Install Dependencies
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
-        working-directory: projects/subgraph-basin
+      - name: Install dependencies
+        run: |
+          yarn install --immutable || exit_code=$?
+          if [ -n "$exit_code" ]; then
+            echo "Yarn install failed with exit code $exit_code"
+            log_file=$(find /tmp -name 'pack.log' | tail -n 1)
+            if [ -f "$log_file" ]; then
+              echo "==== Pack Log File ===="
+              cat "$log_file"
+              echo "======================="
+            else
+              echo "No pack.log file found."
+            fi
+            exit $exit_code
+          fi
 
       # Generate code and check for uncommitted changes
       # https://github.com/marketplace/actions/check-uncommitted-changes
