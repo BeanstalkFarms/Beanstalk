@@ -45,6 +45,7 @@ jobs:
             fi
             exit $exit_code
           fi
+          ls -l /home/runner/.cache/yarn/v6/ | grep "sentry"
 
       # Generate code and check for uncommitted changes
       # https://github.com/marketplace/actions/check-uncommitted-changes
