@@ -68,7 +68,7 @@ const getBarIndex = (
   numBars: number
 ) => {
   const normalizedValue = value.minus(min).div(max.minus(min));
-  const barIndex = normalizedValue.times(numBars);
+  const barIndex = normalizedValue.times(numBars - 1);
 
   return Math.floor(barIndex.toNumber());
 };
@@ -108,14 +108,15 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const arr = Array.from({ length: numBars });
 
   const bean2MaxLP = data.bean2MaxLPRatio.value;
+  const bean2MaxLPScalar = caseData?.delta.bean2MaxLPGPPerBdvScalar;
   const min = data.bean2MaxLPRatio.min;
   const max = data.bean2MaxLPRatio.max;
 
   const isAtMax = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.max);
   const isAtMin = bean2MaxLP && bean2MaxLP.eq(data.bean2MaxLPRatio.min);
 
-  const increasing = !isAtMax && caseData?.delta.bean2MaxLPGPPerBdv.gt(0);
-  const decreasing = !isAtMin && caseData?.delta.bean2MaxLPGPPerBdv.lt(0);
+  const increasing = !isAtMax && bean2MaxLPScalar?.gt(0);
+  const decreasing = !isAtMin && bean2MaxLPScalar?.lt(0);
 
   const selectedIndex =
     bean2MaxLP && getBarIndex(min, max, bean2MaxLP, numBars);
@@ -124,8 +125,6 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
 
   const neighborIndex =
     (increasing || decreasing) && selectedIndex && selectedIndex + addIndex;
-
-  const bean2MaxLPScalar = caseData?.delta.bean2MaxLPGPPerBdvScalar || ZERO_BN;
 
   const deltaPct = isAtMax || isAtMin ? ZERO_BN : bean2MaxLPScalar;
 
@@ -140,7 +139,7 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
         </Typography>
         <Typography color="text.secondary">
           Expected {!decreasing ? 'increase' : 'decrease'} of{' '}
-          {deltaPct.eq(0) ? '0' : deltaPct.abs().toFormat(1)}% next Season
+          {deltaPct?.eq(0) ? '0' : deltaPct?.abs().toFormat(1)}% next Season
         </Typography>
       </Stack>
       <Stack
@@ -152,8 +151,8 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
         width="100%"
       >
         {arr.map((_, i) => {
-          const isSelected = selectedIndex === i;
-          const flashing = neighborIndex === i;
+          const isSelected = !!(bean2MaxLP && selectedIndex === i);
+          const flashing = !!(bean2MaxLP && neighborIndex === i);
           return (
             <Bar
               key={`bar-${i}`}
