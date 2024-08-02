@@ -684,6 +684,8 @@ const SiloPage: FC<{}> = () => {
   const farmerSilo = useFarmerSilo();
   const beanstalkSilo = useSilo();
 
+  const [whitelistVisible, setWhitelistVisible] = useState(true);
+
   const breakdown = useFarmerBalancesBreakdown();
   const season = useSeason();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
@@ -695,6 +697,12 @@ const SiloPage: FC<{}> = () => {
     }),
     [whitelist, pools]
   );
+
+  const handleSetWhitelistVisible = (val: boolean, callback?: () => void) => {
+    if (val === whitelistVisible) return;
+    setWhitelistVisible(val);
+    callback?.();
+  };
 
   return (
     <Container maxWidth="lg">
@@ -728,20 +736,23 @@ const SiloPage: FC<{}> = () => {
           revitalizedStalk={revitalizedStalk}
           revitalizedSeeds={revitalizedSeeds}
         />
-        <SeedGaugeDetails />
-        <Whitelist config={config} farmerSilo={farmerSilo} />
-        {/* <RewardsDialog
-          open={open}
-          handleClose={hide}
-          beans={farmerSilo.beans}
-          stalk={farmerSilo.stalk}
-          seeds={farmerSilo.seeds}
-          revitalizedStalk={revitalizedStalk}
-          revitalizedSeeds={revitalizedSeeds}
-        /> */}
+        <SeedGaugeDetails setWhitelistVisible={handleSetWhitelistVisible} />
+        <Box display={whitelistVisible ? 'block' : 'none'}>
+          <Whitelist config={config} farmerSilo={farmerSilo} />
+        </Box>
       </Stack>
     </Container>
   );
 };
 
 export default SiloPage;
+
+/* <RewardsDialog
+  open={open}
+  handleClose={hide}
+  beans={farmerSilo.beans}
+  stalk={farmerSilo.stalk}
+  seeds={farmerSilo.seeds}
+  revitalizedStalk={revitalizedStalk}
+  revitalizedSeeds={revitalizedSeeds}
+/> */
