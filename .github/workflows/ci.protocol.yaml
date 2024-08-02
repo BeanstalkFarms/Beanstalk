@@ -18,7 +18,6 @@ jobs:
           node-version: "18"
       - run: yarn add prettier
       - run: yarn add prettier-plugin-solidity
-      # - run: shopt -s globstar; yarn dlx -p prettier prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -27,6 +26,7 @@ jobs:
           branch: ${{ github.head_ref }}
       - name: check format
         run: shopt -s globstar; yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
+
   test:
     needs: format
     runs-on: ubuntu-latest
@@ -51,15 +51,12 @@ jobs:
         env:
           FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
         working-directory: protocol
-
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
-      with:
-        version: nightly
-
+        with:
+          version: nightly
       - name: Install dependencies
         run: forge install
-
       - name: Run tests
         run: forge test
         env:
