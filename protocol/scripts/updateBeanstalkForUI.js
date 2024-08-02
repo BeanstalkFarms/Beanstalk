@@ -2,21 +2,20 @@ const { impersonateSigner, impersonateBeanstalkOwner, mintEth } = require("../ut
 const { upgradeWithNewFacets } = require("./diamond");
 const { BEANSTALK, PRICE_DEPLOYER } = require("../test/utils/constants.js");
 
-
 /**
  * When running a local anvil fork and force forwarding seasons,
  * the USD oracle & price contract fail to return values due to the
  * timestamp diffs being greater than the max timeout from the Chainlink Oracle.
- * 
- * This script re-deploys the Season & SeasonGetters Facets w/o the checking the 
- * Chalink oracle.
- * 
+ *
+ * This script re-deploys the Season & SeasonGetters Facets w/o the checking the
+ * staleness of the data from the chainlink oracle
+ *
  * Before running this script, comment out the timestamp checks in LibChainlinkOracle.checkForInvalidTimestampOrAnswer
- * 
+ *
  * if (timestamp == 0 || timestamp > currentTimestamp) return true;
  * if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
  * if (answer <= 0) return true;
- * 
+ *
  */
 
 export async function updateBeanstalkForUI() {
