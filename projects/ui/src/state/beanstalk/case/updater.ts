@@ -47,11 +47,6 @@ export const useUpdateBeanstalkCaseState = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [time, sdk.contracts.beanstalk, season]);
 
-  useEffect(() => {
-    if (season.gt(time.season)) return;
-    refetch();
-  }, [refetch, season, time]);
-
   return [refetch];
 };
 
