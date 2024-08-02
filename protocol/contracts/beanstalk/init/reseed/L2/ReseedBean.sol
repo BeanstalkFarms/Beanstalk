@@ -20,9 +20,8 @@ import "forge-std/console.sol";
  * Then adds liquidity to the BeanEth, BeanWsteth, and BeanStable well.
  * @dev each Well is upgradeable and ownable. the owner is `OWNER` when the init is called.
  */
-// TODO: replace with implmentation once developed.
 interface IWellUpgradeable {
-    function init(string memory name, string memory symbol, address owner) external;
+    function init(string memory name, string memory symbol) external;
 }
 
 contract ReseedBean {
@@ -60,9 +59,13 @@ contract ReseedBean {
     // Basin
 
     address internal constant AQUIFIER = address(0);
-    address internal constant CP2_U_BEAN_ETH_WELL_IMPLMENTATION = address(0);
-    address internal constant CP2_U_BEAN_WSTETH_WELL_IMPLMENTATION = address(0);
-    address internal constant SS_U_BEAN_STABLE_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_ETH_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_WSTETH_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_WEETH_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_WBTC_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_USDC_WELL_IMPLMENTATION = address(0);
+    address internal constant BEAN_USDT_WELL_IMPLMENTATION = address(0);
+
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000003;
@@ -75,13 +78,29 @@ contract ReseedBean {
     string internal constant BEAN_WSTETH_NAME = "BEAN:WSTETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WSTETH_SYMBOL = "U-BEANWSTETHCP2w";
 
-    // BEAN_STABLE parameters. (note: usdc is used as a placeholder)
-    bytes32 internal constant BEAN_STABLE_SALT =
+    // BEAN_WEETH parameters.
+    bytes32 internal constant BEAN_WEETH_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000005;
-    string internal constant BEAN_STABLE_NAME = "BEAN:WSTETH StableSwap 2 Upgradeable Well";
-    string internal constant BEAN_STABLE_SYMBOL = "U-BEANUSDCSS2w";
+    string internal constant BEAN_WEETH_NAME = "BEAN:WEETH Constant Product 2 Upgradeable Well";
+    string internal constant BEAN_WEETH_SYMBOL = "U-BEANWEETHCCP2w";
 
-    AppStorage internal s;
+    // BEAN_WBTC parameters.
+    bytes32 internal constant BEAN_WBTC_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000004;
+    string internal constant BEAN_WBTC_NAME = "BEAN:WBTC Constant Product 2 Upgradeable Well";
+    string internal constant BEAN_WBTC_SYMBOL = "U-BEANWBTCCP2w";
+
+    // BEAN_USDC parameters.
+    bytes32 internal constant BEAN_USDC_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000005;
+    string internal constant BEAN_USDC_NAME = "BEAN:USDC Stable 2 Upgradeable Well";
+    string internal constant BEAN_USDC_SYMBOL = "U-BEANUSDCS2w";
+
+    // BEAN_USDT parameters.
+    bytes32 internal constant BEAN_USDT_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000003;
+    string internal constant BEAN_USDT_NAME = "BEAN:USDT Stable 2 Upgradeable Well";
+    string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
@@ -100,29 +119,15 @@ contract ReseedBean {
         ExternalUnripeHolders[] calldata urBeanLP
     ) external {
         // deploy new bean contract. Issue beans.
-        BeanstalkERC20 bean = deployBean(beanSupply);
-
+        deployBean(beanSupply);
         // deploy new unripe bean contract.
-        BeanstalkERC20 urBeanERC20 = deployUnripeBean(unripeBeanSupply);
-
+        deployUnripeBean(unripeBeanSupply);
         // deploy new unripe lp contract.
+        deployUnripeLP(unripeLpSupply);
         BeanstalkERC20 urBeanLPERC20 = deployUnripeLP(unripeLpSupply);
-
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
-
         // TODO: UNCOMMENT WHEN WELLS ARE DEPLOYED.
-        // // deploy new beanEthWell contract.
-        // deployBeanEthWell(bean, beanEthAmounts);
-
-        // // deploy new beanWstEthWell contract.
-        // deployBeanWstEthWell(bean, beanWstethAmounts);
-
-        // // deploy new beanStableWell contract.
-        // deployBeanStableWell(bean, beanStableAmounts);
-
-        // mint urBean and urBeanLP to external holders:
-        // mintUnripeToExternal(address(urBeanERC20), urBean);
-        // mintUnripeToExternal(address(urBeanLPERC20), urBeanLP);
+        // deployUpgradableWells();
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -155,85 +160,65 @@ contract ReseedBean {
         return unripeLP;
     }
 
-    function deployBeanEthWell(
-        BeanstalkERC20 bean,
-        WellAmountData calldata beanEth
-    ) internal returns (IWell) {
-        address beanEthWell = address(
-            new ERC1967Proxy{salt: BEAN_ETH_SALT}(
-                CP2_U_BEAN_ETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_ETH_NAME, BEAN_ETH_SYMBOL, OWNER))
-            )
-        );
-
-        return mintAndSync(bean, beanEthWell, beanEth.beansInWell, beanEth.nonBeanTokensInWell);
-    }
-
-    function deployBeanWstEthWell(
-        BeanstalkERC20 bean,
-        WellAmountData calldata beanWsteth
-    ) internal returns (IWell) {
-        address beanWstEthWell = address(
-            new ERC1967Proxy{salt: BEAN_WSTETH_SALT}(
-                CP2_U_BEAN_WSTETH_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_WSTETH_NAME, BEAN_WSTETH_SYMBOL, OWNER))
-            )
-        );
-        return
-            mintAndSync(
-                bean,
-                beanWstEthWell,
-                beanWsteth.beansInWell,
-                beanWsteth.nonBeanTokensInWell
-            );
-    }
-
-    function deployBeanStableWell(
-        BeanstalkERC20 bean,
-        WellAmountData calldata beanStable
-    ) internal returns (IWell) {
-        address beanStableWell = address(
-            new ERC1967Proxy{salt: BEAN_STABLE_SALT}(
-                SS_U_BEAN_STABLE_WELL_IMPLMENTATION,
-                abi.encodeCall(IWellUpgradeable.init, (BEAN_STABLE_NAME, BEAN_STABLE_SYMBOL, OWNER))
-            )
-        );
-
-        return
-            mintAndSync(
-                bean,
-                beanStableWell,
-                beanStable.beansInWell,
-                beanStable.nonBeanTokensInWell
-            );
-    }
-
-    /**
-     * @notice transfers `tokenAmount` from `OWNER` to the `well,
-     * mints `beanAmount` to `well`, and calls sync.
-     */
-    function mintAndSync(
-        BeanstalkERC20 bean,
-        address well,
-        uint256 beanAmount,
-        uint256 tokenAmount
-    ) internal returns (IWell) {
-        bean.mint(well, beanAmount);
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        IERC20(nonBeanToken).safeTransferFrom(OWNER, address(well), tokenAmount);
-        IWell(well).sync(address(this), 0); // sync the well.
-        return IWell(well);
-    }
-
-    /**
-     * @notice mints unripe to an account's internal balance.
-     */
-    function mintUnripeToExternal(
-        address token,
-        ExternalUnripeHolders[] calldata externalHolders
+    function deployUpgradebleWell(
+        address implementation,
+        bytes32 salt,
+        string memory name,
+        string memory symbol
     ) internal {
-        for (uint256 i; i < externalHolders.length; i++) {
-            BeanstalkERC20(token).mint(externalHolders[i].account, externalHolders[i].amount);
-        }
+        new ERC1967Proxy{salt: salt}(
+            implementation,
+            abi.encodeCall(IWellUpgradeable.init, (name, symbol))
+        );
+    }
+
+    function deployUpgradableWells() internal {
+        // BEAN/ETH well
+        deployUpgradebleWell(
+            BEAN_ETH_WELL_IMPLMENTATION,
+            BEAN_ETH_SALT,
+            BEAN_ETH_NAME,
+            BEAN_ETH_SYMBOL
+        );
+
+        // BEAN/WSTETH well
+        deployUpgradebleWell(
+            BEAN_WSTETH_WELL_IMPLMENTATION,
+            BEAN_WSTETH_SALT,
+            BEAN_WSTETH_NAME,
+            BEAN_WSTETH_SYMBOL
+        );
+
+        // BEAN/WEWETH well
+        deployUpgradebleWell(
+            BEAN_WEETH_WELL_IMPLMENTATION,
+            BEAN_WEETH_SALT,
+            BEAN_WEETH_NAME,
+            BEAN_WEETH_SYMBOL
+        );
+
+        // BEAN/WBTC well
+        deployUpgradebleWell(
+            BEAN_WBTC_WELL_IMPLMENTATION,
+            BEAN_WBTC_SALT,
+            BEAN_WBTC_NAME,
+            BEAN_WBTC_SYMBOL
+        );
+
+        // BEAN/USDC well
+        deployUpgradebleWell(
+            BEAN_USDC_WELL_IMPLMENTATION,
+            BEAN_USDC_SALT,
+            BEAN_USDC_NAME,
+            BEAN_USDC_SYMBOL
+        );
+
+        // BEAN/USDT well
+        deployUpgradebleWell(
+            BEAN_USDT_WELL_IMPLMENTATION,
+            BEAN_USDT_SALT,
+            BEAN_USDT_NAME,
+            BEAN_USDT_SYMBOL
+        );
     }
 }
