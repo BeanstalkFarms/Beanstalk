@@ -1,0 +1,41 @@
+query SiloAssetAverageSeedsPerBDV(
+  $token: String
+  $first: Int!
+  $season_lte: Int!
+) {
+  seasons: siloAssetHourlySnapshots(
+    first: $first
+    orderBy: season
+    orderDirection: desc
+    where: {
+      siloAsset_contains: $token
+      season_lte: $season_lte
+      depositedBDV_gt: 0
+    }
+  ) {
+    id
+    season
+    siloAsset {
+      token
+    }
+    depositedBDV
+    createdAt
+  }
+  token: whitelistTokenHourlySnapshots(
+    first: $first
+    orderBy: season
+    orderDirection: desc
+    where: {
+      token: $token
+      season_lte: $season_lte
+      stalkEarnedPerSeason_gt: 0
+    }
+  ) {
+    season
+    token {
+      id
+    }
+    stalkEarnedPerSeason
+    createdAt
+  }
+}
