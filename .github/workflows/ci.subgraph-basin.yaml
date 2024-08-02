@@ -26,9 +26,12 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install The Graph CLI
         run: npm install -g @graphprotocol/graph-cli
+
+      - name: Set environment variables for verbose logging
+        run: echo "YARN_ENABLE_INLINE_BUILDS=true" >> $GITHUB_ENV
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable --verbose
+        run: yarn install --immutable
         working-directory: projects/subgraph-basin
 
       # Generate code and check for uncommitted changes
