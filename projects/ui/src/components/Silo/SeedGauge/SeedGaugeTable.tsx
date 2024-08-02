@@ -137,7 +137,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
       currentPctDepositedBdv,
       isAllocatedGP,
     }) => {
-      if (isAllocatedGP) {
+      if (!isAllocatedGP) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
       const isOptimal = currentPctDepositedBdv.eq(optimalPctDepositedBdv);
@@ -192,7 +192,9 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
         {isAllocatedGP
           ? gaugePointsPerBdv.eq(0)
             ? 0
-            : gaugePointsPerBdv.toExponential(2, 2)
+            : gaugePointsPerBdv.lte(0.0001)
+              ? '<0.0001'
+              : gaugePointsPerBdv.toFormat(4)
           : 'N/A'}
       </Typography>
     ),
