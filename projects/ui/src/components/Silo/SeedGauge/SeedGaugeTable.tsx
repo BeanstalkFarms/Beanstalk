@@ -52,7 +52,7 @@ const GridConfig: Record<
 > = {
   token: {
     advanced: { xs: 2, lg: 2 },
-    basic: { xs: 2.5, sm: 5 },
+    basic: { xs: 2, sm: 4.5 },
   },
   totalBDV: {
     advanced: { xs: 2 },
@@ -69,7 +69,7 @@ const GridConfig: Record<
   },
   currentLPBDVPct: {
     advanced: { xs: 2 },
-    basic: { xs: 4.5, sm: 4 },
+    basic: { xs: 5, sm: 4.5 },
   },
 };
 
