@@ -27,6 +27,9 @@ jobs:
       - name: Install The Graph CLI
         run: npm install -g @graphprotocol/graph-cli
 
+      - name: Check Yarn Version
+        run: yarn --version
+
       - name: Install dependencies
         run: |
           yarn install --immutable || exit_code=$?
