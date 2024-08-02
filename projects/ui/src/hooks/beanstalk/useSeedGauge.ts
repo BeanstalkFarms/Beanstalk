@@ -86,7 +86,7 @@ const useSeedGauge = () => {
       const calls = getTokenSettingsCalls(b.address, whitelist);
       const gaugeCalls = getGPPerBdvPerTokenCalls(b.address, whitelist);
 
-      const [_maxBean2LPRatio, settings, gaugePointsPerBdvForToken] =
+      const [_bean2MaxLPRatio, settings, gaugePointsPerBdvForToken] =
         await Promise.all([
           b.getBeanToMaxLpGpPerBdvRatioScaled(),
           multicall(config, { contracts: calls }),
@@ -115,11 +115,11 @@ const useSeedGauge = () => {
         }
       });
 
-      const maxBean2LPRatio = toBN(_maxBean2LPRatio, 18);
+      const bean2MaxLPRatio = toBN(_bean2MaxLPRatio, 18);
 
       return {
         tokenSettings: map,
-        maxBean2LPRatio,
+        bean2MaxLPRatio,
       };
     },
     enabled: !!whitelist.length,
@@ -163,7 +163,7 @@ const useSeedGauge = () => {
     data: {
       bean2MaxLPRatio: {
         max: toBN(LibCases.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO, 18),
-        value: query.data?.maxBean2LPRatio,
+        value: query.data?.bean2MaxLPRatio,
         min: toBN(LibCases.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO, 18),
       },
       gaugeData: gaugeData,
