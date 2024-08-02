@@ -114,7 +114,7 @@ const SeedGaugeSelect = ({
           <Typography component="span" color="text.primary">
             {data?.bean2MaxLPRatio.value?.toFormat(1) || '--'}%
           </Typography>{' '}
-          Seed reward for Beans vs. the Max LP token
+          Seed for Beans vs. the Max LP token
         </Typography>
       ),
     });
@@ -142,12 +142,13 @@ const SeedGaugeSelect = ({
       );
     }
 
+    const clipped = tokensWithGP.slice(0, 2);
     arr.push({
       title: 'Optimal Distribution of LP',
       subtitle: (
         <Typography color="text.secondary">
-          {tokensWithGP.length
-            ? tokensWithGP.map((datum, i) => {
+          {clipped.length
+            ? clipped.map((datum, i) => {
                 const symbol = datum.token.symbol;
                 const pct = datum.optimalPctDepositedBdv;
 
@@ -157,7 +158,11 @@ const SeedGaugeSelect = ({
                     <Typography component="span" color="text.primary">
                       {pct ? displayFullBN(pct, 0) : '-'}%
                     </Typography>
-                    {i !== tokensWithGP.length - 1 ? ', ' : ''}
+                    {i !== clipped.length - 1 ? ', ' : ''}
+                    {tokensWithGP.length > clipped.length &&
+                    i === clipped.length - 1
+                      ? '...'
+                      : ''}
                   </React.Fragment>
                 );
               })
@@ -184,6 +189,8 @@ const SeedGaugeSelect = ({
   );
 };
 
+const allowedTabs = new Set([0, 1, 2]);
+
 const SeedGaugeInfoSelected = ({
   activeIndex,
   data,
@@ -207,7 +214,7 @@ const SeedGaugeInfoSelected = ({
     }
   }, [activeIndex, shouldFetch]);
 
-  if (activeIndex === -1) return null;
+  if (!allowedTabs.has(activeIndex)) return null;
 
   return (
     <Card>

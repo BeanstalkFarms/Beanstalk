@@ -128,6 +128,20 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
 
   const deltaPct = isAtMax || isAtMin ? ZERO_BN : bean2MaxLPScalar;
 
+  const SubTitle = () => {
+    const getValue = () => {
+      if (isAtMax || isAtMin) {
+        return `Already at ${isAtMin ? 'min' : 'max'}`;
+      }
+
+      return `Expected ${!decreasing ? 'increase' : 'decrease'} of ${
+        deltaPct?.eq(0) ? '0' : deltaPct?.abs().toFormat(1)
+      }% next Season`;
+    };
+
+    return <Typography color="text.secondary">{getValue()}</Typography>;
+  };
+
   return (
     <Stack width="100%" ref={containerRef}>
       <Stack>
@@ -137,10 +151,7 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
             Bean to Max LP Ratio
           </Typography>
         </Typography>
-        <Typography color="text.secondary">
-          Expected {!decreasing ? 'increase' : 'decrease'} of{' '}
-          {deltaPct?.eq(0) ? '0' : deltaPct?.abs().toFormat(1)}% next Season
-        </Typography>
+        <SubTitle />
       </Stack>
       <Stack
         pt={2}
@@ -224,7 +235,7 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
             </Typography>
           </Stack>
           <Link
-            href="https://docs.bean.money/almanac/protocol/glossary#target-seasons-to-catchup"
+            href="https://docs.bean.money/almanac/peg-maintenance/bean-to-max-lp-seed-ratio"
             target="_blank"
             underline="always"
             color="primary.main"
