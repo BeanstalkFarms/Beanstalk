@@ -34,4 +34,14 @@ query SunButton($season_lte: Int!) {
     sownBeans
     caseId
   }
+  silo: siloHourlySnapshots(
+    first: 25
+    orderBy: season
+    orderDirection: desc
+    where: { season_lte: $season_lte, beanToMaxLpGpPerBdvRatio_gt: 0 }
+  ) {
+    id
+    season
+    beanToMaxLpGpPerBdvRatio
+  }
 }

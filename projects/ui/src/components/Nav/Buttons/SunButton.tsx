@@ -109,25 +109,25 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     title: 'Bean:Max LP Scalar',
     subtitle: 'Relative reward for Dep. Bean',
     widths: { xs: 1.65 },
-    render: ({ bean2MaxLPScalar }) => (
+    render: ({ bean2MaxLPRatio }) => (
       <Stack justifyContent="center" alignItems="flex-end">
         <Typography variant="bodySmall" align="right">
-          {bean2MaxLPScalar.value?.toFormat(1) || '-'}{' '}
-          {bean2MaxLPScalar.value && (
+          {bean2MaxLPRatio.value?.toFormat(1) || '-'}{' '}
+          {bean2MaxLPRatio.delta && (
             <Typography
               component="span"
               variant="bodySmall"
               color="text.secondary"
             >
-              {`(${getDelta(bean2MaxLPScalar.delta)}${
-                bean2MaxLPScalar?.delta?.div(100).abs().toFormat() || '-'
+              {`(${getDelta(bean2MaxLPRatio.delta)}${
+                bean2MaxLPRatio?.delta?.div(100).abs().toFormat() || '-'
               })`}
             </Typography>
           )}
         </Typography>
-        {bean2MaxLPScalar.display && (
+        {bean2MaxLPRatio.display && (
           <Typography variant="bodySmall" align="right" color="text.tertiary">
-            {bean2MaxLPScalar.display}
+            {bean2MaxLPRatio.display}
           </Typography>
         )}
       </Stack>

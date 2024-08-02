@@ -6,7 +6,7 @@ import {
 } from '~/generated/graphql';
 import { useAppSelector } from '~/state';
 import BigNumber from 'bignumber.js';
-import { toTokenUnitsBN } from '~/util';
+import { toBNWithDecimals } from '~/util';
 import { useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
 import { LibCases } from '~/lib/Beanstalk/LibCases';
@@ -14,36 +14,7 @@ import { ZERO_BN } from '~/constants';
 import useSdk from '../sdk';
 import useSeason from './useSeason';
 import useBeanstalkCaseData from './useBeanstalkCaseData';
-
-type SeasonMap<T> = Record<number, T>;
-
-type SunSeason = {
-  price: BigNumber;
-  rewardBeans: BigNumber;
-  beanSupply: BigNumber;
-  deltaB: BigNumber;
-};
-
-type SunField = {
-  issuedSoil: BigNumber;
-  temperature: BigNumber;
-  podRate: BigNumber;
-  soilSoldOut: boolean;
-  blocksToSoldOutSoil: BigNumber;
-  deltaSownBeans: BigNumber;
-  caseId: BigNumber;
-};
-
-type SeasonalLiquidityAndPrice = {
-  totalLiquidity: BigNumber;
-  largestLiquidityWellPrice: BigNumber;
-};
-
-type mergedQueryData = {
-  season: BigNumber;
-} & SunSeason &
-  SunField &
-  SeasonalLiquidityAndPrice;
+import useSeedGauge from './useSeedGauge';
 
 export type SeasonSummaryItem = {
   value: BigNumber | undefined;
@@ -56,108 +27,119 @@ export type SeasonSummary = {
   beanMints: SeasonSummaryItem;
   maxSoil: SeasonSummaryItem;
   maxTemperature: SeasonSummaryItem;
-  bean2MaxLPScalar: SeasonSummaryItem;
+  bean2MaxLPRatio: SeasonSummaryItem;
   price: SeasonSummaryItem;
   l2sr: SeasonSummaryItem;
   podRate: SeasonSummaryItem;
   deltaPodDemand: SeasonSummaryItem;
 };
 
-const castField = (
-  data: SunButtonQuery['fields'][number],
-  beanDecimals: number
-): SunField => ({
-  issuedSoil: toTokenUnitsBN(data.issuedSoil, beanDecimals),
-  temperature: new BigNumber(data.temperature),
-  podRate: new BigNumber(data.podRate),
-  soilSoldOut: data.soilSoldOut,
-  blocksToSoldOutSoil: new BigNumber(data.blocksToSoldOutSoil),
-  deltaSownBeans: toTokenUnitsBN(data.sownBeans, beanDecimals),
-  caseId: new BigNumber(data.caseId),
-});
-
-const castSeason = (
-  data: SunButtonQuery['seasons'][number],
-  beanDecimals: number
-): SunSeason => ({
-  price: new BigNumber(data.price),
-  rewardBeans: toTokenUnitsBN(
-    data.season <= 6074 ? data.deltaBeans : data.rewardBeans,
-    beanDecimals
-  ),
-  beanSupply: toTokenUnitsBN(data.beans, beanDecimals),
-  deltaB: toTokenUnitsBN(data.deltaB, beanDecimals),
-});
-
-const parseSeasonalPoolsLiquidityResult = (
-  snapshots: SeasonalLiquidityAndPriceByPoolQuery['seasons']
-) => {
-  const map = snapshots.reduce<SeasonMap<SeasonalLiquidityAndPrice>>(
-    (memo, data) => {
-      const poolLiquidity = new BigNumber(data.pool.liquidityUSD);
-      const poolPrice = new BigNumber(data.pool.lastPrice);
-
-      const price = memo[data.season]?.largestLiquidityWellPrice || ZERO_BN;
-      const liquidity = memo[data.season]?.totalLiquidity || ZERO_BN;
-
-      memo[data.season] = {
-        // price of the largest liquidity well
-        totalLiquidity: liquidity.plus(poolLiquidity),
-        largestLiquidityWellPrice: poolPrice.gt(price) ? poolPrice : price,
-      };
-
-      return memo;
-    },
-    {}
-  );
-
-  return map;
+type MergedSeasonData = {
+  season: BigNumber;
+  price: BigNumber;
+  rewardBeans: BigNumber;
+  beanSupply: BigNumber;
+  deltaB: BigNumber;
+  issuedSoil: BigNumber;
+  temperature: BigNumber;
+  podRate: BigNumber;
+  soilSoldOut: boolean;
+  blocksToSoldOutSoil: BigNumber;
+  deltaSownBeans: BigNumber;
+  caseId: BigNumber;
+  bean2MaxLPRatio: BigNumber;
+  totalLiquidity: BigNumber;
+  largestLiquidityWellPrice: BigNumber;
 };
 
 const castQueries = (
-  seasons: SunButtonQuery['seasons'],
-  field: SunButtonQuery['fields'],
-  priceAndLiquidityByPool: SeasonalLiquidityAndPriceByPoolQuery['seasons'],
+  sunQuery: SunButtonQuery | undefined,
+  priceAndLiquidityByPool: SeasonalLiquidityAndPriceByPoolQuery | undefined,
   currentSeason: BigNumber,
   sdk: BeanstalkSDK
-) => {
-  if (!field.length || !seasons.length) return [];
-
+): MergedSeasonData[] => {
   const beanDecimals = sdk.tokens.BEAN.decimals;
   const currSeason = currentSeason.toNumber();
-  const allSeasons = new Set<number>();
+  const mergedData = new Map<number, Partial<MergedSeasonData>>();
 
-  const fieldMap = field.reduce<SeasonMap<SunField>>((memo, curr) => {
-    const seasonIndex = curr.season;
-    allSeasons.add(curr.season);
-    memo[seasonIndex] = { ...castField(curr, beanDecimals) };
-    return memo;
-  }, {});
-  const seasonFieldMap = seasons.reduce<SeasonMap<SunSeason>>((memo, curr) => {
-    const seasonIndex = curr.season;
-    allSeasons.add(curr.season);
-    memo[seasonIndex] = { ...castSeason(curr, beanDecimals) };
-    return memo;
-  }, {});
-  const liquidityAndPriceMap = parseSeasonalPoolsLiquidityResult(
-    priceAndLiquidityByPool
-  );
+  const seasons = sunQuery?.seasons;
+  const field = sunQuery?.fields;
+  const silo = sunQuery?.silo;
+  const prices = priceAndLiquidityByPool?.seasons;
 
-  return Array.from({ length: 25 })
-    .map((_, i) => {
-      const seasonIndex = currSeason - i;
-      if (!allSeasons.has(seasonIndex)) {
-        return;
-      }
+  if (!seasons?.length || !field?.length || !silo?.length || !prices?.length) {
+    return [];
+  }
 
-      return {
-        season: new BigNumber(seasonIndex),
-        ...fieldMap[seasonIndex],
-        ...seasonFieldMap[seasonIndex],
-        ...liquidityAndPriceMap[seasonIndex],
-      };
-    })
-    .filter(Boolean) as mergedQueryData[];
+  // Process seasons data
+  seasons.forEach((season) => {
+    const seasonIndex = season.season;
+    mergedData.set(seasonIndex, {
+      ...mergedData.get(seasonIndex),
+      season: new BigNumber(seasonIndex),
+      price: new BigNumber(season.price),
+      rewardBeans: toBNWithDecimals(
+        season.season <= 6074 ? season.deltaBeans : season.rewardBeans,
+        beanDecimals
+      ),
+      beanSupply: toBNWithDecimals(season.beans, beanDecimals),
+      deltaB: toBNWithDecimals(season.deltaB, beanDecimals),
+    });
+  });
+
+  // Process field data
+  field.forEach((f) => {
+    const seasonIndex = f.season;
+    mergedData.set(seasonIndex, {
+      ...mergedData.get(seasonIndex),
+      issuedSoil: toBNWithDecimals(f.issuedSoil, beanDecimals),
+      temperature: new BigNumber(f.temperature),
+      podRate: new BigNumber(f.podRate),
+      soilSoldOut: f.soilSoldOut,
+      blocksToSoldOutSoil: new BigNumber(f.blocksToSoldOutSoil),
+      deltaSownBeans: toBNWithDecimals(f.sownBeans, beanDecimals),
+      caseId: new BigNumber(f.caseId),
+    });
+  });
+
+  // Process silo data
+  silo.forEach((s) => {
+    const seasonIndex = s.season;
+    mergedData.set(seasonIndex, {
+      ...mergedData.get(seasonIndex),
+      bean2MaxLPRatio: toBNWithDecimals(s.beanToMaxLpGpPerBdvRatio, 18),
+    });
+  });
+
+  // Process liquidity and price data
+  prices.forEach((data) => {
+    const seasonIndex = data.season;
+    const existingData = mergedData.get(seasonIndex) || {};
+    const poolLiquidity = new BigNumber(data.pool.liquidityUSD);
+    const poolPrice = new BigNumber(data.pool.lastPrice);
+
+    mergedData.set(seasonIndex, {
+      ...existingData,
+      totalLiquidity: (existingData.totalLiquidity || ZERO_BN).plus(
+        poolLiquidity
+      ),
+      largestLiquidityWellPrice: poolPrice.gt(
+        existingData.largestLiquidityWellPrice || ZERO_BN
+      )
+        ? poolPrice
+        : existingData.largestLiquidityWellPrice,
+    });
+  });
+
+  // Create final array
+  // no need to sort as Map retains insertion order
+  return Array.from({ length: 25 }, (_, i) => {
+    const seasonIndex = currSeason - i;
+    const seasonData = mergedData.get(seasonIndex);
+    return seasonData && seasonData.season
+      ? (seasonData as MergedSeasonData)
+      : null;
+  }).filter((data): data is MergedSeasonData => data !== null);
 };
 
 const getAdjustmentDisplay = (value: BigNumber | undefined) => {
@@ -171,6 +153,7 @@ const useSeasonsSummary = () => {
   const { caseState } = useAppSelector((s) => s._beanstalk.case);
   const pools = useAppSelector((s) => s._bean.pools);
   const evaluation = useBeanstalkCaseData();
+  const { data: seedGauge } = useSeedGauge();
   const season = useSeason();
   const sdk = useSdk();
 
@@ -200,12 +183,13 @@ const useSeasonsSummary = () => {
       skip: skipQuery || !Object.keys(pools).length,
     });
 
-  const instantaneousDeltaB = sdk.tokens.siloWhitelistedWellLPAddresses
-    .reduce((prev, address) => {
+  const instantaneousDeltaB = sdk.tokens.siloWhitelistedWellLPAddresses.reduce(
+    (prev, address) => {
       const poolDeltaB = pools[address]?.deltaB || ZERO_BN;
       return prev.plus(poolDeltaB);
-    }, ZERO_BN)
-    .toString();
+    },
+    ZERO_BN
+  );
 
   const forecast = useMemo(() => {
     const beansMinted = twaDeltaB.gt(0) ? twaDeltaB : ZERO_BN;
@@ -226,7 +210,7 @@ const useSeasonsSummary = () => {
           maxTemp,
           caseState.podRate,
           twaDeltaB,
-          new BigNumber(instantaneousDeltaB)
+          instantaneousDeltaB
         ),
       },
       maxTemperature: {
@@ -234,10 +218,12 @@ const useSeasonsSummary = () => {
         delta: evaluation?.delta.temperature,
         display: getAdjustmentDisplay(evaluation?.delta.temperature),
       },
-      bean2MaxLPScalar: {
-        value: evaluation?.delta.bean2MaxLPGPPerBdvScalar || ZERO_BN,
-        delta: evaluation?.delta.bean2MaxLPGPPerBdv || ZERO_BN,
-        display: getAdjustmentDisplay(evaluation?.delta.bean2MaxLPGPPerBdv),
+      bean2MaxLPRatio: {
+        value: seedGauge.bean2MaxLPRatio.value || ZERO_BN,
+        delta: evaluation?.delta.bean2MaxLPGPPerBdvScalar.times(100) || ZERO_BN,
+        display: getAdjustmentDisplay(
+          evaluation?.delta.bean2MaxLPGPPerBdvScalar
+        ),
       },
       price: {
         value: evaluation?.highestLiquidityWellPrice || ZERO_BN,
@@ -262,6 +248,7 @@ const useSeasonsSummary = () => {
     instantaneousDeltaB,
     field.temperature.max,
     evaluation,
+    seedGauge.bean2MaxLPRatio,
     season,
     caseState,
   ]);
@@ -269,21 +256,14 @@ const useSeasonsSummary = () => {
   const seasonsSummary = useMemo(() => {
     const arr: SeasonSummary[] = [];
 
-    const seasonsArr = seasonsData?.seasons ?? [];
-    const fieldArr = seasonsData?.fields ?? [];
-    const liquidityArr = liquidityAndPrice?.seasons ?? [];
-
-    if (!seasonsArr.length || !fieldArr.length || !liquidityArr.length) {
-      return arr;
-    }
-
     const mergedQueryData = castQueries(
-      seasonsArr,
-      fieldArr,
-      liquidityArr,
+      seasonsData,
+      liquidityAndPrice,
       season,
       sdk
     );
+
+    if (!mergedQueryData.length) return arr;
 
     const lastIndex = mergedQueryData.length - 1;
 
@@ -334,9 +314,9 @@ const useSeasonsSummary = () => {
           value: data.temperature,
           delta: deltaTemperature,
         },
-        bean2MaxLPScalar: {
-          value: delta.bean2MaxLPGPPerBdvScalar,
-          delta: delta.bean2MaxLPGPPerBdv,
+        bean2MaxLPRatio: {
+          value: data.bean2MaxLPRatio,
+          delta: delta.bean2MaxLPGPPerBdvScalar.times(100),
         },
         price: {
           value: data.largestLiquidityWellPrice,
@@ -358,13 +338,7 @@ const useSeasonsSummary = () => {
     });
 
     return arr;
-  }, [
-    season,
-    seasonsData?.fields,
-    seasonsData?.seasons,
-    liquidityAndPrice?.seasons,
-    sdk,
-  ]);
+  }, [season, seasonsData, liquidityAndPrice, sdk]);
 
   return {
     loading: liquidityAndPricesLoading || seasonsDataLoading,
