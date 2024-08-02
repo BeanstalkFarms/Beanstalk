@@ -19,47 +19,33 @@ contract ReseedInternalBalances {
     event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
 
     struct BeanstalkInternalBalance {
+        address farmer;
         address token;
-        address[] farmers;
-        uint256[] balances;
-        uint256 totalInternalBalance;
+        uint256 balance;
     }
 
+    /**
+    * @notice Re-initializes the internal balances of farmers. 
+    * @param internalBalances the internal balances for each farmer
+    * @dev Receives an array of balances, from any token to any farmer and sets the internal balance.
+    * On migration, we just split the array to stay under gas limits. 
+    */
     function init(
-        BeanstalkInternalBalance calldata beanBalances,
-        BeanstalkInternalBalance calldata beanEthBalances,
-        BeanstalkInternalBalance calldata beanWstethBalances,
-        BeanstalkInternalBalance calldata beanStableBalances,
-        BeanstalkInternalBalance calldata urBeanBalances,
-        BeanstalkInternalBalance calldata urBeanLpBalances
+        BeanstalkInternalBalance[] calldata internalBalances
     ) external {
-        setInternalBalances(beanBalances);
-        setInternalBalances(beanEthBalances);
-        setInternalBalances(beanWstethBalances);
-        setInternalBalances(beanStableBalances);
-        setInternalBalances(urBeanBalances);
-        setInternalBalances(urBeanLpBalances);
+        setInternalBalances(internalBalances);
     }
 
     function setInternalBalances(BeanstalkInternalBalance calldata internalBalances) internal {
-        uint256 totalInternalBalance;
-        for (uint i; i < internalBalances.farmers.length; i++) {
-            s.accts[internalBalances.farmers[i]].internalTokenBalance[
-                IERC20(internalBalances.token)
-            ] = internalBalances.balances[i];
-            totalInternalBalance += internalBalances.balances[i];
+        for (uint i; i < internalBalances.length; i++) {
+            s.accts[internalBalances[i].farmer].internalTokenBalance[
+                IERC20(internalBalances[i].token)
+            ] = internalBalances[i].balance;
             emit InternalBalanceChanged(
-                internalBalances.farmers[i],
-                IERC20(internalBalances.token),
-                int256(internalBalances.balances[i])
+                internalBalances[i].farmer,
+                IERC20(internalBalances[i].token),
+                int256(internalBalances[i].balance)
             );
         }
-
-        require(
-            totalInternalBalance == internalBalances.totalInternalBalance,
-            "ReseedInternalBalances: totalInternalBalance mismatch"
-        );
-
-        s.sys.internalTokenBalanceTotal[IERC20(internalBalances.token)] = totalInternalBalance;
     }
 }

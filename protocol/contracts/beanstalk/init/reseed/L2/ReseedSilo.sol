@@ -19,21 +19,12 @@ contract ReseedSilo {
     using LibBytes for uint256;
 
     /**
-     * @notice SiloDeposits is a struct that contains the silo deposits for a given token.
-     */
-    struct SiloDeposits {
-        address token;
-        AccountSiloDeposits[] siloDepositsAccount;
-        int96 stemTip;
-        uint128 totalDeposited;
-        uint128 totalDepositedBdv;
-    }
-
-    /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposits for a given account.
      */
     struct AccountSiloDeposits {
-        address accounts;
+        address account;
+        address token;
+        int96 stemTip;
         AccountDepositData[] dd;
     }
 
@@ -67,6 +58,11 @@ contract ReseedSilo {
 
     AppStorage internal s;
 
+    // currently, deposits are initialized per token 
+    // this way if a specific token has a lot of deposits, the gas limit may be reached.
+    // we need to generalize it in such a way that the script takes in a list of account deposits,
+    // for any token  and initializes them.
+
     /**
      * @notice Initialize the silo with the given deposits.
      * @dev performs the following:
@@ -75,30 +71,9 @@ contract ReseedSilo {
      * note: token addresses will differ from L1.
      */
     function init(
-        SiloDeposits calldata beanDeposits,
-        SiloDeposits calldata beanEthDeposits,
-        SiloDeposits calldata beanWstEthDeposits,
-        SiloDeposits calldata bean3CrvDeposits,
-        SiloDeposits calldata urBeanDeposits,
-        SiloDeposits calldata urBeanLpDeposits
+        AccountSiloDeposits[] calldata deposits
     ) external {
-        // initialize beanDeposits.
-        reseedSiloDeposit(beanDeposits);
-
-        // initialize beanEthDeposits.
-        reseedSiloDeposit(beanEthDeposits);
-
-        // initialize beanWstEthDeposits.
-        reseedSiloDeposit(beanWstEthDeposits);
-
-        // initialize beanStableDeposits.
-        reseedSiloDeposit(bean3CrvDeposits);
-
-        // initialize urBeanDeposits.
-        reseedSiloDeposit(urBeanDeposits);
-
-        // initialize urBeanLpDeposits.
-        reseedSiloDeposit(urBeanLpDeposits);
+        reseedSiloDeposit(deposits);
     }
 
     /**
@@ -106,9 +81,7 @@ contract ReseedSilo {
      * @param siloDeposit The silo deposit data
      * @dev all deposits and accounts are mown to the current season.
      */
-    function reseedSiloDeposit(SiloDeposits calldata siloDeposit) internal {
-        uint256 totalCalcDeposited;
-        uint256 totalCalcDepositedBdv;
+    function reseedSiloDeposit(AccountSiloDeposits[] calldata deposits) internal {
         uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[siloDeposit.token].stalkIssuedPerBdv;
         for (uint256 i; i < siloDeposit.siloDepositsAccount.length; i++) {
             AccountSiloDeposits memory deposits = siloDeposit.siloDepositsAccount[i];
@@ -132,10 +105,6 @@ contract ReseedSilo {
 
                 // increment by grown stalk of deposit.
                 accountStalk += uint96(siloDeposit.stemTip - stem) * deposits.dd[j].bdv;
-
-                // increment totalCalcDeposited and totalCalcDepositedBdv.
-                totalCalcDeposited += deposits.dd[j].amount;
-                totalCalcDepositedBdv += deposits.dd[j].bdv;
 
                 // emit events.
                 emit AddDeposit(
@@ -165,19 +134,5 @@ contract ReseedSilo {
             // set stalk for account.
             s.accts[deposits.accounts].stalk = accountStalk;
         }
-
-        // verify that the total deposited and total deposited bdv are correct.
-        require(
-            totalCalcDeposited == siloDeposit.totalDeposited,
-            "ReseedSilo: INVALID_TOTAL_DEPOSITS"
-        );
-        require(
-            totalCalcDepositedBdv == siloDeposit.totalDepositedBdv,
-            "ReseedSilo: INVALID_TOTAL_DEPOSITED_BDV"
-        );
-
-        // set global state
-        s.sys.silo.balances[siloDeposit.token].deposited = siloDeposit.totalDeposited;
-        s.sys.silo.balances[siloDeposit.token].depositedBdv = siloDeposit.totalDepositedBdv;
     }
 }

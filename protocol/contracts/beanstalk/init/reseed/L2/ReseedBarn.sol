@@ -39,6 +39,8 @@ contract ReseedBarn {
     }
 
     AppStorage internal s;
+    bytes32 internal constant FERTILIZER_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000000;
 
     /**
      * @notice deploys Fertilizer and Fertilizer proxy,
@@ -52,13 +54,14 @@ contract ReseedBarn {
         uint128 bpf
     ) external {
         // deploy fertilizer implmentation.
-        Fertilizer fertilizer = new Fertilizer();
+        // TODO: Merge misc-bip to get updated bytecode and mine for salt
+        Fertilizer fertilizer = new Fertilizer{salt: FERTILIZER_SALT}();
 
         // deploy fertilizer proxy. Set owner to beanstalk.
         TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy(
-            address(fertilizer),
-            address(this),
-            abi.encode(IFertilizer.init.selector)
+            address(fertilizer), // logic
+            address(this), // admin (diamond)
+            abi.encode(IFertilizer.init.selector) // init data
         );
 
         mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
