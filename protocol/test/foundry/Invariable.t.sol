@@ -84,9 +84,9 @@ contract InvariableTest is TestHelper {
         vm.prank(siloUsers[1]);
         bs.advancedFarm(advancedFarmCalls);
 
-        // Exploit Earned Beans.
+        // Exploit Pod Order Beans.
         advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
-            abi.encodeWithSelector(MockAttackFacet.exploitEarnedBeans.selector),
+            abi.encodeWithSelector(MockAttackFacet.exploitPodOrderBeans.selector),
             abi.encode("")
         );
         vm.expectRevert("INV: Insufficient token balance");
