@@ -43,7 +43,7 @@ jobs:
             else
               echo "No pack.log file found."
             fi
-            ls -l /home/runner/.cache/yarn/v6/ | grep "sentry"
+            find /home/runner/.cache/yarn/v6/ | grep "sentry-tracing"
             exit $exit_code
           fi
 
