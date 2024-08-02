@@ -133,8 +133,12 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'currentLPBDVPct',
     header: 'Current LP BDV %',
-    render: ({ optimalPctDepositedBdv, currentPctDepositedBdv }) => {
-      if (optimalPctDepositedBdv.eq(0)) {
+    render: ({
+      optimalPctDepositedBdv,
+      currentPctDepositedBdv,
+      isAllocatedGP,
+    }) => {
+      if (isAllocatedGP) {
         return <Typography color="text.tertiary">N/A</Typography>;
       }
       const isOptimal = currentPctDepositedBdv.eq(optimalPctDepositedBdv);
@@ -142,7 +146,7 @@ const BDVPctColumns: ISeedGaugeColumn[] = [
       return (
         <Chip
           variant="filled"
-          label={`${currentPctDepositedBdv.toFormat(0, BigNumber.ROUND_HALF_CEIL)}%`}
+          label={`${currentPctDepositedBdv.toFormat(2, BigNumber.ROUND_HALF_UP)}%`}
           sx={{
             ...chipSx,
             color: isOptimal ? Palette.logoGreen : Palette.theme.winter.red,
@@ -167,7 +171,7 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
         <Typography
           color={isNonZero(totalBdv) ? 'text.primary' : 'text.tertiary'}
         >
-          {displayBNValue(totalBdv)}
+          {displayBNValue(totalBdv, 0)}
         </Typography>
       </Stack>
     ),
@@ -175,25 +179,24 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePoints',
     header: 'Gauge Points',
-    render: ({ gaugePoints }) => (
-      <Typography
-        color={isNonZero(gaugePoints) ? 'text.primary' : 'text.tertiary'}
-      >
-        {displayBNValue(gaugePoints)}
+    render: ({ gaugePoints, isAllocatedGP }) => (
+      <Typography color={isAllocatedGP ? 'text.primary' : 'text.tertiary'}>
+        {isAllocatedGP ? displayBNValue(gaugePoints, 0) : 'N/A'}
       </Typography>
     ),
   },
   {
     key: 'gaugePointsPerBDV',
     header: 'Gauge Points per BDV',
-    render: ({ gaugePointsPerBdv }) => {
-      const isValidValue = isNonZero(gaugePointsPerBdv);
-      return (
-        <Typography color={isValidValue ? 'text.primary' : 'text.tertiary'}>
-          {isValidValue ? gaugePointsPerBdv.toExponential(2, 2) : 'N/A'}
-        </Typography>
-      );
-    },
+    render: ({ gaugePointsPerBdv, isAllocatedGP }) => (
+      <Typography color={isAllocatedGP ? 'text.primary' : 'text.tertiary'}>
+        {isAllocatedGP
+          ? gaugePointsPerBdv.eq(0)
+            ? 0
+            : gaugePointsPerBdv.toExponential(2, 2)
+          : 'N/A'}
+      </Typography>
+    ),
   },
   ...BDVPctColumns,
 ];
@@ -204,10 +207,7 @@ const useTableConfig = (
 ) => {
   const sdk = useSdk();
   const rowData = useMemo(() => {
-    const baseTokens = [
-      sdk.tokens.BEAN_ETH_WELL_LP,
-      sdk.tokens.BEAN_WSTETH_WELL_LP,
-    ];
+    const baseTokens = [...sdk.tokens.siloWhitelistedWellLP] as ERC20Token[];
     const tokens = advancedView
       ? [
           sdk.tokens.BEAN,

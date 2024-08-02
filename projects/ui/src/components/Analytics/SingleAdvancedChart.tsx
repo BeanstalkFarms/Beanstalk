@@ -492,8 +492,8 @@ const Chart = ({
                   : '0'}
               </>
             }
-            subtitle={`Season ${currSeason}`}
-            secondSubtitle={`${currTimestamp}`}
+            subtitle={`Season ${currSeason || '--'}`}
+            secondSubtitle={`${currTimestamp || '--'}`}
           />
           <CalendarButton setTimePeriod={setTimePeriod} />
         </Stack>
@@ -605,28 +605,28 @@ const SingleAdvancedChart = ({
   query: [{ seriesData, chartId }, loading, error],
   ...rest
 }: SingleAdvancedChartProps) => (
-    <Stack position="relative">
-      <Stack
-        sx={{
-          position: 'relative',
-          width: '100%',
-          height: '250px',
-          overflow: 'clip',
-        }}
-      >
-        {chartId ? (
-          <Chart
-            seriesData={seriesData}
-            chartId={chartId}
-            isLoading={loading || (!seriesData.length && !error)}
-            isError={error}
-            {...rest}
-          />
-        ) : (
-          <ChartEmptyState />
-        )}
-      </Stack>
+  <Stack position="relative">
+    <Stack
+      sx={{
+        position: 'relative',
+        width: '100%',
+        height: '250px',
+        overflow: 'clip',
+      }}
+    >
+      {chartId ? (
+        <Chart
+          seriesData={seriesData}
+          chartId={chartId}
+          isLoading={loading || (!seriesData.length && !error)}
+          isError={error}
+          {...rest}
+        />
+      ) : (
+        <ChartEmptyState />
+      )}
     </Stack>
-  );
+  </Stack>
+);
 
 export default SingleAdvancedChart;
