@@ -3342,7 +3342,7 @@ __metadata:
     "@openzeppelin/contracts-upgradeable": "npm:5.0.2"
     "@openzeppelin/hardhat-upgrades": "npm:^1.17.0"
     "@prb/math": "npm:v2.5.0"
-    "@uniswap/v3-core": "https://github.com/Uniswap/v3-core.git#0.8"
+    "@uniswap/v3-core": "npm:v1.0.2-solc-0.8-simulate"
     "@uniswap/v3-periphery": "https://github.com/Uniswap/v3-periphery#0.8"
     axios: "npm:1.6.7"
     bignumber: "npm:^1.1.0"
@@ -15394,14 +15394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/v3-core@https://github.com/Uniswap/v3-core.git#0.8":
-  version: 1.0.1-solc-0.8
-  resolution: "@uniswap/v3-core@https://github.com/Uniswap/v3-core.git#commit=6562c52e8f75f0c10f9deaf44861847585fc8129"
-  checksum: 10/b30a5667275655fb442b44213bdaccf1f8eaa0a97c15f9af720d8cc15ecb6352cf5329e810ac33f91285a1a98ff12bc0bc51b2d0345a24d8e5dd3ca32412dc33
-  languageName: node
-  linkType: hard
-
-"@uniswap/v3-core@npm:1.0.2-solc-0.8-simulate":
+"@uniswap/v3-core@npm:1.0.2-solc-0.8-simulate, @uniswap/v3-core@npm:v1.0.2-solc-0.8-simulate":
   version: 1.0.2-solc-0.8-simulate
   resolution: "@uniswap/v3-core@npm:1.0.2-solc-0.8-simulate"
   checksum: 10/3e473cfac0da8b578f7de2519b90e5b31d695a1e0d8cd834f86766f003b97fbfab031b0088c61e60f61ce945ce51d7aacf423c0713efb6e3946e74956997183e
