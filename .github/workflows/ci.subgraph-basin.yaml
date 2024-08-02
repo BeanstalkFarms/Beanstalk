@@ -28,7 +28,7 @@ jobs:
         run: npm install -g @graphprotocol/graph-cli
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --immutable
+        run: yarn install --immutable --verbose
         working-directory: projects/subgraph-basin
 
       # Generate code and check for uncommitted changes
