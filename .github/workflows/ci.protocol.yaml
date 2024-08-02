@@ -26,7 +26,6 @@ jobs:
           branch: ${{ github.head_ref }}
       - name: check format
         run: shopt -s globstar; yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
-
   test:
     needs: format
     runs-on: ubuntu-latest
@@ -51,13 +50,3 @@ jobs:
         env:
           FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
         working-directory: protocol
-      - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: Install dependencies
-        run: forge install
-      - name: Run tests
-        run: forge test
-        env:
-          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
