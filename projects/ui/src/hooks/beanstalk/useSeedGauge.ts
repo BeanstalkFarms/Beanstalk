@@ -140,7 +140,7 @@ const useSeedGauge = () => {
       const totalDeposited = siloBals[address].deposited.amount || ZERO_BN;
       const tokenTotalBdv = bdvPerToken.times(totalDeposited);
 
-      if (values.gaugePoints.gt(0)) {
+      if (values.optimalPctDepositedBdv.gt(0)) {
         totalRelevantBdv = totalRelevantBdv.plus(tokenTotalBdv);
       }
       map[address] = {
@@ -151,7 +151,10 @@ const useSeedGauge = () => {
     });
 
     Object.entries(map).forEach(([key, value]) => {
-      if (value.gaugePoints.gt(0) && key !== sdk.tokens.BEAN.address) {
+      if (
+        value.optimalPctDepositedBdv.gt(0) &&
+        key !== sdk.tokens.BEAN.address
+      ) {
         const currentPct = value.totalBdv.div(totalRelevantBdv).times(100); // scale amount to pct
         map[key].currentPctDepositedBdv = currentPct;
       }
