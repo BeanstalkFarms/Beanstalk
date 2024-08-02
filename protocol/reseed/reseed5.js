@@ -2,40 +2,24 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const BEAN_DEPOSITS = "./reseed/data/r5/bean_deposits.json";
-const BEAN_ETH_DEPOSITS = "./reseed/data/r5/bean_eth_deposits.json";
-const BEAN_WSTETH_DEPOSITS = "./reseed/data/r5/bean_wsteth_deposits.json";
-const BEAN_3CRV_DEPOSITS = "./reseed/data/r5/bean_3crv_deposits.json";
-const UR_BEAN_DEPOSITS = "./reseed/data/r5/ur_bean_deposits.json";
-const UR_BEANLP_DEPOSITS = "./reseed/data/r5/ur_beanlp_deposits.json";
+const BARN_RAISE = "./reseed/data/r4-barn-raise.json";
 
 async function reseed5(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed5: reissue deposits.\n");
-  let beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
-  let beanEthDeposits = JSON.parse(await fs.readFileSync(BEAN_ETH_DEPOSITS));
-  let beanWstEthDeposits = JSON.parse(await fs.readFileSync(BEAN_WSTETH_DEPOSITS));
-  let bean3CrvDeposits = JSON.parse(await fs.readFileSync(BEAN_3CRV_DEPOSITS));
-  let urBeanDeposits = JSON.parse(await fs.readFileSync(UR_BEAN_DEPOSITS));
-  let urBeanLpDeposits = JSON.parse(await fs.readFileSync(UR_BEANLP_DEPOSITS));
-
+  console.log("reseed4: reissue fertilizer, reinitialize fertilizer holder state.\n");
+  const [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF] = JSON.parse(
+    await fs.readFileSync(BARN_RAISE)
+  );
+  
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
-    initFacetName: "ReseedSilo",
-    initArgs: [
-      beanDeposits,
-      beanEthDeposits,
-      beanWstEthDeposits,
-      bean3CrvDeposits,
-      urBeanDeposits,
-      urBeanLpDeposits
-    ],
+    initFacetName: "ReseedBarn",
+    initArgs: [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF],
     bip: false,
     verbose: true,
     account: account
   });
   console.log("-----------------------------------");
 }
-
 exports.reseed5 = reseed5;

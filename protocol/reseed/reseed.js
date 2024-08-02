@@ -19,24 +19,17 @@ async function printBeanstalk() {
 }
 
 let reseeds;
-async function reseed(
-  account,
-  mock = true,
-  log = false,
-  start = 0,
-  end = 9
-) {
+async function reseed(account, mock = true, log = false, start = 0, end = 9) {
   reseeds = [
-    reseed1,
-    reseedDeployL2Beanstalk,
-    // reseed3,
-    // reseed4,
-    // reseed5,
-    // reseed6,
-    // reseed7,
-    reseed8,
-
-    // reseed9
+    reseed1, // pause l1 beanstalk
+    reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
+    reseed3, // reseedbean + deploy wells on l2
+    reseed4, // reseed field
+    reseed5, // reseed barn (fert)
+    reseed6, // reseed silo
+    reseed7, // reseed internal balances
+    reseed8, // reseed whitelist
+    reseed9  // add selectors to l2
   ];
   let l2BeanstalkAddress;
   console.clear();
@@ -50,7 +43,6 @@ async function reseed(
     } else if (i == 1 && mock == true) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, true, mock);
-      console.log("L2 Beanstalk:", l2BeanstalkAddress);
     } else {
       // initialize beanstalk state.
       await reseeds[i](account, l2BeanstalkAddress);

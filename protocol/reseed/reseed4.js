@@ -2,24 +2,33 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const BARN_RAISE = "./reseed/data/r4-barn-raise.json";
+// Todo: get plot data. Example written for testing
+const FARMER_PLOTS = "./reseed/data/r3-field.json";
 
 async function reseed4(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed4: reissue fertilizer, reinitialize fertilizer holder state.\n");
-  const [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF] = JSON.parse(
-    await fs.readFileSync(BARN_RAISE)
-  );
+  console.log("reseed3: re-initialize the field and plots.\n");
+
+  // Read and parse the JSON file
+  const [
+    accountPlots, 
+    TOTAL_PODS, 
+    HARVESTABLE, 
+    HARVESTED, 
+    FIELD_ID, 
+    TEMPERATURE
+  ] = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
   
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
-    initFacetName: "ReseedBarn",
-    initArgs: [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF],
+    initFacetName: "ReseedField",
+    initArgs: [accountPlots, TOTAL_PODS, HARVESTABLE, HARVESTED, FIELD_ID, TEMPERATURE],
     bip: false,
     verbose: true,
     account: account
   });
   console.log("-----------------------------------");
 }
+
 exports.reseed4 = reseed4;
