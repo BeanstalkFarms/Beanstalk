@@ -29,18 +29,13 @@ contract ReseedWhitelist {
     ) external {
         for (uint i; i < tokens.length; i++) {
             address token = tokens[i];
-            AssetSettings storage ss = s.sys.silo.assetSettings[token];
             // If an LP token, initialize oracle storage variables.
             if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
                 s.sys.usdTokenPrice[token] = 1;
                 s.sys.twaReserves[token].reserve0 = 1;
                 s.sys.twaReserves[token].reserve1 = 1;
             }
-            AssetSettings memory asset = assets[i];
-            assembly {
-                // set the asset settings for the token
-                ss.slot := asset
-            }
+            s.sys.silo.assetSettings[token] = assets[i];
             // the Oracle should return the price for the non-bean asset in USD
             s.sys.oracleImplementation[token] = oracle[i];
         }
