@@ -7,7 +7,7 @@ const FARMER_PLOTS = "./reseed/data/r3-field.json";
 
 async function reseed4(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed3: re-initialize the field and plots.\n");
+  console.log("reseed4: re-initialize the field and plots.\n");
 
   // Read and parse the JSON file
   const [

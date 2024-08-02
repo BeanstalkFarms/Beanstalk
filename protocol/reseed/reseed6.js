@@ -11,7 +11,7 @@ const UR_BEANLP_DEPOSITS = "./reseed/data/r5/ur_beanlp_deposits.json";
 
 async function reseed6(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed5: reissue deposits.\n");
+  console.log("reseed6: reissue deposits.\n");
   let beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
   let beanEthDeposits = JSON.parse(await fs.readFileSync(BEAN_ETH_DEPOSITS));
   let beanWstEthDeposits = JSON.parse(await fs.readFileSync(BEAN_WSTETH_DEPOSITS));

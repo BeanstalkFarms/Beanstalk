@@ -23,7 +23,7 @@ const EXTERNAL_UNRIPE = "./reseed/data/r8/L2_external_unripe_balances.json";
 async function reseed3(account, L2Beanstalk, mock = false, deployBasin = false) {
   verbose = true;
   console.log("-----------------------------------");
-  console.log("reseed8: deploy bean tokens.\n");
+  console.log("reseed3: deploy bean tokens.\n");
   [beanSupply, unripeBeanSupply, unripeLpSupply] = JSON.parse(await fs.readFileSync(INIT_SUPPLY));
   [ethInBeanEthWell, wstEthInBeanWstEthWell, stableInBeanStableWell] = JSON.parse(
     await fs.readFileSync(INIT_WELL_BALANCES)

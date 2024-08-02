@@ -12,7 +12,7 @@ const SELECTORS = require("./data/beanstalkSelectors.json");
 async function reseed1(account) {
   beanstalkSelectors = [];
   console.log("-----------------------------------");
-  console.log("Reseed1: Initialize L2 migration\n");
+  console.log("reseed1: Initialize L2 migration\n");
 
   // the following selectors come from the following facets.
   // diamondLoupeFacet,

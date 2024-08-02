@@ -6,7 +6,7 @@ const WHITELIST_SETTINGS = "./reseed/data/r7-whitelist.json";
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed7: whitelist tokens.\n");
+  console.log("reseed8: whitelist tokens.\n");
   let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
   let tokens = assets.map((asset) => asset[0]);
   let siloSettings = assets.map((asset) => asset[1]);

@@ -6,7 +6,7 @@ const BARN_RAISE = "./reseed/data/r4-barn-raise.json";
 
 async function reseed5(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed4: reissue fertilizer, reinitialize fertilizer holder state.\n");
+  console.log("reseed5: reissue fertilizer, reinitialize fertilizer holder state.\n");
   const [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF] = JSON.parse(
     await fs.readFileSync(BARN_RAISE)
   );
