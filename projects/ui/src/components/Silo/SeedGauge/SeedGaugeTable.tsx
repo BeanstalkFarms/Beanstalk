@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Breakpoint,
@@ -11,7 +11,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import useToggle from '~/hooks/display/useToggle';
 import { ERC20Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import useSdk from '~/hooks/sdk';
@@ -341,10 +340,12 @@ const ArrowRightAdornment = () => (
 
 const SeedGaugeTable = ({
   data,
+  onToggleAdvancedMode,
 }: {
   data: ReturnType<typeof useSeedGauge>['data'];
+  onToggleAdvancedMode: (v: boolean) => void;
 }) => {
-  const [isAdvanced, show, hide] = useToggle();
+  const [isAdvanced, setIsAdvanced] = useState(false);
   const rows = useTableConfig(isAdvanced, data);
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;
 
@@ -361,7 +362,10 @@ const SeedGaugeTable = ({
               <Switch
                 size="small"
                 value={isAdvanced}
-                onChange={() => (isAdvanced ? hide : show)()}
+                onChange={() => {
+                  setIsAdvanced((prev) => !prev);
+                  onToggleAdvancedMode(isAdvanced);
+                }}
                 inputProps={{ 'aria-label': 'controlled' }}
               />
             </Stack>

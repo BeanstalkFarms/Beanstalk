@@ -129,17 +129,16 @@ const LPRatioShiftChart = ({ data }: IBean2MaxLPRatio) => {
   const deltaPct = isAtMax || isAtMin ? ZERO_BN : bean2MaxLPScalar;
 
   const SubTitle = () => {
-    const getValue = () => {
-      if (isAtMax || isAtMin) {
-        return `Already at ${isAtMin ? 'min' : 'max'}`;
-      }
-
-      return `Expected ${!decreasing ? 'increase' : 'decrease'} of ${
+    let displayStr = '';
+    if (isAtMax || isAtMin) {
+      displayStr = `Already at ${isAtMin ? 'minimum' : 'maximum'}`;
+    } else {
+      displayStr = `Expected ${!decreasing ? 'increase' : 'decrease'} of ${
         deltaPct?.eq(0) ? '0' : deltaPct?.abs().toFormat(1)
       }% next Season`;
-    };
+    }
 
-    return <Typography color="text.secondary">{getValue()}</Typography>;
+    return <Typography color="text.secondary">{displayStr}</Typography>;
   };
 
   return (

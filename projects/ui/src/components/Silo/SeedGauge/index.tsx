@@ -28,6 +28,13 @@ interface ISeedGaugeInfoCardProps extends ISeedGaugeCardInfo {
   setActive: () => void;
 }
 
+const scrollToBottom = () => {
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    // behavior: 'smooth',
+  });
+};
+
 const SeedGaugeInfoCard = ({
   title,
   subtitle,
@@ -179,7 +186,9 @@ const SeedGaugeSelect = ({
         <Grid item xs={12} md={4} key={`sgi-${i}`}>
           <SeedGaugeInfoCard
             active={activeIndex === i}
-            setActive={() => handleSetActiveIndex(i)}
+            setActive={() => {
+              handleSetActiveIndex(i);
+            }}
             loading={isLoading}
             {...info}
           />
@@ -194,9 +203,11 @@ const allowedTabs = new Set([0, 1, 2]);
 const SeedGaugeInfoSelected = ({
   activeIndex,
   data,
+  setWhitelistVisible,
 }: {
   activeIndex: number;
   data: ReturnType<typeof useSeedGauge>['data'];
+  setWhitelistVisible: (val: boolean, callback?: () => void) => void;
 }) => {
   // load the data at the top level
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -220,14 +231,29 @@ const SeedGaugeInfoSelected = ({
     <Card>
       {activeIndex === 0 ? <SeasonsToCatchUpInfo query={query} /> : null}
       {activeIndex === 1 ? <Bean2MaxLPRatio data={data} /> : null}
-      {activeIndex === 2 ? <SeedGaugeTable data={data} /> : null}
+      {activeIndex === 2 ? (
+        <SeedGaugeTable
+          data={data}
+          onToggleAdvancedMode={setWhitelistVisible}
+        />
+      ) : null}
     </Card>
   );
 };
 
-const SeedGaugeDetails = () => {
+const SeedGaugeDetails = ({
+  setWhitelistVisible,
+}: {
+  setWhitelistVisible: (val: boolean, callback?: () => void) => void;
+}) => {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const query = useSeedGauge();
+
+  useEffect(() => {
+    if (activeIndex !== 2) {
+      setWhitelistVisible(true, scrollToBottom);
+    }
+  }, [activeIndex, setWhitelistVisible]);
 
   return (
     <Stack gap={2}>
@@ -237,7 +263,11 @@ const SeedGaugeDetails = () => {
         gaugeQuery={query}
         setActiveIndex={setActiveIndex}
       />
-      <SeedGaugeInfoSelected activeIndex={activeIndex} data={query.data} />
+      <SeedGaugeInfoSelected
+        activeIndex={activeIndex}
+        data={query.data}
+        setWhitelistVisible={setWhitelistVisible}
+      />
     </Stack>
   );
 };
