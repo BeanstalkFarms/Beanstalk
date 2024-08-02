@@ -65,11 +65,6 @@ contract ReseedBarn {
         );
 
         mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
-        s.sys.season.fertilizing = true;
-        s.sys.fert.activeFertilizer = activeFertilizer;
-        s.sys.fert.fertilizedIndex = fertilizedIndex;
-        s.sys.fert.unfertilizedIndex = unfertilizedIndex;
-        s.sys.fert.bpf = bpf;
     }
 
     function mintFertilizers(

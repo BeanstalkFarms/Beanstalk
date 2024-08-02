@@ -16,7 +16,7 @@ import {C} from "contracts/C.sol";
  */
 contract ReseedInternalBalances {
     AppStorage internal s;
-    event InternalBalanceChanged(address indexed user, IERC20 indexed token, int256 delta);
+    event InternalBalanceMigrated(address indexed user, IERC20 indexed token, int256 delta);
 
     struct BeanstalkInternalBalance {
         address farmer;
@@ -36,12 +36,12 @@ contract ReseedInternalBalances {
         setInternalBalances(internalBalances);
     }
 
-    function setInternalBalances(BeanstalkInternalBalance calldata internalBalances) internal {
+    function setInternalBalances(BeanstalkInternalBalance[] calldata internalBalances) internal {
         for (uint i; i < internalBalances.length; i++) {
             s.accts[internalBalances[i].farmer].internalTokenBalance[
                 IERC20(internalBalances[i].token)
             ] = internalBalances[i].balance;
-            emit InternalBalanceChanged(
+            emit InternalBalanceMigrated(
                 internalBalances[i].farmer,
                 IERC20(internalBalances[i].token),
                 int256(internalBalances[i].balance)

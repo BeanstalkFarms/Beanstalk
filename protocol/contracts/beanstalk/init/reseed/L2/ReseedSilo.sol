@@ -19,12 +19,19 @@ contract ReseedSilo {
     using LibBytes for uint256;
 
     /**
+     * @notice SiloDeposits is a struct that contains the silo deposits for a given token.
+     */
+    struct SiloDeposits {
+        address token;
+        AccountSiloDeposits[] siloDepositsAccount;
+        int96 stemTip;
+    }
+
+    /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposits for a given account.
      */
     struct AccountSiloDeposits {
         address account;
-        address token;
-        int96 stemTip;
         AccountDepositData[] dd;
     }
 
@@ -35,9 +42,9 @@ contract ReseedSilo {
     }
 
     /**
-     * @notice AddDeposit event is emitted when a deposit is added to the silo. See {TokenSilo.AddDeposit}
+     * @notice AddMigratedDeposit event is emitted when a migrated deposit is added to the silo. See {TokenSilo.AddDeposit}
      */
-    event AddDeposit(
+    event AddMigratedDeposit(
         address indexed account,
         address indexed token,
         int96 stem,
@@ -58,21 +65,17 @@ contract ReseedSilo {
 
     AppStorage internal s;
 
-    // currently, deposits are initialized per token 
-    // this way if a specific token has a lot of deposits, the gas limit may be reached.
-    // we need to generalize it in such a way that the script takes in a list of account deposits,
-    // for any token  and initializes them.
-
     /**
      * @notice Initialize the silo with the given deposits.
      * @dev performs the following:
-     * - re-deposits all deposits to the silo.
-     * - re-issues all stalk to holders.
+     * - re-deposits the provided deposits to the silo.
+     * - re-issues stalk to the provided deposit holders.
      * note: token addresses will differ from L1.
      */
     function init(
-        AccountSiloDeposits[] calldata deposits
+        SiloDeposits calldata deposits
     ) external {
+        // initialize deposits.
         reseedSiloDeposit(deposits);
     }
 
@@ -81,7 +84,7 @@ contract ReseedSilo {
      * @param siloDeposit The silo deposit data
      * @dev all deposits and accounts are mown to the current season.
      */
-    function reseedSiloDeposit(AccountSiloDeposits[] calldata deposits) internal {
+    function reseedSiloDeposit(SiloDeposits calldata siloDeposit) internal {
         uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[siloDeposit.token].stalkIssuedPerBdv;
         for (uint256 i; i < siloDeposit.siloDepositsAccount.length; i++) {
             AccountSiloDeposits memory deposits = siloDeposit.siloDepositsAccount[i];
@@ -94,9 +97,9 @@ contract ReseedSilo {
                 uint256 depositId = LibBytes.packAddressAndStem(siloDeposit.token, stem);
 
                 // add deposit to account. Add to depositIdList.
-                s.accts[deposits.accounts].deposits[depositId].amount = deposits.dd[j].amount;
-                s.accts[deposits.accounts].deposits[depositId].bdv = deposits.dd[j].bdv;
-                s.accts[deposits.accounts].depositIdList[siloDeposit.token].depositIds.push(
+                s.accts[deposits.account].deposits[depositId].amount = deposits.dd[j].amount;
+                s.accts[deposits.account].deposits[depositId].bdv = deposits.dd[j].bdv;
+                s.accts[deposits.account].depositIdList[siloDeposit.token].depositIds.push(
                     depositId
                 );
 
@@ -107,24 +110,24 @@ contract ReseedSilo {
                 accountStalk += uint96(siloDeposit.stemTip - stem) * deposits.dd[j].bdv;
 
                 // emit events.
-                emit AddDeposit(
-                    deposits.accounts,
+                emit AddMigratedDeposit(
+                    deposits.account,
                     siloDeposit.token,
                     stem,
                     deposits.dd[j].amount,
                     deposits.dd[j].bdv
                 );
                 emit TransferSingle(
-                    deposits.accounts, // operator
+                    deposits.account, // operator
                     address(0), // from
-                    deposits.accounts, // to
+                    deposits.account, // to
                     depositId, // depositID
                     deposits.dd[j].amount // token amount
                 );
             }
             // update mowStatuses for account and token.
-            s.accts[deposits.accounts].mowStatuses[siloDeposit.token].bdv = totalBdvForAccount;
-            s.accts[deposits.accounts].mowStatuses[siloDeposit.token].lastStem = siloDeposit
+            s.accts[deposits.account].mowStatuses[siloDeposit.token].bdv = totalBdvForAccount;
+            s.accts[deposits.account].mowStatuses[siloDeposit.token].lastStem = siloDeposit
                 .stemTip;
 
             // increment stalkForAccount by the stalk issued per BDV.
@@ -132,7 +135,7 @@ contract ReseedSilo {
             accountStalk += stalkIssuedPerBdv * totalBdvForAccount;
 
             // set stalk for account.
-            s.accts[deposits.accounts].stalk = accountStalk;
+            s.accts[deposits.account].stalk = accountStalk;
         }
     }
 }
