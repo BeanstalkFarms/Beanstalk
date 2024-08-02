@@ -32,6 +32,7 @@ contract ReseedBarn {
     /**
      * @notice Fertilizers contains the ids, accounts, amounts, and lastBpf of each Fertilizer.
      * @dev fertilizerIds MUST be in acsending order.
+     * for each fert id --> all accounts --> amount, lastBpf
      */
     struct Fertilizers {
         uint128 fertilizerId;
@@ -47,11 +48,7 @@ contract ReseedBarn {
      * reissues Fertilizer to each holder.
      */
     function init(
-        Fertilizers[] calldata fertilizerIds,
-        uint256 activeFertilizer,
-        uint256 fertilizedIndex,
-        uint256 unfertilizedIndex,
-        uint128 bpf
+        Fertilizers[] calldata fertilizerIds
     ) external {
         // deploy fertilizer implmentation.
         // TODO: Merge misc-bip to get updated bytecode and mine for salt

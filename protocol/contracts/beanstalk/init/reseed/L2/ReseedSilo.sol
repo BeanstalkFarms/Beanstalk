@@ -19,18 +19,11 @@ contract ReseedSilo {
     using LibBytes for uint256;
 
     /**
-     * @notice SiloDeposits is a struct that contains the silo deposits for a given token.
-     */
-    struct SiloDeposits {
-        address token;
-        AccountSiloDeposits[] siloDepositsAccount;
-        int96 stemTip;
-    }
-
-    /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposits for a given account.
      */
     struct AccountSiloDeposits {
+        address token;
+        int96 stemTip;
         address account;
         AccountDepositData[] dd;
     }
@@ -42,7 +35,7 @@ contract ReseedSilo {
     }
 
     /**
-     * @notice AddMigratedDeposit event is emitted when a migrated deposit is added to the silo. See {TokenSilo.AddDeposit}
+     * @notice AddMigratedDeposit event is emitted when a deposit is added to the silo. See {TokenSilo.AddDeposit}
      */
     event AddMigratedDeposit(
         address indexed account,
