@@ -3342,8 +3342,7 @@ __metadata:
     "@openzeppelin/contracts-upgradeable": "npm:5.0.2"
     "@openzeppelin/hardhat-upgrades": "npm:^1.17.0"
     "@prb/math": "npm:v2.5.0"
-    "@uniswap/v3-core": "https://github.com/Uniswap/v3-core.git#0.8"
-    "@uniswap/v3-periphery": "https://github.com/Uniswap/v3-periphery#0.8"
+    "@uniswap/v3-core": "npm:v1.0.2-solc-0.8-simulate"
     axios: "npm:1.6.7"
     bignumber: "npm:^1.1.0"
     chai: "npm:^4.4.1"
@@ -10854,13 +10853,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:4.6.0":
-  version: 4.6.0
-  resolution: "@openzeppelin/contracts@npm:4.6.0"
-  checksum: 10/a4e3f81cd6021cf71ab55d711e8c9da790c1d876c3d80031e4d8854ad4b2196fd149257386f9e0c480a698e2f99c72fa1e3abd993b6ba191c427b3a36194e0b2
-  languageName: node
-  linkType: hard
-
 "@openzeppelin/contracts@npm:5.0.2":
   version: 5.0.2
   resolution: "@openzeppelin/contracts@npm:5.0.2"
@@ -15387,37 +15379,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/v2-core@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@uniswap/v2-core@npm:1.0.1"
-  checksum: 10/a98cbafba613c088be4b439138e0a68f1d79c1f26c3bbe6ba20088832be4d8fa4a3f22569982e5d05f01a1d51586b58d83d64206f8f029c5bfb41282fcb8d62d
-  languageName: node
-  linkType: hard
-
-"@uniswap/v3-core@https://github.com/Uniswap/v3-core.git#0.8":
-  version: 1.0.1-solc-0.8
-  resolution: "@uniswap/v3-core@https://github.com/Uniswap/v3-core.git#commit=6562c52e8f75f0c10f9deaf44861847585fc8129"
-  checksum: 10/b30a5667275655fb442b44213bdaccf1f8eaa0a97c15f9af720d8cc15ecb6352cf5329e810ac33f91285a1a98ff12bc0bc51b2d0345a24d8e5dd3ca32412dc33
-  languageName: node
-  linkType: hard
-
-"@uniswap/v3-core@npm:1.0.2-solc-0.8-simulate":
+"@uniswap/v3-core@npm:v1.0.2-solc-0.8-simulate":
   version: 1.0.2-solc-0.8-simulate
   resolution: "@uniswap/v3-core@npm:1.0.2-solc-0.8-simulate"
   checksum: 10/3e473cfac0da8b578f7de2519b90e5b31d695a1e0d8cd834f86766f003b97fbfab031b0088c61e60f61ce945ce51d7aacf423c0713efb6e3946e74956997183e
-  languageName: node
-  linkType: hard
-
-"@uniswap/v3-periphery@https://github.com/Uniswap/v3-periphery#0.8":
-  version: 1.4.2-solc-0.8
-  resolution: "@uniswap/v3-periphery@https://github.com/Uniswap/v3-periphery.git#commit=b325bb0905d922ae61fcc7df85ee802e8df5e96c"
-  dependencies:
-    "@openzeppelin/contracts": "npm:4.6.0"
-    "@uniswap/v2-core": "npm:1.0.1"
-    "@uniswap/v3-core": "npm:1.0.2-solc-0.8-simulate"
-    base64-sol: "npm:1.1.0"
-    hardhat-watcher: "npm:^2.1.1"
-  checksum: 10/9eb8a54182561fba8295b22ddbd1b05277ccd55b47b2fdf1b5c2e18ff0bcecd7fd62ce55b5c7db9bcab38ccc5817f196d9cda8efc2b38fb6b6a3919445779428
   languageName: node
   linkType: hard
 
@@ -18924,13 +18889,6 @@ __metadata:
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 10/669632eb3745404c2f822a18fc3a0122d2f9a7a13f7fb8b5823ee19d1d2ff9ee5b52c53367176ea4ad093c332fd5ab4bd0ebae5a8e27917a4105a4cfc86b1005
-  languageName: node
-  linkType: hard
-
-"base64-sol@npm:1.1.0":
-  version: 1.1.0
-  resolution: "base64-sol@npm:1.1.0"
-  checksum: 10/9bea828af71e6adcf7c841cf0001e03bd1eae8cc1aef86daedb36f04117b2a626ac23631f700d56a24515f88c2021d7ebdbee4608369f66c53e51c0b4b39ee47
   languageName: node
   linkType: hard
 
@@ -27942,17 +27900,6 @@ __metadata:
     ethers: 5.x
     hardhat: 2.x
   checksum: 10/61773d5845faaf4ac2f8af1da41c49b5db0b0f18ff3b3f26a50a99ddbeb8e74760e720dbb7fea6882caf39871e0fdadd8dbfef7752ccd93995df7f860a448e49
-  languageName: node
-  linkType: hard
-
-"hardhat-watcher@npm:^2.1.1":
-  version: 2.5.0
-  resolution: "hardhat-watcher@npm:2.5.0"
-  dependencies:
-    chokidar: "npm:^3.5.3"
-  peerDependencies:
-    hardhat: ^2.0.0
-  checksum: 10/aa2eb49a8ffcf3bfa6beb740ee1d3f8cbb2690c9abead17acdc016be3a1f292347c464c3fa873fd5a247aae36d11c8fb4b4e1994f5c4b9303cc208a8869c1275
   languageName: node
   linkType: hard
 
@@ -37373,6 +37320,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier@npm:3.3.3":
+  version: 3.3.3
+  resolution: "prettier@npm:3.3.3"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 10/5beac1f30b5b40162532b8e2f7c3a4eb650910a2695e9c8512a62ffdc09dae93190c29db9107fa7f26d1b6c71aad3628ecb9b5de1ecb0911191099be109434d7
+  languageName: node
+  linkType: hard
+
 "prettier@npm:>=2.2.1 <=2.3.0":
   version: 2.3.0
   resolution: "prettier@npm:2.3.0"
@@ -39725,7 +39681,7 @@ __metadata:
     jest: "npm:29.2.2"
     jest-serial-runner: "npm:1.2.1"
     lint-staged: "npm:13.3.0"
-    prettier: "npm:3.2.5"
+    prettier: "npm:3.3.3"
     prettier-plugin-solidity: "npm:1.3.1"
     ts-jest: "npm:29.1.2"
     ts-node: "npm:10.9.2"
