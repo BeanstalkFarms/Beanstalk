@@ -3,7 +3,7 @@ const fs = require("fs");
 
 // Files
 // Todo: get plot data. Example written for testing
-const FARMER_PLOTS = "./reseed/data/r3-field.json";
+const FARMER_PLOTS = "./reseed/data/r4-field.json";
 
 async function reseed4(account, L2Beanstalk) {
   console.log("-----------------------------------");

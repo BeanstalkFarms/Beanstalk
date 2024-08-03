@@ -11,9 +11,9 @@ const {
 const { deployBasinV1_2Components, deployUpgradeableWell } = require("../scripts/basinV1_2.js");
 
 // Files
-const INIT_SUPPLY = "./reseed/data/r8/L2_initial_supply.json";
-const INIT_WELL_BALANCES = "./reseed/data/r8/L2_well_balances.json";
-const EXTERNAL_UNRIPE = "./reseed/data/r8/L2_external_unripe_balances.json";
+const INIT_SUPPLY = "./reseed/data/r3/L2_initial_supply.json";
+const INIT_WELL_BALANCES = "./reseed/data/r3/L2_well_balances.json";
+const EXTERNAL_UNRIPE = "./reseed/data/r3/L2_external_unripe_balances.json";
 
 /**
  * reseed8 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,

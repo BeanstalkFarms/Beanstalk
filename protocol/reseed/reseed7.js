@@ -2,7 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r6/bean_internal.json";
+const BEAN_INTERNAL_BALANCES = "./reseed/data/r7/bean_internal.json";
 
 async function reseed7(account, L2Beanstalk) {
   console.log("-----------------------------------");
