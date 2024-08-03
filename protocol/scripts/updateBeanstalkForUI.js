@@ -30,10 +30,7 @@ async function updateBeanstalkForUI(verbose = true) {
       "LibIncentive",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate",
-      "LibChainlinkOracle",
-      "LibShipping",
-      "LibFlood"
+      "LibGerminate"
     ],
     facetLibraries: {
       SeasonFacet: [
@@ -42,8 +39,6 @@ async function updateBeanstalkForUI(verbose = true) {
         "LibLockedUnderlying",
         "LibWellMinting",
         "LibGerminate",
-        "LibShipping",
-        "LibFlood"
       ],
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },
