@@ -11,7 +11,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Brean
+ * @author Brean, Deadmanwalking
  * @notice ReseedSilo re-initializes the Silo.
  * @dev Deposits are re-issued to each holder. Silo is set to L1 state.
  */

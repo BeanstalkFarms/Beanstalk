@@ -10,7 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Brean
+ * @author Brean, Deadmanwalking
  * @notice Reseed re-initializes the Internal Balance of Farmers.
  * @dev non Bean assets cannot be transfered to L2, due to the lack of garentee of the asset's Liquidity.
  */

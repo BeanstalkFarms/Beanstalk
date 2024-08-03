@@ -29,7 +29,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 9) {
     reseed6, // reseed silo
     reseed7, // reseed internal balances
     // reseed8, // reseed whitelist
-    reseed9  // add selectors to l2
+    // reseed9  // add selectors to l2
   ];
   let l2BeanstalkAddress;
   console.clear();

@@ -9,7 +9,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Brean
+ * @author Brean, Deadmanwalking
  * @notice ReseedField re-initializes the Field.
  * @dev Plots are re-issued to existing farmers. Field is set to L1 state.
  */
