@@ -1,7 +1,7 @@
-const { impersonateSigner, impersonateBeanstalkOwner, mintEth } = require("../utils");
+const { impersonateBeanstalkOwner, mintEth } = require("../utils");
 const { upgradeWithNewFacets } = require("./diamond");
-const { BEANSTALK, PRICE_DEPLOYER } = require("../test/utils/constants.js");
-const { deployAtNonce } = require("./contracts");
+const { BEANSTALK, USD_ORACLE, PRICE } = require("../test/utils/constants.js");
+const { deployContract } = require("./contracts");
 
 /**
  * When running a local anvil fork and force forwarding seasons,
@@ -19,7 +19,7 @@ const { deployAtNonce } = require("./contracts");
  *
  */
 
-async function updateBeanstalkForUI() {
+async function updateBeanstalkForUI(verbose = true) {
   const owner = await impersonateBeanstalkOwner();
   await mintEth(owner.address);
   await upgradeWithNewFacets({
@@ -31,7 +31,9 @@ async function updateBeanstalkForUI() {
       "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
-      "LibChainlinkOracle"
+      "LibChainlinkOracle",
+      "LibShipping",
+      "LibFlood"
     ],
     facetLibraries: {
       SeasonFacet: [
@@ -39,35 +41,29 @@ async function updateBeanstalkForUI() {
         "LibIncentive",
         "LibLockedUnderlying",
         "LibWellMinting",
-        "LibGerminate"
+        "LibGerminate",
+        "LibShipping",
+        "LibFlood"
       ],
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },
     initArgs: [],
     bip: false,
-    verbose: true,
+    verbose: verbose,
     account: owner
   });
 
-  const account = await impersonateSigner(PRICE_DEPLOYER, true);
-  let price = await deployAtNonce("BeanstalkPrice", account, (n = 3), true, [BEANSTALK]);
-
+  // impersonate price contract.
+  let price = await deployContract("BeanstalkPrice", owner, false, [BEANSTALK]);
   const bytecode = await ethers.provider.getCode(price.address);
-  await network.provider.send("hardhat_setCode", [
-    "0x4bed6cb142b7d474242d87f4796387deb9e1e1b4",
-    bytecode
-  ]);
-  price = await ethers.getContractAt(
-    "BeanstalkPrice",
-    "0x4bed6cb142b7d474242d87f4796387deb9e1e1b4"
-  );
+  await network.provider.send("hardhat_setCode", [PRICE, bytecode]);
+  console.log("price contract deployed at", PRICE)
 
-  const usdOracle = await deployAtNonce("UsdOracle", account, (n = 5), true);
+  // impersonate usd oracle contract.
+  const usdOracle = await deployContract("UsdOracle", owner, false);
   const bytecode2 = await ethers.provider.getCode(usdOracle.address);
-  await network.provider.send("hardhat_setCode", [
-    "0xE0AdBED7e2ac72bc7798c5DC33aFD77B068db7Fd",
-    bytecode2
-  ]);
+  await network.provider.send("hardhat_setCode", [USD_ORACLE, bytecode2]);
+  console.log("usdOracle contract deployed at", USD_ORACLE)
 }
 
 exports.updateBeanstalkForUI = updateBeanstalkForUI;
