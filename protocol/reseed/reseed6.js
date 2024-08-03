@@ -24,7 +24,8 @@ async function reseed6(account, L2Beanstalk) {
       initArgs: [depositChunks[i]],
       bip: false,
       verbose: true,
-      account: account
+      account: account,
+      checkGas: true
     });
     console.log("-----------------------------------");
   }

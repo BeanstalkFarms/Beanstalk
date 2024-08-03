@@ -18,7 +18,8 @@ async function reseed5(account, L2Beanstalk) {
     initArgs: [fertilizerIds],
     bip: false,
     verbose: true,
-    account: account
+    account: account,
+    checkGas: true
   });
   console.log("-----------------------------------");
 }

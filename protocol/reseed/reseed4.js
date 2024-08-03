@@ -13,7 +13,7 @@ async function reseed4(account, L2Beanstalk) {
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
 
-  chunkSize = 2;
+  chunkSize = 4;
   plotChunks = splitEntriesIntoChunks(accountPlots, chunkSize);
   
   for (let i = 0; i < plotChunks.length; i++) {
@@ -26,8 +26,10 @@ async function reseed4(account, L2Beanstalk) {
       initArgs: [plotChunks[i]],
       bip: false,
       verbose: true,
-      account: account
+      account: account,
+      checkGas: true
     });
+
     console.log("-----------------------------------");
   }
 
