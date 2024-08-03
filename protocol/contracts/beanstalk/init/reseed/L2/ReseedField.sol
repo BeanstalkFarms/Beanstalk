@@ -22,6 +22,7 @@ contract ReseedField {
     }
     struct MigratedPlotData {
         address account;
+        uint256 fieldId;
         Plot[] plots;
     }
 
@@ -31,20 +32,18 @@ contract ReseedField {
     /**
      * @notice Re-initializes the field.
      * @param accountPlots the plots for each account
-     * @param fieldId the field to reseed
      * @dev Receives an array of plots for each account and initializes them. 
      * On migration, we just split the array to stay under gas limits.
      */
     function init(
-        MigratedPlotData[] calldata accountPlots,
-        uint256 fieldId
+        MigratedPlotData[] calldata accountPlots
     ) external {
         for (uint i; i < accountPlots.length; i++) {
             for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
-                s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;
-                s.accts[accountPlots[i].account].fields[fieldId].plotIndexes.push(podIndex);
+                s.accts[accountPlots[i].account].fields[accountPlots[i].fieldId].plots[podIndex] = podAmount;
+                s.accts[accountPlots[i].account].fields[accountPlots[i].fieldId].plotIndexes.push(podIndex);
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
             }
         }

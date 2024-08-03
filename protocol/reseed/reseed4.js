@@ -10,13 +10,13 @@ async function reseed4(account, L2Beanstalk) {
   console.log("reseed4: re-initialize the field and plots.\n");
 
   // Read and parse the JSON file
-  const [accountPlots, FIELD_ID] = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
+  const accountPlots = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
   
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
     initFacetName: "ReseedField",
-    initArgs: [accountPlots, FIELD_ID],
+    initArgs: [accountPlots],
     bip: false,
     verbose: true,
     account: account
