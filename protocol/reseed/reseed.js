@@ -26,7 +26,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 9) {
     reseed3, // reseedbean + deploy wells on l2 (works)
     reseed4, // reseed field (works)
     reseed5, // reseed barn (fert)
-    // reseed6, // reseed silo
+    reseed6, // reseed silo
     // reseed7, // reseed internal balances
     // reseed8, // reseed whitelist
     // reseed9  // add selectors to l2
