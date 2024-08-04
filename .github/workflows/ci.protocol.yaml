@@ -1,5 +1,4 @@
 name: Protocol
-
 on:
   pull_request:
     types: [opened, synchronize]
@@ -11,22 +10,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Protocol Tests
         uses: actions/setup-node@v3
         with:
           node-version: "18"
+
       - name: Cache Node Modules
         id: node-modules-cache
         uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: yarn install --no-immutable
-      - run: yarn generate
+
+      - name: Generate (with cache)
+        id: generate-with-cache
+        continue-on-error: true
+        run: yarn generate
         working-directory: protocol
-      - run: yarn test
+
+      - name: Clear cache and reinstall on generate failure
+        if: steps.generate-with-cache.outcome == 'failure' && steps.node-modules-cache.outputs.cache-hit == 'true'
+        run: |
+          rm -rf **/node_modules
+          yarn install --no-immutable
+
+      - name: Generate (after potential cache clear)
+        if: steps.generate-with-cache.outcome == 'failure'
+        run: yarn generate
+        working-directory: protocol
+
+      - name: Run tests
+        run: yarn test
         env:
           FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
         working-directory: protocol
