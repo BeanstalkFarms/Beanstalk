@@ -121,7 +121,7 @@ library LibWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
@@ -191,7 +191,7 @@ library LibWhitelist {
     function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         uint128 gaugePoints,
@@ -510,7 +510,7 @@ library LibWhitelist {
     function verifyWhitelistStatus(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv
+        uint48 stalkIssuedPerBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 

@@ -381,21 +381,22 @@ contract MockSeasonFacet is SeasonFacet {
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
         ds.supportedInterfaces[0x0e89341c] = true;
+        uint48 stalk = 1e10;
 
         uint24 currentSeason = uint24(s.sys.season.current);
 
         s.sys.silo.assetSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneStem = 0;
 

@@ -665,9 +665,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(uint96(endStem.sub(startStem))).mul(bdv).div(PRECISION);
-
-        return reward;
+        return uint256(uint96(endStem.sub(startStem))).mul(bdv);
     }
 
     /**

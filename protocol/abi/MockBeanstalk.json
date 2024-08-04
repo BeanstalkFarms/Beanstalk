@@ -6551,9 +6551,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -6621,9 +6621,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -6696,9 +6696,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -7845,9 +7845,9 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint48",
             "name": "stalkIssuedPerBdv",
-            "type": "uint32"
+            "type": "uint48"
           },
           {
             "internalType": "uint32",
@@ -12003,14 +12003,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint48"
       },
       {
-        "internalType": "uint24",
+        "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
-        "type": "uint24"
+        "type": "uint32"
       }
     ],
     "name": "mockWhitelistToken",

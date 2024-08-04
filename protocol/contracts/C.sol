@@ -25,10 +25,10 @@ library C {
 
     /// @dev The length of a Season meaured in seconds.
     uint256 private constant CURRENT_SEASON_PERIOD = 3600; // 1 hour
-    uint256 internal constant SOP_PRECISION = 1e24;
+    uint256 internal constant SOP_PRECISION = 1e30;
 
     //////////////////// Silo ////////////////////
-    uint256 internal constant STALK_PER_BEAN = 10000;
+    uint256 internal constant STALK_PER_BEAN = 1e10;
     uint256 private constant ROOTS_BASE = 1e12;
 
     //////////////////// Exploit Migration ////////////////////
