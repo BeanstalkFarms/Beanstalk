@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
-import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {C} from "contracts/C.sol";
 
@@ -24,22 +24,20 @@ contract ReseedWhitelist {
      */
     function init(
         address[] calldata tokens,
-        AssetSettings[] calldata asset,
+        AssetSettings[] calldata assets,
         Implementation[] calldata oracle
     ) external {
         for (uint i; i < tokens.length; i++) {
-            LibWhitelist.whitelistToken(
-                tokens[i],
-                asset[i].selector,
-                asset[i].stalkIssuedPerBdv,
-                asset[i].stalkEarnedPerSeason,
-                asset[i].encodeType,
-                asset[i].gaugePointImplementation.selector,
-                asset[i].liquidityWeightImplementation.selector,
-                asset[i].gaugePoints,
-                asset[i].optimalPercentDepositedBdv,
-                oracle[i]
-            );
+            address token = tokens[i];
+            // If an LP token, initialize oracle storage variables.
+            if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+                s.sys.usdTokenPrice[token] = 1;
+                s.sys.twaReserves[token].reserve0 = 1;
+                s.sys.twaReserves[token].reserve1 = 1;
+            }
+            s.sys.silo.assetSettings[token] = assets[i];
+            // the Oracle should return the price for the non-bean asset in USD
+            s.sys.oracleImplementation[token] = oracle[i];
         }
     }
 }

@@ -10,12 +10,13 @@ async function reseed8(account, L2Beanstalk) {
   let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
   let tokens = assets.map((asset) => asset[0]);
   let siloSettings = assets.map((asset) => asset[1]);
+  let oracles = assets.map((asset) => asset[2]);
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
     initFacetName: "ReseedWhitelist",
-    initArgs: [tokens, siloSettings],
+    initArgs: [tokens, siloSettings, oracles],
     bip: false,
     verbose: true,
     account: account
