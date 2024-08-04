@@ -1,41 +1,34 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r6/bean_internal.json";
-const BEAN_ETH_BALANCES = "./reseed/data/r6/bean_eth_internal.json";
-const BEAN_WSTETH_BALANCES = "./reseed/data/r6/bean_wsteth_internal.json";
-const BEAN_STABLE_BALANCES = "./reseed/data/r6/bean_3crv_internal.json";
-const URBEAN_BALANCES = "./reseed/data/r6/ur_bean_internal.json";
-const URBEAN_LP_BALANCES = "./reseed/data/r6/ur_beanlp_internal.json";
+const BEAN_DEPOSITS = "./reseed/data/r6/bean_deposits.json";
 
 async function reseed6(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed6: reissue internal balances.\n");
-  let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
-  let beanEthBalances = JSON.parse(await fs.readFileSync(BEAN_ETH_BALANCES));
-  let beanWstethBalances = JSON.parse(await fs.readFileSync(BEAN_WSTETH_BALANCES));
-  let beanStableBalances = JSON.parse(await fs.readFileSync(BEAN_STABLE_BALANCES));
-  let urBeanBalances = JSON.parse(await fs.readFileSync(URBEAN_BALANCES));
-  let urBeanLpBalances = JSON.parse(await fs.readFileSync(URBEAN_LP_BALANCES));
+  console.log("reseed6: reissue deposits.\n");
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedInternalBalances",
-    initArgs: [
-      beanBalances,
-      beanEthBalances,
-      beanWstethBalances,
-      beanStableBalances,
-      urBeanBalances,
-      urBeanLpBalances
-    ],
-    bip: false,
-    verbose: true,
-    account: account
-  });
-  console.log("-----------------------------------");
+  let beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
+
+  chunkSize = 2;
+  depositChunks = splitEntriesIntoChunks(beanDeposits, chunkSize);
+
+  for (let i = 0; i < depositChunks.length; i++) {
+    console.log(`Processing chunk ${i + 1} of ${depositChunks.length}`);
+    console.log("Data chunk:", depositChunks[i]);
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedSilo",
+      initArgs: [depositChunks[i]],
+      bip: false,
+      verbose: true,
+      account: account,
+      checkGas: true
+    });
+    console.log("-----------------------------------");
+  }
 }
 
 exports.reseed6 = reseed6;

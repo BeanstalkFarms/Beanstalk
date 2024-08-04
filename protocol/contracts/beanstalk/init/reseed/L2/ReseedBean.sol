@@ -124,7 +124,6 @@ contract ReseedBean {
         deployUnripeBean(unripeBeanSupply);
         // deploy new unripe lp contract.
         deployUnripeLP(unripeLpSupply);
-        BeanstalkERC20 urBeanLPERC20 = deployUnripeLP(unripeLpSupply);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         // TODO: UNCOMMENT WHEN WELLS ARE DEPLOYED.
         // deployUpgradableWells();
@@ -137,6 +136,7 @@ contract ReseedBean {
             BEAN_SYMBOL
         );
         bean.mint(address(this), supply);
+        console.log("Bean deployed at: ", address(bean));
         return bean;
     }
 
@@ -147,6 +147,7 @@ contract ReseedBean {
             UNRIPE_BEAN_SYMBOL
         );
         unripeBean.mint(address(this), supply);
+        console.log("Unripe Bean deployed at: ", address(unripeBean));
         return unripeBean;
     }
 
@@ -157,6 +158,7 @@ contract ReseedBean {
             UNRIPE_LP_SYMBOL
         );
         unripeLP.mint(address(this), supply);
+        console.log("Unripe LP deployed at: ", address(unripeLP));
         return unripeLP;
     }
 
