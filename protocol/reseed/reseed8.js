@@ -2,7 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const WHITELIST_SETTINGS = "./reseed/data/r7-whitelist.json";
+const WHITELIST_SETTINGS = "./reseed/data/r8-whitelist.json";
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");

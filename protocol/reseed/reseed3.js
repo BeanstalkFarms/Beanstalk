@@ -11,16 +11,16 @@ const {
 const { deployBasinV1_2Components, deployUpgradeableWell } = require("../scripts/basinV1_2.js");
 
 // Files
-const INIT_SUPPLY = "./reseed/data/r8/L2_initial_supply.json";
-const INIT_WELL_BALANCES = "./reseed/data/r8/L2_well_balances.json";
-const EXTERNAL_UNRIPE = "./reseed/data/r8/L2_external_unripe_balances.json";
+const INIT_SUPPLY = "./reseed/data/r3/L2_initial_supply.json";
+const INIT_WELL_BALANCES = "./reseed/data/r3/L2_well_balances.json";
+const EXTERNAL_UNRIPE = "./reseed/data/r3/L2_external_unripe_balances.json";
 
 /**
  * reseed8 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,
  * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
  * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
  */
-async function reseed3(account, L2Beanstalk, mock = false, deployBasin = false) {
+async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
   verbose = true;
   console.log("-----------------------------------");
   console.log("reseed3: deploy bean tokens.\n");
@@ -117,6 +117,8 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = false) 
       );
     }
   }
+
+  console.log("Wells deployed:", wells);
 
   // approve beanstalk:
   await weth.connect(approver).approve(L2Beanstalk, ethInBeanEthWell[0]);

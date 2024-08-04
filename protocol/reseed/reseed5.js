@@ -2,12 +2,12 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const BARN_RAISE = "./reseed/data/r4-barn-raise.json";
+const BARN_RAISE = "./reseed/data/r5-barn-raise.json";
 
 async function reseed5(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed5: reissue fertilizer, reinitialize fertilizer holder state.\n");
-  const [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF] = JSON.parse(
+  const fertilizerIds = JSON.parse(
     await fs.readFileSync(BARN_RAISE)
   );
   
@@ -15,10 +15,11 @@ async function reseed5(account, L2Beanstalk) {
     diamondAddress: L2Beanstalk,
     facetNames: [],
     initFacetName: "ReseedBarn",
-    initArgs: [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF],
+    initArgs: [fertilizerIds],
     bip: false,
     verbose: true,
-    account: account
+    account: account,
+    checkGas: true
   });
   console.log("-----------------------------------");
 }

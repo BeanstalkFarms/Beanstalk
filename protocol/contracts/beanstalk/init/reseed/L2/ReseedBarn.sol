@@ -32,6 +32,7 @@ contract ReseedBarn {
     /**
      * @notice Fertilizers contains the ids, accounts, amounts, and lastBpf of each Fertilizer.
      * @dev fertilizerIds MUST be in acsending order.
+     * for each fert id --> all accounts --> amount, lastBpf
      */
     struct Fertilizers {
         uint128 fertilizerId;
@@ -39,34 +40,28 @@ contract ReseedBarn {
     }
 
     AppStorage internal s;
+    bytes32 internal constant FERTILIZER_PROXY_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000000;
 
     /**
      * @notice deploys Fertilizer and Fertilizer proxy,
      * reissues Fertilizer to each holder.
      */
     function init(
-        Fertilizers[] calldata fertilizerIds,
-        uint256 activeFertilizer,
-        uint256 fertilizedIndex,
-        uint256 unfertilizedIndex,
-        uint128 bpf
+        Fertilizers[] calldata fertilizerIds
     ) external {
         // deploy fertilizer implmentation.
+        // TODO: Merge misc-bip to get updated bytecode and mine for salt
         Fertilizer fertilizer = new Fertilizer();
 
         // deploy fertilizer proxy. Set owner to beanstalk.
-        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy(
-            address(fertilizer),
-            address(this),
-            abi.encode(IFertilizer.init.selector)
+        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{salt: FERTILIZER_PROXY_SALT}(
+            address(fertilizer), // logic
+            address(this), // admin (diamond)
+            abi.encode(IFertilizer.init.selector) // init data
         );
 
         mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
-        s.sys.season.fertilizing = true;
-        s.sys.fert.activeFertilizer = activeFertilizer;
-        s.sys.fert.fertilizedIndex = fertilizedIndex;
-        s.sys.fert.unfertilizedIndex = unfertilizedIndex;
-        s.sys.fert.bpf = bpf;
     }
 
     function mintFertilizers(

@@ -1,41 +1,34 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r6/bean_internal.json";
-const BEAN_ETH_BALANCES = "./reseed/data/r6/bean_eth_internal.json";
-const BEAN_WSTETH_BALANCES = "./reseed/data/r6/bean_wsteth_internal.json";
-const BEAN_STABLE_BALANCES = "./reseed/data/r6/bean_3crv_internal.json";
-const URBEAN_BALANCES = "./reseed/data/r6/ur_bean_internal.json";
-const URBEAN_LP_BALANCES = "./reseed/data/r6/ur_beanlp_internal.json";
+const BEAN_INTERNAL_BALANCES = "./reseed/data/r7/bean_internal.json";
 
 async function reseed7(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed7: reissue internal balances.\n");
-  let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
-  let beanEthBalances = JSON.parse(await fs.readFileSync(BEAN_ETH_BALANCES));
-  let beanWstethBalances = JSON.parse(await fs.readFileSync(BEAN_WSTETH_BALANCES));
-  let beanStableBalances = JSON.parse(await fs.readFileSync(BEAN_STABLE_BALANCES));
-  let urBeanBalances = JSON.parse(await fs.readFileSync(URBEAN_BALANCES));
-  let urBeanLpBalances = JSON.parse(await fs.readFileSync(URBEAN_LP_BALANCES));
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedInternalBalances",
-    initArgs: [
-      beanBalances,
-      beanEthBalances,
-      beanWstethBalances,
-      beanStableBalances,
-      urBeanBalances,
-      urBeanLpBalances
-    ],
-    bip: false,
-    verbose: true,
-    account: account
-  });
-  console.log("-----------------------------------");
+  let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
+
+  chunkSize = 2;
+  balanceChunks = splitEntriesIntoChunks(beanBalances, chunkSize);
+
+  for (let i = 0; i < balanceChunks.length; i++) {
+    console.log(`Processing chunk ${i + 1} of ${balanceChunks.length}`);
+    console.log("Data chunk:", balanceChunks[i]);
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedInternalBalances",
+      initArgs: [balanceChunks[i]],
+      bip: false,
+      verbose: true,
+      account: account,
+      checkGas: true
+    });
+    console.log("-----------------------------------");
+  }
 }
 
 exports.reseed7 = reseed7;
