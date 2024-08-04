@@ -80,13 +80,28 @@ contract ReseedBarn {
             for (uint j; j < f.accountData.length; j++) {
                 // `id` only needs to be set once per account, but is set on each fertilizer
                 // as `Fertilizer` does not have a function to set `id` once on a batch.
-                fertilizerProxy.beanstalkMint(
-                    f.accountData[j].account,
-                    fid,
-                    f.accountData[j].amount,
-                    f.accountData[j].lastBpf
-                );
+                // if a user attempts to perform a DOS attack by sending fertilizer to an EOA on L1,
+                // but is a contract on L2, the contract will skip the issuance of their fertilizer.
+                if (!hasCode(f.accountData[j].account)) {
+                    fertilizerProxy.beanstalkMint(
+                        f.accountData[j].account,
+                        fid,
+                        f.accountData[j].amount,
+                        f.accountData[j].lastBpf
+                    );
+                }
             }
         }
+    }
+
+    /**
+     * @notice checks if an account is a contract.
+     */
+    function hasCode(address account) internal view returns (bool) {
+        uint size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }
