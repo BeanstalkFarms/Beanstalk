@@ -1889,4 +1889,14 @@ interface IMockFBeanstalk {
         address token,
         uint256 depositId
     ) external view returns (uint256);
+
+    function getTokenUsdPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
+
+    function getUsdTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
 }

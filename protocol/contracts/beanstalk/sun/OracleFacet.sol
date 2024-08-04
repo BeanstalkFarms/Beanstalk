@@ -53,15 +53,28 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @param token address of token to get the price of.
      * @param lookback the amount of time to look back in seconds.
      */
-    function getTokenPriceFromExternal(
+    function getUsdTokenPriceFromExternal(
         address token,
         uint256 lookback
-    ) external view returns (uint256 tokenPrice) {
+    ) external view returns (uint256 usdToken) {
         return
             LibUsdOracle.getTokenPriceFromExternal(
                 token,
                 IERC20Decimals(token).decimals(),
                 lookback
             );
+    }
+
+    /**
+     * @notice Fetches the amount of USD equal to 1 token, using the oracle implementation.
+     * @param token address of token to get the price of.
+     * @param lookback the amount of time to look back in seconds.
+     * @dev returns 6 decimal precision.
+     */
+    function getTokenUsdPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenUsd) {
+        return LibUsdOracle.getTokenPriceFromExternal(token, 0, lookback);
     }
 }
