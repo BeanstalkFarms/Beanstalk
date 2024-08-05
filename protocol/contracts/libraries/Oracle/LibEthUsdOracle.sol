@@ -35,7 +35,7 @@ library LibEthUsdOracle {
 
     /**
      * @dev Returns the instantaneous USD/ETH price
-     * Return value has 6 decimal precision.
+     * Return value has 18 decimal precision.
      * Returns 0 if the USD/ETH Chainlink Oracle is broken or frozen.
      **/
     function getUsdEthPrice() internal view returns (uint256) {
@@ -45,7 +45,7 @@ library LibEthUsdOracle {
     /**
      * @dev Returns the USD/ETH price with the option of using a TWA lookback.
      * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
-     * Return value has 6 decimal precision.
+     * Return value has 18 decimal precision.
      * Returns 0 if the USD/ETH Chainlink Oracle is broken or frozen.
      **/
     function getUsdEthPrice(uint256 lookback) internal view returns (uint256) {

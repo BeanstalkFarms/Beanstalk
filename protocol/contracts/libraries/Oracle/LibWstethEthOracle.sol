@@ -43,7 +43,6 @@ library LibWstethEthOracle {
     uint128 constant ONE = 1e18;
     uint128 constant AVERAGE_DENOMINATOR = 2;
     uint128 constant PRECISION_DENOMINATOR = 1e12;
-    uint256 constant WSTETH_DECIMALS = 18;
 
     /**
      * @dev Returns the instantaneous wstETH/ETH price
