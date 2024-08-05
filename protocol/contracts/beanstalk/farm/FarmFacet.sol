@@ -10,6 +10,7 @@ import {LibEth} from "../../libraries/Token/LibEth.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibFunction} from "../../libraries/LibFunction.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title Farm Facet
@@ -18,9 +19,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * Any function stored in Beanstalk's EIP-2535 DiamondStorage can be called as a Farm call. (https://eips.ethereum.org/EIPS/eip-2535)
  **/
 
-contract FarmFacet is Invariable {
-    AppStorage internal s;
-
+contract FarmFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Execute multiple Farm calls.
      * @param data The encoded function data for each of the calls
@@ -28,11 +27,12 @@ contract FarmFacet is Invariable {
      **/
     function farm(
         bytes[] calldata data
-    ) external payable fundsSafu withEth returns (bytes[] memory results) {
+    ) external payable fundsSafu nonReentrant returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i; i < data.length; ++i) {
             results[i] = LibFarm._farm(data[i]);
         }
+        LibEth.refundEth();
     }
 
     /**
@@ -43,21 +43,11 @@ contract FarmFacet is Invariable {
      **/
     function advancedFarm(
         AdvancedFarmCall[] calldata data
-    ) external payable fundsSafu withEth returns (bytes[] memory results) {
+    ) external payable fundsSafu nonReentrant returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; ++i) {
             results[i] = LibFarm._advancedFarm(data[i], results);
         }
-    }
-
-    // signals to Beanstalk functions that they should not refund Eth
-    // at the end of the function because the function is wrapped in a Farm function
-    modifier withEth() {
-        if (msg.value > 0) s.sys.isFarm = 2;
-        _;
-        if (msg.value > 0) {
-            s.sys.isFarm = 1;
-            LibEth.refundEth();
-        }
+        LibEth.refundEth();
     }
 }

@@ -14,12 +14,13 @@ import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author funderberker, 0xm00neth
  */
-contract TractorFacet is Invariable {
+contract TractorFacet is Invariable, ReentrancyGuard {
     using LibBytes for bytes32;
     using LibRedundantMath256 for uint256;
 
@@ -109,6 +110,7 @@ contract TractorFacet is Invariable {
         external
         payable
         fundsSafu
+        nonReentrant
         verifyRequisition(requisition)
         runBlueprint(requisition)
         returns (bytes[] memory results)
