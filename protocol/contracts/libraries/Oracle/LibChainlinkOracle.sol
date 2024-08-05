@@ -141,7 +141,12 @@ library LibChainlinkOracle {
             t.endTimestamp = block.timestamp.sub(lookback);
             // Check if last round was more than `lookback` ago.
             if (timestamp <= t.endTimestamp) {
-                return uint256(answer).mul(PRECISION).div(10 ** decimals);
+                if (tokenDecimals > 0) {
+                    return uint256(10 ** (tokenDecimals + decimals)).div(uint256(answer));
+                } else {
+                    // Adjust to 6 decimal precision.
+                    return uint256(answer).mul(PRECISION).div(10 ** decimals);
+                }
             } else {
                 t.lastTimestamp = block.timestamp;
                 // Loop through previous rounds and compute cumulative sum until

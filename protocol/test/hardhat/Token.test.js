@@ -175,14 +175,7 @@ describe("Token", function () {
           .withArgs(this.recipient.address, this.token.address, "200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "200",
-            EXTERNAL,
-            INTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 0, 1);
       });
     });
 
@@ -224,14 +217,7 @@ describe("Token", function () {
           .withArgs(this.recipient.address, this.token.address, "200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "200",
-            INTERNAL,
-            INTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 1);
       });
 
       it("internal tolerant", async function () {
@@ -267,14 +253,7 @@ describe("Token", function () {
           .withArgs(this.recipient.address, this.token.address, "300");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "200",
-            INTERNAL_EXTERNAL,
-            INTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "300", 2, 1);
       });
 
       it("internal + external", async function () {
@@ -310,14 +289,7 @@ describe("Token", function () {
           .withArgs(this.recipient.address, this.token.address, "200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "250",
-            INTERNAL_TOLERANT,
-            INTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 3, 1);
       });
 
       it("0 internal tolerant", async function () {
@@ -370,14 +342,7 @@ describe("Token", function () {
           .withArgs(this.user.address, this.token.address, "-200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "200",
-            INTERNAL,
-            EXTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 0);
       });
     });
   });
@@ -417,14 +382,7 @@ describe("Token", function () {
           .withArgs(this.user.address, this.token.address, "-200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "250",
-            INTERNAL,
-            EXTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 0);
       });
 
       it("to internal", async function () {
@@ -454,14 +412,7 @@ describe("Token", function () {
           .withArgs(this.user.address, this.token.address, "-200");
         await expect(this.result)
           .to.emit(beanstalk, "TokenTransferred")
-          .withArgs(
-            this.token.address,
-            this.user.address,
-            this.recipient.address,
-            "250",
-            INTERNAL,
-            INTERNAL
-          );
+          .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 1);
       });
     });
 
@@ -530,14 +481,7 @@ describe("Token", function () {
             .withArgs(this.user.address, this.token.address, "-200");
           await expect(this.result)
             .to.emit(beanstalk, "TokenTransferred")
-            .withArgs(
-              this.token.address,
-              this.user.address,
-              this.recipient.address,
-              "200",
-              INTERNAL,
-              INTERNAL
-            );
+            .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 1);
         });
 
         it("some approval", async function () {
@@ -570,14 +514,7 @@ describe("Token", function () {
             .withArgs(this.user.address, this.token.address, "-200");
           await expect(this.result)
             .to.emit(beanstalk, "TokenTransferred")
-            .withArgs(
-              this.token.address,
-              this.user.address,
-              this.recipient.address,
-              "200",
-              INTERNAL,
-              INTERNAL
-            );
+            .withArgs(this.token.address, this.user.address, this.recipient.address, "200", 1, 1);
         });
       });
     });
