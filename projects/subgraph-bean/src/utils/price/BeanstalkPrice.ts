@@ -121,7 +121,10 @@ export function BeanstalkPrice_try_price(beanAddr: Address, blockNumber: BigInt)
 // Extracts the pool price from the larger result
 export function getPoolPrice(priceResult: BeanstalkPriceResult, pool: Address): PricePoolStruct | null {
   for (let i = 0; i < priceResult.value.ps.length; ++i) {
-    if (priceResult.value.ps[i].pool == pool) {
+    // Zero liquidity responses are also omitted - this can be caused on a legacy price contract implementation
+    // due to extreme discrepancies in chainlink vs uniswap oracle price. Particularly for the bean subgraph,
+    // it is preferable to omit those events from being handled than to have periods where zero liquidity is reported.
+    if (priceResult.value.ps[i].pool == pool && priceResult.value.ps[i].liquidity.gt(ZERO_BI)) {
       return priceResult.value.ps[i];
     }
   }
