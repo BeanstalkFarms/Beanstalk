@@ -21,8 +21,8 @@ const Dropdown = ({ open, children, trigger, offset, setOpen }: DropdownProps) =
       <TriggerContainer ref={ref}>
         <DropdownMenu.Trigger
           asChild
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={(e) => e.preventDefault()}
+          onMouseDown={(e: any) => e.preventDefault()}
+          onClick={(e: any) => e.preventDefault()}
         >
           {trigger}
         </DropdownMenu.Trigger>
@@ -31,7 +31,7 @@ const Dropdown = ({ open, children, trigger, offset, setOpen }: DropdownProps) =
         <StyledContent
           $width={dimensions.width}
           sideOffset={offset}
-          onFocus={(e) => e.preventDefault()}
+          onFocus={(e: any) => e.preventDefault()}
         >
           <>{children}</>
         </StyledContent>
