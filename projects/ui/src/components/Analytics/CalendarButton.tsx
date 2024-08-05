@@ -37,9 +37,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Range, Time } from 'lightweight-charts';
 
 type CalendarProps = {
-  setTimePeriod: React.Dispatch<
-    React.SetStateAction<Range<Time> | undefined>
-  >;
+  setTimePeriod: React.Dispatch<React.SetStateAction<Range<Time> | undefined>>;
+  setLocalStorage?: boolean;
 };
 
 type CalendarContentProps = {
@@ -47,13 +46,10 @@ type CalendarContentProps = {
   isMobile: boolean;
   range: DateRange | undefined;
   selectedPreset: string;
-  handleChange: (
-    newRange?: DateRange,
-    _preset?: string
-  ) => void;
+  handleChange: (newRange?: DateRange, _preset?: string) => void;
 };
 
-const presetRanges: {
+export const CalendarPresetRanges: {
   key: string;
   from: Date | undefined;
   to: Date | undefined;
@@ -161,7 +157,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
     if (type === 'date') {
       const currentValue = inputValue;
       const currentTime = inputTime;
-      
+
       setInputValue({
         from: target === 'from' ? value : currentValue.from,
         to: target === 'to' ? value : currentValue.to,
@@ -179,20 +175,30 @@ const CalendarContent: FC<CalendarContentProps> = ({
         minutes: 5,
       });
 
-      const currentDateFrom = currentValue.from ? parse(currentValue.from, 'MM/dd/yyyy', new Date()) : undefined;
-      const currentDateTo = currentValue.to ? parse(currentValue.to, 'MM/dd/yyyy', new Date()) : undefined;
+      const currentDateFrom = currentValue.from
+        ? parse(currentValue.from, 'MM/dd/yyyy', new Date())
+        : undefined;
+      const currentDateTo = currentValue.to
+        ? parse(currentValue.to, 'MM/dd/yyyy', new Date())
+        : undefined;
 
       if (isValid(parsedDate)) {
-        handleChange({
-          from: target === 'from' ? parsedDate : currentDateFrom,
-          to: target === 'to' ? parsedDate : currentDateTo,
-        }, 'CUSTOM');
+        handleChange(
+          {
+            from: target === 'from' ? parsedDate : currentDateFrom,
+            to: target === 'to' ? parsedDate : currentDateTo,
+          },
+          'CUSTOM'
+        );
         setMonth(parsedDate);
       } else {
-        handleChange({
-          from: undefined,
-          to: undefined,
-        }, 'ALL');
+        handleChange(
+          {
+            from: undefined,
+            to: undefined,
+          },
+          'ALL'
+        );
       }
     } else if (type === 'time') {
       const currentValue = inputTime;
@@ -266,65 +272,75 @@ const CalendarContent: FC<CalendarContentProps> = ({
         }}
       >
         {['from', 'to'].map((inputType) => {
-          
           const dateRange = range?.[inputType as keyof typeof inputValue];
-          const formattedDate = dateRange ? format(dateRange, 'MM/dd/yyy') : undefined;
-          const formattedHour = dateRange ? format(dateRange, 'HH:mm') : undefined;
+          const formattedDate = dateRange
+            ? format(dateRange, 'MM/dd/yyy')
+            : undefined;
+          const formattedHour = dateRange
+            ? format(dateRange, 'HH:mm')
+            : undefined;
 
-        return (
-          <Box
-            display="flex"
-            key={`timeInputField-${inputType}`}
-            paddingX={1.6}
-            maxWidth={isMobile ? undefined : 310}
-            gap={0.8}
-          >
-            <TextField
-              sx={{
-                display: isMobile ? 'flex' : undefined,
-                flexGrow: isMobile ? 1 : undefined,
-                width: isMobile ? undefined : 160,
-                '& .MuiOutlinedInput-root': {
-                  height: 32,
-                  borderRadius: 0.6,
-                },
-              }}
-              value={inputValue[inputType as keyof typeof inputValue] || formattedDate}
-              placeholder="MM/DD/YYYY"
-              size="small"
-              color="primary"
-              onChange={(e) => {
-                handleInputChange('date', inputType, e.target.value);
-              }}
-            />
-            <TextField
-              sx={{
-                width: isMobile ? 140 : 120,
-                '& .MuiOutlinedInput-root': {
-                  height: 32,
-                  borderRadius: 0.6,
-                },
-              }}
-              value={inputTime[inputType as keyof typeof inputTime] || formattedHour}
-              placeholder="00:00"
-              size="small"
-              color="primary"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}>
-                    <AccessTimeIcon sx={{ scale: '80%' }} />
-                  </InputAdornment>
-                ),
-              }}
-              onChange={(e) => {
-                handleInputChange('time', inputType, e.target.value);
-              }}
-              onBlur={(e) => {
-                formatInputTimeOnBlur(inputType, e.target.value);
-              }}
-            />
-          </Box>
-        )})}
+          return (
+            <Box
+              display="flex"
+              key={`timeInputField-${inputType}`}
+              paddingX={1.6}
+              maxWidth={isMobile ? undefined : 310}
+              gap={0.8}
+            >
+              <TextField
+                sx={{
+                  display: isMobile ? 'flex' : undefined,
+                  flexGrow: isMobile ? 1 : undefined,
+                  width: isMobile ? undefined : 160,
+                  '& .MuiOutlinedInput-root': {
+                    height: 32,
+                    borderRadius: 0.6,
+                  },
+                }}
+                value={
+                  inputValue[inputType as keyof typeof inputValue] ||
+                  formattedDate
+                }
+                placeholder="MM/DD/YYYY"
+                size="small"
+                color="primary"
+                onChange={(e) => {
+                  handleInputChange('date', inputType, e.target.value);
+                }}
+              />
+              <TextField
+                sx={{
+                  width: isMobile ? 140 : 120,
+                  '& .MuiOutlinedInput-root': {
+                    height: 32,
+                    borderRadius: 0.6,
+                  },
+                }}
+                value={
+                  inputTime[inputType as keyof typeof inputTime] ||
+                  formattedHour
+                }
+                placeholder="00:00"
+                size="small"
+                color="primary"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end" sx={{ ml: 0, mr: -0.5 }}>
+                      <AccessTimeIcon sx={{ scale: '80%' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                onChange={(e) => {
+                  handleInputChange('time', inputType, e.target.value);
+                }}
+                onBlur={(e) => {
+                  formatInputTimeOnBlur(inputType, e.target.value);
+                }}
+              />
+            </Box>
+          );
+        })}
       </Box>
       <Divider
         sx={{
@@ -426,7 +442,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
             flexGrow={1}
             justifyContent="space-between"
           >
-            {presetRanges.map((preset) => (
+            {CalendarPresetRanges.map((preset) => (
               <Button
                 key={`timePeriodPreset${preset.key}`}
                 variant={
@@ -446,10 +462,13 @@ const CalendarContent: FC<CalendarContentProps> = ({
                 }}
                 disableRipple
                 onClick={() => {
-                  handleChange({
-                    from: preset.from,
-                    to: preset.to,
-                  }, preset.key);
+                  handleChange(
+                    {
+                      from: preset.from,
+                      to: preset.to,
+                    },
+                    preset.key
+                  );
                 }}
               >
                 {preset.key}
@@ -462,7 +481,10 @@ const CalendarContent: FC<CalendarContentProps> = ({
   );
 };
 
-const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
+const CalendarButton: FC<CalendarProps> = ({
+  setLocalStorage = true,
+  setTimePeriod,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -492,18 +514,25 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
   const handleChange = (newRange?: DateRange, _preset?: string) => {
     if (newRange) {
       const newTimePeriod = {
-        from: (newRange?.from || 0).valueOf() / 1000 as Time,
-        to: (newRange?.to || Date.now()).valueOf() / 1000 as Time,
+        from: ((newRange?.from || 0).valueOf() / 1000) as Time,
+        to: ((newRange?.to || Date.now()).valueOf() / 1000) as Time,
       };
       setRange(newRange);
       setTimePeriod(newTimePeriod);
-      localStorage.setItem('advancedChartRange', JSON.stringify(newRange));
-      localStorage.setItem('advancedChartTimePeriod', JSON.stringify(newTimePeriod));
-    };
+      if (setLocalStorage) {
+        localStorage.setItem('advancedChartRange', JSON.stringify(newRange));
+        localStorage.setItem(
+          'advancedChartTimePeriod',
+          JSON.stringify(newTimePeriod)
+        );
+      }
+    }
     if (_preset) {
       setPreset(_preset);
-      localStorage.setItem('advancedChartPreset', JSON.stringify(_preset));
-    };
+      if (setLocalStorage) {
+        localStorage.setItem('advancedChartPreset', JSON.stringify(_preset));
+      }
+    }
   };
 
   return (
@@ -511,7 +540,7 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
       <Box sx={{ display: 'flex' }}>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {!isMobile &&
-            presetRanges.map((preset) => (
+            CalendarPresetRanges.map((preset) => (
               <Button
                 key={`timePeriodPreset${preset.key}`}
                 variant="text"
@@ -527,10 +556,13 @@ const CalendarButton: FC<CalendarProps> = ({ setTimePeriod }) => {
                 }}
                 disableRipple
                 onClick={() => {
-                  handleChange({
-                    from: preset.from,
-                    to: preset.to,
-                  }, preset.key);
+                  handleChange(
+                    {
+                      from: preset.from,
+                      to: preset.to,
+                    },
+                    preset.key
+                  );
                 }}
               >
                 {preset.key}

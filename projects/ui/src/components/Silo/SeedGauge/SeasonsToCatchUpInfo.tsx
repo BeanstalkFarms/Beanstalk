@@ -7,10 +7,14 @@ import {
   Typography,
 } from '@mui/material';
 import SingleAdvancedChart from '~/components/Analytics/SingleAdvancedChart';
-import useSeasonsQueryV2 from '~/hooks/beanstalk/useSeasonsQueryV2';
+import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
+import { tickFormatSmallBN } from '~/components/Analytics/formatters';
+import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
 
 type SeasonsToCatchUpInfoProps = {
-  query: ReturnType<typeof useSeasonsQueryV2>;
+  queryData: ChartQueryData[];
+  loading: boolean;
+  timeState: ReturnType<typeof useChartTimePeriodState>;
 };
 
 const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
@@ -40,7 +44,18 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
     </Stack>
     <Divider />
     <Stack p={1.5} position="relative" width="100%">
-      <SingleAdvancedChart query={props.query} drawPegLine={false} />
+      <SingleAdvancedChart
+        tooltipTitle="Average Seeds per BDV"
+        tooltipHoverText="The number of stalk issued per Season for each bean in the Silo."
+        valueAxisType="stalk"
+        tooltipText="asdfasdfasdfasdf"
+        timeState={props.timeState}
+        tickFormatter={tickFormatSmallBN(4)}
+        shortTickFormatter={tickFormatSmallBN(4)}
+        seriesData={props.queryData}
+        isLoading={props.loading}
+        drawPegLine={false}
+      />
     </Stack>
   </Stack>
 );
