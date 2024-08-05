@@ -117,12 +117,10 @@ library LibUsdOracle {
             }
 
             return
-                uint256(1e24).div(
-                    LibChainlinkOracle.getTokenPrice(
-                        chainlinkOraclePriceAddress,
-                        LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
-                        lookback
-                    )
+                LibChainlinkOracle.getTokenPrice(
+                    chainlinkOraclePriceAddress,
+                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
             // assumes a dollar stablecoin is passed in
