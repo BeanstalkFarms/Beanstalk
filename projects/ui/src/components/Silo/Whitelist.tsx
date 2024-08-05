@@ -751,9 +751,8 @@ const Whitelist: FC<{
                                         title="Chop Amount"
                                         gap={0.25}
                                         variant="h4"
-                                        // After Chop Change, update this to: recap rate * Total LP Underlying urBEANETH * BeanEth LP Price
                                         amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
-                                        subtitle="The amount of BEANETH received for Chopping 1 urBEANETH."
+                                        subtitle="The amount of BEANwstETH received for Chopping 1 urBEANwstETH."
                                       />
                                     ) : (
                                       <Stat

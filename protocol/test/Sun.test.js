@@ -10,6 +10,8 @@ const { deployBasin } = require('../scripts/basin.js');
 const ZERO_BYTES = ethers.utils.formatBytes32String('0x0')
 const { deployBasinV1_1Upgrade } = require('../scripts/basinV1_1.js');
 const { impersonateBeanWstethWell } = require('../utils/well.js');
+const { advanceTime } = require('../utils/helpers.js');
+const { deployMockWell, setReserves, deployMockBeanWell } = require('../utils/well.js');
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -77,6 +79,8 @@ describe('Sun', function () {
     await c.multiFlowPump.update([toBean('10000'), to18('10')], 0x00);
     this.pump = c.multiFlowPump;
 
+    [this.well, this.wellFunction, this.pump] = await deployMockBeanWell(BEAN_ETH_WELL, WETH);
+
     await this.season.siloSunrise(0)
   })
 
@@ -88,11 +92,109 @@ describe('Sun', function () {
     await revertToSnapshot(snapshotId)
   })
 
-  it("delta B < 1", async function () {
-    this.result = await this.season.sunSunrise('-100', 8);
-    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100');
+  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB  (-twaDeltaB < -instDeltaB)", async function () {
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // whitelist well to be included in the instantaneous deltaB calculation
+    await this.silo.mockWhitelistToken(BEAN_ETH_WELL, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    // set reserves to 2M Beans and 1000 Eth
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twaDeltaB = -100000000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-100000000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
   })
 
+  it("When deltaB < 0 it sets the soil to be the min of -twaDeltaB and -instantaneous deltaB (-twaDeltaB > -instDeltaB)", async function () {
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // whitelist well to be included in the instantaneous deltaB calculation
+    await this.silo.mockWhitelistToken(BEAN_ETH_WELL, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+
+    // set reserves to 2M Beans and 1000 Eth
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    await await this.well.setReserves([to6('2000000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twaDeltaB = -100000000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-585786437627', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '585786437627');
+    await expect(await this.field.totalSoil()).to.be.equal('585786437627');
+  })
+
+  it("twaDeltaB < 0, -instDeltaB > 0. (uses twaDeltaB)", async function () {
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // whitelist well to be included in the instantaneous deltaB calculation
+    await this.silo.mockWhitelistToken(BEAN_ETH_WELL, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    // set reserves to 0.5M Beans and 1000 Eth
+    await await this.well.setReserves([to6('500000'), to18('1000')]);
+    await await this.well.setReserves([to6('500000'), to18('1000')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+
+    // twaDeltaB = +500_000
+    // instantaneousDeltaB = -585786437627
+                                            // twaDeltaB, case ID
+    this.result = await this.season.sunSunrise('-585786437627', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '585786437627');
+    await expect(await this.field.totalSoil()).to.be.equal('585786437627');
+  })
+
+
+  it("When deltaB < 0 it sets the correct soil if the instantaneous deltaB oracle fails", async function () {
+    // go fo forward 1800 blocks
+    await advanceTime(1800)
+    // whitelist well to be included in the instantaneous deltaB calculation
+    await this.silo.mockWhitelistToken(BEAN_ETH_WELL, this.silo.interface.getSighash("mockBDV(uint256 amount)"), "10000", "1");
+    // set reserves to 1 Bean and 1 Eth
+    // If the Bean reserve is less than the minimum of 1000 beans,
+    // LibWellMinting.instantaneousDeltaB returns a deltaB of 0
+    await this.well.setReserves([to6('1'), to18('1')]);
+    await this.well.setReserves([to6('1'), to18('1')]);
+    // go forward 1800 blocks
+    await advanceTime(1800)
+    // send 0 eth to beanstalk
+    await user.sendTransaction({
+      to: this.diamond.address,
+      value: 0
+    })
+    // If the twaDeltaB fails, we assume the instantaneous is also manipulated
+    // And since we havent changes the reserves, the instantaneous deltaB is 0
+                                          // twadeltaB, CASE ID
+    this.result = await this.season.sunSunrise('-100000000', 8);
+    await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '100000000');
+    await expect(await this.field.totalSoil()).to.be.equal('100000000');
+  })
+
+  it("rewards more than type(uint128).max Soil below peg", async function () {
+    await expect(this.season.setSoilE('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
+  })
+  
   it("delta B == 1", async function () {
     this.result = await this.season.sunSunrise('0', 8);
     await expect(this.result).to.emit(this.season, 'Soil').withArgs(3, '0');
@@ -380,10 +482,6 @@ describe('Sun', function () {
 
   it("rewards more than type(uint128).max/10000 to silo", async function () {
     await expect(this.season.siloSunrise('340282366920938463463374607431768211456')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
-  })
-
-  it("rewards more than type(uint128).max Soil below peg", async function () {
-    await expect(this.season.sunSunrise('-340282366920938463463374607431768211456', '0')).to.be.revertedWith('SafeCast: value doesn\'t fit in 128 bits');
   })
 })
 
