@@ -88,11 +88,11 @@ export class EventProcessor {
     if (!event.event) {
       return;
     }
-    if (!SupportedEventsSet.has(event.event as typeof SupportedEvents[number])) {
+    if (!SupportedEventsSet.has(event.event as (typeof SupportedEvents)[number])) {
       return;
     }
     // @ts-ignore
-    return this[event.event as typeof SupportedEvents[number]]?.(event as any);
+    return this[event.event as (typeof SupportedEvents)[number]]?.(event as any);
   }
 
   ingestAll<T extends EventManager.Event>(events: T[]) {
@@ -169,8 +169,10 @@ export class EventProcessor {
     });
   }
 
-  PlotTransfer(event: EventManager.Simplify<PlotTransferEvent>) {
+  PlotTransfer(_event: EventManager.Simplify<PlotTransferEvent>) {
     // Numerical "index" of the Plot. Absolute, with respect to Pod 0.
+
+    const event = _event as any;
     const transferIndex = event.args.id;
     const podsTransferred = event.args.pods;
 
@@ -371,9 +373,13 @@ export class EventProcessor {
   }
 
   _removeDeposit(stem: string, token: Token, amount: ethers.BigNumber) {
-    if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
+    if (!this.whitelist.has(token))
+      throw new Error(`Attempted to process an event with an unknown token: ${token}`);
     const existingDeposit = this.deposits.get(token)?.[stem];
-    if (!existingDeposit) throw new Error(`Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${stem}`);
+    if (!existingDeposit)
+      throw new Error(
+        `Received a 'RemoveDeposit' event for an unknown deposit: ${token.address} ${stem}`
+      );
 
     // BDV scales linearly with the amount of the underlying token.
     // Ex. if we remove 60% of the `amount`, we also remove 60% of the BDV.
@@ -397,7 +403,8 @@ export class EventProcessor {
     const token = this.getToken(event);
     const stem = this.migrateStem(event.args.stem);
 
-    if (!this.whitelist.has(token)) throw new Error(`Attempted to process an event with an unknown token: ${token}`);
+    if (!this.whitelist.has(token))
+      throw new Error(`Attempted to process an event with an unknown token: ${token}`);
 
     const tokDeposits = this.deposits.get(token);
     this.deposits.set(token, {

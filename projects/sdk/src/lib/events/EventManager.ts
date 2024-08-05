@@ -88,11 +88,17 @@ export class EventManager {
 
     return Promise.all([
       this.sdk.contracts.beanstalkRead.queryFilter(
-        this.sdk.contracts.beanstalkRead.filters["Sow(address,uint256,uint256,uint256)"](account),
+        this.sdk.contracts.beanstalkRead.filters["Sow(address,uint256,uint256,uint256,uint256)"](
+          account
+        ),
         fromBlock,
         toBlock
       ),
-      this.sdk.contracts.beanstalkRead.queryFilter(this.sdk.contracts.beanstalkRead.filters.Harvest(account), fromBlock, toBlock),
+      this.sdk.contracts.beanstalkRead.queryFilter(
+        this.sdk.contracts.beanstalkRead.filters.Harvest(account),
+        fromBlock,
+        toBlock
+      ),
       this.sdk.contracts.beanstalkRead.queryFilter(
         this.sdk.contracts.beanstalkRead.filters.PlotTransfer(account, null), // from
         fromBlock,
