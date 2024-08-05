@@ -3,9 +3,12 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { deployMockToken, getWellContractAt } = require("../utils/well.js");
 const {
-  L2_WETH_ADDRESS,
-  L2_WSTETH_ADDRESS,
-  L2_USDC_ADDRESS,
+  L2_WETH,
+  L2_WSTETH,
+  L2_WEETH,
+  L2_WBTC,
+  L2_USDC,
+  L2_USDT,
   BEAN
 } = require("../test/hardhat/utils/constants.js");
 const { deployBasinV1_2Components, deployUpgradeableWell } = require("../scripts/basinV1_2.js");
@@ -34,7 +37,7 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
   let weth, wsteth, stable, owner;
   let approver = account;
   if (mock) {
-    // Deploy 3 mock tokens
+    // Deploy mock tokens
     weth = await deployMockToken("WETH", "WETH");
     wsteth = await deployMockToken("wstETH", "wstETH");
     stable = await deployMockToken("USDC", "USDC");
@@ -45,9 +48,9 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
     await stable.mint(account.address, stableInBeanStableWell[0]);
   } else {
     // TODO: Replace with actual token addresses on the L2
-    weth = await ethers.getContractAt("IERC20", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
-    wsteth = await ethers.getContractAt("IERC20", "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0");
-    stable = await ethers.getContractAt("IERC20", "0xdAC17F958D2ee523a2206206994597C13D831ec7");
+    weth = await ethers.getContractAt("IERC20", L2_WETH);
+    wsteth = await ethers.getContractAt("IERC20", L2_WEETH);
+    stable = await ethers.getContractAt("IERC20", L2_WBTC);
   }
 
   // deploy basin components, if deployBasin is enabled:
@@ -77,12 +80,14 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
     // BEAN/USDC
     // BEAN/USDT
     cp2Tokens = [
-      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-      // more tokens should be added here.
+      L2_WETH,
+      L2_WSTETH,
+      L2_WEETH,
+      L2_WBTC,
     ];
     s2Tokens = [
-      "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-      // more tokens should be added here.
+      L2_USDC,
+      L2_USDT
     ];
     // loop through tokens:
     for (let i = 0; i < cp2Tokens.length; i++) {

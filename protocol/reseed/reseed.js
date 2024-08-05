@@ -25,13 +25,13 @@ async function reseed(account, mock = true, log = false, start = 0, end = 10) {
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseedGlobal,
-    reseed3, // reseedbean + deploy wells on l2
-    reseed4, // reseed field
-    reseed5, // reseed barn (fert)
-    reseed6, // reseed silo
-    reseed7, // reseed internal balances
-    reseed8, // reseed whitelist
-    reseed9 // add selectors to l2
+    reseed3 // reseedbean + deploy wells on l2
+    // reseed4, // reseed field
+    // reseed5, // reseed barn (fert)
+    // reseed6, // reseed silo
+    // reseed7, // reseed internal balances
+    // reseed8, // reseed whitelist
+    // reseed9 // add selectors to l2
   ];
   let l2BeanstalkAddress;
   console.clear();

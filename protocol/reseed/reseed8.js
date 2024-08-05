@@ -12,6 +12,8 @@ async function reseed8(account, L2Beanstalk) {
   let siloSettings = assets.map((asset) => asset[1]);
   let oracles = assets.map((asset) => asset[2]);
 
+  // deploy LSD chainlink oracle:
+
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],

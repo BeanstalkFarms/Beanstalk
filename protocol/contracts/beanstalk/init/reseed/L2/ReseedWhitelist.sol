@@ -25,6 +25,7 @@ contract ReseedWhitelist {
     function init(
         address[] calldata tokens,
         AssetSettings[] calldata assets,
+        WhitelistStatus[] calldata whitelistStatus
         Implementation[] calldata oracle
     ) external {
         for (uint i; i < tokens.length; i++) {
@@ -36,6 +37,9 @@ contract ReseedWhitelist {
                 s.sys.twaReserves[token].reserve1 = 1;
             }
             s.sys.silo.assetSettings[token] = assets[i];
+            
+            // add whitelist status
+            s.sys.silo.whitelistStatus.push(whitelistStatus[i]);
             // the Oracle should return the price for the non-bean asset in USD
             s.sys.oracleImplementation[token] = oracle[i];
         }
