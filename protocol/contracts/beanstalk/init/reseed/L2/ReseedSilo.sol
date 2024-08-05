@@ -82,20 +82,16 @@ contract ReseedSilo {
      * @dev all deposits and accounts are mown to the current season.
      */
     function reseedSiloDeposit(AccountSiloDeposits[] calldata deposits) internal {
-        uint256 stalkIssuedPerBdv;
         // for all deposits of a token and account.
         for (uint256 i; i < deposits.length; i++) {
             uint128 calculatedBdv;
             uint256 calculatedStalk;
-            // different stalkIssuedPerBdv for each token in the AccountSiloDeposits struct.
-            stalkIssuedPerBdv = s.sys.silo.assetSettings[deposits[i].token].stalkIssuedPerBdv;
             // for all of account's deposits.
             for (uint256 j; j < deposits[i].dd.length; j++) {
                 // get stem from depositId.
                 (, int96 stem) = LibBytes.unpackAddressAndStem(deposits[i].dd[j].depositId);
                 // verify that depositId is valid.
                 require(deposits[i].stemTip >= stem, "ReseedSilo: INVALID_STEM");
-
                 // add deposit to account.
                 s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].amount =
                     deposits[i].dd[j].amount;
@@ -128,17 +124,6 @@ contract ReseedSilo {
                     deposits[i].dd[j].amount // token amount
                 );
             }
-
-            // update mowStatuses for account and token.
-            s.accts[deposits[i].account].mowStatuses[deposits[i].token].bdv += calculatedBdv;
-            s.accts[deposits[i].account].mowStatuses[deposits[i].token].lastStem += deposits[i].stemTip;
-
-            // increment calculatedStalk by the stalk issued per BDV.
-            // placed outside of loop for gas effiency.
-            calculatedStalk += stalkIssuedPerBdv * calculatedBdv;
-
-            // increment stalk for account.
-            s.accts[deposits[i].account].stalk += calculatedStalk;
         }
     }
 }

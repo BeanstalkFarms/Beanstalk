@@ -1,26 +1,34 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const WHITELIST_SETTINGS = "./reseed/data/r8-whitelist.json";
+const BEAN_INTERNAL_BALANCES = "./reseed/data/r8/bean_internal.json";
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed8: whitelist tokens.\n");
-  let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
-  let tokens = assets.map((asset) => asset[0]);
-  let siloSettings = assets.map((asset) => asset[1]);
-  let oracles = assets.map((asset) => asset[2]);
+  console.log("reseed7: reissue internal balances.\n");
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedWhitelist",
-    initArgs: [tokens, siloSettings, oracles],
-    bip: false,
-    verbose: true,
-    account: account
-  });
-  console.log("-----------------------------------");
+  let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
+
+  chunkSize = 2;
+  balanceChunks = splitEntriesIntoChunks(beanBalances, chunkSize);
+
+  for (let i = 0; i < balanceChunks.length; i++) {
+    console.log(`Processing chunk ${i + 1} of ${balanceChunks.length}`);
+    console.log("Data chunk:", balanceChunks[i]);
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedInternalBalances",
+      initArgs: [balanceChunks[i]],
+      bip: false,
+      verbose: true,
+      account: account,
+      checkGas: true
+    });
+    console.log("-----------------------------------");
+  }
 }
+
 exports.reseed8 = reseed8;
