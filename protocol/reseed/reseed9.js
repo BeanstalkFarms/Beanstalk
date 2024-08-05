@@ -1,86 +1,26 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
-/**
- * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
- */
-async function reseed9(account, L2Beanstalk, verbose = true,) {
+// Files
+const WHITELIST_SETTINGS = "./reseed/data/r9-whitelist.json";
 
-  // get list of facets to deploy:
-  let facets = [
-    "SeasonFacet", // SUN
-    "SeasonGettersFacet",
-    "GaugePointFacet",
-    "LiquidityWeightFacet",
-    "SiloFacet", // SILO
-    "SiloGettersFacet",
-    "WhitelistFacet",
-    "ApprovalFacet",
-    "BDVFacet",
-    "ConvertFacet", // CONVERT
-    "ConvertGettersFacet",
-    "MetadataFacet", // METADATA
-    "MarketplaceFacet", // MARKET
-    "FieldFacet", // FIELD
-    "DepotFacet", // FARM
-    "FarmFacet",
-    "TokenFacet",
-    "TokenSupportFacet",
-    "TractorFacet",
-    "FertilizerFacet", // BARN
-    "UnripeFacet",
-    "EnrootFacet",
-    "PauseFacet", // DIAMOND
-    "OwnershipFacet"
-  ];
+async function reseed9(account, L2Beanstalk) {
+  console.log("-----------------------------------");
+  console.log("reseed8: whitelist tokens.\n");
+  let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
+  let tokens = assets.map((asset) => asset[0]);
+  let siloSettings = assets.map((asset) => asset[1]);
+  let oracles = assets.map((asset) => asset[2]);
 
-  // A list of public libraries that need to be deployed separately.
-  let libraryNames = [
-    "LibGauge",
-    "LibIncentive",
-    "LibConvert",
-    "LibLockedUnderlying",
-    "LibWellMinting",
-    "LibGerminate",
-    "LibShipping",
-    "LibFlood",
-    "LibSilo",
-    "LibPipelineConvert",
-  ];
-
-  // A mapping of facet to public library names that will be linked to it.
-  // MockFacets will be deployed with the same public libraries.
-  let facetLibraries = {
-    SeasonFacet: [
-      "LibGauge",
-      "LibIncentive",
-      "LibLockedUnderlying",
-      "LibWellMinting",
-      "LibGerminate",
-      "LibShipping",
-      "LibFlood"
-    ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
-    UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
-  };
-
-  // Season to reseed 
-  const season = 12345;
-
-  // upgrade beanstalk with all facets. calls `reseedRestart`
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
-    facetNames: facets,
-    facetLibraries: facetLibraries,
-    libraryNames: libraryNames,
-    initFacetName: "InitReseed",
-    initArgs: [season],
+    facetNames: [],
+    initFacetName: "ReseedWhitelist",
+    initArgs: [tokens, siloSettings, oracles],
     bip: false,
-    verbose: verbose,
+    verbose: true,
     account: account
   });
+  console.log("-----------------------------------");
 }
 exports.reseed9 = reseed9;
