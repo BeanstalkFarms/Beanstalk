@@ -3,22 +3,23 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "./storage/AppStorage.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @author Beanstalk Farms
- * @title Variation of Oepn Zeppelins reentrant guard to include Silo Update
+ * @title Variation of Oepn Zeppelins reentrant guard to include Beanstalk specific functionality.
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts%2Fsecurity%2FReentrancyGuard.sol
  **/
 abstract contract ReentrancyGuard {
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-
     AppStorage internal s;
 
+    /**
+     * @dev Standard reentrancy is not compatible with farm-like features. See _beanstalkCall().
+     */
     modifier nonReentrant() {
-        require(s.sys.reentrantStatus != _ENTERED, "ReentrancyGuard: reentrant call");
-        s.sys.reentrantStatus = _ENTERED;
+        require(s.sys.reentrantStatus != C.ENTERED, "ReentrancyGuard: reentrant call");
+        s.sys.reentrantStatus = C.ENTERED;
         _;
-        s.sys.reentrantStatus = _NOT_ENTERED;
+        s.sys.reentrantStatus = C.NOT_ENTERED;
     }
 }

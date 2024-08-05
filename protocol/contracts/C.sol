@@ -21,6 +21,10 @@ library C {
     uint256 private constant LEGACY_CHAIN_ID = 1;
     uint256 private constant CHAIN_ID = 1;
 
+    //////////////////// Reentrancy ////////////////////
+    uint256 internal constant NOT_ENTERED = 1;
+    uint256 internal constant ENTERED = 2;
+
     //////////////////// Season ////////////////////
 
     /// @dev The length of a Season meaured in seconds.
