@@ -45,10 +45,10 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
     <Divider />
     <Stack p={1.5} position="relative" width="100%">
       <SingleAdvancedChart
+        storageKeyPrefix="silo-avg-seeds-per-bdv"
         tooltipTitle="Average Seeds per BDV"
         tooltipHoverText="The number of stalk issued per Season for each bean in the Silo."
         valueAxisType="stalk"
-        tooltipText="asdfasdfasdfasdf"
         timeState={props.timeState}
         tickFormatter={tickFormatSmallBN(4)}
         shortTickFormatter={tickFormatSmallBN(4)}
@@ -59,5 +59,4 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
     </Stack>
   </Stack>
 );
-
 export default SeasonsToCatchUpInfo;

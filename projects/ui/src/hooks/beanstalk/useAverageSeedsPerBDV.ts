@@ -7,7 +7,6 @@ import { Time, Range } from 'lightweight-charts';
 import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
 import useSdk from '~/hooks/sdk';
 import { apolloClient } from '~/graph/client';
-import { ZERO_BN } from '~/constants';
 import { toBNWithDecimals } from '~/util';
 
 type SiloAssetsReturn = {
@@ -38,8 +37,6 @@ type MergedQueryData = {
   grownStalkPerBDV: BigNumber;
   totalBDV: BigNumber;
 };
-
-type MergedQueryDataBySeason = SeasonMap<MergedQueryData>;
 
 type OutputMap = SeasonMap<{
   [address: string]: Partial<MergedQueryData>;
@@ -99,9 +96,9 @@ function createMultiTokenQuery(tokens: Token[]) {
 
 const maxDataPerQuery = 1000;
 
-const getNumQueries = (range: Range<Time>) => {
-  const from = Number(range.from.valueOf());
-  const to = Number(range.to.valueOf());
+const getNumQueries = (range: Range<Time> | undefined) => {
+  const from = Number((range?.from || 0).valueOf());
+  const to = Number((range?.to || Date.now()).valueOf());
   const numSeasons = Math.floor((to - from) / 3600);
 
   const numQueries = Math.ceil(numSeasons / maxDataPerQuery);
@@ -154,80 +151,10 @@ const parseResult = (sdk: BeanstalkSDK, data: any, output: OutputMap) => {
       };
     });
   });
-
-  const tsMap = new Map<number, number>();
-
-  const combinedData = Object.entries(output).reduce<MergedQueryDataBySeason>(
-    (memo, [_season, entity]) => {
-      const summatedData = Object.values(entity).reduce<MergedQueryData>(
-        (prev, curr) => {
-          const season = Number(_season);
-          if (curr.createdAt && !tsMap.has(season)) {
-            tsMap.set(season, Number(curr.createdAt));
-            const currTS = tsMap.get(season);
-            const prevTS = tsMap.get(season - 1);
-            const nextTS = tsMap.get(season + 1);
-
-            if (currTS === nextTS || currTS === prevTS) return prev;
-
-            return {
-              season: season,
-              depositedBDV: (curr.depositedBDV || ZERO_BN)?.plus(
-                prev.depositedBDV || 0
-              ),
-              grownStalkPerSeason: (curr.grownStalkPerSeason || ZERO_BN)?.plus(
-                prev.grownStalkPerSeason || 0
-              ),
-              createdAt: curr.createdAt,
-              grownStalkPerBDV: ZERO_BN,
-              totalBDV: (curr.depositedBDV || ZERO_BN).plus(prev.totalBDV || 0),
-            };
-          }
-
-          return prev;
-        },
-        {} as MergedQueryData
-      );
-
-      if (
-        summatedData.season &&
-        summatedData.createdAt &&
-        summatedData.grownStalkPerSeason &&
-        summatedData.depositedBDV?.gt(0)
-      ) {
-        memo[summatedData.season] = summatedData;
-      }
-
-      tsMap.clear();
-      return memo;
-    },
-    {}
-  );
-
-  console.log('combinedData: ', combinedData);
-
-  const combined: ChartQueryData[] = Object.values(combinedData).map(
-    (cData) => {
-      const avgSeedsPerBdv = cData.grownStalkPerSeason.times(
-        cData.depositedBDV
-      );
-
-      return {
-        value: avgSeedsPerBdv.toNumber(),
-        time: Number(cData.createdAt) as Time,
-        customValues: {
-          season: cData.season,
-        },
-      };
-    }
-  );
-
-  return combined;
 };
 
-const combineQueryResults = (output: OutputMap) => {
+const normalizeQueryResults = (output: OutputMap) => {
   const tsMap = new Map<number, number>();
-
   const map: SeasonMap<ChartQueryData> = {};
 
   const summate = (
@@ -264,18 +191,25 @@ const combineQueryResults = (output: OutputMap) => {
 
     if (datum.depositedBDV && datum.grownStalkPerBDV && datum.createdAt) {
       map[season] = {
-        customValues: { season },
-        time: datum.createdAt,
+        customValues: {
+          season,
+        },
+        time: Number(datum.createdAt) as Time,
         value: datum.grownStalkPerBDV.div(datum.depositedBDV).toNumber(),
       };
     }
   };
 
-  Object.entries(output).forEach(([season, entity]) => {
-    summate(Number(season), entity);
-  });
+  Object.entries(output).forEach(([season, entity]) =>
+    summate(Number(season), entity)
+  );
 
-  console.log(map);
+  const arr = Object.values(map).sort(
+    (a, b) => Number(a.time) - Number(b.time)
+  );
+  console.log('map: ', arr);
+
+  return arr;
 };
 
 const apolloFetch = async (
@@ -297,7 +231,8 @@ const apolloFetch = async (
 };
 
 export const useAverageSeedsPerBDV = (
-  range: Range<Time>
+  range: Range<Time> | undefined,
+  skip?: boolean
 ): readonly [
   seriesData: ChartQueryData[],
   loading: boolean,
@@ -310,6 +245,7 @@ export const useAverageSeedsPerBDV = (
   const sdk = useSdk();
 
   const fetch = useCallback(async () => {
+    if (skip) return;
     const tokens = [...sdk.tokens.siloWhitelistedWellLP];
     const document = createMultiTokenQuery(tokens);
 
@@ -321,62 +257,45 @@ export const useAverageSeedsPerBDV = (
     const output: OutputMap = {};
     const promises: Promise<any>[] = [];
 
-    setLoading(true);
-
-    if (numQueries === 1) {
-      const promise = apolloFetch(document, first, 999999999).then((r) =>
-        parseResult(sdk, r.data, output)
-      );
-      promises.push(promise);
-    } else {
-      const datas: ChartQueryData[] = [];
-      await apolloClient
-        .query({
-          query: document,
-          variables: {
-            first: 1000,
-            season_lte: 999999999,
-          },
-          notifyOnNetworkStatusChange: true,
-          fetchPolicy: 'cache-first',
-        })
-        .then((r) => data.push(...parseResult(sdk, r.data, output)));
-
-      const earliestSeason = data[0]?.customValues.season;
-      if (!earliestSeason) return;
-
-      for (let i = 1; i < numQueries; i += 1) {
-        const numVals = Math.min(first - i * 1000, 1000);
-        const seasonLte = earliestSeason - i * 1000;
-        console.log({
-          i,
-          numVals,
-          seasonLte,
+    try {
+      setLoading(true);
+      if (numQueries === 1) {
+        const promise = apolloFetch(document, first, 999999999).then((r) => {
+          parseResult(sdk, r.data, output);
         });
-        const promise = apolloClient
-          .query({
-            query: document,
-            variables: {
-              first: numVals,
-              season_lte: seasonLte,
-            },
-            notifyOnNetworkStatusChange: true,
-            fetchPolicy: 'cache-first',
-          })
-          .then((r) => {
-            datas.push(...parseResult(sdk, r.data, output));
-          });
         promises.push(promise);
+      } else {
+        await apolloFetch(document, 1000, 999999999).then((r) => {
+          parseResult(sdk, r.data, output);
+        });
+
+        const initResult = Object.keys(output);
+        const earliestSeason =
+          initResult.length && Number(initResult.sort()[0]);
+
+        if (earliestSeason <= 0) return;
+
+        for (let i = 1; i < numQueries; i += 1) {
+          const numVals = Math.min(first - i * 1000, 1000);
+          const seasonLte = earliestSeason - i * 1000;
+          promises.push(
+            apolloFetch(document, numVals, seasonLte).then((r) => {
+              parseResult(sdk, r.data, output);
+            })
+          );
+        }
       }
+
       await Promise.all(promises);
-      const sorted = datas.sort((a, b) => Number(a.time) - Number(b.time));
-      setData(sorted);
+      setData(normalizeQueryResults(output));
+    } catch (e) {
+      console.debug('[useAverageSeedsPerBDV/fetch]: FAILED: ', e);
+      setError(true);
+      return;
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, sdk]);
+  }, [range, sdk, skip]);
 
   useEffect(() => {
     fetch();

@@ -213,9 +213,9 @@ const SeedGaugeInfoSelected = ({
   // load the data at the top level
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  const timeState = useChartTimePeriodState();
+  const timeState = useChartTimePeriodState('silo-avg-seeds-per-bdv');
 
-  const [query, loading] = useAverageSeedsPerBDV(timeState[0]);
+  const [query, loading] = useAverageSeedsPerBDV(timeState[0], !shouldFetch);
 
   useEffect(() => {
     // Fetch only if we open the seasonsToCatchUp Tab
