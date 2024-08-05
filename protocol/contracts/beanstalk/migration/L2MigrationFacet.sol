@@ -4,8 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import "../ReentrancyGuard.sol";
-import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/migration/L1ReentrancyGuard.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
@@ -45,7 +44,7 @@ interface IInbox {
     ) external payable returns (uint256);
 }
 
-contract L2MigrationFacet is Invariable, ReentrancyGuard {
+contract L2MigrationFacet is ReentrancyGuard {
     // Arbitrum Delayed inbox.
     address constant BRIDGE = address(0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f);
     address constant L1_BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
