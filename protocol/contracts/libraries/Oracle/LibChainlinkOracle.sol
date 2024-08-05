@@ -31,9 +31,10 @@ library LibChainlinkOracle {
     }
 
     /**
-     * @dev Returns the TOKEN/USD, or USD/TOKEN price with the option of using a TWA lookback.
+     * @dev Returns the TOKEN1/TOKEN2, or TOKEN2/TOKEN1 price with the option of using a TWA lookback.
      * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
-     * Return value has 6 decimal precision if using TOKEN/USD, and the token's decimal precision if using USD/TOKEN.
+     * Use `tokenDecimals = 0` for TOKEN1/TOKEN2 price. `tokenDecimals > 0` for TOKEN2/TOKEN1 price.
+     * Return value has 6 decimal precision if using TOKEN1/TOKEN2, and `tokenDecimals` if using TOKEN2/TOKEN1.
      * Returns 0 if `priceAggregatorAddress` is broken or frozen.
      **/
     function getTokenPrice(
@@ -50,7 +51,9 @@ library LibChainlinkOracle {
 
     /**
      * @dev Returns the price of a given `priceAggregator`
-     * Return value has 6 decimal precision.
+     * Use `tokenDecimals = 0` for TOKEN1/TOKEN2 price. `tokenDecimals > 0` for TOKEN2/TOKEN1 price
+     * where TOKEN1 is the numerator asset and TOKEN2 is the asset the oracle is denominated in.
+     * Return value has 6 decimal precision if using TOKEN1/TOKEN2, and `tokenDecimals` if using TOKEN2/TOKEN1.
      * Returns 0 if Chainlink's price feed is broken or frozen.
      **/
     function getPrice(
@@ -83,7 +86,7 @@ library LibChainlinkOracle {
                 return 0;
             }
 
-            // if token decimals is greater than 0, return the usd/token price instead (i.e invert the price).
+            // if token decimals is greater than 0, return the TOKEN2/TOKEN1 price instead (i.e invert the price).
             if (tokenDecimals > 0) {
                 price = uint256(10 ** (tokenDecimals + decimals)).div(uint256(answer));
             } else {
@@ -98,7 +101,8 @@ library LibChainlinkOracle {
 
     /**
      * @dev Returns the TWAP price from the Chainlink Oracle over the past `lookback` seconds.
-     * Return value has 6 decimal precision.
+     * Use `tokenDecimals = 0` for TOKEN1/TOKEN2 price. `tokenDecimals > 0` for TOKEN2/TOKEN1 price.
+     * Return value has 6 decimal precision if using TOKEN1/TOKEN2, and `tokenDecimals` if using TOKEN2/TOKEN1.
      * Returns 0 if Chainlink's price feed is broken or frozen.
      **/
     function getTwap(
@@ -143,7 +147,7 @@ library LibChainlinkOracle {
                 // Loop through previous rounds and compute cumulative sum until
                 // a round at least `lookback` seconds ago is reached.
                 while (timestamp > t.endTimestamp) {
-                    // if token decimals is greater than 0, return the usd/token price instead (i.e invert the price).
+                    // if token decimals is greater than 0, return the TOKEN2/TOKEN1 price instead (i.e invert the price).
                     if (tokenDecimals > 0) {
                         answer = int256((10 ** (tokenDecimals + decimals)) / (uint256(answer)));
                     }
