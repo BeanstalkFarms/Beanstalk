@@ -1,4 +1,4 @@
-import { DiamondCut } from "../generated/Diamond/Beanstalk";
+import { DiamondCut } from "../generated/Beanstalk-ABIs/PreReplant";
 import { loadBeanstalk } from "./utils/Beanstalk";
 
 export function handleDiamondCut(event: DiamondCut): void {

@@ -1,6 +1,6 @@
 // Unfortunately this file must be copied across the various subgraph projects. This is due to the codegen
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { BeanstalkPrice } from "../../generated/templates/Well/BeanstalkPrice";
+import { BeanstalkPrice } from "../../generated/Basin-ABIs/BeanstalkPrice";
 import { BEANSTALK_PRICE_1, BEANSTALK_PRICE_2, PRICE_2_BLOCK } from "../../../subgraph-core/utils/Constants";
 
 // Gets the BeanstalkPrice contract, bound to the appropriate instance of the contract.

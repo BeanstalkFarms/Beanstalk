@@ -1,5 +1,5 @@
 query LatestAPY {
-  day: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_24_HOUR}) {
+  day: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {emaWindow: ROLLING_24_HOUR}) {
     id
     season
     beansPerSeasonEMA
@@ -9,7 +9,7 @@ query LatestAPY {
       stalkAPY
     }
   }
-  week: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_7_DAY}) {
+  week: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {emaWindow: ROLLING_7_DAY}) {
     id
     season
     beansPerSeasonEMA
@@ -19,7 +19,7 @@ query LatestAPY {
       stalkAPY
     }
   }
-  month: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {window: ROLLING_30_DAY}) {
+  month: siloYields(first: 1, orderBy: season, orderDirection: desc,  where: {emaWindow: ROLLING_30_DAY}) {
     id
     season
     beansPerSeasonEMA

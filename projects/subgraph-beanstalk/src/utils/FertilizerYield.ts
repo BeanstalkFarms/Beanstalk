@@ -14,11 +14,11 @@ export function loadFertilizerYield(season: i32, window: i32): FertilizerYield {
     fertilizerYield.createdAt = ZERO_BI;
 
     if (window == 24) {
-      fertilizerYield.window = "ROLLING_24_HOUR";
+      fertilizerYield.emaWindow = "ROLLING_24_HOUR";
     } else if (window == 168) {
-      fertilizerYield.window = "ROLLING_7_DAY";
+      fertilizerYield.emaWindow = "ROLLING_7_DAY";
     } else if (window == 720) {
-      fertilizerYield.window = "ROLLING_30_DAY";
+      fertilizerYield.emaWindow = "ROLLING_30_DAY";
     }
 
     fertilizerYield.save();
