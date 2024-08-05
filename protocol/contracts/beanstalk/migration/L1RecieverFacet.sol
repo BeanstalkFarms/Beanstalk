@@ -219,7 +219,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice issues InternalBalances to `reciever`. Uses a merkle tree in order to verify plots.
+     * @notice issues InternalBalances to `reciever`. Uses a merkle tree in order to verify balances.
      * @dev global internal balance variables (`internalTokenBalanceTotal`) do not need to be updated,
      * as the internal balances were included in the initial L2 Migration.
      */
@@ -255,7 +255,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice issues Fertilizer to `reciever`. Uses a merkle tree in order to verify plots.
+     * @notice issues Fertilizer to `reciever`. Uses a merkle tree in order to verify fertilizer.
      * @dev global internal balance variables (`fertilizer, unfertilizedIndex`, etc) do not need to be updated,
      * as the internal balances were included in the initial L2 Migration.
      */
