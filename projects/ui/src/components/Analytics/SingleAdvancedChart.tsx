@@ -26,15 +26,14 @@ import {
   TickMarkType,
   Time,
 } from 'lightweight-charts';
-import useSeasonsQueryV2 from '~/hooks/beanstalk/useSeasonsQueryV2';
 import { VertLine } from '~/util/lightweight-charts-plugins/vertical-line/vertical-line';
 import { setHours } from 'date-fns';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
 import CalendarButton from './CalendarButton';
 import { ChartV2DataProps } from './ChartV2';
 import { chartColors } from './chartColors';
-import { useChartSetupData } from './useChartSetupData';
 import { ChartQueryData } from './AdvancedChart';
 import ChartInfoOverlay from '../Common/Charts/ChartInfoOverlay';
 
@@ -131,7 +130,13 @@ type OmmitedV2DataProps = Omit<
 
 type ChartProps = OmmitedV2DataProps & {
   seriesData: ChartQueryData[];
-  chartId: number;
+  tickFormatter: (v: number) => string | undefined;
+  shortTickFormatter: (d: any) => string | undefined;
+  timeState: ReturnType<typeof useChartTimePeriodState>;
+  valueAxisType: string;
+  tooltipText: string;
+  tooltipHoverText: string;
+  tooltipTitle: string;
   isLoading?: boolean;
   isError?: boolean;
 };
@@ -148,9 +153,15 @@ const Chart = ({
   size = 'full',
   drawExploitLine = true,
   seriesData,
-  chartId,
+  valueAxisType,
+  timeState,
   isLoading,
   isError,
+  tooltipText,
+  tooltipHoverText,
+  tooltipTitle,
+  shortTickFormatter,
+  tickFormatter,
 }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chart = useRef<IChartApi>();
@@ -165,7 +176,6 @@ const Chart = ({
   );
 
   const theme = useTheme();
-  const chartSetupData = useChartSetupData();
 
   // Menu
   const [rightAnchorEl, setRightAnchorEl] = useState<null | HTMLElement>(null);
@@ -179,11 +189,6 @@ const Chart = ({
     },
     [rightAnchorEl]
   );
-
-  const chartProps = chartSetupData[chartId];
-
-  const chartAxisTypes = chartProps.valueAxisType;
-  const secondPriceScale = new Set(chartAxisTypes).size > 1;
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -246,23 +251,19 @@ const Chart = ({
     const priceScaleIds: string[] = [];
     let scaleId = '';
     const findScale = priceScaleIds.findIndex(
-      (value) => value === chartProps.valueAxisType
+      (value) => value === valueAxisType
     );
     if (findScale > -1) {
       scaleId =
-        findScale > 1
-          ? chartProps.valueAxisType
-          : findScale === 0
-            ? 'right'
-            : 'left';
+        findScale > 1 ? valueAxisType : findScale === 0 ? 'right' : 'left';
     } else if (priceScaleIds.length === 0) {
-      priceScaleIds[0] = chartProps.valueAxisType;
+      priceScaleIds[0] = valueAxisType;
       scaleId = 'right';
     } else if (priceScaleIds.length === 1) {
-      priceScaleIds[1] = chartProps.valueAxisType;
+      priceScaleIds[1] = valueAxisType;
       scaleId = 'left';
     } else {
-      scaleId = chartProps.valueAxisType;
+      scaleId = valueAxisType;
     }
 
     areaSeries.current = chart.current.addLineSeries({
@@ -271,7 +272,7 @@ const Chart = ({
       priceScaleId: scaleId,
       priceFormat: {
         type: 'custom',
-        formatter: chartProps.shortTickFormatter,
+        formatter: tickFormatter,
       },
     });
 
@@ -303,16 +304,7 @@ const Chart = ({
       window.removeEventListener('resize', handleResize);
       chart.current?.remove();
     };
-  }, [
-    theme,
-    drawPegLine,
-    drawExploitLine,
-    size,
-    chartSetupData,
-    secondPriceScale,
-    chartProps.shortTickFormatter,
-    chartProps.valueAxisType,
-  ]);
+  }, [theme, drawPegLine, drawExploitLine, size, tickFormatter, valueAxisType]);
 
   useEffect(() => {
     chart.current?.applyOptions({
@@ -323,6 +315,7 @@ const Chart = ({
   }, [rightPriceScaleMode]);
 
   useMemo(() => {
+    if (!chart.current) return;
     if (lastDataPoint) {
       const from = timePeriod?.from;
       const to = timePeriod?.to;
@@ -334,14 +327,14 @@ const Chart = ({
           0
         );
         const newTo = setHours(new Date((from.valueOf() as number) * 1000), 23);
-        chart.current?.timeScale().setVisibleRange({
+        chart.current?.timeScale()?.setVisibleRange({
           from: (newFrom.valueOf() / 1000) as Time,
           to: (newTo.valueOf() / 1000) as Time,
         });
-      } else {
-        chart.current?.timeScale().setVisibleRange({
+      } else if (from && to) {
+        chart.current?.timeScale()?.setVisibleRange({
           from: from,
-          to: to!,
+          to: to,
         });
       }
     }
@@ -358,7 +351,7 @@ const Chart = ({
       : undefined;
 
     if (size === 'full' && storedTimePeriod) {
-      chart.current?.timeScale().setVisibleRange(storedTimePeriod);
+      chart.current?.timeScale()?.setVisibleRange(storedTimePeriod);
     }
 
     function getDataPoint(mode: string) {
@@ -457,9 +450,6 @@ const Chart = ({
     };
   }, [seriesData, size]);
 
-  const tooltipTitle = chartSetupData[chartId].tooltipTitle;
-  const tooltipHoverText = chartSetupData[chartId].tooltipHoverText;
-
   const beforeFirstSeason =
     dataPoint && firstDataPoint
       ? dataPoint.timestamp < firstDataPoint?.timestamp
@@ -486,16 +476,19 @@ const Chart = ({
             title={tooltipTitle}
             titleTooltip={tooltipHoverText}
             amount={
-              <>
-                {currValue
-                  ? chartSetupData[chartId].tickFormatter(currValue)?.toString()
-                  : '0'}
-              </>
+              <>{currValue ? tickFormatter(currValue)?.toString() : '0'}</>
             }
             subtitle={`Season ${currSeason || '--'}`}
             secondSubtitle={`${currTimestamp || '--'}`}
           />
-          <CalendarButton setTimePeriod={setTimePeriod} />
+          <CalendarButton
+            setLocalStorage={false}
+            setTimePeriod={
+              timeState[1] as React.Dispatch<
+                React.SetStateAction<Range<Time> | undefined>
+              >
+            }
+          />
         </Stack>
       </Box>
       <Box
@@ -598,13 +591,13 @@ const Chart = ({
 };
 
 export type SingleAdvancedChartProps = {
-  query: ReturnType<typeof useSeasonsQueryV2>;
-} & OmmitedV2DataProps;
+  seriesData: ChartQueryData[];
+  isLoading?: boolean;
+  error?: boolean;
+} & OmmitedV2DataProps &
+  ChartProps;
 
-const SingleAdvancedChart = ({
-  query: [{ seriesData, chartId }, loading, error],
-  ...rest
-}: SingleAdvancedChartProps) => (
+const SingleAdvancedChart = (props: SingleAdvancedChartProps) => (
   <Stack position="relative">
     <Stack
       sx={{
@@ -614,17 +607,8 @@ const SingleAdvancedChart = ({
         overflow: 'clip',
       }}
     >
-      {chartId ? (
-        <Chart
-          seriesData={seriesData}
-          chartId={chartId}
-          isLoading={loading || (!seriesData.length && !error)}
-          isError={error}
-          {...rest}
-        />
-      ) : (
-        <ChartEmptyState />
-      )}
+      <Chart {...props} />
+      {/* <ChartEmptyState /> */}
     </Stack>
   </Stack>
 );
