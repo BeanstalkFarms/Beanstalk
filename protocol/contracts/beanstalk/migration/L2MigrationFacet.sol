@@ -7,6 +7,7 @@ pragma solidity ^0.8.20;
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @author Brean
@@ -26,7 +27,7 @@ import {IBean} from "contracts/interfaces/IBean.sol";
  **/
 
 interface IL1RecieverFacet {
-    function recieveL1Beans(address reciever, uint256 amount) external;
+    function recieveL1Beans(address reciever, uint256 amount, LibTransfer.To toMode) external;
 
     function approveReciever(address owner, address reciever) external;
 }
@@ -59,6 +60,7 @@ contract L2MigrationFacet is Invariable, ReentrancyGuard {
         address reciever,
         address L2Beanstalk,
         uint256 amount,
+        LibTransfer.To toMode,
         uint256 maxSubmissionCost,
         uint256 maxGas,
         uint256 gasPriceBid
@@ -68,7 +70,7 @@ contract L2MigrationFacet is Invariable, ReentrancyGuard {
 
         bytes memory data = abi.encodeCall(
             IL1RecieverFacet(L2Beanstalk).recieveL1Beans,
-            (reciever, amount)
+            (reciever, amount, toMode)
         );
 
         // send data to L2Beanstalk via the bridge.

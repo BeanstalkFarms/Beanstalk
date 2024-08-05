@@ -137,11 +137,61 @@ contract L1RecieverFacetTest is TestHelper {
         assertEq(bs.getReciever(OWNER), reciever);
     }
 
-    function test_L2MigrateInvalidPlot() public {}
+    /**
+     * @notice verifies that a user cannot gain an invalid plot.
+     */
+    function test_L2MigrateInvalidPlot() public {
+        bs.setRecieverForL1Migration(OWNER, RECIEVER);
 
-    function test_L2MigrateInvalidInternalBalance() public {}
+        (
+            address owner,
+            uint256[] memory index,
+            uint256[] memory pods,
+            bytes32[] memory proof
+        ) = getMockPlot();
 
-    function test_L2MigrateInvalidInternalFert() public {}
+        pods[0] = type(uint256).max;
+
+        vm.expectRevert("L2Migration: Invalid plots");
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
+    }
+
+    function test_L2MigrateInvalidInternalBalance() public {
+        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+
+        (
+            address owner,
+            address[] memory tokens,
+            uint256[] memory amounts,
+            bytes32[] memory proof
+        ) = getMockInternalBalance();
+
+        amounts[0] = type(uint256).max;
+
+        vm.expectRevert("L2Migration: Invalid internal balances");
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
+    }
+
+    function test_L2MigrateInvalidInternalFert() public {
+        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+
+        (
+            address owner,
+            uint256[] memory ids,
+            uint128[] memory amounts,
+            uint128 lastBpf,
+            bytes32[] memory proof
+        ) = getMockFertilizer();
+
+        amounts[0] = type(uint128).max;
+
+        // verify user cannot migrate afterwords.
+        vm.expectRevert("L2Migration: Invalid Fertilizer");
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+    }
 
     // test helpers
     function getMockDepositData()

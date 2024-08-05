@@ -17,6 +17,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @author Brean
@@ -50,7 +51,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     /**
      * @notice emitted when L1 Beans are migrated to L2.
      */
-    event L1BeansMigrated(address indexed reciever, uint256 amount);
+    event L1BeansMigrated(address indexed reciever, uint256 amount, LibTransfer.To toMode);
 
     /**
      * @notice emitted when an account recieves a deposit(s) from L1.
@@ -114,7 +115,11 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @notice migrates `amount` of Beans to L2,
      * issued to `reciever`.
      */
-    function recieveL1Beans(address reciever, uint256 amount) external nonReentrant {
+    function recieveL1Beans(
+        address reciever,
+        uint256 amount,
+        LibTransfer.To toMode
+    ) external nonReentrant {
         // To check that message came from L1, we check that the sender is the L1 contract's L2 alias.
         require(msg.sender == applyL1ToL2Alias(L1BEANSTALK), "recieveL1Beans only callable by L1");
         s.sys.l2Migration.migratedL1Beans += amount;
@@ -122,9 +127,9 @@ contract L1RecieverFacet is ReentrancyGuard {
             EXTERNAL_L1_BEANS >= s.sys.l2Migration.migratedL1Beans,
             "L2Migration: exceeds maximum migrated"
         );
-        C.bean().mint(reciever, amount);
+        LibTransfer.mintToken(C.bean(), amount, reciever, toMode);
 
-        emit L1BeansMigrated(reciever, amount);
+        emit L1BeansMigrated(reciever, amount, toMode);
     }
 
     /**
@@ -173,7 +178,6 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         // add migrated deposits to the account.
         uint256 stalk = addMigratedDepositsToAccount(reciever, depositIds, amounts, bdvs);
-        console.log("stalk issued:", stalk);
 
         // increment receiver stalk:
         LibSilo.mintActiveStalk(reciever, stalk);
@@ -370,9 +374,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata bdvs
     ) internal returns (uint256 stalk) {
         for (uint i; i < depositIds.length; i++) {
-            console.log("depositIds[i]", depositIds[i]);
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
-            console.log("token", token);
             uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             int96 stemTip = LibTokenSilo.stemTipForToken(token);
             LibTokenSilo.addDepositToAccount(
@@ -383,14 +385,8 @@ contract L1RecieverFacet is ReentrancyGuard {
                 bdvs[i],
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-            console.log("stalk issued.");
 
             // calculate the stalk assoicated with the deposit and increment.
-            console.log("stalkIssuedPerBdv", stalkIssuedPerBdv);
-            console.logInt(stemTip);
-            console.logInt(stem);
-            console.log("bdvs[i]", bdvs[i]);
-            console.log(STALK_PRECISION);
             stalk +=
                 (bdvs[i] * stalkIssuedPerBdv) +
                 (uint256(uint256(uint96(stemTip - stem)) * bdvs[i]) / STALK_PRECISION);

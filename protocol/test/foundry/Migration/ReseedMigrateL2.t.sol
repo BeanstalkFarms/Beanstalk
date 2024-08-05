@@ -151,13 +151,37 @@ contract reeseedMigrateL2 is TestHelper {
     }
 
     // verifies that the user is able to migrate external beans to L2 and approve a reciever on L2.
-    function test_bean_l2_migration() public {
+    function test_bean_l2_migration_external() public {
         vm.startPrank(BS_FARMS);
         IERC20(C.BEAN).approve(BEANSTALK, 1e6);
         L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
             BS_FARMS,
             L2_BEANSTALK,
             1e6,
+            LibTransfer.To.EXTERNAL,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+
+        vm.startPrank(BS_FARMS);
+        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+    }
+
+    function test_bean_l2_migration_internal() public {
+        vm.startPrank(BS_FARMS);
+        IERC20(C.BEAN).approve(BEANSTALK, 1e6);
+        L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            1e6,
+            LibTransfer.To.INTERNAL,
             2e14, // max submission cost = 200k gas * 10 gwei
             200000, // 200k gas to execute on L2
             10e9 // @10 gwei
