@@ -90,8 +90,6 @@ contract ReseedSilo {
             for (uint256 j; j < deposits[i].dd.length; j++) {
                 // get stem from depositId.
                 (, int96 stem) = LibBytes.unpackAddressAndStem(deposits[i].dd[j].depositId);
-                // verify that depositId is valid.
-                require(deposits[i].stemTip >= stem, "ReseedSilo: INVALID_STEM");
                 // add deposit to account.
                 s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].amount =
                     deposits[i].dd[j].amount;
