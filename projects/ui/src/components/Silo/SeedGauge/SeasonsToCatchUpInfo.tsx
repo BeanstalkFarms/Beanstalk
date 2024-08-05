@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import SingleAdvancedChart from '~/components/Analytics/SingleAdvancedChart';
 import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
-import { tickFormatSmallBN } from '~/components/Analytics/formatters';
 import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
+import BigNumber from 'bignumber.js';
 
 type SeasonsToCatchUpInfoProps = {
   queryData: ChartQueryData[];
@@ -50,8 +50,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
         tooltipHoverText="The number of stalk issued per Season for each bean in the Silo."
         valueAxisType="stalk"
         timeState={props.timeState}
-        tickFormatter={tickFormatSmallBN(4)}
-        shortTickFormatter={tickFormatSmallBN(4)}
+        tickFormatter={(val) => new BigNumber(val).toFormat(6)}
         seriesData={props.queryData}
         isLoading={props.loading}
         drawPegLine={false}

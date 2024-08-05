@@ -43,7 +43,6 @@ type OutputMap = SeasonMap<{
 }>;
 
 function createMultiTokenQuery(tokens: Token[]) {
-  // const queryParat: string[] = [];
   const queryParts = tokens.map(
     (token) => `
     seasonsSiloAssets_${token.symbol}: siloAssetHourlySnapshots(
@@ -74,6 +73,7 @@ function createMultiTokenQuery(tokens: Token[]) {
         stalkEarnedPerSeason_gt: 0
       }
     ) {
+      id
       season
       token {
         id
@@ -89,7 +89,7 @@ function createMultiTokenQuery(tokens: Token[]) {
       $first: Int!
       $season_lte: Int!
     ) {
-      ${queryParts.join('\n')}
+      ${queryParts.join('')}
     }
   `;
 }
@@ -117,45 +117,65 @@ const parseResult = (sdk: BeanstalkSDK, data: any, output: OutputMap) => {
     const s = data[`seasonsSiloAssets_${token.symbol}`] as SiloAssetsReturn[];
     const w = data[`seasonsWhitelisted_${token.symbol}`] as WhitelistedReturn[];
 
-    s.forEach((assetData) => {
-      const existing = output[assetData.season]?.[token.address] || {};
+    console.log(token.symbol, ' w: ', w);
+    console.log(token.symbol, ' s: ', s);
+
+    (s || []).forEach((sData) => {
+      if (!output[sData.season]) {
+        output[sData.season] = {};
+      }
+      const existing = output[sData.season][token.address] || {};
       const amount = existing?.depositedBDV?.gt(0)
         ? existing.depositedBDV
-        : toBNWithDecimals(assetData.depositedBDV ?? '0', BEAN.decimals);
+        : toBNWithDecimals(sData.depositedBDV || '0', BEAN.decimals);
 
-      output[assetData.season] = {
-        ...output[assetData.season],
-        [token.address]: {
-          ...existing,
-          depositedBDV: amount,
-          createdAt: existing.createdAt ?? assetData.createdAt,
-          season: existing.season ?? assetData.season,
-        },
+      output[sData.season][token.address] = {
+        ...existing,
+        depositedBDV: amount,
+        createdAt: existing.createdAt ?? sData.createdAt,
+        season: sData.season,
       };
     });
 
-    w.forEach((wData) => {
-      const existing = output[wData.season]?.[token.address] || {};
-      const amount = existing?.grownStalkPerSeason?.gt(0)
-        ? existing.depositedBDV
-        : toBNWithDecimals(wData.stalkEarnedPerSeason ?? '0', SEEDS.decimals);
+    (w || []).forEach((wData) => {
+      if (!output[wData.season]) {
+        output[wData.season] = {};
+      }
+      const existing = output[wData.season][token.address] || {};
+      let amount = existing?.grownStalkPerSeason?.gt(0)
+        ? existing.grownStalkPerSeason
+        : toBNWithDecimals(wData.stalkEarnedPerSeason || '0', SEEDS.decimals);
 
-      output[wData.season] = {
-        ...output[wData.season],
-        [token.address]: {
-          ...existing,
-          grownStalkPerSeason: amount,
-          createdAt: existing.createdAt ?? wData.createdAt,
-          season: existing.season ?? wData.season,
-        },
+      if (token.symbol === sdk.tokens.BEAN_ETH_WELL_LP.symbol) {
+        if (wData.season <= 21799) {
+          amount = toBNWithDecimals('4500000', SEEDS.decimals);
+        }
+      }
+
+      output[wData.season][token.address] = {
+        ...existing,
+        grownStalkPerSeason: amount,
+        createdAt: existing.createdAt || wData.createdAt,
+        season: existing.season || wData.season,
       };
     });
+
+    // console.log('outputasdfadf: ', output);
+
+    // return mapping;
   });
+  console.log('-----');
 };
 
 const normalizeQueryResults = (output: OutputMap) => {
   const tsMap = new Map<number, number>();
   const map: SeasonMap<ChartQueryData> = {};
+
+  // const sorted = Object.entries(output).sort(
+  //   ([s1], [s2]) => Number(s1) - Number(s2)
+  // );
+  // const sortedOutput = Object.fromEntries(sorted);
+  // console.log('sortedOutput: ', sortedOutput);
 
   const summate = (
     season: number,
@@ -163,7 +183,7 @@ const normalizeQueryResults = (output: OutputMap) => {
   ) => {
     const datum = Object.values(entity).reduce<Partial<MergedQueryData>>(
       (prev, curr) => {
-        if (!curr.grownStalkPerSeason?.gt(0) || !curr.depositedBDV?.gt(0)) {
+        if (!curr.grownStalkPerSeason || !curr.depositedBDV) {
           return prev;
         }
         if (curr.createdAt && !tsMap.has(season)) {
@@ -200,35 +220,40 @@ const normalizeQueryResults = (output: OutputMap) => {
     }
   };
 
-  Object.entries(output).forEach(([season, entity]) =>
-    summate(Number(season), entity)
-  );
+  // console.log('output: ', Object.keys(output).length);
+
+  Object.entries(output).forEach(([season, entity]) => {
+    summate(Number(season), entity);
+    tsMap.clear();
+  });
 
   const arr = Object.values(map).sort(
     (a, b) => Number(a.time) - Number(b.time)
   );
-  console.log('map: ', arr);
+  // console.log('map: ', arr);
 
   return arr;
 };
 
-const apolloFetch = async (
+const SEASON_GT = 20389;
+
+async function apolloFetch(
   document: DocumentNode,
   first: number,
   seasonLte: number
-) => {
+) {
   const query = apolloClient.query({
     query: document,
     variables: {
       first,
       season_lte: seasonLte,
     },
-    fetchPolicy: 'cache-first',
+    fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
   });
 
   return query;
-};
+}
 
 export const useAverageSeedsPerBDV = (
   range: Range<Time> | undefined,
@@ -245,7 +270,6 @@ export const useAverageSeedsPerBDV = (
   const sdk = useSdk();
 
   const fetch = useCallback(async () => {
-    if (skip) return;
     const tokens = [...sdk.tokens.siloWhitelistedWellLP];
     const document = createMultiTokenQuery(tokens);
 
@@ -253,6 +277,10 @@ export const useAverageSeedsPerBDV = (
     if (numQueries === 0) {
       throw new Error(`Invalid range`);
     }
+    // console.log({
+    //   first,
+    //   numQueries,
+    // });
 
     const output: OutputMap = {};
     const promises: Promise<any>[] = [];
@@ -260,14 +288,14 @@ export const useAverageSeedsPerBDV = (
     try {
       setLoading(true);
       if (numQueries === 1) {
-        const promise = apolloFetch(document, first, 999999999).then((r) => {
-          parseResult(sdk, r.data, output);
-        });
-        promises.push(promise);
+        promises.push(
+          apolloFetch(document, first, 999999999).then((r) => {
+            parseResult(sdk, r.data, output);
+          })
+        );
       } else {
-        await apolloFetch(document, 1000, 999999999).then((r) => {
-          parseResult(sdk, r.data, output);
-        });
+        const firstDatas = await apolloFetch(document, 1000, 999999999);
+        parseResult(sdk, firstDatas.data, output);
 
         const initResult = Object.keys(output);
         const earliestSeason =
@@ -275,35 +303,39 @@ export const useAverageSeedsPerBDV = (
 
         if (earliestSeason <= 0) return;
 
-        for (let i = 1; i < numQueries; i += 1) {
-          const numVals = Math.min(first - i * 1000, 1000);
-          const seasonLte = earliestSeason - i * 1000;
+        for (let i = 0; i < numQueries; i += 1) {
+          const season = Math.max(0, earliestSeason - i * 1000);
+          const numVals = season < 1000 ? season - 1 : 1000;
+
           promises.push(
-            apolloFetch(document, numVals, seasonLte).then((r) => {
+            apolloFetch(document, numVals, season).then((r) => {
+              // console.log(i, r.data);
               parseResult(sdk, r.data, output);
             })
           );
         }
       }
-
       await Promise.all(promises);
+      // console.log('combiing...');
+      // console.log('outpu: ', Object.values(output));
       setData(normalizeQueryResults(output));
     } catch (e) {
-      console.debug('[useAverageSeedsPerBDV/fetch]: FAILED: ', e);
+      console.error('[useAverageSeedsPerBDV/fetch]: FAILED: ', e);
       setError(true);
       return;
     } finally {
       setLoading(false);
     }
-  }, [range, sdk, skip]);
+  }, [range, sdk]);
 
   useEffect(() => {
+    if (skip) return;
     fetch();
-  }, [fetch]);
+  }, [fetch, skip]);
 
   return [data, loading, error] as const;
 };
 
 // beaneth: 16626
-// beanwsteth: 23321
+// beanwsteth: 23347
 // bean3crv:

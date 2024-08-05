@@ -131,7 +131,6 @@ type OmmitedV2DataProps = Omit<
 type ChartProps = OmmitedV2DataProps & {
   seriesData: ChartQueryData[];
   tickFormatter: (v: number) => string | undefined;
-  shortTickFormatter: (d: any) => string | undefined;
   timeState: ReturnType<typeof useChartTimePeriodState>;
   valueAxisType: string;
   tooltipHoverText: string;
@@ -160,7 +159,6 @@ const Chart = ({
   tooltipHoverText,
   storageKeyPrefix,
   tooltipTitle,
-  shortTickFormatter,
   tickFormatter,
 }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -302,7 +300,18 @@ const Chart = ({
       window.removeEventListener('resize', handleResize);
       chart.current?.remove();
     };
-  }, [theme, drawPegLine, drawExploitLine, size, tickFormatter, valueAxisType]);
+  }, [
+    seriesData,
+    theme,
+    drawPegLine,
+    drawExploitLine,
+    size,
+    tickFormatter,
+    valueAxisType,
+  ]);
+
+  // console.log("chartref: ", chart.current);
+  // console.log('seriesData: ', seriesData);
 
   useEffect(() => {
     chart.current?.applyOptions({
@@ -325,12 +334,12 @@ const Chart = ({
           0
         );
         const newTo = setHours(new Date((from.valueOf() as number) * 1000), 23);
-        chart.current?.timeScale()?.setVisibleRange({
+        chart?.current?.timeScale()?.setVisibleRange({
           from: (newFrom.valueOf() / 1000) as Time,
           to: (newTo.valueOf() / 1000) as Time,
         });
       } else if (from && to) {
-        chart.current?.timeScale()?.setVisibleRange({
+        chart?.current?.timeScale().setVisibleRange({
           from: from,
           to: to,
         });
@@ -348,11 +357,9 @@ const Chart = ({
       ? JSON.parse(storedSetting)
       : undefined;
 
-    if (size === 'full' && storedTimePeriod) {
-      chart.current?.timeScale()?.setVisibleRange(storedTimePeriod);
-    }
+    chart.current?.timeScale()?.setVisibleRange(storedTimePeriod);
 
-    function getDataPoint(mode: string) {
+    const getDataPoint = (mode: string) => {
       let _time = 0;
       let _season = 0;
 
@@ -370,7 +377,7 @@ const Chart = ({
         season: _season,
         timestamp: _time,
       };
-    }
+    };
 
     setLastDataPoint(getDataPoint('last'));
     setFirstDataPoint(getDataPoint('first'));
@@ -418,6 +425,7 @@ const Chart = ({
 
     function timeRangeChangeHandler(param: Range<Time> | null) {
       if (!param) return;
+      // console.log('param: ', param);
       const lastTimestamp = new Date((param.to.valueOf() as number) * 1000);
       const lastValue =
         seriesData.find((value) => value.time === param.to)?.value || 0;
@@ -601,11 +609,11 @@ const SingleAdvancedChart = (props: SingleAdvancedChartProps) => (
         overflow: 'clip',
       }}
     >
-      {!props.seriesData.length && !props.isLoading && !props.error ? (
+      {/* {!props.seriesData.length && !props.isLoading && !props.error ? (
         <ChartEmptyState />
-      ) : (
-        <Chart {...props} />
-      )}
+      ) : ( */}
+      <Chart {...props} />
+      {/* )} */}
     </Stack>
   </Stack>
 );
