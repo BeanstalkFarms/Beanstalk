@@ -420,8 +420,8 @@ contract MockSeasonFacet is SeasonFacet {
         return uint256(s.sys.weather.temp);
     }
 
-    function getEthUsdPrice() external view returns (uint256) {
-        return LibEthUsdOracle.getEthUsdPrice();
+    function getUsdEthPrice() external view returns (uint256) {
+        return LibEthUsdOracle.getUsdEthPrice();
     }
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
@@ -432,7 +432,8 @@ contract MockSeasonFacet is SeasonFacet {
         return
             LibChainlinkOracle.getPrice(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0
             );
     }
 
@@ -441,6 +442,7 @@ contract MockSeasonFacet is SeasonFacet {
             LibChainlinkOracle.getTwap(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
                 lookback
             );
     }

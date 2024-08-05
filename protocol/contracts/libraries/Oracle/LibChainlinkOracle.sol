@@ -31,20 +31,21 @@ library LibChainlinkOracle {
     }
 
     /**
-     * @dev Returns the TOKEN/USD price with the option of using a TWA lookback.
+     * @dev Returns the TOKEN/USD, or USD/TOKEN price with the option of using a TWA lookback.
      * Use `lookback = 0` for the instantaneous price. `lookback > 0` for a TWAP.
-     * Return value has 6 decimal precision.
+     * Return value has 6 decimal precision if using TOKEN/USD, and the token's decimal precision if using USD/TOKEN.
      * Returns 0 if `priceAggregatorAddress` is broken or frozen.
      **/
     function getTokenPrice(
         address priceAggregatorAddress,
         uint256 maxTimeout,
+        uint256 tokenDecimals,
         uint256 lookback
     ) internal view returns (uint256 price) {
         return
             lookback > 0
-                ? getPrice(priceAggregatorAddress, maxTimeout)
-                : getTwap(priceAggregatorAddress, maxTimeout, lookback);
+                ? getTwap(priceAggregatorAddress, maxTimeout, tokenDecimals, lookback)
+                : getPrice(priceAggregatorAddress, maxTimeout, tokenDecimals);
     }
 
     /**
@@ -54,7 +55,8 @@ library LibChainlinkOracle {
      **/
     function getPrice(
         address priceAggregatorAddress,
-        uint256 maxTimeout
+        uint256 maxTimeout,
+        uint256 tokenDecimals
     ) internal view returns (uint256 price) {
         IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
         // First, try to get current decimal precision:
@@ -80,8 +82,14 @@ library LibChainlinkOracle {
             if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp, maxTimeout)) {
                 return 0;
             }
-            // Adjust to 6 decimal precision.
-            return uint256(answer).mul(PRECISION).div(10 ** decimals);
+
+            // if token decimals is greater than 0, return the usd/token price instead (i.e invert the price).
+            if (tokenDecimals > 0) {
+                price = uint256(10 ** (tokenDecimals + decimals)).div(uint256(answer));
+            } else {
+                // Adjust to 6 decimal precision.
+                price = uint256(answer).mul(PRECISION).div(10 ** decimals);
+            }
         } catch {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure
             return 0;
@@ -96,6 +104,7 @@ library LibChainlinkOracle {
     function getTwap(
         address priceAggregatorAddress,
         uint256 maxTimeout,
+        uint256 tokenDecimals,
         uint256 lookback
     ) internal view returns (uint256 price) {
         IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
@@ -134,6 +143,10 @@ library LibChainlinkOracle {
                 // Loop through previous rounds and compute cumulative sum until
                 // a round at least `lookback` seconds ago is reached.
                 while (timestamp > t.endTimestamp) {
+                    // if token decimals is greater than 0, return the usd/token price instead (i.e invert the price).
+                    if (tokenDecimals > 0) {
+                        answer = int256((10 ** (tokenDecimals + decimals)) / (uint256(answer)));
+                    }
                     t.cumulativePrice = t.cumulativePrice.add(
                         uint256(answer).mul(t.lastTimestamp.sub(timestamp))
                     );
@@ -151,10 +164,17 @@ library LibChainlinkOracle {
                         return 0;
                     }
                 }
+                if (tokenDecimals > 0) {
+                    answer = int256((10 ** (tokenDecimals + decimals)) / (uint256(answer)));
+                }
                 t.cumulativePrice = t.cumulativePrice.add(
                     uint256(answer).mul(t.lastTimestamp.sub(t.endTimestamp))
                 );
-                return t.cumulativePrice.mul(PRECISION).div(10 ** decimals).div(lookback);
+                if (tokenDecimals > 0) {
+                    price = t.cumulativePrice.div(lookback);
+                } else {
+                    price = t.cumulativePrice.mul(PRECISION).div(10 ** decimals).div(lookback);
+                }
             }
         } catch {
             // If call to Chainlink aggregator reverts, return a price of 0 indicating failure

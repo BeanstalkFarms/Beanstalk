@@ -16,6 +16,7 @@ import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {IERC20Decimals} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @title LibWhitelist
@@ -136,6 +137,7 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -204,6 +206,7 @@ library LibWhitelist {
 
         // verify the gaugePoint and liquidityWeight selector.
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -346,6 +349,7 @@ library LibWhitelist {
     ) internal {
         // check that new implementation is valid.
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -440,6 +444,7 @@ library LibWhitelist {
      * is valid for the gauge system.
      */
     function verifyOracleImplementation(
+        address token,
         address oracleImplementation,
         bytes4 selector,
         bytes1 encodeType
@@ -455,7 +460,9 @@ library LibWhitelist {
             (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
         } else {
             // verify you passed in a callable oracle selector
-            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(selector, 0));
+            (success, ) = oracleImplementation.staticcall(
+                abi.encodeWithSelector(selector, IERC20Decimals(token).decimals(), 0)
+            );
         }
 
         require(success, "Whitelist: Invalid Oracle Implementation");
