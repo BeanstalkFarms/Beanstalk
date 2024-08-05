@@ -3,7 +3,7 @@ query SiloAssetAverageSeedsPerBDV(
   $first: Int!
   $season_lte: Int!
 ) {
-  seasons: siloAssetHourlySnapshots(
+  siloAssetHourlySnapshots(
     first: $first
     orderBy: season
     orderDirection: desc
@@ -21,7 +21,7 @@ query SiloAssetAverageSeedsPerBDV(
     depositedBDV
     createdAt
   }
-  token: whitelistTokenHourlySnapshots(
+  whitelistTokenHourlySnapshots(
     first: $first
     orderBy: season
     orderDirection: desc
