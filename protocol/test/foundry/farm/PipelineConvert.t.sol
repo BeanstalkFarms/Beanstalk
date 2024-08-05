@@ -58,7 +58,7 @@ contract PipelineConvertTest is TestHelper {
     address[] farmers;
 
     uint256 constant MAX_UINT256 = type(uint256).max;
-    uint256 constant BDV_TO_STALK = 1e4;
+    uint256 constant BDV_TO_STALK = 1e10;
     address constant EXTRACT_VALUE_ADDRESS = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
 
     bytes constant noData = abi.encode(0);

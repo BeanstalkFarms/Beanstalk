@@ -32,7 +32,7 @@ contract InitalizeDiamond {
     uint128 constant INIT_AVG_GSPBDV = 3e6;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
+    uint48 constant INIT_STALK_ISSUED_PER_BDV = 1e10;
     uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 

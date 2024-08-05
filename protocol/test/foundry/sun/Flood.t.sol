@@ -81,12 +81,12 @@ contract FloodTest is TestHelper {
         assertEq(s.rainStart, s.current);
         assertTrue(s.raining);
         assertEq(rain.pods, bs.totalPods(bs.activeField()));
-        assertEq(rain.roots, 20008000e18);
+        assertEq(rain.roots, 20008000e24);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory sop = siloGetters.balanceOfSop(users[1]);
 
         assertEq(sop.lastRain, s.rainStart);
-        assertEq(sop.roots, 10004000e18);
+        assertEq(sop.roots, 10004000e24);
     }
 
     function testStopsRaining() public {
@@ -179,7 +179,7 @@ contract FloodTest is TestHelper {
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
-        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.roots, 10004000e24);
 
         assertGt(userSop.farmerSops.length, 0);
 
@@ -195,7 +195,7 @@ contract FloodTest is TestHelper {
         userSop = siloGetters.balanceOfSop(users[2]);
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
-        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.roots, 10004000e24);
         assertEq(userSop.farmerSops[0].well, sopWell);
         assertEq(userSop.farmerSops[0].wellsPlenty.plenty, userCalcPlenty);
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, userCalcPlentyPerRoot);
@@ -253,7 +253,7 @@ contract FloodTest is TestHelper {
 
         assertEq(userSop.lastRain, 9);
         assertEq(userSop.lastSop, 9);
-        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.roots, 10004000e24);
         assertEq(userSop.farmerSops[0].well, sopWell);
         assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 38544532214605630101);
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 3852912056637907847);
@@ -267,7 +267,7 @@ contract FloodTest is TestHelper {
         userSop = siloGetters.balanceOfSop(users[2]);
         assertEq(userSop.lastRain, 9);
         assertEq(userSop.lastSop, 9);
-        assertEq(userSop.roots, 10006000000000000000000000);
+        assertEq(userSop.roots, 10006000e24);
         assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 38547120970363278477);
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 3852912056637907847);
     }
@@ -317,7 +317,7 @@ contract FloodTest is TestHelper {
 
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
-        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.roots, 10004000e24);
         assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 25595575914848452999);
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 2558534177813719812);
 
@@ -330,7 +330,7 @@ contract FloodTest is TestHelper {
         userSop = siloGetters.balanceOfSop(users[2]);
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
-        assertEq(userSop.roots, 10004000e18);
+        assertEq(userSop.roots, 10004000e24);
         assertEq(userSop.farmerSops[0].wellsPlenty.plenty, 25595575914848452999);
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, 2558534177813719812);
 

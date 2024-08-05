@@ -5,7 +5,7 @@ const { EXTERNAL } = require("./utils/balances.js");
 const { to18, to6, toStalk, toBN } = require("./utils/helpers.js");
 const { BEAN, ZERO_ADDRESS } = require("./utils/constants");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { initalizeUsersForToken, endGermination } = require("./utils/testHelpers.js");
+const { initializeUsersForToken, endGermination } = require("./utils/testHelpers.js");
 const axios = require("axios");
 const fs = require("fs");
 const { impersonateBeanWstethWell } = require("../../utils/well.js");
@@ -22,7 +22,7 @@ describe("newSilo", function () {
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
 
     // initalize users - mint bean and approve beanstalk to use all beans.
-    await initalizeUsersForToken(BEAN, [user, user2, user3, user4], to6("10000"));
+    await initializeUsersForToken(BEAN, [user, user2, user3, user4], to6("10000"));
 
     // deposit 1000 beans from 2 users.
     await beanstalk.connect(user).deposit(BEAN, to6("1000"), EXTERNAL);
@@ -120,12 +120,14 @@ describe("newSilo", function () {
 
     it("properly updates the total balances", async function () {
       expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("1050.6"));
-      expect(await beanstalk.balanceOfRoots(user.address)).to.eq("10005714285714285714285714");
+      expect(await beanstalk.balanceOfRoots(user.address)).to.eq(
+        "10005714285714285714285714285714"
+      );
     });
 
     it("properly updates the total balances", async function () {
-      expect(await beanstalk.totalStalk()).to.eq(to6("21012000"));
-      expect(await beanstalk.totalRoots()).to.eq("20011428571428571428571428");
+      expect(await beanstalk.totalStalk()).to.eq(to6("21012000000000"));
+      expect(await beanstalk.totalRoots()).to.eq("20011428571428571428571428571428");
     });
 
     it("properly emits events", async function () {
@@ -136,7 +138,9 @@ describe("newSilo", function () {
       await beanstalk.connect(user2).plant();
       expect(await beanstalk.totalEarnedBeans()).to.eq("0");
       expect(await beanstalk.balanceOfStalk(user2.address)).to.eq(toStalk("1050.6"));
-      expect(await beanstalk.balanceOfRoots(user2.address)).to.eq("10005714285714285714285714");
+      expect(await beanstalk.balanceOfRoots(user2.address)).to.eq(
+        "10005714285714285714285714285714"
+      );
     });
 
     it("user can withdraw earned beans", async function () {
