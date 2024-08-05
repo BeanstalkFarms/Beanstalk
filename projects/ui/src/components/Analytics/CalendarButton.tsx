@@ -38,7 +38,7 @@ import { Range, Time } from 'lightweight-charts';
 
 type CalendarProps = {
   setTimePeriod: React.Dispatch<React.SetStateAction<Range<Time> | undefined>>;
-  setLocalStorage?: boolean;
+  storageKeyPrefix?: string;
 };
 
 type CalendarContentProps = {
@@ -482,7 +482,7 @@ const CalendarContent: FC<CalendarContentProps> = ({
 };
 
 const CalendarButton: FC<CalendarProps> = ({
-  setLocalStorage = true,
+  storageKeyPrefix = 'advancedChart',
   setTimePeriod,
 }) => {
   const theme = useTheme();
@@ -502,14 +502,14 @@ const CalendarButton: FC<CalendarProps> = ({
     setAnchorEl(null);
   }, []);
 
-  const storedSetting1 = localStorage.getItem('advancedChartRange');
+  const storedSetting1 = localStorage.getItem(`${storageKeyPrefix}Range`);
   const storedRange = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
 
-  const storedSetting2 = localStorage.getItem('advancedChartPreset');
+  const storedSetting2 = localStorage.getItem(`${storageKeyPrefix}Preset`);
   const storedPreset = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
 
-  const [range, setRange] = useState<DateRange>(storedRange || initialRange);
   const [selectedPreset, setPreset] = useState<string>(storedPreset || '1W');
+  const [range, setRange] = useState<DateRange>(storedRange || initialRange);
 
   const handleChange = (newRange?: DateRange, _preset?: string) => {
     if (newRange) {
@@ -519,19 +519,22 @@ const CalendarButton: FC<CalendarProps> = ({
       };
       setRange(newRange);
       setTimePeriod(newTimePeriod);
-      if (setLocalStorage) {
-        localStorage.setItem('advancedChartRange', JSON.stringify(newRange));
-        localStorage.setItem(
-          'advancedChartTimePeriod',
-          JSON.stringify(newTimePeriod)
-        );
-      }
+
+      localStorage.setItem(
+        `${storageKeyPrefix}Range`,
+        JSON.stringify(newRange)
+      );
+      localStorage.setItem(
+        `${storageKeyPrefix}TimePeriod`,
+        JSON.stringify(newTimePeriod)
+      );
     }
     if (_preset) {
       setPreset(_preset);
-      if (setLocalStorage) {
-        localStorage.setItem('advancedChartPreset', JSON.stringify(_preset));
-      }
+      localStorage.setItem(
+        `${storageKeyPrefix}Preset`,
+        JSON.stringify(_preset)
+      );
     }
   };
 

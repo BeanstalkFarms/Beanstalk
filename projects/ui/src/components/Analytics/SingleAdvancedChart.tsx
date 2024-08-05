@@ -134,9 +134,9 @@ type ChartProps = OmmitedV2DataProps & {
   shortTickFormatter: (d: any) => string | undefined;
   timeState: ReturnType<typeof useChartTimePeriodState>;
   valueAxisType: string;
-  tooltipText: string;
   tooltipHoverText: string;
   tooltipTitle: string;
+  storageKeyPrefix?: string;
   isLoading?: boolean;
   isError?: boolean;
 };
@@ -157,8 +157,8 @@ const Chart = ({
   timeState,
   isLoading,
   isError,
-  tooltipText,
   tooltipHoverText,
+  storageKeyPrefix,
   tooltipTitle,
   shortTickFormatter,
   tickFormatter,
@@ -171,9 +171,7 @@ const Chart = ({
   const [firstDataPoint, setFirstDataPoint] = useState<DataPoint>();
   const [dataPoint, setDataPoint] = useState<DataPoint>();
 
-  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(
-    undefined
-  );
+  const [timePeriod, setTimePeriod] = timeState;
 
   const theme = useTheme();
 
@@ -345,7 +343,7 @@ const Chart = ({
     if (!chart.current || !seriesData?.length) return;
     areaSeries.current?.setData(seriesData);
 
-    const storedSetting = localStorage.getItem('advancedChartTimePeriod');
+    const storedSetting = localStorage.getItem(`${storageKeyPrefix}TimePeriod`);
     const storedTimePeriod = storedSetting
       ? JSON.parse(storedSetting)
       : undefined;
@@ -448,7 +446,7 @@ const Chart = ({
         ?.timeScale()
         .unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [seriesData, size]);
+  }, [seriesData, size, storageKeyPrefix]);
 
   const beforeFirstSeason =
     dataPoint && firstDataPoint
@@ -482,12 +480,8 @@ const Chart = ({
             secondSubtitle={`${currTimestamp || '--'}`}
           />
           <CalendarButton
-            setLocalStorage={false}
-            setTimePeriod={
-              timeState[1] as React.Dispatch<
-                React.SetStateAction<Range<Time> | undefined>
-              >
-            }
+            storageKeyPrefix={storageKeyPrefix}
+            setTimePeriod={setTimePeriod}
           />
         </Stack>
       </Box>
@@ -607,8 +601,11 @@ const SingleAdvancedChart = (props: SingleAdvancedChartProps) => (
         overflow: 'clip',
       }}
     >
-      <Chart {...props} />
-      {/* <ChartEmptyState /> */}
+      {!props.seriesData.length && !props.isLoading && !props.error ? (
+        <ChartEmptyState />
+      ) : (
+        <Chart {...props} />
+      )}
     </Stack>
   </Stack>
 );
