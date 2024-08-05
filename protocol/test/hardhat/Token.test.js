@@ -173,6 +173,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.recipient.address, this.token.address, "200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "200",
+            EXTERNAL,
+            INTERNAL
+          );
       });
     });
 
@@ -212,6 +222,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.recipient.address, this.token.address, "200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "200",
+            INTERNAL,
+            INTERNAL
+          );
       });
 
       it("internal tolerant", async function () {
@@ -245,6 +265,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.recipient.address, this.token.address, "300");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "200",
+            INTERNAL_EXTERNAL,
+            INTERNAL
+          );
       });
 
       it("internal + external", async function () {
@@ -278,6 +308,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.recipient.address, this.token.address, "200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "250",
+            INTERNAL_TOLERANT,
+            INTERNAL
+          );
       });
 
       it("0 internal tolerant", async function () {
@@ -328,6 +368,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.user.address, this.token.address, "-200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "200",
+            INTERNAL,
+            EXTERNAL
+          );
       });
     });
   });
@@ -365,6 +415,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.user.address, this.token.address, "-200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "250",
+            INTERNAL,
+            EXTERNAL
+          );
       });
 
       it("to internal", async function () {
@@ -392,6 +452,16 @@ describe("Token", function () {
         await expect(this.result)
           .to.emit(beanstalk, "InternalBalanceChanged")
           .withArgs(this.user.address, this.token.address, "-200");
+        await expect(this.result)
+          .to.emit(beanstalk, "TokenTransferred")
+          .withArgs(
+            this.token.address,
+            this.user.address,
+            this.recipient.address,
+            "250",
+            INTERNAL,
+            INTERNAL
+          );
       });
     });
 
@@ -458,6 +528,16 @@ describe("Token", function () {
           await expect(this.result)
             .to.emit(beanstalk, "InternalBalanceChanged")
             .withArgs(this.user.address, this.token.address, "-200");
+          await expect(this.result)
+            .to.emit(beanstalk, "TokenTransferred")
+            .withArgs(
+              this.token.address,
+              this.user.address,
+              this.recipient.address,
+              "200",
+              INTERNAL,
+              INTERNAL
+            );
         });
 
         it("some approval", async function () {
@@ -488,6 +568,16 @@ describe("Token", function () {
           await expect(this.result)
             .to.emit(beanstalk, "InternalBalanceChanged")
             .withArgs(this.user.address, this.token.address, "-200");
+          await expect(this.result)
+            .to.emit(beanstalk, "TokenTransferred")
+            .withArgs(
+              this.token.address,
+              this.user.address,
+              this.recipient.address,
+              "200",
+              INTERNAL,
+              INTERNAL
+            );
         });
       });
     });

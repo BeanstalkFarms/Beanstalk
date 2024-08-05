@@ -15,7 +15,7 @@ library LibTransfer {
     using SafeERC20 for IERC20;
     using LibRedundantMath256 for uint256;
 
-    event TokenTransfered(
+    event TokenTransferred(
         address indexed token,
         address indexed sender,
         address indexed recipient,
@@ -50,7 +50,7 @@ library LibTransfer {
         }
         amount = receiveToken(token, amount, sender, fromMode);
         sendToken(token, amount, recipient, toMode);
-        emit TokenTransfered(address(token), sender, recipient, amount, fromMode, toMode);
+        emit TokenTransferred(address(token), sender, recipient, amount, fromMode, toMode);
         return amount;
     }
 
