@@ -194,12 +194,16 @@ const ConvertForm: FC<
   }
 
   useEffect(() => {
-    if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
-      setChoppingConfirmed(true);
+    if (isChopping) {
+      if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
+        setChoppingConfirmed(true);
+      } else {
+        setChoppingConfirmed(false);
+      }
     } else {
-      setChoppingConfirmed(false);
+      setChoppingConfirmed(true);
     }
-  }, [confirmText, setChoppingConfirmed]);
+  }, [isChopping, confirmText, setChoppingConfirmed]);
 
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
@@ -264,7 +268,6 @@ const ConvertForm: FC<
             tokenOut?.address === sdk.tokens.BEAN_WSTETH_WELL_LP.address);
 
         setIsChopping(chopping);
-        if (!chopping) setChoppingConfirmed(true);
       }
     })();
   }, [sdk, setFieldValue, tokenIn, tokenOut]);
