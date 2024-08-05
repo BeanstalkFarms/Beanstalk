@@ -6,9 +6,8 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {Implementation} from "contracts/beanstalk/storage/System.sol";
+import {Implementation, WhitelistStatus, AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
-import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -25,6 +24,7 @@ contract ReseedWhitelist {
     function init(
         address[] calldata tokens,
         AssetSettings[] calldata assets,
+        WhitelistStatus[] calldata whitelistStatus,
         Implementation[] calldata oracle
     ) external {
         for (uint i; i < tokens.length; i++) {
@@ -36,6 +36,9 @@ contract ReseedWhitelist {
                 s.sys.twaReserves[token].reserve1 = 1;
             }
             s.sys.silo.assetSettings[token] = assets[i];
+
+            // add whitelist status
+            s.sys.silo.whitelistStatuses.push(whitelistStatus[i]);
             // the Oracle should return the price for the non-bean asset in USD
             s.sys.oracleImplementation[token] = oracle[i];
         }

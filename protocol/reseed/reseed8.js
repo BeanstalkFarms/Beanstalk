@@ -7,7 +7,7 @@ const BEAN_INTERNAL_BALANCES = "./reseed/data/r8/bean_internal.json";
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");
-  console.log("reseed7: reissue internal balances.\n");
+  console.log("reseed8: reissue internal balances.\n");
 
   let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
 

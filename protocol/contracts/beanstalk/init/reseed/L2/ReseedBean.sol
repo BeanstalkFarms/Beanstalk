@@ -42,7 +42,7 @@ contract ReseedBean {
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
-    bytes32 internal constant BEAN_SALT = 
+    bytes32 internal constant BEAN_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
     // UNRIPE_BEAN parameters.
     string internal constant UNRIPE_BEAN_NAME = "Unripe Bean";
@@ -58,13 +58,20 @@ contract ReseedBean {
 
     // Basin
 
-    address internal constant AQUIFIER = address(0);
-    address internal constant BEAN_ETH_WELL_IMPLMENTATION = address(0);
-    address internal constant BEAN_WSTETH_WELL_IMPLMENTATION = address(0);
-    address internal constant BEAN_WEETH_WELL_IMPLMENTATION = address(0);
-    address internal constant BEAN_WBTC_WELL_IMPLMENTATION = address(0);
-    address internal constant BEAN_USDC_WELL_IMPLMENTATION = address(0);
-    address internal constant BEAN_USDT_WELL_IMPLMENTATION = address(0);
+    // TODO: change once addresses are finalized.
+    address internal constant AQUIFIER = address(0xBA51AAAA95aeEFc1292515b36D86C51dC7877773);
+    address internal constant BEAN_ETH_WELL_IMPLMENTATION =
+        address(0xB7df651e8e8D9cf694AA2632c66064c068a3a2c0);
+    address internal constant BEAN_WSTETH_WELL_IMPLMENTATION =
+        address(0xEe00E29d81c571f87C97A03C670f159513a1B62e);
+    address internal constant BEAN_WEETH_WELL_IMPLMENTATION =
+        address(0xD3B4FAd7c08b401838CD6C5A5F744904934a9066);
+    address internal constant BEAN_WBTC_WELL_IMPLMENTATION =
+        address(0xB4389f2Da821ca5B75a104a9Fe1809203aF1217c);
+    address internal constant BEAN_USDC_WELL_IMPLMENTATION =
+        address(0x184Eb4C03A5414a01AfC333eE36C8E082e86d981);
+    address internal constant BEAN_USDT_WELL_IMPLMENTATION =
+        address(0x4a8e57b15fB07ca8A2C9248bE3f99928De5A6872);
 
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
@@ -126,7 +133,7 @@ contract ReseedBean {
         deployUnripeLP(unripeLpSupply);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         // TODO: UNCOMMENT WHEN WELLS ARE DEPLOYED.
-        // deployUpgradableWells();
+        deployUpgradableWells();
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -168,10 +175,14 @@ contract ReseedBean {
         string memory name,
         string memory symbol
     ) internal {
-        new ERC1967Proxy{salt: salt}(
-            implementation,
-            abi.encodeCall(IWellUpgradeable.init, (name, symbol))
+        address well = address(
+            new ERC1967Proxy{salt: salt}(
+                implementation,
+                abi.encodeCall(IWellUpgradeable.init, (name, symbol))
+            )
         );
+        console.log(name);
+        console.log("well proxy deployed at:", well);
     }
 
     function deployUpgradableWells() internal {
