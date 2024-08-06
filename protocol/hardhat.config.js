@@ -310,9 +310,18 @@ task("deploySeedGauge", async function () {
 
 /// EBIPS ///
 
+task("ebip17", async function () {
+  await ebip17();
+});
+
+task("ebip16", async function () {
+  await ebip16();
+});
+
 task("ebip15", async function () {
   await ebip15();
 });
+
 task("ebip14", async function () {
   await ebip14();
 });

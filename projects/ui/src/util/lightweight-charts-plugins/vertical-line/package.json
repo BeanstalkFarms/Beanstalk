@@ -1,0 +1,13 @@
+{
+    "name": "vertical-line",
+    "type": "module",
+    "main": "./vertical-line.umd.cjs",
+    "module": "./vertical-line.js",
+    "exports": {
+        ".": {
+            "import": "./vertical-line.js",
+            "require": "./vertical-line.umd.cjs",
+            "types": "./vertical-line.d.ts"
+        }
+    }
+}

@@ -12,9 +12,9 @@ import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, transform } from '~/util';
 import { BEAN, STALK } from '~/constants/tokens';
 import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
+import useSdk from '~/hooks/sdk';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from './index';
-import useSdk from '~/hooks/sdk';
 
 export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
@@ -52,9 +52,9 @@ export const useFetchBeanstalkSilo = () => {
             sdk.contracts.beanstalk
               .getTotalDeposited(token.address)
               .then((v) => transform(v, 'bnjs', token)),
-            sdk.contracts.beanstalk
-              .getTotalWithdrawn(token.address)
-              .then((v) => transform(v, 'bnjs', token)),
+            // sdk.contracts.beanstalk
+            //   .getTotalWithdrawn(token.address)
+            //   .then((v) => transform(v, 'bnjs', token)),
 
             // BEAN will always have a fixed BDV of 1, skip to save a network request
             token === sdk.tokens.BEAN
@@ -76,10 +76,10 @@ export const useFetchBeanstalkSilo = () => {
           ]).then((data) => ({
             address: token.address.toLowerCase(),
             deposited: data[0],
-            withdrawn: data[1],
-            bdvPerToken: data[2],
-            stemTip: data[3],
-            depositedBdv: data[4],
+            // withdrawn: data[1],
+            bdvPerToken: data[1],
+            stemTip: data[2],
+            depositedBdv: data[3],
           }))
         )
       ),
@@ -117,7 +117,8 @@ export const useFetchBeanstalkSilo = () => {
           amount: curr.deposited,
         },
         withdrawn: {
-          amount: curr.withdrawn,
+          amount: ZERO_BN,
+          // amount: curr.withdrawn,
         },
       };
 

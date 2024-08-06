@@ -21,7 +21,6 @@ import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
 import { setRawWellReserves, setTwaLast } from "./utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
-import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
 import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
 
 export function handleSunrise(event: Sunrise): void {

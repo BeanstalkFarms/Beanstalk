@@ -98,6 +98,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
     }
 
@@ -106,6 +110,10 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint256 i; i < amount; ++i) {
             s.sys.season.current += 1;
             stepOracle();
+            LibGerminate.endTotalGermination(
+                s.sys.season.current,
+                LibWhitelistedTokens.getWhitelistedTokens()
+            );
             mockStartSop();
         }
         s.sys.season.sunriseBlock = uint32(block.number);
@@ -117,6 +125,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         LibFlood.handleRain(2);
     }
 
@@ -126,6 +138,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -136,6 +152,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -147,12 +167,16 @@ contract MockSeasonFacet is SeasonFacet {
         stepSun(deltaB, caseId);
     }
 
-    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId, bool oracleFailure) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         stepSun(deltaB, caseId);
+    }
+
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        seedGaugeSunSunrise(deltaB, caseId, false);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
@@ -514,7 +538,7 @@ contract MockSeasonFacet is SeasonFacet {
         return currentGaugePoints;
     }
 
-    function mockInitalizeGaugeForToken(
+    function mockinitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -553,6 +577,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,

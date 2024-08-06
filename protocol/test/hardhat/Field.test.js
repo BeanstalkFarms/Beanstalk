@@ -358,14 +358,14 @@ describe("newField", function () {
     });
 
     it("Does set thisSowTime if Soil = 1", async function () {
-      mockBeanstalk.setSoilE(to6("1"));
+      await mockBeanstalk.setSoilE(to6("1"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));
     });
 
     it("Does set thisSowTime if Soil < 1", async function () {
-      mockBeanstalk.setSoilE(to6("1.5"));
+      await mockBeanstalk.setSoilE(to6("1.5"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));

@@ -38,7 +38,7 @@ const AllActiveListings: React.FC<{
       loading={data.loading}
       getRowId={(row: PodListing) => `${row.account}-${row.id}`}
       onRowClick={({ row }) => {
-        navigate(`/market/buy/${row.id.toString()}`);
+        navigate(`/market/buy/${row.id.toString().slice(43)}`);
       }}
     />
   );

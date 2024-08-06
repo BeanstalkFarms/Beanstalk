@@ -15,6 +15,9 @@ class NotFoundError extends BaseError {
   }
 }
 
+/**
+ * @deprecated
+ */
 export class PodsMarket {
   static sdk: BeanstalkSDK;
 
@@ -35,18 +38,16 @@ export class PodsMarket {
       validate: boolean;
     }
   ) {
-    const [isValid, query] = await Promise.all([
-      options?.validate
-        ? PodsMarket.sdk.contracts.beanstalk.podListing(id).then((r) => ethers.BigNumber.from(r).gt(0))
-        : Promise.resolve(true),
-      PodsMarket.sdk.queries.getListingByIndex({ index: id })
-    ]);
-
-    if (!isValid || !query.podListings[0]) {
-      throw new NotFoundError("Listing", id);
-    }
-
-    return query.podListings[0]; // FIXME: cast
+    // const [isValid, query] = await Promise.all([
+    //   options?.validate
+    //     ? PodsMarket.sdk.contracts.beanstalk.getPodListing(id).then((r) => ethers.BigNumber.from(r).gt(0))
+    //     : Promise.resolve(true),
+    //   PodsMarket.sdk.queries.getListingByIndex({ index: id })
+    // ]);
+    // if (!isValid || !query.podListings[0]) {
+    //   throw new NotFoundError("Listing", id);
+    // }
+    // return query.podListings[0]; // FIXME: cast
   }
 
   /**

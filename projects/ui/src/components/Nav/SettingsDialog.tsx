@@ -119,6 +119,10 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   /// Cache
   const clearCache = useCallback(() => {
     clearApolloCache();
+    localStorage.removeItem('advancedChartTimePeriod');
+    localStorage.removeItem('advancedChartSelectedCharts');
+    localStorage.removeItem('advancedChartRange');
+    localStorage.removeItem('advancedChartPreset');
   }, []);
   const updateSubgraphEnv = useCallback(
     (env: SGEnvironments) => {
