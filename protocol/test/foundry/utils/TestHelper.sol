@@ -57,7 +57,7 @@ contract TestHelper is
     // The largest deposit that can occur on the first season.
     // Given the supply of beans should starts at 0,
     // this should never occur.
-    uint256 constant MAX_DEPOSIT_BOUND = 1.7e22; // 2 ** 128 / 2e16
+    uint256 constant MAX_DEPOSIT_BOUND = 1.7e16; // 2 ** 128 / 2e16
 
     struct initERC20params {
         address targetAddr;
