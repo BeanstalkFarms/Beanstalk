@@ -47,7 +47,7 @@ contract L2ContractMigrationFacet is Invariable, ReentrancyGuard {
             "RedeemDepositsAndInternalBalances(address owner,address reciever,uint256 deadline)"
         );
 
-    // todo: update with the scorrect merkle root.
+    // todo: update with the correct merkle root.
     bytes32 private constant MERKLE_ROOT =
         0xffe91be2b2c070885dbf2f8b4a7b82966d0ff6d91961734a506d1cf1fb80478d;
 

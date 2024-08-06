@@ -8,7 +8,7 @@ import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFace
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings, Implementation} from "contracts/beanstalk/storage/System.sol";
-import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -32,7 +32,7 @@ contract InitalizeDiamond {
     uint128 constant INIT_AVG_GSPBDV = 3e6;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
+    uint48 constant INIT_STALK_ISSUED_PER_BDV = 1e10;
     uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 
@@ -91,7 +91,6 @@ contract InitalizeDiamond {
             IGaugePointFacet.defaultGaugePointFunction.selector,
             bytes1(0)
         );
-        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -105,8 +104,7 @@ contract InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: impl,
-            liquidityWeightImplementation: impl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: impl
         });
 
         assetSettings[1] = AssetSettings({
@@ -120,8 +118,7 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
 
         whitelistPools(tokens, assetSettings);
@@ -254,22 +251,23 @@ contract InitalizeDiamond {
     }
 
     function initializeSeedGaugeSettings() internal {
-        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
-        s.sys.seedGaugeSettings.podRateLowerBound = POD_RATE_LOWER_BOUND;
-        s.sys.seedGaugeSettings.podRateOptimal = POD_RATE_OPTIMAL;
-        s.sys.seedGaugeSettings.podRateUpperBound = POD_RATE_UPPER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
-        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
-        s.sys.seedGaugeSettings.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
+        s.sys.evaluationParameters.podRateLowerBound = POD_RATE_LOWER_BOUND;
+        s.sys.evaluationParameters.podRateOptimal = POD_RATE_OPTIMAL;
+        s.sys.evaluationParameters.podRateUpperBound = POD_RATE_UPPER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
+        s.sys.evaluationParameters.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
+        s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
     function initalizeFarmAndTractor() public {
         s.sys.isFarm = 1;
         LibTractor._resetPublisher();
+        LibTractor._setVersion("1.0.0");
     }
 }

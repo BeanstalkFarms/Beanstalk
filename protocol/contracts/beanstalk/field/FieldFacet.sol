@@ -217,6 +217,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 newIndex = index.add(harvestablePods);
         s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
         s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+        s.accts[account].fields[fieldId].piIndex[newIndex] =
+            s.accts[account].fields[fieldId].plotIndexes.length -
+            1;
     }
 
     //////////////////// CONFIG /////////////////////

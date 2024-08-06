@@ -4,9 +4,9 @@
 
 pragma solidity ^0.8.20;
 
-import "contracts/C.sol";
 import "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @author Brean
@@ -35,6 +35,7 @@ interface IBeanL1RecieverFacet {
 
 contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
     address constant BRIDGE = address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa);
+    address constant L1_BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
 
     /**
      * @notice migrates `amount` of Beans to L2,
@@ -46,7 +47,7 @@ contract BeanL2MigrationFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         uint32 gasLimit
     ) external nonReentrant {
-        C.bean().burnFrom(msg.sender, amount);
+        IBean(L1_BEAN).burnFrom(msg.sender, amount);
 
         // send data to
         IL2Bridge(BRIDGE).sendMessage(

@@ -70,22 +70,7 @@ interface IBeanstalk {
         bytes32 r,
         bytes32 s
     ) external payable;
-
-    function convert(
-        bytes calldata convertData,
-        uint32[] memory crates,
-        uint256[] memory amounts
-    )
-        external
-        payable
-        returns (
-            uint32 toSeason,
-            uint256 fromAmount,
-            uint256 toAmount,
-            uint256 fromBdv,
-            uint256 toBdv
-        );
-
+    
     function deposit(
         address token,
         uint256 _amount,

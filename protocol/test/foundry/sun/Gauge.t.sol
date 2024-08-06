@@ -7,6 +7,7 @@ import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
+import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
@@ -14,18 +15,23 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
  * @notice Tests the functionality of the gauge.
  */
 contract GaugeTest is TestHelper {
-    event UpdatedSeedGaugeSettings(IMockFBeanstalk.SeedGaugeSettings);
+    event UpdatedSeedGaugeSettings(IMockFBeanstalk.EvaluationParameters);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    MockLiquidityWeight lw = MockLiquidityWeight(BEANSTALK);
+    MockLiquidityWeight mlw = MockLiquidityWeight(BEANSTALK);
+    GaugePointPrice gpP;
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
 
         // deploy mockLiquidityWeight contract for testing.
-        lw = new MockLiquidityWeight(0.5e18);
+        mlw = new MockLiquidityWeight(0.5e18);
+
+        // deploy gaugePointPrice contract for WETH, with a price threshold of 500 USD,
+        // and a gaugePoint of 10.
+        gpP = new GaugePointPrice(BEANSTALK, C.WETH, 500e6, 10e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -96,19 +102,17 @@ contract GaugeTest is TestHelper {
     ) public {
         initBeanToMaxLPRatio = bound(initBeanToMaxLPRatio, 0, 100e18);
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
+        uint256 minBeanMaxLpGpPerBdvRatio = bs.getMinBeanMaxLpGpPerBdvRatio();
+        uint256 maxBeanMaxLpGpPerBdvRatio = bs.getMaxBeanMaxLpGpPerBdvRatio();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
+        assertGe(scaledRatio, minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
+        assertLe(scaledRatio, maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
-        assertEq(
-            scaledRatio - s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
-            initBeanToMaxLPRatio / 2
-        );
+        assertEq(scaledRatio - minBeanMaxLpGpPerBdvRatio, initBeanToMaxLPRatio / 2);
     }
 
     ////////////////////// L2SR //////////////////////
@@ -189,9 +193,9 @@ contract GaugeTest is TestHelper {
         // update liquidtyWeight.
         bs.mockUpdateLiquidityWeight(
             whitelistedWellTokens[rand],
-            address(lw),
+            address(mlw),
             0x00,
-            lw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
@@ -228,13 +232,8 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season changes after the catchup season.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(
-            season,
-            s.sys.seedGaugeSettings.targetSeasonsToCatchUp,
-            type(uint32).max - 1
-        );
+        season = bound(season, bs.getTargetSeasonsToCatchUp(), type(uint32).max - 1);
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
@@ -519,6 +518,43 @@ contract GaugeTest is TestHelper {
         }
     }
 
+    function testPriceGaugePointFunction(
+        uint256 gaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv,
+        uint256 price
+    ) public {
+        gaugePoints = bound(gaugePoints, 1e18, 1000e18);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
+        price = bound(price, 0, 1000e6);
+
+        // update weth price:
+        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, int256(price), 900);
+
+        uint256 newGaugePoints = gpP.priceGaugePointFunction(
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+
+        if (gpP.getPriceThreshold() >= price) {
+            uint256 gaugePointPrice = gpP.getGaugePointsPrice();
+            gaugePointPrice = gaugePointPrice > gaugePoints ? gaugePoints : gaugePointPrice;
+            assertEq(newGaugePoints, gaugePointPrice);
+        } else {
+            // verify standard gauge point implmnetation:
+            assertEq(
+                newGaugePoints,
+                gpP.defaultGaugePointFunction(
+                    gaugePoints,
+                    optimalPercentDepositedBdv,
+                    percentOfDepositedBdv
+                )
+            );
+        }
+    }
+
     ////////////////////// GAUGE HELPERS //////////////////////
 
     function addLiquidityAndReturnNonBeanValue(
@@ -526,7 +562,7 @@ contract GaugeTest is TestHelper {
         uint256 nonBeanAmount
     ) internal returns (uint256 newTotalNonBeanValue) {
         (, address nonBeanToken) = addLiquidityToWellAtCurrentPrice(well, nonBeanAmount);
-        uint256 usdTokenPrice = usdOracle.getUsdTokenPrice(nonBeanToken);
+        uint256 usdTokenPrice = bs.getUsdTokenPrice(nonBeanToken);
         uint256 precision = 10 ** MockToken(nonBeanToken).decimals();
         newTotalNonBeanValue = (nonBeanAmount * precision) / usdTokenPrice;
     }
@@ -650,15 +686,15 @@ contract GaugeTest is TestHelper {
      */
     function testSeedGaugeSettings() external {
         // validate current settings
-        IMockFBeanstalk.SeedGaugeSettings memory seedGauge = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
 
         // change settings
         vm.prank(BEANSTALK);
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.SeedGaugeSettings(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );
 
-        IMockFBeanstalk.SeedGaugeSettings memory ssg = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
         assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.targetSeasonsToCatchUp, 0);

@@ -12,7 +12,7 @@ const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES, MAX_UINT256 } = require("./uti
 const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const {
-  initalizeUsersForToken,
+  initializeUsersForToken,
   endGermination,
   addMockUnderlying,
   endGerminationWithMockToken
@@ -52,14 +52,14 @@ describe("New Silo Token", function () {
     await mockBeanstalk.mockWhitelistToken(
       siloToken.address,
       mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"),
-      "10000",
+      "10000000000",
       1e6 //aka "1 seed"
     );
 
     // Needed to appease invariants when underlying asset of urBean != Bean.
     await mockBeanstalk.removeWhitelistStatus(BEAN);
 
-    await initalizeUsersForToken(
+    await initializeUsersForToken(
       siloToken.address,
       [user, user2, owner, flashLoanExploiter],
       to18("100000000000")
@@ -104,11 +104,11 @@ describe("New Silo Token", function () {
         expect(await beanstalk.getGerminatingTotalDeposited(siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalDepositedBdv(siloToken.address)).to.eq("1000");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(siloToken.address)).to.eq("0");
-        expect(await beanstalk.totalStalk()).to.eq("10000000");
+        expect(await beanstalk.totalStalk()).to.eq("10000000000000");
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("10000000");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("10000000000000");
       });
 
       it("properly adds the crate", async function () {
@@ -132,14 +132,14 @@ describe("New Silo Token", function () {
         // deposit has grown 2 seeds worth of stalk, as 2 seasons has elasped.
         expect(
           await beanstalk.grownStalkForDeposit(user.address, siloToken.address, depositStem)
-        ).to.eq("2000");
+        ).to.eq("2000000000");
 
         // verify the function changes after a season has elapsed.
         await mockBeanstalk.lightSunrise();
 
         expect(
           await beanstalk.grownStalkForDeposit(user.address, siloToken.address, depositStem)
-        ).to.eq("3000");
+        ).to.eq("3000000000");
       });
     });
 
@@ -156,11 +156,11 @@ describe("New Silo Token", function () {
         expect(await beanstalk.getGerminatingTotalDeposited(siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalDepositedBdv(siloToken.address)).to.eq("2000");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(siloToken.address)).to.eq("0");
-        expect(await beanstalk.totalStalk()).to.eq("20000000");
+        expect(await beanstalk.totalStalk()).to.eq("20000000000000");
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("20000000");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("20000000000000");
       });
 
       it("properly adds the crate", async function () {
@@ -185,14 +185,14 @@ describe("New Silo Token", function () {
         expect(await beanstalk.getGerminatingTotalDeposited(siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalDepositedBdv(siloToken.address)).to.eq("2000");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(siloToken.address)).to.eq("0");
-        expect(await beanstalk.totalStalk()).to.eq("20000000");
+        expect(await beanstalk.totalStalk()).to.eq("20000000000000");
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("10000000");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("10000000000000");
       });
       it("properly updates the user2 balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.eq("10000000");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.eq("10000000000000");
       });
 
       it("properly adds the crate", async function () {
@@ -278,13 +278,13 @@ describe("New Silo Token", function () {
           expect(await beanstalk.totalStalk()).to.eq("0");
           expect(
             (await beanstalk.getGerminatingStalkAndRootsForSeason(await beanstalk.season()))[0]
-          ).to.eq("5000000");
+          ).to.eq("5000000000000");
         });
 
         it("properly updates the user balance", async function () {
           // user should not have any stalk, but should have germinating stalk.
           expect(await beanstalk.balanceOfStalk(user.address)).to.eq("0");
-          expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq("5000000");
+          expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq("5000000000000");
           expect((await siloToken.balanceOf(user.address)).sub(userBalanceBefore)).to.eq("500");
         });
 
@@ -320,19 +320,19 @@ describe("New Silo Token", function () {
           expect(await beanstalk.getTotalDepositedBdv(siloToken.address)).to.eq("0");
           expect(await beanstalk.getGerminatingTotalDeposited(siloToken.address)).to.eq("500");
           expect(await beanstalk.getGerminatingTotalDepositedBdv(siloToken.address)).to.eq("500");
-          expect(await beanstalk.totalStalk()).to.eq("500");
+          expect(await beanstalk.totalStalk()).to.eq("500000000");
           expect(
             (
               await beanstalk.getGerminatingStalkAndRootsForSeason(
                 toBN(await beanstalk.season()).sub("1")
               )
             )[0]
-          ).to.eq("5000000");
+          ).to.eq("5000000000000");
         });
         it("properly updates the user balance", async function () {
           // the user should have 500 microStalk, and 5e6 germinating stalk.
-          expect(await beanstalk.balanceOfStalk(user.address)).to.eq("500");
-          expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq("5000000");
+          expect(await beanstalk.balanceOfStalk(user.address)).to.eq("500000000");
+          expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq("5000000000000");
           expect((await siloToken.balanceOf(user.address)).sub(userBalanceBefore)).to.eq("1500");
         });
         it("properly removes the crate", async function () {
@@ -467,7 +467,7 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("500100");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("500100000000");
       });
 
       it("add the deposit to the recipient", async function () {
@@ -477,7 +477,7 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("500100");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("500100000000");
       });
 
       it("totalStalk is unchanged", async function () {
@@ -575,7 +575,7 @@ describe("New Silo Token", function () {
       it("updates users stalk and seeds", async function () {
         // 3 seasons have passed for 1 deposit and 2 season for the other. (500 total stalk)
         // (300 * 50%) + (200 * 75%) = 300
-        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("1250300");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("1250300000000");
       });
 
       it("add the deposit to the recipient", async function () {
@@ -591,11 +591,11 @@ describe("New Silo Token", function () {
       it("updates users stalk and seeds", async function () {
         // 3 seasons have passed for 1 deposit and 2 season for the other. (500 total stalk)
         // (300 * 50%) + (200 * 25%) = 200
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("750200");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("750200000000");
       });
 
       it("updates total stalk and seeds", async function () {
-        expect(await beanstalk.totalStalk()).to.be.equal("2000500");
+        expect(await beanstalk.totalStalk()).to.be.equal("2000500000000");
       });
     });
 
@@ -620,7 +620,7 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk and seeds", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("500100");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("500100000000");
       });
 
       it("add the deposit to the recipient", async function () {
@@ -630,11 +630,11 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk and seeds", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("500100");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("500100000000");
       });
 
       it("updates total stalk and seeds", async function () {
-        expect(await beanstalk.totalStalk()).to.be.equal("1000200");
+        expect(await beanstalk.totalStalk()).to.be.equal("1000200000000");
       });
 
       it("properly updates users token allowance", async function () {
@@ -690,11 +690,11 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk and seeds", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("1000200");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("1000200000000");
       });
 
       it("updates total stalk and seeds", async function () {
-        expect(await beanstalk.totalStalk()).to.be.equal("1000200");
+        expect(await beanstalk.totalStalk()).to.be.equal("1000200000000");
       });
 
       it("properly updates users token allowance", async function () {
@@ -742,7 +742,7 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk and seeds", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("1250300");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.be.equal("1250300000000");
       });
 
       it("add the deposit to the recipient", async function () {
@@ -755,11 +755,11 @@ describe("New Silo Token", function () {
       });
 
       it("updates users stalk and seeds", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("750200");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.be.equal("750200000000");
       });
 
       it("updates total stalk and seeds", async function () {
-        expect(await beanstalk.totalStalk()).to.be.equal("2000500");
+        expect(await beanstalk.totalStalk()).to.be.equal("2000500000000");
       });
 
       it("properly updates users token allowance", async function () {
@@ -847,11 +847,13 @@ describe("New Silo Token", function () {
 
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("1.5").add(toBN("3")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("1.5").add(toBN("3000000")));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("1.5").add(toBN("3")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("1.5").add(toBN("3000000"))
+        );
       });
 
       it("properly updates the crate", async function () {
@@ -896,11 +898,13 @@ describe("New Silo Token", function () {
 
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("4")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("4000000")));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("2").add(toBN("4")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("2").add(toBN("4000000"))
+        );
       });
 
       it("properly removes the crate", async function () {
@@ -937,8 +941,10 @@ describe("New Silo Token", function () {
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
         // note a micro stalk is incremented due to a min stalk requirement to grow stalk.
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("1")));
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("2").add(toBN("1")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("1000000")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("2").add(toBN("1000000"))
+        );
 
         // add the underlying token, to increase the bdv of the unripe asset.
         // prev. unripeBeans had 10,000 units. Now it has 20,000 (20% bdv).
@@ -952,11 +958,13 @@ describe("New Silo Token", function () {
 
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("3").add(toBN("8")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("3").add(toBN("7500000")));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("3").add(toBN("8")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("3").add(toBN("7500000"))
+        );
       });
 
       it("properly removes the crate", async function () {
@@ -1005,8 +1013,10 @@ describe("New Silo Token", function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
         // currently, there are 10,000 units underlying 100,000 beans (10% bdv)
         // depositing 10 urBeans should result in (0.1)*10 = 1 stalk.
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("1")));
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("2").add(toBN("1")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("2").add(toBN("1000000")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("2").add(toBN("1000000"))
+        );
 
         // add the underlying token, to increase the bdv of the unripe asset.
         // prev. unripeBeans had 10,000 units. Now it has 20,000 (20% bdv).
@@ -1020,11 +1030,13 @@ describe("New Silo Token", function () {
 
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("20"));
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("4").add(toBN("10")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("4").add(toBN("10000000")));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("4").add(toBN("10")));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
+          toStalk("4").add(toBN("10000000"))
+        );
       });
 
       it("properly removes the crate", async function () {

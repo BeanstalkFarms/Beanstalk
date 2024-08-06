@@ -603,7 +603,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) public view returns (TokenDepositId memory deposits) {
-        uint256[] memory depositIds = s.accts[account].depositIdList[token];
+        uint256[] memory depositIds = s.accts[account].depositIdList[token].depositIds;
         if (depositIds.length == 0) return TokenDepositId(token, depositIds, new Deposit[](0));
         deposits.token = token;
         deposits.depositIds = depositIds;
@@ -620,6 +620,14 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account,
         address token
     ) public view returns (uint256[] memory depositIds) {
-        return s.accts[account].depositIdList[token];
+        return s.accts[account].depositIdList[token].depositIds;
+    }
+
+    function getIndexForDepositId(
+        address account,
+        address token,
+        uint256 depositId
+    ) external view returns (uint256) {
+        return s.accts[account].depositIdList[token].idIndex[depositId];
     }
 }

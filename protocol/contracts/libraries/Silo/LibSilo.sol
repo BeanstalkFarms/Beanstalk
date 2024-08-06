@@ -449,7 +449,7 @@ library LibSilo {
         uint32 currentSeason = s.sys.season.current;
 
         // End account germination.
-        uint128 firstGerminatingRoots;
+        uint256 firstGerminatingRoots;
         if (lastUpdate < currentSeason) {
             firstGerminatingRoots = LibGerminate.endAccountGermination(
                 account,
@@ -661,7 +661,7 @@ library LibSilo {
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
         if (emission == ERC1155Event.EMIT_BATCH_EVENT) {
-            emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+            emit TransferBatch(LibTractor._user(), account, address(0), removedDepositIDs, amounts);
         }
 
         emit RemoveDeposits(
@@ -692,9 +692,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(uint96(endStem.sub(startStem))).mul(bdv).div(PRECISION);
-
-        return reward;
+        return uint256(uint96(endStem.sub(startStem))).mul(bdv);
     }
 
     /**

@@ -30,7 +30,7 @@ const {
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
 } = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/hardhat/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
@@ -97,7 +97,12 @@ task("getTime", async function () {
 })*/
 
 task("reseed", async () => {
-  const account = await impersonateSigner(PUBLIUS);
+  const account = await impersonateSigner(BCM);
+  // mint more eth to the bcm to cover gas costs
+  const mock = true;
+  if (mock) {
+    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  }
   await reseed(account);
 });
 
@@ -129,15 +134,14 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      // files.push("contracts/libraries/LibIncentive.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
-      // files.push("contracts/libraries/Silo/LibGerminate.sol");
-      // files.push("contracts/libraries/Minting/LibWellMinting.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/LibIncentive.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
+      files.push("contracts/libraries/Minting/LibWellMinting.sol");
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
       files.push("contracts/libraries/LibShipping.sol");
+      files.push("contracts/libraries/Token/LibTransfer.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
