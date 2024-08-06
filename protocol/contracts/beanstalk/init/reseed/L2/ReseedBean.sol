@@ -42,7 +42,7 @@ contract ReseedBean {
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
-    bytes32 internal constant BEAN_SALT = 
+    bytes32 internal constant BEAN_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
     // UNRIPE_BEAN parameters.
     string internal constant UNRIPE_BEAN_NAME = "Unripe Bean";
