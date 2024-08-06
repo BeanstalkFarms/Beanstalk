@@ -235,8 +235,6 @@ const normalizeQueryResults = (output: OutputMap) => {
   return arr;
 };
 
-const SEASON_GT = 20389;
-
 async function apolloFetch(
   document: DocumentNode,
   first: number,
