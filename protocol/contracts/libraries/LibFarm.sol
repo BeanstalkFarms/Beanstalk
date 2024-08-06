@@ -24,6 +24,11 @@ struct AdvancedFarmCall {
 }
 
 library LibFarm {
+    /**
+     * @notice Delegatecall an external facing Beanstalk function, optionally using a clipboard.
+     * @param data The calldata of the call.
+     * @param returnData The return data of all previous calls.
+     */
     function _advancedFarm(
         AdvancedFarmCall memory data,
         bytes[] memory returnData
@@ -43,7 +48,10 @@ library LibFarm {
         }
     }
 
-    // delegatecall a Beanstalk function using memory data
+    /**
+     * @notice Delegatecall an external facing Beanstalk function.
+     * @param data The calldata of the call.
+     */
     function _farm(bytes memory data) internal returns (bytes memory result) {
         bytes4 selector;
         bool success;
@@ -55,12 +63,17 @@ library LibFarm {
         LibFunction.checkReturn(success, result);
     }
 
-    // Any public facing Beanstalk function should call nonReentrancy, thus the status will immediately return to ENTERED.
-    // this logic belongs in reentrancy guard, but solidity >:(
+    /**
+     * @notice Swap reentrancy locks, such that standard reentrant is unlocked and farming is locked.
+     * @dev All Beanstalk write functions should be nonReentrant, immediately returning reentrant status to entered.
+     * @dev This logic pertains to ReentrancyGuard, but Solidity limitations require it to be be placed here.
+     * @param facet The address of the facet containing the function to call.
+     * @param data The calldata of the call.
+     */
     function _beanstalkCall(
         address facet,
         bytes memory data
-    ) internal returns (bool success, bytes memory result) {
+    ) private returns (bool success, bytes memory result) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(s.sys.farmingStatus != C.ENTERED, "Reentrant farm call");
 

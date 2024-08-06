@@ -9,12 +9,19 @@ import {C} from "contracts/C.sol";
  * @author Beanstalk Farms
  * @title Variation of Oepn Zeppelins reentrant guard to include Beanstalk specific functionality.
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts%2Fsecurity%2FReentrancyGuard.sol
+ *
+ * The key difference between Beanstalk reentrancy and standard reentrancy is the need for Beanstalk
+ * to be able to re-enter itself executing functions through farm-like functions. This Farm functiiionality
+ * allows users to batch multiple Beanstalk functions into a single transaction.
+ * Examples of Farm use can be seen in Farm, AdvancedFarm, Tractor, and PipelineConvert.
+ * Reference _beanstalkCall() to see Farm interaction with ReentrancyGuard.
  **/
 abstract contract ReentrancyGuard {
     AppStorage internal s;
 
     /**
-     * @dev Standard reentrancy is not compatible with farm-like features. See _beanstalkCall().
+     * @notice Verify Beanstalk is not already entered and lock entrance.
+     * @dev Standard reentrancy is not compatible with farm-like features.
      */
     modifier nonReentrant() {
         require(s.sys.reentrantStatus != C.ENTERED, "ReentrancyGuard: reentrant call");
