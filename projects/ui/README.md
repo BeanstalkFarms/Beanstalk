@@ -16,6 +16,9 @@
 # Install packages
 yarn install
 
+# Build the SDKs
+yarn all:build
+
 # Generate typed contracts and queries
 yarn generate
 

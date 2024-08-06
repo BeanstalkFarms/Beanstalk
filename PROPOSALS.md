@@ -52,6 +52,10 @@ You can read more about BIPs [here](https://docs.bean.money/almanac/governance/p
 * [BIP-41](https://bean.money/bip-41): Immunefi Program Update
 * [BIP-42](https://bean.money/bip-42): Seed Gauge System
 * [BIP-43](https://bean.money/bip-43): Hypernative
+* [BIP-44](https://bean.money/bip-44): Seed Gauge System
+* [BIP-45](https://bean.money/bip-45): Seed Gauge System
+* [BIP-46](https://bean.money/bip-46): Hypernative
+* [BIP-47](https://bean.money/bip-47): Adjust Quorum
 
 ## Emergency Beanstalk Improvement Proposal (EBIP)
 
@@ -74,6 +78,8 @@ You can read about the BCM's Emergency Response Procedures [here](https://docs.b
 * [EBIP-12](https://bean.money/ebip-12): Remove Convert
 * [EBIP-13](https://bean.money/ebip-13): Re-Add Convert
 * [EBIP-14](https://bean.money/ebip-14): Remove Vesting Period
+* [EBIP-15](https://bean.money/ebip-15): Seed Gauge System Fixes
+* [EBIP-16](https://bean.money/ebip-16): Fix Germinating Earned Bean Deposits
 
 ## Beanstalk Operations Proposal (BOP)
 

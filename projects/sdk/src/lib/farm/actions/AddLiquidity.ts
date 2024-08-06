@@ -1,9 +1,19 @@
 import { BigNumber, ethers } from "ethers";
-import { BasicPreparedResult, RunContext, RunMode, Step, StepClass, Workflow } from "src/classes/Workflow";
+import {
+  BasicPreparedResult,
+  RunContext,
+  RunMode,
+  Step,
+  StepClass,
+  Workflow
+} from "src/classes/Workflow";
 import { CurveMetaPool__factory, CurvePlainPool__factory } from "src/constants/generated";
 import { assert } from "src/utils";
 import { FarmFromMode, FarmToMode } from "../types";
 
+/**
+ * @deprecated
+ */
 export class AddLiquidity extends StepClass<BasicPreparedResult> {
   public name: string = "addLiquidity";
 
@@ -17,14 +27,19 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
     super();
   }
 
-  async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<BasicPreparedResult>> {
+  async run(
+    _amountInStep: ethers.BigNumber,
+    context: RunContext
+  ): Promise<Step<BasicPreparedResult>> {
     if (context.runMode === RunMode.EstimateReversed) {
       throw new Error("Reverse estimation is not yet supported for this action");
     }
 
     /// [0, 0, 1] => [0, 0, amountIn]
     /// FIXME: this uses a binary approach instead of a multiplier.
-    const amountInStep = this._amounts.map((k) => (k === 1 ? _amountInStep : ethers.BigNumber.from(0)));
+    const amountInStep = this._amounts.map((k) =>
+      k === 1 ? _amountInStep : ethers.BigNumber.from(0)
+    );
 
     /// Get amount out based on the selected pool
     const poolAddr = this._pool.toLowerCase();
@@ -54,16 +69,22 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
     /// Case: Metapools
     else if (this._registry === AddLiquidity.sdk.contracts.curve.registries.metaFactory.address) {
       assert(amountInStep.length === 2);
-      amountOut = await CurveMetaPool__factory.connect(this._pool, AddLiquidity.sdk.provider).callStatic[
-        "calc_token_amount(uint256[2],bool)"
-      ](
+      amountOut = await CurveMetaPool__factory.connect(
+        this._pool,
+        AddLiquidity.sdk.provider
+      ).callStatic["calc_token_amount(uint256[2],bool)"](
         amountInStep as [any, any],
         true, // _is_deposit
         { gasLimit: 10000000 }
       );
-    } else if (this._registry === AddLiquidity.sdk.contracts.curve.registries.cryptoFactory.address) {
+    } else if (
+      this._registry === AddLiquidity.sdk.contracts.curve.registries.cryptoFactory.address
+    ) {
       assert(amountInStep.length === 2);
-      amountOut = await CurvePlainPool__factory.connect(this._pool, AddLiquidity.sdk.provider).callStatic.calc_token_amount(
+      amountOut = await CurvePlainPool__factory.connect(
+        this._pool,
+        AddLiquidity.sdk.provider
+      ).callStatic.calc_token_amount(
         amountInStep as [any, any],
         true, // _is_deposit
         { gasLimit: 10000000 }
@@ -99,18 +120,21 @@ export class AddLiquidity extends StepClass<BasicPreparedResult> {
         if (!minAmountOut) throw new Error("AddLiquidity: missing minAmountOut");
         return {
           target: AddLiquidity.sdk.contracts.beanstalk.address,
-          callData: AddLiquidity.sdk.contracts.beanstalk.interface.encodeFunctionData("addLiquidity", [
-            this._pool,
-            this._registry,
-            amountInStep as any[], // could be 2 or 3 elems
-            minAmountOut,
-            this._fromMode,
-            this._toMode
-          ])
+          callData: ""
+          // callData: AddLiquidity.sdk.contracts.beanstalk.interface.encodeFunctionData("addLiquidity", [
+          //   this._pool,
+          //   this._registry,
+          //   amountInStep as any[], // could be 2 or 3 elems
+          //   minAmountOut,
+          //   this._fromMode,
+          //   this._toMode
+          // ])
         };
       },
-      decode: (data: string) => AddLiquidity.sdk.contracts.beanstalk.interface.decodeFunctionData("addLiquidity", data),
-      decodeResult: (result: string) => AddLiquidity.sdk.contracts.beanstalk.interface.decodeFunctionResult("addLiquidity", result)
+      decode: (data: string) => undefined,
+      // decode: (data: string) => AddLiquidity.sdk.contracts.beanstalk.interface.decodeFunctionData("addLiquidity", data),
+      decodeResult: (result: string) => undefined
+      // decodeResult: (result: string) => AddLiquidity.sdk.contracts.beanstalk.interface.decodeFunctionResult("addLiquidity", result)
     };
   }
 }

@@ -47,7 +47,7 @@ describe("Silo Withdrawl", function () {
     expect(t).rejects.toThrow("Insufficient balance");
   });
 
-  it.only("Calculates crates correctly", async () => {
+  it("Calculates crates correctly", async () => {
     const currentSeason = 10_000;
     const c1 = utils.mockDepositCrate(token, 900, "200", currentSeason);
     const c2 = utils.mockDepositCrate(token, 800, "500", currentSeason);

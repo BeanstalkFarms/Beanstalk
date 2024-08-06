@@ -3,7 +3,6 @@
   "singleQuote": false,
   "semi": true,
   "trailingComma": "none",
-
   "plugins": ["prettier-plugin-solidity"],
   "overrides": [
     {
@@ -15,6 +14,12 @@
         "useTabs": false,
         "singleQuote": false,
         "bracketSpacing": false
+      }
+    },
+    {
+      "files": "projects/subgraph-*/**",
+      "options": {
+        "printWidth": 140
       }
     }
   ]

@@ -61,7 +61,7 @@ contract GaugePointFacet {
             // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
             if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;
         } else {
-            // If % of deposited BDV is .01% within range of optimal, 
+            // If % of deposited BDV is .01% within range of optimal,
             // keep gauge points the same.
             return currentGaugePoints;
         }
