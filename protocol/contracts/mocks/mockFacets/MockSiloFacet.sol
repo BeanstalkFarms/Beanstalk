@@ -164,7 +164,7 @@ contract MockSiloFacet is SiloFacet {
             // If rain started after update, set account variables to track rain.
             if (s.sys.season.rainStart > _lastUpdate) {
                 s.accts[account].lastRain = s.sys.season.rainStart;
-                s.accts[account].sop.roots = s.accts[account].roots;
+                s.accts[account].sop.rainRoots = s.accts[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.

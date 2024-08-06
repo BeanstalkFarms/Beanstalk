@@ -25,7 +25,6 @@ import useAnchor from '~/hooks/display/useAnchor';
 import useToggle from '~/hooks/display/useToggle';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
-import PickBeansDialog from '~/components/Farmer/Unripe/PickDialog';
 import AddressIcon from '~/components/Common/AddressIcon';
 import useGlobal from '~/hooks/app/useGlobal';
 import Row from '~/components/Common/Row';
@@ -56,7 +55,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
   const [selectingWallet, showWallets, hideWallets] = useToggle();
 
   /// Dialog: Pick Unripe Beans
-  const [picking, showPick, hidePick] = useToggle(toggleMenuAnchor);
+  // const [picking, showPick, hidePick] = useToggle(toggleMenuAnchor);
 
   /// Dialog: Settings
   const [_, setSettingsOpen] = useGlobal('showSettings');
@@ -155,25 +154,6 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
         </Row>
       </MenuItem>
       <Divider sx={{ mx: 1, borderColor: 'divider' }} />
-      <Box sx={{ px: 1, pb: 0.25 }}>
-        <Button
-          fullWidth
-          onClick={showPick}
-          sx={{
-            py: 1.25,
-            color: BeanstalkPalette.brown,
-            backgroundColor: BeanstalkPalette.lightBrown,
-            '&:hover': {
-              backgroundColor: BeanstalkPalette.lightBrown,
-              opacity: 0.96,
-            },
-          }}
-        >
-          <Row>
-            <Typography variant="h4">Pick Unripe Assets</Typography>
-          </Row>
-        </Button>
-      </Box>
       <Box sx={{ px: 1, pt: 0.75, pb: 0.25 }}>
         <Button
           fullWidth
@@ -233,7 +213,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
         }
       />
       {/* Pick Beans Dialog */}
-      <PickBeansDialog open={picking} handleClose={hidePick} />
+      {/* <PickBeansDialog open={picking} handleClose={hidePick} /> */}
     </>
   );
 };

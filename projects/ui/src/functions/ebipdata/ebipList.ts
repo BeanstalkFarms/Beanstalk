@@ -224,4 +224,34 @@ export const ebipList = [
         id: '',
       }
     },
+    {
+      id: 'ebip-15',
+      title: 'EBIP-15: Seed Gauge System Fixes',
+      choices: [],
+      type: '',
+      state: 'closed',
+      start: 1716526343,
+      end: 1716526343,
+      scores: [],
+      scores_total: 0,
+      snapshot: '',
+      space: {
+        id: '',
+      }
+    },
+    {
+      id: 'ebip-16',
+      title: 'EBIP-16: Fix Germinating Earned Bean Deposits',
+      choices: [],
+      type: '',
+      state: 'closed',
+      start: 1717292507,
+      end: 1717292507,
+      scores: [],
+      scores_total: 0,
+      snapshot: '',
+      space: {
+        id: '',
+      }
+    },
   ];

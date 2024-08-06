@@ -14,6 +14,7 @@ export class HarvestFarmStep extends FarmStep implements EstimatesGas {
   async estimateGas() {
     const { beanstalk } = this._sdk.contracts;
     const gasEstimate = await beanstalk.estimateGas.harvest(
+      '0',
       this._plotIds,
       FarmToMode.INTERNAL
     );
@@ -33,6 +34,7 @@ export class HarvestFarmStep extends FarmStep implements EstimatesGas {
       prepare: () => ({
         target: beanstalk.address,
         callData: beanstalk.interface.encodeFunctionData('harvest', [
+          '0',
           this._plotIds,
           toMode,
         ]),

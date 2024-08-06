@@ -163,12 +163,16 @@ library LibGerminate {
      * the germination process:
      * - increments the assoicated values (bdv, stalk, roots)
      * - clears the germination struct for the account.
+     *
+     * @return firstGerminatingRoots the roots from the first germinating stalk.
+     * used in {handleRain} to properly set the rain roots of a user,
+     * if the user had deposited in the season prior to a rain.
      */
     function endAccountGermination(
         address account,
         uint32 lastMowedSeason,
         uint32 currentSeason
-    ) internal {
+    ) internal returns (uint128 firstGerminatingRoots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
         (uint128 firstStalk, uint128 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
@@ -187,6 +191,7 @@ library LibGerminate {
             );
             germinatingStalk = firstStalk;
             totalRootsFromGermination = roots;
+            firstGerminatingRoots = roots;
             emit FarmerGerminatingStalkBalanceChanged(
                 account,
                 -int256(uint256(germinatingStalk)),
