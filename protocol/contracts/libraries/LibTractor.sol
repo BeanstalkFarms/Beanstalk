@@ -11,7 +11,6 @@ import {C} from "contracts/C.sol";
  * @author funderbrker, 0xm00neth
  **/
 library LibTractor {
-
     enum CounterUpdateType {
         INCREASE,
         DECREASE
@@ -81,7 +80,7 @@ library LibTractor {
         _tractorStorage().version = version;
         emit TractorVersionSet(version);
     }
-    
+
     /**
      * @notice Increment the blueprint nonce by 1.
      * @param blueprintHash blueprint hash
