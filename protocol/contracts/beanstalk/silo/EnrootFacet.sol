@@ -45,7 +45,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         uint256 stalkAdded;
         uint256 bdvAdded;
         int96 stemTip;
-        uint32 stalkPerBdv;
+        uint48 stalkPerBdv;
     }
 
     modifier mowSender(address token) {
@@ -119,7 +119,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
-        LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk.toUint128());
+        LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk);
     }
 
     function balanceOfRevitalizedStalk(
@@ -261,7 +261,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         int96 stemTip,
-        uint32 stalkPerBdv
+        uint48 stalkPerBdv
     ) private returns (uint256 stalkAdded) {
         LibTokenSilo.addDepositToAccount(
             LibTractor._user(),

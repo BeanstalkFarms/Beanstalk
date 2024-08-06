@@ -47,7 +47,7 @@ describe("Silo Enroot", function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -63,7 +63,7 @@ describe("Silo Enroot", function () {
     await mockBeanstalk.mockWhitelistToken(
       this.siloToken.address,
       mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"),
-      "10000",
+      "10000000000",
       "1"
     );
 
@@ -133,15 +133,13 @@ describe("Silo Enroot", function () {
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_BEAN)).to.eq(to6("10"));
         expect(await beanstalk.getTotalDepositedBdv(UNRIPE_BEAN)).to.eq(
-          pruneToStalk(to6("10")).add(toStalk("0.5")).div("10000")
+          pruneToStalk(to6("10")).add(toStalk("0.0000005")).div("10000")
         );
-        expect(await beanstalk.totalStalk()).to.eq(pruneToStalk(to6("10")).add(toStalk("0.5")));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("2.355646"));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(
-          pruneToStalk(to6("10")).add(toStalk("0.5"))
-        );
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("2.355646"));
         expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq("0");
       });
 
@@ -229,8 +227,8 @@ describe("Silo Enroot", function () {
 
         await mockBeanstalk.setStalkAndRoots(
           user.address,
-          "18558315646",
-          "18558315646000000000000"
+          "18558315646000000",
+          "18558315646000000000000000000"
         );
 
         this.result = await beanstalk
@@ -296,8 +294,8 @@ describe("Silo Enroot", function () {
           .depositAtStemAndBdv(UNRIPE_LP, to6("10"), stem1, "1855646", 0);
         await mockBeanstalk.setStalkAndRoots(
           user.address,
-          "37120342584",
-          "37120342584000000000000"
+          "37120342584000000",
+          "37120342584000000000000000000"
         );
         this.result = await beanstalk
           .connect(user)
@@ -306,11 +304,11 @@ describe("Silo Enroot", function () {
 
       it("properly updates the total balances", async function () {
         expect(await beanstalk.getTotalDeposited(UNRIPE_LP)).to.eq(to6("20"));
-        expect(await beanstalk.totalStalk()).to.eq(toStalk("234.7697275564"));
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("234.7697275564000000"));
       });
 
       it("properly updates the user balance", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("234.7697275564"));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("234.7697275564000000"));
       });
 
       it("properly updates the crate", async function () {

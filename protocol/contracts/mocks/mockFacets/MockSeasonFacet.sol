@@ -381,21 +381,22 @@ contract MockSeasonFacet is SeasonFacet {
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
         ds.supportedInterfaces[0x0e89341c] = true;
+        uint48 stalk = 1e10;
 
         uint24 currentSeason = uint24(s.sys.season.current);
 
         s.sys.silo.assetSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneStem = 0;
 
@@ -420,8 +421,8 @@ contract MockSeasonFacet is SeasonFacet {
         return uint256(s.sys.weather.temp);
     }
 
-    function getEthUsdPrice() external view returns (uint256) {
-        return LibEthUsdOracle.getEthUsdPrice();
+    function getUsdEthPrice() external view returns (uint256) {
+        return LibEthUsdOracle.getUsdEthPrice();
     }
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
@@ -432,7 +433,8 @@ contract MockSeasonFacet is SeasonFacet {
         return
             LibChainlinkOracle.getPrice(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0
             );
     }
 
@@ -441,6 +443,7 @@ contract MockSeasonFacet is SeasonFacet {
             LibChainlinkOracle.getTwap(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
                 lookback
             );
     }

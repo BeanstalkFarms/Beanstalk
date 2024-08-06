@@ -29,9 +29,9 @@ const {
   INTERNAL,
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
-} = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/utils/constants.js");
-const { to6 } = require("./test/utils/helpers.js");
+} = require("./test/hardhat/utils/balances.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
+const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
@@ -134,15 +134,14 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
     const files = glob.sync(pattern);
     if (module == "silo") {
       // Manually add in libraries that emit events
-      // files.push("contracts/libraries/LibIncentive.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
-      // files.push("contracts/libraries/Silo/LibGerminate.sol");
-      // files.push("contracts/libraries/Minting/LibWellMinting.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
-      // files.push("contracts/libraries/Silo/LibWhitelist.sol");
-      // files.push("contracts/libraries/LibGauge.sol");
+      files.push("contracts/libraries/LibIncentive.sol");
+      files.push("contracts/libraries/Silo/LibGerminate.sol");
+      files.push("contracts/libraries/Minting/LibWellMinting.sol");
+      files.push("contracts/libraries/Silo/LibWhitelistedTokens.sol");
+      files.push("contracts/libraries/Silo/LibWhitelist.sol");
+      files.push("contracts/libraries/LibGauge.sol");
       files.push("contracts/libraries/LibShipping.sol");
+      files.push("contracts/libraries/Token/LibTransfer.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -364,7 +363,7 @@ module.exports = {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
-      accounts: "remote",
+      accounts: "remote"
     },
     mainnet: {
       chainId: 1,
