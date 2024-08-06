@@ -9,13 +9,11 @@ import {
   SupplyNeutral,
   WeatherChange
 } from "../generated/Beanstalk-ABIs/PreReplant";
-import { Harvest as HarvestEntity } from "../generated/schema";
 import { BEANSTALK, BEANSTALK_FARMS } from "../../subgraph-core/utils/Constants";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import { handleRateChange, loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import { loadPlot } from "./utils/Plot";
-import { savePodTransfer } from "./utils/PodTransfer";
 import { getCurrentSeason, getHarvestableIndex, loadSeason } from "./utils/Season";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { expirePodListingIfExists } from "./utils/PodListing";
@@ -203,18 +201,6 @@ export function handleHarvest(event: Harvest): void {
   }
   field.plotIndexes = newIndexes;
   field.save();
-
-  // Save the low level details for the event.
-  let harvest = new HarvestEntity("harvest-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString());
-  harvest.hash = event.transaction.hash.toHexString();
-  harvest.logIndex = event.transactionLogIndex.toI32();
-  harvest.protocol = event.address.toHexString();
-  harvest.farmer = event.params.account.toHexString();
-  harvest.plots = event.params.plots;
-  harvest.beans = event.params.beans;
-  harvest.blockNumber = event.block.number;
-  harvest.createdAt = event.block.timestamp;
-  harvest.save();
 }
 
 export function handlePlotTransfer(event: PlotTransfer): void {
@@ -472,9 +458,6 @@ export function handlePlotTransfer(event: PlotTransfer): void {
       event.block.number
     );
   }
-
-  // Save the raw event data
-  savePodTransfer(event);
 }
 
 export function handleSupplyIncrease(event: SupplyIncrease): void {

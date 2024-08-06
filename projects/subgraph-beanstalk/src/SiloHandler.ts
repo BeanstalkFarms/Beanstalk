@@ -37,17 +37,12 @@ import {
   loadWhitelistTokenDailySnapshot,
   addToSiloWhitelist
 } from "./utils/SiloEntities";
-import {
-  AddDeposit as AddDepositEntity,
-  RemoveDeposit as RemoveDepositEntity,
-  WhitelistToken as WhitelistTokenEntity,
-  DewhitelistToken as DewhitelistTokenEntity,
-  SeedChange,
-  StalkChange
-} from "../generated/schema";
+import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { getCurrentSeason } from "./utils/Season";
+
+// TODO: extract common logic between v2, v3 handlers
 
 /**
  * SILO V2 (REPLANT) HANDLERS
@@ -107,20 +102,6 @@ export function handleAddDeposit(event: AddDeposit): void {
     event.block.timestamp,
     event.block.number
   );
-
-  let id = "addDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let add = new AddDepositEntity(id);
-  add.hash = event.transaction.hash.toHexString();
-  add.logIndex = event.transactionLogIndex.toI32();
-  add.protocol = event.address.toHexString();
-  add.account = event.params.account.toHexString();
-  add.token = event.params.token.toHexString();
-  add.season = event.params.season.toI32();
-  add.amount = event.params.amount;
-  add.bdv = event.params.bdv;
-  add.blockNumber = event.block.number;
-  add.createdAt = event.block.timestamp;
-  add.save();
 }
 
 export function handleRemoveDeposit(event: RemoveDeposit): void {
@@ -171,25 +152,13 @@ export function handleRemoveDeposit(event: RemoveDeposit): void {
     event.block.timestamp,
     event.block.number
   );
-
-  let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let removal = new RemoveDepositEntity(id);
-  removal.hash = event.transaction.hash.toHexString();
-  removal.logIndex = event.transactionLogIndex.toI32();
-  removal.protocol = event.address.toHexString();
-  removal.account = event.params.account.toHexString();
-  removal.token = event.params.token.toHexString();
-  removal.season = event.params.season.toI32();
-  removal.amount = event.params.amount;
-  removal.blockNumber = event.block.number;
-  removal.createdAt = event.block.timestamp;
-  removal.save();
 }
 
 export function handleRemoveDeposits(event: RemoveDeposits): void {
   let beanstalk = loadBeanstalk(event.address); // get current season
 
   for (let i = 0; i < event.params.seasons.length; i++) {
+    // TODO: extract common loop logic
     let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.seasons[i]);
 
     let withdrawnBDV = deposit.amount == ZERO_BI ? ZERO_BI : event.params.amounts[i].times(deposit.bdv).div(deposit.amount);
@@ -236,19 +205,6 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
       event.block.timestamp,
       event.block.number
     );
-
-    let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString() + "-" + i.toString();
-    let removal = new RemoveDepositEntity(id);
-    removal.hash = event.transaction.hash.toHexString();
-    removal.logIndex = event.transactionLogIndex.toI32();
-    removal.protocol = event.address.toHexString();
-    removal.account = event.params.account.toHexString();
-    removal.token = event.params.token.toHexString();
-    removal.season = event.params.seasons[i].toI32();
-    removal.amount = event.params.amounts[i];
-    removal.blockNumber = event.block.number;
-    removal.createdAt = event.block.timestamp;
-    removal.save();
   }
 }
 
@@ -310,21 +266,6 @@ export function handleAddDeposit_V3(event: AddDeposit_V3): void {
     event.block.timestamp,
     event.block.number
   );
-
-  let id = "addDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let add = new AddDepositEntity(id);
-  add.hash = event.transaction.hash.toHexString();
-  add.logIndex = event.transactionLogIndex.toI32();
-  add.protocol = event.address.toHexString();
-  add.account = event.params.account.toHexString();
-  add.token = event.params.token.toHexString();
-  add.season = beanstalk.lastSeason;
-  add.stem = event.params.stem;
-  add.amount = event.params.amount;
-  add.bdv = event.params.bdv;
-  add.blockNumber = event.block.number;
-  add.createdAt = event.block.timestamp;
-  add.save();
 }
 
 export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
@@ -373,21 +314,6 @@ export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
     event.block.timestamp,
     event.block.number
   );
-
-  let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let removal = new RemoveDepositEntity(id);
-  removal.hash = event.transaction.hash.toHexString();
-  removal.logIndex = event.transactionLogIndex.toI32();
-  removal.protocol = event.address.toHexString();
-  removal.account = event.params.account.toHexString();
-  removal.token = event.params.token.toHexString();
-  removal.season = beanstalk.lastSeason;
-  removal.stem = event.params.stem;
-  removal.amount = event.params.amount;
-  removal.bdv = event.params.bdv;
-  removal.blockNumber = event.block.number;
-  removal.createdAt = event.block.timestamp;
-  removal.save();
 }
 
 export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
@@ -438,21 +364,6 @@ export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
       event.block.timestamp,
       event.block.number
     );
-
-    let id = "removeDeposit-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString() + "-" + i.toString();
-    let removal = new RemoveDepositEntity(id);
-    removal.hash = event.transaction.hash.toHexString();
-    removal.logIndex = event.transactionLogIndex.toI32();
-    removal.protocol = event.address.toHexString();
-    removal.account = event.params.account.toHexString();
-    removal.token = event.params.token.toHexString();
-    removal.season = beanstalk.lastSeason;
-    removal.stem = event.params.stems[i];
-    removal.amount = event.params.amounts[i];
-    removal.bdv = event.params.bdvs[i];
-    removal.blockNumber = event.block.number;
-    removal.createdAt = event.block.timestamp;
-    removal.save();
   }
 }
 
@@ -495,7 +406,9 @@ export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
 
 export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
   // Exclude BIP-24 emission of missed past events
-  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") return;
+  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") {
+    return;
+  }
 
   let beanstalk = loadBeanstalk(event.address); // get current season
   updateStalkBalances(
@@ -514,39 +427,17 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
     event.block.timestamp,
     event.block.number
   );
-
-  let id = "stalkChange-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let removal = new StalkChange(id);
-  removal.hash = event.transaction.hash.toHexString();
-  removal.logIndex = event.transactionLogIndex.toI32();
-  removal.protocol = event.address.toHexString();
-  removal.account = event.params.account.toHexString();
-  removal.delta = event.params.delta;
-  removal.season = beanstalk.lastSeason;
-  removal.blockNumber = event.block.number;
-  removal.createdAt = event.block.timestamp;
-  removal.save();
 }
 
 export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
   // Exclude BIP-24 emission of missed past events
-  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") return;
+  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") {
+    return;
+  }
 
   let beanstalk = loadBeanstalk(event.address); // get current season
   updateSeedsBalances(event.address, beanstalk.lastSeason, event.params.delta, event.block.timestamp, event.block.number);
   updateSeedsBalances(event.params.account, beanstalk.lastSeason, event.params.delta, event.block.timestamp, event.block.number);
-
-  let id = "seedChange-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let removal = new SeedChange(id);
-  removal.hash = event.transaction.hash.toHexString();
-  removal.logIndex = event.transactionLogIndex.toI32();
-  removal.protocol = event.address.toHexString();
-  removal.account = event.params.account.toHexString();
-  removal.delta = event.params.delta;
-  removal.season = beanstalk.lastSeason;
-  removal.blockNumber = event.block.number;
-  removal.createdAt = event.block.timestamp;
-  removal.save();
 }
 
 export function handlePlant(event: Plant): void {

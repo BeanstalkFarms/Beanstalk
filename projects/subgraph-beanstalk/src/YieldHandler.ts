@@ -506,7 +506,8 @@ function deltaRFromState(earnedBeans: f64): f64 {
   return -0.01;
 }
 
-// TODO: implement the various gauge point functions and choose which one to call based on the stored selector
+// (this may no longer be relevant as an api approach to vapys is preferred)
+// Can implement the various gauge point functions and choose which one to call based on the stored selector
 // see {GaugePointFacet.defaultGaugePointFunction} for implementation.
 // This will become relevant once there are multiple functions implemented in the contract.
 function updateGaugePoints(gaugePoints: f64, currentPercent: f64, optimalPercent: f64): f64 {

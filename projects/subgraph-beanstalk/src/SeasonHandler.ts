@@ -2,10 +2,8 @@ import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { MetapoolOracle, Reward, Soil, WellOracle } from "../generated/Beanstalk-ABIs/BasinBip";
 import { CurvePrice } from "../generated/Beanstalk-ABIs/CurvePrice";
 import { SeasonSnapshot, Sunrise, Incentivization, PreReplant } from "../generated/Beanstalk-ABIs/PreReplant";
-import { Incentive } from "../generated/schema";
 import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOracle as WellOracleEntity } from "../generated/schema";
 import { BEANSTALK, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
@@ -88,21 +86,8 @@ export function handleSeasonSnapshot(event: SeasonSnapshot): void {
 }
 
 export function handleReward(event: Reward): void {
-  let id = "reward-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let reward = new RewardEntity(id);
-  reward.hash = event.transaction.hash.toHexString();
-  reward.logIndex = event.transactionLogIndex.toI32();
-  reward.protocol = event.address.toHexString();
-  reward.season = event.params.season.toI32();
-  reward.toField = event.params.toField;
-  reward.toSilo = event.params.toSilo;
-  reward.toFertilizer = event.params.toFertilizer;
-  reward.blockNumber = event.block.number;
-  reward.createdAt = event.block.timestamp;
-  reward.save();
-
   let season = loadSeason(event.address, event.params.season);
-  season.rewardBeans = reward.toField.plus(reward.toSilo).plus(reward.toFertilizer);
+  season.rewardBeans = event.params.toField.plus(event.params.toSilo).plus(event.params.toFertilizer);
   season.save();
 
   // Add to total Silo Bean mints
@@ -145,19 +130,6 @@ export function handleReward(event: Reward): void {
 }
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
-  let id = "metapoolOracle-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let oracle = new MetapoolOracleEntity(id);
-  oracle.hash = event.transaction.hash.toHexString();
-  oracle.logIndex = event.transactionLogIndex.toI32();
-  oracle.protocol = event.address.toHexString();
-  oracle.season = event.params.season.toI32();
-  oracle.deltaB = event.params.deltaB;
-  oracle.balanceA = event.params.balances[0];
-  oracle.balanceB = event.params.balances[1];
-  oracle.blockNumber = event.block.number;
-  oracle.createdAt = event.block.timestamp;
-  oracle.save();
-
   if (event.block.number < GAUGE_BIP45_BLOCK) {
     let season = loadSeason(event.address, event.params.season);
     // Attempt to pull from Beanstalk Price contract first
@@ -174,18 +146,6 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
 }
 
 export function handleWellOracle(event: WellOracle): void {
-  let id = "wellOracle-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let oracle = new WellOracleEntity(id);
-  oracle.hash = event.transaction.hash.toHexString();
-  oracle.logIndex = event.transactionLogIndex.toI32();
-  oracle.protocol = event.address.toHexString();
-  oracle.season = event.params.season.toI32();
-  oracle.deltaB = event.params.deltaB;
-  oracle.cumulativeReserves = event.params.cumulativeReserves;
-  oracle.blockNumber = event.block.number;
-  oracle.createdAt = event.block.timestamp;
-  oracle.save();
-
   let season = loadSeason(event.address, event.params.season);
   season.deltaB = season.deltaB.plus(event.params.deltaB);
   if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
@@ -223,19 +183,8 @@ export function handleSoil(event: Soil): void {
   }
 }
 
+// This is the final function to be called during sunrise both pre and post replant
 export function handleIncentive(event: Incentivization): void {
-  // This is the final function to be called during sunrise both pre and post replant
-  let id = "incentive-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let incentive = new Incentive(id);
-  incentive.hash = event.transaction.hash.toHexString();
-  incentive.logIndex = event.transactionLogIndex.toI32();
-  incentive.protocol = event.address.toHexString();
-  incentive.caller = event.params.account.toHexString();
-  incentive.amount = event.params.beans;
-  incentive.blockNumber = event.block.number;
-  incentive.createdAt = event.block.timestamp;
-  incentive.save();
-
   // Update market cap for season
   let beanstalk = loadBeanstalk(event.address);
   let beanstalk_contract = PreReplant.bind(BEANSTALK);
