@@ -13,6 +13,11 @@ import {LibSafeMath128} from "./LibSafeMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {LibBarnRaise} from "./LibBarnRaise.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @author Publius
@@ -23,6 +28,8 @@ library LibFertilizer {
     using SafeMath for uint256;
     using LibSafeMath128 for uint128;
     using SafeCast for uint256;
+    using SafeERC20 for IERC20;
+    using LibWell for address;
 
     event SetFertilizer(uint128 id, uint128 bpf);
 
@@ -35,6 +42,7 @@ library LibFertilizer {
 
     function addFertilizer(
         uint128 season,
+        uint256 tokenAmountIn,
         uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
@@ -53,7 +61,7 @@ library LibFertilizer {
         s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
         s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
-        addUnderlying(fertilizerAmount.mul(DECIMALS), minLP);
+        addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
         if (s.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
@@ -73,10 +81,10 @@ library LibFertilizer {
     }
 
     /**
-     * @dev Any WETH contributions should already be transferred to the Bean:Eth Well to allow for a gas efficient liquidity
+     * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
      * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
      */
-    function addUnderlying(uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(uint256 tokenAmountIn, uint256 usdAmount, uint256 minAmountOut) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
         uint256 percentToFill = usdAmount.mul(C.precision()).div(
@@ -103,15 +111,35 @@ library LibFertilizer {
             newDepositedBeans
         );
 
-        // Mint the LP Beans to the Well to sync.
+        // Mint the LP Beans and add liquidity to the well.
+        address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
+        address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
+
         C.bean().mint(
-            address(C.BEAN_ETH_WELL),
+            address(this),
             newDepositedLPBeans
         );
 
-        uint256 newLP = IWell(C.BEAN_ETH_WELL).sync(
+        IERC20(barnRaiseToken).transferFrom(
+            msg.sender,
             address(this),
-            minAmountOut
+            uint256(tokenAmountIn)
+        );
+
+        IERC20(barnRaiseToken).approve(barnRaiseWell, uint256(tokenAmountIn));
+        C.bean().approve(barnRaiseWell, newDepositedLPBeans);
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean() ?
+            (newDepositedLPBeans, tokenAmountIn) :
+            (tokenAmountIn, newDepositedLPBeans);
+
+        uint256 newLP = IWell(barnRaiseWell).addLiquidity(
+            tokenAmountsIn,
+            minAmountOut,
+            address(this),
+            type(uint256).max
         );
 
         // Increment underlying balances of Unripe Tokens
@@ -156,10 +184,7 @@ library LibFertilizer {
         returns (uint256 remaining)
     {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(C.unripeLP().totalSupply())
-            .div(DECIMALS);
+        uint256 totalDollars = uint256(1e12).mul(C.unripeLP().totalSupply()).div(C.unripeLPPerDollar()).div(DECIMALS);
         totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
         if (s.recapitalized >= totalDollars) return 0;
         return totalDollars.sub(s.recapitalized);
@@ -195,5 +220,29 @@ library LibFertilizer {
     function setNext(uint128 id, uint128 next) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.nextFid[id] = next;
+    }
+
+    function beginBarnRaiseMigration(address well) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        require(well.isWell(), "Fertilizer: Not a Whitelisted Well.");
+
+        // The Barn Raise only supports 2 token Wells where 1 token is Bean and the
+        // other is supported by the Lib Usd Oracle.
+        IERC20[] memory tokens = IWell(well).tokens();
+        require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
+        require(
+            tokens[0] == C.bean() || tokens[1] == C.bean(),
+            "Fertilizer: Well must have BEAN."
+        );
+        // Check that Lib Usd Oracle supports the non-Bean token in the Well.
+        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
+
+        uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
+        IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
+            LibDiamond.diamondStorage().contractOwner,
+            balanceOfUnderlying
+        );
+        LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
+        LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
     }
 }

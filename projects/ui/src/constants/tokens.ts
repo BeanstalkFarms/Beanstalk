@@ -6,6 +6,7 @@ import wEthIconCircledUrl from '~/img/tokens/weth-logo-circled.svg';
 // import beanLogoUrl from '~/img/tokens/bean-logo.svg';
 import beanCircleLogoUrl from '~/img/tokens/bean-logo-circled.svg';
 import beanCrv3LpLogoUrl from '~/img/tokens/bean-crv3-logo.svg';
+import beanWstethLogo from '~/img/tokens/bean-wsteth-logo.svg';
 
 // Beanstalk Token Logos
 import stalkLogo from '~/img/beanstalk/stalk-icon-winter.svg';
@@ -18,13 +19,15 @@ import beanEthWellLpLogoUrl from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
 
 // ERC-20 Token Images
+import wstethLogo from '~/img/tokens/wsteth-logo.svg';
+import stethLogo from '~/img/tokens/steth-logo.svg';
 import crv3LogoUrl from '~/img/tokens/crv3-logo.png';
 import daiLogoUrl from '~/img/tokens/dai-logo.svg';
 import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
 import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
-import unripeBeanWethLogoUrl from '~/img/tokens/unrip-beanweth.svg';
+import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // Other imports
@@ -39,10 +42,13 @@ import {
   USDC_ADDRESSES,
   USDT_ADDRESSES,
   UNRIPE_BEAN_ADDRESSES,
-  UNRIPE_BEAN_WETH_ADDRESSES,
+  UNRIPE_BEAN_WSTETH_ADDRESSES,
   BEAN_ADDRESSES,
   BEAN_ETH_WELL_ADDRESSES,
   BEAN_CRV3_V1_ADDRESSES,
+  BEAN_WSTETH_ADDRESSS,
+  STETH_ADDRESSES,
+  WSTETH_ADDRESSES,
 } from './addresses';
 
 // ----------------------------------------
@@ -132,7 +138,7 @@ export const WETH = {
       name: 'Wrapped Ether',
       symbol: 'WETH',
       logo: wEthIconCircledUrl,
-      displayDecimals: 4
+      displayDecimals: 4,
     }
   ),
 };
@@ -151,6 +157,32 @@ export const BEAN = {
     {
       stalk: 1,
       seeds: 0,
+    }
+  ),
+};
+
+export const WSTETH = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    WSTETH_ADDRESSES,
+    18,
+    {
+      name: 'Wrapped liquid staked Ether 2.0',
+      symbol: 'wstETH',
+      logo: wstethLogo,
+    }
+  ),
+};
+
+export const STETH = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    STETH_ADDRESSES,
+    18,
+    {
+      name: 'Liquid staked Ether 2.0',
+      symbol: 'stETH',
+      logo: stethLogo,
     }
   ),
 };
@@ -294,11 +326,31 @@ export const BEAN_ETH_WELL_LP = {
     BEAN_ETH_WELL_ADDRESSES,
     18,
     {
-      name: 'BEAN:ETH Well LP',
+      name: 'BEAN:ETH LP',
       symbol: 'BEANETH',
       logo: beanEthWellLpLogoUrl,
       isLP: true,
       color: '#DFB385',
+    },
+    {
+      stalk: 1,
+      seeds: 0,
+    }
+  ),
+};
+
+export const BEAN_WSTETH_WELL_LP = {
+  [SupportedChainId.MAINNET]: new ERC20Token(
+    SupportedChainId.MAINNET,
+    BEAN_WSTETH_ADDRESSS,
+    18,
+    {
+      name: 'BEAN:wstETH LP',
+      symbol: 'BEANwstETH',
+      logo: beanWstethLogo,
+      displayDecimals: 2,
+      color: BeanstalkPalette.lightBlue,
+      isUnripe: false,
     },
     {
       stalk: 1,
@@ -350,15 +402,15 @@ export const UNRIPE_BEAN = {
   ),
 };
 
-export const UNRIPE_BEAN_WETH = {
+export const UNRIPE_BEAN_WSTETH = {
   [SupportedChainId.MAINNET]: new ERC20Token(
     SupportedChainId.MAINNET,
-    UNRIPE_BEAN_WETH_ADDRESSES,
+    UNRIPE_BEAN_WSTETH_ADDRESSES,
     6,
     {
-      name: 'Unripe BEAN:ETH LP',
-      symbol: 'urBEANETH',
-      logo: unripeBeanWethLogoUrl,
+      name: 'Unripe BEAN:wstETH LP',
+      symbol: 'urBEANwstETH',
+      logo: unripeBeanWstethLogoUrl,
       displayDecimals: 2,
       color: BeanstalkPalette.lightBlue,
       isUnripe: true,
@@ -376,19 +428,20 @@ export const UNRIPE_BEAN_WETH = {
 
 export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 ];
 export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_ETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
 ];
 
 // Show these tokens as whitelisted in the Silo.
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
   BEAN_ETH_WELL_LP,
+  BEAN_WSTETH_WELL_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
   BEAN_CRV3_LP,
 ];
 
@@ -408,6 +461,7 @@ export const ERC20_TOKENS: ChainConstant<ERC20Token>[] = [
   DAI,
   USDC,
   USDT,
+  WSTETH,
 ];
 
 // Assets underlying 3CRV (accessible when depositing/removing liquidity)

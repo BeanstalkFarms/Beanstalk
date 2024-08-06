@@ -9,6 +9,7 @@ import "contracts/C.sol";
 import "contracts/libraries/Curve/LibBeanMetaCurve.sol";
 import "contracts/libraries/LibUnripe.sol";
 import "contracts/libraries/Well/LibWellBdv.sol";
+import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
 
 /**
  * @title BDVFacet
@@ -40,7 +41,7 @@ contract BDVFacet {
             amount, 
             IBean(C.UNRIPE_LP).totalSupply()
         );
-        amount = LibWellBdv.bdv(C.BEAN_ETH_WELL, amount);
+        amount = LibWellBdv.bdv(LibBarnRaise.getBarnRaiseWell(), amount);
         return amount;
     }
 

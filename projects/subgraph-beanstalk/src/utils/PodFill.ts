@@ -9,11 +9,13 @@ export function loadPodFill(diamondAddress: Address, index: BigInt, hash: String
     fill = new PodFill(id);
     fill.podMarketplace = diamondAddress.toHexString();
     fill.createdAt = ZERO_BI;
-    fill.from = "";
-    fill.to = "";
+    fill.fromFarmer = "";
+    fill.toFarmer = "";
+    fill.placeInLine = ZERO_BI;
     fill.amount = ZERO_BI;
     fill.index = ZERO_BI;
     fill.start = ZERO_BI;
+    fill.costInBeans = ZERO_BI;
     fill.save();
   }
   return fill;

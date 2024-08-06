@@ -5,7 +5,7 @@ import {
   BEAN_CRV3_LP,
   BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import { BEANSTALK_ADDRESSES } from '~/constants';
 import useTabs from '~/hooks/display/useTabs';
@@ -81,7 +81,7 @@ const SiloAnalytics: FC<{}> = () => {
       )}
       {tab === 4 && (
         <DepositedAsset
-          asset={UNRIPE_BEAN_WETH[1]}
+          asset={UNRIPE_BEAN_WSTETH[1]}
           account={BEANSTALK_ADDRESSES[1]}
           height={300}
         />

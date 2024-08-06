@@ -3535,6 +3535,7 @@ __metadata:
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
     "@beanstalk/wells": "npm:0.4.1"
+    "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease1"
     "@ethereum-waffle/chai": "npm:4.0.10"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@nomiclabs/hardhat-ethers": "npm:^2.2.1"
@@ -3546,6 +3547,7 @@ __metadata:
     "@openzeppelin/hardhat-upgrades": "npm:^1.17.0"
     "@uniswap/v3-core": "npm:^1.0.1"
     "@uniswap/v3-periphery": "npm:^1.4.4"
+    axios: "npm:1.6.7"
     bignumber: "npm:^1.1.0"
     chai: "npm:^4.4.1"
     csv-parser: "npm:3.0.0"
@@ -3695,6 +3697,13 @@ __metadata:
     ethers: 5.6.8
   languageName: unknown
   linkType: soft
+
+"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease1":
+  version: 1.1.0-prerelease1
+  resolution: "@beanstalk/wells@npm:1.1.0-prerelease1"
+  checksum: 10/8a8af753ad7024ccca9549932ef0bfbeb245f52c1d98664059cbd58921937b3fef94b47f4317a4b61b750ca6e48424e836d9a92206f6146d9a95e6ed5cf897de
+  languageName: node
+  linkType: hard
 
 "@beanstalk/wells@npm:0.4.1":
   version: 0.4.1
@@ -5375,9 +5384,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:0.69.0":
-  version: 0.69.0
-  resolution: "@graphprotocol/graph-cli@npm:0.69.0"
+"@graphprotocol/graph-cli@npm:0.79.2":
+  version: 0.79.2
+  resolution: "@graphprotocol/graph-cli@npm:0.79.2"
   dependencies:
     "@float-capital/float-subgraph-uncrashable": "npm:^0.0.0-alpha.4"
     "@oclif/core": "npm:2.8.6"
@@ -5399,6 +5408,7 @@ __metadata:
     ipfs-http-client: "npm:55.0.0"
     jayson: "npm:4.0.0"
     js-yaml: "npm:3.14.1"
+    open: "npm:8.4.2"
     prettier: "npm:3.0.3"
     semver: "npm:7.4.0"
     sync-request: "npm:6.1.0"
@@ -5408,7 +5418,7 @@ __metadata:
     yaml: "npm:1.10.2"
   bin:
     graph: bin/run
-  checksum: 10/55c1dcc2396530171ade4dde5444395f0a78755292237a67fdd5122b3390bcbc547bf5509427950ccdfb41ed22de7455aecb4573a4faa643c793633ee8535765
+  checksum: 10/433468c6a747a74f5f3c8e51ee3e287fd7b828fbb39e51ddda3a98d4991e66a015727d87e1308682bda299a62b872c31562a1b09b62ffa3c76d134d67671f822
   languageName: node
   linkType: hard
 
@@ -14654,13 +14664,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.15.13":
-  version: 18.15.13
-  resolution: "@types/node@npm:18.15.13"
-  checksum: 10/b9bbe923573797ef7c5fd2641a6793489e25d9369c32aeadcaa5c7c175c85b42eb12d6fe173f6781ab6f42eaa1ebd9576a419eeaa2a1ec810094adb8adaa9a54
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:18.19.17, @types/node@npm:^18.16.3":
   version: 18.19.17
   resolution: "@types/node@npm:18.19.17"
@@ -17304,13 +17307,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aes-js@npm:4.0.0-beta.5":
-  version: 4.0.0-beta.5
-  resolution: "aes-js@npm:4.0.0-beta.5"
-  checksum: 10/8f745da2e8fb38e91297a8ec13c2febe3219f8383303cd4ed4660ca67190242ccfd5fdc2f0d1642fd1ea934818fb871cd4cc28d3f28e812e3dc6c3d0f1f97c24
-  languageName: node
-  linkType: hard
-
 "agent-base@npm:6, agent-base@npm:^6.0.2":
   version: 6.0.2
   resolution: "agent-base@npm:6.0.2"
@@ -18532,6 +18528,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:1.6.7":
+  version: 1.6.7
+  resolution: "axios@npm:1.6.7"
+  dependencies:
+    follow-redirects: "npm:^1.15.4"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10/a1932b089ece759cd261f175d9ebf4d41c8994cf0c0767cda86055c7a19bcfdade8ae3464bf4cec4c8b142f4a657dc664fb77a41855e8376cf38b86d7a86518f
+  languageName: node
+  linkType: hard
+
 "axios@npm:^0.21.1, axios@npm:^0.21.4":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
@@ -18962,9 +18969,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "beanft@workspace:projects/subgraph-beanft"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
-    ethers: "npm:^6.3.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
@@ -24966,21 +24972,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^6.3.0":
-  version: 6.8.1
-  resolution: "ethers@npm:6.8.1"
-  dependencies:
-    "@adraffy/ens-normalize": "npm:1.10.0"
-    "@noble/curves": "npm:1.2.0"
-    "@noble/hashes": "npm:1.3.2"
-    "@types/node": "npm:18.15.13"
-    aes-js: "npm:4.0.0-beta.5"
-    tslib: "npm:2.4.0"
-    ws: "npm:8.5.0"
-  checksum: 10/22d17fb038fd48aa23d4c43f4b0a8c20aa1c74676724adb94b52f363f42044b7d14dfa086dd2f881f172f79fcb7108ff161e672e323dcebef9d9ed4d373f072f
-  languageName: node
-  linkType: hard
-
 "ethjs-unit@npm:0.1.6":
   version: 0.1.6
   resolution: "ethjs-unit@npm:0.1.6"
@@ -26148,7 +26139,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.15.4, follow-redirects@npm:^1.15.6":
   version: 1.15.6
   resolution: "follow-redirects@npm:1.15.6"
   peerDependenciesMeta:
@@ -35953,6 +35944,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"open@npm:8.4.2":
+  version: 8.4.2
+  resolution: "open@npm:8.4.2"
+  dependencies:
+    define-lazy-prop: "npm:^2.0.0"
+    is-docker: "npm:^2.1.1"
+    is-wsl: "npm:^2.2.0"
+  checksum: 10/acd81a1d19879c818acb3af2d2e8e9d81d17b5367561e623248133deb7dd3aefaed527531df2677d3e6aaf0199f84df57b6b2262babff8bf46ea0029aac536c9
+  languageName: node
+  linkType: hard
+
 "open@npm:^7.0.3":
   version: 7.4.2
   resolution: "open@npm:7.4.2"
@@ -41754,7 +41756,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-basin@workspace:projects/subgraph-basin"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -41764,7 +41766,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-bean@workspace:projects/subgraph-bean"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -41774,7 +41776,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "subgraph-beanstalk@workspace:projects/subgraph-beanstalk"
   dependencies:
-    "@graphprotocol/graph-cli": "npm:0.69.0"
+    "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
@@ -42856,17 +42858,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.4.0, tslib@npm:^2.0.0, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:~2.4.0":
-  version: 2.4.0
-  resolution: "tslib@npm:2.4.0"
-  checksum: 10/d8379e68b36caf082c1905ec25d17df8261e1d68ddc1abfd6c91158a064f6e4402039ae7c02cf4c81d12e3a2a2c7cd8ea2f57b233eb80136a2e3e7279daf2911
-  languageName: node
-  linkType: hard
-
 "tslib@npm:2.6.2, tslib@npm:^2.6.2":
   version: 2.6.2
   resolution: "tslib@npm:2.6.2"
   checksum: 10/bd26c22d36736513980091a1e356378e8b662ded04204453d353a7f34a4c21ed0afc59b5f90719d4ba756e581a162ecbf93118dc9c6be5acf70aa309188166ca
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.0.0, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:~2.4.0":
+  version: 2.4.0
+  resolution: "tslib@npm:2.4.0"
+  checksum: 10/d8379e68b36caf082c1905ec25d17df8261e1d68ddc1abfd6c91158a064f6e4402039ae7c02cf4c81d12e3a2a2c7cd8ea2f57b233eb80136a2e3e7279daf2911
   languageName: node
   linkType: hard
 
@@ -45415,21 +45417,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10/1769532b6fdab9ff659f0b17810e7501831d34ecca23fd179ee64091dd93a51f42c59f6c7bb4c7a384b6c229aca8076fb312aa35626257c18081511ef62a161d
-  languageName: node
-  linkType: hard
-
-"ws@npm:8.5.0":
-  version: 8.5.0
-  resolution: "ws@npm:8.5.0"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ^5.0.2
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 10/f0ee700970a0bf925b1ec213ca3691e84fb8b435a91461fe3caf52f58c6cec57c99ed5890fbf6978824c932641932019aafc55d864cad38ac32577496efd5d3a
   languageName: node
   linkType: hard
 

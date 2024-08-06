@@ -1,7 +1,7 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import * as YieldHandler from "../src/YieldHandler";
-import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/SiloEntities";
 import {
   BEAN_3CRV,
@@ -12,7 +12,7 @@ import {
   UNRIPE_BEAN_3CRV,
   LUSD_3POOL
 } from "../../subgraph-core/utils/Constants";
-import { setSeason } from "./event-mocking/Season";
+import { setSeason } from "./utils/Season";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
@@ -53,8 +53,11 @@ describe("APY Calculations", () => {
       log.info(`bean apy (4 seeds): {}`, [(apy4[0] as BigDecimal).toString()]);
       log.info(`stalk apy (2 seeds): {}`, [(apy2[1] as BigDecimal).toString()]);
       log.info(`stalk apy (4 seeds): {}`, [(apy4[1] as BigDecimal).toString()]);
-      assert.assertTrue((apy4[0] as BigDecimal).gt(apy2[0] as BigDecimal));
-      assert.assertTrue((apy4[1] as BigDecimal).gt(apy2[1] as BigDecimal));
+      const desiredPrecision = BigDecimal.fromString("0.0001");
+      assert.assertTrue(BigDecimal_isClose(apy2[0], BigDecimal.fromString("0.14346160171558054"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[0], BigDecimal.fromString("0.18299935285933523"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy2[1], BigDecimal.fromString("2.9293613175698485"), desiredPrecision));
+      assert.assertTrue(BigDecimal_isClose(apy4[1], BigDecimal.fromString("4.318733617611663"), desiredPrecision));
     });
   });
 
@@ -234,6 +237,37 @@ describe("APY Calculations", () => {
       log.info("stalk apy {}", [zeroGsResult.stalkAPY.toString()]);
       assert.assertTrue(BigDecimal_isClose(zeroGsResult.beanAPY, BigDecimal.fromString("0.221606859225904494"), desiredPrecision));
       assert.assertTrue(BigDecimal_isClose(zeroGsResult.stalkAPY, BigDecimal.fromString("0.222879524712790346"), desiredPrecision));
+    });
+
+    test("Token yields - multiple gauge LP, one with no GP", () => {
+      // 0 is beanweth, 1 is beanwsteth
+      const apy = YieldHandler.calculateGaugeVAPYs(
+        [0, 1],
+        BigDecimal.fromString("100"),
+        // [BigDecimal.fromString("1"), BigDecimal.fromString("499")],
+        [BigDecimal.fromString("0"), BigDecimal.fromString("509")],
+        [BigDecimal.fromString("152986"), BigDecimal.fromString("2917")],
+        BigDecimal.fromString("45143199"),
+        [BigDecimal.fromString("20"), BigDecimal.fromString("80")],
+        BigDecimal.fromString("1"),
+        BigDecimal.fromString("5588356"),
+        BigDecimal.fromString("172360290"),
+        BigDecimal.fromString("4320"),
+        ZERO_BI,
+        [ZERO_BD, ZERO_BD],
+        [
+          [ZERO_BD, ZERO_BD],
+          [ZERO_BD, ZERO_BD]
+        ],
+        [ZERO_BD, ZERO_BD],
+        [null, null]
+      );
+
+      for (let i = 0; i < apy.length; ++i) {
+        log.info(`bean apy: {}`, [(apy[i][0] as BigDecimal).toString()]);
+        log.info(`stalk apy: {}`, [(apy[i][1] as BigDecimal).toString()]);
+      }
+      // Not adding any asserts for now as part of the multi-lp implementation is still incomplete
     });
   });
 });

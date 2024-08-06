@@ -4,6 +4,10 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
+import {
+  AmountsBySource,
+  displayAmountsBySource,
+} from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
@@ -64,6 +68,8 @@ export type EndTokenAction = {
 export type SwapAction = {
   type: ActionType.SWAP;
   tokenIn: Token;
+  source?: FarmFromMode;
+  amountsBySource?: AmountsBySource;
   amountIn: BigNumber;
   tokenOut: Token;
   amountOut: BigNumber;
@@ -81,6 +87,7 @@ export type ReceiveTokenAction = {
 export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
+  amountsBySource?: AmountsBySource;
   token: Token;
   source:
     | FarmFromMode.INTERNAL
@@ -295,25 +302,52 @@ export const parseActionMessage = (a: Action) => {
         a.tokenOut.symbol !== CRV3[1].symbol &&
         !a.tokenOut.isUnripe
       ) {
-        return `Add ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} of liquidity for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+        const bySource = a.amountsBySource;
+        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut, {
+          showName: false,
+          showSymbol: true,
+        });
+
+        if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
+          const amountsBySourceDisplay = displayAmountsBySource(
+            bySource,
+            a.tokenIn,
+            'of liquidity'
+          );
+
+          return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
+        }
+
+        return `Add ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} of liquidity for ${amtOutDisplay}.`;
       }
       if (
         a.tokenIn.isLP &&
         a.tokenIn.symbol !== CRV3[1].symbol &&
         !a.tokenIn.isUnripe
       ) {
-        return `Burn ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
+        return `Burn ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })} of liquidity.`;
       }
-      return `Swap ${displayTokenAmount(
-        a.amountIn,
-        a.tokenIn
-      )} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      if (
+        a.amountsBySource &&
+        a.amountsBySource.internal.plus(a.amountsBySource.external).gt(0)
+      ) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.tokenIn
+        );
+        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
+      }
+
+      return `Swap ${displayTokenAmount(a.amountIn, a.tokenIn, {
+        showName: false,
+        showSymbol: true,
+      })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
     case ActionType.RECEIVE_TOKEN: {
       if (a.hideMessage) {
         return null;
@@ -333,6 +367,14 @@ export const parseActionMessage = (a: Action) => {
       return `${commonString}.`;
     }
     case ActionType.TRANSFER_BALANCE:
+      if (a.amountsBySource) {
+        const bySourceDisplay = displayAmountsBySource(
+          a.amountsBySource,
+          a.token
+        );
+        return `Move ${bySourceDisplay.combined} to ${a.to ? `${trimAddress(a.to, false)}'s` : 'your'} ${copy.MODES[a.destination]}.`;
+      }
+
       return a.to
         ? `Move ${displayTokenAmount(a.amount, a.token)} from your ${
             copy.MODES[a.source]
@@ -424,7 +466,7 @@ export const parseActionMessage = (a: Action) => {
       return `Buy ${displayFullBN(a.amountOut, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),
         1
-      )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
+      )}% Humidity with ${displayFullBN(a.amountIn, 2)} wstETH.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
     case ActionType.TRANSFER_FERTILIZER:

@@ -3,10 +3,13 @@ const { deploy } = require('../scripts/deploy.js')
 const { impersonateFertilizer } = require('../scripts/deployFertilizer.js')
 const { EXTERNAL, INTERNAL } = require('./utils/balances.js')
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { BEAN, FERTILIZER, USDC, BEAN_3_CURVE, THREE_CURVE, UNRIPE_BEAN, UNRIPE_LP, WETH, BEANSTALK } = require('./utils/constants.js');
-const { setEthUsdcPrice, setEthUsdPrice } = require('../utils/oracle.js');
+const { BEAN, USDC, UNRIPE_BEAN, UNRIPE_LP, BEANSTALK, BARN_RAISE_TOKEN, BEAN_WSTETH_WELL } = require('./utils/constants.js');
+const { setWstethUsdPrice } = require('../utils/oracle.js');
 const { to6, to18 } = require('./utils/helpers.js');
-const { deployBasin } = require('../scripts/basin.js');
+const { deployBasinV1_1 } = require('../scripts/basinV1_1.js');
+const { impersonateBeanWstethWell } = require('../utils/well.js');
+const { impersonateContract } = require('../scripts/impersonate.js');
+
 let user,user2,owner,fert
 let userAddress, ownerAddress, user2Address
 
@@ -43,34 +46,34 @@ describe('Fertilize', function () {
     this.token = await ethers.getContractAt('TokenFacet', this.diamond.address)
     this.usdc = await ethers.getContractAt('IBean', USDC)
     this.bean = await ethers.getContractAt('IBean', BEAN)
-    this.weth = await ethers.getContractAt('IBean', WETH)
+    this.barnRaiseToken = await ethers.getContractAt('IBean', BARN_RAISE_TOKEN)
 
     this.unripeBean = await ethers.getContractAt('MockToken', UNRIPE_BEAN)
     this.unripeLP = await ethers.getContractAt('MockToken', UNRIPE_LP)
     await this.unripeBean.mint(user2.address, to6('1000'))
     await this.unripeLP.mint(user2.address, to6('942.297473'))
 
-    this.weth = await ethers.getContractAt('IBean', WETH)
-
     await this.bean.mint(owner.address, to18('1000000000'));
-    await this.weth.mint(owner.address, to18('1000000000'));
-    await this.weth.mint(user.address, to18('1000000000'));
-    await this.weth.mint(user2.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(owner.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(user.address, to18('1000000000'));
+    await this.barnRaiseToken.mint(user2.address, to18('1000000000'));
     await this.bean.connect(owner).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(owner).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(user).approve(this.diamond.address, to18('1000000000'));
-    await this.weth.connect(user2).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(owner).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(user).approve(this.diamond.address, to18('1000000000'));
+    await this.barnRaiseToken.connect(user2).approve(this.diamond.address, to18('1000000000'));
 
-    this.well = await deployBasin(true, undefined, false, true)
+    await setWstethUsdPrice('1000')
+
+    // this.well = (await deployBasinV1_1(true, undefined, false, true)).well
+    this.well = await impersonateContract('MockSetComponentsWell', BEAN_WSTETH_WELL)
+    console.log("well address: ", this.well.address);
+    await impersonateBeanWstethWell();
+    console.log("BEAN_WSTETH_WELL: ", BEAN_WSTETH_WELL);
+    
+
     this.wellToken = await ethers.getContractAt("IERC20", this.well.address)
     await this.wellToken.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
     await this.bean.connect(owner).approve(BEANSTALK, ethers.constants.MaxUint256)
-
-    await setEthUsdPrice('999.998018')
-    await setEthUsdcPrice('1000')
-
-    console.log(`Well Address: ${this.well.address}`)
-
   });
 
   beforeEach(async function () {
@@ -139,7 +142,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('2'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('29438342344636187')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.001'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.001'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(lpBeansForUsdc('1'))
       })
 
@@ -181,7 +184,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('3.999999'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('58876684689272374')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.002'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.002'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(lpBeansForUsdc('2'))
       })
 
@@ -215,7 +218,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('11.999999'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('176630054067817122')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.006'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.006'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -272,13 +275,13 @@ describe('Fertilize', function () {
   describe("Mint Fertilizer", async function () {
     it('Reverts if mints 0', async function () {
       await this.season.teleportSunrise('6274')
-      await expect(this.fertilizer.connect(user).mintFertilizer('0', '0', '0', EXTERNAL)).to.be.revertedWith('Fertilizer: None bought.')
+      await expect(this.fertilizer.connect(user).mintFertilizer('0', '0', '0')).to.be.revertedWith('Fertilizer: None bought.')
     })
 
     describe('1 mint', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100')
       })
 
@@ -295,7 +298,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('200'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('2943834234463618707')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -324,8 +327,8 @@ describe('Fertilize', function () {
     describe('2 mints', async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0')
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.05'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100');
       })
 
@@ -342,7 +345,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal('199999999') // Rounds down
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('2943834234463618707')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.1'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -371,10 +374,10 @@ describe('Fertilize', function () {
     describe("2 mint with season in between", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6274')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -392,7 +395,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('5887668468927237414')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -426,10 +429,10 @@ describe('Fertilize', function () {
     describe("2 mint with same id", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6174')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         this.lpBeans = lpBeansForUsdc('100').add(lpBeansForUsdc('100'))
       })
 
@@ -447,7 +450,7 @@ describe('Fertilize', function () {
         expect(await this.bean.balanceOf(this.fertilizer.address)).to.be.equal(to6('450'))
         expect(await this.well.balanceOf(this.fertilizer.address)).to.be.equal('5887668468927237414')
 
-        expect(await this.weth.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
+        expect(await this.barnRaiseToken.balanceOf(this.well.address)).to.be.equal(to18('0.2'))
         expect(await this.bean.balanceOf(this.well.address)).to.be.equal(this.lpBeans)
       })
 
@@ -480,11 +483,11 @@ describe('Fertilize', function () {
     describe("2 mint with same id and claim", async function () {
       beforeEach(async function () {
         await this.season.teleportSunrise('6074')
-        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('50'))
         await this.season.teleportSunrise('6174')
         await this.fertilizer.connect(user).claimFertilized([to6('3.5')], INTERNAL)
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
       })
 
       it('updates claims fertilized Beans', async function () {
@@ -496,7 +499,7 @@ describe('Fertilize', function () {
   describe("Fertilize", async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise('6274')
-      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     it('gets fertilizable', async function () {
@@ -584,7 +587,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
@@ -613,7 +616,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('150'))
 
@@ -642,7 +645,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.fertilizer.connect(user).claimFertilized([to6('2.5')], EXTERNAL)
         await this.season.rewardToFertilizerE(to6('200'))
 
@@ -671,7 +674,7 @@ describe('Fertilize', function () {
   describe("Transfer", async function () {
     beforeEach(async function () {
       await this.season.teleportSunrise('6274')
-      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+      this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
     })
 
     describe("no fertilized", async function () {
@@ -735,7 +738,7 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('100'))
         await this.fert.connect(user).safeTransferFrom(user.address, user2.address, to6('2.5'), '50', ethers.constants.HashZero)
       })
@@ -762,7 +765,7 @@ describe('Fertilize', function () {
       beforeEach(async function() {
         await this.season.rewardToFertilizerE(to6('200'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('150'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })
@@ -790,11 +793,11 @@ describe('Fertilize', function () {
 
     describe("Both some Beans", async function () {
       beforeEach(async function() {
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('400'))
         await this.season.teleportSunrise('6474')
-        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
-        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0', EXTERNAL)
+        this.result = await this.fertilizer.connect(user).mintFertilizer(to18('0.1'), '0', '0')
+        this.result = await this.fertilizer.connect(user2).mintFertilizer(to18('0.1'), '0', '0')
         await this.season.rewardToFertilizerE(to6('300'))
         await this.fert.connect(user).safeBatchTransferFrom(user.address, user2.address, [to6('2.5'), to6('3.5')], ['50', '50'], ethers.constants.HashZero)
       })

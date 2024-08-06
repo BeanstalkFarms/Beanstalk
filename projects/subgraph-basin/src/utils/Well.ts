@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-import { BoreWellWellFunctionStruct } from "../../generated/Aquifer/Aquifer";
+import { BoreWellWellFunctionStruct } from "../../generated/Basin-ABIs/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
-import { ERC20 } from "../../generated/templates/Well/ERC20";
+import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import {
@@ -43,6 +43,7 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   well.aquifer = Bytes.empty();
   well.implementation = implementation;
   well.tokens = []; // This is currently set in the `handleBoreWell` function
+  well.tokenOrder = [];
   well.createdTimestamp = ZERO_BI;
   well.createdBlockNumber = ZERO_BI;
   well.lpTokenSupply = ZERO_BI;

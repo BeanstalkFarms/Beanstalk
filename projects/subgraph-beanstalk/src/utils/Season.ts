@@ -39,3 +39,9 @@ export function getCurrentSeason(beanstalk: Address): i32 {
   let beanstalkEntity = loadBeanstalk(beanstalk);
   return beanstalkEntity.lastSeason;
 }
+
+export function getHarvestableIndex(beanstalk: Address): BigInt {
+  let bs = loadBeanstalk(beanstalk);
+  let season = loadSeason(beanstalk, BigInt.fromI32(bs.lastSeason));
+  return season.harvestableIndex;
+}

@@ -1,23 +1,14 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { Chop, DewhitelistToken, Reward, Sunrise } from "../generated/Beanstalk/Beanstalk";
+import { Chop, DewhitelistToken, Reward, Sunrise } from "../generated/Bean-ABIs/Beanstalk";
 import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "./utils/Bean";
 import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
-import { BeanstalkPrice } from "../generated/Beanstalk/BeanstalkPrice";
-import {
-  BEANSTALK_PRICE,
-  BEAN_3CRV,
-  BEAN_ERC20,
-  BEAN_ERC20_V1,
-  BEAN_WETH_CP2_WELL,
-  BEAN_WETH_V1,
-  CURVE_PRICE
-} from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_V1, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { CurvePrice } from "../generated/Beanstalk/CurvePrice";
+import { CurvePrice } from "../generated/Bean-ABIs/CurvePrice";
 import { checkBeanCross } from "./utils/Cross";
 import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
 import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
-import { MetapoolOracle, WellOracle } from "../generated/TWAPOracles/BIP37";
+import { MetapoolOracle, WellOracle } from "../generated/Bean-ABIs/BIP37";
 import { DeltaBPriceLiquidity } from "./utils/price/Types";
 import { setRawWellReserves, setTwaLast } from "./utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
