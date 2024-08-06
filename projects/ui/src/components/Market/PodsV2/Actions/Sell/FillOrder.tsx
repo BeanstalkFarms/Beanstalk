@@ -23,7 +23,7 @@ const FillOrder: React.FC<{}> = () => {
       (async () => {
         try {
           const _order = await beanstalk
-            .podOrderById(orderID.toString())
+            .getPodOrder(orderID.toString())
             .then(bigNumberResult);
           console.debug('[pages/order] order = ', _order);
           setOrderValid(_order?.gt(0));

@@ -166,21 +166,5 @@ testIfRpcSet("wStEth Oracle with Forking", function () {
       console.log(error);
       return;
     }
-
-    // const MockSeasonFacet = await ethers.getContractFactory('MockSeasonFacet');
-    // const season = await MockSeasonFacet.deploy({
-
-    // });
-    // await season.deployed();
-
-    // const UsdOracle = await ethers.getContractFactory("UsdOracle");
-    // const usdOracle = await UsdOracle.deploy();
-    // await usdOracle.deployed();
-
-    // expect(await usdOracle.getWstethEthPrice()).to.be.equal(to6("1.154105"));
-    // expect(await usdOracle.getWstethEthTwap("500000")).to.be.equal(to6("1.154095"));
-    // expect(await usdOracle.getWstethUsdPrice()).to.be.equal(to6("2580.422122"));
-    // expect(await usdOracle.getWstethUsdTwap("500000")).to.be.within(to6("2744"), to6("2745"));
-    // expect(await usdOracle.getUsdTokenPrice(WSTETH)).to.be.equal(to18("0.000387533493638216"));
   });
 });

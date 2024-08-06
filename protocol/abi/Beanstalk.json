@@ -7445,6 +7445,44 @@
         "type": "address"
       }
     ],
+    "name": "getGerminatingStem",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "germinatingStem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGerminatingStems",
+    "outputs": [
+      {
+        "internalType": "int96[]",
+        "name": "germinatingStems",
+        "type": "int96[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
     "name": "getGerminatingTotalDeposited",
     "outputs": [
       {
@@ -7978,6 +8016,19 @@
   {
     "inputs": [],
     "name": "totalEarnedBeans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalRainRoots",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8721,6 +8772,25 @@
       }
     ],
     "name": "getTokenUsdPriceFromExternal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getTokenUsdPrice",
     "outputs": [
       {
         "internalType": "uint256",

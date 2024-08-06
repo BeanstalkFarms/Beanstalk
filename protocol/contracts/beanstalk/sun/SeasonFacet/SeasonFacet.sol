@@ -52,8 +52,8 @@ contract SeasonFacet is Invariable, Weather {
         checkSeasonTime();
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = calcCaseIdandUpdate(deltaB);
         LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
+        uint256 caseId = calcCaseIdandUpdate(deltaB);
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 

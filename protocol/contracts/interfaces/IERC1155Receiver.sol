@@ -4,7 +4,7 @@
 pragma solidity ^0.8.20;
 
 /**
-*  @notice Duplicate of OpenZeppelin's IERC1155Receiver with the IERC165 inheritance removed.
+ *  @notice Duplicate of OpenZeppelin's IERC1155Receiver with the IERC165 inheritance removed.
  * @dev Interface that must be implemented by smart contracts in order to receive
  * ERC-1155 token transfers.
  */

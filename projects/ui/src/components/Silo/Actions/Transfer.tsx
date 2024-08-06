@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import React, { useCallback, useMemo } from 'react';
+import { Box, Divider, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import {
@@ -80,33 +80,9 @@ const TransferForm: FC<
   plantAndDoX,
 }) => {
   const sdk = useSdk();
-  const [migrationNeeded, setMigrationNeeded] = React.useState(false);
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
   // Check address on change
-
-  useEffect(() => {
-    const check = async (address: string) => {
-      try {
-        const needed = await sdk.contracts.beanstalk.migrationNeeded(
-          address.toLocaleLowerCase()
-        );
-        setMigrationNeeded(needed);
-      } catch (err) {
-        console.error(
-          'Error while checking if address needs migration: ',
-          address,
-          err
-        );
-      }
-    };
-
-    if (values.to.length === 42) {
-      check(values.to);
-    } else {
-      setMigrationNeeded(false);
-    }
-  }, [sdk.contracts.beanstalk, values.to]);
 
   /// Claim and Plant
   const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
@@ -336,38 +312,6 @@ const TransferForm: FC<
               )}
           </>
         )}
-        {migrationNeeded && (
-          // <Box>
-          //   <Typography variant="body1" color="error.main">
-          //     Migration Needed
-          //   </Typography>
-          //   <Typography variant="body1" color="text.primary">
-          //     Transfers can only be made to accounts that have migrated to Silo
-          //     v3. The account you are trying to transfer to has not migrated
-          //     yet.
-          //   </Typography>
-          // </Box>
-          <Grid
-            container
-            spacing={0}
-            direction="column"
-            alignItems="center"
-            sx={{ background: '#fdf4e7' }}
-          >
-            <Box component="section" sx={{ p: 2, minWidth: '400px' }}>
-              <Typography variant="h3" align="center">
-                Migration Required
-              </Typography>
-              <br />
-              <Typography variant="body1" align="center">
-                Transfers can only be made to accounts that have migrated to
-                Silo v3. The account you are trying to transfer to has not
-                migrated yet.
-              </Typography>
-              <br />
-            </Box>
-          </Grid>
-        )}
         <SmartSubmitButton
           loading={isSubmitting}
           disabled={
@@ -375,8 +319,7 @@ const TransferForm: FC<
             !depositedBalance ||
             depositedBalance.eq(0) ||
             isSubmitting ||
-            values.to === '' ||
-            migrationNeeded === true
+            values.to === ''
           }
           type="submit"
           variant="contained"

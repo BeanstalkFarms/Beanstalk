@@ -46,8 +46,19 @@ contract BeanstalkInvariants is TestHelper {
     }
 
     function invariant_contractBalances() public {
-        assertGe(bean.balanceOf(BEANSTALK), beanstalkHandler.depositSumsTotal(C.BEAN) - beanstalkHandler.withdrawSumsTotal(C.BEAN));
-        assertGe(weth.balanceOf(BEANSTALK), beanstalkHandler.depositSumsTotal(C.BEAN_ETH_WELL) - beanstalkHandler.withdrawSumsTotal(C.BEAN_ETH_WELL));
-        assertGe(wsteth.balanceOf(BEANSTALK), beanstalkHandler.depositSumsTotal(C.BEAN_WSTETH_WELL) - beanstalkHandler.withdrawSumsTotal(C.BEAN_WSTETH_WELL));
+        assertGe(
+            bean.balanceOf(BEANSTALK),
+            beanstalkHandler.depositSumsTotal(C.BEAN) - beanstalkHandler.withdrawSumsTotal(C.BEAN)
+        );
+        assertGe(
+            weth.balanceOf(BEANSTALK),
+            beanstalkHandler.depositSumsTotal(C.BEAN_ETH_WELL) -
+                beanstalkHandler.withdrawSumsTotal(C.BEAN_ETH_WELL)
+        );
+        assertGe(
+            wsteth.balanceOf(BEANSTALK),
+            beanstalkHandler.depositSumsTotal(C.BEAN_WSTETH_WELL) -
+                beanstalkHandler.withdrawSumsTotal(C.BEAN_WSTETH_WELL)
+        );
     }
 }
