@@ -22,11 +22,11 @@ export const useFetchBeanstalkField = () => {
         adjustedTemperature,
         maxTemperature,
       ] = await Promise.all([
-        beanstalk.harvestableIndex().then(tokenResult(BEAN)), // FIXME
-        beanstalk.podIndex().then(tokenResult(BEAN)),
+        beanstalk.harvestableIndex('0').then(tokenResult(BEAN)), // FIXME
+        beanstalk.podIndex('0').then(tokenResult(BEAN)),
         beanstalk.totalSoil().then(tokenResult(BEAN)),
         beanstalk.weather().then((_weather) => ({
-          lastDSoil: tokenResult(BEAN)(_weather.lastDSoil),
+          lastDSoil: tokenResult(BEAN)(_weather.lastDeltaSoil),
           lastSowTime: bigNumberResult(_weather.lastSowTime),
           thisSowTime: bigNumberResult(_weather.thisSowTime),
         })),
