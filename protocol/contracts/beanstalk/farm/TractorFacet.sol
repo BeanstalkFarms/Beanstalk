@@ -67,7 +67,7 @@ contract TractorFacet is Invariable, ReentrancyGuard {
      */
     function updateTractorVersion(
         string calldata version
-    ) external fundsSafu noNetFlow noSupplyChange {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         LibTractor._setVersion(version);
     }
@@ -85,7 +85,7 @@ contract TractorFacet is Invariable, ReentrancyGuard {
      */
     function publishRequisition(
         LibTractor.Requisition calldata requisition
-    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) nonReentrant {
         emit PublishRequisition(requisition);
     }
 
@@ -94,7 +94,7 @@ contract TractorFacet is Invariable, ReentrancyGuard {
      */
     function cancelBlueprint(
         LibTractor.Requisition calldata requisition
-    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) nonReentrant {
         require(msg.sender == requisition.blueprint.publisher, "TractorFacet: not publisher");
         LibTractor._cancelBlueprint(requisition.blueprintHash);
         emit CancelBlueprint(requisition.blueprintHash);
@@ -175,7 +175,7 @@ contract TractorFacet is Invariable, ReentrancyGuard {
         bytes32 counterId,
         LibTractor.CounterUpdateType updateType,
         uint256 amount
-    ) external fundsSafu noNetFlow noSupplyChange returns (uint256 count) {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 count) {
         uint256 newCount;
         if (updateType == LibTractor.CounterUpdateType.INCREASE) {
             newCount = getPublisherCounter(counterId).add(amount);

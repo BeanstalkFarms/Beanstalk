@@ -214,7 +214,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 depositId,
         uint256 amount,
         bytes calldata
-    ) external fundsSafu noNetFlow noSupplyChange {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(recipient != address(0), "ERC1155: transfer to the zero address");
         // allowance requirements are checked in transferDeposit
         (address token, int96 cumulativeGrownStalkPerBDV) = LibBytes.unpackAddressAndStem(
@@ -240,7 +240,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         bytes calldata
-    ) external fundsSafu noNetFlow noSupplyChange {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant {
         require(
             depositIds.length == amounts.length,
             "Silo: depositIDs and amounts arrays must be the same length"
