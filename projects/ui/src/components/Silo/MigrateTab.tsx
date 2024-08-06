@@ -11,15 +11,14 @@ import React, { useEffect, useState } from 'react';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import Row from '~/components/Common/Row';
 import Centered from '~/components/Common/ZeroState/Centered';
-import { Migrate } from '~/components/Silo/Actions/Migrate';
 import { DISCORD_LINK } from '~/constants';
 
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import { FC } from '~/types';
 
-import styles from './MigrateTab.module.scss';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
+import styles from './MigrateTab.module.scss';
 
 const bip36 = (
   <Link
@@ -118,11 +117,13 @@ export const MigrateTab: FC<{}> = () => {
             {step === 3 && (
               <Stack textAlign="center" spacing={2} maxWidth={480}>
                 <Typography variant="h1">
-                  After you Migrate, you&apos;ll get access to instant Withdrawals.
+                  After you Migrate, you&apos;ll get access to instant
+                  Withdrawals.
                 </Typography>
                 <Typography variant="body1">
-                  No more waiting until the end of the Season to claim your assets — Withdrawals happen 
-                  instantly and you don&apos;t have to execute a second transaction to claim.
+                  No more waiting until the end of the Season to claim your
+                  assets — Withdrawals happen instantly and you don&apos;t have
+                  to execute a second transaction to claim.
                 </Typography>
                 <Button variant="contained" size="medium" onClick={nextStep}>
                   Next &rarr;
@@ -136,8 +137,15 @@ export const MigrateTab: FC<{}> = () => {
                   before you can claim them.
                 </Typography>
                 <Typography variant="body1">
-                  This only applies to Beans you earned during the last <Typography paddingX={1} sx={{ display:"inline", backgroundColor:"#E9F5EB" }}>gm</Typography> call, which makes Beanstalk more manipulation resistant. 
-                  See{' '}{bip36} for details.
+                  This only applies to Beans you earned during the last{' '}
+                  <Typography
+                    paddingX={1}
+                    sx={{ display: 'inline', backgroundColor: '#E9F5EB' }}
+                  >
+                    gm
+                  </Typography>{' '}
+                  call, which makes Beanstalk more manipulation resistant. See{' '}
+                  {bip36} for details.
                 </Typography>
                 <Button variant="contained" size="medium" onClick={nextStep}>
                   Next &rarr;
@@ -147,12 +155,14 @@ export const MigrateTab: FC<{}> = () => {
             {step === 5 && (
               <Stack textAlign="center" spacing={2} maxWidth={500}>
                 <Typography variant="h1">
-                  The amount of Grown Stalk you earn each Season is subject to change.
+                  The amount of Grown Stalk you earn each Season is subject to
+                  change.
                   {/* The number of Seeds earned for Depositing can change over time. */}
                 </Typography>
                 <Typography variant="body1">
-                  Seeds per BDV for whitelisted assets can now be changed through governance or 
-                  automated mechanisms to bolster peg maintenance.
+                  Seeds per BDV for whitelisted assets can now be changed
+                  through governance or automated mechanisms to bolster peg
+                  maintenance.
                 </Typography>
                 <Button variant="contained" size="medium" onClick={nextStep}>
                   Next &rarr;
@@ -165,8 +175,10 @@ export const MigrateTab: FC<{}> = () => {
                   Unripe Deposits no longer earn Grown Stalk each Season.
                 </Typography>
                 <Typography variant="body1">
-                  {bip36} reduced the Seeds per BDV of urBEAN and urBEAN3CRV to 0 to dramatically reduce the 
-                  incentive to not Convert urBEAN3CRV to urBEAN. The change went into effect in Season 14210.
+                  {bip36} reduced the Seeds per BDV of urBEAN and urBEAN3CRV to
+                  0 to dramatically reduce the incentive to not Convert
+                  urBEAN3CRV to urBEAN. The change went into effect in Season
+                  14210.
                   <br />
                 </Typography>
                 <Alert
@@ -175,8 +187,9 @@ export const MigrateTab: FC<{}> = () => {
                   icon={<></>}
                   sx={{ textAlign: 'left', background: 'white' }}
                 >
-                  <strong>For Unripe holders:</strong> Unripe Depositors haven&apos;t lost any Stalk. 
-                  All Stalk earned up to Season 14210 remains.
+                  <strong>For Unripe holders:</strong> Unripe Depositors
+                  haven&apos;t lost any Stalk. All Stalk earned up to Season
+                  14210 remains.
                 </Alert>
                 <Button variant="contained" size="medium" onClick={nextStep}>
                   Next &rarr;
@@ -189,9 +202,10 @@ export const MigrateTab: FC<{}> = () => {
                   Deposits now implement the ERC-1155 standard.
                 </Typography>
                 <Typography variant="body1">
-                  This means Deposits will show up as tokens in popular wallets like 
-                  MetaMask and on platforms like OpenSea. After you Migrate, the ERC-1155s 
-                  representing your Deposits will be minted directly to your address.
+                  This means Deposits will show up as tokens in popular wallets
+                  like MetaMask and on platforms like OpenSea. After you
+                  Migrate, the ERC-1155s representing your Deposits will be
+                  minted directly to your address.
                 </Typography>
                 <Alert
                   variant="outlined"
@@ -240,27 +254,22 @@ export const MigrateTab: FC<{}> = () => {
             )}
           </Centered>
         ) : null}
-        {step === 9 &&
-          (migrationNeeded ? (
-            <Box minHeight="400px">
-              <Migrate />
-            </Box>
-          ) : (
-            <Centered minHeight="400px">
-              <Stack spacing={2} maxWidth={550}>
-                <Typography variant="h1" textAlign="center">
-                  You&apos;ve Migrated!
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="medium"
-                  onClick={() => setStep(2)}
-                >
-                  Replay onboarding
-                </Button>
-              </Stack>
-            </Centered>
-          ))}
+        {step === 9 && (
+          <Centered minHeight="400px">
+            <Stack spacing={2} maxWidth={550}>
+              <Typography variant="h1" textAlign="center">
+                You&apos;ve Migrated!
+              </Typography>
+              <Button
+                variant="contained"
+                size="medium"
+                onClick={() => setStep(2)}
+              >
+                Replay onboarding
+              </Button>
+            </Stack>
+          </Centered>
+        )}
       </Box>
     </Box>
   );

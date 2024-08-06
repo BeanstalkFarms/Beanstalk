@@ -3,6 +3,10 @@ import { BasicPreparedResult, RunContext, RunMode, StepClass, Workflow } from "s
 import { CurveMetaPool__factory, CurvePlainPool__factory } from "src/constants/generated";
 import { FarmFromMode, FarmToMode } from "../types";
 
+/**
+ * @deprecated
+ * deprecated after beanstalk3 upgrade
+ */
 export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
   public name: string = "RemoveLiquidityOneToken";
 
@@ -74,21 +78,22 @@ export class RemoveLiquidityOneToken extends StepClass<BasicPreparedResult> {
         if (!minAmountOut) throw new Error("RemoveLiquidityOneToken: missing minAmountOut");
         return {
           target: RemoveLiquidityOneToken.sdk.contracts.beanstalk.address,
-          callData: RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.encodeFunctionData("removeLiquidityOneToken", [
-            this._pool,
-            this._registry,
-            this._tokenOut,
-            _amountInStep,
-            minAmountOut,
-            this._fromMode,
-            this._toMode
-          ])
+          callData: ""
+          // callData: RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.encodeFunctionData("removeLiquidityOneToken", [
+          //   this._pool,
+          //   this._registry,
+          //   this._tokenOut,
+          //   _amountInStep,
+          //   minAmountOut,
+          //   this._fromMode,
+          //   this._toMode
+          // ])
         };
       },
-      decode: (data: string) =>
-        RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.decodeFunctionData("removeLiquidityOneToken", data),
-      decodeResult: (result: string) =>
-        RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.decodeFunctionResult("removeLiquidityOneToken", result)
+      decode: (data: string) => undefined,
+      // RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.decodeFunctionData("removeLiquidityOneToken", data),
+      decodeResult: (result: string) => undefined
+      // RemoveLiquidityOneToken.sdk.contracts.beanstalk.interface.decodeFunctionResult("removeLiquidityOneToken", result)
     };
   }
 }
