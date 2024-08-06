@@ -1,11 +1,11 @@
 import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
-import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../generated/schema";
-import { dayFromTimestamp } from "./Dates";
+import { Field, FieldDailySnapshot, FieldHourlySnapshot, Plot } from "../../generated/schema";
 import { BI_MAX, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
-import { loadSeason } from "./Season";
+import { ADDRESS_ZERO, BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
 import { BeanstalkPrice_try_price } from "./BeanstalkPrice";
+import { loadBeanstalk, loadSeason } from "./Beanstalk";
+import { dayFromTimestamp } from "./Snapshots";
 
 // This function is for handling both the WeatherChange and TemperatureChange events.
 // The logic is the same for both, this is intended to accommodate the renamed event and fields.
@@ -19,8 +19,6 @@ export function handleRateChange(evtAddress: Address, evtBlock: ethereum.Block, 
   fieldDaily.temperature += absChange;
 
   fieldHourly.caseId = caseId;
-
-  // Real Rate of Return
 
   let seasonEntity = loadSeason(evtAddress, season);
 
@@ -71,6 +69,40 @@ export function loadField(account: Address): Field {
     field.save();
   }
   return field;
+}
+
+export function getHarvestableIndex(beanstalk: Address): BigInt {
+  let bs = loadBeanstalk(beanstalk);
+  let season = loadSeason(beanstalk, BigInt.fromI32(bs.lastSeason));
+  return season.harvestableIndex;
+}
+
+export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
+  let plot = Plot.load(index.toString());
+  if (plot == null) {
+    plot = new Plot(index.toString());
+    plot.field = diamondAddress.toHexString();
+    plot.farmer = ADDRESS_ZERO.toHexString();
+    plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
+    plot.sourceHash = "";
+    plot.season = 0;
+    plot.creationHash = "";
+    plot.createdAt = ZERO_BI;
+    plot.updatedAt = ZERO_BI;
+    plot.updatedAtBlock = ZERO_BI;
+    plot.index = index;
+    plot.pods = ZERO_BI;
+    plot.beansPerPod = ZERO_BI;
+    plot.harvestablePods = ZERO_BI;
+    plot.harvestedPods = ZERO_BI;
+    plot.fullyHarvested = false;
+    plot.save();
+
+    let field = loadField(diamondAddress);
+    field.plotIndexes.push(plot.index);
+    field.save();
+  }
+  return plot;
 }
 
 export function loadFieldHourly(account: Address, season: i32, timestamp: BigInt): FieldHourlySnapshot {

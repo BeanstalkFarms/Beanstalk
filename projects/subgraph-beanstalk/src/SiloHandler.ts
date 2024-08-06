@@ -21,7 +21,6 @@ import {
 } from "../generated/Beanstalk-ABIs/SiloV3";
 import { Replanted, TransferDepositCall, TransferDepositsCall } from "../generated/Beanstalk-ABIs/Replanted";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadFarmer } from "./utils/Farmer";
 import {
   loadSilo,
   loadSiloDailySnapshot,
@@ -36,11 +35,10 @@ import {
   loadWhitelistTokenHourlySnapshot,
   loadWhitelistTokenDailySnapshot,
   addToSiloWhitelist
-} from "./utils/SiloEntities";
+} from "./utils/Silo";
 import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity } from "../generated/schema";
-import { loadBeanstalk } from "./utils/Beanstalk";
+import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
-import { getCurrentSeason } from "./utils/Season";
 
 // TODO: extract common logic between v2, v3 handlers
 

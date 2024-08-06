@@ -29,10 +29,10 @@ import {
 import { createWhitelistTokenV4Event } from "./event-mocking/Whitelist";
 import { createTemperatureChangeEvent } from "./event-mocking/Field";
 import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
-import { loadSilo } from "../src/utils/SiloEntities";
+import { loadSilo } from "../src/utils/Silo";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
-import { dayFromTimestamp } from "../src/utils/Dates";
 import { setSeason } from "./utils/Season";
+import { dayFromTimestamp } from "../src/utils/Snapshots";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 

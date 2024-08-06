@@ -19,14 +19,14 @@ import {
   loadWhitelistTokenDailySnapshot,
   loadWhitelistTokenHourlySnapshot,
   addToSiloWhitelist
-} from "./utils/SiloEntities";
+} from "./utils/Silo";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
-import { getCurrentSeason } from "./utils/Season";
 import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
 import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
+import { getCurrentSeason } from "./utils/Beanstalk";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);

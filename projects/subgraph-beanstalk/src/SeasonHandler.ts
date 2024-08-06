@@ -3,7 +3,7 @@ import { MetapoolOracle, Reward, Soil, WellOracle } from "../generated/Beanstalk
 import { CurvePrice } from "../generated/Beanstalk-ABIs/CurvePrice";
 import { SeasonSnapshot, Sunrise, Incentivization, PreReplant } from "../generated/Beanstalk-ABIs/PreReplant";
 import { updateHarvestablePlots } from "./FieldHandler";
-import { loadBeanstalk } from "./utils/Beanstalk";
+import { loadBeanstalk, loadSeason } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
@@ -13,7 +13,6 @@ import {
   loadPodMarketplaceHourlySnapshot,
   updateExpiredPlots
 } from "./utils/PodMarketplace";
-import { loadSeason } from "./utils/Season";
 import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
 import {
@@ -22,7 +21,7 @@ import {
   loadSiloHourlySnapshot,
   loadSiloAssetDailySnapshot,
   loadSiloAssetHourlySnapshot
-} from "./utils/SiloEntities";
+} from "./utils/Silo";
 import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {

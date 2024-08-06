@@ -581,30 +581,6 @@ dataSources:
           handler: handleTransfer
       file: ../src/BeanHandler.ts
   - kind: ethereum/contract
-    name: Replant
-    network: mainnet
-    source:
-      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: MarketV2
-      startBlock: 15277986
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      entities:
-        - Replant
-      abis:
-        - name: MarketV2
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
-        - name: UniswapV2Pair
-          file: ../../subgraph-core/abis/UniswapV2Pair.json
-        - name: ERC20
-          file: ../../subgraph-core/abis/ERC20.json
-      eventHandlers:
-        - event: Chop(indexed address,indexed address,uint256,uint256)
-          handler: handleChop
-      file: ../src/ReplantHandler.ts
-  - kind: ethereum/contract
     name: Season-Replanted
     network: mainnet
     source:
@@ -639,7 +615,7 @@ dataSources:
           handler: handleSoil
       file: ../src/SeasonHandler.ts
   - kind: ethereum/contract
-    name: Fertilizer
+    name: Fertilizer-1155
     network: mainnet
     source:
       address: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6"
@@ -661,7 +637,31 @@ dataSources:
           handler: handleTransferBatch
         - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
           handler: handleTransferSingle
-      file: ../src/FertilizerHandler.ts
+      file: ../src/BarnHandler.ts
+  - kind: ethereum/contract
+    name: Fertilizer-Beanstalk
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: MarketV2
+      startBlock: 15277986
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Replant
+      abis:
+        - name: MarketV2
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
+        - name: UniswapV2Pair
+          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: Chop(indexed address,indexed address,uint256,uint256)
+          handler: handleChop
+      file: ../src/BarnHandler.ts
   - kind: ethereum/contract
     name: Farm
     network: mainnet

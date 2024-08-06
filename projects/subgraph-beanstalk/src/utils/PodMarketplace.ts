@@ -1,9 +1,9 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapshot } from "../../generated/schema";
-import { dayFromTimestamp } from "./Dates";
+import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapshot, PodFill } from "../../generated/schema";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
 import { expirePodListingIfExists } from "./PodListing";
+import { dayFromTimestamp } from "./Snapshots";
 
 export enum MarketplaceAction {
   CREATED,
@@ -36,6 +36,25 @@ export function loadPodMarketplace(diamondAddress: Address): PodMarketplace {
     marketplace.save();
   }
   return marketplace;
+}
+
+export function loadPodFill(diamondAddress: Address, index: BigInt, hash: String): PodFill {
+  let id = diamondAddress.toHexString() + "-" + index.toString() + "-" + hash;
+  let fill = PodFill.load(id);
+  if (fill == null) {
+    fill = new PodFill(id);
+    fill.podMarketplace = diamondAddress.toHexString();
+    fill.createdAt = ZERO_BI;
+    fill.fromFarmer = "";
+    fill.toFarmer = "";
+    fill.placeInLine = ZERO_BI;
+    fill.amount = ZERO_BI;
+    fill.index = ZERO_BI;
+    fill.start = ZERO_BI;
+    fill.costInBeans = ZERO_BI;
+    fill.save();
+  }
+  return fill;
 }
 
 export function loadPodMarketplaceHourlySnapshot(diamondAddress: Address, season: i32, timestamp: BigInt): PodMarketplaceHourlySnapshot {

@@ -1,9 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { InternalBalanceChanged } from "../generated/Beanstalk-ABIs/MarketV2";
-import { loadBeanstalk } from "./utils/Beanstalk";
+import { loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK } from "../../subgraph-core/utils/Constants";
-import { loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/SiloEntities";
-import { loadFarmer } from "./utils/Farmer";
+import { loadSiloAsset, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/Silo";
 
 export function handleInternalBalanceChanged(event: InternalBalanceChanged): void {
   let beanstalk = loadBeanstalk(BEANSTALK);

@@ -15,9 +15,9 @@ import {
   TokenYield
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
-import { dayFromTimestamp, hourFromTimestamp } from "./Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk } from "./Beanstalk";
+import { dayFromTimestamp, hourFromTimestamp } from "./Snapshots";
 
 /* ===== Base Silo Entities ===== */
 
@@ -119,7 +119,6 @@ export function loadSiloAsset(account: Address, token: Address): SiloAsset {
   let asset = SiloAsset.load(id);
 
   if (asset == null) {
-    //let tokenEntity = loadToken(token)
     asset = new SiloAsset(id);
     asset.silo = account.toHexString();
     asset.token = token.toHexString();
@@ -264,6 +263,7 @@ export function loadWhitelistTokenDailySnapshot(token: Address, timestamp: BigIn
 
 /* ===== Deposit Entities ===== */
 
+// TODO: consolidate the 2 load methods
 export function loadSiloDeposit(account: Address, token: Address, season: BigInt): SiloDeposit {
   let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();
   let deposit = SiloDeposit.load(id);

@@ -2,9 +2,8 @@ import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { Transfer as LegacyTransfer } from "../generated/Beanstalk-ABIs/ERC20";
 import { Transfer } from "../generated/Beanstalk-ABIs/ERC20";
 import { ADDRESS_ZERO, BEANSTALK } from "../../subgraph-core/utils/Constants";
-import { loadSeason } from "./utils/Season";
 import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadBeanstalk } from "./utils/Beanstalk";
+import { loadBeanstalk, loadSeason } from "./utils/Beanstalk";
 
 export function handleLegacyTransfer(event: LegacyTransfer): void {
   if (event.block.number > BigInt.fromI32(14603000)) {

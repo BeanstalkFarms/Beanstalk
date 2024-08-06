@@ -1,8 +1,10 @@
+import { Chop as ChopEntity } from "../generated/schema";
+import { Chop } from "../generated/Beanstalk-ABIs/MarketV2";
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { TransferSingle, TransferBatch } from "../generated/Beanstalk-ABIs/Fertilizer";
 import { ADDRESS_ZERO, FERTILIZER } from "../../subgraph-core/utils/Constants";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "./utils/Fertilizer";
-import { loadFarmer } from "./utils/Farmer";
+import { loadFarmer } from "./utils/Beanstalk";
 
 export function handleTransferSingle(event: TransferSingle): void {
   handleTransfer(event.params.from, event.params.to, event.params.id, event.params.value, event.block.number);
@@ -36,4 +38,19 @@ function handleTransfer(from: Address, to: Address, id: BigInt, amount: BigInt, 
   let toFertilizerBalance = loadFertilizerBalance(fertilizerToken, toFarmer);
   toFertilizerBalance.amount = toFertilizerBalance.amount.plus(amount);
   toFertilizerBalance.save();
+}
+
+export function handleChop(event: Chop): void {
+  let id = "chop-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
+  let chop = new ChopEntity(id);
+  chop.hash = event.transaction.hash.toHexString();
+  chop.logIndex = event.transactionLogIndex.toI32();
+  chop.protocol = event.address.toHexString();
+  chop.farmer = event.params.account.toHexString();
+  chop.unripe = event.params.token.toHexString();
+  chop.amount = event.params.amount;
+  chop.underlying = event.params.underlying.toHexString();
+  chop.blockNumber = event.block.number;
+  chop.createdAt = event.block.timestamp;
+  chop.save();
 }
