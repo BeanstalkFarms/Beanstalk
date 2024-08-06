@@ -29,9 +29,9 @@ const {
   INTERNAL,
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
-} = require("./test/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/utils/constants.js");
-const { to6 } = require("./test/utils/helpers.js");
+} = require("./test/hardhat/utils/balances.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
+const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
@@ -307,19 +307,19 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+/// EBIPS ///
 
 task("ebip17", async function () {
   await ebip17();
-})
+});
 
 task("ebip16", async function () {
   await ebip16();
-})
+});
 
 task("ebip15", async function () {
   await ebip15();
-})
+});
 
 task("ebip14", async function () {
   await ebip14();
@@ -373,7 +373,7 @@ module.exports = {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
-      accounts: "remote",
+      accounts: "remote"
     },
     mainnet: {
       chainId: 1,
