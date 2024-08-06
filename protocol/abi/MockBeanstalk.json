@@ -5934,7 +5934,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "",
         "type": "tuple"
       }
@@ -6447,7 +6447,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "updatedSeedGaugeSettings",
         "type": "tuple"
       }
@@ -7868,28 +7868,6 @@
             "internalType": "struct Implementation",
             "name": "liquidityWeightImplementation",
             "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes4",
-                "name": "selector",
-                "type": "bytes4"
-              },
-              {
-                "internalType": "bytes1",
-                "name": "encodeType",
-                "type": "bytes1"
-              }
-            ],
-            "internalType": "struct Implementation",
-            "name": "oracleImplementation",
-            "type": "tuple"
           }
         ],
         "internalType": "struct AssetSettings",
@@ -8428,30 +8406,6 @@
         "type": "uint256"
       }
     ],
-    "name": "getTokenPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
     "name": "getTokenPriceFromExternal",
     "outputs": [
       {
@@ -8471,7 +8425,7 @@
         "type": "address"
       }
     ],
-    "name": "getUsdPrice",
+    "name": "getTokenUsdPrice",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8495,7 +8449,50 @@
         "type": "uint256"
       }
     ],
-    "name": "getUsdPriceWithLookback",
+    "name": "getTokenUsdTwap",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getUsdTokenPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUsdTokenTwap",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8520,28 +8517,12 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "currentGaugePoints",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "percentOfDepositedBdv",
-        "type": "uint256"
-      }
-    ],
-    "name": "defaultGaugePointFunction",
+    "inputs": [],
+    "name": "noWeight",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "newGaugePoints",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -9308,7 +9289,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "",
         "type": "tuple"
       }
@@ -10018,6 +9999,35 @@
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "currentGaugePoints",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "defaultGaugePointFunction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newGaugePoints",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {

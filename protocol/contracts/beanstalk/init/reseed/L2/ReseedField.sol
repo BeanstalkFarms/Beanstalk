@@ -46,7 +46,7 @@ contract ReseedField {
     ) external {
         uint256 calculatedTotalPods;
         for (uint i; i < accountPlots.length; i++) {
-            for (uint j; j < accountPlots[i].plots.length; i++) {
+            for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
                 s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;
@@ -61,9 +61,9 @@ contract ReseedField {
         require(totalPods >= harvestable, "ReseedField: harvestable mismatch");
         require(harvestable >= harvested, "ReseedField: harvested mismatch");
 
-        s.sys.fields[s.sys.activeField].pods = totalPods;
-        s.sys.fields[s.sys.activeField].harvestable = harvestable;
-        s.sys.fields[s.sys.activeField].harvested = harvested;
+        s.sys.fields[fieldId].pods = totalPods;
+        s.sys.fields[fieldId].harvestable = harvestable;
+        s.sys.fields[fieldId].harvested = harvested;
 
         // soil demand initialization.
         s.sys.weather.thisSowTime = type(uint32).max;

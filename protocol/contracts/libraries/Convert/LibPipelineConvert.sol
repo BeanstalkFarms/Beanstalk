@@ -57,6 +57,8 @@ library LibPipelineConvert {
         // this also let's us know how many assets to attempt to pull out of the final type
         toAmount = transferTokensFromPipeline(outputToken);
 
+        newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
+
         // Calculate stalk penalty using start/finish deltaB of pools, and the capped deltaB is
         // passed in to setup max convert power.
         pipeData.stalkPenaltyBdv = prepareStalkPenaltyCalculation(
@@ -64,14 +66,17 @@ library LibPipelineConvert {
             outputToken,
             pipeData.deltaB,
             pipeData.overallConvertCapacity,
-            fromBdv,
+            newBdv,
             pipeData.initialLpSupply
         );
 
-        // Update grownStalk amount with penalty applied
-        newGrownStalk = (initialGrownStalk * (fromBdv - pipeData.stalkPenaltyBdv)) / fromBdv;
+        // scale initial grown stalk proportionally to the bdv lost (if any)
+        if (newBdv < fromBdv) {
+            initialGrownStalk = (initialGrownStalk * newBdv) / fromBdv;
+        }
 
-        newBdv = LibTokenSilo.beanDenominatedValue(outputToken, toAmount);
+        // Update grownStalk amount with penalty applied
+        newGrownStalk = (initialGrownStalk * (newBdv - pipeData.stalkPenaltyBdv)) / newBdv;
     }
 
     /**

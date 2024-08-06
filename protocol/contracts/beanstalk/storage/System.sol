@@ -38,7 +38,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
  * @param migration See {Migration}.
- * @param seedGaugeSettings See {SeedGaugeSettings}.
+ * @param evaluationParameters See {EvaluationParameters}.
  * @param sop See {SeasonOfPlenty}.
  */
 struct System {
@@ -73,7 +73,7 @@ struct System {
     SeedGauge seedGauge;
     Rain rain;
     Migration migration;
-    SeedGaugeSettings seedGaugeSettings;
+    EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
 }
@@ -290,7 +290,6 @@ struct WhitelistStatus {
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
- * @param oracleImplementation The implementation for the oracle.
  * @param gaugePointImplementation The implementation for the gauge points. Supports encodeType 0 and 1.
  * @param liquidityWeightImplementation The implementation for the liquidity weight.
  * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
@@ -307,7 +306,6 @@ struct AssetSettings {
     uint64 optimalPercentDepositedBdv; //  ──┘ 8
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
-    Implementation oracleImplementation;
 }
 
 /**
@@ -393,7 +391,7 @@ struct Implementation {
     bytes1 encodeType;
 }
 
-struct SeedGaugeSettings {
+struct EvaluationParameters {
     uint256 maxBeanMaxLpGpPerBdvRatio;
     uint256 minBeanMaxLpGpPerBdvRatio;
     uint256 targetSeasonsToCatchUp;

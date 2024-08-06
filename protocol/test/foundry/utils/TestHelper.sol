@@ -27,7 +27,6 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 
 ///// ECOSYSTEM //////
-import {UsdOracle} from "contracts/ecosystem/oracles/UsdOracle.sol";
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 
 /**
@@ -44,9 +43,6 @@ contract TestHelper is
     FertilizerDeployer,
     ShipmentDeployer
 {
-    // usdOracle contract.
-    UsdOracle usdOracle;
-
     Pipeline pipeline;
 
     MockToken bean = MockToken(C.BEAN);
@@ -109,31 +105,6 @@ contract TestHelper is
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
-
-        // TODO: upon deployment, setup these state settings
-        initStateSettings();
-
-        vm.prank(BEANSTALK);
-        bs.updateOracleImplementationForToken(
-            WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
-        );
-    }
-
-    function initStateSettings() public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = 100e18;
-        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = 50e18;
-        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = 4320;
-        s.sys.seedGaugeSettings.podRateLowerBound = 0.05e18;
-        s.sys.seedGaugeSettings.podRateOptimal = 0.15e18;
-        s.sys.seedGaugeSettings.podRateUpperBound = 0.25e18;
-        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = 0.95e18;
-        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = 1.05e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = 0.8e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = 0.4e18;
-        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = 0.12e18;
-        s.sys.seedGaugeSettings.excessivePriceThreshold = 1.05e6;
     }
 
     /**
@@ -347,12 +318,11 @@ contract TestHelper is
         uint256 amount
     ) internal returns (uint256 lpAmountOut, address tokenInWell) {
         (tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
-        uint256 beanAmount = (amount * 1e6) / usdOracle.getUsdTokenPrice(tokenInWell);
+        uint256 beanAmount = (amount * 1e6) / bs.getUsdTokenPrice(tokenInWell);
         lpAmountOut = addLiquidityToWell(user, well, beanAmount, amount);
     }
 
     function initMisc() internal {
-        usdOracle = UsdOracle(deployCode("UsdOracle"));
         pipeline = Pipeline(PIPELINE);
     }
 
@@ -435,7 +405,7 @@ contract TestHelper is
         uint256 humidity = bs.getHumidity(season);
         uint256 fertOut = sprouts / ((1000 + humidity) / 1000);
         // calculate the amount of the barnRaiseToken needed to equal usdAmount.
-        uint256 tokenAmount = fertOut * usdOracle.getUsdTokenPrice(bs.getBarnRaiseToken());
+        uint256 tokenAmount = fertOut * bs.getUsdTokenPrice(bs.getBarnRaiseToken());
 
         // add fertilizer.
         mockAddFertilizer(season, uint128(tokenAmount));

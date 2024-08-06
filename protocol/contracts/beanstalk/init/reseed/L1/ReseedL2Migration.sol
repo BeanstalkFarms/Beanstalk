@@ -36,10 +36,11 @@ contract ReseedL2Migration {
         uint256 beanEthBalance = beanEth.balanceOf(address(this));
         beanEth.transfer(BCM, beanEthBalance);
 
+        // TODO: Uncomment after the WstETH migration is complete.
         // BEAN:WstETH
-        IERC20 beanwsteth = IERC20(C.BEAN_WSTETH_WELL);
-        uint256 beanwstethBalance = beanwsteth.balanceOf(address(this));
-        beanwsteth.transfer(BCM, beanwstethBalance);
+        // IERC20 beanwsteth = IERC20(C.BEAN_WSTETH_WELL);
+        // uint256 beanwstethBalance = beanwsteth.balanceOf(address(this));
+        // beanwsteth.transfer(BCM, beanwstethBalance);
 
         // BEAN:3CRV
         IERC20 bean3crv = IERC20(C.CURVE_BEAN_METAPOOL);

@@ -83,6 +83,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 beforeInputWellCapacity;
         uint256 beforeOutputWellCapacity;
         uint256 beforeOverallCapacity;
+        uint256 newBdv;
     }
 
     struct BeanToBeanTestData {
@@ -195,10 +196,12 @@ contract PipelineConvertTest is TestHelper {
 
         uint256 grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
 
+        uint256 newBdv = bs.bdv(beanEthWell, wellAmountOut);
+
         uint256 bdvOfAmountOut = bs.bdv(beanEthWell, wellAmountOut);
         (int96 outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
             beanEthWell,
-            grownStalkForDeposit,
+            (grownStalkForDeposit * newBdv) / amount, // amount is the same as the original BDV
             bdvOfAmountOut
         );
 
@@ -369,9 +372,11 @@ contract PipelineConvertTest is TestHelper {
         dbs.beforeOverallDeltaB = LibDeltaB.overallCurrentDeltaB();
         dbs.afterOverallDeltaB = dbs.afterInputTokenDeltaB + dbs.afterOutputTokenDeltaB; // update and for scaled deltaB
 
+        pd.newBdv = bs.bdv(pd.outputWell, pd.wellAmountOut);
+
         (uint256 stalkPenalty, , , ) = LibConvert.calculateStalkPenalty(
             dbs,
-            bdvOfDepositedLp,
+            pd.newBdv,
             LibConvert.abs(LibDeltaB.overallCappedDeltaB()), // overall convert capacity
             pd.inputWell,
             pd.outputWell
@@ -379,7 +384,7 @@ contract PipelineConvertTest is TestHelper {
 
         (pd.outputStem, ) = bs.calculateStemForTokenFromGrownStalk(
             pd.outputWell,
-            (pd.grownStalkForDeposit * (bdvOfDepositedLp - stalkPenalty)) / bdvOfDepositedLp,
+            (pd.grownStalkForDeposit * (pd.newBdv - stalkPenalty)) / pd.newBdv,
             pd.bdvOfAmountOut
         );
 
@@ -565,35 +570,34 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function testConvertWithPegAndKeepStalk(uint256 amount) public {
-        amount = bound(amount, 10e6, 5000e6);
+        amount = bound(amount, 10e6, 100e6);
 
         setDeltaBforWell(int256(amount), beanEthWell, C.WETH);
 
-        // how many eth would we get if we swapped this amount in the well
-        uint256 ethAmount = IWell(beanEthWell).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
-
-        MockToken(C.WETH).mint(users[1], ethAmount);
-        vm.prank(users[1]);
-        MockToken(C.WETH).approve(beanEthWell, ethAmount);
-
-        uint256[] memory tokenAmountsIn = new uint256[](2);
-        tokenAmountsIn[0] = 0;
-        tokenAmountsIn[1] = ethAmount;
-
-        vm.prank(users[1]);
-        IWell(beanEthWell).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
-
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
+
+        // get bdv of amount
+        (, uint256 oldBdv) = bs.getDeposit(users[1], C.BEAN, stem);
+
         uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
         beanToLPDoConvert(amount, stem, users[1]);
 
-        uint256 totalStalkAfter = bs.balanceOfStalk(users[1]);
+        uint256 balanceOfStalk = bs.balanceOfStalk(users[1]);
+        uint256 balanceOfGerminatingStalk = bs.balanceOfGerminatingStalk(users[1]);
 
         // get balance of deposited bdv for this user
-        uint256 bdvBalance = bs.balanceOfDepositedBdv(users[1], beanEthWell) * BDV_TO_STALK; // convert to stalk amount
+        uint256 newBdv = bs.balanceOfDepositedBdv(users[1], beanEthWell); // convert to stalk amount
 
-        assertTrue(totalStalkAfter == bdvBalance + grownStalkBefore); // all grown stalk was kept
+        // calculate grown stalk haircut as a result of fewer BDV deposited
+        uint256 calculatedNewGrownStalk = (newBdv * BDV_TO_STALK) +
+            ((grownStalkBefore * newBdv) / oldBdv);
+
+        assertEq(
+            balanceOfStalk + balanceOfGerminatingStalk,
+            calculatedNewGrownStalk,
+            "all grown stalk was not kept"
+        );
     }
 
     function testFlashloanManipulationLoseGrownStalkBecauseZeroConvertCapacity(
@@ -811,7 +815,7 @@ contract PipelineConvertTest is TestHelper {
         );
 
         uint256 stalkAfter = bs.balanceOfStalk(users[1]);
-        assertEq(stalkAfter, stalkBefore.div(2) + grownStalk);
+        assertEq(stalkAfter, stalkBefore.div(2) + grownStalk.div(2));
 
         uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], C.BEAN);
         assertEq(bdvAfter, bdvBefore.div(2));

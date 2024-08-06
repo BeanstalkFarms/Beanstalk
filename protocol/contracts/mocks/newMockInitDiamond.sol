@@ -131,8 +131,7 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
         assetSettings[1] = AssetSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
@@ -145,8 +144,7 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
     }
 
@@ -191,8 +189,7 @@ contract MockInitDiamond is InitalizeDiamond {
                 address(0),
                 ILiquidityWeightFacet.maxWeight.selector,
                 bytes1(0)
-            ),
-            oracleImplementation: impl
+            )
         });
 
         // updates the optimal percent deposited for bean:eth.

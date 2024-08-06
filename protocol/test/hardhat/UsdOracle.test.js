@@ -22,6 +22,6 @@ describe("USD Oracle", function () {
   });
 
   it("Reverts if not accepted token", async function () {
-    expect(await mockBeanstalk.getUsdPrice(USDC)).to.be.equal(0);
+    expect(await mockBeanstalk.getUsdTokenPrice(USDC)).to.be.equal(0);
   });
 });

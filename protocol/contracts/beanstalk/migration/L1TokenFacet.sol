@@ -13,7 +13,6 @@ import "contracts/beanstalk/migration/L1Libraries/LibTokenApprove.sol";
 import "contracts/beanstalk/migration/L1AppStorage.sol";
 import "contracts/beanstalk/migration/L1ReentrancyGuard.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {C} from "contracts/C.sol";
 
 /**
  * @author Publius
@@ -40,6 +39,12 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
         IERC20 token,
         uint256 amount
     );
+
+    // Blacklisted tokens that cannot be removed.
+    address internal constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
+    address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
+    address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E;
 
     //////////////////////// Transfer ////////////////////////
 
@@ -305,17 +310,17 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
      * and thus requires that these tokens are not transferred.
      */
     function checkBeanAsset(address token) internal pure {
-        require(token != address(C.BEAN), "TokenFacet: Beans cannot be transferred.");
+        require(token != address(BEAN), "TokenFacet: Beans cannot be transferred.");
         require(
-            token != address(C.BEAN_ETH_WELL),
+            token != address(BEAN_ETH_WELL),
             "TokenFacet: BeanEth Well Tokens cannot be transferred."
         );
         require(
-            token != address(C.BEAN_WSTETH_WELL),
+            token != address(BEAN_WSTETH_WELL),
             "TokenFacet: BeanwstEth Well Tokens cannot be transferred."
         );
         require(
-            token != address(C.CURVE_BEAN_METAPOOL),
+            token != address(CURVE_BEAN_METAPOOL),
             "TokenFacet: Bean3crv Well Tokens cannot be transferred."
         );
     }

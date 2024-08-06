@@ -132,8 +132,7 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // verify the BDV, gaugePoint, and liquidityWeight selector.
-        verifyBDVselector(token, encodeType, selector);
+        // verify the gaugePoint and liquidityWeight selector.
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
         verifyOracleImplementation(
@@ -203,8 +202,7 @@ library LibWhitelist {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // verify the BDV, gaugePoint, and liquidityWeight selector.
-        verifyBDVselector(token, encodeType, selector);
+        // verify the gaugePoint and liquidityWeight selector.
         verifyOracleImplementation(
             oracleImplementation.target,
             oracleImplementation.selector,

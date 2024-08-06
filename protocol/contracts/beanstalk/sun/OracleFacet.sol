@@ -18,7 +18,7 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @notice Fetches the amount of tokens equal to 1 USD for a given token.
      * @param token address of the token to get the amount for.
      */
-    function getUsdPrice(address token) external view returns (uint256) {
+    function getUsdTokenPrice(address token) external view returns (uint256) {
         return LibUsdOracle.getUsdPrice(token, 0);
     }
 
@@ -28,10 +28,7 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @param token address of the token to get the amount for.
      * @param lookback the amount of time to look back in seconds.
      */
-    function getUsdPriceWithLookback(
-        address token,
-        uint256 lookback
-    ) external view returns (uint256) {
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256) {
         return LibUsdOracle.getUsdPrice(token, lookback);
     }
 
@@ -39,7 +36,7 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @notice Fetches the amount of USD equal 1 token is worth.
      * @param token address of token to get the price of.
      */
-    function getTokenPrice(address token) external view returns (uint256) {
+    function getTokenUsdPrice(address token) external view returns (uint256) {
         return LibUsdOracle.getTokenPrice(token, 0);
     }
 
@@ -47,7 +44,7 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @notice Fetches the amount of USD equal 1 token is worth, using a lookback
      * @param token address of token to get the price of.
      */
-    function getTokenPrice(address token, uint256 lookback) external view returns (uint256) {
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256) {
         return LibUsdOracle.getTokenPrice(token, lookback);
     }
 

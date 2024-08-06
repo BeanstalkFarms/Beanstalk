@@ -71,38 +71,6 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    // reverts with invalid BDV selector.
-    function test_whitelistRevertInvalidBDVSelector(uint i) public prank(BEANSTALK) {
-        bytes4 bdvSelector = bytes4(keccak256(abi.encode(i)));
-
-        vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes4(0),
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-
-        vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0x01),
-            bytes4(0),
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
-
     function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));

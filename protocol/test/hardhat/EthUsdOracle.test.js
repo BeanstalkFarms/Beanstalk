@@ -39,14 +39,14 @@ describe("USD Oracle", function () {
   });
 
   it("it gets the USD price", async function () {
-    expect(await mockBeanstalk.getEthUsdPrice()).to.be.equal(to6("10000")); // About 1e14
-    expect(await mockBeanstalk.getEthUsdTwap(900)).to.be.equal(to6("10000")); // About 1e14
-    expect(await mockBeanstalk.getUsdPrice(WETH)).to.be.equal(to18("0.0001")); // About 1e14
+    expect(await mockBeanstalk.getTokenUsdPrice(WETH)).to.be.equal(to6("10000")); // About 1e14
+    expect(await mockBeanstalk.getTokenUsdTwap(WETH, 900)).to.be.equal(to6("10000")); // About 1e14
+    expect(await mockBeanstalk.getUsdTokenPrice(WETH)).to.be.equal(to18("0.0001")); // About 1e14
   });
 
   it("it gets the USD TWA", async function () {
     await setEthUsdChainlinkPrice("20000", (lookback = 449));
-    expect(await mockBeanstalk.getEthUsdTwap(900)).to.be.equal(to6("15000")); // About 1e14
+    expect(await mockBeanstalk.getTokenUsdTwap(WETH, 900)).to.be.equal(to6("15000")); // About 1e14
   });
 
   it("Handles Chainlink Oracle Failure", async function () {
@@ -55,8 +55,8 @@ describe("USD Oracle", function () {
       ETH_USD_CHAINLINK_AGGREGATOR
     );
     await chainlinkAggregator.setRound("1", "0", to18("1"), "0", "0");
-    expect(await mockBeanstalk.getEthUsdPrice()).to.be.equal("0"); // About 1e14
-    expect(await mockBeanstalk.getEthUsdTwap(900)).to.be.equal("0"); // About 1e14
-    expect(await mockBeanstalk.getUsdPrice(WETH)).to.be.equal("0"); // About 1e14
+    expect(await mockBeanstalk.getTokenUsdPrice(WETH)).to.be.equal("0"); // About 1e14
+    expect(await mockBeanstalk.getTokenUsdTwap(WETH, 900)).to.be.equal("0"); // About 1e14
+    expect(await mockBeanstalk.getUsdTokenPrice(WETH)).to.be.equal("0"); // About 1e14
   });
 });

@@ -351,28 +351,28 @@ describe("newField", function () {
 
   describe("complex DPD", async function () {
     it("Does not set thisSowTime if Soil > 1", async function () {
-      mockBeanstalk.setSoilE(to6("3"));
+      await mockBeanstalk.setSoilE(to6("3"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.equal(parseInt(MAX_UINT32));
     });
 
     it("Does set thisSowTime if Soil = 1", async function () {
-      mockBeanstalk.setSoilE(to6("1"));
+      await mockBeanstalk.setSoilE(to6("1"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));
     });
 
     it("Does set thisSowTime if Soil < 1", async function () {
-      mockBeanstalk.setSoilE(to6("1.5"));
+      await mockBeanstalk.setSoilE(to6("1.5"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));
     });
 
     it("Does not set thisSowTime if Soil already < 1", async function () {
-      mockBeanstalk.setSoilE(to6("1.5"));
+      await mockBeanstalk.setSoilE(to6("1.5"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       await beanstalk.connect(user).sow(to6("0.5"), 0, EXTERNAL);

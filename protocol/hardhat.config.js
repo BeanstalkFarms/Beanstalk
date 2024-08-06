@@ -30,7 +30,7 @@ const {
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
 } = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL } = require("./test/hardhat/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseed } = require("./reseed/reseed.js");
@@ -97,7 +97,12 @@ task("getTime", async function () {
 })*/
 
 task("reseed", async () => {
-  const account = await impersonateSigner(PUBLIUS);
+  const account = await impersonateSigner(BCM);
+  // mint more eth to the bcm to cover gas costs
+  const mock = true;
+  if (mock) {
+    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  }
   await reseed(account);
 });
 
@@ -302,19 +307,19 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+/// EBIPS ///
 
 task("ebip17", async function () {
   await ebip17();
-})
+});
 
 task("ebip16", async function () {
   await ebip16();
-})
+});
 
 task("ebip15", async function () {
   await ebip15();
-})
+});
 
 task("ebip14", async function () {
   await ebip14();

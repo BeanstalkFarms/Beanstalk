@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
 import {C} from "contracts/C.sol";
@@ -21,7 +22,11 @@ contract ReseedWhitelist {
     /**
      * @notice Whitelists Silo assets
      */
-    function init(address[] calldata tokens, AssetSettings[] calldata asset) external {
+    function init(
+        address[] calldata tokens,
+        AssetSettings[] calldata asset,
+        Implementation[] calldata oracle
+    ) external {
         for (uint i; i < tokens.length; i++) {
             LibWhitelist.whitelistToken(
                 tokens[i],
@@ -33,7 +38,7 @@ contract ReseedWhitelist {
                 asset[i].liquidityWeightImplementation.selector,
                 asset[i].gaugePoints,
                 asset[i].optimalPercentDepositedBdv,
-                asset[i].oracleImplementation
+                oracle[i]
             );
         }
     }

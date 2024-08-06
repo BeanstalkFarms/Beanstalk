@@ -19,4 +19,8 @@ contract LiquidityWeightFacet {
     function maxWeight() external pure returns (uint256) {
         return MAX_WEIGHT;
     }
+
+    function noWeight() external pure returns (uint256) {
+        return 0;
+    }
 }
