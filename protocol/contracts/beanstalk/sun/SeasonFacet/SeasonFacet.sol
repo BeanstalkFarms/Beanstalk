@@ -34,8 +34,8 @@ contract SeasonFacet is Invariable, Weather {
      * @return reward The number of beans minted to the caller.
      * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function sunrise() external payable fundsSafu noOutFlow returns (uint256) {
-        return gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
+    function sunrise() external payable fundsSafu nonReentrant noOutFlow returns (uint256) {
+        return _gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
     /**
@@ -48,7 +48,11 @@ contract SeasonFacet is Invariable, Weather {
     function gm(
         address account,
         LibTransfer.To mode
-    ) public payable fundsSafu noOutFlow returns (uint256) {
+    ) public payable fundsSafu noOutFlow nonReentrant returns (uint256) {
+        return _gm(account, mode);
+    }
+
+    function _gm(address account, LibTransfer.To mode) private returns (uint256) {
         require(!s.sys.paused, "Season: Paused.");
         require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
         uint32 season = stepSeason();
