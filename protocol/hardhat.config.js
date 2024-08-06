@@ -96,12 +96,14 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
-task("reseed", async () => {
-  const account = await impersonateSigner(BCM);
+task("reseed", async (mock = true) => {
   // mint more eth to the bcm to cover gas costs
-  const mock = true;
+  let account;
   if (mock) {
+    account = await impersonateSigner(BCM);
     await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+  } else {
+    // account = BCM signer
   }
   await reseed(account);
 });
@@ -401,7 +403,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.8.25",
         settings: {
           optimizer: {
             enabled: true,

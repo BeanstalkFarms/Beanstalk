@@ -58,7 +58,7 @@ library C {
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
     address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
-    address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E; // TODO: Set
+    address internal constant BEAN_WSTETH_WELL = 0xBeA0000113B0d182f4064C86B71c315389E4715D;
 
     //////////////////// Chainlink Oracles ////////////////////
     address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
