@@ -16,13 +16,14 @@ import {C} from "contracts/C.sol";
 contract ReseedField {
     AppStorage internal s;
 
+    uint256 constant FIELD_ID = 0;
+
     struct Plot {
         uint256 podIndex;
         uint256 podAmounts;
     }
     struct MigratedPlotData {
         address account;
-        uint256 fieldId;
         Plot[] plots;
     }
 
@@ -42,8 +43,8 @@ contract ReseedField {
             for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
-                s.accts[accountPlots[i].account].fields[accountPlots[i].fieldId].plots[podIndex] = podAmount;
-                s.accts[accountPlots[i].account].fields[accountPlots[i].fieldId].plotIndexes.push(podIndex);
+                s.accts[accountPlots[i].account].fields[FIELD_ID].plots[podIndex] = podAmount;
+                s.accts[accountPlots[i].account].fields[FIELD_ID].plotIndexes.push(podIndex);
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
             }
         }

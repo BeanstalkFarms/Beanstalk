@@ -8,9 +8,12 @@ const { impersonateSigner, mintEth } = require("../utils");
  */
 async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
   // Initialize deployer account for vanity address.
-  let deployerSigner = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  let deployerSigner;
   if (mock) {
     await mintEth(deployerSigner.address);
+    deployerSigner = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  } else {
+    deployerSigner = new ethers.Wallet(process.env.DIAMOND_DEPLOYER_PRIVATE_KEY, ethers.provider);
   }
 
   const beanstalkDiamond = await deployDiamond({
