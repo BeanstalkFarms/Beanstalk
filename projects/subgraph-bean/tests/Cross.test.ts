@@ -8,11 +8,7 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
 import { BEAN_3CRV_V1, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_CP2_WELL, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
-<<<<<<< HEAD
-import { BD_10, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-=======
 import { BD_10, BigDecimal_round, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
->>>>>>> master
 
 import { loadBean } from "../src/utils/Bean";
 import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
@@ -79,13 +75,8 @@ describe("Peg Crosses", () => {
       const reserves = uniswapV2Reserves(BEAN_WETH_V1);
       const ethPriceNow = getPreReplantPriceETH();
       const newPrice = constantProductPrice(toDecimal(reserves[1]), toDecimal(reserves[0], 18), ethPriceNow);
-<<<<<<< HEAD
-      log.info("expected | actual {} | {}", [beanPrice.toString(), newPrice.truncate(4).toString()]);
-      assert.assertTrue(beanPrice.equals(newPrice));
-=======
       // log.info("expected | actual {} | {}", [beanPrice.toString(), newPrice.truncate(4).toString()]);
       assert.assertTrue(beanPrice.equals(newPrice.truncate(4)));
->>>>>>> master
 
       const beanPrice2 = BigDecimal.fromString("0.7652");
       const liquidity2 = BigDecimal.fromString("1234567");
@@ -95,17 +86,10 @@ describe("Peg Crosses", () => {
       const ethPriceNow2 = getPreReplantPriceETH();
       const newPrice2 = constantProductPrice(toDecimal(reserves2[1]), toDecimal(reserves2[0], 18), ethPriceNow2);
       const newLiquidity2 = toDecimal(reserves2[0], 18).times(ethPriceNow2).times(BigDecimal.fromString("2"));
-<<<<<<< HEAD
-      log.info("expected | actual {} | {}", [beanPrice2.toString(), newPrice2.truncate(4).toString()]);
-      assert.assertTrue(beanPrice2.equals(newPrice2));
-      log.info("expected | actual {} | {}", [liquidity2.truncate(0).toString(), newLiquidity2.truncate(0).toString()]);
-      // assert.assertTrue(liquidity2.truncate(0).equals(newLiquidity2.truncate(0)));
-=======
       // log.info("expected | actual {} | {}", [beanPrice2.toString(), newPrice2.truncate(4).toString()]);
       assert.assertTrue(beanPrice2.equals(newPrice2.truncate(4)));
       // log.info("expected | actual {} | {}", [liquidity2.truncate(2).toString(), newLiquidity2.truncate(2).toString()]);
       assert.assertTrue(BigDecimal_round(liquidity2).equals(BigDecimal_round(newLiquidity2)));
->>>>>>> master
     });
 
     test("UniswapV2/Bean cross above", () => {

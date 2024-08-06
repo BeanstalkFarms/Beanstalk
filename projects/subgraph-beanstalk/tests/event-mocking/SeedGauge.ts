@@ -1,8 +1,4 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-<<<<<<< HEAD
-import { newMockEvent } from "matchstick-as/assembly/index";
-=======
->>>>>>> master
 import {
   BeanToMaxLpGpPerBdvRatioChange,
   GaugePointChange,
@@ -13,19 +9,7 @@ import {
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
 } from "../../generated/BIP45-SeedGauge/Beanstalk";
-<<<<<<< HEAD
-
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-
-// Default mock to include beanstalk address
-const mockBeanstalkEvent = (): ethereum.Event => {
-  let e = changetype<ethereum.Event>(newMockEvent());
-  e.address = BEANSTALK;
-  return e;
-};
-=======
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
->>>>>>> master
 
 export function createBeanToMaxLpGpPerBdvRatioChangeEvent(
   season: BigInt,
