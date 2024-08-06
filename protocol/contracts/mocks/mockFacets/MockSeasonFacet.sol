@@ -601,4 +601,10 @@ contract MockSeasonFacet is SeasonFacet  {
             LibWell.getUsdTokenPriceForWell(well).mul(beanTokenPrice)
         );
     }
+
+    function captureWellEInstantaneous(address well) external returns (int256 instDeltaB) {
+        instDeltaB = LibWellMinting.instantaneousDeltaB(well);
+        s.season.timestamp = block.timestamp;
+        emit DeltaB(instDeltaB);
+    }
 }

@@ -50,4 +50,18 @@ contract MockUnripeFacet is UnripeFacet {
         );
         LibUnripe.addUnderlying(unripeToken, amount);
     }
+
+    function getLegacyLockedUnderlyingBean() public view returns (uint256) {
+        return LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_BEAN,
+            LibUnripe.getRecapPaidPercentAmount(1e6)
+        );
+    }
+
+    function getLegacyLockedUnderlyingLP() public view returns (uint256) {
+        return LibLockedUnderlying.getLockedUnderlying(
+            C.UNRIPE_LP,
+            LibUnripe.getRecapPaidPercentAmount(1e6)
+        );
+    }
 }

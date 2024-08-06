@@ -12,6 +12,10 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
+
+const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
@@ -24,7 +28,6 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { upgradeWithNewFacets } = require("./scripts/diamond");
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
@@ -223,6 +226,11 @@ task("deployWstethMigration", async function () {
   await bipMigrateUnripeBeanEthToBeanSteth();
 });
 
+
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
 task("updateBeanstalkForUI", async function () {
   await updateBeanstalkForUI();
 });
@@ -334,7 +342,7 @@ module.exports = {
         version: "0.8.17",
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 1000
           }
         }
@@ -348,7 +356,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000
