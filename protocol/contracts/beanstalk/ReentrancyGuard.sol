@@ -25,8 +25,24 @@ abstract contract ReentrancyGuard {
      */
     modifier nonReentrant() {
         require(s.sys.reentrantStatus != C.ENTERED, "ReentrancyGuard: reentrant call");
+
         s.sys.reentrantStatus = C.ENTERED;
         _;
+        s.sys.reentrantStatus = C.NOT_ENTERED;
+    }
+
+    /**
+     * @notice Verify and lock both standard entrance and farming entrance.
+     * @dev This modifier should be used on all functions that contain generalized Farm calls.
+     */
+    modifier nonReentrantFarm() {
+        require(s.sys.farmingStatus != C.ENTERED, "ReentrancyGuard: reentrant farm call");
+        require(s.sys.reentrantStatus != C.ENTERED, "ReentrancyGuard: reentrant call");
+
+        s.sys.farmingStatus = C.ENTERED;
+        s.sys.reentrantStatus = C.ENTERED;
+        _;
+        s.sys.farmingStatus = C.NOT_ENTERED;
         s.sys.reentrantStatus = C.NOT_ENTERED;
     }
 }

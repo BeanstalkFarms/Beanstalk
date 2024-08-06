@@ -27,7 +27,7 @@ contract FarmFacet is Invariable, ReentrancyGuard {
      **/
     function farm(
         bytes[] calldata data
-    ) external payable fundsSafu nonReentrant returns (bytes[] memory results) {
+    ) external payable fundsSafu nonReentrantFarm returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i; i < data.length; ++i) {
             results[i] = LibFarm._farm(data[i]);
@@ -43,7 +43,7 @@ contract FarmFacet is Invariable, ReentrancyGuard {
      **/
     function advancedFarm(
         AdvancedFarmCall[] calldata data
-    ) external payable fundsSafu nonReentrant returns (bytes[] memory results) {
+    ) external payable fundsSafu nonReentrantFarm returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; ++i) {
             results[i] = LibFarm._advancedFarm(data[i], results);

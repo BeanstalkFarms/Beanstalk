@@ -75,12 +75,13 @@ library LibFarm {
         bytes memory data
     ) private returns (bool success, bytes memory result) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        require(s.sys.farmingStatus != C.ENTERED, "Reentrant farm call");
 
-        s.sys.farmingStatus = C.ENTERED;
+        // Verify that farm reentrancy is already protected.
+        require(s.sys.farmingStatus == C.ENTERED, "Unprotected farm call");
+
+        // Temporarily unlock non-farming reentrancy to allow a single Beanstalk call.
         s.sys.reentrantStatus = C.NOT_ENTERED;
         (success, result) = facet.delegatecall(data);
-        s.sys.farmingStatus = C.NOT_ENTERED;
         s.sys.reentrantStatus = C.ENTERED;
     }
 }

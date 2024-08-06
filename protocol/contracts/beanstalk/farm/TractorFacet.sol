@@ -110,7 +110,7 @@ contract TractorFacet is Invariable, ReentrancyGuard {
         external
         payable
         fundsSafu
-        nonReentrant
+        nonReentrantFarm
         verifyRequisition(requisition)
         runBlueprint(requisition)
         returns (bytes[] memory results)
