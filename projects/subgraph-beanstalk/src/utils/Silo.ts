@@ -281,7 +281,9 @@ export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
     deposit.farmer = depositId.account.toHexString();
     deposit.token = depositId.token.toHexString();
     deposit.depositVersion = depositId.depositVersion.toString();
-    deposit.season = depositId.season;
+    if (depositId.season !== null) {
+      deposit.season = depositId.season!.toU32();
+    }
     deposit.stem = depositId.stem;
     deposit.depositedAmount = ZERO_BI;
     deposit.depositedBDV = ZERO_BI;

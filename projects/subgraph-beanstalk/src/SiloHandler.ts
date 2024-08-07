@@ -39,6 +39,7 @@ import {
 import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
+import { takeSiloSnapshots } from "./utils/Snapshots";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -335,9 +336,9 @@ export function handlePlant(event: Plant): void {
   // This removes the plantable stalk for planted beans.
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
-  let beanstalk = loadBeanstalk(event.address);
+  const currentSeason = getCurrentSeason(event.address);
   let silo = loadSilo(event.address);
-  let siloHourly = loadSiloHourlySnapshot(event.address, beanstalk.lastSeason, event.block.timestamp);
+  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason, event.block.timestamp);
   let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
 
@@ -359,10 +360,12 @@ export function handlePlant(event: Plant): void {
   siloDaily.updatedAt = event.block.timestamp;
   siloDaily.save();
 
+  // Remove the asset-only amount that got added in Reward event handler.
+  // Will be immediately re-credited to the user/system in AddDeposit
   removeDepositFromSiloAsset(
     event.address,
     BEAN_ERC20,
-    beanstalk.lastSeason,
+    currentSeason,
     event.params.beans,
     event.params.beans,
     event.block.timestamp,
@@ -438,23 +441,12 @@ function removeDepositFromSilo(
 
   silo.depositedBDV = silo.depositedBDV.minus(bdv);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
+  // TODO: event originator in method signature (required for recursion also)
   if (account == BEANSTALK) {
     silo.grownStalkPerSeason = silo.grownStalkPerSeason.minus(grownStalkPerBDV);
   }
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-
-  siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.minus(bdv);
-  siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloHourly.updatedAt = timestamp;
-  siloHourly.save();
-
-  siloDaily.season = season;
-  siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.minus(bdv);
-  siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloDaily.updatedAt = timestamp;
-  siloDaily.save();
 }
 
 export function addDepositToSiloAsset(
@@ -738,6 +730,7 @@ export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   rawEvent.createdAt = event.block.timestamp;
   rawEvent.save();
 }
+// V4 whitelist for seed gauge is in GaugeHandler
 
 export function handleDewhitelistToken(event: DewhitelistToken): void {
   let silo = loadSilo(event.address);

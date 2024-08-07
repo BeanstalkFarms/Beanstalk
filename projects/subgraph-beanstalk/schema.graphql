@@ -137,6 +137,10 @@ type Silo @entity {
   beanMints: BigInt!
   "Current number of active farmers deposited in the silo"
   activeFarmers: Int!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [SiloHourlySnapshot!]! @derivedFrom(field: "silo")
   "Link to daily snapshot data"
@@ -616,7 +620,7 @@ type SiloDeposit @entity {
   "Version of deposit. Options are season, v3, v3.1. `season` type includes those deposits which are calculated according to their silo v1 deposits pre-explout"
   depositVersion: String!
   "Season of deposit"
-  season: BigInt
+  season: Int
   "Stem of deposit. If this is a season deposit type, stem will be filled according to `LibLegacyTokenSilo.seasonToStem`"
   stem: BigInt
   "Token amount deposited"
