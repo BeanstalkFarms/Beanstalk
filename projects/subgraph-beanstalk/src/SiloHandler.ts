@@ -300,23 +300,7 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
     return;
   }
 
-  let beanstalk = loadBeanstalk(event.address); // get current season
-  updateStalkBalances(
-    event.address,
-    beanstalk.lastSeason,
-    event.params.delta,
-    event.params.deltaRoots,
-    event.block.timestamp,
-    event.block.number
-  );
-  updateStalkBalances(
-    event.params.account,
-    beanstalk.lastSeason,
-    event.params.delta,
-    event.params.deltaRoots,
-    event.block.timestamp,
-    event.block.number
-  );
+  updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block.timestamp);
 }
 
 export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
@@ -513,24 +497,25 @@ function addWithdrawToSiloAsset(
 }
 
 export function updateStalkBalances(
+  protocol: Address,
   account: Address,
-  season: i32,
-  stalk: BigInt,
-  roots: BigInt,
+  deltaStalk: BigInt,
+  deltaRoots: BigInt,
   timestamp: BigInt,
-  blockNumber: BigInt
+  recurs: boolean = true
 ): void {
+  if (recurs && account != protocol) {
+    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, timestamp);
+  }
   let silo = loadSilo(account);
+  silo.stalk = silo.stalk.plus(deltaStalk);
+  silo.roots = silo.roots.plus(deltaRoots);
 
-  silo.stalk = silo.stalk.plus(stalk);
-  silo.roots = silo.roots.plus(roots);
-
-  // TODO: protocol in param
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
+  takeSiloSnapshots(silo, protocol, timestamp);
 
   // Add account to active list if needed
-  if (account !== BEANSTALK) {
-    let beanstalk = loadBeanstalk(BEANSTALK);
+  if (account !== protocol) {
+    let beanstalk = loadBeanstalk(protocol);
     let farmerIndex = beanstalk.activeFarmers.indexOf(account.toHexString());
     if (farmerIndex == -1) {
       let newFarmers = beanstalk.activeFarmers;
@@ -549,13 +534,13 @@ export function updateStalkBalances(
   silo.save();
 }
 
-function updateSeedsBalances(beanstalk: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: Boolean = true): void {
-  if (recurs && account != beanstalk) {
-    updateSeedsBalances(beanstalk, beanstalk, seeds, timestamp);
+function updateSeedsBalances(protocol: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: boolean = true): void {
+  if (recurs && account != protocol) {
+    updateSeedsBalances(protocol, protocol, seeds, timestamp);
   }
   let silo = loadSilo(account);
   silo.seeds = silo.seeds.plus(seeds);
-  takeSiloSnapshots(silo, beanstalk, timestamp);
+  takeSiloSnapshots(silo, protocol, timestamp);
   silo.save();
 }
 
@@ -565,25 +550,25 @@ function updateClaimedWithdraw(account: Address, token: Address, season: BigInt)
   withdraw.save();
 }
 
-export function updateStalkWithCalls(beanstalkAddress: Address, season: i32, timestamp: BigInt, blockNumber: BigInt): void {
+export function updateStalkWithCalls(protocol: Address, timestamp: BigInt): void {
   // This should be run at sunrise for the previous season to update any farmers stalk/seed/roots balances from silo transfers.
 
-  let beanstalk = loadBeanstalk(beanstalkAddress);
-  let beanstalk_call = Replanted.bind(beanstalkAddress);
+  let beanstalk = loadBeanstalk(protocol);
+  let beanstalk_call = Replanted.bind(protocol);
 
   for (let i = 0; i < beanstalk.farmersToUpdate.length; i++) {
     let account = Address.fromString(beanstalk.farmersToUpdate[i]);
     let silo = loadSilo(account);
     updateStalkBalances(
+      protocol,
       account,
-      season,
       beanstalk_call.balanceOfStalk(account).minus(silo.stalk),
       beanstalk_call.balanceOfRoots(account).minus(silo.roots),
       timestamp,
-      blockNumber
+      false
     );
     // balanceOfSeeds function was removed in silov2
-    updateSeedsBalances(beanstalkAddress, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, false);
+    updateSeedsBalances(protocol, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, false);
   }
   beanstalk.farmersToUpdate = [];
   beanstalk.save();

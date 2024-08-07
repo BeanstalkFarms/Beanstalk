@@ -140,14 +140,7 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
 // Germination completes, germinating stalk turns into stalk.
 // The removal of Germinating stalk would have already been handled from a separate emission
 export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedFromGermination): void {
-  updateStalkBalances(
-    event.address,
-    getCurrentSeason(event.address),
-    event.params.deltaStalk,
-    event.params.deltaRoots,
-    event.block.timestamp,
-    event.block.number
-  );
+  updateStalkBalances(event.address, event.address, event.params.deltaStalk, event.params.deltaRoots, event.block.timestamp);
 }
 
 // WHITELIST / GAUGE CONFIGURATION SETTINGS //

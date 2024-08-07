@@ -71,9 +71,9 @@ export function loadField(account: Address): Field {
   return field;
 }
 
-export function getHarvestableIndex(beanstalk: Address): BigInt {
-  let bs = loadBeanstalk(beanstalk);
-  let season = loadSeason(beanstalk, BigInt.fromI32(bs.lastSeason));
+export function getHarvestableIndex(protocol: Address): BigInt {
+  let bs = loadBeanstalk(protocol);
+  let season = loadSeason(protocol, BigInt.fromI32(bs.lastSeason));
   return season.harvestableIndex;
 }
 

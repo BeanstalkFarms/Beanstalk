@@ -3,8 +3,8 @@ import { Silo, SiloDailySnapshot, SiloHourlySnapshot } from "../../../generated/
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
-export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(beanstalk);
+export function takeSiloSnapshots(silo: Silo, protocol: Address, timestamp: BigInt): void {
+  const currentSeason = getCurrentSeason(protocol);
 
   const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
   const day = BigInt.fromI32(dayFromTimestamp(timestamp));
@@ -132,8 +132,8 @@ export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: Big
 }
 
 // Set case id on hourly snapshot. assumption is that the snapshot was already created
-export function setHourlyCaseId(caseId: BigInt, silo: Silo, beanstalk: Address): void {
-  const currentSeason = getCurrentSeason(beanstalk);
+export function setHourlyCaseId(caseId: BigInt, silo: Silo, protocol: Address): void {
+  const currentSeason = getCurrentSeason(protocol);
   const hourly = SiloHourlySnapshot.load(silo.id + "-" + currentSeason.toString())!;
   hourly.caseId = caseId;
   hourly.save();

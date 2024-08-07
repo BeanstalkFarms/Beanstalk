@@ -20,11 +20,12 @@ import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPr
 import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleSunrise(event: Sunrise): void {
+  // Update any farmers that had silo transfers from the prior season.
+  // This is intentionally done before beanstalk.lastSeason gets updated
+  updateStalkWithCalls(event.address, event.block.timestamp);
+
   let currentSeason = event.params.season.toI32();
   let season = loadSeason(event.address, event.params.season);
-
-  // Update any farmers that had silo transfers from the prior season
-  updateStalkWithCalls(currentSeason - 1, event.block.timestamp, event.block.number);
 
   // Update season metrics
   if (event.params.season == BigInt.fromI32(6075)) {
