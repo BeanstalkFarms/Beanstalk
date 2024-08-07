@@ -51,7 +51,6 @@ class AddRemoveDepositsParams {
 }
 
 function addDeposits(params: AddRemoveDepositsParams): void {
-  let currentSeason = getCurrentSeason(params.event.address);
   for (let i = 0; i < params.amounts.length; ++i) {
     let deposit = loadSiloDeposit({
       account: params.account,
@@ -72,54 +71,21 @@ function addDeposits(params: AddRemoveDepositsParams): void {
     updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event);
     deposit.save();
 
-    // TODO: these add/remove deposit to silo methods should be refactored such that it only needs to be called
-    // at the farmer level, and that will recur on the system level (only when called for farmer).
-    // In that case, the addDepositToSiloAsset method should not need to be called here, it can be called in the
-    // underlying method. I believe it needs to be refactored also
-
     // Ensure that a Farmer entity is set up for this account.
     loadFarmer(params.account);
 
-    // Update overall silo totals
-    addDepositToSilo(
+    updateDepositInSilo(
       params.event.address,
-      currentSeason,
-      params.bdvs![i],
-      addDepositToSiloAsset(
-        params.event.address,
-        params.token,
-        currentSeason,
-        params.bdvs![i],
-        params.amounts[i],
-        params.event.block.timestamp,
-        params.event.block.number
-      ),
-      params.event.block.timestamp,
-      params.event.block.number
-    );
-
-    // Update farmer silo totals
-    addDepositToSilo(
       params.account,
-      currentSeason,
+      params.token,
+      params.amounts[i],
       params.bdvs![i],
-      addDepositToSiloAsset(
-        params.account,
-        params.token,
-        currentSeason,
-        params.bdvs![i],
-        params.amounts[i],
-        params.event.block.timestamp,
-        params.event.block.number
-      ),
-      params.event.block.timestamp,
-      params.event.block.number
+      params.event.block.timestamp
     );
   }
 }
 
 function removeDeposits(params: AddRemoveDepositsParams): void {
-  let currentSeason = getCurrentSeason(params.event.address);
   for (let i = 0; i < params.amounts.length; ++i) {
     let deposit = loadSiloDeposit({
       account: params.account,
@@ -137,39 +103,13 @@ function removeDeposits(params: AddRemoveDepositsParams): void {
     deposit.save();
 
     // Update protocol totals
-    removeDepositFromSilo(
+    updateDepositInSilo(
       params.event.address,
-      currentSeason,
-      removedBdv,
-      removeDepositFromSiloAsset(
-        params.event.address,
-        params.token,
-        currentSeason,
-        removedBdv,
-        params.amounts[i],
-        params.event.block.timestamp,
-        params.event.block.number
-      ),
-      params.event.block.timestamp,
-      params.event.block.number
-    );
-
-    // Update farmer totals
-    removeDepositFromSilo(
       params.account,
-      currentSeason,
-      removedBdv,
-      removeDepositFromSiloAsset(
-        params.account,
-        params.token,
-        currentSeason,
-        removedBdv,
-        params.amounts[i],
-        params.event.block.timestamp,
-        params.event.block.number
-      ),
-      params.event.block.timestamp,
-      params.event.block.number
+      params.token,
+      params.amounts[i].neg(),
+      removedBdv.neg(),
+      params.event.block.timestamp
     );
   }
 }
@@ -328,14 +268,14 @@ export function handlePlant(event: Plant): void {
 
   // Remove the asset-only amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
-  removeDepositFromSiloAsset(
+  updateDepositInSiloAsset(
+    event.address,
     event.address,
     BEAN_ERC20,
     currentSeason,
     event.params.beans,
     event.params.beans,
-    event.block.timestamp,
-    event.block.number
+    event.block.timestamp
   );
 }
 
@@ -359,120 +299,79 @@ export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   beanstalk.save();
 }
 
-// TODO: consider consolidating both add/remove deposit methods here
-function addDepositToSilo(
-  account: Address,
-  season: i32,
-  bdv: BigInt,
-  grownStalkPerBDV: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
-): void {
-  let silo = loadSilo(account);
-
-  silo.depositedBDV = silo.depositedBDV.plus(bdv);
-  // Individual farmer seeds cannot be directly tracked due to seed gauge
-  if (account == BEANSTALK) {
-    silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(grownStalkPerBDV);
-  }
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
-  silo.save();
-}
-
-function removeDepositFromSilo(
-  account: Address,
-  season: i32,
-  bdv: BigInt,
-  grownStalkPerBDV: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
-): void {
-  let silo = loadSilo(account);
-
-  silo.depositedBDV = silo.depositedBDV.minus(bdv);
-  // Individual farmer seeds cannot be directly tracked due to seed gauge
-  // TODO: event originator in method signature (required for recursion also)
-  if (account == BEANSTALK) {
-    silo.grownStalkPerSeason = silo.grownStalkPerSeason.minus(grownStalkPerBDV);
-  }
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
-  silo.save();
-}
-
-export function addDepositToSiloAsset(
+function updateDepositInSilo(
+  protocol: Address,
   account: Address,
   token: Address,
-  season: i32,
-  bdv: BigInt,
-  amount: BigInt,
+  deltaAmount: BigInt,
+  deltaBdv: BigInt,
   timestamp: BigInt,
-  blockNumber: BigInt
+  recurs: boolean = true
+): void {
+  if (recurs && account != protocol) {
+    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+  }
+  let silo = loadSilo(account);
+  silo.depositedBDV = silo.depositedBDV.plus(deltaBdv);
+
+  const newSeedStalk = updateDepositInSiloAsset(
+    protocol,
+    account,
+    token,
+    getCurrentSeason(protocol),
+    deltaAmount,
+    deltaBdv,
+    timestamp,
+    false
+  );
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == protocol) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(newSeedStalk);
+  }
+  takeSiloSnapshots(silo, protocol, timestamp);
+  silo.save();
+}
+
+export function updateDepositInSiloAsset(
+  protocol: Address,
+  account: Address,
+  token: Address,
+  season: i32, // season will be removed upon snapshot refactor
+  deltaAmount: BigInt,
+  deltaBdv: BigInt,
+  timestamp: BigInt,
+  recurs: boolean = true
 ): BigInt {
+  if (recurs && account != protocol) {
+    updateDepositInSiloAsset(protocol, protocol, token, season, deltaAmount, deltaBdv, timestamp);
+  }
   let asset = loadSiloAsset(account, token);
   let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
   let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  let newGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
+  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
-  asset.depositedBDV = asset.depositedBDV.plus(bdv);
-  asset.depositedAmount = asset.depositedAmount.plus(amount);
+  asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
+  asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);
   asset.save();
 
-  assetHourly.deltaDepositedBDV = assetHourly.deltaDepositedBDV.plus(bdv);
+  assetHourly.deltaDepositedBDV = assetHourly.deltaDepositedBDV.plus(deltaBdv);
   assetHourly.depositedBDV = asset.depositedBDV;
-  assetHourly.deltaDepositedAmount = assetHourly.deltaDepositedAmount.plus(amount);
+  assetHourly.deltaDepositedAmount = assetHourly.deltaDepositedAmount.plus(deltaAmount);
   assetHourly.depositedAmount = asset.depositedAmount;
   assetHourly.updatedAt = timestamp;
   assetHourly.save();
 
   assetDaily.season = season;
-  assetDaily.deltaDepositedBDV = assetDaily.deltaDepositedBDV.plus(bdv);
+  assetDaily.deltaDepositedBDV = assetDaily.deltaDepositedBDV.plus(deltaBdv);
   assetDaily.depositedBDV = asset.depositedBDV;
-  assetDaily.deltaDepositedAmount = assetDaily.deltaDepositedAmount.plus(amount);
+  assetDaily.deltaDepositedAmount = assetDaily.deltaDepositedAmount.plus(deltaAmount);
   assetDaily.depositedAmount = asset.depositedAmount;
   assetDaily.updatedAt = timestamp;
   assetDaily.save();
 
   return newGrownStalk;
-}
-
-function removeDepositFromSiloAsset(
-  account: Address,
-  token: Address,
-  season: i32,
-  bdv: BigInt,
-  amount: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
-): BigInt {
-  let asset = loadSiloAsset(account, token);
-  let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
-  let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
-
-  let tokenSettings = loadWhitelistTokenSetting(token);
-  let removedGrownStalk = bdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
-
-  asset.depositedBDV = asset.depositedBDV.minus(bdv);
-  asset.depositedAmount = asset.depositedAmount.minus(amount);
-  asset.save();
-
-  assetHourly.deltaDepositedBDV = assetHourly.deltaDepositedBDV.minus(bdv);
-  assetHourly.depositedBDV = asset.depositedBDV;
-  assetHourly.deltaDepositedAmount = assetHourly.deltaDepositedAmount.minus(amount);
-  assetHourly.depositedAmount = asset.depositedAmount;
-  assetHourly.updatedAt = timestamp;
-  assetHourly.save();
-
-  assetDaily.season = season;
-  assetDaily.deltaDepositedBDV = assetDaily.deltaDepositedBDV.minus(bdv);
-  assetDaily.depositedBDV = asset.depositedBDV;
-  assetDaily.deltaDepositedAmount = assetDaily.deltaDepositedAmount.minus(amount);
-  assetDaily.depositedAmount = asset.depositedAmount;
-  assetDaily.updatedAt = timestamp;
-  assetDaily.save();
-
-  return removedGrownStalk;
 }
 
 function addWithdrawToSiloAsset(

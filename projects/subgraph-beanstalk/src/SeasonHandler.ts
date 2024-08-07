@@ -13,7 +13,7 @@ import {
   loadPodMarketplaceHourlySnapshot,
   updateExpiredPlots
 } from "./utils/PodMarketplace";
-import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
+import { updateDepositInSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
 import { loadSilo, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/Silo";
 import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
@@ -97,14 +97,14 @@ export function handleReward(event: Reward): void {
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
 
-  addDepositToSiloAsset(
+  updateDepositInSiloAsset(
+    event.address,
     event.address,
     BEAN_ERC20,
     event.params.season.toI32(),
     event.params.toSilo,
     event.params.toSilo,
-    event.block.timestamp,
-    event.block.number
+    event.block.timestamp
   );
 }
 
