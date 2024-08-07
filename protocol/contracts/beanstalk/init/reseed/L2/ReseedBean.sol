@@ -8,10 +8,11 @@ pragma experimental ABIEncoderV2;
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {C} from "contracts/C.sol";
+import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import "forge-std/console.sol";
 
 /**
@@ -22,27 +23,14 @@ import "forge-std/console.sol";
  */
 interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
-    function initNoWellToken() external;
-}
 
-interface IAquifer {
-    function boreWell(
-        address implementation,
-        bytes calldata immutableData,
-        bytes calldata initFunctionCall,
-        bytes32 salt
-    ) external returns (address wellAddress);
+    function initNoWellToken() external;
 }
 
 contract ReseedBean {
     struct ExternalUnripeHolders {
         address account;
         uint256 amount;
-    }
-
-    struct Call {
-        address target;
-        bytes data;
     }
 
     struct WellAmountData {
@@ -75,11 +63,13 @@ contract ReseedBean {
 
     // TODO: change once addresses are finalized.
     address internal constant AQUIFER = address(0xBA51AAAA95aeEFc1292515b36D86C51dC7877773);
-    address internal constant CONSTANT_PRODUCT_2 = address(0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26);
+    address internal constant CONSTANT_PRODUCT_2 =
+        address(0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26);
     // TODO: Replace with actual address.
     address internal constant STABLE_2 = address(0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26);
     // TODO: Replace with actual address.
-    address internal constant UPGRADEABLE_WELL_IMPLEMENTATION = address(0x8685A763F97b6228e4CF65F8B6993BFecc932e2b);
+    address internal constant UPGRADEABLE_WELL_IMPLEMENTATION =
+        address(0x8685A763F97b6228e4CF65F8B6993BFecc932e2b);
     address internal constant MULTIFLOW_PUMP = address(0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17);
 
     // BEAN_ETH parameters.
@@ -191,14 +181,20 @@ contract ReseedBean {
         string memory name,
         string memory symbol
     ) internal {
-        
         // Encode well data
-        (bytes memory immutableData, bytes memory initData) =
-            encodeWellDeploymentData(AQUIFER, tokens, wellFunction, pumps);
+        (bytes memory immutableData, bytes memory initData) = encodeWellDeploymentData(
+            AQUIFER,
+            tokens,
+            wellFunction,
+            pumps
+        );
 
         // Bore upgradeable well
         address _well = IAquifer(AQUIFER).boreWell(
-            UPGRADEABLE_WELL_IMPLEMENTATION, immutableData, initData, salt
+            UPGRADEABLE_WELL_IMPLEMENTATION,
+            immutableData,
+            initData,
+            salt
         );
 
         // Deploy proxy
@@ -216,7 +212,7 @@ contract ReseedBean {
         tokens[0] = IERC20(bean);
         tokens[1] = IERC20(WETH);
 
-        // cp2 
+        // cp2
         Call memory cp2;
         cp2.target = CONSTANT_PRODUCT_2;
 
@@ -225,15 +221,16 @@ contract ReseedBean {
         uint256 stableDecimals = 1e6;
         bytes memory stable2Data = abi.encode(beanDecimals, stableDecimals);
         Call memory stable2 = Call(STABLE_2, stable2Data);
-        
+
         // pump
         Call[] memory pumps = new Call[](1);
         // Note: mfpData will need to be updated based on the L2 block time.
-        bytes memory mfpData = hex"3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        bytes
+            memory mfpData = hex"3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         pumps[0] = Call(MULTIFLOW_PUMP, mfpData);
 
         // BEAN/ETH well
-        deployUpgradebleWell( 
+        deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             cp2, // well function (Call)
             pumps, // pumps (Call[])
@@ -298,7 +295,6 @@ contract ReseedBean {
             BEAN_USDT_NAME,
             BEAN_USDT_SYMBOL
         );
-
     }
 
     /////////////////////// Helper Functions ///////////////////////
@@ -309,22 +305,21 @@ contract ReseedBean {
         Call memory _wellFunction,
         Call[] memory _pumps
     ) internal pure returns (bytes memory immutableData) {
-        
         immutableData = abi.encodePacked(
-            _aquifer,                   // aquifer address
-            _tokens.length,             // number of tokens
-            _wellFunction.target,       // well function address
-            _wellFunction.data.length,  // well function data length
-            _pumps.length,              // number of pumps
-            _tokens,                    // tokens array
-            _wellFunction.data         // well function data (bytes)
+            _aquifer, // aquifer address
+            _tokens.length, // number of tokens
+            _wellFunction.target, // well function address
+            _wellFunction.data.length, // well function data length
+            _pumps.length, // number of pumps
+            _tokens, // tokens array
+            _wellFunction.data // well function data (bytes)
         );
         for (uint256 i; i < _pumps.length; ++i) {
             immutableData = abi.encodePacked(
-                immutableData,            // previously packed pumps
-                _pumps[i].target,       // pump address
-                _pumps[i].data.length,  // pump data length
-                _pumps[i].data          // pump data (bytes)
+                immutableData, // previously packed pumps
+                _pumps[i].target, // pump address
+                _pumps[i].data.length, // pump data length
+                _pumps[i].data // pump data (bytes)
             );
         }
     }
