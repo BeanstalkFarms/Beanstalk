@@ -106,7 +106,7 @@ library LibFlood {
     function handleRainAndSops(
         address account,
         uint32 lastUpdate,
-        uint128 firstGerminatingRoots
+        uint256 firstGerminatingRoots
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
@@ -259,7 +259,6 @@ library LibFlood {
         quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
     }
 
-    // Reviewer note: This works, but there's got to be a way to make this more gas efficient
     function quickSort(
         WellDeltaB[] memory arr,
         int left,
@@ -269,13 +268,29 @@ library LibFlood {
 
         // Choose the median of left, right, and middle as pivot (improves performance on random data)
         uint mid = uint(left) + (uint(right) - uint(left)) / 2;
-        WellDeltaB memory pivot = arr[uint(left)].deltaB > arr[uint(mid)].deltaB
-            ? (
-                arr[uint(left)].deltaB < arr[uint(right)].deltaB
-                    ? arr[uint(left)]
-                    : arr[uint(right)]
-            )
-            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
+        WellDeltaB memory pivot;
+
+        if (arr[uint(left)].deltaB > arr[uint(mid)].deltaB) {
+            if (arr[uint(left)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(left)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(mid)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(mid)];
+                }
+            }
+        } else {
+            if (arr[uint(mid)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(mid)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(left)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(left)];
+                }
+            }
+        }
 
         int i = left;
         int j = right;
@@ -290,7 +305,7 @@ library LibFlood {
         }
 
         if (left < j) {
-            return quickSort(arr, left, j);
+            arr = quickSort(arr, left, j);
         }
         if (i < right) {
             return quickSort(arr, i, right);

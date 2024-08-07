@@ -449,7 +449,7 @@ library LibSilo {
         uint32 currentSeason = s.sys.season.current;
 
         // End account germination.
-        uint128 firstGerminatingRoots;
+        uint256 firstGerminatingRoots;
         if (lastUpdate < currentSeason) {
             firstGerminatingRoots = LibGerminate.endAccountGermination(
                 account,

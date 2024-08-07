@@ -109,7 +109,7 @@ contract FloodTest is TestHelper {
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
-        assertEq(rainRoots, 10004000000000000000000000);
+        assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
         bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
@@ -134,7 +134,7 @@ contract FloodTest is TestHelper {
         bs.mow(users[3], C.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[3]);
-        assertEq(rainRoots, 500000000000000000000000000);
+        assertEq(rainRoots, 500000000000000000000000000000000);
 
         season.droughtSunrise();
 
@@ -167,7 +167,7 @@ contract FloodTest is TestHelper {
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
-        assertEq(rainRoots, 10004000000000000000000000);
+        assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
         bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 1_000e6);
@@ -190,14 +190,14 @@ contract FloodTest is TestHelper {
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
-        assertEq(rainRoots, 10004000000000000000000000);
+        assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
         bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
         bs.mow(users[1], C.BEAN);
 
         // user[1] should be down by 500 rain roots
-        assertEq(bs.balanceOfRainRoots(users[1]), 5004000000000000000000000);
+        assertEq(bs.balanceOfRainRoots(users[1]), 5004000000000000000000000000000);
     }
 
     function testDoesNotBurnRainRootsUponTransferIfExtraRootsAvailable() public {
@@ -211,7 +211,7 @@ contract FloodTest is TestHelper {
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
-        assertEq(rainRoots, 10004000000000000000000000);
+        assertEq(rainRoots, 10004000000000000000000000000000);
 
         // do another deposit
         vm.prank(users[1]);
@@ -222,17 +222,17 @@ contract FloodTest is TestHelper {
         season.siloSunrise(0);
 
         // verify roots went up
-        assertEq(bs.balanceOfRoots(users[1]), 20008000000000000000000000);
+        assertEq(bs.balanceOfRoots(users[1]), 20008000000000000000000000000000);
 
         // verify rain roots stayed the same
-        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000);
+        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
 
         vm.prank(users[1]);
         bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
         bs.mow(users[1], C.BEAN);
 
         // user should have full rain roots, since they had non-rain roots that could be removed before
-        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000);
+        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
     }
 
     function testGerminationRainRoots() public {
@@ -739,13 +739,26 @@ contract FloodTest is TestHelper {
         wells[1] = LibFlood.WellDeltaB(address(1), 200);
         wells[2] = LibFlood.WellDeltaB(address(2), -300);
         wells[3] = LibFlood.WellDeltaB(address(3), 400);
-        wells[4] = LibFlood.WellDeltaB(address(4), -500);
+        wells[4] = LibFlood.WellDeltaB(address(4), 500);
         wells = LibFlood.quickSort(wells, 0, right);
-        assertEq(wells[0].deltaB, 400);
-        assertEq(wells[1].deltaB, 200);
-        assertEq(wells[2].deltaB, 100);
-        assertEq(wells[3].deltaB, -300);
-        assertEq(wells[4].deltaB, -500);
+        assertEq(wells[0].deltaB, 500);
+        assertEq(wells[1].deltaB, 400);
+        assertEq(wells[2].deltaB, 200);
+        assertEq(wells[3].deltaB, 100);
+        assertEq(wells[4].deltaB, -300);
+
+        // these values are examples from the codehawks report
+        wells[0] = LibFlood.WellDeltaB(address(0), 39);
+        wells[1] = LibFlood.WellDeltaB(address(1), 6);
+        wells[2] = LibFlood.WellDeltaB(address(2), 27);
+        wells[3] = LibFlood.WellDeltaB(address(3), -14);
+        wells[4] = LibFlood.WellDeltaB(address(4), 15);
+        wells = LibFlood.quickSort(wells, 0, right);
+        assertEq(wells[0].deltaB, 39);
+        assertEq(wells[1].deltaB, 27);
+        assertEq(wells[2].deltaB, 15);
+        assertEq(wells[3].deltaB, 6);
+        assertEq(wells[4].deltaB, -14);
 
         wells = new LibFlood.WellDeltaB[](2);
         right = int(wells.length - 1);
@@ -760,6 +773,50 @@ contract FloodTest is TestHelper {
         wells = LibFlood.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
+
+        wells = new LibFlood.WellDeltaB[](20);
+        right = int(wells.length - 1);
+        wells[0] = LibFlood.WellDeltaB(address(0), -1);
+        wells[1] = LibFlood.WellDeltaB(address(1), 2);
+        wells[2] = LibFlood.WellDeltaB(address(2), -3);
+        wells[3] = LibFlood.WellDeltaB(address(3), 4);
+        wells[4] = LibFlood.WellDeltaB(address(4), -5);
+        wells[5] = LibFlood.WellDeltaB(address(5), 6);
+        wells[6] = LibFlood.WellDeltaB(address(6), -7);
+        wells[7] = LibFlood.WellDeltaB(address(7), 8);
+        wells[8] = LibFlood.WellDeltaB(address(8), -9);
+        wells[9] = LibFlood.WellDeltaB(address(9), 10);
+        wells[10] = LibFlood.WellDeltaB(address(10), -11);
+        wells[11] = LibFlood.WellDeltaB(address(11), 12);
+        wells[12] = LibFlood.WellDeltaB(address(12), -13);
+        wells[13] = LibFlood.WellDeltaB(address(13), 14);
+        wells[14] = LibFlood.WellDeltaB(address(14), -15);
+        wells[15] = LibFlood.WellDeltaB(address(15), 16);
+        wells[16] = LibFlood.WellDeltaB(address(16), -17);
+        wells[17] = LibFlood.WellDeltaB(address(17), 18);
+        wells[18] = LibFlood.WellDeltaB(address(18), -19);
+        wells[19] = LibFlood.WellDeltaB(address(19), 20);
+        wells = LibFlood.quickSort(wells, 0, right);
+        assertEq(wells[0].deltaB, 20);
+        assertEq(wells[1].deltaB, 18);
+        assertEq(wells[2].deltaB, 16);
+        assertEq(wells[3].deltaB, 14);
+        assertEq(wells[4].deltaB, 12);
+        assertEq(wells[5].deltaB, 10);
+        assertEq(wells[6].deltaB, 8);
+        assertEq(wells[7].deltaB, 6);
+        assertEq(wells[8].deltaB, 4);
+        assertEq(wells[9].deltaB, 2);
+        assertEq(wells[10].deltaB, -1);
+        assertEq(wells[11].deltaB, -3);
+        assertEq(wells[12].deltaB, -5);
+        assertEq(wells[13].deltaB, -7);
+        assertEq(wells[14].deltaB, -9);
+        assertEq(wells[15].deltaB, -11);
+        assertEq(wells[16].deltaB, -13);
+        assertEq(wells[17].deltaB, -15);
+        assertEq(wells[18].deltaB, -17);
+        assertEq(wells[19].deltaB, -19);
     }
 
     function test_notGerminated() public {
