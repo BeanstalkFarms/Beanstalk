@@ -38,6 +38,7 @@ import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as Dewhitelist
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { stemFromSeason } from "./utils/contracts/SiloCalculations";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -63,12 +64,13 @@ function addDeposits(params: AddRemoveDepositsParams): void {
     // Set granular deposit version type
     if (params.depositVersion == "season") {
       deposit.depositVersion = "season";
-      // TODO: fill stem according to seasonToStem
+      // Fill stem according to legacy conversion
+      deposit.stem = stemFromSeason(params.seasons![i].toI32(), params.token);
     } else {
       deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
     }
 
-    updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event);
+    deposit = updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event)!;
     deposit.save();
 
     // Ensure that a Farmer entity is set up for this account.
@@ -98,9 +100,11 @@ function removeDeposits(params: AddRemoveDepositsParams): void {
     // Use bdv if it was provided (v2 events dont provide bdv), otherwise infer
     let removedBdv = params.bdvs != null ? params.bdvs![i] : params.amounts[i].times(deposit.depositedBDV).div(deposit.depositedAmount);
 
-    // TODO: if amount goes to zero, instead delete the deposit entirely.
-    updateDeposit(deposit, params.amounts[i].neg(), removedBdv.neg(), params.event);
-    deposit.save();
+    // If the amount goes to zero, the deposit is deleted and not returned
+    const updatedDeposit = updateDeposit(deposit, params.amounts[i].neg(), removedBdv.neg(), params.event);
+    if (updatedDeposit !== null) {
+      updatedDeposit.save();
+    }
 
     // Update protocol totals
     updateDepositInSilo(

@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, ethereum, store } from "@graphprotocol/graph-ts";
 import {
   Silo,
   SiloDeposit,
@@ -228,9 +228,14 @@ export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
   return deposit;
 }
 
-export function updateDeposit(deposit: SiloDeposit, amount: BigInt, bdv: BigInt, event: ethereum.Event): void {
-  deposit.depositedAmount = deposit.depositedAmount.plus(amount);
-  deposit.depositedBDV = deposit.depositedBDV.plus(bdv);
+// Updates the given SiloDeposit with new amounts/bdv. If the deposit was fully withdrawn, delete the SiloDeposit.
+export function updateDeposit(deposit: SiloDeposit, deltaAmount: BigInt, deltaBdv: BigInt, event: ethereum.Event): SiloDeposit | null {
+  deposit.depositedAmount = deposit.depositedAmount.plus(deltaAmount);
+  if (deposit.depositedAmount <= ZERO_BI) {
+    store.remove("SiloDeposit", deposit.id);
+    return null;
+  }
+  deposit.depositedBDV = deposit.depositedBDV.plus(deltaBdv);
   let depositHashes = deposit.hashes;
   depositHashes.push(event.transaction.hash.toHexString());
   deposit.hashes = depositHashes;
@@ -238,6 +243,7 @@ export function updateDeposit(deposit: SiloDeposit, amount: BigInt, bdv: BigInt,
   deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
   deposit.updatedBlock = event.block.number;
   deposit.updatedAt = event.block.timestamp;
+  return deposit;
 }
 
 /* ===== Withdraw Entities ===== */

@@ -3,7 +3,7 @@ import { Field, FieldDailySnapshot, FieldHourlySnapshot, Plot } from "../../gene
 import { BI_MAX, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ADDRESS_ZERO, BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
-import { BeanstalkPrice_try_price } from "./BeanstalkPrice";
+import { BeanstalkPrice_try_price } from "./contracts/BeanstalkPrice";
 import { loadBeanstalk, loadSeason } from "./Beanstalk";
 import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 

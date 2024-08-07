@@ -16,7 +16,7 @@ import {
 import { updateDepositInSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
 import { loadSilo, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/Silo";
-import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
+import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/contracts/BeanstalkPrice";
 import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleSunrise(event: Sunrise): void {
