@@ -3,7 +3,9 @@ import { table } from "table";
 
 export const balance = async (sdk, { account, symbol }) => {
   console.log(`${chalk.bold.whiteBright("Account:")} ${chalk.greenBright(account)}`);
-  let res = [[chalk.bold("Token"), chalk.bold("Internal"), chalk.bold("External"), chalk.bold("Total")]];
+  let res = [
+    [chalk.bold("Token"), chalk.bold("Internal"), chalk.bold("External"), chalk.bold("Total")]
+  ];
 
   if (symbol) {
     res.push(await getBal(sdk, symbol, account));
@@ -18,7 +20,7 @@ export const balance = async (sdk, { account, symbol }) => {
         "DAI",
         "CRV3",
         "UNRIPE_BEAN",
-        "UNRIPE_BEAN_WETH",
+        "UNRIPE_BEAN_wstETH",
         "BEAN_CRV3_LP",
         "BEAN_ETH_WELL_LP",
         "ROOT"

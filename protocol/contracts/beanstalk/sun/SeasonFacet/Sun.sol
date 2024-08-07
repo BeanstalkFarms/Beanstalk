@@ -8,6 +8,10 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {Distribution} from "./Distribution.sol";
 import {LibShipping} from "contracts/libraries/LibShipping.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title Sun
@@ -18,6 +22,7 @@ contract Sun is Oracle, Distribution {
     using SafeCast for uint256;
     using LibRedundantMath256 for uint256;
     using LibRedundantMath128 for uint128;
+    using SignedMath for int256;
 
     /// @dev When the Pod Rate is high, issue less Soil.
     uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
@@ -51,7 +56,7 @@ contract Sun is Oracle, Distribution {
         }
         // Below peg
         else {
-            setSoil(uint256(-deltaB));
+            setSoilBelowPeg(deltaB);
             s.sys.season.abovePeg = false;
         }
     }
@@ -78,6 +83,38 @@ contract Sun is Oracle, Distribution {
         setSoil(newSoil);
     }
 
+    /**
+    * @param twaDeltaB The time weighted average precalculated deltaB 
+    * from {Oracle.stepOracle} at the start of the season.
+    * @dev When below peg, Beanstalk wants to issue debt for beans to be sown(burned),
+    * and removed from the supply, pushing the price up. To avoid soil over issuance,
+    * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
+    * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
+    * at the start of the season, and pick the minimum of the two.
+    */
+    function setSoilBelowPeg(int256 twaDeltaB) internal {
+
+        // Calculate deltaB from instantaneous reserves of all whitelisted Wells.
+        int256 instDeltaB;
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            int256 wellInstDeltaB = LibWellMinting.instantaneousDeltaB(tokens[i]);
+            instDeltaB += wellInstDeltaB;
+        }
+
+        // Set new soil.
+        if (instDeltaB < 0) {
+            setSoil(Math.min(uint256(-twaDeltaB), uint256(-instDeltaB)));
+        } else {
+            setSoil(uint256(-twaDeltaB));
+        }
+        
+    }
+
+    /**
+    * @param amount The new amount of Soil available.
+    * @dev Sets the amount of Soil available and emits a Soil event.
+    */
     function setSoil(uint256 amount) internal {
         s.sys.soil = amount.toUint128();
         emit Soil(s.sys.season.current, amount.toUint128());

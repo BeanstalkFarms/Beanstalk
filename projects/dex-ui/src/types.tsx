@@ -4,6 +4,8 @@ export type FC<T extends any> = React.FC<React.PropsWithChildren<T>>;
 
 export type Address = `0x${string}`;
 
+export type AddressIsh = Address | string | undefined;
+
 export type BasinAPIResponse = {
   ticker_id: `${Address}_${Address}`;
   base_currency: Address;

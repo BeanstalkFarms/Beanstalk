@@ -27,7 +27,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @title LibConvert
- * @author Publius
+ * @author Publius, deadmanwalking
  */
 library LibConvert {
     using LibRedundantMath256 for uint256;
@@ -82,99 +82,130 @@ library LibConvert {
         uint256[] bdvs
     );
 
+    struct ConvertParams {
+        address toToken;
+        address fromToken;
+        uint256 fromAmount;
+        uint256 toAmount;
+        address account;
+        bool decreaseBDV;
+    }
+
     /**
      * @notice Takes in bytes object that has convert input data encoded into it for a particular convert for
      * a specified pool and returns the in and out convert amounts and token addresses and bdv
      * @param convertData Contains convert input parameters for a specified convert
+     * note account and decreaseBDV variables are initialized at the start
+     * as address(0) and false respectively and remain that way if a convert is not anti-lambda-lambda
+     * If it is anti-lambda, account is the address of the account to update the deposit
+     * and decreaseBDV is true
      */
-    function convert(
-        bytes calldata convertData
-    ) external returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+    function convert(bytes calldata convertData)
+        external
+        returns (ConvertParams memory cp)
+    {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
-        if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert.convertBeansToLP(
-                convertData
-            );
-        } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibUnripeConvert.convertLPToBeans(
-                convertData
-            );
-        } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibLambdaConvert.convert(convertData);
-        } else if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert.convertBeansToLP(convertData);
+        if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibWellConvert
+                .convertBeansToLP(convertData);
         } else if (kind == LibConvertData.ConvertKind.WELL_LP_TO_BEANS) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibWellConvert.convertLPToBeans(convertData);
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibWellConvert
+                .convertLPToBeans(convertData);
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_BEANS_TO_UNRIPE_LP) {
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibUnripeConvert
+                .convertBeansToLP(convertData);
+        } else if (kind == LibConvertData.ConvertKind.UNRIPE_LP_TO_UNRIPE_BEANS) {
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibUnripeConvert
+                .convertLPToBeans(convertData);
         } else if (kind == LibConvertData.ConvertKind.UNRIPE_TO_RIPE) {
-            (tokenOut, tokenIn, amountOut, amountIn) = LibChopConvert.convertUnripeToRipe(
-                convertData
-            );
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibChopConvert
+                .convertUnripeToRipe(convertData);
+        } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibLambdaConvert
+                .convert(convertData);
+        } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount, cp.account, cp.decreaseBDV) = LibLambdaConvert
+                .antiConvert(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
     }
 
-    function getMaxAmountIn(address tokenIn, address tokenOut) internal view returns (uint256) {
-        // Lambda -> Lambda
-        if (tokenIn == tokenOut) return type(uint256).max;
+    function getMaxAmountIn(address fromToken, address toToken)
+        internal
+        view
+        returns (uint256)
+    {   
+        // Lambda -> Lambda &
+        // Anti-Lambda -> Lambda
+        if (fromToken == toToken) 
+            return type(uint256).max;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.BEAN && tokenOut.isWell()) return LibWellConvert.beansToPeg(tokenOut);
+        if (fromToken == C.BEAN && toToken.isWell())
+            return LibWellConvert.beansToPeg(toToken);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.BEAN) return LibWellConvert.lpToPeg(tokenIn);
+        if (fromToken.isWell() && toToken == C.BEAN)
+            return LibWellConvert.lpToPeg(fromToken);
 
         // urLP Convert
-        if (tokenIn == C.UNRIPE_LP) {
+        if (fromToken == C.UNRIPE_LP){
             // UrBEANETH -> urBEAN
-            if (tokenOut == C.UNRIPE_BEAN) return LibUnripeConvert.lpToPeg();
+            if (toToken == C.UNRIPE_BEAN)
+                return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if (tokenOut == LibBarnRaise.getBarnRaiseWell()) return type(uint256).max;
+            if (toToken == LibBarnRaise.getBarnRaiseWell())
+                return type(uint256).max;
         }
 
         // urBEAN Convert
-        if (tokenIn == C.UNRIPE_BEAN) {
+        if (fromToken == C.UNRIPE_BEAN){
             // urBEAN -> urLP
-            if (tokenOut == C.UNRIPE_LP) return LibUnripeConvert.beansToPeg();
+            if (toToken == C.UNRIPE_LP)
+                return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
-            if (tokenOut == C.BEAN) return type(uint256).max;
+            if (toToken == C.BEAN)
+                return type(uint256).max;
         }
 
         revert("Convert: Tokens not supported");
     }
 
-    function getAmountOut(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn
-    ) internal view returns (uint256) {
+    function getAmountOut(address fromToken, address toToken, uint256 fromAmount)
+        internal
+        view
+        returns (uint256)
+    {
         /// urLP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
-            return LibUnripeConvert.getBeanAmountOut(amountIn);
-
+        if (fromToken == C.UNRIPE_LP && toToken == C.UNRIPE_BEAN)
+            return LibUnripeConvert.getBeanAmountOut(fromAmount);
+        
         /// urBEAN -> urLP
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
-            return LibUnripeConvert.getLPAmountOut(amountIn);
-
-        // Lambda -> Lambda
-        if (tokenIn == tokenOut) return amountIn;
+        if (fromToken == C.UNRIPE_BEAN && toToken == C.UNRIPE_LP)
+            return LibUnripeConvert.getLPAmountOut(fromAmount);
+        
+        // Lambda -> Lambda &
+        // Anti-Lambda -> Lambda
+        if (fromToken == toToken)
+            return fromAmount;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.BEAN && tokenOut.isWell())
-            return LibWellConvert.getLPAmountOut(tokenOut, amountIn);
+        if (fromToken == C.BEAN && toToken.isWell())
+            return LibWellConvert.getLPAmountOut(toToken, fromAmount);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.BEAN)
-            return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
+        if (fromToken.isWell() && toToken == C.BEAN)
+            return LibWellConvert.getBeanAmountOut(fromToken, fromAmount);
 
         // UrBEAN -> Bean
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
-            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
+        if (fromToken == C.UNRIPE_BEAN && toToken == C.BEAN)
+            return LibChopConvert.getConvertedUnderlyingOut(fromToken, fromAmount);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == C.UNRIPE_LP && tokenOut == LibBarnRaise.getBarnRaiseWell())
-            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
+        if (fromToken == C.UNRIPE_LP && toToken == LibBarnRaise.getBarnRaiseWell())
+            return LibChopConvert.getConvertedUnderlyingOut(fromToken, fromAmount);
 
         revert("Convert: Tokens not supported");
     }
