@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {C} from "contracts/C.sol";
-import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {LibUniswapOracleLibrary} from "./LibUniswapOracleLibrary.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 interface IERC20Decimals {
@@ -42,7 +42,7 @@ library LibUniswapOracle {
         (bool success, int24 tick) = consult(pool, lookback);
         if (!success) return 0;
 
-        price = OracleLibrary.getQuoteAtTick(tick, baseTokenAmount, baseToken, quoteToken);
+        price = LibUniswapOracleLibrary.getQuoteAtTick(tick, oneToken, token1, token2);
 
         uint256 baseTokenDecimals = IERC20Decimals(baseToken).decimals();
         uint256 quoteTokenDecimals = IERC20Decimals(quoteToken).decimals();

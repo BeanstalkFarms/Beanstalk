@@ -32,11 +32,7 @@ import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Prices"
 import { loadSilo } from "../src/utils/SiloEntities";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { dayFromTimestamp } from "../src/utils/Dates";
-<<<<<<< HEAD
-import { setSeason } from "./event-mocking/Season";
-=======
 import { setSeason } from "./utils/Season";
->>>>>>> master
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 

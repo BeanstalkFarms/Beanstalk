@@ -6,13 +6,7 @@ export const ZERO_BI = BigInt.fromI32(0);
 export const ONE_BI = BigInt.fromI32(1);
 export const BI_6 = BigInt.fromI32(6);
 export const BI_10 = BigInt.fromI32(10);
-<<<<<<< HEAD
-export const BI_MAX = BigInt.fromUnsignedBytes(
-  Bytes.fromHexString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-);
-=======
 export const BI_MAX = BigInt.fromUnsignedBytes(Bytes.fromHexString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
->>>>>>> master
 export const ZERO_BD = BigDecimal.fromString("0");
 export const ONE_BD = BigDecimal.fromString("1");
 export const BD_10 = BigDecimal.fromString("10");
@@ -31,14 +25,7 @@ export function pow(base: BigDecimal, exponent: number): BigDecimal {
   return result;
 }
 
-<<<<<<< HEAD
-export function sqrt(
-  value: BigDecimal,
-  tolerance: BigDecimal = BigDecimal.fromString("0.0000001")
-): BigDecimal {
-=======
 export function sqrt(value: BigDecimal, tolerance: BigDecimal = BigDecimal.fromString("0.0000001")): BigDecimal {
->>>>>>> master
   if (value.equals(ZERO_BD)) {
     return ZERO_BD;
   }
@@ -54,15 +41,8 @@ export function sqrt(value: BigDecimal, tolerance: BigDecimal = BigDecimal.fromS
     // Check if the difference is within the tolerance level
     if (
       lastX.minus(x).equals(ZERO_BD) ||
-<<<<<<< HEAD
-      (lastX.minus(x).toString().startsWith("-") &&
-        lastX.minus(x).toString().substring(1) < tolerance.toString()) ||
-      (!lastX.minus(x).toString().startsWith("-") &&
-        lastX.minus(x).toString() < tolerance.toString())
-=======
       (lastX.minus(x).toString().startsWith("-") && lastX.minus(x).toString().substring(1) < tolerance.toString()) ||
       (!lastX.minus(x).toString().startsWith("-") && lastX.minus(x).toString() < tolerance.toString())
->>>>>>> master
     ) {
       break;
     }
@@ -81,13 +61,7 @@ export function toDecimal(value: BigInt, decimals: number = DEFAULT_DECIMALS): B
 
 export function toBigInt(value: BigDecimal, decimals: number = DEFAULT_DECIMALS): BigInt {
   let precision = 10 ** decimals;
-<<<<<<< HEAD
-  return BigInt.fromString(
-    value.times(BigDecimal.fromString(precision.toString())).truncate(0).toString()
-  );
-=======
   return BigInt.fromString(value.times(BigDecimal.fromString(precision.toString())).truncate(0).toString());
->>>>>>> master
 }
 
 export function emptyBigIntArray(length: i32): BigInt[] {
@@ -124,15 +98,6 @@ export function getBigDecimalArrayTotal(detail: BigDecimal[]): BigDecimal {
   return total;
 }
 
-<<<<<<< HEAD
-export function BigDecimal_isClose(
-  value: BigDecimal,
-  target: BigDecimal,
-  window: BigDecimal
-): boolean {
-  return target.minus(window) < value && value < target.plus(window);
-}
-=======
 export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window: BigDecimal): boolean {
   return target.minus(window) < value && value < target.plus(window);
 }
@@ -140,4 +105,3 @@ export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window
 export function BigDecimal_round(value: BigDecimal): BigDecimal {
   return value.plus(BigDecimal.fromString("0.5")).truncate(0);
 }
->>>>>>> master

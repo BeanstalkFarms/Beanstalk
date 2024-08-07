@@ -5,11 +5,8 @@ import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils
 import { getBeanTokenAddress, loadBean, updateInstDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
 import { DeltaBAndPrice } from "./price/Types";
-<<<<<<< HEAD
-=======
 import { getTokensForPool } from "../constants/PooledTokens";
 import { loadOrCreateToken } from "./Token";
->>>>>>> master
 
 export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
   let pool = Pool.load(poolAddress);

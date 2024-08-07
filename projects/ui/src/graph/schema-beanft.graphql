@@ -11,14 +11,11 @@ directive @entity on OBJECT
 """Defined a Subgraph ID for an object type"""
 directive @subgraphId(id: String!) on OBJECT
 
-<<<<<<< HEAD
-=======
 enum Aggregation_interval {
   day
   hour
 }
 
->>>>>>> master
 type BeaNFTUser {
   barnRaise: [Int!]
   basin: [Int!]
@@ -121,12 +118,9 @@ enum CollectionData_orderBy {
   minted
 }
 
-<<<<<<< HEAD
-=======
 "8 bytes signed integer\n"
 scalar Int8
 
->>>>>>> master
 """Defines the order direction, either ascending or descending"""
 enum OrderDirection {
   asc
@@ -255,12 +249,9 @@ type Subscription {
   ): [CollectionData!]!
 }
 
-<<<<<<< HEAD
-=======
 "A string representation of microseconds UNIX timestamp (16 digits)\n"
 scalar Timestamp
 
->>>>>>> master
 type _Block_ {
   """The hash of the block"""
   hash: Bytes
@@ -268,12 +259,9 @@ type _Block_ {
   """The block number"""
   number: Int!
 
-<<<<<<< HEAD
-=======
   """The hash of the parent block"""
   parentHash: Bytes
 
->>>>>>> master
   """Integer representation of the timestamp stored in blocks for the chain"""
   timestamp: Int
 }

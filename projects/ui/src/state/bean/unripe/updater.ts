@@ -5,16 +5,10 @@ import useChainId from '~/hooks/chain/useChainId';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenResult } from '~/util';
 import { AddressMap, ONE_BN } from '~/constants';
-<<<<<<< HEAD
-import { UNRIPE_TOKENS } from '~/constants/tokens';
-import { UnripeToken } from '~/state/bean/unripe';
-import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
-=======
 import { UNRIPE_BEAN_WETH, UNRIPE_TOKENS } from '~/constants/tokens';
 import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import BigNumber from 'bignumber.js';
->>>>>>> master
 import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {

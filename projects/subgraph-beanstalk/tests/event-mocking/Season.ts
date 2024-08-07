@@ -1,30 +1,8 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-<<<<<<< HEAD
-import { newMockEvent } from "matchstick-as/assembly/index";
-import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
-
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-import { loadBeanstalk } from "../../src/utils/Beanstalk";
-
-// Default mock to include beanstalk address
-const mockBeanstalkEvent = (): ethereum.Event => {
-  let e = changetype<ethereum.Event>(newMockEvent());
-  e.address = BEANSTALK;
-  return e;
-};
-
-export function setSeason(season: u32): void {
-  let beanstalk = loadBeanstalk(BEANSTALK);
-  beanstalk.lastSeason = season;
-  beanstalk.save();
-}
-
-=======
 import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
 
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
->>>>>>> master
 export function createSunriseEvent(season: BigInt): void {}
 export function createSeasonSnapshotEvent(
   season: i32,

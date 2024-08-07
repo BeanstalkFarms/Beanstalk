@@ -15,13 +15,6 @@ export const useTokenBalance = (token: Token | undefined) => {
     queryFn: async () => {
       if (!token) return;
 
-<<<<<<< HEAD
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: key,
-
-    queryFn: async () => {
-=======
->>>>>>> master
       let balance: TokenValue;
       if (!address) {
         balance = TokenValue.ZERO;
@@ -42,11 +35,7 @@ export const useTokenBalance = (token: Token | undefined) => {
 
       return result;
     },
-<<<<<<< HEAD
-
-=======
     enabled: !!token,
->>>>>>> master
     staleTime: 1000 * 15,
     refetchInterval: 1000 * 15,
     refetchIntervalInBackground: false,
