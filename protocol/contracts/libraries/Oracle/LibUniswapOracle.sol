@@ -42,7 +42,12 @@ library LibUniswapOracle {
         (bool success, int24 tick) = consult(pool, lookback);
         if (!success) return 0;
 
-        price = LibUniswapOracleLibrary.getQuoteAtTick(tick, oneToken, token1, token2);
+        price = LibUniswapOracleLibrary.getQuoteAtTick(
+            tick,
+            baseTokenAmount,
+            baseToken,
+            quoteToken
+        );
 
         uint256 baseTokenDecimals = IERC20Decimals(baseToken).decimals();
         uint256 quoteTokenDecimals = IERC20Decimals(quoteToken).decimals();
