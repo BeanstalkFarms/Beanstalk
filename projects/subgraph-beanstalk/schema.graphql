@@ -606,35 +606,29 @@ type Farmer @entity {
 
 type SiloDeposit @entity {
   """
-  Pre Silo V3:
-  Account - Token Address - Season
-
-  Post Silo-V3:
-  Account - Token Address - Stem
+  Account - Token Address - Deposit Version - (Season|Stem)
   """
   id: ID!
   "Farmer address"
   farmer: Farmer!
   "Token Address"
   token: String!
+  "Version of deposit. Options are season, v3, v3.1. `season` type includes those deposits which are calculated according to their silo v1 deposits pre-explout"
+  depositVersion: String!
   "Season of deposit"
-  season: Int!
-  "Stem of deposit - Introduced in Silo V3"
+  season: BigInt
+  "Stem of deposit. If this is a season deposit type, stem will be filled according to `LibLegacyTokenSilo.seasonToStem`"
   stem: BigInt
-  "Current token amount deposited"
-  amount: BigInt!
-  "Original token amount deposited"
+  "Token amount deposited"
   depositedAmount: BigInt!
-  "Token amount withdrawn"
-  withdrawnAmount: BigInt!
-  "Current BDV of the deposit"
-  bdv: BigInt!
   "Original deposited BDV"
   depositedBDV: BigInt!
-  "Withdrawn BDV"
-  withdrawnBDV: BigInt!
-  "Transaction hashes for multiple deposits in one season"
+  "Transaction hashes pertaining to this deposit"
   hashes: [String!]!
+  "Block of first deposit"
+  createdBlock: BigInt!
+  "Block when last updated"
+  updatedBlock: BigInt!
   "Timestamp of first deposit"
   createdAt: BigInt!
   "Timestamp when last updated"
@@ -656,8 +650,6 @@ type SiloWithdraw @entity {
   claimed: Boolean!
   "Token amount withdrawn"
   amount: BigInt!
-  "Transaction hash of withdrawal"
-  hashes: [String!]!
   "Timestamp created"
   createdAt: BigInt!
 }

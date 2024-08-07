@@ -44,8 +44,8 @@ describe("Mocked Events", () => {
       handleRemoveDeposit(newRemoveDepositEvent);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "500000000");
-      assert.fieldEquals("SiloDeposit", account + "-" + token + "-6100", "withdrawnAmount", "500000000");
-      assert.fieldEquals("SiloDeposit", account + "-" + token + "-6100", "withdrawnBDV", "500000000");
+      assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedAmount", "500000000");
+      assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedBDV", "500000000");
       assert.fieldEquals("SiloAsset", account + "-" + token, "depositedBDV", "500000000");
       assert.fieldEquals("SiloAsset", account + "-" + token, "depositedAmount", "500000000");
     });
@@ -67,8 +67,8 @@ describe("Mocked Events", () => {
       handleRemoveDeposit(secondRemoveDepositEvent);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "250000000");
-      assert.fieldEquals("SiloDeposit", account + "-" + token + "-6100", "withdrawnAmount", "750000000");
-      assert.fieldEquals("SiloDeposit", account + "-" + token + "-6100", "withdrawnBDV", "750000000");
+      assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedAmount", "250000000");
+      assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedBDV", "250000000");
       assert.fieldEquals("SiloAsset", account + "-" + token, "depositedBDV", "250000000");
       assert.fieldEquals("SiloAsset", account + "-" + token, "depositedAmount", "250000000");
     });

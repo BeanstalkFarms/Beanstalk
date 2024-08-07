@@ -1,4 +1,4 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import {
   AddDeposit,
   StalkBalanceChanged,
@@ -30,347 +30,197 @@ import {
   loadSiloAssetHourlySnapshot,
   loadSiloWithdraw,
   loadSiloDeposit,
-  loadSiloDepositV3,
   loadWhitelistTokenSetting,
   loadWhitelistTokenHourlySnapshot,
   loadWhitelistTokenDailySnapshot,
-  addToSiloWhitelist
+  addToSiloWhitelist,
+  updateDeposit
 } from "./utils/Silo";
-import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity } from "../generated/schema";
+import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
-import { BEANSTALK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 
-// TODO: extract common logic between v2, v3 handlers
+class AddRemoveDepositsParams {
+  event: ethereum.Event;
+  account: Address;
+  token: Address;
+  seasons: BigInt[] | null; // Seasons not present in v3+
+  stems: BigInt[] | null; // Stems not present in v2
+  amounts: BigInt[];
+  bdvs: BigInt[] | null; // bdv not present in v2
+  depositVersion: String;
+}
+
+function addDeposits(params: AddRemoveDepositsParams): void {
+  let currentSeason = getCurrentSeason(params.event.address);
+  for (let i = 0; i < params.amounts.length; ++i) {
+    let deposit = loadSiloDeposit({
+      account: params.account,
+      token: params.token,
+      depositVersion: params.depositVersion,
+      season: params.seasons != null ? params.seasons![i] : null,
+      stem: params.stems != null ? params.stems![i] : null
+    });
+
+    // Set granular deposit version type
+    if (params.depositVersion == "season") {
+      deposit.depositVersion = "season";
+      // TODO: fill stem according to seasonToStem
+    } else {
+      deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
+    }
+
+    updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event);
+    deposit.save();
+
+    // TODO: these add/remove deposit to silo methods should be refactored such that it only needs to be called
+    // at the farmer level, and that will recur on the system level (only when called for farmer).
+    // In that case, the addDepositToSiloAsset method should not need to be called here, it can be called in the
+    // underlying method. I believe it needs to be refactored also
+
+    // Ensure that a Farmer entity is set up for this account.
+    loadFarmer(params.account);
+
+    // Update overall silo totals
+    addDepositToSilo(
+      params.event.address,
+      currentSeason,
+      params.bdvs![i],
+      addDepositToSiloAsset(
+        params.event.address,
+        params.token,
+        currentSeason,
+        params.bdvs![i],
+        params.amounts[i],
+        params.event.block.timestamp,
+        params.event.block.number
+      ),
+      params.event.block.timestamp,
+      params.event.block.number
+    );
+
+    // Update farmer silo totals
+    addDepositToSilo(
+      params.account,
+      currentSeason,
+      params.bdvs![i],
+      addDepositToSiloAsset(
+        params.account,
+        params.token,
+        currentSeason,
+        params.bdvs![i],
+        params.amounts[i],
+        params.event.block.timestamp,
+        params.event.block.number
+      ),
+      params.event.block.timestamp,
+      params.event.block.number
+    );
+  }
+}
+
+function removeDeposits(params: AddRemoveDepositsParams): void {
+  let currentSeason = getCurrentSeason(params.event.address);
+  for (let i = 0; i < params.amounts.length; ++i) {
+    let deposit = loadSiloDeposit({
+      account: params.account,
+      token: params.token,
+      depositVersion: params.depositVersion,
+      season: params.seasons != null ? params.seasons![i] : null,
+      stem: params.stems != null ? params.stems![i] : null
+    });
+
+    // Use bdv if it was provided (v2 events dont provide bdv), otherwise infer
+    let removedBdv = params.bdvs != null ? params.bdvs![i] : params.amounts[i].times(deposit.depositedBDV).div(deposit.depositedAmount);
+
+    // TODO: if amount goes to zero, instead delete the deposit entirely.
+    updateDeposit(deposit, params.amounts[i].neg(), removedBdv.neg(), params.event);
+    deposit.save();
+
+    // Update protocol totals
+    removeDepositFromSilo(
+      params.event.address,
+      currentSeason,
+      removedBdv,
+      removeDepositFromSiloAsset(
+        params.event.address,
+        params.token,
+        currentSeason,
+        removedBdv,
+        params.amounts[i],
+        params.event.block.timestamp,
+        params.event.block.number
+      ),
+      params.event.block.timestamp,
+      params.event.block.number
+    );
+
+    // Update farmer totals
+    removeDepositFromSilo(
+      params.account,
+      currentSeason,
+      removedBdv,
+      removeDepositFromSiloAsset(
+        params.account,
+        params.token,
+        currentSeason,
+        removedBdv,
+        params.amounts[i],
+        params.event.block.timestamp,
+        params.event.block.number
+      ),
+      params.event.block.timestamp,
+      params.event.block.number
+    );
+  }
+}
 
 /**
  * SILO V2 (REPLANT) HANDLERS
  */
 
 export function handleAddDeposit(event: AddDeposit): void {
-  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.season);
-  deposit.amount = deposit.amount.plus(event.params.amount);
-  deposit.depositedAmount = deposit.depositedAmount.plus(event.params.amount);
-  deposit.bdv = deposit.bdv.plus(event.params.bdv);
-  deposit.depositedBDV = deposit.depositedBDV.plus(event.params.bdv);
-  let depositHashes = deposit.hashes;
-  depositHashes.push(event.transaction.hash.toHexString());
-  deposit.hashes = depositHashes;
-  deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
-  deposit.updatedAt = event.block.timestamp;
-  deposit.save();
-
-  // Use the current season of beanstalk for updating silo and farmer totals
-  let beanstalk = loadBeanstalk(event.address);
-
-  // Update overall silo totals
-  addDepositToSilo(
-    event.address,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    addDepositToSiloAsset(
-      event.address,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-
-  // Ensure that a Farmer entity is set up for this account.
-  loadFarmer(event.params.account);
-
-  // Update farmer silo totals
-  addDepositToSilo(
-    event.params.account,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    addDepositToSiloAsset(
-      event.params.account,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
+  addDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: [event.params.season],
+    stems: null,
+    amounts: [event.params.amount],
+    bdvs: [event.params.bdv],
+    depositVersion: "season"
+  });
 }
 
 export function handleRemoveDeposit(event: RemoveDeposit): void {
-  let beanstalk = loadBeanstalk(event.address); // get current season
-  let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.season);
-
-  let withdrawnBDV = deposit.amount == ZERO_BI ? ZERO_BI : event.params.amount.times(deposit.bdv).div(deposit.amount);
-
-  // Update deposit
-  deposit.withdrawnBDV = deposit.withdrawnBDV.plus(withdrawnBDV);
-  deposit.bdv = deposit.bdv.minus(withdrawnBDV);
-  deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amount);
-  deposit.amount = deposit.amount.minus(event.params.amount);
-  deposit.save();
-
-  // Update protocol totals
-  removeDepositFromSilo(
-    event.address,
-    beanstalk.lastSeason,
-    withdrawnBDV,
-    removeDepositFromSiloAsset(
-      event.address,
-      event.params.token,
-      beanstalk.lastSeason,
-      withdrawnBDV,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-
-  // Update farmer totals
-  removeDepositFromSilo(
-    event.params.account,
-    beanstalk.lastSeason,
-    withdrawnBDV,
-    removeDepositFromSiloAsset(
-      event.params.account,
-      event.params.token,
-      beanstalk.lastSeason,
-      withdrawnBDV,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
+  removeDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: [event.params.season],
+    stems: null,
+    amounts: [event.params.amount],
+    bdvs: null,
+    depositVersion: "season"
+  });
 }
 
 export function handleRemoveDeposits(event: RemoveDeposits): void {
-  let beanstalk = loadBeanstalk(event.address); // get current season
-
-  for (let i = 0; i < event.params.seasons.length; i++) {
-    // TODO: extract common loop logic
-    let deposit = loadSiloDeposit(event.params.account, event.params.token, event.params.seasons[i]);
-
-    let withdrawnBDV = deposit.amount == ZERO_BI ? ZERO_BI : event.params.amounts[i].times(deposit.bdv).div(deposit.amount);
-
-    // Update deposit
-    deposit.withdrawnBDV = deposit.withdrawnBDV.plus(withdrawnBDV);
-    deposit.bdv = deposit.bdv.minus(withdrawnBDV);
-    deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amounts[i]);
-    deposit.amount = deposit.amount.minus(event.params.amounts[i]);
-    deposit.save();
-
-    // Update protocol totals
-    removeDepositFromSilo(
-      event.address,
-      beanstalk.lastSeason,
-      withdrawnBDV,
-      removeDepositFromSiloAsset(
-        event.address,
-        event.params.token,
-        beanstalk.lastSeason,
-        withdrawnBDV,
-        event.params.amounts[i],
-        event.block.timestamp,
-        event.block.number
-      ),
-      event.block.timestamp,
-      event.block.number
-    );
-
-    // Update farmer totals
-    removeDepositFromSilo(
-      event.params.account,
-      beanstalk.lastSeason,
-      withdrawnBDV,
-      removeDepositFromSiloAsset(
-        event.params.account,
-        event.params.token,
-        beanstalk.lastSeason,
-        withdrawnBDV,
-        event.params.amounts[i],
-        event.block.timestamp,
-        event.block.number
-      ),
-      event.block.timestamp,
-      event.block.number
-    );
-  }
-}
-
-/**
- * SILO V3 HANDLERS
- */
-
-export function handleAddDeposit_V3(event: AddDeposit_V3): void {
-  let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stem);
-  deposit.amount = deposit.amount.plus(event.params.amount);
-  deposit.depositedAmount = deposit.depositedAmount.plus(event.params.amount);
-  deposit.bdv = deposit.bdv.plus(event.params.bdv);
-  deposit.depositedBDV = deposit.depositedBDV.plus(event.params.bdv);
-  let depositHashes = deposit.hashes;
-  depositHashes.push(event.transaction.hash.toHexString());
-  deposit.hashes = depositHashes;
-  deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
-  deposit.updatedAt = event.block.timestamp;
-  deposit.save();
-
-  // Use the current season of beanstalk for updating silo and farmer totals
-  let beanstalk = loadBeanstalk(event.address);
-
-  // Update overall silo totals
-  addDepositToSilo(
-    event.address,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    addDepositToSiloAsset(
-      event.address,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-
-  // Ensure that a Farmer entity is set up for this account.
-  loadFarmer(event.params.account);
-
-  // Update farmer silo totals
-  addDepositToSilo(
-    event.params.account,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    addDepositToSiloAsset(
-      event.params.account,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-}
-
-export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
-  let beanstalk = loadBeanstalk(event.address); // get current season
-  let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stem);
-
-  // Update deposit
-  deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdv);
-  deposit.bdv = deposit.bdv.minus(event.params.bdv);
-  deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amount);
-  deposit.amount = deposit.amount.minus(event.params.amount);
-  deposit.save();
-
-  // Update protocol totals
-  removeDepositFromSilo(
-    event.address,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    removeDepositFromSiloAsset(
-      event.address,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-
-  // Update farmer totals
-  removeDepositFromSilo(
-    event.params.account,
-    beanstalk.lastSeason,
-    event.params.bdv,
-    removeDepositFromSiloAsset(
-      event.params.account,
-      event.params.token,
-      beanstalk.lastSeason,
-      event.params.bdv,
-      event.params.amount,
-      event.block.timestamp,
-      event.block.number
-    ),
-    event.block.timestamp,
-    event.block.number
-  );
-}
-
-export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
-  let beanstalk = loadBeanstalk(event.address); // get current season
-
-  for (let i = 0; i < event.params.stems.length; i++) {
-    let deposit = loadSiloDepositV3(event.params.account, event.params.token, event.params.stems[i]);
-
-    // Update deposit
-    deposit.withdrawnBDV = deposit.withdrawnBDV.plus(event.params.bdvs[i]);
-    deposit.bdv = deposit.bdv.minus(event.params.bdvs[i]);
-    deposit.withdrawnAmount = deposit.withdrawnAmount.plus(event.params.amounts[i]);
-    deposit.amount = deposit.amount.minus(event.params.amounts[i]);
-    deposit.save();
-
-    // Update protocol totals
-    removeDepositFromSilo(
-      event.address,
-      beanstalk.lastSeason,
-      event.params.bdvs[i],
-      removeDepositFromSiloAsset(
-        event.address,
-        event.params.token,
-        beanstalk.lastSeason,
-        event.params.bdvs[i],
-        event.params.amounts[i],
-        event.block.timestamp,
-        event.block.number
-      ),
-      event.block.timestamp,
-      event.block.number
-    );
-
-    // Update farmer totals
-    removeDepositFromSilo(
-      event.params.account,
-      beanstalk.lastSeason,
-      event.params.bdvs[i],
-      removeDepositFromSiloAsset(
-        event.params.account,
-        event.params.token,
-        beanstalk.lastSeason,
-        event.params.bdvs[i],
-        event.params.amounts[i],
-        event.block.timestamp,
-        event.block.number
-      ),
-      event.block.timestamp,
-      event.block.number
-    );
-  }
+  removeDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: event.params.seasons,
+    stems: null,
+    amounts: event.params.amounts,
+    bdvs: null,
+    depositVersion: "season"
+  });
 }
 
 export function handleAddWithdrawal(event: AddWithdrawal): void {
   let withdraw = loadSiloWithdraw(event.params.account, event.params.token, event.params.season.toI32());
   withdraw.amount = withdraw.amount.plus(event.params.amount);
-  let withdrawHashes = withdraw.hashes;
-  withdrawHashes.push(event.transaction.hash.toHexString());
-  withdraw.hashes = withdrawHashes;
   withdraw.createdAt = withdraw.createdAt == ZERO_BI ? event.block.timestamp : withdraw.createdAt;
   withdraw.save();
 
@@ -400,6 +250,49 @@ export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
   for (let i = 0; i < event.params.seasons.length; i++) {
     updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i]);
   }
+}
+
+/**
+ * SILO V3 HANDLERS
+ */
+
+export function handleAddDeposit_V3(event: AddDeposit_V3): void {
+  addDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: null,
+    stems: [event.params.stem],
+    amounts: [event.params.amount],
+    bdvs: [event.params.bdv],
+    depositVersion: "stem"
+  });
+}
+
+export function handleRemoveDeposit_V3(event: RemoveDeposit_V3): void {
+  removeDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: null,
+    stems: [event.params.stem],
+    amounts: [event.params.amount],
+    bdvs: [event.params.bdv],
+    depositVersion: "stem"
+  });
+}
+
+export function handleRemoveDeposits_V3(event: RemoveDeposits_V3): void {
+  removeDeposits({
+    event,
+    account: event.params.account,
+    token: event.params.token,
+    seasons: null,
+    stems: event.params.stems,
+    amounts: event.params.amounts,
+    bdvs: event.params.bdvs,
+    depositVersion: "stem"
+  });
 }
 
 export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
@@ -497,6 +390,7 @@ export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   beanstalk.save();
 }
 
+// TODO: consider consolidating both add/remove deposit methods here
 function addDepositToSilo(
   account: Address,
   season: i32,

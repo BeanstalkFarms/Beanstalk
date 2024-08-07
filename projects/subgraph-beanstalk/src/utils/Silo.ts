@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   Silo,
   SiloHourlySnapshot,
@@ -16,7 +16,6 @@ import {
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadBeanstalk } from "./Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "./Snapshots";
 
 /* ===== Base Silo Entities ===== */
@@ -263,22 +262,32 @@ export function loadWhitelistTokenDailySnapshot(token: Address, timestamp: BigIn
 
 /* ===== Deposit Entities ===== */
 
-// TODO: consolidate the 2 load methods
-export function loadSiloDeposit(account: Address, token: Address, season: BigInt): SiloDeposit {
-  let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();
+class SiloDepositID {
+  account: Address;
+  token: Address;
+  depositVersion: String;
+  season: BigInt | null;
+  stem: BigInt | null;
+}
+
+export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
+  // id: Account - Token Address - Deposit Version - (Season|Stem)
+  const seasonOrStem = depositId.depositVersion == "season" ? depositId.season! : depositId.stem!;
+  const id =
+    depositId.account.toHexString() + "-" + depositId.token.toHexString() + "-" + depositId.depositVersion + "-" + seasonOrStem.toString();
   let deposit = SiloDeposit.load(id);
   if (deposit == null) {
     deposit = new SiloDeposit(id);
-    deposit.farmer = account.toHexString();
-    deposit.token = token.toHexString();
-    deposit.season = season.toI32();
-    deposit.amount = ZERO_BI;
+    deposit.farmer = depositId.account.toHexString();
+    deposit.token = depositId.token.toHexString();
+    deposit.depositVersion = depositId.depositVersion.toString();
+    deposit.season = depositId.season;
+    deposit.stem = depositId.stem;
     deposit.depositedAmount = ZERO_BI;
-    deposit.withdrawnAmount = ZERO_BI;
-    deposit.bdv = ZERO_BI;
     deposit.depositedBDV = ZERO_BI;
-    deposit.withdrawnBDV = ZERO_BI;
     deposit.hashes = [];
+    deposit.createdBlock = ZERO_BI;
+    deposit.updatedBlock = ZERO_BI;
     deposit.createdAt = ZERO_BI;
     deposit.updatedAt = ZERO_BI;
     deposit.save();
@@ -286,28 +295,16 @@ export function loadSiloDeposit(account: Address, token: Address, season: BigInt
   return deposit;
 }
 
-export function loadSiloDepositV3(account: Address, token: Address, stem: BigInt): SiloDeposit {
-  let id = account.toHexString() + "-" + token.toHexString() + "-" + stem.toString();
-  let deposit = SiloDeposit.load(id);
-  if (deposit == null) {
-    let beanstalk = loadBeanstalk(BEANSTALK);
-    deposit = new SiloDeposit(id);
-    deposit.farmer = account.toHexString();
-    deposit.token = token.toHexString();
-    deposit.season = beanstalk.lastSeason;
-    deposit.stem = stem;
-    deposit.amount = ZERO_BI;
-    deposit.depositedAmount = ZERO_BI;
-    deposit.withdrawnAmount = ZERO_BI;
-    deposit.bdv = ZERO_BI;
-    deposit.depositedBDV = ZERO_BI;
-    deposit.withdrawnBDV = ZERO_BI;
-    deposit.hashes = [];
-    deposit.createdAt = ZERO_BI;
-    deposit.updatedAt = ZERO_BI;
-    deposit.save();
-  }
-  return deposit;
+export function updateDeposit(deposit: SiloDeposit, amount: BigInt, bdv: BigInt, event: ethereum.Event): void {
+  deposit.depositedAmount = deposit.depositedAmount.plus(amount);
+  deposit.depositedBDV = deposit.depositedBDV.plus(bdv);
+  let depositHashes = deposit.hashes;
+  depositHashes.push(event.transaction.hash.toHexString());
+  deposit.hashes = depositHashes;
+  deposit.createdBlock = deposit.createdBlock == ZERO_BI ? event.block.number : deposit.createdBlock;
+  deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
+  deposit.updatedBlock = event.block.number;
+  deposit.updatedAt = event.block.timestamp;
 }
 
 /* ===== Withdraw Entities ===== */
@@ -323,7 +320,6 @@ export function loadSiloWithdraw(account: Address, token: Address, season: i32):
     withdraw.claimableSeason = season + 1;
     withdraw.claimed = false;
     withdraw.amount = ZERO_BI;
-    withdraw.hashes = [];
     withdraw.createdAt = ZERO_BI;
     withdraw.save();
   }
