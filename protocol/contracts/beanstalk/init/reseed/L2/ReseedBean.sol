@@ -217,24 +217,26 @@ contract ReseedBean {
         tokens[1] = IERC20(WETH);
 
         // cp2 
-        // TODO: change data if needed
-        Call memory cp2 = Call(CONSTANT_PRODUCT_2, abi.encode("beanWF"));
+        Call memory cp2;
+        cp2.target = CONSTANT_PRODUCT_2;
 
         // stable2
-        // TODO: change data if needed
-        Call memory stable2 = Call(STABLE_2, abi.encode("beanStable"));
+        uint256 beanDecimals = 1e6;
+        uint256 stableDecimals = 1e6;
+        bytes memory stable2Data = abi.encode(beanDecimals, stableDecimals);
+        Call memory stable2 = Call(STABLE_2, stable2Data);
         
-        // pumps
-        // TODO: change pump data
-        // NOTE: Different data for each well pump or could this be the same? 
-        Call[] memory beanEthPumps = new Call[](1);
-        beanEthPumps[0] = Call(MULTIFLOW_PUMP, abi.encode("beanstalkPump"));
+        // pump
+        Call[] memory pumps = new Call[](1);
+        // Note: mfpData will need to be updated based on the L2 block time.
+        bytes memory mfpData = hex"3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        pumps[0] = Call(MULTIFLOW_PUMP, mfpData);
 
         // BEAN/ETH well
         deployUpgradebleWell( 
             tokens, // tokens (IERC20[])
             cp2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_ETH_SALT, // salt
             BEAN_ETH_NAME, // name
             BEAN_ETH_SYMBOL // symbol
@@ -245,7 +247,7 @@ contract ReseedBean {
         deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             cp2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_WSTETH_SALT,
             BEAN_WSTETH_NAME,
             BEAN_WSTETH_SYMBOL
@@ -256,7 +258,7 @@ contract ReseedBean {
         deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             cp2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_WEETH_SALT,
             BEAN_WEETH_NAME,
             BEAN_WEETH_SYMBOL
@@ -267,29 +269,31 @@ contract ReseedBean {
         deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             cp2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_WBTC_SALT,
             BEAN_WBTC_NAME,
             BEAN_WBTC_SYMBOL
         );
 
         // BEAN/USDC well
+        // USDC uses 6 decimals
         tokens[1] = IERC20(USDC);
         deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             stable2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_USDC_SALT,
             BEAN_USDC_NAME,
             BEAN_USDC_SYMBOL
         );
 
         // BEAN/USDT well
+        // USDT uses 6 decimals
         tokens[1] = IERC20(USDT);
         deployUpgradebleWell(
             tokens, // tokens (IERC20[])
             stable2, // well function (Call)
-            beanEthPumps, // pumps (Call[])
+            pumps, // pumps (Call[])
             BEAN_USDT_SALT,
             BEAN_USDT_NAME,
             BEAN_USDT_SYMBOL
