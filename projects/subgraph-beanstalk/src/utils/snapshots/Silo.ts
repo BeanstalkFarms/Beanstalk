@@ -1,19 +1,7 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { Silo, SiloDailySnapshot, SiloHourlySnapshot } from "../../generated/schema";
-import { getCurrentSeason } from "./Beanstalk";
-
-export function dayFromTimestamp(timestamp: BigInt): string {
-  let day_ts = timestamp.toI32() - (timestamp.toI32() % 86400);
-  return day_ts.toString();
-}
-
-export function hourFromTimestamp(timestamp: BigInt): string {
-  let day_ts = timestamp.toI32() - (timestamp.toI32() % 3600);
-  return day_ts.toString();
-}
-
-// Entities could store a lastSnapshotAt field which can be used to derive both the date and hour.
-// This would then become the base for comparison of deltas
+import { Silo, SiloDailySnapshot, SiloHourlySnapshot } from "../../../generated/schema";
+import { getCurrentSeason } from "../Beanstalk";
+import { dayFromTimestamp, hourFromTimestamp } from "./DateUtil";
 
 export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: BigInt): void {
   const currentSeason = getCurrentSeason(beanstalk);
@@ -35,6 +23,7 @@ export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: Big
   const hourly = new SiloHourlySnapshot(hourlyId);
   const daily = new SiloDailySnapshot(dailyId);
 
+  // Set current values
   hourly.season = currentSeason;
   hourly.silo = silo.id;
   hourly.depositedBDV = silo.depositedBDV;
@@ -47,6 +36,8 @@ export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: Big
   hourly.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
   hourly.beanMints = silo.beanMints;
   hourly.activeFarmers = silo.activeFarmers;
+
+  // Set deltas
   if (baseHourly !== null) {
     hourly.deltaDepositedBDV = hourly.depositedBDV.minus(baseHourly.depositedBDV);
     hourly.deltaStalk = hourly.stalk.minus(baseHourly.stalk);
@@ -84,7 +75,58 @@ export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: Big
   hourly.updatedAt = timestamp;
   hourly.save();
 
+  // Repeat for daily snapshot.
+  // Duplicate code is preferred to type coercion, the codegen doesnt provide a common interface.
+
+  daily.season = currentSeason;
+  daily.silo = silo.id;
+  daily.depositedBDV = silo.depositedBDV;
+  daily.stalk = silo.stalk;
+  daily.plantableStalk = silo.plantableStalk;
+  daily.seeds = silo.seeds;
+  daily.grownStalkPerSeason = silo.grownStalkPerSeason;
+  daily.roots = silo.roots;
+  daily.germinatingStalk = silo.germinatingStalk;
+  daily.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
+  daily.beanMints = silo.beanMints;
+  daily.activeFarmers = silo.activeFarmers;
+  if (baseDaily !== null) {
+    daily.deltaDepositedBDV = daily.depositedBDV.minus(baseDaily.depositedBDV);
+    daily.deltaStalk = daily.stalk.minus(baseDaily.stalk);
+    daily.deltaPlantableStalk = daily.plantableStalk.minus(baseDaily.plantableStalk);
+    daily.deltaSeeds = daily.seeds.minus(baseDaily.seeds);
+    daily.deltaRoots = daily.roots.minus(baseDaily.roots);
+    daily.deltaGerminatingStalk = daily.germinatingStalk.minus(baseDaily.germinatingStalk);
+    // NOTE: missing beanToMaxLpGpPerBdvRatio
+    daily.deltaBeanMints = daily.beanMints.minus(baseDaily.beanMints);
+    daily.deltaActiveFarmers = daily.activeFarmers - baseDaily.activeFarmers;
+    if (daily.id == baseDaily.id) {
+      // Add existing deltas
+      daily.deltaDepositedBDV = daily.deltaDepositedBDV.plus(baseDaily.deltaDepositedBDV);
+      daily.deltaStalk = daily.deltaStalk.plus(baseDaily.deltaDepositedBDV);
+      daily.deltaPlantableStalk = daily.deltaPlantableStalk.plus(baseDaily.deltaPlantableStalk);
+      daily.deltaSeeds = daily.deltaSeeds.plus(baseDaily.deltaSeeds);
+      daily.deltaRoots = daily.deltaRoots.plus(baseDaily.deltaRoots);
+      daily.deltaGerminatingStalk = daily.deltaGerminatingStalk.plus(baseDaily.deltaGerminatingStalk);
+      // NOTE: missing beanToMaxLpGpPerBdvRatio
+      daily.deltaBeanMints = daily.deltaBeanMints.plus(baseDaily.deltaBeanMints);
+      daily.deltaActiveFarmers = daily.deltaActiveFarmers + baseDaily.deltaActiveFarmers;
+    }
+  } else {
+    daily.deltaDepositedBDV = daily.depositedBDV;
+    daily.deltaStalk = daily.stalk;
+    daily.deltaPlantableStalk = daily.plantableStalk;
+    daily.deltaSeeds = daily.seeds;
+    daily.deltaRoots = daily.roots;
+    daily.deltaGerminatingStalk = daily.germinatingStalk;
+    // NOTE: missing beanToMaxLpGpPerBdvRatio
+    daily.deltaBeanMints = daily.beanMints;
+    daily.deltaActiveFarmers = daily.activeFarmers;
+  }
+  daily.createdAt = hour;
+  daily.updatedAt = timestamp;
+  daily.save();
+
   silo.lastHourlySnapshotSeason = currentSeason;
   silo.lastDailySnapshotDay = day;
-  // Caller must call save on silo. (document this somewhere)
 }

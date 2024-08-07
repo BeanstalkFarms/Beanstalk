@@ -64,6 +64,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
     for (let i = 6075; i <= t; i++) {
+      // TODO: solution for this
       let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
       currentEMA = toDecimal(season.deltaBeanMints).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
@@ -71,6 +72,7 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   } else {
     // Calculate EMA for the prior 720 seasons
     for (let i = t - window + 1; i <= t; i++) {
+      // TODO: solution for this
       let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
       currentEMA = toDecimal(season.deltaBeanMints).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;

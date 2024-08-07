@@ -23,8 +23,6 @@ import { Replanted, TransferDepositCall, TransferDepositsCall } from "../generat
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadSilo,
-  loadSiloDailySnapshot,
-  loadSiloHourlySnapshot,
   loadSiloAsset,
   loadSiloAssetDailySnapshot,
   loadSiloAssetHourlySnapshot,
@@ -39,7 +37,7 @@ import {
 import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
-import { takeSiloSnapshots } from "./utils/Snapshots";
+import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -338,27 +336,13 @@ export function handlePlant(event: Plant): void {
 
   const currentSeason = getCurrentSeason(event.address);
   let silo = loadSilo(event.address);
-  let siloHourly = loadSiloHourlySnapshot(event.address, currentSeason, event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
 
   silo.plantableStalk = silo.plantableStalk.minus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.minus(event.params.beans);
+
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
-
-  siloHourly.plantableStalk = silo.plantableStalk;
-  siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.deltaPlantableStalk = siloHourly.deltaPlantableStalk.minus(newPlantableStalk);
-  siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.minus(event.params.beans);
-  siloHourly.updatedAt = event.block.timestamp;
-  siloHourly.save();
-
-  siloDaily.plantableStalk = silo.plantableStalk;
-  siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.deltaPlantableStalk = siloDaily.deltaPlantableStalk.minus(newPlantableStalk);
-  siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.minus(event.params.beans);
-  siloDaily.updatedAt = event.block.timestamp;
-  siloDaily.save();
 
   // Remove the asset-only amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
@@ -403,28 +387,14 @@ function addDepositToSilo(
   blockNumber: BigInt
 ): void {
   let silo = loadSilo(account);
-  let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.plus(bdv);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
   if (account == BEANSTALK) {
     silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(grownStalkPerBDV);
   }
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-
-  siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.plus(bdv);
-  siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloHourly.updatedAt = timestamp;
-  siloHourly.save();
-
-  siloDaily.season = season;
-  siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.plus(bdv);
-  siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloDaily.updatedAt = timestamp;
-  siloDaily.save();
 }
 
 function removeDepositFromSilo(
@@ -436,8 +406,6 @@ function removeDepositFromSilo(
   blockNumber: BigInt
 ): void {
   let silo = loadSilo(account);
-  let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.depositedBDV = silo.depositedBDV.minus(bdv);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
@@ -555,27 +523,13 @@ export function updateStalkBalances(
   blockNumber: BigInt
 ): void {
   let silo = loadSilo(account);
-  let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(account, timestamp);
 
   silo.stalk = silo.stalk.plus(stalk);
   silo.roots = silo.roots.plus(roots);
+
+  // TODO: protocol in param
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-
-  siloHourly.stalk = silo.stalk;
-  siloHourly.roots = silo.roots;
-  siloHourly.deltaStalk = siloHourly.deltaStalk.plus(stalk);
-  siloHourly.deltaRoots = siloHourly.deltaRoots.plus(roots);
-  siloHourly.updatedAt = timestamp;
-  siloHourly.save();
-
-  siloDaily.season = season;
-  siloDaily.stalk = silo.stalk;
-  siloDaily.roots = silo.roots;
-  siloDaily.deltaStalk = siloDaily.deltaStalk.plus(stalk);
-  siloDaily.deltaRoots = siloDaily.deltaRoots.plus(roots);
-  siloDaily.updatedAt = timestamp;
-  siloDaily.save();
 
   // Add account to active list if needed
   if (account !== BEANSTALK) {
@@ -600,22 +554,10 @@ export function updateStalkBalances(
 
 function updateSeedsBalances(account: Address, season: i32, seeds: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
   let silo = loadSilo(account);
-  let siloHourly = loadSiloHourlySnapshot(account, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(account, timestamp);
-
   silo.seeds = silo.seeds.plus(seeds);
+  // TODO: protocol in param?
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-
-  siloHourly.seeds = silo.seeds;
-  siloHourly.deltaSeeds = siloHourly.deltaSeeds.plus(seeds);
-  siloHourly.updatedAt = timestamp;
-  siloHourly.save();
-
-  siloDaily.season = season;
-  siloDaily.seeds = silo.seeds;
-  siloDaily.deltaSeeds = siloDaily.deltaSeeds.plus(seeds);
-  siloDaily.updatedAt = timestamp;
-  siloDaily.save();
 }
 
 function updateClaimedWithdraw(account: Address, token: Address, season: BigInt): void {
@@ -626,32 +568,18 @@ function updateClaimedWithdraw(account: Address, token: Address, season: BigInt)
 
 function incrementProtocolFarmers(season: i32, timestamp: BigInt): void {
   let silo = loadSilo(BEANSTALK);
-  let siloHourly = loadSiloHourlySnapshot(BEANSTALK, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(BEANSTALK, timestamp);
-
   silo.activeFarmers += 1;
-  siloHourly.activeFarmers += 1;
-  siloHourly.deltaActiveFarmers += 1;
-  siloDaily.activeFarmers += 1;
-  siloDaily.deltaActiveFarmers += 1;
+  // TODO: protocol in param?
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-  siloHourly.save();
-  siloDaily.save();
 }
 
 function decrementProtocolFarmers(season: i32, timestamp: BigInt): void {
   let silo = loadSilo(BEANSTALK);
-  let siloHourly = loadSiloHourlySnapshot(BEANSTALK, season, timestamp);
-  let siloDaily = loadSiloDailySnapshot(BEANSTALK, timestamp);
-
   silo.activeFarmers -= 1;
-  siloHourly.activeFarmers -= 1;
-  siloHourly.deltaActiveFarmers -= 1;
-  siloDaily.activeFarmers -= 1;
-  siloDaily.deltaActiveFarmers -= 1;
+  // TODO: protocol in param?
+  takeSiloSnapshots(silo, BEANSTALK, timestamp);
   silo.save();
-  siloHourly.save();
-  siloDaily.save();
 }
 
 export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber: BigInt): void {

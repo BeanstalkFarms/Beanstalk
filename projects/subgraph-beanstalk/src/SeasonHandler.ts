@@ -15,14 +15,9 @@ import {
 } from "./utils/PodMarketplace";
 import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
-import {
-  loadSilo,
-  loadSiloDailySnapshot,
-  loadSiloHourlySnapshot,
-  loadSiloAssetDailySnapshot,
-  loadSiloAssetHourlySnapshot
-} from "./utils/Silo";
+import { loadSilo, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/Silo";
 import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
+import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleSunrise(event: Sunrise): void {
   let currentSeason = event.params.season.toI32();
@@ -70,12 +65,12 @@ export function handleSunrise(event: Sunrise): void {
 
   // Create silo entities for the protocol
   let silo = loadSilo(event.address);
-  loadSiloHourlySnapshot(event.address, currentSeason, event.block.timestamp);
-  loadSiloDailySnapshot(event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
   for (let i = 0; i < silo.whitelistedTokens.length; i++) {
     loadSiloAssetHourlySnapshot(event.address, Address.fromString(silo.whitelistedTokens[i]), currentSeason, event.block.timestamp);
     loadSiloAssetDailySnapshot(event.address, Address.fromString(silo.whitelistedTokens[i]), event.block.timestamp);
   }
+  silo.save();
 }
 
 export function handleSeasonSnapshot(event: SeasonSnapshot): void {
@@ -92,30 +87,14 @@ export function handleReward(event: Reward): void {
   // Add to total Silo Bean mints
 
   let silo = loadSilo(event.address);
-  let siloHourly = loadSiloHourlySnapshot(event.address, season.season, event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   let newPlantableStalk = event.params.toSilo.times(BigInt.fromI32(10000)); // Stalk has 10 decimals
 
   silo.beanMints = silo.beanMints.plus(event.params.toSilo);
   silo.plantableStalk = silo.plantableStalk.plus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.plus(event.params.toSilo);
+
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
-
-  siloHourly.beanMints = silo.beanMints;
-  siloHourly.plantableStalk = silo.plantableStalk;
-  siloHourly.depositedBDV = silo.depositedBDV;
-  siloHourly.deltaBeanMints = siloHourly.deltaBeanMints.plus(event.params.toSilo);
-  siloHourly.deltaPlantableStalk = siloHourly.deltaPlantableStalk.plus(newPlantableStalk);
-  siloHourly.deltaDepositedBDV = siloHourly.deltaDepositedBDV.plus(event.params.toSilo);
-  siloHourly.save();
-
-  siloDaily.beanMints = silo.beanMints;
-  siloDaily.plantableStalk = silo.plantableStalk;
-  siloDaily.depositedBDV = silo.depositedBDV;
-  siloDaily.deltaBeanMints = siloDaily.deltaBeanMints.plus(event.params.toSilo);
-  siloDaily.deltaPlantableStalk = siloDaily.deltaPlantableStalk.plus(newPlantableStalk);
-  siloDaily.deltaDepositedBDV = siloDaily.deltaDepositedBDV.plus(event.params.toSilo);
-  siloDaily.save();
 
   addDepositToSiloAsset(
     event.address,

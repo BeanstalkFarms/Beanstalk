@@ -27,6 +27,7 @@ import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
 import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 import { getCurrentSeason } from "./utils/Beanstalk";
+import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -44,6 +45,7 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
   }
   silo.save();
 
+  // TODO: solution for caseId.
   let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season.toI32(), event.block.timestamp);
   let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
   siloHourly.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
@@ -71,13 +73,8 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   let silo = loadSilo(event.address);
 
   silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
-  let siloHourly = loadSiloHourlySnapshot(event.address, getCurrentSeason(event.address), event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
-  siloHourly.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloDaily.grownStalkPerSeason = silo.grownStalkPerSeason;
-  siloHourly.save();
-  siloDaily.save();
 
   // Individual asset grown stalk is set by the UpdatedStalkPerBdvPerSeason event in SiloHandler
 }
@@ -110,16 +107,8 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 
   let farmerSilo = loadSilo(event.params.account);
   farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.deltaGerminatingStalk);
+  takeSiloSnapshots(farmerSilo, event.address, event.block.timestamp);
   farmerSilo.save();
-
-  let siloHourly = loadSiloHourlySnapshot(event.params.account, currentSeason, event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.params.account, event.block.timestamp);
-  siloHourly.germinatingStalk = farmerSilo.germinatingStalk;
-  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.deltaGerminatingStalk);
-  siloDaily.germinatingStalk = farmerSilo.germinatingStalk;
-  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.deltaGerminatingStalk);
-  siloHourly.save();
-  siloDaily.save();
 }
 
 // Tracks the germinating balance on a token level
@@ -153,16 +142,8 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
 
   let silo = loadSilo(event.address);
   silo.germinatingStalk = silo.germinatingStalk.plus(event.params.deltaGerminatingStalk);
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
-
-  let siloHourly = loadSiloHourlySnapshot(event.address, getCurrentSeason(event.address), event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
-  siloHourly.germinatingStalk = silo.germinatingStalk;
-  siloHourly.deltaGerminatingStalk = siloHourly.deltaGerminatingStalk.plus(event.params.deltaGerminatingStalk);
-  siloDaily.germinatingStalk = silo.germinatingStalk;
-  siloDaily.deltaGerminatingStalk = siloDaily.deltaGerminatingStalk.plus(event.params.deltaGerminatingStalk);
-  siloHourly.save();
-  siloDaily.save();
 }
 
 // Germination completes, germinating stalk turns into stalk.

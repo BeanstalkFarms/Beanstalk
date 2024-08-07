@@ -16,7 +16,7 @@ import {
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { dayFromTimestamp, hourFromTimestamp } from "./Snapshots";
+import { dayFromTimestamp, hourFromTimestamp } from "./snapshots/DateUtil";
 
 /* ===== Base Silo Entities ===== */
 
