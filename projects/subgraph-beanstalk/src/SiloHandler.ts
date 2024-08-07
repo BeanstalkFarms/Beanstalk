@@ -34,7 +34,7 @@ import {
   addToSiloWhitelist,
   updateDeposit
 } from "./utils/Silo";
-import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit } from "../generated/schema";
+import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit, Silo } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { takeSiloSnapshots } from "./utils/snapshots/Silo";
@@ -325,9 +325,7 @@ export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
     return;
   }
 
-  let beanstalk = loadBeanstalk(event.address); // get current season
-  updateSeedsBalances(event.address, beanstalk.lastSeason, event.params.delta, event.block.timestamp, event.block.number);
-  updateSeedsBalances(event.params.account, beanstalk.lastSeason, event.params.delta, event.block.timestamp, event.block.number);
+  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block.timestamp);
 }
 
 export function handlePlant(event: Plant): void {
@@ -529,7 +527,6 @@ export function updateStalkBalances(
 
   // TODO: protocol in param
   takeSiloSnapshots(silo, BEANSTALK, timestamp);
-  silo.save();
 
   // Add account to active list if needed
   if (account !== BEANSTALK) {
@@ -540,23 +537,25 @@ export function updateStalkBalances(
       newFarmers.push(account.toHexString());
       beanstalk.activeFarmers = newFarmers;
       beanstalk.save();
-
-      incrementProtocolFarmers(season, timestamp);
+      silo.activeFarmers += 1;
     } else if (silo.stalk == ZERO_BI) {
       let newFarmers = beanstalk.activeFarmers;
       newFarmers.splice(farmerIndex, 1);
       beanstalk.activeFarmers = newFarmers;
-
-      decrementProtocolFarmers(season, timestamp);
+      beanstalk.save();
+      silo.activeFarmers -= 1;
     }
   }
+  silo.save();
 }
 
-function updateSeedsBalances(account: Address, season: i32, seeds: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+function updateSeedsBalances(beanstalk: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: Boolean = true): void {
+  if (recurs && account != beanstalk) {
+    updateSeedsBalances(beanstalk, beanstalk, seeds, timestamp);
+  }
   let silo = loadSilo(account);
   silo.seeds = silo.seeds.plus(seeds);
-  // TODO: protocol in param?
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
+  takeSiloSnapshots(silo, beanstalk, timestamp);
   silo.save();
 }
 
@@ -566,27 +565,11 @@ function updateClaimedWithdraw(account: Address, token: Address, season: BigInt)
   withdraw.save();
 }
 
-function incrementProtocolFarmers(season: i32, timestamp: BigInt): void {
-  let silo = loadSilo(BEANSTALK);
-  silo.activeFarmers += 1;
-  // TODO: protocol in param?
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
-  silo.save();
-}
-
-function decrementProtocolFarmers(season: i32, timestamp: BigInt): void {
-  let silo = loadSilo(BEANSTALK);
-  silo.activeFarmers -= 1;
-  // TODO: protocol in param?
-  takeSiloSnapshots(silo, BEANSTALK, timestamp);
-  silo.save();
-}
-
-export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber: BigInt): void {
+export function updateStalkWithCalls(beanstalkAddress: Address, season: i32, timestamp: BigInt, blockNumber: BigInt): void {
   // This should be run at sunrise for the previous season to update any farmers stalk/seed/roots balances from silo transfers.
 
-  let beanstalk = loadBeanstalk(BEANSTALK);
-  let beanstalk_call = Replanted.bind(BEANSTALK);
+  let beanstalk = loadBeanstalk(beanstalkAddress);
+  let beanstalk_call = Replanted.bind(beanstalkAddress);
 
   for (let i = 0; i < beanstalk.farmersToUpdate.length; i++) {
     let account = Address.fromString(beanstalk.farmersToUpdate[i]);
@@ -600,7 +583,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
       blockNumber
     );
     // balanceOfSeeds function was removed in silov2
-    updateSeedsBalances(account, season, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, blockNumber);
+    updateSeedsBalances(beanstalkAddress, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, false);
   }
   beanstalk.farmersToUpdate = [];
   beanstalk.save();
