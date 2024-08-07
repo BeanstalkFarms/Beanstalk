@@ -3,7 +3,7 @@ import { PodMarketplace, PodMarketplaceHourlySnapshot, PodMarketplaceDailySnapsh
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "./Field";
 import { expirePodListingIfExists } from "./PodListing";
-import { dayFromTimestamp } from "./Snapshots";
+import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 
 export enum MarketplaceAction {
   CREATED,

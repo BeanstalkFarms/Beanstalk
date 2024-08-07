@@ -3,19 +3,11 @@ import { BasinBip } from "../generated/Beanstalk-ABIs/BasinBip";
 import { BEANSTALK, BEAN_ERC20, FERTILIZER } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFertilizer, loadFertilizerYield } from "./utils/Fertilizer";
-import {
-  loadSilo,
-  loadSiloAsset,
-  loadSiloHourlySnapshot,
-  loadSiloYield,
-  loadTokenYield,
-  loadWhitelistTokenSetting,
-  SiloAsset_findIndex_token
-} from "./utils/Silo";
+import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting, SiloAsset_findIndex_token } from "./utils/Silo";
 import { BigDecimal_sum, f64_sum, f64_max } from "../../subgraph-core/utils/ArrayMath";
 import { getGerminatingBdvs } from "./utils/Germinating";
 import { SiloAsset, WhitelistTokenSetting } from "../generated/schema";
-import { getCurrentSeason } from "./utils/Beanstalk";
+import { getCurrentSeason, getRewardMinted } from "./utils/Beanstalk";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -64,17 +56,15 @@ function updateWindowEMA(t: i32, timestamp: BigInt, window: i32): void {
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
     for (let i = 6075; i <= t; i++) {
-      // TODO: solution for this
-      let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
-      currentEMA = toDecimal(season.deltaBeanMints).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
+      let rewardMint = getRewardMinted(i);
+      currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
     }
   } else {
     // Calculate EMA for the prior 720 seasons
     for (let i = t - window + 1; i <= t; i++) {
-      // TODO: solution for this
-      let season = loadSiloHourlySnapshot(BEANSTALK, i, timestamp);
-      currentEMA = toDecimal(season.deltaBeanMints).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
+      let rewardMint = getRewardMinted(i);
+      currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
     }
   }

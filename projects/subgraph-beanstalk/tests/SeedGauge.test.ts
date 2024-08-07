@@ -32,7 +32,7 @@ import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 import { loadSilo } from "../src/utils/Silo";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setSeason } from "./utils/Season";
-import { dayFromTimestamp } from "../src/utils/Snapshots";
+import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
@@ -61,6 +61,7 @@ describe("Seed Gauge", () => {
   describe("Seasonal Adjustments", () => {
     test("event: BeanToMaxLpGpPerBdvRatioChange (initialization)", () => {
       const initialRatio = BigInt.fromI32(66).times(ratioDecimals);
+      setSeason(20000);
       handleBeanToMaxLpGpPerBdvRatioChange(
         createBeanToMaxLpGpPerBdvRatioChangeEvent(BigInt.fromU32(20000), BigInt.fromU32(10), initialRatio)
       );
@@ -224,7 +225,7 @@ describe("Seed Gauge", () => {
       const timestamp = BigInt.fromU32(1712793374);
       const day = dayFromTimestamp(timestamp);
       assert.notInStore("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1");
-      assert.notInStore("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day);
+      assert.notInStore("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString());
 
       let event = createUpdateGaugeSettingsEvent(
         BEAN_ERC20.toHexString(),
@@ -236,7 +237,7 @@ describe("Seed Gauge", () => {
       handleUpdateGaugeSettings(event);
 
       assert.fieldEquals("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1", "gpSelector", "0x12341234");
-      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day, "gpSelector", "0x12341234");
+      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString(), "gpSelector", "0x12341234");
     });
   });
 });

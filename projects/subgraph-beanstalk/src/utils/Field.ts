@@ -5,7 +5,7 @@ import { ADDRESS_ZERO, BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/uti
 import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
 import { BeanstalkPrice_try_price } from "./BeanstalkPrice";
 import { loadBeanstalk, loadSeason } from "./Beanstalk";
-import { dayFromTimestamp } from "./Snapshots";
+import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 
 // This function is for handling both the WeatherChange and TemperatureChange events.
 // The logic is the same for both, this is intended to accommodate the renamed event and fields.

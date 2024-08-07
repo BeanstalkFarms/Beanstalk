@@ -13,8 +13,6 @@ import {
 import { handleRateChange } from "./utils/Field";
 import {
   loadSilo,
-  loadSiloHourlySnapshot,
-  loadSiloDailySnapshot,
   loadWhitelistTokenSetting,
   loadWhitelistTokenDailySnapshot,
   loadWhitelistTokenHourlySnapshot,
@@ -27,7 +25,7 @@ import { WhitelistToken as WhitelistTokenEntity } from "../generated/schema";
 import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 import { getCurrentSeason } from "./utils/Beanstalk";
-import { takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { setHourlyCaseId, takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -43,16 +41,9 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
   } else {
     silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio!.plus(event.params.absChange);
   }
+  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  setHourlyCaseId(event.params.caseId, silo, event.address);
   silo.save();
-
-  // TODO: solution for caseId.
-  let siloHourly = loadSiloHourlySnapshot(event.address, event.params.season.toI32(), event.block.timestamp);
-  let siloDaily = loadSiloDailySnapshot(event.address, event.block.timestamp);
-  siloHourly.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
-  siloHourly.caseId = event.params.caseId;
-  siloDaily.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
-  siloHourly.save();
-  siloDaily.save();
 }
 
 export function handleGaugePointChange(event: GaugePointChange): void {

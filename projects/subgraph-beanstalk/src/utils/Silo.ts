@@ -1,8 +1,6 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   Silo,
-  SiloHourlySnapshot,
-  SiloDailySnapshot,
   SiloDeposit,
   SiloWithdraw,
   SiloYield,
@@ -16,7 +14,7 @@ import {
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { dayFromTimestamp, hourFromTimestamp } from "./snapshots/DateUtil";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 
 /* ===== Base Silo Entities ===== */
 
@@ -42,73 +40,6 @@ export function loadSilo(account: Address): Silo {
     silo.save();
   }
   return silo as Silo;
-}
-
-export function loadSiloHourlySnapshot(account: Address, season: i32, timestamp: BigInt): SiloHourlySnapshot {
-  let id = account.toHexString() + "-" + season.toString();
-  let snapshot = SiloHourlySnapshot.load(id);
-  if (snapshot == null) {
-    snapshot = new SiloHourlySnapshot(id);
-    let silo = loadSilo(account);
-    snapshot.season = season;
-    snapshot.silo = account.toHexString();
-    snapshot.depositedBDV = silo.depositedBDV;
-    snapshot.stalk = silo.stalk;
-    snapshot.plantableStalk = silo.plantableStalk;
-    snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
-    snapshot.roots = silo.roots;
-    snapshot.germinatingStalk = silo.germinatingStalk;
-    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
-    snapshot.beanMints = silo.beanMints;
-    snapshot.activeFarmers = silo.activeFarmers;
-    snapshot.deltaDepositedBDV = ZERO_BI;
-    snapshot.deltaStalk = ZERO_BI;
-    snapshot.deltaPlantableStalk = ZERO_BI;
-    snapshot.deltaSeeds = ZERO_BI;
-    snapshot.deltaRoots = ZERO_BI;
-    snapshot.deltaGerminatingStalk = ZERO_BI;
-    snapshot.deltaBeanMints = ZERO_BI;
-    snapshot.deltaActiveFarmers = 0;
-    snapshot.createdAt = BigInt.fromString(hourFromTimestamp(timestamp));
-    snapshot.updatedAt = timestamp;
-    snapshot.save();
-  }
-  return snapshot as SiloHourlySnapshot;
-}
-
-export function loadSiloDailySnapshot(account: Address, timestamp: BigInt): SiloDailySnapshot {
-  let day = dayFromTimestamp(timestamp);
-  let id = account.toHexString() + "-" + day.toString();
-  let snapshot = SiloDailySnapshot.load(id);
-  if (snapshot == null) {
-    snapshot = new SiloDailySnapshot(id);
-    let silo = loadSilo(account);
-    snapshot.season = 0;
-    snapshot.silo = account.toHexString();
-    snapshot.depositedBDV = silo.depositedBDV;
-    snapshot.stalk = silo.stalk;
-    snapshot.plantableStalk = silo.plantableStalk;
-    snapshot.seeds = silo.seeds;
-    snapshot.grownStalkPerSeason = silo.grownStalkPerSeason;
-    snapshot.roots = silo.roots;
-    snapshot.germinatingStalk = silo.germinatingStalk;
-    snapshot.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio;
-    snapshot.beanMints = silo.beanMints;
-    snapshot.activeFarmers = silo.activeFarmers;
-    snapshot.deltaDepositedBDV = ZERO_BI;
-    snapshot.deltaStalk = ZERO_BI;
-    snapshot.deltaPlantableStalk = ZERO_BI;
-    snapshot.deltaSeeds = ZERO_BI;
-    snapshot.deltaRoots = ZERO_BI;
-    snapshot.deltaGerminatingStalk = ZERO_BI;
-    snapshot.deltaBeanMints = ZERO_BI;
-    snapshot.deltaActiveFarmers = 0;
-    snapshot.createdAt = BigInt.fromString(day);
-    snapshot.updatedAt = timestamp;
-    snapshot.save();
-  }
-  return snapshot as SiloDailySnapshot;
 }
 
 /* ===== Asset Entities ===== */
@@ -147,7 +78,7 @@ export function loadSiloAssetHourlySnapshot(account: Address, token: Address, se
     snapshot.deltaDepositedAmount = ZERO_BI;
     snapshot.deltaWithdrawnAmount = ZERO_BI;
     snapshot.deltaFarmAmount = ZERO_BI;
-    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.createdAt = BigInt.fromI32(hour);
     snapshot.updatedAt = ZERO_BI;
     snapshot.save();
   }
@@ -171,7 +102,7 @@ export function loadSiloAssetDailySnapshot(account: Address, token: Address, tim
     snapshot.deltaDepositedAmount = ZERO_BI;
     snapshot.deltaWithdrawnAmount = ZERO_BI;
     snapshot.deltaFarmAmount = ZERO_BI;
-    snapshot.createdAt = BigInt.fromString(day);
+    snapshot.createdAt = BigInt.fromI32(day);
     snapshot.updatedAt = ZERO_BI;
     snapshot.save();
   }
@@ -230,7 +161,7 @@ export function loadWhitelistTokenHourlySnapshot(token: Address, season: i32, ti
     snapshot.milestoneSeason = setting.milestoneSeason;
     snapshot.gaugePoints = setting.gaugePoints;
     snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
-    snapshot.createdAt = BigInt.fromString(hour);
+    snapshot.createdAt = BigInt.fromI32(hour);
     snapshot.updatedAt = ZERO_BI;
     snapshot.save();
   }
@@ -253,7 +184,7 @@ export function loadWhitelistTokenDailySnapshot(token: Address, timestamp: BigIn
     snapshot.milestoneSeason = setting.milestoneSeason;
     snapshot.gaugePoints = setting.gaugePoints;
     snapshot.optimalPercentDepositedBdv = setting.optimalPercentDepositedBdv;
-    snapshot.createdAt = BigInt.fromString(day);
+    snapshot.createdAt = BigInt.fromI32(day);
     snapshot.updatedAt = ZERO_BI;
     snapshot.save();
   }

@@ -1,13 +1,13 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { BigInt, Address, log } from "@graphprotocol/graph-ts";
 import { Silo, SiloDailySnapshot, SiloHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
-import { dayFromTimestamp, hourFromTimestamp } from "./DateUtil";
+import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
 export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: BigInt): void {
   const currentSeason = getCurrentSeason(beanstalk);
 
-  const hour = BigInt.fromString(hourFromTimestamp(timestamp));
-  const day = BigInt.fromString(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = silo.id + "-" + currentSeason.toString();
@@ -123,10 +123,18 @@ export function takeSiloSnapshots(silo: Silo, beanstalk: Address, timestamp: Big
     daily.deltaBeanMints = daily.beanMints;
     daily.deltaActiveFarmers = daily.activeFarmers;
   }
-  daily.createdAt = hour;
+  daily.createdAt = day;
   daily.updatedAt = timestamp;
   daily.save();
 
   silo.lastHourlySnapshotSeason = currentSeason;
   silo.lastDailySnapshotDay = day;
+}
+
+// Set case id on hourly snapshot. assumption is that the snapshot was already created
+export function setHourlyCaseId(caseId: BigInt, silo: Silo, beanstalk: Address): void {
+  const currentSeason = getCurrentSeason(beanstalk);
+  const hourly = SiloHourlySnapshot.load(silo.id + "-" + currentSeason.toString())!;
+  hourly.caseId = caseId;
+  hourly.save();
 }
