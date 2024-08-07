@@ -135,7 +135,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         address unripeToken,
         uint256 amount
     ) public view returns (uint256 redeem) {
-        return LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
+        return
+            LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
     /**
@@ -195,18 +196,21 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        if (unripeToken == C.UNRIPE_BEAN) { 
-            return LibUnripe.getPenalizedUnderlying(
-                unripeToken,
-                LibUnripe.DECIMALS,
-                IERC20(unripeToken).totalSupply()
-            );
+        if (unripeToken == C.UNRIPE_BEAN) {
+            return
+                LibUnripe.getPenalizedUnderlying(
+                    unripeToken,
+                    LibUnripe.DECIMALS,
+                    IERC20(unripeToken).totalSupply()
+                );
         }
-        
-        if (unripeToken == C.UNRIPE_LP) { 
-            return LibUnripe.getTotalRecapitalizedPercent()
-                .mul(LibUnripe.getTotalRecapitalizedPercent())
-                .div(LibUnripe.DECIMALS);
+
+        if (unripeToken == C.UNRIPE_LP) {
+            return
+                LibUnripe
+                    .getTotalRecapitalizedPercent()
+                    .mul(LibUnripe.getTotalRecapitalizedPercent())
+                    .div(LibUnripe.DECIMALS);
         }
     }
 
@@ -328,10 +332,11 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
      */
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
-        return LibLockedUnderlying.getLockedUnderlying(
-            C.UNRIPE_BEAN,
-            LibUnripe.getTotalRecapitalizedPercent()
-        );
+        return
+            LibLockedUnderlying.getLockedUnderlying(
+                C.UNRIPE_BEAN,
+                LibUnripe.getTotalRecapitalizedPercent()
+            );
     }
 
     /**

@@ -27,7 +27,12 @@ interface IBeanstalk {
     function getFertilizer(uint128) external view returns (uint256);
 }
 
-contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertilizer1155, FertilizerImage {
+contract Internalizer is
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    Fertilizer1155,
+    FertilizerImage
+{
     using LibRedundantMath128 for uint128;
     using LibStrings for uint256;
 
@@ -56,18 +61,11 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
      * @param _id - the id of the fertilizer
      * @return - the json metadata URI
      */
-    function uri(uint256 _id)
-        public
-        view
-        virtual
-        override 
-        returns (string memory)
-    {
-
+    function uri(uint256 _id) public view virtual override returns (string memory) {
         uint128 bpfRemaining = calculateBpfRemaining(_id);
 
         // generate the image URI
-        string memory imageUri = imageURI(_id , bpfRemaining);
+        string memory imageUri = imageURI(_id, bpfRemaining);
 
         // assemble and return the json URI
         return (
@@ -99,17 +97,17 @@ contract Internalizer is OwnableUpgradeable, ReentrancyGuardUpgradeable, Fertili
      * @notice Returns the beans per fertilizer remaining for a given fertilizer Id.
      * @param id - the id of the fertilizer
      * Formula: bpfRemaining = id - s.bpf
-     * Calculated here to avoid uint underflow 
+     * Calculated here to avoid uint underflow
      * Solidity 0.8.0 has underflow protection and the tx would revert but we are using 0.7.6
      */
     function calculateBpfRemaining(uint256 id) internal view returns (uint128) {
         // make sure it does not underflow
         if (uint128(id) >= IBeanstalk(BEANSTALK).beansPerFertilizer()) {
-            return uint128(id) - IBeanstalk(BEANSTALK).beansPerFertilizer() ;
+            return uint128(id) - IBeanstalk(BEANSTALK).beansPerFertilizer();
         } else {
             return 0;
         }
-    } 
+    }
 
     function name() external pure returns (string memory) {
         return "Fertilizer";

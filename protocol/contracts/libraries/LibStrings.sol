@@ -6,7 +6,6 @@ pragma solidity 0.8.20;
  * @dev String operations.
  */
 library LibStrings {
-
     bytes16 private constant _SYMBOLS = "0123456789abcdef";
     uint8 private constant _ADDRESS_LENGTH = 20;
 
@@ -30,13 +29,13 @@ library LibStrings {
         uint256 index = digits - 1;
         temp = value;
         while (temp != 0) {
-            buffer[index--] = bytes1(uint8(48 + temp % 10));
+            buffer[index--] = bytes1(uint8(48 + (temp % 10)));
             temp /= 10;
         }
         return string(buffer);
     }
 
-     function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
+    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
         bytes memory buffer = new bytes(2 * length + 2);
         buffer[0] = "0";
         buffer[1] = "x";
@@ -55,8 +54,8 @@ library LibStrings {
     /**
      * @dev Converts a `int256` to its ASCII `string` representation.
      */
-    function toString(int256 value) internal pure returns(string memory){
-        if(value > 0){
+    function toString(int256 value) internal pure returns (string memory) {
+        if (value > 0) {
             return toString(uint256(value));
         } else {
             return string(abi.encodePacked("-", toString(uint256(-value))));
@@ -64,12 +63,12 @@ library LibStrings {
     }
 
     /**
-    * @notice Returns a substring of a string starting from startIndex and ending at endIndex.
-    * @param str - The string to extract from.
-    * @param startIndex - The index to start at.
-    * @param endIndex - The index to end at.
-    * Inspired by: https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
-    */
+     * @notice Returns a substring of a string starting from startIndex and ending at endIndex.
+     * @param str - The string to extract from.
+     * @param startIndex - The index to start at.
+     * @param endIndex - The index to end at.
+     * Inspired by: https://ethereum.stackexchange.com/questions/31457/substring-in-solidity
+     */
     function substring(
         string memory str,
         uint startIndex,
@@ -88,12 +87,8 @@ library LibStrings {
      * @param number - The number to format.
      * @return string - The formatted string.
      */
-    function formatUintWith6DecimalsTo2(uint128 number)
-        internal 
-        pure
-        returns (string memory)
-    {                                       
-        // Cast to uint256 to be compatible with toString  
+    function formatUintWith6DecimalsTo2(uint128 number) internal pure returns (string memory) {
+        // Cast to uint256 to be compatible with toString
         string memory numString = toString(uint256(number));
 
         // If the number has fewer than 6 decimals, add trailing zeros
@@ -103,7 +98,11 @@ library LibStrings {
 
         // Extract the integer part and the first 2 decimal places
         string memory integerPart = substring(numString, 0, bytes(numString).length - 6);
-        string memory decimalPart = substring(numString, bytes(numString).length - 6, bytes(numString).length - 4);
+        string memory decimalPart = substring(
+            numString,
+            bytes(numString).length - 6,
+            bytes(numString).length - 4
+        );
 
         // Concatenate the integer part and the decimal part with a dot in between
         return string(abi.encodePacked(integerPart, ".", decimalPart));

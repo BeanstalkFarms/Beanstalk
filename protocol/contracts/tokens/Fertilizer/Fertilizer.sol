@@ -33,9 +33,9 @@ contract Fertilizer is Internalizer {
      * @notice Calculates and updates the amount of beans a user should receive
      * given a set of fertilizer ids. Callable only by the Beanstalk contract.
      * @param account - the user to update
-     * @param ids - an array of fertilizer ids 
+     * @param ids - an array of fertilizer ids
      * @param bpf - the current beans per fertilizer
-    */
+     */
     function beanstalkUpdate(
         address account,
         uint256[] memory ids,
@@ -51,8 +51,13 @@ contract Fertilizer is Internalizer {
      * @param id - the id of the fertilizer to mint
      * @param amount - the amount of fertilizer to mint
      * @param bpf - the current beans per fertilizer
-    */
-    function beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
+     */
+    function beanstalkMint(
+        address account,
+        uint256 id,
+        uint128 amount,
+        uint128 bpf
+    ) external onlyOwner {
         if (_balances[id][account].amount > 0) {
             uint256[] memory ids = new uint256[](1);
             ids[0] = id;
@@ -62,12 +67,12 @@ contract Fertilizer is Internalizer {
         _safeMint(account, id, amount, bytes("0"));
     }
 
-    /** 
+    /**
      * @notice hadles state updates before a fertilizer transfer
      * @param from - the account to transfer from
      * @param to - the account to transfer to
-     * @param ids - an array of fertilizer ids 
-    */
+     * @param ids - an array of fertilizer ids
+     */
     function _beforeTokenTransfer(
         address, // operator,
         address from,
@@ -88,11 +93,7 @@ contract Fertilizer is Internalizer {
      * @param ids - an array of fertilizer ids
      * @param bpf - the beans per fertilizer
      */
-    function _update(
-        address account,
-        uint256[] memory ids,
-        uint256 bpf
-    ) internal {
+    function _update(address account, uint256[] memory ids, uint256 bpf) internal {
         uint256 amount = __update(account, ids, bpf);
         if (amount > 0) IBeanstalk(owner()).payFertilizer(account, amount);
     }
@@ -128,7 +129,10 @@ contract Fertilizer is Internalizer {
      * @param ids - the fertilizer ids 
      * @return beans - the amount of fertilized beans the fertilizer owner has
      */
-    function balanceOfFertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
+    function balanceOfFertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBeanstalk(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
             uint256 stopBpf = bpf < ids[i] ? bpf : ids[i];
@@ -144,7 +148,10 @@ contract Fertilizer is Internalizer {
      * @param ids - the fertilizer ids 
      * @return beans - the amount of unfertilized beans the fertilizer owner has
      */
-    function balanceOfUnfertilized(address account, uint256[] memory ids) external view returns (uint256 beans) {
+    function balanceOfUnfertilized(
+        address account,
+        uint256[] memory ids
+    ) external view returns (uint256 beans) {
         uint256 bpf = uint256(IBeanstalk(owner()).beansPerFertilizer());
         for (uint256 i; i < ids.length; ++i) {
             if (ids[i] > bpf)

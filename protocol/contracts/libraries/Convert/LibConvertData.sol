@@ -49,16 +49,13 @@ library LibConvertData {
         (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
     }
 
-
     /// @notice Decoder for the antiLambdaConvert
     /// @dev contains an additional address parameter for the account to update the deposit
     /// and a bool to indicate whether to decrease the bdv
-    function antiLambdaConvert(bytes memory self)
-        internal
-        pure
-        returns (uint256 amount, address token, address account, bool decreaseBDV)
-    {
-        (, amount, token, account) = abi.decode(self, (ConvertKind, uint256, address , address));
+    function antiLambdaConvert(
+        bytes memory self
+    ) internal pure returns (uint256 amount, address token, address account, bool decreaseBDV) {
+        (, amount, token, account) = abi.decode(self, (ConvertKind, uint256, address, address));
         decreaseBDV = true;
     }
 }

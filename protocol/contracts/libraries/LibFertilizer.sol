@@ -42,7 +42,7 @@ library LibFertilizer {
 
     /**
      * @dev Adds a new fertilizer to Beanstalk, updates global state,
-     * the season queue, and returns the corresponding fertilizer id.  
+     * the season queue, and returns the corresponding fertilizer id.
      * @param season The season the fertilizer is added.
      * @param fertilizerAmount The amount of Fertilizer to add.
      * @param minLP The minimum amount of LP to add.
@@ -168,8 +168,8 @@ library LibFertilizer {
      * @dev Adds a fertilizer id in the queue.
      * fFirst is the lowest active Fertilizer Id (see AppStorage)
      * (start of linked list that is stored by nextFid).
-     *  The highest active Fertilizer Id 
-     * (end of linked list that is stored by nextFid). 
+     *  The highest active Fertilizer Id
+     * (end of linked list that is stored by nextFid).
      * @param id The id of the fertilizer.
      */
     function push(uint128 id) internal {
@@ -205,11 +205,7 @@ library LibFertilizer {
      * @dev Returns the dollar amount remaining for beanstalk to recapitalize.
      * @return remaining The dollar amount remaining.
      */
-    function remainingRecapitalization()
-        internal
-        view
-        returns (uint256 remaining)
-    {
+    function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalDollars = getTotalRecapDollarsNeeded();
         if (s.sys.fert.recapitalized >= totalDollars) return 0;
@@ -220,7 +216,7 @@ library LibFertilizer {
      * @dev Returns the total dollar amount needed to recapitalize Beanstalk.
      * @return totalDollars The total dollar amount.
      */
-    function getTotalRecapDollarsNeeded() internal view returns(uint256) {
+    function getTotalRecapDollarsNeeded() internal view returns (uint256) {
         return getTotalRecapDollarsNeeded(C.unripeLP().totalSupply());
     }
 
@@ -230,15 +226,12 @@ library LibFertilizer {
      * @param urLPsupply The supply of Unripe LP.
      * @return totalDollars The total dollar amount.
      */
-    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal pure returns(uint256) {
-	    uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(urLPsupply)
-            .div(DECIMALS);
-        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
+    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal pure returns (uint256) {
+        uint256 totalDollars = C.dollarPerUnripeLP().mul(urLPsupply).div(DECIMALS);
+        totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         return totalDollars;
     }
-    
+
     /**
      * @dev Removes the first fertilizer id in the queue.
      * fFirst is the lowest active Fertilizer Id (see AppStorage)

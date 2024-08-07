@@ -75,15 +75,20 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 grownStalk;
         LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
-        if (cp.decreaseBDV) {require(stems.length == 1 && amounts.length == 1, "Convert: DecreaseBDV only supports updating one deposit.");}
-        
+        if (cp.decreaseBDV) {
+            require(
+                stems.length == 1 && amounts.length == 1,
+                "Convert: DecreaseBDV only supports updating one deposit."
+            );
+        }
+
         require(cp.fromAmount > 0, "Convert: From amount is 0.");
 
         LibSilo._mow(LibTractor._user(), cp.fromToken);
 
         // If the fromToken and toToken are different, mow the toToken as well.
         if (cp.fromToken != cp.toToken) LibSilo._mow(LibTractor._user(), cp.toToken);
-        
+
         // Withdraw the tokens from the deposit.
         (pipeData.grownStalk, fromBdv) = LibConvert._withdrawTokens(
             cp.fromToken,
@@ -105,7 +110,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         uint256 newBdv = LibTokenSilo.beanDenominatedValue(cp.toToken, cp.toAmount);
 
         // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
-        toBdv = (newBdv > fromBdv || cp.decreaseBDV)  ? newBdv : fromBdv;
+        toBdv = (newBdv > fromBdv || cp.decreaseBDV) ? newBdv : fromBdv;
 
         toStem = LibConvert._depositTokensForConvert(cp.toToken, cp.toAmount, toBdv, grownStalk);
 

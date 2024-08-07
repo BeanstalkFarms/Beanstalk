@@ -48,7 +48,7 @@ contract MockSiloFacet is SiloFacet {
         return amount.mul(3).div(2);
     }
 
-        /// @dev Mocks a BDV decrease of 10
+    /// @dev Mocks a BDV decrease of 10
     function mockBDVDecrease(uint256 amount) external pure returns (uint256) {
         return amount - 10;
     }

@@ -155,7 +155,7 @@ library LibUnripe {
     }
 
     /**
-     * @notice Calculates the the penalized amount of Ripe Tokens corresponding to 
+     * @notice Calculates the the penalized amount of Ripe Tokens corresponding to
      * the amount of Unripe Tokens that are Chopped according to the current Chop Rate.
      * The new chop rate is %Recapitalized^2.
      */
@@ -170,23 +170,28 @@ library LibUnripe {
         // If the token being chopped is unripeLP, getting the current supply here is inaccurate due to the burn
         // Instead, we use the supply passed in as an argument to getTotalRecapDollarsNeeded since the supply variable
         // here is the total urToken supply queried before burnning the unripe token
-	    uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP ? LibFertilizer.getTotalRecapDollarsNeeded(supply) 
+        uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP
+            ? LibFertilizer.getTotalRecapDollarsNeeded(supply)
             : LibFertilizer.getTotalRecapDollarsNeeded();
         // chop rate = total redeemable * (%DollarRecapitalized)^2 * share of unripe tokens
         // redeem = totalRipeUnderlying * (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
         uint256 underlyingAmount = s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying;
-        if(totalUsdNeeded == 0) {
+        if (totalUsdNeeded == 0) {
             // when totalUsdNeeded == 0, the barnraise has been fully recapitalized.
             redeem = underlyingAmount.mul(amount).div(supply);
         } else {
-            redeem = underlyingAmount.mul(s.sys.fert.recapitalized).div(totalUsdNeeded).mul(amount).div(supply);
+            redeem = underlyingAmount
+                .mul(s.sys.fert.recapitalized)
+                .div(totalUsdNeeded)
+                .mul(amount)
+                .div(supply);
         }
-        
+
         // cap `redeem to `balanceOfUnderlying in the case that `s.recapitalized` exceeds `totalUsdNeeded`.
         // this can occur due to unripe LP chops.
-        if(redeem > underlyingAmount) redeem = underlyingAmount;
+        if (redeem > underlyingAmount) redeem = underlyingAmount;
     }
 
     /**

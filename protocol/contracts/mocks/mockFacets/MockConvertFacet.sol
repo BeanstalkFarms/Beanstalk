@@ -29,16 +29,21 @@ contract MockConvertFacet is ConvertFacet {
     ) external {
         LibSilo._mow(msg.sender, token);
         if (account == address(0)) account = msg.sender;
-        (uint256 stalkRemoved, uint256 bdvRemoved) = LibConvert._withdrawTokens(token, stems, amounts, maxTokens, account);
-        
-        
+        (uint256 stalkRemoved, uint256 bdvRemoved) = LibConvert._withdrawTokens(
+            token,
+            stems,
+            amounts,
+            maxTokens,
+            account
+        );
+
         emit MockConvert(stalkRemoved, bdvRemoved);
     }
 
     function depositForConvertE(
-        address token, 
-        uint256 amount, 
-        uint256 bdv, 
+        address token,
+        uint256 amount,
+        uint256 bdv,
         uint256 grownStalk,
         address account
     ) external {
@@ -51,14 +56,17 @@ contract MockConvertFacet is ConvertFacet {
         address tokenIn,
         uint amountIn,
         bytes calldata convertData
-    ) external returns (
-        address toToken,
-        address fromToken,
-        uint256 toAmount,
-        uint256 fromAmount,
-        address account,
-        bool decreaseBDV
-    ) {
+    )
+        external
+        returns (
+            address toToken,
+            address fromToken,
+            uint256 toAmount,
+            uint256 fromAmount,
+            address account,
+            bool decreaseBDV
+        )
+    {
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
         LibConvert.convertParams memory cp = LibConvert.convert(convertData);
         toToken = cp.toToken;

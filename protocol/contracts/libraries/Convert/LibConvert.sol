@@ -100,10 +100,7 @@ library LibConvert {
      * If it is anti-lambda, account is the address of the account to update the deposit
      * and decreaseBDV is true
      */
-    function convert(bytes calldata convertData)
-        external
-        returns (ConvertParams memory cp)
-    {
+    function convert(bytes calldata convertData) external returns (ConvertParams memory cp) {
         LibConvertData.ConvertKind kind = convertData.convertKind();
 
         if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
@@ -122,74 +119,69 @@ library LibConvert {
             (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibChopConvert
                 .convertUnripeToRipe(convertData);
         } else if (kind == LibConvertData.ConvertKind.LAMBDA_LAMBDA) {
-            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibLambdaConvert
-                .convert(convertData);
+            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount) = LibLambdaConvert.convert(
+                convertData
+            );
         } else if (kind == LibConvertData.ConvertKind.ANTI_LAMBDA_LAMBDA) {
-            (cp.toToken, cp.fromToken, cp.toAmount, cp.fromAmount, cp.account, cp.decreaseBDV) = LibLambdaConvert
-                .antiConvert(convertData);
+            (
+                cp.toToken,
+                cp.fromToken,
+                cp.toAmount,
+                cp.fromAmount,
+                cp.account,
+                cp.decreaseBDV
+            ) = LibLambdaConvert.antiConvert(convertData);
         } else {
             revert("Convert: Invalid payload");
         }
     }
 
-    function getMaxAmountIn(address fromToken, address toToken)
-        internal
-        view
-        returns (uint256)
-    {   
+    function getMaxAmountIn(address fromToken, address toToken) internal view returns (uint256) {
         // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
-        if (fromToken == toToken) 
-            return type(uint256).max;
+        if (fromToken == toToken) return type(uint256).max;
 
         // Bean -> Well LP Token
-        if (fromToken == C.BEAN && toToken.isWell())
-            return LibWellConvert.beansToPeg(toToken);
+        if (fromToken == C.BEAN && toToken.isWell()) return LibWellConvert.beansToPeg(toToken);
 
         // Well LP Token -> Bean
-        if (fromToken.isWell() && toToken == C.BEAN)
-            return LibWellConvert.lpToPeg(fromToken);
+        if (fromToken.isWell() && toToken == C.BEAN) return LibWellConvert.lpToPeg(fromToken);
 
         // urLP Convert
-        if (fromToken == C.UNRIPE_LP){
+        if (fromToken == C.UNRIPE_LP) {
             // UrBEANETH -> urBEAN
-            if (toToken == C.UNRIPE_BEAN)
-                return LibUnripeConvert.lpToPeg();
+            if (toToken == C.UNRIPE_BEAN) return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
-            if (toToken == LibBarnRaise.getBarnRaiseWell())
-                return type(uint256).max;
+            if (toToken == LibBarnRaise.getBarnRaiseWell()) return type(uint256).max;
         }
 
         // urBEAN Convert
-        if (fromToken == C.UNRIPE_BEAN){
+        if (fromToken == C.UNRIPE_BEAN) {
             // urBEAN -> urLP
-            if (toToken == C.UNRIPE_LP)
-                return LibUnripeConvert.beansToPeg();
+            if (toToken == C.UNRIPE_LP) return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
-            if (toToken == C.BEAN)
-                return type(uint256).max;
+            if (toToken == C.BEAN) return type(uint256).max;
         }
 
         revert("Convert: Tokens not supported");
     }
 
-    function getAmountOut(address fromToken, address toToken, uint256 fromAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function getAmountOut(
+        address fromToken,
+        address toToken,
+        uint256 fromAmount
+    ) internal view returns (uint256) {
         /// urLP -> urBEAN
         if (fromToken == C.UNRIPE_LP && toToken == C.UNRIPE_BEAN)
             return LibUnripeConvert.getBeanAmountOut(fromAmount);
-        
+
         /// urBEAN -> urLP
         if (fromToken == C.UNRIPE_BEAN && toToken == C.UNRIPE_LP)
             return LibUnripeConvert.getLPAmountOut(fromAmount);
-        
+
         // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
-        if (fromToken == toToken)
-            return fromAmount;
+        if (fromToken == toToken) return fromAmount;
 
         // Bean -> Well LP Token
         if (fromToken == C.BEAN && toToken.isWell())

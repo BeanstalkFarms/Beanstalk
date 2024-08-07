@@ -84,16 +84,15 @@ contract Sun is Oracle, Distribution {
     }
 
     /**
-    * @param twaDeltaB The time weighted average precalculated deltaB 
-    * from {Oracle.stepOracle} at the start of the season.
-    * @dev When below peg, Beanstalk wants to issue debt for beans to be sown(burned),
-    * and removed from the supply, pushing the price up. To avoid soil over issuance,
-    * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
-    * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
-    * at the start of the season, and pick the minimum of the two.
-    */
+     * @param twaDeltaB The time weighted average precalculated deltaB
+     * from {Oracle.stepOracle} at the start of the season.
+     * @dev When below peg, Beanstalk wants to issue debt for beans to be sown(burned),
+     * and removed from the supply, pushing the price up. To avoid soil over issuance,
+     * Beanstalk can read inter-block MEV manipulation resistant instantaneous reserves
+     * for whitelisted Well LP tokens via Multi Flow, compare it to the twaDeltaB calculated
+     * at the start of the season, and pick the minimum of the two.
+     */
     function setSoilBelowPeg(int256 twaDeltaB) internal {
-
         // Calculate deltaB from instantaneous reserves of all whitelisted Wells.
         int256 instDeltaB;
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
@@ -108,13 +107,12 @@ contract Sun is Oracle, Distribution {
         } else {
             setSoil(uint256(-twaDeltaB));
         }
-        
     }
 
     /**
-    * @param amount The new amount of Soil available.
-    * @dev Sets the amount of Soil available and emits a Soil event.
-    */
+     * @param amount The new amount of Soil available.
+     * @dev Sets the amount of Soil available and emits a Soil event.
+     */
     function setSoil(uint256 amount) internal {
         s.sys.soil = amount.toUint128();
         emit Soil(s.sys.season.current, amount.toUint128());
