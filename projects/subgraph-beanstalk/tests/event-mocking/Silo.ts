@@ -1,10 +1,8 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { newMockEvent } from "matchstick-as/assembly/index";
-
 import {
-  AddDeposit,
-  RemoveDeposit,
-  RemoveDeposits,
+  AddDeposit as AddDepositV2,
+  RemoveDeposit as RemoveDepositV2,
+  RemoveDeposits as RemoveDepositsV2,
   AddWithdrawal,
   RemoveWithdrawal,
   RemoveWithdrawals,
@@ -12,17 +10,23 @@ import {
   StalkBalanceChanged,
   Plant
 } from "../../generated/Beanstalk-ABIs/MarketV2";
-import { handleAddDeposit } from "../../src/SiloHandler";
 import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
+import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import {
+  AddDeposit as AddDepositV3,
+  RemoveDeposits as RemoveDepositsV3,
+  RemoveDeposit as RemoveDepositV3
+} from "../../generated/Beanstalk-ABIs/SiloV3";
 
-export function handleAddDeposits(events: AddDeposit[]): void {
-  events.forEach((event) => {
-    handleAddDeposit(event);
-  });
-}
-
-export function createAddDepositEvent(account: string, token: string, season: i32, amount: i32, tokenDecimals: i32, bdv: i32): AddDeposit {
-  let addDepositEvent = changetype<AddDeposit>(newMockEvent());
+export function createAddDepositV2Event(
+  account: string,
+  token: string,
+  season: i32,
+  amount: i32,
+  tokenDecimals: i32,
+  bdv: i32
+): AddDepositV2 {
+  let addDepositEvent = changetype<AddDepositV2>(mockBeanstalkEvent());
   addDepositEvent.parameters = new Array();
   let accountParam = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
   let tokenParam = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
@@ -42,11 +46,42 @@ export function createAddDepositEvent(account: string, token: string, season: i3
   addDepositEvent.parameters.push(amountParam);
   addDepositEvent.parameters.push(bdvParam);
 
-  return addDepositEvent as AddDeposit;
+  return addDepositEvent as AddDepositV2;
 }
 
-export function createRemoveDepositEvent(account: string, token: string, season: i32, amount: BigInt): RemoveDeposit {
-  let removeDepositEvent = changetype<RemoveDeposit>(newMockEvent());
+export function createAddDepositV3Event(
+  account: string,
+  token: string,
+  stem: BigInt,
+  amount: i32,
+  tokenDecimals: i32,
+  bdv: i32
+): AddDepositV3 {
+  let addDepositEvent = changetype<AddDepositV3>(mockBeanstalkEvent());
+  addDepositEvent.parameters = new Array();
+  let accountParam = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
+  let tokenParam = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  let stemParam = new ethereum.EventParam("stem", ethereum.Value.fromSignedBigInt(stem));
+  let amountParam = new ethereum.EventParam(
+    "amount",
+    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(amount).times(BigInt.fromI32(10 ** tokenDecimals)))
+  );
+  let bdvParam = new ethereum.EventParam(
+    "bdv",
+    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** BEAN_DECIMALS)))
+  );
+
+  addDepositEvent.parameters.push(accountParam);
+  addDepositEvent.parameters.push(tokenParam);
+  addDepositEvent.parameters.push(stemParam);
+  addDepositEvent.parameters.push(amountParam);
+  addDepositEvent.parameters.push(bdvParam);
+
+  return addDepositEvent as AddDepositV3;
+}
+
+export function createRemoveDepositV2Event(account: string, token: string, season: i32, amount: BigInt): RemoveDepositV2 {
+  let removeDepositEvent = changetype<RemoveDepositV2>(mockBeanstalkEvent());
   removeDepositEvent.parameters = new Array();
   let accountParam = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
   let tokenParam = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
@@ -58,24 +93,52 @@ export function createRemoveDepositEvent(account: string, token: string, season:
   removeDepositEvent.parameters.push(seasonParam);
   removeDepositEvent.parameters.push(amountParam);
 
-  return removeDepositEvent as RemoveDeposit;
+  return removeDepositEvent as RemoveDepositV2;
 }
 
-export function createRemoveDepositsEvent(
+export function createRemoveDepositV3Event(account: string, token: string, stem: BigInt, amount: BigInt, bdv: BigInt): RemoveDepositV3 {
+  let removeDepositEvent = changetype<RemoveDepositV3>(mockBeanstalkEvent());
+  removeDepositEvent.parameters = new Array();
+  let accountParam = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
+  let tokenParam = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  let stemParam = new ethereum.EventParam("stem", ethereum.Value.fromSignedBigInt(stem));
+  let amountParam = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount));
+  let bdvParam = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(bdv));
+
+  removeDepositEvent.parameters.push(accountParam);
+  removeDepositEvent.parameters.push(tokenParam);
+  removeDepositEvent.parameters.push(stemParam);
+  removeDepositEvent.parameters.push(amountParam);
+  removeDepositEvent.parameters.push(bdvParam);
+
+  return removeDepositEvent as RemoveDepositV3;
+}
+
+export function createRemoveDepositsV2Event(
   account: string,
   token: string,
   seasons: i32[],
   amounts: BigInt[],
   amount: BigInt
-): RemoveDeposits {
-  let event = changetype<RemoveDeposits>(newMockEvent());
+): RemoveDepositsV2 {
+  let event = changetype<RemoveDepositsV2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
+  let seasonsArray: ethereum.Value[] = [];
+  for (let i = 0; i < seasons.length; ++i) {
+    seasonsArray.push(ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(seasons[i])));
+  }
+
+  let amountsArray: ethereum.Value[] = [];
+  for (let i = 0; i < amounts.length; ++i) {
+    amountsArray.push(ethereum.Value.fromUnsignedBigInt(amounts[i]));
+  }
+
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
-  let param2 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(account)));
-  let param3 = new ethereum.EventParam("seasons", ethereum.Value.fromAddress(Address.fromString(account)));
-  let param4 = new ethereum.EventParam("amounts", ethereum.Value.fromAddress(Address.fromString(account)));
-  let param5 = new ethereum.EventParam("amount", ethereum.Value.fromAddress(Address.fromString(account)));
+  let param2 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  let param3 = new ethereum.EventParam("seasons", ethereum.Value.fromArray(seasonsArray));
+  let param4 = new ethereum.EventParam("amounts", ethereum.Value.fromArray(amountsArray));
+  let param5 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount));
 
   event.parameters.push(param1);
   event.parameters.push(param2);
@@ -83,53 +146,96 @@ export function createRemoveDepositsEvent(
   event.parameters.push(param4);
   event.parameters.push(param5);
 
-  return event as RemoveDeposits;
+  return event as RemoveDepositsV2;
+}
+
+export function createRemoveDepositsV3Event(
+  account: string,
+  token: string,
+  stems: BigInt[],
+  amounts: BigInt[],
+  amount: BigInt,
+  bdvs: BigInt[]
+): RemoveDepositsV3 {
+  let event = changetype<RemoveDepositsV3>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let stemsArray: ethereum.Value[] = [];
+  for (let i = 0; i < stems.length; ++i) {
+    stemsArray.push(ethereum.Value.fromSignedBigInt(stems[i]));
+  }
+
+  let amountsArray: ethereum.Value[] = [];
+  for (let i = 0; i < amounts.length; ++i) {
+    amountsArray.push(ethereum.Value.fromUnsignedBigInt(amounts[i]));
+  }
+
+  let bdvsArray: ethereum.Value[] = [];
+  for (let i = 0; i < bdvs.length; ++i) {
+    bdvsArray.push(ethereum.Value.fromUnsignedBigInt(bdvs[i]));
+  }
+
+  let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
+  let param2 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  let param3 = new ethereum.EventParam("stems", ethereum.Value.fromArray(stemsArray));
+  let param4 = new ethereum.EventParam("amounts", ethereum.Value.fromArray(amountsArray));
+  let param5 = new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount));
+  let param6 = new ethereum.EventParam("bdvs", ethereum.Value.fromArray(bdvsArray));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+  event.parameters.push(param4);
+  event.parameters.push(param5);
+  event.parameters.push(param6);
+
+  return event as RemoveDepositsV3;
 }
 
 export function createAddWithdrawalEvent(account: string, token: string, season: i32, amount: BigInt): AddWithdrawal {
-  let event = changetype<AddWithdrawal>(newMockEvent());
+  let event = changetype<AddWithdrawal>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as AddWithdrawal;
 }
 
 export function createRemoveWithdrawalEvent(account: string, token: string, season: i32, amount: BigInt): RemoveWithdrawal {
-  let event = changetype<RemoveWithdrawal>(newMockEvent());
+  let event = changetype<RemoveWithdrawal>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as RemoveWithdrawal;
 }
 
 export function createRemoveWithdrawalsEvent(account: string, token: string, seasons: i32[], amount: BigInt): RemoveWithdrawals {
-  let event = changetype<RemoveWithdrawals>(newMockEvent());
+  let event = changetype<RemoveWithdrawals>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as RemoveWithdrawals;
 }
 
 export function createSeedsBalanceChangedEvent(account: string, delta: BigInt): SeedsBalanceChanged {
-  let event = changetype<SeedsBalanceChanged>(newMockEvent());
+  let event = changetype<SeedsBalanceChanged>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as SeedsBalanceChanged;
 }
 
 export function createStalkBalanceChangedEvent(account: string, delta: BigInt, rootDelta: BigInt): StalkBalanceChanged {
-  let event = changetype<StalkBalanceChanged>(newMockEvent());
+  let event = changetype<StalkBalanceChanged>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as StalkBalanceChanged;
 }
 
 export function createPlantEvent(account: string, amount: BigInt): Plant {
-  let event = changetype<Plant>(newMockEvent());
+  let event = changetype<Plant>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as Plant;
 }
 
 export function createWhitelistTokenEvent(token: string, selector: Bytes, seeds: BigInt, stalk: BigInt): WhitelistToken {
-  let event = changetype<WhitelistToken>(newMockEvent());
+  let event = changetype<WhitelistToken>(mockBeanstalkEvent());
   event.parameters = new Array();
   return event as WhitelistToken;
 }
 
 export function createDewhitelistTokenEvent(token: string): DewhitelistToken {
-  let event = changetype<DewhitelistToken>(newMockEvent());
+  let event = changetype<DewhitelistToken>(mockBeanstalkEvent());
   event.parameters = new Array();
   let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
   event.parameters.push(param1);

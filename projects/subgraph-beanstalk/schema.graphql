@@ -621,8 +621,10 @@ type SiloDeposit @entity {
   depositVersion: String!
   "Season of deposit"
   season: Int
-  "Stem of deposit. If this is a season deposit type, stem will be filled according to `LibLegacyTokenSilo.seasonToStem`"
+  "Stem of deposit"
   stem: BigInt
+  "Silo v3.1 equivalent stem. This value will always be assigned regardless of the deposit version."
+  stemV31: BigInt!
   "Token amount deposited"
   depositedAmount: BigInt!
   "Original deposited BDV"

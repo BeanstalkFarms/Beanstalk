@@ -216,6 +216,7 @@ export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
       deposit.season = depositId.season!.toU32();
     }
     deposit.stem = depositId.stem;
+    deposit.stemV31 = ZERO_BI;
     deposit.depositedAmount = ZERO_BI;
     deposit.depositedBDV = ZERO_BI;
     deposit.hashes = [];

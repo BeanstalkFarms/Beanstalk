@@ -20,7 +20,7 @@ import {
   WhitelistToken as WhitelistToken_V3
 } from "../generated/Beanstalk-ABIs/SiloV3";
 import { Replanted, TransferDepositCall, TransferDepositsCall } from "../generated/Beanstalk-ABIs/Replanted";
-import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadSilo,
   loadSiloAsset,
@@ -65,9 +65,10 @@ function addDeposits(params: AddRemoveDepositsParams): void {
     if (params.depositVersion == "season") {
       deposit.depositVersion = "season";
       // Fill stem according to legacy conversion
-      deposit.stem = stemFromSeason(params.seasons![i].toI32(), params.token);
+      deposit.stemV31 = stemFromSeason(params.seasons![i].toI32(), params.token);
     } else {
       deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
+      deposit.stemV31 = params.event.block.number > GAUGE_BIP45_BLOCK ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
     }
 
     deposit = updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event)!;
