@@ -47,9 +47,7 @@ contract ReseedBarn {
      * @notice deploys Fertilizer and Fertilizer proxy,
      * reissues Fertilizer to each holder.
      */
-    function init(
-        Fertilizers[] calldata fertilizerIds
-    ) external {
+    function init(Fertilizers[] calldata fertilizerIds) external {
         // deploy fertilizer implmentation.
         // TODO: Merge misc-bip to get updated bytecode and mine for salt
         // TODO: This will have to be moved to a separate contract since we cant initialize all fert
@@ -57,7 +55,9 @@ contract ReseedBarn {
         Fertilizer fertilizer = new Fertilizer();
 
         // deploy fertilizer proxy. Set owner to beanstalk.
-        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{salt: FERTILIZER_PROXY_SALT}(
+        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
+            salt: FERTILIZER_PROXY_SALT
+        }(
             address(fertilizer), // logic
             address(this), // admin (diamond)
             abi.encode(IFertilizer.init.selector) // init data

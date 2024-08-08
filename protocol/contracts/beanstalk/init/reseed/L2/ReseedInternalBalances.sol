@@ -25,14 +25,12 @@ contract ReseedInternalBalances {
     }
 
     /**
-    * @notice Re-initializes the internal balances of farmers. 
-    * @param internalBalances the internal balances for each farmer
-    * @dev Receives an array of balances, from any token to any farmer and sets the internal balance.
-    * On migration, we just split the array to stay under gas limits. 
-    */
-    function init(
-        BeanstalkInternalBalance[] calldata internalBalances
-    ) external {
+     * @notice Re-initializes the internal balances of farmers.
+     * @param internalBalances the internal balances for each farmer
+     * @dev Receives an array of balances, from any token to any farmer and sets the internal balance.
+     * On migration, we just split the array to stay under gas limits.
+     */
+    function init(BeanstalkInternalBalance[] calldata internalBalances) external {
         setInternalBalances(internalBalances);
     }
 

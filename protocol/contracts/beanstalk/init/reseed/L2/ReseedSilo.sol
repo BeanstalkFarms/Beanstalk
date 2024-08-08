@@ -76,7 +76,7 @@ contract ReseedSilo {
     }
 
     /**
-     * @notice reseed the silo deposits. 
+     * @notice reseed the silo deposits.
      * @param  deposits an array of account deposits for any token
      * where each account's deposits can have many entries for the same token.
      * @dev all deposits and accounts are mown to the current season.
@@ -89,10 +89,13 @@ contract ReseedSilo {
                 // get stem from depositId.
                 (, int96 stem) = LibBytes.unpackAddressAndStem(deposits[i].dd[j].depositId);
                 // add deposit to account.
-                s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].amount =
-                    deposits[i].dd[j].amount;
-                s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].bdv =
-                    deposits[i].dd[j].bdv;
+                s
+                    .accts[deposits[i].account]
+                    .deposits[deposits[i].dd[j].depositId]
+                    .amount = deposits[i].dd[j].amount;
+                s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].bdv = deposits[i]
+                    .dd[j]
+                    .bdv;
                 // add deposit to depositIdList.
                 s.accts[deposits[i].account].depositIdList[deposits[i].token].depositIds.push(
                     deposits[i].dd[j].depositId
