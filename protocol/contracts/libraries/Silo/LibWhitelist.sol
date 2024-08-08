@@ -404,8 +404,16 @@ library LibWhitelist {
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        uint256 tokenStatusIndex = LibWhitelistedTokens.findWhitelistStatusIndex(token);
+
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
-        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false, false);
+        LibWhitelistedTokens.updateWhitelistStatus(
+            token,
+            false,
+            false,
+            false,
+            s.sys.silo.whitelistStatuses[tokenStatusIndex].isSoppable // if token was soppable, it should remain so, so that previous sops can be claimed.
+        );
 
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.
