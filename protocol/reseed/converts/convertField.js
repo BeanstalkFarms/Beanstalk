@@ -43,7 +43,9 @@ function parseFieldFromStorageAccounts(inputFilePath, outputFilePath, callback) 
     });
 }
 
-parseFieldFromStorageAccounts("./reseed/converts/storage-accounts20330000.json", "./reseed/converts/outputs/r4-field.json", (err, message) => {
+const inputFilePath = "./reseed/converts/storage-accounts20330000.json";
+const outputFilePath = "./reseed/converts/outputs/r4-field.json";
+parseFieldFromStorageAccounts(inputFilePath, outputFilePath, (err, message) => {
     if (err) {
         console.error('Error:', err);
         return;

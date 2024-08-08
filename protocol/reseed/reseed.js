@@ -24,7 +24,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 11) {
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseedGlobal,
+    reseedGlobal, // reseed global variables
     reseed3, // reseedbean + deploy wells on l2
     reseed4, // reseed field
     reseed5, // reseed barn (fert)

@@ -52,6 +52,8 @@ contract ReseedBarn {
     ) external {
         // deploy fertilizer implmentation.
         // TODO: Merge misc-bip to get updated bytecode and mine for salt
+        // TODO: This will have to be moved to a separate contract since we cant initialize all fert
+        // at once due to gas limits
         Fertilizer fertilizer = new Fertilizer();
 
         // deploy fertilizer proxy. Set owner to beanstalk.
