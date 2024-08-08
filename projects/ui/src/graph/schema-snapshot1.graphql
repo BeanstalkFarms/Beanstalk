@@ -69,6 +69,41 @@ type Item {
   spacesCount: Int
 }
 
+type Leaderboard {
+  lastVote: Int
+  proposalsCount: Int
+  space: String
+  user: String
+  votesCount: Int
+}
+
+input LeaderboardsWhere {
+  proposal_count: Int
+  proposal_count_gt: [Int]
+  proposal_count_gte: [Int]
+  proposal_count_in: [Int]
+  proposal_count_lt: [Int]
+  proposal_count_lte: [Int]
+  proposal_count_not: Int
+  proposal_count_not_in: [Int]
+  space: String
+  space_in: [String]
+  space_not: String
+  space_not_in: [String]
+  user: String
+  user_in: [String]
+  user_not: String
+  user_not_in: [String]
+  vote_count: Int
+  vote_count_gt: [Int]
+  vote_count_gte: [Int]
+  vote_count_in: [Int]
+  vote_count_lt: [Int]
+  vote_count_lte: [Int]
+  vote_count_not: Int
+  vote_count_not_in: [Int]
+}
+
 type Message {
   address: String
   id: String
@@ -205,6 +240,7 @@ input ProposalWhere {
 type Query {
   aliases(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: AliasWhere): [Alias]
   follows(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: FollowWhere): [Follow]
+  leaderboards(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: LeaderboardsWhere): [Leaderboard]
   messages(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: MessageWhere): [Message]
   networks: [Item]
   plugins: [Item]
@@ -235,8 +271,6 @@ type RankingObject {
 
 input RankingWhere {
   category: String
-  id: String
-  id_in: [String]
   network: String
   plugin: String
   search: String
@@ -319,6 +353,7 @@ type SpaceVoting {
 }
 
 input SpaceWhere {
+  controller: String
   created: Int
   created_gt: Int
   created_gte: Int
@@ -335,10 +370,13 @@ type Statement {
   about: String
   created: Int!
   delegate: String
+  discourse: String
   id: String!
   ipfs: String!
+  network: String
   space: String!
   statement: String
+  status: String
   updated: Int!
 }
 
@@ -409,10 +447,18 @@ type Treasury {
 type User {
   about: String
   avatar: String
-  created: Int!
+  cover: String
+  created: Int
+  farcaster: String
+  github: String
   id: String!
   ipfs: String
+  lastVote: Int
+  lens: String
   name: String
+  proposalsCount: Int
+  twitter: String
+  votesCount: Int
 }
 
 input UsersWhere {

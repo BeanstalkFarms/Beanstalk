@@ -83,6 +83,9 @@ library LibWstethEthOracle {
             ONE
         );
 
+        // uniswap price is a 1e6, need to convert to 1e18, multiply by 1e12
+        uniswapPrice = uniswapPrice * PRECISION_DENOMINATOR;
+
         // Check if the uniswapPrice oracle fails.
         if (uniswapPrice == 0) return 0;
 

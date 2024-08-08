@@ -28,6 +28,7 @@ contract FloodTest is TestHelper {
 
     // test accounts
     address[] farmers;
+    int96 depositStemBean;
 
     event SeasonOfPlentyWell(uint256 indexed season, address well, address token, uint256 amount);
     event SeasonOfPlentyField(uint256 toField);
@@ -55,14 +56,248 @@ contract FloodTest is TestHelper {
         season.siloSunrise(0);
         season.siloSunrise(0);
 
+        depositStemBean = bs.stemTipForToken(C.BEAN);
+
         // users 1 and 2 deposits 1000 beans into the silo.
         address[] memory depositUsers = new address[](2);
         depositUsers[0] = users[1];
         depositUsers[1] = users[2];
-        depostBeansForUsers(depositUsers, 1_000e6, 10_000e6);
+        depostBeansForUsers(depositUsers, 1_000e6, 10_000e6, true);
 
         // give user2 some eth
         vm.deal(users[2], 10 ether);
+    }
+
+    function testBugReportLostPlenty2() public {
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+
+        // set reserves so next season plenty is accrued
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise(); // 1st actual sop
+        bs.mow(users[1], C.BEAN);
+
+        season.rainSunrise();
+        season.rainSunrise();
+
+        season.droughtSunrise();
+        season.droughtSunrise();
+
+        // withdraw deposit
+        vm.prank(users[1]);
+        bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
+
+        season.rainSunrise();
+        bs.mow(users[1], C.BEAN);
+
+        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
+        assertEq(userPlenty, 25595575914848452999);
+    }
+
+    function testReducesRainRootsUponWithdrawal() public {
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise();
+        season.rainSunrise();
+
+        bs.mow(users[1], C.BEAN);
+
+        uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
+
+        assertEq(rainRoots, 10004000000000000000000000000000);
+
+        vm.prank(users[1]);
+        bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
+
+        rainRoots = bs.balanceOfRainRoots(users[1]);
+
+        assertEq(rainRoots, 0);
+    }
+
+    function testStopsRainingAndWithdraw() public {
+        int96 stem = bs.stemTipForToken(C.BEAN);
+        address[] memory testUsers = new address[](1);
+
+        testUsers[0] = users[3];
+        depostBeansForUsers(testUsers, 50_000e6, 100_000e6, false);
+
+        // set reserves so that a sop will occur
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise();
+        bs.mow(users[3], C.BEAN);
+
+        uint256 rainRoots = bs.balanceOfRainRoots(users[3]);
+        assertEq(rainRoots, 500000000000000000000000000000000);
+
+        season.droughtSunrise();
+
+        // withdraw
+        vm.prank(users[3]);
+        bs.withdrawDeposit(C.BEAN, stem, 50_000e6, 0);
+        rainRoots = bs.balanceOfRainRoots(users[3]);
+        assertEq(rainRoots, 0);
+
+        // start raining again
+        season.rainSunrise();
+        season.rainSunrise();
+        bs.mow(users[3], C.BEAN);
+        rainRoots = bs.balanceOfRainRoots(users[3]);
+        assertEq(rainRoots, 0);
+
+        // measure actual roots
+        uint256 roots = bs.balanceOfRoots(users[3]);
+        assertEq(roots, 0);
+    }
+
+    function testBurnsRainRootsUponTransfer() public {
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise(); // start raining
+        season.rainSunrise(); // sop
+
+        bs.mow(users[1], C.BEAN);
+
+        uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
+
+        assertEq(rainRoots, 10004000000000000000000000000000);
+
+        vm.prank(users[1]);
+        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 1_000e6);
+        bs.mow(users[1], C.BEAN);
+
+        // user[1] should have 0 rain roots
+        assertEq(bs.balanceOfRainRoots(users[1]), 0);
+        // user[3] should have 0 rain roots, none transferred
+        assertEq(bs.balanceOfRainRoots(users[3]), 0);
+    }
+
+    function testBurnsHalfOfRainRootsUponHalfTransfer() public {
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise(); // start raining
+        season.rainSunrise(); // sop
+
+        bs.mow(users[1], C.BEAN);
+
+        uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
+
+        assertEq(rainRoots, 10004000000000000000000000000000);
+
+        vm.prank(users[1]);
+        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
+        bs.mow(users[1], C.BEAN);
+
+        // user[1] should be down by 500 rain roots
+        assertEq(bs.balanceOfRainRoots(users[1]), 5004000000000000000000000000000);
+    }
+
+    function testDoesNotBurnRainRootsUponTransferIfExtraRootsAvailable() public {
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise(); // start raining
+        season.rainSunrise(); // sop
+
+        bs.mow(users[1], C.BEAN);
+
+        uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
+
+        assertEq(rainRoots, 10004000000000000000000000000000);
+
+        // do another deposit
+        vm.prank(users[1]);
+        bs.deposit(C.BEAN, 1_000e6, 0);
+
+        // pass germination
+        season.siloSunrise(0);
+        season.siloSunrise(0);
+
+        // verify roots went up
+        assertEq(bs.balanceOfRoots(users[1]), 20008000000000000000000000000000);
+
+        // verify rain roots stayed the same
+        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
+
+        vm.prank(users[1]);
+        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
+        bs.mow(users[1], C.BEAN);
+
+        // user should have full rain roots, since they had non-rain roots that could be removed before
+        assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
+    }
+
+    function testGerminationRainRoots() public {
+        C.bean().mint(users[3], 50_000e6);
+        vm.prank(users[3]);
+        C.bean().approve(BEANSTALK, type(uint256).max);
+        vm.prank(users[3]);
+        bs.deposit(C.BEAN, 50_000e6, 0);
+
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise();
+
+        season.rainSunrise();
+        bs.mow(users[3], C.BEAN);
+
+        uint256 totalRainRoots = bs.totalRainRoots();
+        uint256 userRainRoots = bs.balanceOfRainRoots(users[3]);
+        // expect user rain roots to be less than total rain roots
+        assertLt(userRainRoots, totalRainRoots);
+
+        // also rain roots should be zero
+        assertEq(userRainRoots, 0);
+    }
+
+    function testSecondGerminationRainRoots() public {
+        // not raining
+
+        season.rainSunrise(); // start raining
+
+        uint256 totalRainRootsBefore = bs.totalRainRoots();
+
+        C.bean().mint(users[3], 50_000e6);
+        vm.prank(users[3]);
+        C.bean().approve(BEANSTALK, type(uint256).max);
+        vm.prank(users[3]);
+        bs.deposit(C.BEAN, 50_000e6, 0);
+        // set reserves so we'll sop
+        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+
+        season.rainSunrise(); // sop
+        bs.mow(users[3], C.BEAN);
+
+        uint256 totalRainRootsAfter = bs.totalRainRoots();
+        // rain roots before should equal rain roots after, anything deposited after raining doesn't count
+        assertEq(
+            totalRainRootsBefore,
+            totalRainRootsAfter,
+            "total rain roots before and after should be equal"
+        );
+
+        uint256 userRainRoots = bs.balanceOfRainRoots(users[3]);
+
+        // assert that user rain roots are zero
+        assertEq(userRainRoots, 0, "user rain roots should be zero");
+
+        // shouldn't be a way for a user to get more rain roots than total rain roots
+        // couldn't find a way to do lessThan without importing something else that supports BigNumber from chai
+        assertLt(
+            userRainRoots,
+            totalRainRootsAfter,
+            "user rain roots should be less than total rain roots"
+        );
     }
 
     function testNotRaining() public view {
@@ -504,13 +739,26 @@ contract FloodTest is TestHelper {
         wells[1] = LibFlood.WellDeltaB(address(1), 200);
         wells[2] = LibFlood.WellDeltaB(address(2), -300);
         wells[3] = LibFlood.WellDeltaB(address(3), 400);
-        wells[4] = LibFlood.WellDeltaB(address(4), -500);
+        wells[4] = LibFlood.WellDeltaB(address(4), 500);
         wells = LibFlood.quickSort(wells, 0, right);
-        assertEq(wells[0].deltaB, 400);
-        assertEq(wells[1].deltaB, 200);
-        assertEq(wells[2].deltaB, 100);
-        assertEq(wells[3].deltaB, -300);
-        assertEq(wells[4].deltaB, -500);
+        assertEq(wells[0].deltaB, 500);
+        assertEq(wells[1].deltaB, 400);
+        assertEq(wells[2].deltaB, 200);
+        assertEq(wells[3].deltaB, 100);
+        assertEq(wells[4].deltaB, -300);
+
+        // these values are examples from the codehawks report
+        wells[0] = LibFlood.WellDeltaB(address(0), 39);
+        wells[1] = LibFlood.WellDeltaB(address(1), 6);
+        wells[2] = LibFlood.WellDeltaB(address(2), 27);
+        wells[3] = LibFlood.WellDeltaB(address(3), -14);
+        wells[4] = LibFlood.WellDeltaB(address(4), 15);
+        wells = LibFlood.quickSort(wells, 0, right);
+        assertEq(wells[0].deltaB, 39);
+        assertEq(wells[1].deltaB, 27);
+        assertEq(wells[2].deltaB, 15);
+        assertEq(wells[3].deltaB, 6);
+        assertEq(wells[4].deltaB, -14);
 
         wells = new LibFlood.WellDeltaB[](2);
         right = int(wells.length - 1);
@@ -525,6 +773,50 @@ contract FloodTest is TestHelper {
         wells = LibFlood.quickSort(wells, 0, right);
         assertEq(wells[0].deltaB, 200);
         assertEq(wells[1].deltaB, 100);
+
+        wells = new LibFlood.WellDeltaB[](20);
+        right = int(wells.length - 1);
+        wells[0] = LibFlood.WellDeltaB(address(0), -1);
+        wells[1] = LibFlood.WellDeltaB(address(1), 2);
+        wells[2] = LibFlood.WellDeltaB(address(2), -3);
+        wells[3] = LibFlood.WellDeltaB(address(3), 4);
+        wells[4] = LibFlood.WellDeltaB(address(4), -5);
+        wells[5] = LibFlood.WellDeltaB(address(5), 6);
+        wells[6] = LibFlood.WellDeltaB(address(6), -7);
+        wells[7] = LibFlood.WellDeltaB(address(7), 8);
+        wells[8] = LibFlood.WellDeltaB(address(8), -9);
+        wells[9] = LibFlood.WellDeltaB(address(9), 10);
+        wells[10] = LibFlood.WellDeltaB(address(10), -11);
+        wells[11] = LibFlood.WellDeltaB(address(11), 12);
+        wells[12] = LibFlood.WellDeltaB(address(12), -13);
+        wells[13] = LibFlood.WellDeltaB(address(13), 14);
+        wells[14] = LibFlood.WellDeltaB(address(14), -15);
+        wells[15] = LibFlood.WellDeltaB(address(15), 16);
+        wells[16] = LibFlood.WellDeltaB(address(16), -17);
+        wells[17] = LibFlood.WellDeltaB(address(17), 18);
+        wells[18] = LibFlood.WellDeltaB(address(18), -19);
+        wells[19] = LibFlood.WellDeltaB(address(19), 20);
+        wells = LibFlood.quickSort(wells, 0, right);
+        assertEq(wells[0].deltaB, 20);
+        assertEq(wells[1].deltaB, 18);
+        assertEq(wells[2].deltaB, 16);
+        assertEq(wells[3].deltaB, 14);
+        assertEq(wells[4].deltaB, 12);
+        assertEq(wells[5].deltaB, 10);
+        assertEq(wells[6].deltaB, 8);
+        assertEq(wells[7].deltaB, 6);
+        assertEq(wells[8].deltaB, 4);
+        assertEq(wells[9].deltaB, 2);
+        assertEq(wells[10].deltaB, -1);
+        assertEq(wells[11].deltaB, -3);
+        assertEq(wells[12].deltaB, -5);
+        assertEq(wells[13].deltaB, -7);
+        assertEq(wells[14].deltaB, -9);
+        assertEq(wells[15].deltaB, -11);
+        assertEq(wells[16].deltaB, -13);
+        assertEq(wells[17].deltaB, -15);
+        assertEq(wells[18].deltaB, -17);
+        assertEq(wells[19].deltaB, -19);
     }
 
     function test_notGerminated() public {
@@ -615,7 +907,8 @@ contract FloodTest is TestHelper {
     function depostBeansForUsers(
         address[] memory users,
         uint256 beansDeposit,
-        uint256 beansMint
+        uint256 beansMint,
+        bool mow
     ) public {
         for (uint i = 0; i < users.length; i++) {
             C.bean().mint(users[i], beansMint);
@@ -629,10 +922,12 @@ contract FloodTest is TestHelper {
         season.siloSunrise(0);
         season.siloSunrise(0);
 
-        for (uint i = 0; i < users.length; i++) {
-            // mow, so that lastUpdated has been called at least once
-            vm.prank(users[i]);
-            bs.mow(users[i], C.BEAN);
+        if (mow) {
+            for (uint i = 0; i < users.length; i++) {
+                // mow, so that lastUpdated has been called at least once
+                vm.prank(users[i]);
+                bs.mow(users[i], C.BEAN);
+            }
         }
     }
 

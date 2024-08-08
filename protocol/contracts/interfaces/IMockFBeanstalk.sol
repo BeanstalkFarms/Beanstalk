@@ -1674,6 +1674,8 @@ interface IMockFBeanstalk {
 
     function totalPods(uint256 fieldId) external view returns (uint256);
 
+    function totalRainRoots() external view returns (uint256);
+
     function totalRealSoil() external view returns (uint256);
 
     function totalRoots() external view returns (uint256);

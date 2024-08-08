@@ -41,9 +41,11 @@ export function ToastAlert({
         display: 'flex',
         alignItems: 'center',
         flexDirection: 'row',
+        maxHeight: 250,
+        overflow: 'hidden',
       }}
     >
-      <Typography sx={{ pl: 1, pr: 2, flex: 1, textAlign: 'center' }}>
+      <Box sx={{ pl: 1, pr: 2, flex: 1, alignSelf: 'flex-start', textAlign: 'center' }}>
         <span>
           {desc}
           {hash && (
@@ -70,7 +72,7 @@ export function ToastAlert({
             <div>{msg}</div>
           </Box>
         )}
-      </Typography>
+      </Box>
       {rawError && (
         <IconButton
           sx={{

@@ -57,7 +57,6 @@ library LibUsdOracle {
         if (token == C.WSTETH) {
             return LibWstethUsdOracle.getUsdWstethPrice(lookback);
         }
-
         // tokens that use the custom oracle implementation are called here.
         return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }
@@ -106,9 +105,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                        token,
-                        0x0000000000000000000000000000000000000348
-                    ); // 0x0348 is the address for USD
+                    token,
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
             }
 
             // todo: need to update timeout
@@ -148,9 +147,9 @@ library LibUsdOracle {
             if (chainlinkOraclePriceAddress == address(0)) {
                 // use the chainlink registry
                 chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                        chainlinkToken,
-                        0x0000000000000000000000000000000000000348
-                    ); // 0x0348 is the address for USD
+                    chainlinkToken,
+                    0x0000000000000000000000000000000000000348
+                ); // 0x0348 is the address for USD
             }
 
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(

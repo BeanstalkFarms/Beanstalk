@@ -66,6 +66,10 @@ contract Listing is PodTransfer {
             s.sys.fields[podListing.fieldId].harvestable <= podListing.maxHarvestableIndex,
             "Marketplace: Expired."
         );
+        require(
+            podListing.minFillAmount <= podListing.podAmount,
+            "Marketplace: minFillAmount must be <= podAmount."
+        );
 
         if (s.sys.podListings[podListing.fieldId][podListing.index] != bytes32(0))
             LibMarket._cancelPodListing(podListing.lister, podListing.fieldId, podListing.index);

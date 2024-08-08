@@ -70,7 +70,7 @@ interface IBeanstalk {
         bytes32 r,
         bytes32 s
     ) external payable;
-    
+
     function deposit(
         address token,
         uint256 _amount,

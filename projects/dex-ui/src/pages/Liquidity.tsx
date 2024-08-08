@@ -23,8 +23,7 @@ import { useWellWithParams } from "src/wells/useWellWithParams";
 export const Liquidity = () => {
   const { well, loading, error } = useWellWithParams();
   const navigate = useNavigate();
-
-  const [wellFunctionName, setWellFunctionName] = useState<string>("This Well's Function");
+  
   const [tab, setTab] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -47,19 +46,11 @@ export const Liquidity = () => {
     setOpen(!open);
   }, [open]);
 
-  useEffect(() => {
-    const run = async () => {
-      if (well && well.wellFunction) {
-        const _wellName = await well.wellFunction.contract.name();
-        setWellFunctionName(_wellName);
-      }
-    };
-    run();
-  }, [well]);
-
   if (error) {
     return <Error message={error?.message} errorOnly />;
   }
+
+  const nonEmptyReserves = well && well?.reserves?.some((reserve) => reserve.gt(0));
 
   return (
     <Page>
@@ -97,10 +88,10 @@ export const Liquidity = () => {
                 <LearnYield />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnWellFunction name={wellFunctionName} />
+                <LearnWellFunction well={well} />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnPump />
+                <LearnPump well={well} />
               </LoadingItem>
             </LearnMoreButtons>
           </LearnMoreContainer>
@@ -116,7 +107,7 @@ export const Liquidity = () => {
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover>
+              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover disabled={!nonEmptyReserves}>
                 <LoadingItem loading={loading} onLoading={<>{""}</>}>
                   <span>Remove Liquidity</span>
                 </LoadingItem>
@@ -132,7 +123,7 @@ export const Liquidity = () => {
               handleSlippageValueChange={handleSlippageValueChange}
             />
           )}
-          {tab === 1 && (
+          {tab === 1 && nonEmptyReserves && (
             <RemoveLiquidity
               well={well}
               loading={loading}

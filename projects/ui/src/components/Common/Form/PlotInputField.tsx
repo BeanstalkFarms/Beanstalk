@@ -72,6 +72,7 @@ const PlotInputField: FC<
   const [numPods, numPodsFloat] = useMemo(() => {
     if (!plot.index) return [ZERO_BN, 0];
     const _pods = plots[plot.index];
+    if (!_pods) return [ZERO_BN, 0];
     return [_pods, _pods.toNumber()];
   }, [plots, plot.index]);
 

@@ -94,7 +94,7 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 
   if (event.params.deltaGerminatingStalk > ZERO_BI) {
     // Germinating stalk is being added in the current season
-    let farmerGerminating = loadOrCreateGerminating(event.params.account, currentSeason);
+    let farmerGerminating = loadOrCreateGerminating(event.params.account, currentSeason, true);
     farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.deltaGerminatingStalk);
     farmerGerminating.save();
   } else {
@@ -128,7 +128,7 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
     return;
   }
 
-  let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32());
+  let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32(), false);
   tokenGerminating.season = event.params.germinationSeason.toU32();
   tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
   tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
@@ -145,7 +145,7 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
     return;
   }
 
-  let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32());
+  let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32(), false);
   siloGerminating.season = event.params.germinationSeason.toU32();
   siloGerminating.stalk = siloGerminating.stalk.plus(event.params.deltaGerminatingStalk);
   // Don't delete this entity as the overall silo germinating stalk entity is likely to be recreated frequently.

@@ -79,3 +79,8 @@ templates:
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
       file: ./src/WellHandler.ts
+# features:
+#   - grafting
+# graft:
+#   base: QmWHi6hu2wXnyxBHHmQHwCQLoq5KkoTX2qLm8MdyVXTyTu
+#   block: 20216425

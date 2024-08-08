@@ -7402,6 +7402,44 @@
         "type": "address"
       }
     ],
+    "name": "getGerminatingStem",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "germinatingStem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGerminatingStems",
+    "outputs": [
+      {
+        "internalType": "int96[]",
+        "name": "germinatingStems",
+        "type": "int96[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
     "name": "getGerminatingTotalDeposited",
     "outputs": [
       {
@@ -7935,6 +7973,19 @@
   {
     "inputs": [],
     "name": "totalEarnedBeans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalRainRoots",
     "outputs": [
       {
         "internalType": "uint256",
@@ -10080,6 +10131,35 @@
       },
       {
         "internalType": "uint256",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "defaultGaugePointFunction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newGaugePoints",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "length",
         "type": "uint256"
       }
@@ -11302,6 +11382,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "token",
         "type": "address"
       },
@@ -11322,39 +11407,6 @@
       }
     ],
     "name": "mockIncrementGermination",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint96",
-        "name": "gaugePoints",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "mockInitalizeGaugeForToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11415,6 +11467,39 @@
   {
     "inputs": [],
     "name": "mockUpdateAverageStalkPerBdvPerSeason",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint96",
+        "name": "gaugePoints",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "mockinitializeGaugeForToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11516,6 +11601,11 @@
         "internalType": "uint256",
         "name": "caseId",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "oracleFailure",
+        "type": "bool"
       }
     ],
     "name": "seedGaugeSunSunrise",

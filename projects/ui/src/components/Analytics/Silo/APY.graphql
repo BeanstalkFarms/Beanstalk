@@ -5,7 +5,7 @@ query SeasonalAPY(
   $token: Bytes
 ) {
   seasons: tokenYields(
-    where: { season_lte: $season_lte, season_gt: $season_gt, token: $token, siloYield_: {window: ROLLING_30_DAY} }
+    where: { season_lte: $season_lte, season_gt: $season_gt, token: $token, siloYield_: {emaWindow: ROLLING_30_DAY} }
     first: $first
     orderBy: season
     orderDirection: desc

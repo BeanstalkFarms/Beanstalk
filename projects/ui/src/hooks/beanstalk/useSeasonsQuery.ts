@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DocumentNode, QueryOptions, useLazyQuery } from '@apollo/client';
+import { DocumentNode, QueryOptions, gql, useLazyQuery } from '@apollo/client';
 import { apolloClient } from '~/graph/client';
 
 const PAGE_SIZE = 1000;
@@ -56,7 +56,7 @@ export type SnapshotData<T extends MinimumViableSnapshotQuery> =
  * @returns QueryDocument
  */
 const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
-  document: DocumentNode,
+  document: DocumentNode = gql`query MyQuery { _meta { hasIndexingErrors } }`,
   range: SeasonRange,
   queryConfig?: Partial<QueryOptions>
 ) => {

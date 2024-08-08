@@ -76,7 +76,8 @@ contract ConvertGettersFacet {
     function getOverallConvertCapacity() external view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 _overallCappedDeltaB = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
-        uint256 overallConvertCapacityUsed = s.sys
+        uint256 overallConvertCapacityUsed = s
+            .sys
             .convertCapacity[block.number]
             .overallConvertCapacityUsed;
         return
