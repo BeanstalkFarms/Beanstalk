@@ -11,13 +11,7 @@ import {
   TotalStalkChangedFromGermination
 } from "../generated/Beanstalk-ABIs/SeedGauge";
 import { handleRateChange } from "./utils/Field";
-import {
-  loadSilo,
-  loadWhitelistTokenSetting,
-  loadWhitelistTokenDailySnapshot,
-  loadWhitelistTokenHourlySnapshot,
-  addToSiloWhitelist
-} from "./utils/Silo";
+import { loadSilo, loadWhitelistTokenSetting, addToSiloWhitelist } from "./utils/Silo";
 import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "./utils/Germinating";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { updateStalkBalances } from "./SiloHandler";
@@ -26,6 +20,7 @@ import { BEAN_WETH_CP2_WELL } from "../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../subgraph-core/utils/Bytes";
 import { getCurrentSeason } from "./utils/Beanstalk";
 import { setHourlyCaseId, takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeWhitelistTokenSettingSnapshots } from "./utils/snapshots/WhitelistTokenSetting";
 
 export function handleTemperatureChange(event: TemperatureChange): void {
   handleRateChange(event.address, event.block, event.params.season, event.params.caseId, event.params.absChange);
@@ -50,14 +45,9 @@ export function handleGaugePointChange(event: GaugePointChange): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
 
-  let whitelistHourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
-  let whitelistDaily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
-  whitelistHourly.gaugePoints = event.params.gaugePoints;
-  whitelistDaily.gaugePoints = event.params.gaugePoints;
-  whitelistHourly.save();
-  whitelistDaily.save();
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  siloSettings.save();
 }
 
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
@@ -158,10 +148,9 @@ export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
   siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
-  siloSettings.save();
 
-  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
-  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  siloSettings.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -181,28 +170,14 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
-  hourly.gpSelector = siloSettings.gpSelector;
-  hourly.lwSelector = siloSettings.lwSelector;
-  hourly.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
-  hourly.updatedAt = siloSettings.updatedAt;
-
-  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
-  daily.gpSelector = siloSettings.gpSelector;
-  daily.lwSelector = siloSettings.lwSelector;
-  daily.optimalPercentDepositedBdv = siloSettings.optimalPercentDepositedBdv;
-  daily.updatedAt = siloSettings.updatedAt;
-
   // On initial gauge deployment, there was no GaugePointChange event emitted. Need to initialize BEANETH here
   if (
     event.params.token == BEAN_WETH_CP2_WELL &&
     event.transaction.hash.toHexString().toLowerCase() == "0x299a4b93b8d19f8587b648ce04e3f5e618ea461426bb2b2337993b5d6677f6a7"
   ) {
     siloSettings.gaugePoints = BI_10.pow(20);
-    hourly.gaugePoints = BI_10.pow(20);
-    daily.gaugePoints = BI_10.pow(20);
   }
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
   siloSettings.save();
-  hourly.save();
-  daily.save();
 }

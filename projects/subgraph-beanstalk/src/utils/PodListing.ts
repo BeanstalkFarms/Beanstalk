@@ -2,7 +2,8 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { PodListing } from "../../generated/schema";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./PodMarketplace";
+import { loadPodMarketplace } from "./PodMarketplace";
+import { takeMarketSnapshots } from "./snapshots/Marketplace";
 
 export function loadPodListing(account: Address, index: BigInt): PodListing {
   let id = account.toHexString() + "-" + index.toString();
@@ -44,7 +45,7 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
 }
 
 export function expirePodListingIfExists(
-  diamondAddress: Address,
+  protocol: Address,
   farmer: string,
   listedPlotIndex: BigInt,
   timestamp: BigInt,
@@ -57,7 +58,7 @@ export function expirePodListingIfExists(
   listing.status = "EXPIRED";
   listing.save();
 
-  let market = loadPodMarketplace(diamondAddress);
+  let market = loadPodMarketplace(protocol);
 
   if (activeListingIndex == -1) {
     // There should always be a matching entry in this list because it is verified that the listing is ACTIVE
@@ -71,29 +72,14 @@ export function expirePodListingIfExists(
     }
   }
 
-  let marketHourly = loadPodMarketplaceHourlySnapshot(diamondAddress, market.season, timestamp);
-  let marketDaily = loadPodMarketplaceDailySnapshot(diamondAddress, timestamp);
-
   market.expiredListedPods = market.expiredListedPods.plus(listing.remainingAmount);
   market.availableListedPods = market.availableListedPods.minus(listing.remainingAmount);
   let activeListings = market.activeListings;
   activeListings.splice(activeListingIndex, 1);
   market.activeListings = activeListings;
+
+  takeMarketSnapshots(market, protocol, timestamp);
   market.save();
-
-  marketHourly.season = market.season;
-  marketHourly.deltaExpiredListedPods = marketHourly.deltaExpiredListedPods.plus(listing.remainingAmount);
-  marketHourly.expiredListedPods = market.expiredListedPods;
-  marketHourly.deltaAvailableListedPods = marketHourly.deltaAvailableListedPods.minus(listing.remainingAmount);
-  marketHourly.availableListedPods = market.availableListedPods;
-  marketHourly.save();
-
-  marketDaily.season = market.season;
-  marketDaily.deltaExpiredListedPods = marketDaily.deltaExpiredListedPods.plus(listing.remainingAmount);
-  marketDaily.expiredListedPods = market.expiredListedPods;
-  marketDaily.deltaAvailableListedPods = marketDaily.deltaAvailableListedPods.minus(listing.remainingAmount);
-  marketDaily.availableListedPods = market.availableListedPods;
-  marketDaily.save();
 }
 
 export function createHistoricalPodListing(listing: PodListing): void {

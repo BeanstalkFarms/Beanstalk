@@ -115,7 +115,7 @@ export function handlePodListingCancelled(event: PodListingCancelled): void {
       listing.index,
       listing.maxHarvestableIndex
     );
-    updateMarketListingBalances(event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
+    updateMarketListingBalances(event.address, event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
 
     listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
     listing.updatedAt = event.block.timestamp;
@@ -193,6 +193,7 @@ export function handlePodOrderCancelled(event: PodOrderCancelled): void {
 
     updateActiveOrders(event.address, MarketplaceAction.CANCELLED, order.id, order.maxPlaceInLine);
     updateMarketOrderBalances(
+      event.address,
       event.address,
       ZERO_BI,
       order.beanAmount.minus(order.beanAmountFilled),
@@ -366,7 +367,15 @@ function podListingCreated(params: PodListingCreatedParams): void {
     listing.index,
     listing.maxHarvestableIndex
   );
-  updateMarketListingBalances(params.event.address, params.amount, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block.timestamp);
+  updateMarketListingBalances(
+    params.event.address,
+    params.event.address,
+    params.amount,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    params.event.block.timestamp
+  );
 
   /// Save  raw event data
   let id = "podListingCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
@@ -394,7 +403,15 @@ function podListingCreated(params: PodListingCreatedParams): void {
 function podListingFilled(params: MarketFillParams): void {
   let listing = loadPodListing(params.from, params.index);
 
-  updateMarketListingBalances(params.event.address, ZERO_BI, ZERO_BI, params.amount, params.costInBeans, params.event.block.timestamp);
+  updateMarketListingBalances(
+    params.event.address,
+    params.event.address,
+    ZERO_BI,
+    ZERO_BI,
+    params.amount,
+    params.costInBeans,
+    params.event.block.timestamp
+  );
 
   listing.filledAmount = params.amount;
   listing.remainingAmount = listing.remainingAmount.minus(params.amount);
@@ -512,7 +529,15 @@ function podOrderCreated(params: PodOrderCreatedParams): void {
   order.save();
 
   updateActiveOrders(params.event.address, MarketplaceAction.CREATED, order.id, order.maxPlaceInLine);
-  updateMarketOrderBalances(params.event.address, params.beanAmount, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block.timestamp);
+  updateMarketOrderBalances(
+    params.event.address,
+    params.event.address,
+    params.beanAmount,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    params.event.block.timestamp
+  );
 
   // Save the raw event data
   let id = "podOrderCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
@@ -563,7 +588,15 @@ function podOrderFilled(params: MarketFillParams): void {
     updateActiveOrders(params.event.address, MarketplaceAction.FILLED_FULL, order.id, order.maxPlaceInLine);
   }
 
-  updateMarketOrderBalances(params.event.address, ZERO_BI, ZERO_BI, params.amount, params.costInBeans, params.event.block.timestamp);
+  updateMarketOrderBalances(
+    params.event.address,
+    params.event.address,
+    ZERO_BI,
+    ZERO_BI,
+    params.amount,
+    params.costInBeans,
+    params.event.block.timestamp
+  );
 
   // Save the raw event data
   let id = "podOrderFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();

@@ -174,28 +174,24 @@ type SiloHourlySnapshot @entity {
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
   activeFarmers: Int!
-  "Point in time delta BDV of all deposited assets"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta stalk balance"
   deltaStalk: BigInt!
-  "Point in time current plantable stalk for bean seigniorage not yet claimed"
   deltaPlantableStalk: BigInt!
-  "Point in time delta seeds balance"
   deltaSeeds: BigInt!
-  "Point in time delta roots balance"
   deltaRoots: BigInt!
-  "Point in time germinating stalk balance"
   deltaGerminatingStalk: BigInt!
-  "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
-  "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
-  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
-  caseId: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # caseId is unique to hourly snapshot
+  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
+  caseId: BigInt
 }
 
 type SiloDailySnapshot @entity {
@@ -225,22 +221,16 @@ type SiloDailySnapshot @entity {
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
   activeFarmers: Int!
-  "Point in time delta BDV of all deposited assets"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta stalk balance"
   deltaStalk: BigInt!
-  "Point in time current plantable stalk for bean seigniorage not yet claimed"
   deltaPlantableStalk: BigInt!
-  "Point in time delta seeds balance"
   deltaSeeds: BigInt!
-  "Point in time delta roots balance"
   deltaRoots: BigInt!
-  "Point in time germinating stalk balance"
   deltaGerminatingStalk: BigInt!
-  "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
-  "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -287,14 +277,12 @@ type SiloAssetHourlySnapshot @entity {
   withdrawnAmount: BigInt!
   "Point in time current internal (farm) balance of the asset"
   farmAmount: BigInt!
-  "Point in time delta BDV of deposits"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta Token amount of deposits"
   deltaDepositedAmount: BigInt!
-  "Point in time delta Token amount of silo withdrawals"
   deltaWithdrawnAmount: BigInt!
-  "Point in time delta internal (farm) balance of the asset"
   deltaFarmAmount: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -316,14 +304,12 @@ type SiloAssetDailySnapshot @entity {
   withdrawnAmount: BigInt!
   "Point in time current internal (farm) balance of the asset"
   farmAmount: BigInt!
-  "Point in time delta BDV of deposits"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta Token amount of deposits"
   deltaDepositedAmount: BigInt!
-  "Point in time delta Token amount of silo withdrawals"
   deltaWithdrawnAmount: BigInt!
-  "Point in time delta internal (farm) balance of the asset"
   deltaFarmAmount: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -389,6 +375,10 @@ type WhitelistTokenSetting @entity {
   optimalPercentDepositedBdv: BigInt
   "Last timestamp entity was updated"
   updatedAt: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [WhitelistTokenHourlySnapshot!]! @derivedFrom(field: "token")
   "Link to daily snapshot data"
@@ -418,6 +408,13 @@ type WhitelistTokenHourlySnapshot @entity {
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
   optimalPercentDepositedBdv: BigInt
+
+  deltaStalkEarnedPerSeason: BigInt!
+  deltaStalkIssuedPerBdv: BigInt!
+  deltaMilestoneSeason: Int!
+  deltaGaugePoints: BigInt
+  deltaOptimalPercentDepositedBdv: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -427,6 +424,8 @@ type WhitelistTokenHourlySnapshot @entity {
 type WhitelistTokenDailySnapshot @entity {
   "Token address - Unix Timestamp"
   id: ID!
+  "The season for this snapshot"
+  season: Int!
   "WhitelistTokenSetting associated with this snapshot"
   token: WhitelistTokenSetting!
   "Encoded BDV selector"
@@ -445,6 +444,13 @@ type WhitelistTokenDailySnapshot @entity {
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
   optimalPercentDepositedBdv: BigInt
+
+  deltaStalkEarnedPerSeason: BigInt!
+  deltaStalkIssuedPerBdv: BigInt!
+  deltaMilestoneSeason: Int!
+  deltaGaugePoints: BigInt
+  deltaOptimalPercentDepositedBdv: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -484,6 +490,10 @@ type Field @entity {
   podIndex: BigInt!
   "Current pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [FieldHourlySnapshot!]! @derivedFrom(field: "field")
   "Link to daily snapshot data"
@@ -515,36 +525,40 @@ type FieldHourlySnapshot @entity {
   harvestedPods: BigInt!
   "Point in time amount of soil remaining"
   soil: BigInt!
+  "Point in time amount of soil issued"
+  issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
-  "Point in time delta number of unique sowers"
+
+  deltaTemperature: Int!
+  deltaRealRateOfReturn: BigDecimal!
   deltaNumberOfSowers: Int!
-  "Point in time delta number of sows"
   deltaNumberOfSows: Int!
-  "Point in time delta total of sown beans"
   deltaSownBeans: BigInt!
-  "Point in time delta non-harvestable pods"
   deltaUnharvestablePods: BigInt!
-  "Point in time delta harvestable pods"
   deltaHarvestablePods: BigInt!
-  "Point in time delta harvested pods"
   deltaHarvestedPods: BigInt!
-  "Point in time amount of soil issued"
-  issuedSoil: BigInt!
-  "Number of blocks between sunrise and soil being sold out"
-  blocksToSoldOutSoil: BigInt!
-  "Bool flag if soil sold out for the season"
-  soilSoldOut: Boolean!
-  "The caseId used in the seasonal adjustment of temperature"
-  caseId: BigInt!
-  "Creation Block Number"
-  blockNumber: BigInt!
+  deltaSoil: BigInt!
+  deltaIssuedSoil: BigInt!
+  deltaPodIndex: BigInt!
+  deltaPodRate: BigDecimal!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to hourly snapshot
+  "The caseId used in the seasonal adjustment of temperature"
+  caseId: BigInt
+  "Block that started this season/at time of snapshot creation"
+  seasonBlock: BigInt!
+  "Number of blocks between sunrise and soil being sold out"
+  blocksToSoldOutSoil: BigInt
+  "Bool flag if soil sold out for the season"
+  soilSoldOut: Boolean!
 }
 
 type FieldDailySnapshot @entity {
@@ -572,24 +586,26 @@ type FieldDailySnapshot @entity {
   harvestedPods: BigInt!
   "Point in time amount of soil remaining"
   soil: BigInt!
+  "Point in time amount of soil issued"
+  issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
-  "Point in time delta number of unique sowers"
+
+  deltaTemperature: Int!
+  deltaRealRateOfReturn: BigDecimal!
   deltaNumberOfSowers: Int!
-  "Point in time delta number of sows"
   deltaNumberOfSows: Int!
-  "Point in time delta total of sown beans"
   deltaSownBeans: BigInt!
-  "Point in time delta non-harvestable pods"
   deltaUnharvestablePods: BigInt!
-  "Point in time delta harvestable pods"
   deltaHarvestablePods: BigInt!
-  "Point in time delta harvested pods"
   deltaHarvestedPods: BigInt!
-  "Point in time amount of soil issued"
-  issuedSoil: BigInt!
+  deltaSoil: BigInt!
+  deltaIssuedSoil: BigInt!
+  deltaPodIndex: BigInt!
+  deltaPodRate: BigDecimal!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -740,6 +756,10 @@ type PodMarketplace @entity {
   podVolume: BigInt!
   "Cumulative bean volume between listings and orders"
   beanVolume: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [PodMarketplaceHourlySnapshot!]! @derivedFrom(field: "podMarketplace")
   "Link to daily snapshot data"
@@ -777,30 +797,20 @@ type PodMarketplaceHourlySnapshot @entity {
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
-  "Point in time current delta pods listed for sale"
+
   deltaListedPods: BigInt!
-  "Point in time current delta of total pods listed"
   deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
-  "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
-  "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta ordered beans in pod orders created"
   deltaOrderBeans: BigInt!
-  "Point in time current delta available ordered beans in pod orders"
   deltaAvailableOrderBeans: BigInt!
-  "Point in time current delta filled ordered beans in pod orders"
   deltaFilledOrderBeans: BigInt!
-  "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
-  "Point in time current delta bean volume between listings and orders"
   deltaBeanVolume: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -838,30 +848,20 @@ type PodMarketplaceDailySnapshot @entity {
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
-  "Point in time current delta pods listed for sale"
+
   deltaListedPods: BigInt!
-  "Point in time current delta of total pods listed"
   deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
-  "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
-  "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta ordered beans in pod orders created"
   deltaOrderBeans: BigInt!
-  "Point in time current delta available ordered beans in pod orders"
   deltaAvailableOrderBeans: BigInt!
-  "Point in time current delta filled ordered beans in pod orders"
   deltaFilledOrderBeans: BigInt!
-  "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
-  "Point in time current delta bean volume between listings and orders"
   deltaBeanVolume: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"

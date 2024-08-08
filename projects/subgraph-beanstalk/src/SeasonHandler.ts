@@ -6,18 +6,16 @@ import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk, loadSeason } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
-import {
-  loadPodMarketplace,
-  loadPodMarketplaceDailySnapshot,
-  loadPodMarketplaceHourlySnapshot,
-  updateExpiredPlots
-} from "./utils/PodMarketplace";
+import { loadField } from "./utils/Field";
+import { loadPodMarketplace, updateExpiredPlots } from "./utils/PodMarketplace";
 import { updateDepositInSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
 import { loadSilo, loadSiloAsset } from "./utils/Silo";
 import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/contracts/BeanstalkPrice";
-import { takeSiloAssetSnapshots, takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeSiloAssetSnapshots } from "./utils/snapshots/SiloAsset";
+import { takeMarketSnapshots } from "./utils/snapshots/Marketplace";
+import { takeFieldSnapshots } from "./utils/snapshots/Field";
 
 export function handleSunrise(event: Sunrise): void {
   // Update any farmers that had silo transfers from the prior season.
@@ -38,31 +36,20 @@ export function handleSunrise(event: Sunrise): void {
 
   // Update field metrics
   let field = loadField(event.address);
-  let fieldHourly = loadFieldHourly(event.address, field.season, event.block.timestamp);
-  let fieldDaily = loadFieldDaily(event.address, event.block.timestamp);
 
   // -- Field level totals
   field.season = currentSeason;
   field.podRate = season.beans == ZERO_BI ? ZERO_BD : toDecimal(field.unharvestablePods, 6).div(toDecimal(season.beans, 6));
-  fieldHourly.podRate = field.podRate;
-  fieldDaily.season = currentSeason;
-  fieldDaily.podRate = field.podRate;
 
+  takeFieldSnapshots(field, event.address, event.block.timestamp, event.block.number);
   field.save();
-  fieldHourly.save();
-  fieldDaily.save();
 
   // Marketplace Season Update
 
   let market = loadPodMarketplace(event.address);
-  let marketHourly = loadPodMarketplaceHourlySnapshot(event.address, market.season, event.block.timestamp);
-  let marketDaily = loadPodMarketplaceDailySnapshot(event.address, event.block.timestamp);
   market.season = currentSeason;
-  marketHourly.season = currentSeason;
-  marketDaily.season = currentSeason;
+  takeMarketSnapshots(market, event.address, event.block.timestamp);
   market.save();
-  marketHourly.save();
-  marketDaily.save();
 
   // Create silo entities for the protocol
   let silo = loadSilo(event.address);
@@ -133,22 +120,11 @@ export function handleSoil(event: Soil): void {
   // to an existing amount.
 
   let field = loadField(event.address);
-  let fieldHourly = loadFieldHourly(event.address, event.params.season.toI32(), event.block.timestamp);
-  let fieldDaily = loadFieldDaily(event.address, event.block.timestamp);
-
   field.season = event.params.season.toI32();
   field.soil = event.params.soil;
+
+  takeFieldSnapshots(field, event.address, event.block.timestamp, event.block.number);
   field.save();
-
-  fieldHourly.soil = field.soil;
-  fieldHourly.issuedSoil = fieldHourly.issuedSoil.plus(event.params.soil);
-  fieldHourly.updatedAt = event.block.timestamp;
-  fieldHourly.save();
-
-  fieldDaily.soil = field.soil;
-  fieldDaily.issuedSoil = fieldDaily.issuedSoil.plus(event.params.soil);
-  fieldDaily.updatedAt = event.block.timestamp;
-  fieldDaily.save();
 
   if (event.params.season.toI32() >= 6075) {
     updateBeanEMA(event.params.season.toI32(), event.block.timestamp);
@@ -167,6 +143,6 @@ export function handleIncentive(event: Incentivization): void {
   season.harvestableIndex = beanstalk_contract.harvestableIndex();
   season.save();
 
-  updateExpiredPlots(season.harvestableIndex, event.address, event.block.timestamp);
-  updateHarvestablePlots(season.harvestableIndex, event.block.timestamp, event.block.number);
+  updateExpiredPlots(event.address, season.harvestableIndex, event.block.timestamp);
+  updateHarvestablePlots(event.address, season.harvestableIndex, event.block.timestamp, event.block.number);
 }

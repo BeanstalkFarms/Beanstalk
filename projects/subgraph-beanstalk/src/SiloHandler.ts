@@ -27,16 +27,16 @@ import {
   loadSiloWithdraw,
   loadSiloDeposit,
   loadWhitelistTokenSetting,
-  loadWhitelistTokenHourlySnapshot,
-  loadWhitelistTokenDailySnapshot,
   addToSiloWhitelist,
   updateDeposit
 } from "./utils/Silo";
 import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit, Silo } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
-import { takeSiloAssetSnapshots, takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeSiloSnapshots } from "./utils/snapshots/Silo";
 import { stemFromSeason } from "./utils/contracts/SiloCalculations";
+import { takeSiloAssetSnapshots } from "./utils/snapshots/SiloAsset";
+import { takeWhitelistTokenSettingSnapshots } from "./utils/snapshots/WhitelistTokenSetting";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -436,10 +436,9 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   setting.selector = event.params.selector;
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
-  setting.save();
 
-  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
-  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  setting.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -462,10 +461,9 @@ export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
   setting.selector = event.params.selector;
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  setting.save();
 
-  loadWhitelistTokenHourlySnapshot(event.params.token, getCurrentSeason(event.address), event.block.timestamp);
-  loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  setting.save();
 
   let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let rawEvent = new WhitelistTokenEntity(id);
@@ -511,15 +509,7 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
   siloSettings.milestoneSeason = event.params.season.toI32();
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.updatedAt = event.block.timestamp;
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
   siloSettings.save();
-
-  let hourly = loadWhitelistTokenHourlySnapshot(event.params.token, event.params.season.toI32(), event.block.timestamp);
-  hourly.milestoneSeason = siloSettings.milestoneSeason;
-  hourly.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  hourly.save();
-
-  let daily = loadWhitelistTokenDailySnapshot(event.params.token, event.block.timestamp);
-  daily.milestoneSeason = siloSettings.milestoneSeason;
-  daily.stalkEarnedPerSeason = siloSettings.stalkEarnedPerSeason;
-  daily.save();
 }
