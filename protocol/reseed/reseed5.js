@@ -32,7 +32,7 @@ async function reseed5(account, L2Beanstalk) {
       urBeanLpDeposits
     ],
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
   console.log("-----------------------------------");
