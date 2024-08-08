@@ -8,7 +8,6 @@ import "../../beanstalk/silo/ConvertFacet.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibConvert} from "../../libraries/Convert/LibConvert.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
-import {LibConvert} from "../../libraries/Convert/LibConvert.sol";
 
 /**
  * @author Publius
@@ -33,8 +32,7 @@ contract MockConvertFacet is ConvertFacet {
             token,
             stems,
             amounts,
-            maxTokens,
-            account
+            maxTokens
         );
 
         emit MockConvert(stalkRemoved, bdvRemoved);
@@ -49,7 +47,7 @@ contract MockConvertFacet is ConvertFacet {
     ) external {
         LibSilo._mow(msg.sender, token);
         if (account == address(0)) account = msg.sender;
-        LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk, account);
+        LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk);
     }
 
     function convertInternalE(
@@ -68,7 +66,7 @@ contract MockConvertFacet is ConvertFacet {
         )
     {
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
-        LibConvert.convertParams memory cp = LibConvert.convert(convertData);
+        LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
         toToken = cp.toToken;
         fromToken = cp.fromToken;
         toAmount = cp.toAmount;
