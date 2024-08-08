@@ -756,6 +756,69 @@ contract FloodTest is TestHelper {
         );
     }
 
+    function testDewhitelistAndMoreSops() public {
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
+
+        // there's only one well, so sop amount into that well will be the current deltaB
+        int256 currentDeltaB = bs.poolCurrentDeltaB(sopWell);
+
+        // getSwapOut for how much Beanstalk will get for swapping this amount of beans
+        uint256 amountOut = IWell(sopWell).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            uint256(currentDeltaB)
+        );
+
+        // take this amount out, multiply by sop precision then divide by rain roots (current roots)
+        uint256 userCalcPlentyPerRoot = (amountOut * C.SOP_PRECISION) / bs.totalRoots(); // 2558534177813719812
+
+        // user plenty will be plenty per root * user roots
+        uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
+            C.SOP_PRECISION; // 25595575914848452999
+
+        season.rainSunrise(); // start raining
+        bs.mow(users[1], C.BEAN);
+
+        vm.expectEmit();
+        emit SeasonOfPlentyWell(
+            seasonGetters.time().current + 1, // flood will happen next season
+            sopWell,
+            C.WETH,
+            51191151829696906017
+        );
+
+        season.rainSunrise(); // first sop
+
+        // de-whitelist bean eth well
+        vm.prank(BEANSTALK);
+        bs.dewhitelistToken(C.BEAN_ETH_WELL);
+
+        // mow after dewhitelist
+        bs.mow(users[1], C.BEAN);
+        season.rainSunrise(); // sop one more after dewhitelist
+
+        // get balance of plenty
+        bs.balanceOfPlenty(users[1], sopWell);
+
+        setReserves(sopWell, 1_000_000e6, 900e18);
+
+        // stop sopping
+        season.siloSunrise(0);
+        season.siloSunrise(0);
+        bs.mow(users[1], C.BEAN);
+
+        setReserves(sopWell, 1_000_000e6, 1_100e18);
+        // start sopping again
+        season.rainSunrise();
+        season.rainSunrise();
+
+        // neither of these should revert
+        bs.mow(users[1], C.BEAN);
+        bs.balanceOfPlenty(users[1], sopWell);
+    }
+
+
     // test making Beans harvestable
     function testHarvestablePodlineLessThanPointOnePercent(uint256 amount) public {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
