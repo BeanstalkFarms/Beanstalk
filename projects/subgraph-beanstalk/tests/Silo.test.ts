@@ -24,15 +24,15 @@ import {
   createAddDepositV2Event,
   createAddDepositV3Event,
   createRemoveDepositsV2Event,
-  createRemoveDepositsV3Event,
   createRemoveDepositV2Event,
   createRemoveDepositV3Event
 } from "./event-mocking/Silo";
 import { createDewhitelistTokenEvent, createWhitelistTokenV2Event, createWhitelistTokenV3Event } from "./event-mocking/Whitelist";
-import { ONE_BI } from "../../subgraph-core/utils/Decimals";
+import { ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { stemFromSeason } from "../src/utils/contracts/SiloCalculations";
-import { setSeason } from "./utils/Season";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
+import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
+import { setSeason } from "./utils/Season";
 
 describe("Silo Events", () => {
   afterEach(() => {
@@ -171,6 +171,74 @@ describe("Silo Events", () => {
       assert.fieldEquals("SiloAsset", account1 + "-" + token1, "depositedBDV", "2000000000");
       assert.fieldEquals("SiloAsset", account1 + "-" + token2, "depositedBDV", "1000000000");
       assert.fieldEquals("SiloAsset", account2 + "-" + token2, "depositedBDV", "2500000000");
+    });
+
+    // It is assumed sufficient to test a few fields updating properly
+    test("Hourly/Daily snapshots update appropriately", () => {
+      const baseTimestamp = BigInt.fromU32(1712732400);
+      const hours15 = BigInt.fromU64(15 * 60 * 60);
+      let account = "0x1234567890abcdef1234567890abcdef12345678".toLowerCase();
+      let token = BEAN_ERC20.toHexString().toLowerCase();
+
+      let addV3_1 = createAddDepositV3Event(account, token, BigInt.fromU32(70), 2000, 6, 2000);
+      addV3_1.block = mockBlock(ZERO_BI, baseTimestamp);
+      setSeason(20000);
+      handleAddDeposit_V3(addV3_1);
+
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20000", "depositedBDV", "2000000000");
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20000", "deltaDepositedBDV", "2000000000");
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_1.block.timestamp).toString(),
+        "depositedBDV",
+        "2000000000"
+      );
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_1.block.timestamp).toString(),
+        "deltaDepositedBDV",
+        "2000000000"
+      );
+
+      let addV3_2 = createAddDepositV3Event(account, token, BigInt.fromU32(50), 1000, 6, 1000);
+      addV3_2.block = mockBlock(ZERO_BI, baseTimestamp.plus(hours15));
+      setSeason(20015);
+      handleAddDeposit_V3(addV3_2);
+
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20015", "depositedBDV", "3000000000");
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20015", "deltaDepositedBDV", "1000000000");
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_2.block.timestamp).toString(),
+        "depositedBDV",
+        "3000000000"
+      );
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_2.block.timestamp).toString(),
+        "deltaDepositedBDV",
+        "3000000000"
+      );
+
+      let addV3_3 = createAddDepositV3Event(account, token, BigInt.fromU32(90), 5000, 6, 4000);
+      addV3_3.block = mockBlock(ZERO_BI, baseTimestamp.plus(hours15).plus(hours15));
+      setSeason(20030);
+      handleAddDeposit_V3(addV3_3);
+
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20030", "depositedBDV", "7000000000");
+      assert.fieldEquals("SiloHourlySnapshot", account + "-20030", "deltaDepositedBDV", "4000000000");
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_3.block.timestamp).toString(),
+        "depositedBDV",
+        "7000000000"
+      );
+      assert.fieldEquals(
+        "SiloDailySnapshot",
+        account + "-" + dayFromTimestamp(addV3_3.block.timestamp).toString(),
+        "deltaDepositedBDV",
+        "4000000000"
+      );
     });
   });
 
