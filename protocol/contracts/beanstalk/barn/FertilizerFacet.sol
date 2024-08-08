@@ -133,6 +133,14 @@ contract FertilizerFacet is Invariable {
         return s.sys.fert.unfertilizedIndex;
     }
 
+    function rinsedSprouts() external view returns (uint256) {
+        return s.sys.fert.fertilizedPaidIndex;
+    }
+
+    function rinsableSprouts() external view returns (uint256) {
+        return s.sys.fert.fertilizedIndex - s.sys.fert.fertilizedPaidIndex;
+    }
+
     function leftoverBeans() external view returns (uint256) {
         return s.sys.fert.leftoverBeans;
     }
