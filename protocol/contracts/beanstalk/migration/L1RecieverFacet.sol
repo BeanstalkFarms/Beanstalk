@@ -281,11 +281,11 @@ contract L1RecieverFacet is ReentrancyGuard {
         );
 
         // add migrated internal balances to the account.
-        addMigratedFertilizerToAccount(msg.sender, fertIds, amounts, lastBpf);
+        addMigratedFertilizerToAccount(reciever, fertIds, amounts, lastBpf);
 
         // set migrated internal balances to true.
         account.migratedFert = true;
-        emit L1FertilizerMigrated(owner, msg.sender, fertIds, amounts, lastBpf);
+        emit L1FertilizerMigrated(owner, reciever, fertIds, amounts, lastBpf);
     }
 
     //////////// MERKLE PROOF VERIFICATION ////////////
