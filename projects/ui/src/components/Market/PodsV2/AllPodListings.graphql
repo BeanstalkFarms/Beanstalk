@@ -2,10 +2,12 @@
 query AllPodListings(
   $first: Int = 1000,
   $status: MarketStatus = ACTIVE,
-  $maxHarvestableIndex: BigInt!
+  $maxHarvestableIndex: BigInt!,
+  $skip: Int = 0,
 ) {
   podListings(
     first: $first,
+    skip: $skip,
   	where: {
       status: $status,
       maxHarvestableIndex_gt: $maxHarvestableIndex,

@@ -19,7 +19,7 @@ async function getEthSpentOnGas(result) {
 }
 
 function toBean(amount) {
-  return ethers.utils.parseUnits(amount,6);
+  return ethers.utils.parseUnits(amount, 6);
 }
 
 function to6(amount) {
@@ -27,7 +27,7 @@ function to6(amount) {
 }
 
 function toStalk(amount) {
-  return ethers.utils.parseUnits(amount, 10);
+  return ethers.utils.parseUnits(amount, 16);
 }
 
 function toEther(amount) {

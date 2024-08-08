@@ -45,6 +45,17 @@ export const Github = ({ color = "#000", width, height }: SVGProps) => (
   </svg>
 );
 
+export const Etherscan = ({ color = "#000", width, height }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 20" fill="none">
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M7.95794 0.222249C4.25392 1.04107 1.32181 3.81349 0.322619 7.44179C-0.258599 9.55251 -0.0433039 12.1916 0.878127 14.2535C1.40146 15.4244 1.72448 15.6674 2.7579 15.6674C4.16891 15.6674 4.1656 15.675 4.21859 12.1564C4.27159 8.63391 4.24446 8.69869 5.67092 8.69869C7.13115 8.69869 7.12247 8.68016 7.17578 11.9312C7.20102 13.4779 7.26458 14.7863 7.31695 14.8389C7.36915 14.8915 7.6059 14.8661 7.8428 14.7827L8.27339 14.6308L8.35225 10.8967C8.41219 8.05741 8.48301 7.10001 8.64752 6.90125C8.80934 6.70581 9.12811 6.6404 9.90932 6.64214C10.4844 6.64356 11.0612 6.71214 11.1913 6.7945C11.385 6.91724 11.4422 7.54632 11.5068 10.2632L11.5856 13.582L12.0982 13.3653L12.6108 13.1487V9.10224C12.6108 5.19709 12.6225 5.04425 12.9436 4.72179C13.2305 4.4337 13.4174 4.3968 14.3032 4.4535C15.7814 4.54789 15.7653 4.50687 15.7653 8.17461C15.7653 9.8566 15.8119 11.2328 15.8688 11.2328C16.1065 11.2328 17.1805 10.3225 18.2449 9.2188C19.755 7.65307 19.8085 7.37417 18.9367 5.60777C16.9131 1.50718 12.3255 -0.743229 7.95794 0.222249ZM19.0315 10.5701C16.3242 13.9404 11.4046 16.6496 5.96461 17.766C5.02236 17.9594 4.2514 18.1549 4.2514 18.2003C4.2514 18.394 5.80057 19.1984 6.91191 19.5817C7.92214 19.9303 8.39468 19.9976 9.85064 20C12.8801 20.0052 14.9709 19.1595 17.042 17.0907C17.9618 16.172 18.3927 15.5829 18.8982 14.5533C19.6148 13.0943 20.0662 11.276 19.9921 10.1482L19.9451 9.43309L19.0315 10.5701Z"
+      fill={color}
+    />
+  </svg>
+);
+
 export const BeanstalkLogoBlack = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg width={width} height={height} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="48" height="48" rx="24" fill={color} />
@@ -212,10 +223,18 @@ export const RightArrowCircle = ({ width = 24, height = 24 }: SVGProps) => (
 );
 
 export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
-    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5M14 17l5-5M14 7l5 5" />
-  </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+<path d="M2.5 8H13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M9 3.5L13.5 8L9 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+</svg>
 );
+
+export const LeftArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+    <path d="M13.5 8H2.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 3.5L2.5 8L7 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
 
 export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg width={width} height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,3 +242,38 @@ export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGP
     <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2" />
   </svg>
 );
+
+export const CheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 18" fill="none">
+    <path d="M7.08333 12.1166L4.25 9.28325L5.24167 8.29159L7.08333 10.1333L11.7583 5.45825L12.75 6.44992L7.08333 12.1166Z" fill={color}/>
+  </svg>
+)
+
+export const CircleFilledCheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
+    <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill={color} />
+    <path d="M11.4375 6.125L6.85156 10.5L4.5625 8.3125" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const CircleEmptyIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg height={height} width={width} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8" cy="8" r="7" stroke={color} strokeWidth="1" fill="none" />
+  </svg>
+);
+
+export const SearchIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 16" fill="none">
+    <path d="M7.75 12.5C10.6495 12.5 13 10.1495 13 7.25C13 4.35051 10.6495 2 7.75 2C4.85051 2 2.5 4.35051 2.5 7.25C2.5 10.1495 4.85051 12.5 7.75 12.5Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11.4625 10.9624L14.5 13.9999" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const XIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 10" fill="none">
+    <path d="M1 1L9 9" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 9L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 1L9 9" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 9L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)

@@ -57,10 +57,10 @@ const BaseTable: FC<IActivityTable & MarketBaseTableProps & DataGridProps> = ({
   sortModel,
   ...props
 }) => {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollref = useRef<HTMLDivElement | null>(null);
   return (
     <Box
-      ref={scrollRef}
+      ref={scrollref}
       sx={{
         // Container
         px: 0,
@@ -117,7 +117,7 @@ const BaseTable: FC<IActivityTable & MarketBaseTableProps & DataGridProps> = ({
         }}
         componentsProps={{
           footer: {
-            scrollRef,
+            scrollref,
             // handleFetchMore: fetchMore,
           },
           noRowsOverlay: {

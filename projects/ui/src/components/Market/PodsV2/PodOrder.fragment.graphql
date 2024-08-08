@@ -14,7 +14,7 @@ fragment PodOrder on PodOrder {
   minFillAmount       
 
   #// Amounts
-  podAmount           # Market V1: Original amount of the ordered pods
+  #podAmount          # Market V1: Original amount of the ordered pods. sk/fix/pod-market removed podAmount
   beanAmount          # Market V2: Original amount of beans used to ordered beans
   podAmountFilled     # current filled amount
   beanAmountFilled    # bean amount filled

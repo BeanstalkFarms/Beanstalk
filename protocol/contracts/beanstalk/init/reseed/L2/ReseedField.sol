@@ -33,12 +33,10 @@ contract ReseedField {
     /**
      * @notice Re-initializes the field.
      * @param accountPlots the plots for each account
-     * @dev Receives an array of plots for each account and initializes them. 
+     * @dev Receives an array of plots for each account and initializes them.
      * On migration, we just split the array to stay under gas limits.
      */
-    function init(
-        MigratedPlotData[] calldata accountPlots
-    ) external {
+    function init(MigratedPlotData[] calldata accountPlots) external {
         for (uint i; i < accountPlots.length; i++) {
             for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;

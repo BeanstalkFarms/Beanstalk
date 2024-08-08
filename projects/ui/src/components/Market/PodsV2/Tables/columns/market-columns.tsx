@@ -140,7 +140,7 @@ export const MarketColumns = {
         valueFormatter: (params: GridValueFormatterParams) =>
           formatDate(params.value),
         renderCell: (params: GridRenderCellParams) => (
-          <Typography color="text.secondary" sx={{ fontSize: 'inherit' }}>
+          <>
             {params.row[hashKey] ? (
               <Link
                 href={`https://etherscan.io/tx/${params.row[hashKey]}`}
@@ -148,6 +148,7 @@ export const MarketColumns = {
                 target="_blank"
                 underline="hover"
                 color="text.tertiary"
+                fontSize="inherit"
                 sx={{ '&:hover img': { display: 'inline-block' } }}
               >
                 <Row>
@@ -160,9 +161,11 @@ export const MarketColumns = {
                 </Row>
               </Link>
             ) : (
-              params.formattedValue
+              <Typography color="text.secondary" sx={{ fontSize: 'inherit' }}>
+                {params.formattedValue}  
+              </Typography>
             )}
-          </Typography>
+          </>
         ),
       } as GridColumns[number]),
     /** */
@@ -461,7 +464,7 @@ export const MarketColumns = {
 
           return (
             <Typography sx={{ fontSize: 'inherit', color: color }}>
-              {params.value.toString().toUpperCase()}
+              {key === 'cancelled_partial' ? `CANCELLED (PARTIAL)` : params.value.toString().toUpperCase()}
             </Typography>
           );
         },
