@@ -3,7 +3,7 @@ query HistoricalPodOrders(
 ) {
   podOrders(where: {
     historyID_in: $historyIDs
-  }, orderBy: updatedAt, orderDirection: desc) {
+  }, orderBy: updatedAt, orderDirection: desc, first: 1000) {
     #// Identifiers
     id
     historyID
@@ -15,7 +15,9 @@ query HistoricalPodOrders(
     maxPlaceInLine
 
     #// Amounts
-    podAmount
+    #podAmount # sk/fix/pod-market removed podAmount and added beanAmount
+    beanAmount
+    beanAmountFilled
     podAmountFilled
     
     #// Metadata

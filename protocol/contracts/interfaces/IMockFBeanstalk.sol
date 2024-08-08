@@ -90,7 +90,7 @@ interface IMockFBeanstalk {
     struct AssetSettings {
         bytes4 selector; // ────────────────────┐ 4
         uint32 stalkEarnedPerSeason; //         │ 4  (8)
-        uint32 stalkIssuedPerBdv; //            │ 4  (12)
+        uint48 stalkIssuedPerBdv; //            │ 4  (12)
         uint32 milestoneSeason; //              │ 4  (16)
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
@@ -928,8 +928,6 @@ interface IMockFBeanstalk {
         uint256 caseId
     ) external view returns (uint32, int8, uint80, int80);
 
-    function getCounter(bytes32 counterId) external view returns (uint256 count);
-
     function getCurrentHumidity() external view returns (uint128 humidity);
 
     function getDeltaPodDemand() external view returns (uint256);
@@ -948,7 +946,7 @@ interface IMockFBeanstalk {
 
     function getEndBpf() external view returns (uint128 endBpf);
 
-    function getEthUsdPrice() external view returns (uint256);
+    function getUsdEthPrice() external view returns (uint256);
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256);
 
@@ -1676,6 +1674,8 @@ interface IMockFBeanstalk {
 
     function totalPods(uint256 fieldId) external view returns (uint256);
 
+    function totalRainRoots() external view returns (uint256);
+
     function totalRealSoil() external view returns (uint256);
 
     function totalRoots() external view returns (uint256);
@@ -1803,7 +1803,7 @@ interface IMockFBeanstalk {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -1815,7 +1815,7 @@ interface IMockFBeanstalk {
     function whitelistTokenWithEncodeType(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
@@ -1828,7 +1828,7 @@ interface IMockFBeanstalk {
     function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         uint128 gaugePoints,
@@ -1891,6 +1891,16 @@ interface IMockFBeanstalk {
         address token,
         uint256 depositId
     ) external view returns (uint256);
+
+    function getTokenUsdPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
+
+    function getUsdTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
 
     function approveReciever(address owner, address reciever) external;
 

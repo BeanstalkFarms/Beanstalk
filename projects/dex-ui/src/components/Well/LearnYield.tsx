@@ -5,14 +5,14 @@ import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { YieldSparkle } from "../Icons";
 
-type Props = {};
+type Props = { isWhitelisted?: boolean };
 
 function YieldDetails() {
   return (
     <TextContainer>
       <div>
-        Liquidity providers can earn yield by depositing BEANETH LP in the Beanstalk Silo. You can add liquidity and deposit the LP token in
-        the Silo in a single transaction on the{" "}
+        Liquidity providers can earn yield by depositing BEANETH LP in the Beanstalk Silo. You can
+        add liquidity and deposit the LP token in the Silo in a single transaction on the{" "}
         <StyledLink
           href="https://app.bean.money/#/silo/0xbea0e11282e2bb5893bece110cf199501e872bad"
           target="_blank"
@@ -25,7 +25,9 @@ function YieldDetails() {
   );
 }
 
-export const LearnYield: FC<Props> = () => {
+export const LearnYield: FC<Props> = ({ isWhitelisted }) => {
+  if (!isWhitelisted) return null;
+
   return (
     <ExpandBox drawerHeaderText="How can I earn yield?">
       <ExpandBox.Header>

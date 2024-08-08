@@ -117,10 +117,10 @@ export function displayTokenAmount(
     ? _amount
     : tokenValueToBN(_amount);
 
-  const outputValue = config.allowNegative 
-    ? displayFullBN(amount, token.displayDecimals) 
+  const outputValue = config.allowNegative
+    ? displayFullBN(amount, token.displayDecimals)
     : displayFullBN(amount.abs(), token.displayDecimals);
-  
+
   const modifier = config.modifier || '';
 
   const name = config.showName ? token.name : '';
@@ -271,10 +271,7 @@ export function toStringBaseUnitBN(
   return toBaseUnitBN(decimalAmt, decimals).toFixed();
 }
 
-export function getTokenIndex(token: Token | TokenOld) {
-  if (token instanceof Token && token.symbol === 'ETH') {
-    return 'eth';
-  }
-
+export function getTokenIndex(token: { symbol: string; address: string }) {
+  if (token.symbol === 'ETH') return 'eth';
   return token.address;
 }

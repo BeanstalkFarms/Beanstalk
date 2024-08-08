@@ -7,7 +7,7 @@ const { MAX_UINT32, MAX_UINT256 } = require("./utils/constants.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const {
-  initalizeUsersForToken,
+  initializeUsersForToken,
   endGermination,
   addMockUnderlying,
   endGerminationWithMockToken
@@ -30,7 +30,7 @@ describe("newField", function () {
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
-    bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
+    bean = await initializeUsersForToken(BEAN, [user, user2], to6("10000"));
   });
 
   beforeEach(async function () {
@@ -351,28 +351,28 @@ describe("newField", function () {
 
   describe("complex DPD", async function () {
     it("Does not set thisSowTime if Soil > 1", async function () {
-      mockBeanstalk.setSoilE(to6("3"));
+      await mockBeanstalk.setSoilE(to6("3"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.equal(parseInt(MAX_UINT32));
     });
 
     it("Does set thisSowTime if Soil = 1", async function () {
-      mockBeanstalk.setSoilE(to6("1"));
+      await mockBeanstalk.setSoilE(to6("1"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));
     });
 
     it("Does set thisSowTime if Soil < 1", async function () {
-      mockBeanstalk.setSoilE(to6("1.5"));
+      await mockBeanstalk.setSoilE(to6("1.5"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       expect(weather.thisSowTime).to.be.not.equal(parseInt(MAX_UINT32));
     });
 
     it("Does not set thisSowTime if Soil already < 1", async function () {
-      mockBeanstalk.setSoilE(to6("1.5"));
+      await mockBeanstalk.setSoilE(to6("1.5"));
       await beanstalk.connect(user).sow(to6("1"), 0, EXTERNAL);
       const weather = await beanstalk.weather();
       await beanstalk.connect(user).sow(to6("0.5"), 0, EXTERNAL);
@@ -535,7 +535,7 @@ describe("twoField", function () {
     this.activeField = 1;
     mockBeanstalk.setActiveField(this.activeField, 1);
 
-    bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
+    bean = await initializeUsersForToken(BEAN, [user, user2], to6("10000"));
   });
 
   beforeEach(async function () {

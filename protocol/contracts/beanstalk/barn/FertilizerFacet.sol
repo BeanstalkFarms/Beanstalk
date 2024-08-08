@@ -105,7 +105,7 @@ contract FertilizerFacet is Invariable {
     /**
      * @dev Returns the amount of Fertilizer that can be purchased with `tokenAmountIn` Barn Raise tokens.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
-     * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
+     * `tokenAmountIn` has 18 decimals, `getUsdEthPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
     function getMintFertilizerOut(
         uint256 tokenAmountIn

@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
  * @param activeField ID of the active Field.
  * @param fieldCount Number of Fields that have ever been initialized.
+ * @param orderLockedBeans The number of Beans locked in Pod Orders.
  * @param _buffer_0 Reserved storage for future additions.
  * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
@@ -52,6 +53,7 @@ struct System {
     uint128 beanSown;
     uint256 activeField;
     uint256 fieldCount;
+    uint256 orderLockedBeans;
     bytes32[16] _buffer_0;
     mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
@@ -267,8 +269,7 @@ struct WhitelistStatus {
  * It is called by `LibTokenSilo` through the use of `delegatecall`
  * to calculate a token's BDV at the time of Deposit.
  * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
- * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
- * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
+ * grows each season. In the past, this was represented by seeds. 6 decimal precision.
  * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
  * previously called stalk.
  * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
@@ -297,13 +298,15 @@ struct WhitelistStatus {
 struct AssetSettings {
     bytes4 selector; // ────────────────────┐ 4
     uint32 stalkEarnedPerSeason; //         │ 4  (8)
-    uint32 stalkIssuedPerBdv; //            │ 4  (12)
-    uint32 milestoneSeason; //              │ 4  (16)
-    int96 milestoneStem; //                 │ 12 (28)
-    bytes1 encodeType; //                   │ 1  (29)
-    int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-    uint128 gaugePoints; // ─────────-───────┐ 16
-    uint64 optimalPercentDepositedBdv; //  ──┘ 8
+    uint48 stalkIssuedPerBdv; //            │ 6  (14)
+    uint32 milestoneSeason; //              │ 4  (18)
+    int96 milestoneStem; //                 │ 12 (30)
+    bytes1 encodeType; //                   │ 1  (31)
+    // one byte is left here.             ──┘ 1  (32)
+    int24 deltaStalkEarnedPerSeason; // ────┐ 3
+    uint128 gaugePoints; //                 │ 16 (19)
+    uint64 optimalPercentDepositedBdv; //   │ 8  (27)
+    // 5 bytes are left here.             ──┘ 5  (32)
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
 }
@@ -354,8 +357,8 @@ struct ConvertCapacity {
  * @notice Stores the system level germination Silo data.
  */
 struct GerminatingSilo {
-    uint128 stalk;
-    uint128 roots;
+    uint256 stalk;
+    uint256 roots;
 }
 
 /**

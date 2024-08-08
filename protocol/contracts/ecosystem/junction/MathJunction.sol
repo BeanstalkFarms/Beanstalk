@@ -10,7 +10,6 @@ pragma solidity ^0.8.20;
  * @notice A Junction library that enables basic safe math functionality for blueprint encoded calls.
  **/
 contract MathJunction {
-
     function add(uint256 a, uint256 b) public pure returns (uint256) {
         return a + b;
     }
@@ -32,6 +31,6 @@ contract MathJunction {
     }
 
     function mulDiv(uint256 a, uint256 b, uint256 c) public pure returns (uint256) {
-        return a * b / c;
+        return (a * b) / c;
     }
 }

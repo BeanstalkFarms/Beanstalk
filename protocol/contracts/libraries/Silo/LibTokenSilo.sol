@@ -522,7 +522,7 @@ library LibTokenSilo {
         if (deltaStemTip == 0) return 0;
         (, uint256 bdv) = getDeposit(account, token, stem);
 
-        grownStalk = deltaStemTip.mul(bdv).div(PRECISION);
+        grownStalk = deltaStemTip.mul(bdv);
     }
 
     /**
@@ -552,34 +552,8 @@ library LibTokenSilo {
         uint256 bdv
     ) internal view returns (int96 stem, GerminationSide side) {
         LibGerminate.GermStem memory germStem = LibGerminate.getGerminatingStem(token);
-        stem = germStem.stemTip.sub(
-            SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
-        );
+        stem = germStem.stemTip.sub(SafeCast.toInt96(SafeCast.toInt256(grownStalk.div(bdv))));
         side = LibGerminate._getGerminationState(stem, germStem);
-    }
-
-    /**
-     * @dev returns the amount of grown stalk a deposit would have, based on the stem of the deposit.
-     * Similar to calculateStalkFromStemAndBdv, but has an additional check to prevent division by 0.
-     */
-    function grownStalkAndBdvToStem(
-        address token,
-        uint256 grownStalk,
-        uint256 bdv
-    ) internal view returns (int96 cumulativeGrownStalk) {
-        // first get current latest grown stalk index
-        int96 _stemTipForToken = stemTipForToken(token);
-        // then calculate how much stalk each individual bdv has grown
-        // there's a > 0 check here, because if you have a small amount of unripe bean deposit, the bdv could
-        // end up rounding to zero, then you get a divide by zero error and can't migrate without losing that deposit
-
-        // prevent divide by zero error
-        int96 grownStalkPerBdv = bdv > 0
-            ? SafeCast.toInt96(SafeCast.toInt256(grownStalk.mul(PRECISION).div(bdv)))
-            : int96(0);
-
-        // subtract from the current latest index, so we get the index the deposit should have happened at
-        return _stemTipForToken.sub(grownStalkPerBdv);
     }
 
     function toInt96(uint256 value) internal pure returns (int96) {

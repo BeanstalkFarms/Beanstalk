@@ -52,6 +52,7 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = 3e6;
 
         LibTractor._resetPublisher();
+        LibTractor._setVersion("1.0.0");
 
         s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken = C.BEAN_WSTETH_WELL;
 

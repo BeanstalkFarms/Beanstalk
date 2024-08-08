@@ -180,7 +180,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenBasic(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(BEANSTALK) {
@@ -234,7 +234,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenWithEncodeType(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint8 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
@@ -299,7 +299,7 @@ contract WhitelistTest is TestHelper {
         emit DewhitelistToken(token);
         bs.dewhitelistToken(token);
 
-        verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
+        verifyWhitelistState(token, 0, 1, 1e10, 0, 0, 0, 0, false, false, false);
         // verify that the milestone stem and season are updated and are kept, as
         // existing deposits are still valid.
         IMockFBeanstalk.AssetSettings memory newSS = bs.tokenSettings(token);
@@ -309,7 +309,7 @@ contract WhitelistTest is TestHelper {
 
     function test_whitelistTokenWithExternalImplementation(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(BEANSTALK) {
@@ -362,7 +362,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
@@ -388,7 +388,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,

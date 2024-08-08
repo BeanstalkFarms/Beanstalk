@@ -16,7 +16,10 @@ import { getChainConstant } from '~/util/Chain';
 export class BuyFertilizerFarmStep extends FarmStep {
   private _tokenList: (ERC20Token | NativeToken)[];
 
-  constructor(_sdk: BeanstalkSDK, private _account: string) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _account: string
+  ) {
     super(_sdk);
     this._account = _account;
     this._tokenList = BuyFertilizerFarmStep.getTokenList(_sdk.tokens);
@@ -71,7 +74,6 @@ export class BuyFertilizerFarmStep extends FarmStep {
               amountWeth.toBlockchain(), // wethAmountIn
               amountFert.toBlockchain(), // minFertilizerOut
               minLP.subSlippage(slippage).toBlockchain(), // minLPTokensOut (with slippage applied)
-              fromMode, // fromMode
             ]),
           }),
           decode: (data: string) =>

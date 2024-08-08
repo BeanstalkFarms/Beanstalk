@@ -20,7 +20,7 @@ function timeToLocal(originalTime: number) {
 }
 
 type TimeToHourlySnapshotItem = {
-  data: Pick<IWellHourlySnapshot, "deltaVolumeUSD" | "totalLiquidityUSD">;
+  data: Pick<IWellHourlySnapshot, "deltaTradeVolumeUSD" | "totalLiquidityUSD">;
   count: number;
 };
 
@@ -33,16 +33,16 @@ export type IChartDataItem = {
 const parseAndDeduplicateSnapshots = (arr: IWellHourlySnapshot[]) => {
   const snapshotMap = arr.reduce<Record<string, TimeToHourlySnapshotItem>>((memo, snapshot) => {
     const timeKey = timeToLocal(Number(snapshot.lastUpdateTimestamp)).toString();
-    const deltaVolumeUSD = Number(snapshot.deltaVolumeUSD);
+    const deltaTradeVolumeUSD = Number(snapshot.deltaTradeVolumeUSD);
     const totalLiquidityUSD = Number(snapshot.totalLiquidityUSD);
 
     if (!(timeKey in memo)) {
       memo[timeKey] = {
-        data: { deltaVolumeUSD, totalLiquidityUSD },
+        data: { deltaTradeVolumeUSD, totalLiquidityUSD },
         count: 1
       };
     } else {
-      memo[timeKey].data.deltaVolumeUSD += deltaVolumeUSD;
+      memo[timeKey].data.deltaTradeVolumeUSD += deltaTradeVolumeUSD;
       memo[timeKey].data.totalLiquidityUSD += totalLiquidityUSD;
       memo[timeKey].count++;
     }
@@ -62,7 +62,7 @@ const parseAndDeduplicateSnapshots = (arr: IWellHourlySnapshot[]) => {
     });
     volumeData.push({
       time: timeKey,
-      value: Number(TokenValue.ZERO.add(data.deltaVolumeUSD).div(count).toHuman()).toFixed(2)
+      value: Number(TokenValue.ZERO.add(data.deltaTradeVolumeUSD).div(count).toHuman()).toFixed(2)
     });
   }
 
@@ -78,7 +78,13 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
   const [timePeriod, setTimePeriod] = useState("week");
   const [dropdownButtonText, setDropdownButtonText] = useState("1 WEEK");
 
-  const { data: chartData, refetch, error, isLoading: chartDataLoading } = useWellChartData(well, timePeriod);
+  const {
+    data: chartData,
+    refetch,
+    error,
+    isLoading: chartDataLoading,
+    isRefetching
+  } = useWellChartData(well, timePeriod);
 
   const [liquidityData, setLiquidityData] = useState<IChartDataItem[]>([]);
   const [volumeData, setVolumeData] = useState<IChartDataItem[]>([]);
@@ -174,8 +180,14 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         </>
       </DesktopRow>
       <MobileRow>
-        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>{tab === 0 ? "LIQUIDITY" : "VOLUME"}</TabButton>
-        <BottomDrawer showDrawer={isChartTypeDrawerOpen} headerText={"View Chart"} toggleDrawer={setChartTypeDrawerOpen}>
+        <TabButton onClick={() => setChartTypeDrawerOpen(true)}>
+          {tab === 0 ? "LIQUIDITY" : "VOLUME"}
+        </TabButton>
+        <BottomDrawer
+          showDrawer={isChartTypeDrawerOpen}
+          headerText={"View Chart"}
+          toggleDrawer={setChartTypeDrawerOpen}
+        >
           <DrawerRow
             onClick={() => {
               setTab(0), setChartTypeDrawerOpen(false);
@@ -194,7 +206,11 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
         <FilterButton onClick={() => setChartRangeDrawerOpen(true)}>
           {dropdownButtonText} <ChevronDown width={6} />
         </FilterButton>
-        <BottomDrawer showDrawer={isChartRangeDrawerOpen} headerText={"Time Period"} toggleDrawer={setChartRangeDrawerOpen}>
+        <BottomDrawer
+          showDrawer={isChartRangeDrawerOpen}
+          headerText={"Time Period"}
+          toggleDrawer={setChartRangeDrawerOpen}
+        >
           <DrawerRow
             onClick={() => {
               setChartRange("day"), setChartRangeDrawerOpen(false);
@@ -243,7 +259,10 @@ const ChartSectionContent: FC<{ well: Well }> = ({ well }) => {
   );
 };
 
-export const ChartSection: FC<{ well: Well | undefined; loading?: boolean }> = ({ well, loading }) => {
+export const ChartSection: FC<{ well: Well | undefined; loading?: boolean }> = ({
+  well,
+  loading
+}) => {
   if (!well || loading) {
     return (
       <Container id="chart-section-loading">
@@ -325,7 +344,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   outline: 0.5px solid #9ca3af;
-  outline-offset: -0.5px;
   background-color: #f9f8f6;
 `;
 

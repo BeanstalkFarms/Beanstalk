@@ -22,8 +22,7 @@ const columns = [
 const MarketActivity: React.FC<{
   data: MarketEvent[] | undefined;
   initializing: boolean;
-  fetchMoreData: () => Promise<void>;
-}> = ({ data, initializing, fetchMoreData }) => {
+}> = ({ data, initializing }) => {
   const rows = useMemo(() => (!data || !data.length ? [] : data), [data]);
 
   return (
@@ -31,7 +30,6 @@ const MarketActivity: React.FC<{
       rows={rows}
       columns={columns}
       loading={initializing}
-      fetchMore={fetchMoreData}
       getRowId={(row: MarketEvent) => row.eventId}
     />
   );

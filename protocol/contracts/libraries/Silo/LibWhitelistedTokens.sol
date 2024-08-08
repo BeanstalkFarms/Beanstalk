@@ -150,6 +150,12 @@ library LibWhitelistedTokens {
         }
     }
 
+    function wellIsOrWasSoppable(address well) internal view returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 tokenStatusIndex = findWhitelistStatusIndex(well);
+        return s.sys.silo.whitelistStatuses[tokenStatusIndex].isSoppable;
+    }
+
     function getSopTokens() internal view returns (address[] memory) {
         address[] memory tokens = getSoppableWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -274,7 +280,7 @@ library LibWhitelistedTokens {
     /**
      * @notice Finds the index of a given `token`'s Whitelist Status.
      */
-    function findWhitelistStatusIndex(address token) private view returns (uint256) {
+    function findWhitelistStatusIndex(address token) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 whitelistedStatusLength = s.sys.silo.whitelistStatuses.length;
         uint256 i;

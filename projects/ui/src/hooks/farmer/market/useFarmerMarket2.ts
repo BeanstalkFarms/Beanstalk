@@ -195,15 +195,30 @@ export default function useFarmerMarket() {
 
   // Cast query data to history item form
   const data = useMemo(
-    () =>
+    () => {
+      const filteredOrderItems: FarmerMarketOrder[] = [];
+      if (orderItems) {
+        orderItems.forEach((order) => {
+          if (order.amountBeans.minus(order.amountBeansFilled).lt(new BigNumber(0.00001))) {
+            const newOrder = {
+              ...order,
+              status: MarketStatus.Filled
+            };
+            filteredOrderItems.push(newOrder);
+          } else {
+            filteredOrderItems.push(order);
+          };
+        });
+      };
       // shortcut to check if listings / orders are still loading
-      [...(listingItems || []), ...(orderItems || [])].sort((a, b) => {
+      return [...(listingItems || []), ...(filteredOrderItems || [])].sort((a, b) => {
         // Sort by MARKET_STATUS_TO_ORDER, then by creation date
         const x =
           MARKET_STATUS_TO_ORDER[a.status] - MARKET_STATUS_TO_ORDER[b.status];
         if (x !== 0) return x;
         return parseInt(b.createdAt, 10) - parseInt(a.createdAt, 10);
-      }),
+      });
+    },
     [listingItems, orderItems]
   );
 

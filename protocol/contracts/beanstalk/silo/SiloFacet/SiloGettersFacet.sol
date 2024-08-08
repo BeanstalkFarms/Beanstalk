@@ -502,13 +502,17 @@ contract SiloGettersFacet is ReentrancyGuard {
         sop.lastRain = s.accts[account].lastRain;
         sop.lastSop = s.accts[account].lastSop;
         sop.roots = s.accts[account].sop.rainRoots;
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory wells = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes previously whitelisted tokens
         sop.farmerSops = new FarmerSops[](wells.length);
         for (uint256 i; i < wells.length; i++) {
             PerWellPlenty memory wellSop = s.accts[account].sop.perWellPlenty[wells[i]];
             FarmerSops memory farmerSops = FarmerSops(wells[i], wellSop);
             sop.farmerSops[i] = farmerSops;
         }
+    }
+
+    function totalRainRoots() external view returns (uint256) {
+        return s.sys.rain.roots;
     }
 
     //////////////////////// STEM ////////////////////////
@@ -541,7 +545,29 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the season in which beanstalk initalized siloV3.
+     * @notice gets the germinating stem for a given token.
+     * @dev deposits with a stem lower than the germinating stem are not germinating.
+     * deposits with a stem equal or greater to the germinating stem are germinating.
+     */
+    function getGerminatingStem(address token) external view returns (int96 germinatingStem) {
+        LibGerminate.GermStem memory g = LibGerminate.getGerminatingStem(token);
+        return g.germinatingStem;
+    }
+
+    /**
+     * @notice returns the germinating stem for a list of tokens.
+     */
+    function getGerminatingStems(
+        address[] memory tokens
+    ) external view returns (int96[] memory germinatingStems) {
+        germinatingStems = new int96[](tokens.length);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            germinatingStems[i] = LibGerminate.getGerminatingStem(tokens[i]).germinatingStem;
+        }
+    }
+
+    /**
+     * @notice returns the season in which beanstalk initialized siloV3.
      */
     function stemStartSeason() external view virtual returns (uint16) {
         return s.sys.season.stemStartSeason;

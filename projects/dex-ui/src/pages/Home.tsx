@@ -8,8 +8,10 @@ import { BodyL } from "src/components/Typography";
 import { ContractInfoMarquee } from "src/components/Frame/ContractInfoMarquee";
 
 const copy = {
-  build: "Use DEX components written, audited and deployed by other developers for your custom liquidity pool.",
-  deploy: "Deploy liquidity in pools with unique pricing functions for more granular market making.",
+  build:
+    "Use DEX components written, audited and deployed by other developers for your custom liquidity pool.",
+  deploy:
+    "Deploy liquidity in pools with unique pricing functions for more granular market making.",
   fees: "Exchange assets in liquidity pools that don't impose trading fees."
 };
 
@@ -18,7 +20,8 @@ const links = {
   whitepaper: "/basin.pdf",
   docs: "https://docs.basin.exchange/implementations/overview",
   wells: "/#/wells",
-  swap: "/#/swap"
+  swap: "/#/swap",
+  build: "/#/build"
 };
 
 export const Home = () => {
@@ -31,11 +34,18 @@ export const Home = () => {
               <MevInfo>
                 <MevTitle>Multi Flow Pump is here!</MevTitle>
                 <div>
-                  Explore the <span style={{ fontWeight: 600 }}>inter-block MEV manipulation resistant oracle implementation</span> used by
-                  the BEAN:WETH Well.
+                  Explore the{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    inter-block MEV manipulation resistant oracle implementation
+                  </span>{" "}
+                  used by the BEAN:WETH Well.
                 </div>
               </MevInfo>
-              <GetStartedContainer href={links.multiFlowPump} target="_blank" rel="noopener noreferrer">
+              <GetStartedContainer
+                href={links.multiFlowPump}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <GetStarted>Read the whitepaper →</GetStarted>
               </GetStartedContainer>
             </MevBannerBG>
@@ -51,7 +61,7 @@ export const Home = () => {
               </SubTitle>
             </TitleSubtitleContainer>
             <AccordionContainer>
-              <AccordionItem href={links.docs} target="_blank" rel="noopener noreferrer">
+              <AccordionItem href={links.build}>
                 <AccordionTitle>
                   <Emoji role="img" aria-label="crystal ball">
                     🔮
@@ -209,10 +219,10 @@ const InfoContainer = styled.div`
   gap: 8px;
   box-sizing: border-box;
   height: 100%;
-  
+
   ${mediaQuery.sm.up} {
     padding-top: min(25%, 185px);
-    justify-content: flex-start
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
     gap: 72px;
@@ -368,7 +378,9 @@ const AccordionItem = styled.a`
 const AccordionContent = styled.div`
   overflow: hidden;
   opacity: 0; // Initially hidden
-  transition: opacity 0.3s ease-out, max-height 0.3s ease-out;
+  transition:
+    opacity 0.3s ease-out,
+    max-height 0.3s ease-out;
   max-height: 0;
   width: 100%; // Ensure it takes full width
 

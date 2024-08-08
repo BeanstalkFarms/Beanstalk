@@ -8,6 +8,7 @@ import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title Depot Facet
@@ -16,7 +17,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
-contract DepotFacet is Invariable {
+contract DepotFacet is Invariable, ReentrancyGuard {
     // Pipeline V1.0.1
     address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
 
@@ -27,7 +28,7 @@ contract DepotFacet is Invariable {
      **/
     function pipe(
         PipeCall calldata p
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe(p);
     }
 
@@ -39,7 +40,7 @@ contract DepotFacet is Invariable {
      **/
     function multiPipe(
         PipeCall[] calldata pipes
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).multiPipe(pipes);
     }
 
@@ -51,7 +52,7 @@ contract DepotFacet is Invariable {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
         results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
@@ -65,7 +66,7 @@ contract DepotFacet is Invariable {
     function etherPipe(
         PipeCall calldata p,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
         result = IPipeline(PIPELINE).pipe{value: value}(p);
         LibEth.refundEth();
     }

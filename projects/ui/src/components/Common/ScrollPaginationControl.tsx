@@ -12,7 +12,7 @@ type IScrollPaginationControl = {
   /**
    * ref of the data grid container element
    */
-  scrollRef: React.MutableRefObject<HTMLDivElement | null>;
+  scrollref: React.MutableRefObject<HTMLDivElement | null>;
   /**
    * async function to fetch more data when scrolled to the bottom of the table
    */
@@ -33,7 +33,7 @@ type ControllerCache = {
 const CONTROL_HEIGHT = 52;
 
 const ScrollPaginationControl: React.FC<IScrollPaginationControl> = ({
-  scrollRef,
+  scrollref,
   handleFetchMore,
 }) => {
   const apiRef = useGridApiContext();
@@ -56,7 +56,7 @@ const ScrollPaginationControl: React.FC<IScrollPaginationControl> = ({
   }, []);
 
   // get the Mui Data-Grid-scroll container element in which the scrollbar is rendered
-  const el = scrollRef?.current?.querySelector('.MuiDataGrid-virtualScroller');
+  const el = scrollref?.current?.querySelector('.MuiDataGrid-virtualScroller');
 
   const hasNextPage = useMemo(
     () => !(page === pageCount - 1 || pageCount === 0),

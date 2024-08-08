@@ -12,7 +12,9 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibTractor} from "../../libraries/LibTractor.sol";
 import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author funderberker, 0xm00neth
@@ -33,10 +35,7 @@ contract TractorFacet is Invariable {
     modifier verifyRequisition(LibTractor.Requisition calldata requisition) {
         bytes32 blueprintHash = LibTractor._getBlueprintHash(requisition.blueprint);
         require(blueprintHash == requisition.blueprintHash, "TractorFacet: invalid hash");
-        address signer = ECDSA.recover(
-            MessageHashUtils.toEthSignedMessageHash(requisition.blueprintHash),
-            requisition.signature
-        );
+        address signer = ECDSA.recover(requisition.blueprintHash, requisition.signature);
         require(signer == requisition.blueprint.publisher, "TractorFacet: signer mismatch");
         _;
     }
@@ -62,11 +61,30 @@ contract TractorFacet is Invariable {
     }
 
     /**
+     * @notice Updates the tractor version used for EIP712 signatures.
+     * @dev This function will render all existing blueprints invalid.
+     */
+    function updateTractorVersion(
+        string calldata version
+    ) external fundsSafu noNetFlow noSupplyChange {
+        LibDiamond.enforceIsContractOwner();
+        LibTractor._setVersion(version);
+    }
+
+    /**
+     * @notice Get the current tractor version.
+     * @dev Only blueprints using the current version can be run.
+     */
+    function getTractorVersion() external view returns (string memory) {
+        return LibTractor._tractorStorage().version;
+    }
+
+    /**
      * @notice Publish a new blueprint by emitting its data in an event.
      */
     function publishRequisition(
         LibTractor.Requisition calldata requisition
-    ) external verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
         emit PublishRequisition(requisition);
     }
 
@@ -75,7 +93,7 @@ contract TractorFacet is Invariable {
      */
     function cancelBlueprint(
         LibTractor.Requisition calldata requisition
-    ) external verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
         require(msg.sender == requisition.blueprint.publisher, "TractorFacet: not publisher");
         LibTractor._cancelBlueprint(requisition.blueprintHash);
         emit CancelBlueprint(requisition.blueprintHash);
@@ -126,10 +144,20 @@ contract TractorFacet is Invariable {
     }
 
     /**
-     * @notice Get current counter value.
+     * @notice Get current counter value for any account.
+     * @dev Intended for external access.
      * @return count Counter value
      */
-    function getCounter(bytes32 counterId) public view returns (uint256 count) {
+    function getCounter(address account, bytes32 counterId) external view returns (uint256 count) {
+        return LibTractor._tractorStorage().blueprintCounters[account][counterId];
+    }
+
+    /**
+     * @notice Get current counter value.
+     * @dev Intended for access via Tractor farm call. QoL function.
+     * @return count Counter value
+     */
+    function getPublisherCounter(bytes32 counterId) public view returns (uint256 count) {
         return
             LibTractor._tractorStorage().blueprintCounters[
                 LibTractor._tractorStorage().activePublisher
@@ -138,18 +166,19 @@ contract TractorFacet is Invariable {
 
     /**
      * @notice Update counter value.
+     * @dev Intended for use via Tractor farm call.
      * @return count New value of counter
      */
-    function updateCounter(
+    function updatePublisherCounter(
         bytes32 counterId,
         LibTractor.CounterUpdateType updateType,
         uint256 amount
-    ) external returns (uint256 count) {
+    ) external fundsSafu noNetFlow noSupplyChange returns (uint256 count) {
         uint256 newCount;
         if (updateType == LibTractor.CounterUpdateType.INCREASE) {
-            newCount = getCounter(counterId).add(amount);
+            newCount = getPublisherCounter(counterId).add(amount);
         } else if (updateType == LibTractor.CounterUpdateType.DECREASE) {
-            newCount = getCounter(counterId).sub(amount);
+            newCount = getPublisherCounter(counterId).sub(amount);
         }
         LibTractor._tractorStorage().blueprintCounters[
             LibTractor._tractorStorage().activePublisher
