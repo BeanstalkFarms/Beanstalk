@@ -112,7 +112,7 @@ library LibFlood {
 
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.sys.season.lastSopSeason > lastUpdate) {
-            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens
             for (uint i; i < tokens.length; i++) {
                 s.accts[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
                     account,
@@ -151,7 +151,7 @@ library LibFlood {
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.sys.season.lastSop == s.sys.season.rainStart) {
-                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens (need to update account-level PPR for all tokens)
                 for (uint i; i < tokens.length; i++) {
                     s.accts[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sys.sop.sops[
                         s.sys.season.lastSop

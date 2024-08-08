@@ -502,7 +502,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         sop.lastRain = s.accts[account].lastRain;
         sop.lastSop = s.accts[account].lastSop;
         sop.roots = s.accts[account].sop.rainRoots;
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory wells = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes previously whitelisted tokens
         sop.farmerSops = new FarmerSops[](wells.length);
         for (uint256 i; i < wells.length; i++) {
             PerWellPlenty memory wellSop = s.accts[account].sop.perWellPlenty[wells[i]];
