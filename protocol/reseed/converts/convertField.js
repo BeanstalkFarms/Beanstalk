@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseFieldFromStorageAccounts(inputFilePath, outputFilePath, callback) {
+function parseField(inputFilePath, outputFilePath, callback) {
     fs.readFile(inputFilePath, 'utf8', (err, data) => {
         if (err) {
             callback(err, null);
@@ -45,7 +45,7 @@ function parseFieldFromStorageAccounts(inputFilePath, outputFilePath, callback) 
 
 const inputFilePath = "./reseed/converts/storage-accounts20330000.json";
 const outputFilePath = "./reseed/converts/outputs/r4-field.json";
-parseFieldFromStorageAccounts(inputFilePath, outputFilePath, (err, message) => {
+parseField(inputFilePath, outputFilePath, (err, message) => {
     if (err) {
         console.error('Error:', err);
         return;
@@ -53,4 +53,4 @@ parseFieldFromStorageAccounts(inputFilePath, outputFilePath, (err, message) => {
     console.log(message);
 });
 
-// module.exports = parseFieldFromStorageAccounts;
+// module.exports = parseField;

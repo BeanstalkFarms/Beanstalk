@@ -3,7 +3,7 @@ const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r8/bean_internal.json";
+const BEAN_INTERNAL_BALANCES = "./reseed/data/r8/internal-balances.json";
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");
@@ -11,7 +11,7 @@ async function reseed8(account, L2Beanstalk) {
 
   let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
 
-  chunkSize = 2;
+  chunkSize = 4;
   balanceChunks = splitEntriesIntoChunks(beanBalances, chunkSize);
 
   for (let i = 0; i < balanceChunks.length; i++) {

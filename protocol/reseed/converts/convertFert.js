@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseStorageFertilizer(inputFilePath, outputFilePath, callback) {
+function parseFertilizer(inputFilePath, outputFilePath, callback) {
     fs.readFile(inputFilePath, 'utf8', (err, data) => {
         if (err) {
             callback(err, null);
@@ -45,7 +45,7 @@ function parseStorageFertilizer(inputFilePath, outputFilePath, callback) {
 
 const inputFilePath = "./reseed/converts/storage-fertilizer20330000.json";
 const outputFilePath = "./reseed/converts/outputs/r5-barn-raise.json";
-parseStorageFertilizer(inputFilePath, outputFilePath, (err, message) => {
+parseFertilizer(inputFilePath, outputFilePath, (err, message) => {
     if (err) {
         console.error('Error:', err);
         return;
@@ -53,4 +53,4 @@ parseStorageFertilizer(inputFilePath, outputFilePath, (err, message) => {
     console.log(message);
 });
 
-// module.exports = parseStorageFertilizer;
+// module.exports = parseFertilizer;
