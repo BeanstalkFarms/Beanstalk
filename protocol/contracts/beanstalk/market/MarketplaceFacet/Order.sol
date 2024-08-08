@@ -54,6 +54,10 @@ contract Order is Listing {
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         require(podOrder.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(
+            podOrder.minFillAmount > 0,
+            "Marketplace: Minimum fill amount must be greater than 0."
+        );
 
         id = _getOrderId(podOrder);
 

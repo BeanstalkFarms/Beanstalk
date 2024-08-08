@@ -101,16 +101,15 @@ library LibFlood {
     }
 
     /**
-     * @dev internal logic to handle when beanstalk is raining.
+     * @dev internal account-level logic to handle when beanstalk is raining. Called from mow.
      */
-    function handleRainAndSops(address account, uint32 lastUpdate) internal {
+    function handleRainAndSops(
+        address account,
+        uint32 lastUpdate,
+        uint128 firstGerminatingRoots
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        // If no roots, reset Sop counters variables
-        if (s.accts[account].roots == 0) {
-            s.accts[account].lastSop = s.sys.season.rainStart;
-            s.accts[account].lastRain = 0;
-            return;
-        }
+
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.sys.season.lastSopSeason > lastUpdate) {
             address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
@@ -122,11 +121,32 @@ library LibFlood {
             }
             s.accts[account].lastSop = s.sys.season.lastSop;
         }
+        // If no roots, reset Sop counters variables
+        if (s.accts[account].roots == 0) {
+            s.accts[account].lastSop = s.sys.season.rainStart;
+            s.accts[account].lastRain = 0;
+            return;
+        }
+
         if (s.sys.season.raining) {
             // If rain started after update, set account variables to track rain.
             if (s.sys.season.rainStart > lastUpdate) {
                 s.accts[account].lastRain = s.sys.season.rainStart;
                 s.accts[account].sop.rainRoots = s.accts[account].roots;
+                if (s.sys.season.rainStart - 1 == lastUpdate) {
+                    if (firstGerminatingRoots > 0) {
+                        // if the account had just finished germinating roots this season (i.e,
+                        // deposited in the previous season before raining, and mowed during a sop),
+                        // Beanstalk will not allocate plenty to this deposit, and thus the roots
+                        // needs to be deducted from the sop roots.
+                        s.accts[account].sop.rainRoots = s.accts[account].sop.rainRoots.sub(
+                            firstGerminatingRoots
+                        );
+                    }
+                }
+
+                //  s.accts[account].roots includes newly finished germinating roots from a fresh deposit
+                //  @ season before rainStart
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
@@ -287,7 +307,7 @@ library LibFlood {
      * ownership when the Farm became Oversaturated. Also, at the beginning of the
      * Flood, all Pods that were minted before the Farm became Oversaturated Ripen
      * and become Harvestable.
-     * For more information On Oversaturation see {Weather.handleRain}.
+     * For more information On Oversaturation see {handleRain}.
      */
     function sopWell(WellDeltaB memory wellDeltaB) private {
         AppStorage storage s = LibAppStorage.diamondStorage();

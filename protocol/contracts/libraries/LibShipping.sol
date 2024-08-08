@@ -42,12 +42,7 @@ library LibShipping {
             bool capExceeded;
 
             // Calculate the amount of rewards to each stream. Ignores cap and plans with 0 points.
-            getBeansFromPoints(
-                shipmentAmounts,
-                shipmentPlans,
-                totalPoints,
-                remainingBeansToShip
-            );
+            getBeansFromPoints(shipmentAmounts, shipmentPlans, totalPoints, remainingBeansToShip);
 
             // Iterate though each stream, checking if cap is exceeded.
             for (uint256 j; j < shipmentAmounts.length; j++) {

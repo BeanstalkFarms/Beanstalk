@@ -25,7 +25,14 @@ export const Button: FC<Props> = ({
   secondary = false
 }) => {
   return (
-    <StyledButton onClick={onClick} disabled={disabled} $loading={loading} $width={width} margin={margin} secondary={secondary}>
+    <StyledButton
+      onClick={onClick}
+      disabled={disabled}
+      $loading={loading}
+      $width={width}
+      margin={margin}
+      secondary={secondary}
+    >
       {loading ? <Spinner size={18} /> : label}
     </StyledButton>
   );
@@ -47,7 +54,8 @@ const StyledButton = styled.button<ButtonProps>`
   }};
   height: 48px;
   border: none;
-  outline: ${({ secondary, disabled }) => (secondary ? "0.5px solid #9CA3AF" : disabled ? "0.5px solid #D1D5DB" : "0.5px solid #000")};
+  outline: ${({ secondary, disabled }) =>
+    secondary ? "0.5px solid #9CA3AF" : disabled ? "0.5px solid #D1D5DB" : "0.5px solid #000"};
   outline-offset: -0.5px;
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};

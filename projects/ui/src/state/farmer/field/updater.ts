@@ -4,15 +4,15 @@ import { EventProcessor } from '@beanstalk/sdk';
 import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
-import useEvents, { GetEventsFn } from '../events2/updater';
+import useSdk from '~/hooks/sdk';
+import { transform } from '~/util/BigNumber';
+import { FarmerField } from '~/state/farmer/field';
 import {
   resetFarmerField,
   updateFarmerField,
   updateFarmerFieldLoading,
 } from './actions';
-import useSdk from '~/hooks/sdk';
-import { transform } from '~/util/BigNumber';
-import { FarmerField } from '~/state/farmer/field';
+import useEvents, { GetEventsFn } from '../events2/updater';
 
 export const useFetchFarmerField = () => {
   /// Helpers
