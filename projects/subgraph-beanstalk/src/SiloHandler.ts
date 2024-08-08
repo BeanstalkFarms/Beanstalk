@@ -24,8 +24,6 @@ import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   loadSilo,
   loadSiloAsset,
-  loadSiloAssetDailySnapshot,
-  loadSiloAssetHourlySnapshot,
   loadSiloWithdraw,
   loadSiloDeposit,
   loadWhitelistTokenSetting,
@@ -37,7 +35,7 @@ import {
 import { WhitelistToken as WhitelistTokenEntity, DewhitelistToken as DewhitelistTokenEntity, SiloDeposit, Silo } from "../generated/schema";
 import { getCurrentSeason, loadBeanstalk, loadFarmer } from "./utils/Beanstalk";
 import { BEANSTALK, BEAN_ERC20, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
-import { takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeSiloAssetSnapshots, takeSiloSnapshots } from "./utils/snapshots/Silo";
 import { stemFromSeason } from "./utils/contracts/SiloCalculations";
 
 class AddRemoveDepositsParams {
@@ -168,31 +166,16 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
   withdraw.createdAt = withdraw.createdAt == ZERO_BI ? event.block.timestamp : withdraw.createdAt;
   withdraw.save();
 
-  addWithdrawToSiloAsset(
-    event.address,
-    event.params.token,
-    event.params.season.toI32(),
-    event.params.amount,
-    event.block.timestamp,
-    event.block.number
-  );
-  addWithdrawToSiloAsset(
-    event.params.account,
-    event.params.token,
-    event.params.season.toI32(),
-    event.params.amount,
-    event.block.timestamp,
-    event.block.number
-  );
+  addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block.timestamp);
 }
 
 export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.params.account, event.params.token, event.params.season);
+  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block.timestamp);
 }
 
 export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
   for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i]);
+    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block.timestamp);
   }
 }
 
@@ -273,15 +256,7 @@ export function handlePlant(event: Plant): void {
 
   // Remove the asset-only amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
-  updateDepositInSiloAsset(
-    event.address,
-    event.address,
-    BEAN_ERC20,
-    currentSeason,
-    event.params.beans,
-    event.params.beans,
-    event.block.timestamp
-  );
+  updateDepositInSiloAsset(event.address, event.address, BEAN_ERC20, event.params.beans, event.params.beans, event.block.timestamp);
 }
 
 // These two calls are according to the Replant abi, before stems were included.
@@ -319,16 +294,7 @@ function updateDepositInSilo(
   let silo = loadSilo(account);
   silo.depositedBDV = silo.depositedBDV.plus(deltaBdv);
 
-  const newSeedStalk = updateDepositInSiloAsset(
-    protocol,
-    account,
-    token,
-    getCurrentSeason(protocol),
-    deltaAmount,
-    deltaBdv,
-    timestamp,
-    false
-  );
+  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, timestamp, false);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
   if (account == protocol) {
     silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(newSeedStalk);
@@ -341,63 +307,43 @@ export function updateDepositInSiloAsset(
   protocol: Address,
   account: Address,
   token: Address,
-  season: i32, // season will be removed upon snapshot refactor
   deltaAmount: BigInt,
   deltaBdv: BigInt,
   timestamp: BigInt,
   recurs: boolean = true
 ): BigInt {
   if (recurs && account != protocol) {
-    updateDepositInSiloAsset(protocol, protocol, token, season, deltaAmount, deltaBdv, timestamp);
+    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
   }
   let asset = loadSiloAsset(account, token);
-  let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
-  let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
   let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
   asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);
+
+  takeSiloAssetSnapshots(asset, protocol, timestamp);
   asset.save();
-
-  assetHourly.deltaDepositedBDV = assetHourly.deltaDepositedBDV.plus(deltaBdv);
-  assetHourly.depositedBDV = asset.depositedBDV;
-  assetHourly.deltaDepositedAmount = assetHourly.deltaDepositedAmount.plus(deltaAmount);
-  assetHourly.depositedAmount = asset.depositedAmount;
-  assetHourly.updatedAt = timestamp;
-  assetHourly.save();
-
-  assetDaily.season = season;
-  assetDaily.deltaDepositedBDV = assetDaily.deltaDepositedBDV.plus(deltaBdv);
-  assetDaily.depositedBDV = asset.depositedBDV;
-  assetDaily.deltaDepositedAmount = assetDaily.deltaDepositedAmount.plus(deltaAmount);
-  assetDaily.depositedAmount = asset.depositedAmount;
-  assetDaily.updatedAt = timestamp;
-  assetDaily.save();
 
   return newGrownStalk;
 }
 
 function addWithdrawToSiloAsset(
+  protocol: Address,
   account: Address,
   token: Address,
-  season: i32,
-  amount: BigInt,
+  deltaAmount: BigInt,
   timestamp: BigInt,
-  blockNumber: BigInt
+  recurs: boolean = true
 ): void {
-  let assetHourly = loadSiloAssetHourlySnapshot(account, token, season, timestamp);
-  let assetDaily = loadSiloAssetDailySnapshot(account, token, timestamp);
-
-  assetHourly.deltaWithdrawnAmount = assetHourly.deltaWithdrawnAmount.plus(amount);
-  assetHourly.updatedAt = timestamp;
-  assetHourly.save();
-
-  assetDaily.season = season;
-  assetDaily.deltaWithdrawnAmount = assetDaily.deltaWithdrawnAmount.plus(amount);
-  assetDaily.updatedAt = timestamp;
-  assetDaily.save();
+  if (recurs && account != protocol) {
+    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, timestamp);
+  }
+  let asset = loadSiloAsset(account, token);
+  asset.withdrawnAmount = asset.withdrawnAmount.plus(deltaAmount);
+  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  asset.save();
 }
 
 export function updateStalkBalances(
@@ -448,10 +394,15 @@ function updateSeedsBalances(protocol: Address, account: Address, seeds: BigInt,
   silo.save();
 }
 
-function updateClaimedWithdraw(account: Address, token: Address, season: BigInt): void {
-  let withdraw = loadSiloWithdraw(account, token, season.toI32());
+function updateClaimedWithdraw(protocol: Address, account: Address, token: Address, withdrawSeason: BigInt, timestamp: BigInt): void {
+  let withdraw = loadSiloWithdraw(account, token, withdrawSeason.toI32());
   withdraw.claimed = true;
   withdraw.save();
+
+  let asset = loadSiloAsset(account, token);
+  asset.withdrawnAmount = asset.withdrawnAmount.minus(withdraw.amount);
+  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  asset.save();
 }
 
 export function updateStalkWithCalls(protocol: Address, timestamp: BigInt): void {

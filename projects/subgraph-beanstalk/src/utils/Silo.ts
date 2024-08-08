@@ -4,8 +4,6 @@ import {
   SiloDeposit,
   SiloWithdraw,
   SiloYield,
-  SiloAssetDailySnapshot,
-  SiloAssetHourlySnapshot,
   SiloAsset,
   WhitelistTokenSetting,
   WhitelistTokenHourlySnapshot,
@@ -59,54 +57,6 @@ export function loadSiloAsset(account: Address, token: Address): SiloAsset {
     asset.save();
   }
   return asset as SiloAsset;
-}
-
-export function loadSiloAssetHourlySnapshot(account: Address, token: Address, season: i32, timestamp: BigInt): SiloAssetHourlySnapshot {
-  let hour = hourFromTimestamp(timestamp);
-  let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();
-  let snapshot = SiloAssetHourlySnapshot.load(id);
-  if (snapshot == null) {
-    let asset = loadSiloAsset(account, token);
-    snapshot = new SiloAssetHourlySnapshot(id);
-    snapshot.season = season;
-    snapshot.siloAsset = asset.id;
-    snapshot.depositedBDV = asset.depositedBDV;
-    snapshot.depositedAmount = asset.depositedAmount;
-    snapshot.withdrawnAmount = asset.withdrawnAmount;
-    snapshot.farmAmount = asset.farmAmount;
-    snapshot.deltaDepositedBDV = ZERO_BI;
-    snapshot.deltaDepositedAmount = ZERO_BI;
-    snapshot.deltaWithdrawnAmount = ZERO_BI;
-    snapshot.deltaFarmAmount = ZERO_BI;
-    snapshot.createdAt = BigInt.fromI32(hour);
-    snapshot.updatedAt = ZERO_BI;
-    snapshot.save();
-  }
-  return snapshot as SiloAssetHourlySnapshot;
-}
-
-export function loadSiloAssetDailySnapshot(account: Address, token: Address, timestamp: BigInt): SiloAssetDailySnapshot {
-  let day = dayFromTimestamp(timestamp);
-  let id = account.toHexString() + "-" + token.toHexString() + "-" + day.toString();
-  let snapshot = SiloAssetDailySnapshot.load(id);
-  if (snapshot == null) {
-    let asset = loadSiloAsset(account, token);
-    snapshot = new SiloAssetDailySnapshot(id);
-    snapshot.season = 0;
-    snapshot.siloAsset = asset.id;
-    snapshot.depositedBDV = asset.depositedBDV;
-    snapshot.depositedAmount = asset.depositedAmount;
-    snapshot.withdrawnAmount = asset.withdrawnAmount;
-    snapshot.farmAmount = asset.farmAmount;
-    snapshot.deltaDepositedBDV = ZERO_BI;
-    snapshot.deltaDepositedAmount = ZERO_BI;
-    snapshot.deltaWithdrawnAmount = ZERO_BI;
-    snapshot.deltaFarmAmount = ZERO_BI;
-    snapshot.createdAt = BigInt.fromI32(day);
-    snapshot.updatedAt = ZERO_BI;
-    snapshot.save();
-  }
-  return snapshot as SiloAssetDailySnapshot;
 }
 
 /* ===== Whitelist Token Settings Entities ===== */

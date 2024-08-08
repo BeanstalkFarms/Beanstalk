@@ -15,9 +15,9 @@ import {
 } from "./utils/PodMarketplace";
 import { updateDepositInSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
-import { loadSilo, loadSiloAssetDailySnapshot, loadSiloAssetHourlySnapshot } from "./utils/Silo";
+import { loadSilo, loadSiloAsset } from "./utils/Silo";
 import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/contracts/BeanstalkPrice";
-import { takeSiloSnapshots } from "./utils/snapshots/Silo";
+import { takeSiloAssetSnapshots, takeSiloSnapshots } from "./utils/snapshots/Silo";
 
 export function handleSunrise(event: Sunrise): void {
   // Update any farmers that had silo transfers from the prior season.
@@ -68,8 +68,9 @@ export function handleSunrise(event: Sunrise): void {
   let silo = loadSilo(event.address);
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
   for (let i = 0; i < silo.whitelistedTokens.length; i++) {
-    loadSiloAssetHourlySnapshot(event.address, Address.fromString(silo.whitelistedTokens[i]), currentSeason, event.block.timestamp);
-    loadSiloAssetDailySnapshot(event.address, Address.fromString(silo.whitelistedTokens[i]), event.block.timestamp);
+    let siloAsset = loadSiloAsset(event.address, Address.fromString(silo.whitelistedTokens[i]));
+    takeSiloAssetSnapshots(siloAsset, event.address, event.block.timestamp);
+    siloAsset.save();
   }
   silo.save();
 }
@@ -97,15 +98,7 @@ export function handleReward(event: Reward): void {
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
 
-  updateDepositInSiloAsset(
-    event.address,
-    event.address,
-    BEAN_ERC20,
-    event.params.season.toI32(),
-    event.params.toSilo,
-    event.params.toSilo,
-    event.block.timestamp
-  );
+  updateDepositInSiloAsset(event.address, event.address, BEAN_ERC20, event.params.toSilo, event.params.toSilo, event.block.timestamp);
 }
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {

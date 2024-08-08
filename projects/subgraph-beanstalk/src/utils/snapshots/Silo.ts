@@ -201,6 +201,12 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, 
   // Repeat for daily snapshot.
   // Duplicate code is preferred to type coercion, the codegen doesnt provide a common interface.
 
+  daily.season = currentSeason;
+  daily.siloAsset = siloAsset.id;
+  daily.depositedAmount = siloAsset.depositedAmount;
+  daily.depositedBDV = siloAsset.depositedBDV;
+  daily.withdrawnAmount = siloAsset.withdrawnAmount;
+  daily.farmAmount = siloAsset.farmAmount;
   if (baseDaily !== null) {
     daily.deltaDepositedAmount = daily.depositedAmount.minus(baseDaily.depositedAmount);
     daily.deltaDepositedBDV = daily.depositedBDV.minus(baseDaily.depositedBDV);
