@@ -456,10 +456,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @notice returns the number of pods owned by `account` in a field.
      */
-    function balanceOfPods(
-        address account,
-        uint256 fieldId
-    ) external view returns (uint256 pods) {
+    function balanceOfPods(address account, uint256 fieldId) external view returns (uint256 pods) {
         uint256[] memory plotIndexes = s.accts[account].fields[fieldId].plotIndexes;
         for (uint256 i = 0; i < plotIndexes.length; i++) {
             pods += s.accts[account].fields[fieldId].plots[plotIndexes[i]];

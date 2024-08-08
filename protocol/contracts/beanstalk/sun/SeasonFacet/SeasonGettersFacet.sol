@@ -114,7 +114,9 @@ contract SeasonGettersFacet {
         }
     }
 
-    function cumulativeCurrentDeltaB(address[] calldata pools) external view returns (int256 deltaB) {
+    function cumulativeCurrentDeltaB(
+        address[] calldata pools
+    ) external view returns (int256 deltaB) {
         for (uint256 i; i < pools.length; i++) {
             deltaB += poolCurrentDeltaB(pools[i]);
         }
