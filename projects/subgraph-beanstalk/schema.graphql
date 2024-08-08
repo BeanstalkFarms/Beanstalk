@@ -254,14 +254,18 @@ type SiloAsset @entity {
   silo: Silo!
   "Token address for this asset"
   token: String!
-  "Current BDV of deposits"
-  depositedBDV: BigInt!
   "Current Token amount of deposits"
   depositedAmount: BigInt!
+  "Current BDV of deposits"
+  depositedBDV: BigInt!
   "Current Token amount of silo withdrawals"
   withdrawnAmount: BigInt!
   "Current internal (farm) balance of the asset"
   farmAmount: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [SiloAssetHourlySnapshot!]! @derivedFrom(field: "siloAsset")
   "Link to daily snapshot data"
