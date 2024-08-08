@@ -84,8 +84,6 @@ contract ReseedSilo {
     function reseedSiloDeposit(AccountSiloDeposits[] calldata deposits) internal {
         // for all deposits of a token and account.
         for (uint256 i; i < deposits.length; i++) {
-            uint128 calculatedBdv;
-            uint256 calculatedStalk;
             // for all of account's deposits.
             for (uint256 j; j < deposits[i].dd.length; j++) {
                 // get stem from depositId.
@@ -99,12 +97,6 @@ contract ReseedSilo {
                 s.accts[deposits[i].account].depositIdList[deposits[i].token].depositIds.push(
                     deposits[i].dd[j].depositId
                 );
-
-                // increment calculatedBdv by bdv of deposit:
-                calculatedBdv += deposits[i].dd[j].bdv;
-
-                // increment calculatedStalk by grown stalk of deposit.
-                calculatedStalk += uint96(deposits[i].stemTip - stem) * deposits[i].dd[j].bdv;
 
                 // emit events.
                 emit AddMigratedDeposit(
