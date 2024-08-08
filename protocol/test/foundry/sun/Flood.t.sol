@@ -818,7 +818,6 @@ contract FloodTest is TestHelper {
         bs.balanceOfPlenty(users[1], sopWell);
     }
 
-
     // test making Beans harvestable
     function testHarvestablePodlineLessThanPointOnePercent(uint256 amount) public {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
