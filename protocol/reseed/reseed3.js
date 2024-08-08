@@ -53,77 +53,11 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
     stable = await ethers.getContractAt("IERC20", L2_WBTC);
   }
 
-  // deploy basin components, if deployBasin is enabled:
-  wells = [];
   if (deployBasin) {
-    // TODO: replace aquifer on L2
-    aquifer = await getWellContractAt("Aquifer", "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773");
-    cp2 = await getWellContractAt(
-      "ConstantProduct2",
-      "0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26",
-      "1.2"
-    );
-    mfp = await getWellContractAt(
-      "MultiFlowPump",
-      "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17",
-      "1.2"
-    );
-    mfpData =
-      "0x3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
     [uWell, stable2] = await deployBasinV1_2Components();
-
-    // deploy the following upgradeable wells:
-    // BEAN/WETH
-    // BEAN/WSTETH
-    // BEAN/WEETH
-    // BEAN/WBTC
-    // BEAN/USDC
-    // BEAN/USDT
-    cp2Tokens = [
-      L2_WETH,
-      L2_WSTETH,
-      L2_WEETH,
-      L2_WBTC,
-    ];
-    s2Tokens = [
-      L2_USDC,
-      L2_USDT
-    ];
-    // loop through tokens:
-    for (let i = 0; i < cp2Tokens.length; i++) {
-      wells.push(
-        await deployUpgradeableWell(
-          aquifer,
-          BEAN,
-          cp2Tokens[i],
-          uWell,
-          cp2,
-          "0x",
-          mfp,
-          mfpData,
-          "0x0000000000000000000000000000000000000000000000000000000000000001"
-        )
-      );
-    }
-
-    for (let i = 0; i < s2Tokens.length; i++) {
-      wells.push(
-        await deployUpgradeableWell(
-          aquifer,
-          BEAN,
-          s2Tokens[i],
-          uWell,
-          stable2,
-          ethers.utils.solidityPack(["uint256", "uint256"], [6, 18]),
-          mfp,
-          mfpData,
-          "0x0000000000000000000000000000000000000000000000000000000000000001"
-        )
-      );
-    }
+    console.log("uWell:", uWell.address);
+    console.log("stable2:", stable2.address);
   }
-
-  console.log("Wells deployed:", wells);
 
   // approve beanstalk:
   await weth.connect(approver).approve(L2Beanstalk, ethInBeanEthWell[0]);
