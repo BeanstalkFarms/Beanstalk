@@ -64,15 +64,11 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken;
-        address fromToken;
-
         // if the convert is a well <> bean convert, cache the state to validate convert.
         LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert.getConvertState(
             convertData
         );
 
-        uint256 grownStalk;
         LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
         if (cp.decreaseBDV) {
@@ -112,11 +108,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
         toBdv = (newBdv > fromBdv || cp.decreaseBDV) ? newBdv : fromBdv;
 
-        toStem = LibConvert._depositTokensForConvert(cp.toToken, cp.toAmount, toBdv, grownStalk);
-
-        // Retrieve the rest of return parameters from the convert struct.
-        toAmount = cp.toAmount;
-        fromAmount = cp.fromAmount;
+        toStem = LibConvert._depositTokensForConvert(
+            cp.toToken,
+            cp.toAmount,
+            toBdv,
+            pipeData.grownStalk
+        );
 
         emit Convert(LibTractor._user(), cp.fromToken, cp.toToken, cp.fromAmount, cp.toAmount);
     }
