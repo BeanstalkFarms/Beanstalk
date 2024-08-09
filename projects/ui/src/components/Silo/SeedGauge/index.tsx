@@ -9,8 +9,8 @@ import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { Token } from '@beanstalk/sdk';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
-import { useAverageSeedsPerBDV } from '~/hooks/beanstalk/useAverageSeedsPerBDV';
 import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
+import useAvgSeedsPerBDV from '~/hooks/beanstalk/useAvgSeedsPerBDV';
 import SeasonsToCatchUpInfo from './SeasonsToCatchUpInfo';
 import SeedGaugeTable from './SeedGaugeTable';
 import Bean2MaxLPRatio from './Bean2MaxLPRatio';
@@ -211,18 +211,18 @@ const SeedGaugeInfoSelected = ({
   setWhitelistVisible: (val: boolean, callback?: () => void) => void;
 }) => {
   // load the data at the top level
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const [skip, setSkip] = useState(true);
 
   const timeState = useChartTimePeriodState('silo-avg-seeds-per-bdv');
 
-  const [query, loading] = useAverageSeedsPerBDV(timeState[0], !shouldFetch);
+  const [query, loading, error] = useAvgSeedsPerBDV(timeState[0], skip);
 
   useEffect(() => {
     // Fetch only if we open the seasonsToCatchUp Tab
-    if (activeIndex === 0 && !shouldFetch) {
-      setShouldFetch(true);
+    if (activeIndex === 0 && skip) {
+      setSkip(false);
     }
-  }, [activeIndex, shouldFetch]);
+  }, [activeIndex, skip]);
 
   if (!allowedTabs.has(activeIndex)) return null;
 
@@ -230,9 +230,10 @@ const SeedGaugeInfoSelected = ({
     <Card>
       {activeIndex === 0 ? (
         <SeasonsToCatchUpInfo
-          queryData={query}
-          loading={loading}
           timeState={timeState}
+          queryData={query}
+          error={error}
+          loading={loading}
         />
       ) : null}
       {activeIndex === 1 ? <Bean2MaxLPRatio data={data} /> : null}

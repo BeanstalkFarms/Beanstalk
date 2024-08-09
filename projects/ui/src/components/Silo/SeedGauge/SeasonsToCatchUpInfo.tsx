@@ -14,6 +14,7 @@ import BigNumber from 'bignumber.js';
 type SeasonsToCatchUpInfoProps = {
   queryData: ChartQueryData[];
   loading: boolean;
+  error: boolean;
   timeState: ReturnType<typeof useChartTimePeriodState>;
 };
 
@@ -43,7 +44,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
       </MuiLink>
     </Stack>
     <Divider />
-    <Stack p={1.5} position="relative" width="100%">
+    <Stack p={1.5} width="100%">
       <SingleAdvancedChart
         storageKeyPrefix="silo-avg-seeds-per-bdv"
         tooltipTitle="Average Seeds per BDV"
@@ -53,6 +54,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
         tickFormatter={(val) => new BigNumber(val).toFormat(6)}
         seriesData={props.queryData}
         isLoading={props.loading}
+        error={props.error}
         drawPegLine={false}
       />
     </Stack>
