@@ -250,8 +250,8 @@ const makeTableData = (
 const getSortByWhitelisted =
   (sdk: BeanstalkSDK) =>
   <T extends { well: Well }>(a: T, b: T) => {
-    const aWhitelisted = a.well.lpToken && sdk.tokens.isWhitelisted(a.well.lpToken);
-    const bWhitelisted = b.well.lpToken && sdk.tokens.isWhitelisted(b.well.lpToken);
+    const aWhitelisted = a.well.lpToken && sdk.tokens.getIsWhitelistedWellLPToken(a.well.lpToken);
+    const bWhitelisted = b.well.lpToken && sdk.tokens.getIsWhitelistedWellLPToken(b.well.lpToken);
 
     if (aWhitelisted) return -1;
     if (bWhitelisted) return 1;

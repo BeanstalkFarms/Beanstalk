@@ -4,8 +4,20 @@ import { SupportedChainId } from '~/constants/chains';
 import curveLogo from '~/img/dexes/curve-logo.png';
 
 import { ChainConstant, PoolMap } from '.';
-import { BEAN_CRV3_ADDRESSES, BEAN_ETH_WELL_ADDRESSES } from './addresses';
-import { BEAN, BEAN_CRV3_LP, BEAN_ETH_WELL_LP, CRV3, WETH } from './tokens';
+import {
+  BEAN_CRV3_ADDRESSES,
+  BEAN_ETH_WELL_ADDRESSES,
+  BEAN_WSTETH_ADDRESSS,
+} from './addresses';
+import {
+  BEAN,
+  BEAN_CRV3_LP,
+  BEAN_ETH_WELL_LP,
+  CRV3,
+  WETH,
+  BEAN_WSTETH_WELL_LP,
+  WSTETH,
+} from './tokens';
 
 // ------------------------------------
 // BEAN:CRV3 Curve MetaPool
@@ -37,12 +49,26 @@ export const BEANETH_WELL_MAINNET = new BasinWell(
   }
 );
 
+export const BEANWSTETH_WELL_MAINNET = new BasinWell(
+  SupportedChainId.MAINNET,
+  BEAN_WSTETH_ADDRESSS,
+  BEAN_WSTETH_WELL_LP,
+  [BEAN, WSTETH],
+  {
+    name: 'BEAN:WSTETH Well Pool',
+    logo: curveLogo,
+    symbol: 'BEAN:WSTETH',
+    color: '#ed9f9c',
+  }
+);
+
 // --------------------------------------------------
 
 export const ALL_POOLS: ChainConstant<PoolMap> = {
   [SupportedChainId.MAINNET]: {
     [BEANCRV3_CURVE_MAINNET.address]: BEANCRV3_CURVE_MAINNET,
     [BEANETH_WELL_MAINNET.address]: BEANETH_WELL_MAINNET,
+    [BEANWSTETH_WELL_MAINNET.address]: BEANWSTETH_WELL_MAINNET,
   },
 };
 
@@ -50,6 +76,7 @@ export const ALL_POOLS: ChainConstant<PoolMap> = {
 export const WHITELISTED_POOLS: ChainConstant<PoolMap> = {
   [SupportedChainId.MAINNET]: {
     [BEANETH_WELL_MAINNET.address]: BEANETH_WELL_MAINNET,
+    [BEANWSTETH_WELL_MAINNET.address]: BEANWSTETH_WELL_MAINNET,
   },
 };
 

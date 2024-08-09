@@ -11,7 +11,7 @@ import {
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
 import { ClaimRewardsAction } from '~/util';
-import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
 import DescriptionButton from '~/components/Common/DescriptionButton';
 import { hoverMap } from '~/constants/silo';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
@@ -88,10 +88,10 @@ const ClaimRewardsForm: FC<
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
   const unripeDepositedBalance = balances[
     urBean.address
-  ]?.deposited.amount.plus(balances[urBeanWeth.address]?.deposited.amount);
+  ]?.deposited.amount.plus(balances[urBeanWstETH.address]?.deposited.amount);
 
   /// Handlers
   const onMouseOver = useCallback(

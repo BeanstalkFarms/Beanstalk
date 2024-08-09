@@ -12,6 +12,9 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
+
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
@@ -302,19 +305,31 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+task("deployWstethMigration", async function () {
+  await bipMigrateUnripeBeanEthToBeanSteth();
+});
+
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
+task("updateBeanstalkForUI", async function () {
+  await updateBeanstalkForUI();
+});
+
+/// EBIPS ///
 
 task("ebip17", async function () {
   await ebip17();
-})
+});
 
 task("ebip16", async function () {
   await ebip16();
-})
+});
 
 task("ebip15", async function () {
   await ebip15();
-})
+});
 
 task("ebip14", async function () {
   await ebip14();

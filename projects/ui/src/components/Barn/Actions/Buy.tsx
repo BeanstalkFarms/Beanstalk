@@ -43,10 +43,14 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
-import { displayTokenAmount, getTokenIndex, normaliseTV, tokenValueToBN } from '~/util';
+import {
+  displayTokenAmount,
+  getTokenIndex,
+  normaliseTV,
+  tokenValueToBN,
+} from '~/util';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
 import { FarmerBalances } from '~/state/farmer/balances';
-import FertilizerItem from '../FertilizerItem';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
@@ -68,7 +72,8 @@ import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDr
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BuyFertilizerFarmStep, ClaimAndDoX } from '~/lib/Txn';
-import { useEthPriceFromBeanstalk } from '~/hooks/ledger/useEthPriceFromBeanstalk';
+import { useWstETHPriceFromBeanstalk } from '~/hooks/ledger/useWstEthPriceFromBeanstalk';
+import FertilizerItem from '../FertilizerItem';
 
 // ---------------------------------------------------
 
@@ -116,21 +121,21 @@ const BuyForm: FC<
   sdk,
 }) => {
   const formRef = useRef<HTMLDivElement>(null);
-  const getEthPrice = useEthPriceFromBeanstalk();
+  const getWstETHPrice = useWstETHPriceFromBeanstalk();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
-  const [ethPrice, setEthPrice] = useState(TokenValue.ZERO);
+  const [wstETHPrice, setWstETHPrice] = useState(TokenValue.ZERO);
 
   useEffect(() => {
-    getEthPrice().then((price) => {
-      setEthPrice(price);
+    getWstETHPrice().then((price) => {
+      setWstETHPrice(price);
     });
-  }, [getEthPrice]);
+  }, [getWstETHPrice]);
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
 
   const { fert, humidity, actions } = useFertilizerSummary(
     combinedTokenState,
-    ethPrice
+    wstETHPrice
   );
 
   // Extract
@@ -206,7 +211,7 @@ const BuyForm: FC<
           balanceFrom={values.balanceFrom}
           params={quoteProviderParams}
         />
-        <ClaimBeanDrawerToggle actionText='Buy Fert with'/>
+        <ClaimBeanDrawerToggle actionText="Buy Fert with" />
         {/* Outputs */}
         {fert?.gt(0) ? (
           <>
@@ -239,26 +244,28 @@ const BuyForm: FC<
                   </>
                 )}{' '}
                 {values.claimableBeans.amount?.gt(0) && (
-                  <> 
-                    {values.tokens[0].amount?.gt(0) && (<>+ </>)} 
+                  <>
+                    {values.tokens[0].amount?.gt(0) && <>+ </>}
                     {displayTokenAmount(
-                      values.claimableBeans.amount, 
-                      sdk.tokens.BEAN, 
+                      values.claimableBeans.amount,
+                      sdk.tokens.BEAN,
                       { showName: false, showSymbol: true }
                     )}
                   </>
                 )}{' '}
-                {values.tokens[0].token.symbol !== 'WETH' && (
-                  <> 
-                    →{' '} 
+                {values.tokens[0].token.symbol !== 'wstETH' && (
+                  <>
+                    →{' '}
                     {displayTokenAmount(
-                      values.tokens[0].amountOut?.plus(values.claimableBeans.amountOut || BigNumber(0)) || BigNumber(0), 
-                      sdk.tokens.WETH, 
+                      values.tokens[0].amountOut?.plus(
+                        values.claimableBeans.amountOut || BigNumber(0)
+                      ) || BigNumber(0),
+                      sdk.tokens.WSTETH,
                       { showName: false, showSymbol: true }
                     )}
                   </>
                 )}{' '}
-                * ${ethPrice.toHuman('short')} = {fert.toFixed(0)} Fertilizer
+                * ${wstETHPrice.toHuman('short')} = {fert.toFixed(0)} Fertilizer
               </WarningAlert>
               <Box width="100%">
                 <AdditionalTxnsAccordion />
@@ -328,7 +335,7 @@ const BuyForm: FC<
 
 const BuyPropProvider: FC<{}> = () => {
   const sdk = useSdk();
-  const getEthPrice = useEthPriceFromBeanstalk();
+  const getWstETHPrice = useWstETHPriceFromBeanstalk();
 
   const { remaining } = useSelector<AppState, AppState['_beanstalk']['barn']>(
     (state) => state._beanstalk.barn
@@ -353,7 +360,7 @@ const BuyPropProvider: FC<{}> = () => {
     };
   }, [sdk.tokens]);
   const baseToken = usePreferredToken(preferredTokens, 'use-best');
-  const tokenOut = sdk.tokens.WETH;
+  const tokenOut = sdk.tokens.WSTETH;
 
   const initialValues: BuyFormValues = useMemo(
     () => ({
@@ -383,7 +390,7 @@ const BuyPropProvider: FC<{}> = () => {
 
   /// Handlers
   // Doesn't get called if tokenIn === tokenOut
-  // aka if the user has selected USDC as input
+  // aka if the user has selected wstETH as input
   const handleQuote = useCallback<
     QuoteHandlerWithParams<BuyQuoteHandlerParams>
   >(
@@ -413,8 +420,8 @@ const BuyPropProvider: FC<{}> = () => {
       let txToast;
       try {
         middleware.before();
-        const ethPrice = await getEthPrice();
-        const { USDC, BEAN, WETH } = sdk.tokens;
+        const wstETHPrice = await getWstETHPrice();
+        const { USDC, BEAN, WSTETH } = sdk.tokens;
 
         const { fertilizer } = sdk.contracts;
         if (!sdk.contracts.beanstalk) {
@@ -436,13 +443,11 @@ const BuyPropProvider: FC<{}> = () => {
         }
 
         const amountIn = normaliseTV(tokenIn, _amountIn);
-        const amountOut = WETH.equals(tokenIn)
+        const totalWstETHOut = WSTETH.equals(tokenIn)
           ? amountIn
-          : normaliseTV(WETH, _amountOut);
+          : normaliseTV(WSTETH, _amountOut);
 
-        const totalWETHOut = amountOut;
-
-        if (totalWETHOut.lte(0)) throw new Error('Amount required');
+        if (totalWstETHOut.lte(0)) throw new Error('Amount required');
 
         const claimAndDoX = new ClaimAndDoX(
           sdk,
@@ -452,7 +457,7 @@ const BuyPropProvider: FC<{}> = () => {
         );
 
         const buyTxn = new BuyFertilizerFarmStep(sdk, account);
-        const estFert = buyTxn.getFertFromWeth(totalWETHOut, ethPrice);
+        const estFert = buyTxn.getFertFromWstETH(totalWstETHOut, wstETHPrice);
 
         txToast = new TransactionToast({
           loading: `Buying ${estFert} Fertilizer...`,
@@ -464,7 +469,7 @@ const BuyPropProvider: FC<{}> = () => {
           amountIn,
           balanceFromToMode(values.balanceFrom),
           claimAndDoX,
-          ethPrice,
+          wstETHPrice,
           slippage
         );
 
@@ -520,7 +525,7 @@ const BuyPropProvider: FC<{}> = () => {
     },
     [
       middleware,
-      getEthPrice,
+      getWstETHPrice,
       sdk,
       account,
       txnBundler,

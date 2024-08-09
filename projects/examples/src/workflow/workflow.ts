@@ -64,8 +64,7 @@ async function runWithPresets(sdk: BeanstalkSDK) {
     new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL),
     /////// USING presets
 
-    sdk.farm.presets.weth2usdt(),
-    sdk.farm.presets.usdt2bean()
+    sdk.farm.presets.weth2usdt()
 
     ///// OR with Preset flow
     // sdk.farm.presets.weth2bean(),
@@ -81,37 +80,37 @@ async function runWithPresets(sdk: BeanstalkSDK) {
   console.log("tx done");
 }
 
-async function buyAndDeposit(sdk: BeanstalkSDK) {
-  const work = sdk.farm.create();
+// async function buyAndDeposit(sdk: BeanstalkSDK) {
+//   const work = sdk.farm.create();
 
-  work.add([
-    new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL),
-    sdk.farm.presets.weth2bean(FarmFromMode.INTERNAL, FarmToMode.INTERNAL),
-    async (_amountInStep) => {
-      return sdk.contracts.beanstalk.interface.encodeFunctionData("deposit", [
-        sdk.tokens.BEAN.address,
-        _amountInStep,
-        FarmFromMode.INTERNAL
-      ]);
-    }
-  ]);
+//   work.add([
+//     new sdk.farm.actions.WrapEth(FarmToMode.INTERNAL),
+//     sdk.farm.presets.weth2bean(FarmFromMode.INTERNAL, FarmToMode.INTERNAL),
+//     async (_amountInStep) => {
+//       return sdk.contracts.beanstalk.interface.encodeFunctionData("deposit", [
+//         sdk.tokens.BEAN.address,
+//         _amountInStep,
+//         FarmFromMode.INTERNAL
+//       ]);
+//     }
+//   ]);
 
-  const amountIn = ethers.utils.parseUnits("10", 18);
+//   const amountIn = ethers.utils.parseUnits("10", 18);
 
-  const estimate = await work.estimate(amountIn);
-  console.log("Estimated BEAN: ", sdk.tokens.BEAN.toHuman(estimate));
+//   const estimate = await work.estimate(amountIn);
+//   console.log("Estimated BEAN: ", sdk.tokens.BEAN.toHuman(estimate));
 
-  console.log(`Approving BEAN for ${estimate.toString()}`);
-  await sdk.tokens.BEAN.approve(sdk.contracts.beanstalk.address, estimate);
+//   console.log(`Approving BEAN for ${estimate.toString()}`);
+//   await sdk.tokens.BEAN.approve(sdk.contracts.beanstalk.address, estimate);
 
-  // TODO FIX ME
-  // const test = await work.callStatic(amountIn, 0.1);
-  // console.log(test);
+//   // TODO FIX ME
+//   // const test = await work.callStatic(amountIn, 0.1);
+//   // console.log(test);
 
-  const tx = await work.execute(amountIn, { slippage: 0.1 });
-  await tx.wait();
-  console.log("tx done");
-}
+//   const tx = await work.execute(amountIn, { slippage: 0.1 });
+//   await tx.wait();
+//   console.log("tx done");
+// }
 
 async function runReverse(sdk: BeanstalkSDK) {
   const work = sdk.farm.create();

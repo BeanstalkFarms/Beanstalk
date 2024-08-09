@@ -24,7 +24,7 @@ import {
   SEEDS,
   STALK,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
@@ -80,7 +80,7 @@ const Whitelist: FC<{
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   /// State
@@ -205,9 +205,9 @@ const Whitelist: FC<{
       <Stack gap={1} p={1}>
         {config.whitelist.map((token) => {
           const deposited = farmerSilo.balances[token.address]?.deposited;
-          const isUnripe = token === urBean || token === urBeanWeth;
+          const isUnripe = token === urBean || token === urBeanWstETH;
           const isUnripeLP =
-            isUnripe && token.address === UNRIPE_BEAN_WETH[1].address;
+            isUnripe && token.address === UNRIPE_BEAN_WSTETH[1].address;
           const isDeprecated = checkIfDeprecated(token.address);
 
           // Unripe data
@@ -488,8 +488,8 @@ const Whitelist: FC<{
                                 gap={0.25}
                                 variant="h4"
                                 amount={displayTokenAmount(
-                                  beanstalkSilo.balances[token.address]
-                                    ?.deposited.amount || ZERO_BN,
+                                  beanstalkSilo.balances[token.address]?.TVD ||
+                                    ZERO_BN,
                                   token,
                                   { showName: false }
                                 )}
@@ -540,10 +540,7 @@ const Whitelist: FC<{
                         ) : (
                           <Fiat
                             token={token}
-                            amount={
-                              beanstalkSilo.balances[token.address]?.deposited
-                                .amount
-                            }
+                            amount={beanstalkSilo.balances[token.address]?.TVD}
                             truncate
                           />
                         )}
@@ -754,9 +751,8 @@ const Whitelist: FC<{
                                         title="Chop Amount"
                                         gap={0.25}
                                         variant="h4"
-                                        // After Chop Change, update this to: recap rate * Total LP Underlying urBEANETH * BeanEth LP Price
                                         amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
-                                        subtitle="The amount of BEANETH received for Chopping 1 urBEANETH."
+                                        subtitle="The amount of BEANwstETH received for Chopping 1 urBEANwstETH."
                                       />
                                     ) : (
                                       <Stat

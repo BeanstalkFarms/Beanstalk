@@ -1,5 +1,5 @@
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { DiamondCut } from "../../../generated/Diamond/Beanstalk";
+import { DiamondCut } from "../../../generated/Beanstalk-ABIs/PreReplant";
 import { loadBeanstalk } from "../../utils/Beanstalk";
 import { loadSiloCache } from "../CacheLoader";
 import { SILO_YIELD_24_HOUR_15_000 } from "./HistoricSilo_15_000";

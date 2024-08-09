@@ -11,15 +11,15 @@ import {
   Plant,
   WhitelistToken,
   DewhitelistToken
-} from "../generated/Silo-Replanted/Beanstalk";
+} from "../generated/Beanstalk-ABIs/MarketV2";
 import {
   AddDeposit as AddDeposit_V3,
   RemoveDeposit as RemoveDeposit_V3,
   RemoveDeposits as RemoveDeposits_V3,
   UpdatedStalkPerBdvPerSeason,
   WhitelistToken as WhitelistToken_V3
-} from "../generated/Silo-V3/Beanstalk";
-import { Beanstalk, TransferDepositCall, TransferDepositsCall } from "../generated/Silo-Calls/Beanstalk";
+} from "../generated/Beanstalk-ABIs/SiloV3";
+import { Replanted, TransferDepositCall, TransferDepositsCall } from "../generated/Beanstalk-ABIs/Replanted";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadFarmer } from "./utils/Farmer";
 import {
@@ -34,7 +34,8 @@ import {
   loadSiloDepositV3,
   loadWhitelistTokenSetting,
   loadWhitelistTokenHourlySnapshot,
-  loadWhitelistTokenDailySnapshot
+  loadWhitelistTokenDailySnapshot,
+  addToSiloWhitelist
 } from "./utils/SiloEntities";
 import {
   AddDeposit as AddDepositEntity,
@@ -45,7 +46,7 @@ import {
   StalkChange
 } from "../generated/schema";
 import { loadBeanstalk } from "./utils/Beanstalk";
-import { BEANSTALK, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK, BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { getCurrentSeason } from "./utils/Season";
 
 /**
@@ -882,7 +883,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
   // This should be run at sunrise for the previous season to update any farmers stalk/seed/roots balances from silo transfers.
 
   let beanstalk = loadBeanstalk(BEANSTALK);
-  let beanstalk_call = Beanstalk.bind(BEANSTALK);
+  let beanstalk_call = Replanted.bind(BEANSTALK);
 
   for (let i = 0; i < beanstalk.farmersToUpdate.length; i++) {
     let account = Address.fromString(beanstalk.farmersToUpdate[i]);
@@ -903,11 +904,7 @@ export function updateStalkWithCalls(season: i32, timestamp: BigInt, blockNumber
 }
 
 export function handleWhitelistToken(event: WhitelistToken): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-  currentList.push(event.params.token.toHexString());
-  silo.whitelistedTokens = currentList;
-  silo.save();
+  addToSiloWhitelist(event.address, event.params.token);
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
@@ -933,12 +930,7 @@ export function handleWhitelistToken(event: WhitelistToken): void {
 }
 
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
-  let silo = loadSilo(event.address);
-  let currentList = silo.whitelistedTokens;
-
-  currentList.push(event.params.token.toHexString());
-  silo.whitelistedTokens = currentList;
-  silo.save();
+  addToSiloWhitelist(event.address, event.params.token);
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;

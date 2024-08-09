@@ -311,7 +311,7 @@ const VoteForm: FC<
                 <>
                   ~{displayFullBN(totalForQuorum, 0)}{' '}
                   {isNFT ? 'BEANFT' : 'STALK'}&nbsp;·&nbsp;
-                  {(quorumPct * 100).toFixed(0)}%
+                  {(quorumPct * 100).toFixed(1)}%
                 </>
               )}
             </StatHorizontal>

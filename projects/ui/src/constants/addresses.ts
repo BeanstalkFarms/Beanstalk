@@ -11,7 +11,7 @@ export const BEANSTALK_ADDRESSES = {
 
 export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.MAINNET]:
-    '0xb01CE0008CaD90104651d6A84b6B11e182a9B62A'.toLowerCase(),
+    '0x4bed6cb142b7d474242d87f4796387deb9e1e1b4'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {
@@ -65,7 +65,7 @@ export const UNRIPE_BEAN_ADDRESSES = {
     '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449'.toLowerCase(),
 };
 
-export const UNRIPE_BEAN_WETH_ADDRESSES = {
+export const UNRIPE_BEAN_WSTETH_ADDRESSES = {
   // --------------------------------------------------
   // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
   // -------------------------------------------------
@@ -76,6 +76,16 @@ export const UNRIPE_BEAN_WETH_ADDRESSES = {
 // ----------------------------------------
 // Common ERC-20 Tokens
 // ----------------------------------------
+
+export const STETH_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'.toLowerCase(),
+};
+
+export const WSTETH_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'.toLowerCase(),
+};
 
 export const DAI_ADDRESSES = {
   [SupportedChainId.MAINNET]:
@@ -127,6 +137,11 @@ export const BEAN_CRV3_ADDRESSES = {
 export const BEAN_ETH_WELL_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
+};
+
+export const BEAN_WSTETH_ADDRESSS = {
+  [SupportedChainId.MAINNET]:
+    '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
 };
 
 // ----------------------------------------
@@ -216,12 +231,12 @@ export const DELEGATES_REGISTRY_ADDRESSES = {
 export const BEAN_CRV3_V1_ADDRESSES = {
   [SupportedChainId.MAINNET]:
     '0x3a70DfA7d2262988064A2D051dd47521E43c9BdD'.toLowerCase(),
-}
+};
 
 /// ENS Reverse Records
 export const ENS_REVERSE_RECORDS = {
   [SupportedChainId.MAINNET]:
     '0x3671ae578e63fdf66ad4f3e12cc0c0d71ac7510c'.toLowerCase(),
-}
+};
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';

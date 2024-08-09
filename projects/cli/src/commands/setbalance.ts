@@ -11,15 +11,30 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
   if (!symbol) {
     await chain.setAllBalances(account, amount);
   } else {
-    const symbols = ["ETH", "WETH", "BEAN", "USDT", "USDC", "DAI", "CRV3", "BEAN3CRV", "BEANWETH", "urBEAN", "urBEANWETH", "ROOT"];
+    const symbols = [
+      "ETH",
+      "WETH",
+      "BEAN",
+      "USDT",
+      "USDC",
+      "DAI",
+      "CRV3",
+      "BEAN3CRV",
+      "BEANWETH",
+      "urBEAN",
+      "urBEANwstETH",
+      "ROOT"
+    ];
     if (!symbols.includes(symbol)) {
-      console.log(`${chalk.bold.red("Error")} - ${chalk.bold.white(symbol)} is not a valid token. Valid options are: `);
+      console.log(
+        `${chalk.bold.red("Error")} - ${chalk.bold.white(symbol)} is not a valid token. Valid options are: `
+      );
       console.log(symbols.map((s) => chalk.green(s)).join(", "));
       process.exit(-1);
     }
     let t = sdk.tokens[symbol] as Token;
     if (symbol === "urBEAN") t = sdk.tokens.UNRIPE_BEAN;
-    if (symbol === "urBEANWETH") t = sdk.tokens.UNRIPE_BEAN_WETH;
+    if (symbol === "urBEANwstETH") t = sdk.tokens.UNRIPE_BEAN_WSTETH;
     if (symbol === "BEAN3CRV") t = sdk.tokens.BEAN_CRV3_LP;
     if (symbol === "BEANWETH") t = sdk.tokens.BEAN_ETH_WELL_LP;
     if (typeof chain[`set${symbol}Balance`] !== "function")

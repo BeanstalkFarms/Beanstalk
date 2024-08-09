@@ -1,0 +1,49 @@
+# This file exists solely for the purpose of facilitating all codegen in a shared location such that all ABIs
+# or templates are expanded independently of being used in all chains. Most of the information here is irrelevant,
+# the only important part is in the `abis` and `templates` sections.
+#  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
+#  - For templates, it is only the name of the template that is relevant.
+specVersion: 0.0.4
+schema:
+  file: ../schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Bean-ABIs
+    network: not_relevant
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: ERC20
+      startBlock: 12974077
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: UniswapV2Pair
+          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: Bean3CRV
+          file: ../../subgraph-core/abis/Bean3CRV.json
+        - name: Well
+          file: ../../subgraph-core/abis/Well.json
+        - name: PreReplant
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: Beanstalk
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: BIP37
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: CalculationsCurve
+          file: ../../subgraph-core/abis/CalculationsCurve.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ../src/BeanHandler.ts

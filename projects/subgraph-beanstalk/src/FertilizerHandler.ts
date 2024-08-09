@@ -1,5 +1,5 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import { TransferSingle, TransferBatch } from "../generated/Fertilizer/Fertilizer";
+import { TransferSingle, TransferBatch } from "../generated/Beanstalk-ABIs/Fertilizer";
 import { ADDRESS_ZERO, FERTILIZER } from "../../subgraph-core/utils/Constants";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "./utils/Fertilizer";
 import { loadFarmer } from "./utils/Farmer";

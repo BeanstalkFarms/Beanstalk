@@ -34,7 +34,12 @@ import {
   UniswapV3Router,
   UniswapV3QuoterV2__factory,
   UniswapV3QuoterV2,
-  
+  Steth__factory,
+  Wsteth__factory,
+  Steth,
+  Wsteth,
+  UnwrapAndSendEthJunction,
+  UnwrapAndSendEthJunction__factory
 } from "src/constants/generated";
 import { BaseContract } from "ethers";
 
@@ -54,6 +59,15 @@ type CurveContracts = {
   zap: CurveZap;
 };
 
+type LidoContracts = {
+  steth: Steth;
+  wsteth: Wsteth;
+};
+
+type PipelineJunctions = {
+  unwrapAndSendEth: UnwrapAndSendEthJunction;
+};
+
 export class Contracts {
   static sdk: BeanstalkSDK;
 
@@ -67,8 +81,10 @@ export class Contracts {
   public readonly root: Root;
   public readonly math: Math;
   public readonly usdOracle: UsdOracle;
+  public readonly pipelineJunctions: PipelineJunctions;
 
   public readonly curve: CurveContracts;
+  public readonly lido: LidoContracts;
 
   public readonly uniswapV3Router: UniswapV3Router;
   public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
@@ -88,6 +104,9 @@ export class Contracts {
     const mathAddress = sdk.addresses.MATH.get(sdk.chainId);
     const rootAddress = sdk.addresses.ROOT.get(sdk.chainId);
     const usdOracleAddress = sdk.addresses.USD_ORACLE.get(sdk.chainId);
+    const unwrapAndSendEthJunctionAddress = sdk.addresses.UNWRAP_AND_SEND_ETH_JUNCTION.get(
+      sdk.chainId
+    );
 
     const beancrv3Address = sdk.addresses.BEAN_CRV3.get(sdk.chainId);
     const pool3Address = sdk.addresses.POOL3.get(sdk.chainId);
@@ -100,28 +119,61 @@ export class Contracts {
     const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
     const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
 
+    const stethAddress = sdk.addresses.STETH.get(sdk.chainId);
+    const wstEthAddress = sdk.addresses.WSTETH.get(sdk.chainId);
+
     // Instances
     this.beanstalk = Beanstalk__factory.connect(beanstalkAddress, sdk.providerOrSigner);
-    this.beanstalkRead = Beanstalk__factory.connect(beanstalkAddress, sdk.readProvider ?? sdk.providerOrSigner);
-    this.beanstalkPrice = BeanstalkPrice__factory.connect(beanstalkPriceAddress, sdk.providerOrSigner);
-    this.fertilizer = BeanstalkFertilizer__factory.connect(beanstalkFertilizerAddress, sdk.providerOrSigner);
+    this.beanstalkRead = Beanstalk__factory.connect(
+      beanstalkAddress,
+      sdk.readProvider ?? sdk.providerOrSigner
+    );
+    this.beanstalkPrice = BeanstalkPrice__factory.connect(
+      beanstalkPriceAddress,
+      sdk.providerOrSigner
+    );
+    this.fertilizer = BeanstalkFertilizer__factory.connect(
+      beanstalkFertilizerAddress,
+      sdk.providerOrSigner
+    );
 
     this.pipeline = Pipeline__factory.connect(pipelineAddress, sdk.providerOrSigner);
     this.depot = Depot__factory.connect(depotAddress, sdk.providerOrSigner);
     this.math = Math__factory.connect(mathAddress, sdk.providerOrSigner);
     this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
     this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
+    this.pipelineJunctions = {
+      unwrapAndSendEth: UnwrapAndSendEthJunction__factory.connect(
+        unwrapAndSendEthJunctionAddress,
+        sdk.providerOrSigner
+      )
+    };
 
     const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
     const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
-    const tricrypto2 = CurveTriCrypto2Pool__factory.connect(tricrypto2Address, sdk.providerOrSigner);
+    const tricrypto2 = CurveTriCrypto2Pool__factory.connect(
+      tricrypto2Address,
+      sdk.providerOrSigner
+    );
     const poolRegistry = CurveRegistry__factory.connect(poolRegistryAddress, sdk.providerOrSigner);
     const metaFactory = CurveMetaFactory__factory.connect(metaFactoryAddress, sdk.providerOrSigner);
-    const cryptoFactory = CurveCryptoFactory__factory.connect(cryptoFactoryAddress, sdk.providerOrSigner);
+    const cryptoFactory = CurveCryptoFactory__factory.connect(
+      cryptoFactoryAddress,
+      sdk.providerOrSigner
+    );
     const zap = CurveZap__factory.connect(zapAddress, sdk.providerOrSigner);
 
-    this.uniswapV3Router = UniswapV3Router__factory.connect(uniswapV3RouterAddress, sdk.providerOrSigner);
-    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(uniswapV3QuoterV2Address, sdk.providerOrSigner);
+    this.uniswapV3Router = UniswapV3Router__factory.connect(
+      uniswapV3RouterAddress,
+      sdk.providerOrSigner
+    );
+    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
+      uniswapV3QuoterV2Address,
+      sdk.providerOrSigner
+    );
+
+    const steth = Steth__factory.connect(stethAddress, sdk.providerOrSigner);
+    const wsteth = Wsteth__factory.connect(wstEthAddress, sdk.providerOrSigner);
 
     this.curve = {
       pools: {
@@ -142,5 +194,7 @@ export class Contracts {
       },
       zap
     };
+
+    this.lido = { steth, wsteth };
   }
 }

@@ -3,15 +3,17 @@ import {
   BEAN_3CRV,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
+  BEAN_WSTETH_CP2_WELL,
+  BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
   BEANSTALK,
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_BEAN_3CRV
 } from "../../../subgraph-core/utils/Constants";
-import { SeedGauge } from "../../generated/Beanstalk/SeedGauge";
+import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { ERC20 } from "../../generated/Beanstalk/ERC20";
-import { Beanstalk } from "../../generated/Beanstalk/Beanstalk";
+import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
+import { Beanstalk } from "../../generated/Bean-ABIs/Beanstalk";
 import { loadOrCreatePool } from "./Pool";
 import { loadOrCreateTwaOracle } from "./price/TwaOracle";
 
@@ -58,8 +60,10 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
 function getUnderlyingUnripe(blockNumber: BigInt): Address {
   if (blockNumber < BEAN_WETH_UNRIPE_MIGRATION_BLOCK) {
     return BEAN_3CRV;
-  } else {
+  } else if (blockNumber < BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK) {
     return BEAN_WETH_CP2_WELL;
+  } else {
+    return BEAN_WSTETH_CP2_WELL;
   }
 }
 

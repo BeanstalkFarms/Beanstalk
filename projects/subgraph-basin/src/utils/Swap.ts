@@ -1,4 +1,4 @@
-import { Shift, Swap } from "../../generated/templates/Well/Well";
+import { Shift, Swap } from "../../generated/Basin-ABIs/Well";
 import { Swap as SwapEvent } from "../../generated/schema";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 

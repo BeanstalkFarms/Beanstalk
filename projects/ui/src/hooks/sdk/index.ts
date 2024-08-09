@@ -6,7 +6,7 @@ import {
   ETH,
   BEAN_CRV3_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
   WETH,
   CRV3,
   DAI,
@@ -22,6 +22,8 @@ import {
   RINSABLE_SPROUTS,
   BEAN_ETH_WELL_LP,
   SILO_WHITELIST,
+  WSTETH,
+  BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
 import useGetChainToken from '../chain/useGetChainToken';
@@ -40,7 +42,7 @@ const oldTokenMap = {
   [BEAN_CRV3_LP[1].symbol]: BEAN_CRV3_LP[1],
   [BEAN_ETH_WELL_LP[1].symbol]: BEAN_ETH_WELL_LP[1],
   [UNRIPE_BEAN[1].symbol]: UNRIPE_BEAN[1],
-  [UNRIPE_BEAN_WETH[1].symbol]: UNRIPE_BEAN_WETH[1],
+  [UNRIPE_BEAN_WSTETH[1].symbol]: UNRIPE_BEAN_WSTETH[1],
   [WETH[1].symbol]: WETH[1],
   [CRV3[1].symbol]: CRV3[1],
   [DAI[1].symbol]: DAI[1],
@@ -54,6 +56,8 @@ const oldTokenMap = {
   [RINSABLE_SPROUTS.symbol]: RINSABLE_SPROUTS,
   [BEAN_ETH_UNIV2_LP[1].symbol]: BEAN_ETH_UNIV2_LP[1],
   [BEAN_LUSD_LP[1].symbol]: BEAN_LUSD_LP[1],
+  [BEAN_WSTETH_WELL_LP[1].symbol]: BEAN_WSTETH_WELL_LP[1],
+  [WSTETH[1].symbol]: WSTETH[1],
 };
 
 export function getNewToOldToken(_token: Token) {

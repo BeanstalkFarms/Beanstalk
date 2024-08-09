@@ -2,20 +2,20 @@ import React from 'react';
 import { AppBar, Box } from '@mui/material';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import NetworkButton from '~/components/Common/Connection/NetworkButton';
-import PriceButton from './Buttons/PriceButton';
-import SunButton from './Buttons/SunButton';
-import LinkButton from './Buttons/LinkButton';
-import AboutButton from './Buttons/AboutButton';
-import ROUTES from './routes';
-import HoverMenu from './HoverMenu';
 import {
   NAV_BORDER_HEIGHT,
   NAV_ELEM_HEIGHT,
   NAV_HEIGHT,
 } from '~/hooks/app/usePageDimensions';
 import Row from '~/components/Common/Row';
-
 import { FC } from '~/types';
+import PriceButton from './Buttons/PriceButton';
+import SunButton from './Buttons/SunButton';
+import LinkButton from './Buttons/LinkButton';
+import AboutButton from './Buttons/AboutButton';
+import ROUTES from './routes';
+import HoverMenu from './HoverMenu';
+
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
 
 const NavBar: FC<{}> = ({ children }) => {

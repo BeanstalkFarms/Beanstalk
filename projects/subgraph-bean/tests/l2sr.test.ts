@@ -19,7 +19,7 @@ import {
 } from "./call-mocking/Beanstalk";
 import { handleChop } from "../src/BeanstalkHandler";
 import { mockBeanstalkEvent } from "../../subgraph-core/tests/event-mocking/Util";
-import { Chop } from "../generated/Beanstalk/Beanstalk";
+import { Chop } from "../generated/Bean-ABIs/Beanstalk";
 import { loadOrCreatePool } from "../src/utils/Pool";
 import { calcLockedBeans, LibLockedUnderlying_getPercentLockedUnderlying } from "../src/utils/LockedBeans";
 import { mockERC20TokenSupply } from "../../subgraph-core/tests/event-mocking/Tokens";

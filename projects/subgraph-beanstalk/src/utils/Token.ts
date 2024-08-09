@@ -1,5 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { ERC20 } from "../../generated/Bean/ERC20";
+import { ERC20 } from "../../generated/Beanstalk-ABIs/ERC20";
 import { Token } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "./Decimals";
 

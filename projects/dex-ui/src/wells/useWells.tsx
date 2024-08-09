@@ -61,6 +61,12 @@ const tokenMetadata = tokenMetadataJson as TokenMetadataMap;
 const setTokenMetadatas = (wells: Well[]) => {
   for (const well of wells) {
     if (!well.tokens) continue;
+    if (well.lpToken) {
+      const lpLogo = images[well.lpToken.symbol];
+      if (lpLogo) {
+        well.lpToken.setMetadata({ logo: lpLogo });
+      }
+    }
     well.tokens.forEach((token) => {
       const address = token.address.toLowerCase();
 

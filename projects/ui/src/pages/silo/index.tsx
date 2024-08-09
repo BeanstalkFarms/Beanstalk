@@ -35,7 +35,7 @@ import useToggle from '~/hooks/display/useToggle';
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
-import { UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
@@ -120,12 +120,12 @@ const RewardsBar: FC<{
 
   /// Calculate Unripe Silo Balance
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
 
   const balances = farmerSilo.balances;
   const unripeDepositedBalance = balances[
     urBean.address
-  ]?.deposited.amount.plus(balances[urBeanWeth.address]?.deposited.amount);
+  ]?.deposited.amount.plus(balances[urBeanWstETH.address]?.deposited.amount);
 
   const [refetchFarmerSilo] = useFetchFarmerSilo();
   const account = useAccount();
@@ -249,16 +249,28 @@ const RewardsBar: FC<{
       empty: amountBean.eq(0) && amountStalk.eq(0) && amountSeeds.eq(0),
       output: new Map<Token, TokenValue>([
         [
-          sdk.tokens.BEAN, 
-          transform(amountBean.isNaN() ? ZERO_BN : amountBean, 'tokenValue', sdk.tokens.BEAN),
+          sdk.tokens.BEAN,
+          transform(
+            amountBean.isNaN() ? ZERO_BN : amountBean,
+            'tokenValue',
+            sdk.tokens.BEAN
+          ),
         ],
         [
           sdk.tokens.STALK,
-          transform(amountStalk.isNaN() ? ZERO_BN : amountStalk, 'tokenValue', sdk.tokens.STALK),
+          transform(
+            amountStalk.isNaN() ? ZERO_BN : amountStalk,
+            'tokenValue',
+            sdk.tokens.STALK
+          ),
         ],
         [
           sdk.tokens.SEEDS,
-          transform(amountSeeds.isNaN() ? ZERO_BN : amountSeeds, 'tokenValue', sdk.tokens.SEEDS),
+          transform(
+            amountSeeds.isNaN() ? ZERO_BN : amountSeeds,
+            'tokenValue',
+            sdk.tokens.SEEDS
+          ),
         ],
       ]),
     };

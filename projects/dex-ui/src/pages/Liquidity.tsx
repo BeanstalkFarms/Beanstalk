@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Page } from "src/components/Page";
@@ -85,7 +85,7 @@ export const Liquidity = () => {
             </LearnMoreLabel>
             <LearnMoreButtons open={open}>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-                <LearnYield />
+                <LearnYield token={well?.lpToken} />
               </LoadingItem>
               <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
                 <LearnWellFunction well={well} />

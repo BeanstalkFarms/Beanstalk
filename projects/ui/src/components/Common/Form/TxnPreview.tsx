@@ -19,7 +19,7 @@ import {
   TransferBalanceAction,
 } from '~/util/Actions';
 import { SupportedChainId } from '~/constants/chains';
-import { BEAN, PODS, SEEDS, SPROUTS, STALK, WETH } from '~/constants/tokens';
+import { BEAN, PODS, SEEDS, SPROUTS, STALK, WSTETH } from '~/constants/tokens';
 import AddressIcon from '~/components/Common/AddressIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
@@ -289,7 +289,7 @@ const TxnStep: FC<{
       step = (
         <IconRow>
           <TokenIcon
-            token={WETH[SupportedChainId.MAINNET]}
+            token={WSTETH[SupportedChainId.MAINNET]}
             css={{ height: '100%', marginTop: 0 }}
           />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />

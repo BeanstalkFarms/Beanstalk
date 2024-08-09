@@ -26,6 +26,7 @@ import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 import {LibReceiving} from "contracts/libraries/LibReceiving.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 
 /**
  * @author Publius
@@ -765,5 +766,11 @@ contract MockSeasonFacet is SeasonFacet {
         if (lastSnapshot.length > 0) {
             (deltaB, , , ) = LibWellMinting.twaDeltaB(well, lastSnapshot);
         }
+    }
+
+    function captureWellEInstantaneous(address well) external returns (int256 instDeltaB) {
+        instDeltaB = LibWellMinting.instantaneousDeltaB(well);
+        s.sys.season.timestamp = block.timestamp;
+        emit DeltaB(instDeltaB);
     }
 }

@@ -16,6 +16,8 @@ export class Tokens {
   USDC: ERC20Token;
   DAI: ERC20Token;
   USDT: ERC20Token;
+  STETH: ERC20Token;
+  WSTETH: ERC20Token;
 
   constructor(sdk: WellsSDK) {
     Tokens.sdk = sdk;
@@ -24,7 +26,14 @@ export class Tokens {
     const provider = Tokens.sdk.providerOrSigner;
 
     // ETH
-    this.ETH = new NativeToken(cid, null, 18, "ETH", { name: "Ether", displayDecimals: 4 }, provider);
+    this.ETH = new NativeToken(
+      cid,
+      null,
+      18,
+      "ETH",
+      { name: "Ether", displayDecimals: 4 },
+      provider
+    );
     this.tokens.add(this.ETH);
 
     // WETH
@@ -99,6 +108,33 @@ export class Tokens {
     );
 
     this.tokens.add(this.USDT);
+
+    this.STETH = new ERC20Token(
+      cid,
+      sdk.addresses.STETH.get(),
+      18,
+      "stETH",
+      {
+        name: "Liquid staked Ether 2.0",
+        displayDecimals: 4
+      },
+      provider
+    );
+    this.tokens.add(this.STETH);
+
+    this.WSTETH = new ERC20Token(
+      cid,
+      sdk.addresses.WSTETH.get(),
+      18,
+      "wstETH",
+      {
+        name: "Wrapped liquid staked Ether 2.0",
+        displayDecimals: 4
+      },
+      provider
+    );
+
+    this.tokens.add(this.WSTETH);
   }
 
   /**

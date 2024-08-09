@@ -1,0 +1,7 @@
+{
+  "name": "code_generation",
+  "packageManager": "yarn@4.1.0",
+  "dependencies": {
+    "csv-parse": "5.5.6"
+  }
+}

@@ -25,20 +25,24 @@ import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
 import ethereumLogo from '~/img/tokens/eth-logo-circled.svg';
+import wstETHLogo from '~/img/tokens/wsteth-logo.svg';
 
 // ------------------------------------------------------------
 
 import { FC } from '~/types';
 import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
+import useSdk from '~/hooks/sdk';
 import FolderMenu from '../FolderMenu';
 
 const poolLinks: { [key: string]: string } = {
   '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49': CURVE_LINK,
   '0xbea0e11282e2bb5893bece110cf199501e872bad': `${BASIN_WELL_LINK}0xbea0e11282e2bb5893bece110cf199501e872bad`,
+  '0xbea0000113b0d182f4064c86b71c315389e4715d': `${BASIN_WELL_LINK}0xbea0000113b0d182f4064c86b71c315389e4715d`,
 };
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const [showDeprecated, setShowDeprecated] = useState(false);
+  const sdk = useSdk();
 
   const pools = usePools(showDeprecated);
   for (const [address, pool] of Object.entries(pools)) {
@@ -97,11 +101,11 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         sx={{
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
         }}
       >
-        <div>
+        <Stack gap={0.5}>
           <Chip
             size="small"
             sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
@@ -119,7 +123,27 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
               </span>
             }
           />
-        </div>
+          <Chip
+            size="small"
+            sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
+            avatar={<Avatar src={wstETHLogo} />}
+            onClick={togglePrices}
+            label={
+              <span>
+                {showTWA ? (
+                  <> ${tokenPrices['wstETH-TWA']?.toFixed(2) || 0}</>
+                ) : (
+                  <>
+                    {' '}
+                    ${tokenPrices[sdk.tokens.WSTETH.address]?.toFixed(2) || 0}
+                  </>
+                )}
+
+                <ArrowOutwardIcon sx={{ fontSize: 12, marginLeft: '5px' }} />
+              </span>
+            }
+          />
+        </Stack>
         <div>
           <Chip
             sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
@@ -305,6 +329,24 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         </Box>
         <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
       </Box>
+      {/* wstETH Price */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box display="flex" flexDirection="row">
+          <Avatar
+            sx={{ width: 18, height: 18, marginRight: '5px' }}
+            src={wstETHLogo}
+          />{' '}
+          wstETH Price
+        </Box>
+        <div>${tokenPrices[sdk.tokens.WSTETH.address]?.toFixed(2) || 0}</div>
+      </Box>
 
       {/* TWA ETH Price */}
       <Box
@@ -324,7 +366,24 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         </Box>
         <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
       </Box>
-
+      {/* TWA wstETH Price */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box display="flex" flexDirection="row">
+          <Avatar
+            sx={{ width: 18, height: 18, marginRight: '5px' }}
+            src={wstETHLogo}
+          />{' '}
+          TWA wstETH Price
+        </Box>
+        <div>${tokenPrices['wstETH-TWA']?.toFixed(2) || 0}</div>
+      </Box>
       <Box sx={{ marginTop: '100px' }}>
         <Typography
           sx={{ color: '#647265', fontSize: '12px', lineHeight: '14px' }}

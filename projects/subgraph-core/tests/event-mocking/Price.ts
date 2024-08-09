@@ -5,7 +5,7 @@ import {
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_V1,
-  BEANSTALK_PRICE,
+  BEANSTALK_PRICE_1,
   CURVE_PRICE,
   WETH,
   WETH_USDC_PAIR
@@ -36,11 +36,11 @@ class Pool {
  * @param prices - the Prices struct that the contract will return
  * @param mockPools - when true, mocks the return values from the individual pools' price call also
  */
-export function setMockBeanPrice(prices: Prices, mockPools: boolean = true): void {
+export function setMockBeanPrice(prices: Prices, contract: Address = BEANSTALK_PRICE_1, mockPools: boolean = true): void {
   const pricesReturn = toPricesStruct(prices);
 
   createMockedFunction(
-    BEANSTALK_PRICE,
+    contract,
     "price",
     "price():((uint256,uint256,int256,(address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256)[]))"
   )
@@ -70,7 +70,7 @@ export function setMockWellPrice(pool: Pool): void {
   const wellPriceReturn = toPoolStruct(pool);
 
   createMockedFunction(
-    BEANSTALK_PRICE,
+    BEANSTALK_PRICE_1,
     "getConstantProductWell",
     "getConstantProductWell(address):((address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256))"
   )

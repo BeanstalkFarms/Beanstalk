@@ -1,6 +1,6 @@
 import { Address, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
-import { BoreWell } from "../../generated/Aquifer/Aquifer";
+import { BoreWell } from "../../generated/Basin-ABIs/Aquifer";
 import { handleBoreWell } from "../../src/templates/AquiferHandler";
 import { BEAN_ERC20, WETH } from "../../../subgraph-core/utils/Constants";
 import { AQUIFER, IMPLEMENTATION, PUMP, WELL, WELL_DATA, WELL_FUNCTION } from "./Constants";

@@ -18,6 +18,8 @@ library LibOracleHelpers {
     /**
      * Gets the percent difference between two values with 18 decimal precision.
      * @dev If x == 0 (Such as in the case of Uniswap Oracle failure), then the percent difference is calculated as 100%.
+     * Always use the bigger price as the denominator, thereby making sure that in whichever of the two cases explained in audit report (M-03),
+     * i.e if x > y or not a fixed percentDifference is provided and this can then be accurately checked against protocol's set MAX_DIFFERENCE value.
      */
     function getPercentDifference(
         uint x,

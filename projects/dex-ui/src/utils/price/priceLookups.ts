@@ -65,6 +65,26 @@ const BEAN = async (sdk: BeanstalkSDK) => {
   return sdk.bean.getPrice();
 };
 
+
+const chainLinkWithCallback =
+  (from: keyof typeof FEEDS, getMultiplier: (sdk: BeanstalkSDK) => Promise<(value: TokenValue) => TokenValue>) =>
+  async (sdk: BeanstalkSDK) => {
+    const [fromPrice, calculate] = await Promise.all([
+      chainlinkLookup(from)(sdk),
+      getMultiplier(sdk)
+    ]);
+
+    return calculate(fromPrice);
+  };
+
+const getWstETHWithSteth = async (sdk: BeanstalkSDK) => {
+  const amt = sdk.tokens.STETH.fromHuman("1");
+  const divisor = await sdk.contracts.lido.wsteth.getWstETHByStETH(amt.toBigNumber());
+
+  const value = sdk.tokens.WSTETH.fromBlockchain(divisor);
+  return (otherValue: TokenValue) => otherValue.div(value);
+};
+
 const PRICE_EXPIRY_TIMEOUT = 60 * 5; // 5 minute cache
 
 export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenValue>> = {
@@ -87,5 +107,6 @@ export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenVa
   BTC: memoize(chainlinkLookup("BTC_USD"), PRICE_EXPIRY_TIMEOUT),
   WBTC: memoize(multiChainlinkLookup("WBTC_BTC", "BTC_USD"), PRICE_EXPIRY_TIMEOUT),
   LDO: memoize(multiChainlinkLookup("LDO_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
-  weETH: memoize(multiChainlinkLookup("WeETH_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT)
+  weETH: memoize(multiChainlinkLookup("WeETH_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
+  wstETH: memoize(chainLinkWithCallback("STETH_USD", getWstETHWithSteth), PRICE_EXPIRY_TIMEOUT)
 };

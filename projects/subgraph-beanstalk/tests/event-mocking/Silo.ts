@@ -11,7 +11,7 @@ import {
   SeedsBalanceChanged,
   StalkBalanceChanged,
   Plant
-} from "../../generated/Silo-Replanted/Beanstalk";
+} from "../../generated/Beanstalk-ABIs/MarketV2";
 import { handleAddDeposit } from "../../src/SiloHandler";
 import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
 

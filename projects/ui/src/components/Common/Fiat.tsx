@@ -33,18 +33,14 @@ const Fiat: FC<{
   const siloTokenToFiat = useSiloTokenToFiat();
   const value = _value
     ? // value override provided (in USD terms)
-      denomination === 'usd'
-      ? _value
-      : _value.div(price)
+      denomination === 'usd' ? _value : _value.div(price)
     : // derive value from token amount
-    amount && token
-    ? siloTokenToFiat(token, amount, denomination, chop)
-    : ZERO_BN;
-  const displayValue = truncate
-    ? displayBN(value, allowNegative)
-    : displayFullBN(value, 2, 2);
+      amount && token ? siloTokenToFiat(token, amount, denomination, chop) : ZERO_BN;
+  const displayValue = truncate ? displayBN(value, allowNegative) : displayFullBN(value, 2, 2);
+
   return (
     <Row
+      component="span"
       display="inline-flex"
       sx={{ verticalAlign: 'top', position: 'relative' }}
     >

@@ -1,5 +1,14 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import { Harvest, PlotTransfer, Sow, SupplyDecrease, SupplyIncrease, SupplyNeutral, WeatherChange } from "../generated/Field/Beanstalk";
+import {
+  FundFundraiser,
+  Harvest,
+  PlotTransfer,
+  Sow,
+  SupplyDecrease,
+  SupplyIncrease,
+  SupplyNeutral,
+  WeatherChange
+} from "../generated/Beanstalk-ABIs/PreReplant";
 import { Harvest as HarvestEntity } from "../generated/schema";
 import { BEANSTALK, BEANSTALK_FARMS } from "../../subgraph-core/utils/Constants";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";

@@ -19,7 +19,7 @@ export default function BeanProgressIcon({
   progress,
 }: ProgressIconProps) {
   return (
-    <Stack sx={{ position: 'relative' }}>
+    <Stack component="span" sx={{ position: 'relative' }}>
       {enabled ? (
         <CircularProgress
           variant={variant}

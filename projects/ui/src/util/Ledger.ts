@@ -2,6 +2,7 @@ import { BigNumber as BNJS } from 'ethers';
 import BigNumber from 'bignumber.js';
 import type Token from '~/classes/Token';
 import { ChainConstant, SupportedChainId } from '~/constants';
+import { Token as SdkToken } from '@beanstalk/sdk';
 import { toTokenUnitsBN } from './Tokens';
 import { ERROR_STRINGS } from '../constants/errors';
 
@@ -24,7 +25,14 @@ export const identityResult = (result: any) => result;
 export const bigNumberResult = (result: any) =>
   new BigNumber(result instanceof BNJS ? result.toString() : result);
 
-export const tokenResult = (_token: Token | ChainConstant<Token>) => {
+export const tokenResult = (
+  _token: SdkToken | Token | ChainConstant<Token>
+) => {
+  if (_token instanceof SdkToken) {
+    return (result: any) =>
+      toTokenUnitsBN(bigNumberResult(result), _token.decimals);
+  }
+
   // If a mapping is provided, default to MAINNET decimals.
   // ASSUMPTION: the number of decimals are the same across all chains.
   const token = (_token as Token).decimals
@@ -64,13 +72,14 @@ export const parseError = (error: any) => {
     case 'CALL_EXCEPTION':
       if (error.reason) {
         if (error.reason.includes('viem')) {
-          const _message = error.reason.substring(error.reason.indexOf('execution reverted: '));
+          const _message = error.reason.substring(
+            error.reason.indexOf('execution reverted: ')
+          );
           errorMessage.message = _message.replace('execution reverted: ', '');
           return errorMessage;
-        } else {
-          errorMessage.message = error.reason.replace('execution reverted: ', '');
-          return errorMessage;
         }
+        errorMessage.message = error.reason.replace('execution reverted: ', '');
+        return errorMessage;
       }
 
       if (error.data && error.data.message) {

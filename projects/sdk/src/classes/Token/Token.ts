@@ -1,5 +1,4 @@
-import { TokenValue } from "@beanstalk/sdk-core";
-import { Token as CoreToken } from "@beanstalk/sdk-core";
+import { TokenValue, Token as CoreToken } from "@beanstalk/sdk-core";
 import { BigNumber, ContractTransaction } from "ethers";
 
 const STALK_DECIMALS = 10;
@@ -64,7 +63,9 @@ CoreToken.prototype.getSeeds = function (bdv?: TokenValue): TokenValue {
   return this.rewards.seeds.mul(bdv);
 };
 
-CoreToken.prototype.approveBeanstalk = function (amount: TokenValue | BigNumber): Promise<ContractTransaction> {
+CoreToken.prototype.approveBeanstalk = function (
+  amount: TokenValue | BigNumber
+): Promise<ContractTransaction> {
   // @ts-ignore
   return;
 };

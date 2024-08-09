@@ -1,0 +1,52 @@
+# This file exists solely for the purpose of facilitating all codegen in a shared location such that all ABIs
+# or templates are expanded independently of being used in all chains. Most of the information here is irrelevant,
+# the only important part is in the `abis` and `templates` sections.
+#  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
+#  - For templates, it is only the name of the template that is relevant.
+specVersion: 0.0.4
+schema:
+  file: ../schema.graphql
+dataSources:
+  # Silo V3
+  - kind: ethereum/contract
+    name: Beanstalk-ABIs
+    network: not_relevant
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SiloV3
+      startBlock: 17636279
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo-V3
+      abis:
+        - name: PreReplant
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: MarketV2
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP29.json
+        - name: SiloV3
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP36.json
+        - name: BasinBip
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: UniswapV2Pair
+          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: Fertilizer
+          file: ../../subgraph-core/abis/Fertilizer.json
+      eventHandlers:
+        - event: AddDeposit(indexed address,indexed address,int96,uint256,uint256)
+          handler: handleAddDeposit_V3
+      file: ../src/SiloHandler.ts

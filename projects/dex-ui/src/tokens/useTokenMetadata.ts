@@ -1,3 +1,4 @@
+import tokenMetadataJson from 'src/token-metadata.json';
 import { useQuery } from "@tanstack/react-query";
 import { alchemy } from "../utils/alchemy";
 import { TokenMetadataResponse } from "alchemy-sdk";
@@ -9,6 +10,7 @@ import { queryKeys } from "src/utils/query/queryKeys";
 import { ERC20Token, Token } from "@beanstalk/sdk";
 import { images } from "src/assets/images/tokens";
 import { useMemo } from "react";
+import { TokenMetadataMap } from 'src/types';
 
 const emptyMetas: TokenMetadataResponse = {
   decimals: null,
@@ -25,6 +27,45 @@ const defaultMetas: TokenMetadataResponse = {
 };
 
 type TokenIsh = Token | ERC20Token | undefined;
+
+const metadataJson = tokenMetadataJson as TokenMetadataMap;
+
+export const useTokenImage = (params: string | TokenIsh) => {
+  const { data: wells } = useWells();
+  const address = (params instanceof Token ? params.address : params || "").toLowerCase();
+  const lpToken = wells?.find((well) => well.address.toLowerCase() === address)?.lpToken;
+
+  const isValidAddress = getIsValidEthereumAddress(address);
+
+  const existingImg = (() => {
+    if (params instanceof Token) {
+      const tokenSymbol = params.symbol;
+      const tokenAddress = params.address;
+      if (images[params.symbol]) return images[tokenSymbol];
+      if (metadataJson[params.address]) return metadataJson[tokenAddress].logoURI;
+    }
+    return;
+  })();
+
+  const query = useQuery({
+    queryKey: queryKeys.tokenMetadata(address || "invalid"),
+    queryFn: async () => {
+      const tokenMeta = await alchemy.core.getTokenMetadata(address ?? "");
+      if (!tokenMeta) return { ...defaultMetas };
+      return tokenMeta;
+    },
+    enabled: !!isValidAddress && !!params && !!wells?.length && !existingImg,
+    retry: false,
+    // We never need to refetch this data
+    staleTime: Infinity
+  });
+
+  if (existingImg) return existingImg;
+  if (query?.data?.logo) return query.data.logo;
+  return lpToken ? images.LP : images.DEFAULT;  
+}
+
+
 
 export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataResponse | undefined => {
   const address = (params instanceof Token ? params.address : params || "").toLowerCase();

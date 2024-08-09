@@ -9,8 +9,11 @@ import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 type WellAddresses = string[];
 
 const WELL_BLACKLIST = [
-  "0x875b1da8dcba757398db2bc35043a72b4b62195d",
-  "0xBea0061680A2DEeBFA59076d77e0b6c769660595"
+  "0x875b1da8dcba757398db2bc35043a72b4b62195d".toLowerCase(),
+  "0xBea0061680A2DEeBFA59076d77e0b6c769660595".toLowerCase(), // bean:wstETH duplicate
+  "0xbEa00022Ee2F7E2eb222f75fE79eFE4871E655ca".toLowerCase(), // bean:wstETH duplicate
+  "0xbea0009b5b96D87643DFB7392293f18af7C041F4".toLowerCase(), // bean:wstETH duplicate
+  "0x5997111CbBAA0f4C613Ae678Ba4803e764140266".toLowerCase() // usdc:frax duplicate
 ];
 
 const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {

@@ -10,9 +10,9 @@ import { formatNum, formatPercent } from "src/utils/format";
 
 import { MultiFlowPumpTooltip } from "./MultiFlowPumpTooltip";
 import { Well } from "@beanstalk/sdk/Wells";
-import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { TooltipProps } from "../Tooltip";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { getIsMultiPumpWell } from "src/wells/pump/utils";
 
 export type ReservesProps = {
   well: Well | undefined;
@@ -26,7 +26,6 @@ export type ReservesProps = {
 };
 
 export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => {
-  const { getIsMultiPumpWell } = useBeanstalkSiloWhitelist();
   const isMobile = useIsMobile();
 
   if (!well) return null;
@@ -37,7 +36,7 @@ export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => 
     <Item key={i} column>
       <Symbol>
         {r.token?.symbol}
-        {getIsMultiPumpWell(well) && (
+        {getIsMultiPumpWell(well).isMultiFlow && (
           <div className="info-icon">
             <MultiFlowPumpTooltip
               well={well}

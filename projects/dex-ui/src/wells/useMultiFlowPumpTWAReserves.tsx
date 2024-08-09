@@ -9,17 +9,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 import { config } from "src/utils/wagmi/config";
+import { getIsMultiPumpWell } from "./pump/utils";
 
 export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
-  const { getIsMultiPumpWell, getIsWhitelisted } = useBeanstalkSiloWhitelist();
+  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
   const sdk = useSdk();
 
   const query = useQuery({
     queryKey: ["wells", "multiFlowPumpTWAReserves"],
 
     queryFn: async () => {
-      const whitelistedWells = (wells || []).filter((well) => getIsMultiPumpWell(well) && getIsWhitelisted(well) );
+      const whitelistedWells = (wells || []).filter(
+        (well) => getIsMultiPumpWell(well).isMultiFlow && getIsWhitelisted(well)
+      );
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
         sdk.contracts.beanstalk.time(),
@@ -51,7 +54,7 @@ export const useMultiFlowPumpTWAReserves = () => {
           const indexedResult = twaReservesResult[index];
           if (indexedResult.error) return;
 
-          const reserves = indexedResult?.result?.[0]
+          const reserves = indexedResult?.result?.[0];
           const token1 = well.tokens?.[0];
           const token2 = well.tokens?.[1];
 

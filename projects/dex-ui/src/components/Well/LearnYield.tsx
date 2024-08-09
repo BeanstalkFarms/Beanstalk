@@ -4,14 +4,16 @@ import { ExpandBox } from "src/components/ExpandBox";
 import { TextNudge } from "../Typography";
 import { FC } from "src/types";
 import { YieldSparkle } from "../Icons";
+import { Token } from "@beanstalk/sdk";
+import useSdk from "src/utils/sdk/useSdk";
 
-type Props = { isWhitelisted?: boolean };
+type Props = { token: Token | undefined };
 
-function YieldDetails() {
+function YieldDetails({ token }: Props) {
   return (
     <TextContainer>
       <div>
-        Liquidity providers can earn yield by depositing BEANETH LP in the Beanstalk Silo. You can
+        Liquidity providers can earn yield by depositing {token?.symbol} LP in the Beanstalk Silo. You can
         add liquidity and deposit the LP token in the Silo in a single transaction on the{" "}
         <StyledLink
           href="https://app.bean.money/#/silo/0xbea0e11282e2bb5893bece110cf199501e872bad"
@@ -25,7 +27,10 @@ function YieldDetails() {
   );
 }
 
-export const LearnYield: FC<Props> = ({ isWhitelisted }) => {
+export const LearnYield: FC<Props> = ({ token }) => {
+  const sdk = useSdk();
+  const sdkToken = token ? sdk.tokens.findByAddress(token.address) : undefined;
+  const isWhitelisted = sdkToken && sdk.tokens.siloWhitelist.has(sdkToken);
   if (!isWhitelisted) return null;
 
   return (
@@ -35,7 +40,7 @@ export const LearnYield: FC<Props> = ({ isWhitelisted }) => {
         <TextNudge amount={1}>How can I earn yield?</TextNudge>
       </ExpandBox.Header>
       <ExpandBox.Body>
-        <YieldDetails />
+        <YieldDetails token={sdkToken} /> 
       </ExpandBox.Body>
     </ExpandBox>
   );

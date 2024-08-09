@@ -8,6 +8,7 @@ export class Pools {
   static sdk: BeanstalkSDK;
   public readonly BEAN_CRV3: CurveMetaPool;
   public readonly BEAN_ETH_WELL: BasinWell;
+  public readonly BEAN_WSTETH_WELL: BasinWell;
 
   public readonly pools: Set<Pool>;
 
@@ -53,9 +54,36 @@ export class Pools {
     );
     this.pools.add(this.BEAN_ETH_WELL);
     this.lpAddressMap.set(sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(), this.BEAN_ETH_WELL);
+
+    this.BEAN_WSTETH_WELL = new BasinWell(
+      sdk,
+      sdk.addresses.BEANWSTETH_WELL.get(sdk.chainId),
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
+      [sdk.tokens.BEAN, sdk.tokens.WSTETH],
+      {
+        name: "Basin Bean:wstETH Well",
+        logo: "",
+        symbol: "BEAN:wstETH",
+        color: "#ed9f9c"
+      }
+    );
+    this.pools.add(this.BEAN_WSTETH_WELL);
+    this.lpAddressMap.set(
+      sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase(),
+      this.BEAN_WSTETH_WELL
+    );
   }
 
   getPoolByLPToken(token: Token): Pool | undefined {
     return this.lpAddressMap.get(token.address);
+  }
+
+  getWells(): BasinWell[] {
+    const wells: BasinWell[] = [];
+    for (const pool of this.pools) {
+      if (pool instanceof BasinWell) wells.push(pool);
+    }
+
+    return wells;
   }
 }

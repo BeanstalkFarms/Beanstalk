@@ -26,6 +26,7 @@ beforeAll(async () => {
     subgraphUrl: "https://graph.node.bean.money/subgraphs/name/beanstalk-testing"
   });
   account = _account;
+  setTokenRewards();
 });
 
 describe("Token Library", function () {
@@ -38,7 +39,9 @@ describe("Token Library", function () {
 
       // BDV < 1
       expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(0.5)).toHuman()).toBe("0.5");
-      expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(0.5)).toBlockchain()).toBe((5_000000000).toString());
+      expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(0.5)).toBlockchain()).toBe(
+        (5_000000000).toString()
+      );
       expect(sdk.tokens.BEAN.getSeeds().gt(0)).toBe(true);
 
       // BDV > 1
@@ -46,7 +49,9 @@ describe("Token Library", function () {
       // 100_000000 BEAN => 100_0000000000 STALK  integer notation
       // therefore: 100E10 / 100E6 = 10_000 = 1E4 STALK per BEAN
       expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(100)).toHuman()).toBe("100");
-      expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(100)).toBlockchain()).toBe((100_0000000000).toString());
+      expect(sdk.tokens.BEAN.getStalk(sdk.tokens.BEAN.amount(100)).toBlockchain()).toBe(
+        (100_0000000000).toString()
+      );
       expect(sdk.tokens.BEAN.getSeeds().gt(0)).toBe(true);
     });
   });
@@ -87,7 +92,9 @@ describe("Function: getBalances", function () {
   });
   it("throws if a provided address is not a token", async () => {
     // beanstalk.getAllBalances will revert if any of the requested tokens aren't actually tokens
-    await expect(sdk.tokens.getBalances(account1, [account1])).rejects.toThrow("call revert exception");
+    await expect(sdk.tokens.getBalances(account1, [account1])).rejects.toThrow(
+      "call revert exception"
+    );
   });
   it("accepts string for _tokens", async () => {
     const BEAN = sdk.tokens.BEAN.address;
@@ -115,7 +122,10 @@ describe("Permits", function () {
     const contract = token.getContract();
 
     // Sign permit
-    const permitData = await sdk.permit.sign(account, sdk.tokens.permitERC2612(owner, spender, token, amount.toBlockchain()));
+    const permitData = await sdk.permit.sign(
+      account,
+      sdk.tokens.permitERC2612(owner, spender, token, amount.toBlockchain())
+    );
 
     // Execute permit
     await contract
@@ -135,3 +145,10 @@ describe("Permits", function () {
     expect(newAllowance).toEqual(amount.toBlockchain());
   });
 });
+
+const setTokenRewards = () => {
+  sdk.tokens.BEAN.rewards = {
+    seeds: sdk.tokens.SEEDS.amount(3),
+    stalk: sdk.tokens.STALK.amount(1)
+  };
+};

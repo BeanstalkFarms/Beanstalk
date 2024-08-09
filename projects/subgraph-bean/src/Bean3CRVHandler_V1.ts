@@ -6,13 +6,13 @@ import {
   RemoveLiquidityOne,
   TokenExchange,
   TokenExchangeUnderlying
-} from "../generated/Bean3CRV-V1/Bean3CRV";
+} from "../generated/Bean-ABIs/Bean3CRV";
 import { calcLiquidityWeightedBeanPrice, getLastBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEAN_LUSD_V1, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { Bean3CRV } from "../generated/Bean3CRV-V1/Bean3CRV";
-import { ERC20 } from "../generated/Bean3CRV-V1/ERC20";
+import { Bean3CRV } from "../generated/Bean-ABIs/Bean3CRV";
+import { ERC20 } from "../generated/Bean-ABIs/ERC20";
 import { checkBeanCross } from "./utils/Cross";
 import { curveDeltaBUsingVPrice, curvePriceAndLp } from "./utils/price/CurvePrice";
 import { manualTwa } from "./utils/price/TwaOracle";

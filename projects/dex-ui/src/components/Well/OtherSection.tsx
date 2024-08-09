@@ -9,6 +9,7 @@ import { Token } from "@beanstalk/sdk";
 import { Skeleton } from "../Skeleton";
 import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
 import { useWellImplementations } from "src/wells/useWellImplementations";
+import { getIsMultiPumpWell } from "src/wells/pump/utils";
 
 type Props = { well: Well };
 
@@ -47,6 +48,11 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
           name: pumpInfo?.fullName || pumpInfo.name,
           address: pump.address
         });
+      } else if (getIsMultiPumpWell(well).isV1) {
+        data.push({
+          name: "Multi Flow Pump",
+          address: pump.address
+        });
       } else {
         data.push({
           name: "Pump",
@@ -71,9 +77,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
   }, [
     implementationAddress,
     pumpLookup,
-    well.aquifer?.address,
-    well.pumps,
-    well.wellFunction?.address,
+    well,
     wellFunctionName
   ]);
 

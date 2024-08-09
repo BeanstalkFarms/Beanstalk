@@ -39,4 +39,20 @@ contract MockUnripeFacet is UnripeFacet {
     function resetUnderlying(address unripeToken) external {
         s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying = 0;
     }
+
+    function getLegacyLockedUnderlyingBean() public view returns (uint256) {
+        return
+            LibLockedUnderlying.getLockedUnderlying(
+                C.UNRIPE_BEAN,
+                LibUnripe.getRecapPaidPercentAmount(1e6)
+            );
+    }
+
+    function getLegacyLockedUnderlyingLP() public view returns (uint256) {
+        return
+            LibLockedUnderlying.getLockedUnderlying(
+                C.UNRIPE_LP,
+                LibUnripe.getRecapPaidPercentAmount(1e6)
+            );
+    }
 }

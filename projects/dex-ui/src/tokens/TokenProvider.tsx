@@ -2,7 +2,6 @@ import { Token } from "@beanstalk/sdk";
 import React, { createContext, useContext } from "react";
 
 import { useWellTokens } from "src/tokens/useWellTokens";
-import { images } from "src/assets/images/tokens";
 import { Error } from "src/components/Error";
 
 const tokenMap: Record<string, Token> = {};
@@ -18,11 +17,6 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
   const add = (token: Token) => (tokenMap[token.symbol] = token);
 
   for (const token of tokens || []) {
-    let logo = images[token.symbol] ?? images.DEFAULT;
-
-    if (!logo && token.isLP) logo = images.LP;
-    if (!token.logo) token.setMetadata({ logo });
-
     add(token);
   }
 

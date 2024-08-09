@@ -1,4 +1,4 @@
-import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync, Transfer } from "../generated/templates/Well/Well";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync, Transfer } from "../generated/Basin-ABIs/Well";
 import { loadOrCreateAccount } from "./utils/Account";
 import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent, recordSyncEvent } from "./utils/Liquidity";
