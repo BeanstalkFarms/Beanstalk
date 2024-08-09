@@ -115,6 +115,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             pipeData.grownStalk
         );
 
+        fromAmount = cp.fromAmount;
+        toAmount = cp.toAmount;
+
         emit Convert(LibTractor._user(), cp.fromToken, cp.toToken, cp.fromAmount, cp.toAmount);
     }
 }

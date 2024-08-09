@@ -1,14 +1,22 @@
-const { BEAN, UNRIPE_BEAN, UNRIPE_LP, BEAN_ETH_WELL, BARN_RAISE_WELL, BEANSTALK, WSTETH } = require("./utils/constants.js");
+const {
+  BEAN,
+  UNRIPE_BEAN,
+  UNRIPE_LP,
+  BEAN_ETH_WELL,
+  BARN_RAISE_WELL,
+  BEANSTALK,
+  WSTETH
+} = require("./utils/constants.js");
 const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
-const { impersonateSigner, impersonateBeanstalkOwner } = require("../utils/signer.js");
+const { impersonateSigner, impersonateBeanstalkOwner } = require("../../utils/signer.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
-const { getBeanstalk } = require("../utils/contracts.js");
-const { upgradeWithNewFacets } = require("../scripts/diamond");
-const { bipMiscellaneousImprovements } = require("../scripts/bips.js");
-const { migrateBeanEthToBeanWSteth } = require("../scripts/beanWstethMigration.js");
-const { impersonateWsteth } = require("../scripts/impersonate.js");
+const { getBeanstalk } = require("../../utils/contracts.js");
+const { upgradeWithNewFacets } = require("../../scripts/diamond");
+const { bipMiscellaneousImprovements } = require("../../scripts/bips.js");
+const { migrateBeanEthToBeanWSteth } = require("../../scripts/beanWstethMigration.js");
+const { impersonateWsteth } = require("../../scripts/impersonate.js");
 const { to6, to18 } = require("./utils/helpers.js");
-const { mintEth } = require("../utils");
+const { mintEth } = require("../../utils");
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
@@ -80,10 +88,10 @@ describe("LockedBeansMainnet", function () {
       await revertToSnapshot(snapshotId);
 
       // migrate bean eth to bean wsteth:
-      this.wsteth = await ethers.getContractAt('MockWsteth', WSTETH)
-      const stethPerToken = await this.wsteth.stEthPerToken()
-      await impersonateWsteth()
-      await this.wsteth.setStEthPerToken(stethPerToken)
+      this.wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
+      const stethPerToken = await this.wsteth.stEthPerToken();
+      await impersonateWsteth();
+      await this.wsteth.setStEthPerToken(stethPerToken);
       await migrateBeanEthToBeanWSteth();
 
       // deploy misc. improvements bip:
@@ -145,10 +153,10 @@ describe("LockedBeansMainnet", function () {
       );
 
       // migrate bean eth to bean wsteth:
-      this.wsteth = await ethers.getContractAt('MockWsteth', WSTETH)
-      const stethPerToken = await this.wsteth.stEthPerToken()
-      await impersonateWsteth()
-      await this.wsteth.setStEthPerToken(stethPerToken)
+      this.wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
+      const stethPerToken = await this.wsteth.stEthPerToken();
+      await impersonateWsteth();
+      await this.wsteth.setStEthPerToken(stethPerToken);
       await migrateBeanEthToBeanWSteth();
 
       // mine blocks + update timestamp for pumps to update:
@@ -157,7 +165,7 @@ describe("LockedBeansMainnet", function () {
         await ethers.provider.send("evm_mine");
       }
 
-      // call sunrise: 
+      // call sunrise:
       await this.beanstalk.sunrise();
 
       for (let i = 0; i < 100; i++) {
