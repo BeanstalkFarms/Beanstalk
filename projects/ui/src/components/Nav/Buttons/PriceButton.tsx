@@ -32,6 +32,7 @@ import wstETHLogo from '~/img/tokens/wsteth-logo.svg';
 import { FC } from '~/types';
 import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
 import useSdk from '~/hooks/sdk';
+import useTwaDeltaB from '~/hooks/beanstalk/useTwaDeltaB';
 import FolderMenu from '../FolderMenu';
 
 const poolLinks: { [key: string]: string } = {
@@ -55,6 +56,9 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
     (state) => state._bean.pools
   );
+
+  const { data: twaDeltaBs } = useTwaDeltaB();
+  const twaDeltaB = twaDeltaBs?.total || ZERO_BN;
 
   const toggleDisplayedPools = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -155,7 +159,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
                     Total TWA deltaB:{' '}
                     <strong>
                       {beanTokenData.deltaB.gte(0) && '+'}
-                      {displayBN(beanTokenData.deltaB, true)}
+                      {displayBN(twaDeltaB, true)}
                     </strong>
                   </>
                 ) : (

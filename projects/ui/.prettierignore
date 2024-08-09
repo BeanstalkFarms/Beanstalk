@@ -1,0 +1,7 @@
+./src/generated
+./src/graph/graphql.schema.json
+./src/graph/schema-bean.graphql
+./src/graph/schema-beanft.graphql
+./src/graph/schema-beanstalk.graphql
+./src/graph/schema-snapshot1.graphql
+./src/graph/schema-snapshot2.graphql

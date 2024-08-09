@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 
 import Pool from '~/classes/Pool';
 import Token from '~/classes/Token';
+import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
 
 // --------------
 // Utilities
@@ -58,3 +59,4 @@ export * from './links';
 export * from './values';
 export * from './rpc';
 export * from './tooltips';
+export { BEANSTALK_ABI_SNIPPETS as ABISnippets };

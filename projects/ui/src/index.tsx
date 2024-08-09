@@ -28,12 +28,12 @@ if (import.meta.env.DEV) {
 const container = document.getElementById('app');
 const root = createRoot(container!);
 root.render(
-  <React.StrictMode>
-    <Wrapper>
-      <App />
-      {/* fooooooz */}
-    </Wrapper>
-  </React.StrictMode>
+  // <React.StrictMode>
+  <Wrapper>
+    <App />
+    {/* fooooooz */}
+  </Wrapper>
+  // </React.StrictMode>
 );
 
 reportWebVitals();
