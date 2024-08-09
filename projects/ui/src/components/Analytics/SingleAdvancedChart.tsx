@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -27,7 +21,6 @@ import {
   Time,
 } from 'lightweight-charts';
 import { VertLine } from '~/util/lightweight-charts-plugins/vertical-line/vertical-line';
-import { setHours } from 'date-fns';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
@@ -125,7 +118,7 @@ const priceScaleModes = [
 
 type OmmitedV2DataProps = Omit<
   ChartV2DataProps,
-  'timePeriod' | 'selected' | 'formattedData'
+  'timePeriod' | 'selected' | 'formattedData' | 'size'
 >;
 
 type ChartProps = OmmitedV2DataProps & {
@@ -149,10 +142,8 @@ type DataPoint = {
 
 const Chart = ({
   drawPegLine,
-  size = 'full',
   drawExploitLine = true,
   seriesData,
-  valueAxisType,
   timeState,
   isLoading,
   isError,
@@ -186,6 +177,29 @@ const Chart = ({
     [rightAnchorEl]
   );
 
+  const handleSetVisibleRange = useCallback(
+    (params?: { first?: DataPoint; last?: DataPoint }) => {
+      if (!chart.current) return;
+      try {
+        if (timePeriod?.to && timePeriod?.from) {
+          chart.current.timeScale().setVisibleRange(timePeriod);
+        } else if (params?.first?.time && params?.last?.time) {
+          chart.current.timeScale().setVisibleRange({
+            from: params.first.time,
+            to: params.last.time,
+          });
+        } else {
+          // Fallback to fit content
+          chart.current.timeScale().fitContent();
+        }
+      } catch (error) {
+        console.error('Error setting time period');
+        chart.current.timeScale().fitContent();
+      }
+    },
+    [timePeriod]
+  );
+
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -217,7 +231,6 @@ const Chart = ({
         timeVisible: true,
         secondsVisible: false,
         borderVisible: false,
-        visible: !(size === 'mini'),
         minBarSpacing: 0.001,
         tickMarkFormatter: (time: Date, tickMarkType: TickMarkType) =>
           getTimezoneCorrectedTime(time, tickMarkType),
@@ -226,7 +239,6 @@ const Chart = ({
         borderVisible: false,
         alignLabels: true,
         mode: 0,
-        visible: !(size === 'mini'),
       },
       overlayPriceScale: {
         scaleMargins: {
@@ -236,36 +248,11 @@ const Chart = ({
       },
     };
 
-    const handleResize = () => {
-      chart.current?.applyOptions({
-        width: chartContainerRef.current?.clientWidth,
-        height: chartContainerRef.current?.clientHeight,
-      });
-    };
-
     chart.current = createChart(chartContainerRef.current, chartOptions);
-    const priceScaleIds: string[] = [];
-    let scaleId = '';
-    const findScale = priceScaleIds.findIndex(
-      (value) => value === valueAxisType
-    );
-    if (findScale > -1) {
-      scaleId =
-        findScale > 1 ? valueAxisType : findScale === 0 ? 'right' : 'left';
-    } else if (priceScaleIds.length === 0) {
-      priceScaleIds[0] = valueAxisType;
-      scaleId = 'right';
-    } else if (priceScaleIds.length === 1) {
-      priceScaleIds[1] = valueAxisType;
-      scaleId = 'left';
-    } else {
-      scaleId = valueAxisType;
-    }
-
     areaSeries.current = chart.current.addLineSeries({
       color: chartColors[0].lineColor,
       lineWidth: 2,
-      priceScaleId: scaleId,
+      priceScaleId: 'right',
       priceFormat: {
         type: 'custom',
         formatter: tickFormatter,
@@ -291,156 +278,136 @@ const Chart = ({
         exploitTimestamp,
         { width: 0.5 }
       );
-      areaSeries.current?.attachPrimitive(vertLine);
+      areaSeries.current.attachPrimitive(vertLine);
     }
 
+    const handleResize = () => {
+      if (!chartContainerRef.current || !chart.current) return;
+      chart.current.applyOptions({
+        width: chartContainerRef.current.clientWidth,
+        height: chartContainerRef.current.clientHeight,
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (
+        !document.hidden &&
+        chart.current &&
+        areaSeries.current &&
+        chartContainerRef.current
+      ) {
+        chart.current.applyOptions({
+          width: chartContainerRef.current?.clientWidth,
+          height: chartContainerRef.current?.clientHeight,
+        });
+        areaSeries.current.setData(seriesData);
+        handleSetVisibleRange();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('resize', handleResize);
 
+    handleVisibilityChange();
+    handleResize();
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
       chart.current?.remove();
     };
   }, [
-    seriesData,
     theme,
+    seriesData,
     drawPegLine,
     drawExploitLine,
-    size,
     tickFormatter,
-    valueAxisType,
+    handleSetVisibleRange,
   ]);
 
-  // console.log("chartref: ", chart.current);
-  // console.log('seriesData: ', seriesData);
-
+  // Handle right axis scale mode changes
   useEffect(() => {
     chart.current?.applyOptions({
-      rightPriceScale: {
-        mode: rightPriceScaleMode,
-      },
+      rightPriceScale: { mode: rightPriceScaleMode },
     });
   }, [rightPriceScaleMode]);
 
-  useMemo(() => {
-    if (!chart.current) return;
-    if (lastDataPoint) {
-      const from = timePeriod?.from;
-      const to = timePeriod?.to;
-      if (!from) {
-        chart.current?.timeScale().fitContent();
-      } else if (from && !to) {
-        const newFrom = setHours(
-          new Date((from.valueOf() as number) * 1000),
-          0
-        );
-        const newTo = setHours(new Date((from.valueOf() as number) * 1000), 23);
-        chart?.current?.timeScale()?.setVisibleRange({
-          from: (newFrom.valueOf() / 1000) as Time,
-          to: (newTo.valueOf() / 1000) as Time,
-        });
-      } else if (from && to) {
-        chart?.current?.timeScale().setVisibleRange({
-          from: from,
-          to: to,
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timePeriod]);
-
   useEffect(() => {
-    if (!timePeriod || !chart.current || !seriesData?.length) return;
-    areaSeries.current?.setData(seriesData);
-
-    chart.current?.timeScale()?.setVisibleRange(timePeriod);
+    if (!areaSeries.current || !chart.current) {
+      return;
+    }
 
     const getDataPoint = (mode: string) => {
-      let _time = 0;
-      let _season = 0;
-
+      if (!seriesData.length) return;
       const dataIndex = mode === 'last' ? seriesData.length - 1 : 0;
-      _time = Math.max(_time, seriesData[dataIndex].time.valueOf() as number);
-      _season = Math.max(_season, seriesData[dataIndex].customValues.season);
+      const time = seriesData[dataIndex].time?.valueOf() as number;
+      const season = seriesData[dataIndex].customValues.season;
       const value = seriesData[dataIndex].value;
 
       return {
-        time: new Date(_time * 1000)?.toLocaleString(undefined, {
+        time: new Date(time * 1000)?.toLocaleString(undefined, {
           dateStyle: 'short',
           timeStyle: 'short',
         }),
         value: value,
-        season: _season,
-        timestamp: _time,
+        season: season,
+        timestamp: time,
       };
     };
 
-    setLastDataPoint(getDataPoint('last'));
-    setFirstDataPoint(getDataPoint('first'));
+    const crosshairMoveHandler = (param: MouseEventParams) => {
+      if (!areaSeries.current) return;
+      const datum = param.seriesData.get(areaSeries.current);
 
-    function crosshairMoveHandler(param: MouseEventParams) {
-      const hoveredTimestamp = param.time
-        ? new Date((param.time?.valueOf() as number) * 1000)
-        : null;
-      let hoveredSeason = 0;
-
-      const seriesValueBefore = areaSeries.current?.dataByIndex(
-        param.logical?.valueOf() as number,
-        -1
-      );
-      const seriesValueAfter = areaSeries.current?.dataByIndex(
-        param.logical?.valueOf() as number,
-        1
-      );
-      const hoveredValue =
-        seriesValueBefore && seriesValueAfter && 'value' in seriesValueBefore
-          ? seriesValueBefore?.value
-          : 0;
-      hoveredSeason = Math.max(
-        hoveredSeason,
-        (seriesValueBefore?.customValues!.season as number) || 0
-      );
-
-      if (!param.time) {
+      if (!param.time || !datum || !('value' in datum) || !datum.customValues) {
         setDataPoint(undefined);
-      } else {
-        setDataPoint({
-          time:
-            (param.time &&
-              hoveredTimestamp?.toLocaleString(undefined, {
-                dateStyle: 'short',
-                timeStyle: 'short',
-              })) ||
-            null,
-          value: param.time ? hoveredValue : null,
-          season: param.time ? hoveredSeason : null,
-          timestamp: param.time?.valueOf() as number,
-        });
+        return;
       }
-    }
 
-    function timeRangeChangeHandler(param: Range<Time> | null) {
-      if (!param) return;
-      const lastTimestamp = new Date((param.to.valueOf() as number) * 1000);
-      const lastValue =
-        seriesData.find((value) => value.time === param.to)?.value || 0;
-      const lastSeason =
-        seriesData.find((value) => value.time === param.to)?.customValues
-          .season || 0;
-      setLastDataPoint({
-        time: lastTimestamp?.toLocaleString('en-US', {
+      const timestamp = new Date((param.time.valueOf() as number) * 1000);
+      setDataPoint({
+        time: timestamp.toLocaleString(undefined, {
           dateStyle: 'short',
           timeStyle: 'short',
         }),
-        value: lastValue,
-        season: lastSeason,
+        value: datum.value,
+        season: (datum.customValues.season || 0) as number,
+        timestamp: param.time.valueOf(),
+      });
+    };
+
+    const timeRangeChangeHandler = (param: Range<Time> | null) => {
+      const lastItem =
+        param && seriesData.find((value) => value.time === param.to);
+      if (!lastItem) return;
+
+      const lastTimestamp = new Date((param.to.valueOf() as number) * 1000);
+
+      setLastDataPoint({
+        time: lastTimestamp.toLocaleString('en-US', {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        }),
+        value: lastItem.value,
+        season: lastItem.customValues.season,
         timestamp: param.to.valueOf(),
       });
-    }
+    };
 
-    chart.current?.subscribeCrosshairMove(crosshairMoveHandler);
+    areaSeries.current.setData(seriesData);
+
+    const firstData = getDataPoint('first');
+    const lastData = getDataPoint('last');
+
+    handleSetVisibleRange({ first: firstData, last: lastData });
+
+    lastData && setLastDataPoint(lastData);
+    firstData && setFirstDataPoint(firstData);
+
+    chart.current.subscribeCrosshairMove(crosshairMoveHandler);
     chart.current
-      ?.timeScale()
-      ?.subscribeVisibleTimeRangeChange(timeRangeChangeHandler);
+      .timeScale()
+      .subscribeVisibleTimeRangeChange(timeRangeChangeHandler);
 
     return () => {
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
@@ -448,7 +415,7 @@ const Chart = ({
         ?.timeScale()
         .unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [seriesData, size, storageKeyPrefix, timePeriod]);
+  }, [seriesData, handleSetVisibleRange]);
 
   const beforeFirstSeason =
     dataPoint && firstDataPoint
@@ -487,101 +454,94 @@ const Chart = ({
           />
         </Stack>
       </Box>
-      <Box
-        ref={chartContainerRef}
-        id="container"
-        sx={{ height: 'calc(100% - 85px)' }}
-      >
+      <Box ref={chartContainerRef} sx={{ height: 'calc(100% - 85px)' }}>
         {isLoading && <ChartLoadingState />}
         {isError && <ChartErrorState />}
       </Box>
-      {size === 'full' && (
-        <ClickAwayListener onClickAway={() => setRightAnchorEl(null)}>
-          <Box>
-            <IconButton
-              disableRipple
-              onClick={handleToggleMenu}
+      <ClickAwayListener onClickAway={() => setRightAnchorEl(null)}>
+        <Box>
+          <IconButton
+            disableRipple
+            onClick={handleToggleMenu}
+            sx={{
+              p: 0,
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+            }}
+          >
+            <SettingsIcon
               sx={{
-                p: 0,
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
+                fontSize: 20,
+                color: 'text.primary',
+                transform: `rotate(${rightAnchorEl ? 30 : 0}deg)`,
+                transition: 'transform 150ms ease-in-out',
               }}
-            >
-              <SettingsIcon
-                sx={{
-                  fontSize: 20,
-                  color: 'text.primary',
-                  transform: `rotate(${rightAnchorEl ? 30 : 0}deg)`,
-                  transition: 'transform 150ms ease-in-out',
-                }}
-              />
-            </IconButton>
-            <Popper
-              anchorEl={rightAnchorEl}
-              open={rightMenuVisible}
-              sx={{ zIndex: 79 }}
-              placement="bottom-end"
-              // Align the menu to the bottom right side of the anchor button.
-              transition
-            >
-              {({ TransitionProps }) => (
-                <Grow
-                  {...TransitionProps}
-                  timeout={200}
-                  style={{ transformOrigin: 'top right' }}
+            />
+          </IconButton>
+          <Popper
+            anchorEl={rightAnchorEl}
+            open={rightMenuVisible}
+            sx={{ zIndex: 79 }}
+            placement="bottom-end"
+            transition
+          >
+            {({ TransitionProps }) => (
+              <Grow
+                {...TransitionProps}
+                timeout={200}
+                style={{ transformOrigin: 'top right' }}
+              >
+                <Box
+                  sx={{
+                    borderWidth: 2,
+                    borderColor: 'divider',
+                    borderStyle: 'solid',
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    '& .MuiInputBase-root:after, before': {
+                      borderColor: 'primary.main',
+                    },
+                    overflow: 'clip',
+                  }}
                 >
-                  <Box
-                    sx={{
-                      borderWidth: 2,
-                      borderColor: 'divider',
-                      borderStyle: 'solid',
-                      backgroundColor: 'white',
-                      borderRadius: 1,
-                      '& .MuiInputBase-root:after, before': {
-                        borderColor: 'primary.main',
-                      },
-                      overflow: 'clip',
-                    }}
-                  >
-                    <Stack gap={0}>
-                      {priceScaleModes.map((mode, index) => (
-                        <Button
-                          variant="text"
-                          sx={{
-                            fontWeight: 400,
-                            color: 'text.primary',
-                            paddingY: 0.5,
-                            paddingX: 1,
-                            height: 'auto',
-                            justifyContent: 'space-between',
-                            borderRadius: 0,
-                            width: '150px',
-                            backgroundColor:
-                              rightPriceScaleMode === index
-                                ? 'primary.light'
-                                : undefined,
-                            '&:hover': {
-                              backgroundColor: '#F5F5F5',
-                              cursor: 'pointer',
-                            },
-                          }}
-                          onClick={() => setRightPriceScaleMode(index)}
-                        >
-                          {mode}
-                          {rightPriceScaleMode === index && (
-                            <CheckRoundedIcon fontSize="inherit" />
-                          )}
-                        </Button>
-                      ))}
-                    </Stack>
-                  </Box>
-                </Grow>
-              )}
-            </Popper>
-          </Box>
-        </ClickAwayListener>
-      )}
+                  <Stack gap={0}>
+                    {priceScaleModes.map((mode, index) => (
+                      <Button
+                        variant="text"
+                        sx={{
+                          fontWeight: 400,
+                          color: 'text.primary',
+                          paddingY: 0.5,
+                          paddingX: 1,
+                          height: 'auto',
+                          justifyContent: 'space-between',
+                          borderRadius: 0,
+                          width: '150px',
+                          backgroundColor:
+                            rightPriceScaleMode === index
+                              ? 'primary.light'
+                              : undefined,
+                          '&:hover': {
+                            backgroundColor: '#F5F5F5',
+                            cursor: 'pointer',
+                          },
+                        }}
+                        onClick={() => setRightPriceScaleMode(index)}
+                      >
+                        {mode}
+                        {rightPriceScaleMode === index && (
+                          <CheckRoundedIcon fontSize="inherit" />
+                        )}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Box>
+              </Grow>
+            )}
+          </Popper>
+        </Box>
+      </ClickAwayListener>
     </Box>
   );
 };
@@ -594,22 +554,15 @@ export type SingleAdvancedChartProps = {
   ChartProps;
 
 const SingleAdvancedChart = (props: SingleAdvancedChartProps) => (
-  // <Stack>
   <Stack
     sx={{
-      // position: 'relative',
       width: '100%',
       height: '250px',
       overflow: 'clip',
     }}
   >
-    {!props.seriesData.length && !props.isLoading && !props.error ? (
-      <ChartEmptyState />
-    ) : (
-      <Chart {...props} />
-    )}
+    <Chart {...props} />
   </Stack>
-  // </Stack>
 );
 
 export default SingleAdvancedChart;

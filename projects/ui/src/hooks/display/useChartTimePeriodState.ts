@@ -14,16 +14,16 @@ export type CalendarRangePreset =
   | '2Y'
   | 'ALL';
 
+const getTimePeriodState = (prefix: string) => {
+  const storedSetting1 = localStorage.getItem(`${prefix}TimePeriod`);
+  return storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+};
+
 const useChartTimePeriodState = (
   storageKeyPrefix: string = 'advancedChart'
 ) => {
-  const storedSetting1 = localStorage.getItem(`${storageKeyPrefix}TimePeriod`);
-  const storedTimePeriod = storedSetting1
-    ? JSON.parse(storedSetting1)
-    : undefined;
-
   const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(
-    storedTimePeriod
+    getTimePeriodState(storageKeyPrefix)
   );
 
   return [timePeriod, setTimePeriod] as const;
