@@ -34,31 +34,26 @@ library LibIncentive {
     //////////////////// CALCULATE REWARD ////////////////////
 
     /**
-     * @param secondsLate The number of blocks late that {sunrise()} was called.
-     * @dev Calculates Sunrise incentive amount based on current gas prices and a computed
-     * BEAN:ETH price. This function is called at the end of {sunriseTo()} after all
-     * "step" functions have been executed.
+     * @param secondsLate The number of seconds late that {sunrise()} was called.
      */
     function determineReward(uint256 secondsLate) external pure returns (uint256) {
-        // Cap the maximum number of blocks late. If the sunrise is later than
+        // Cap the maximum number of seconds late. If the sunrise is later than
         // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (secondsLate > MAX_SECONDS_LATE) {
             secondsLate = MAX_SECONDS_LATE;
         }
 
-        // Scale the reward up as the number of blocks after expected sunrise increases.
-        // `sunriseReward * (1 + 1/100)^(blocks late * seconds per block)`
-        // NOTE: 1.01^(25 * 12) = 19.78, This is the maximum multiplier.
+        // Scale the reward up as the number of seconds after expected sunrise increases.
+        // `sunriseReward * (1 + 1/100)^(seconds late)`
+        // NOTE: 1.01^(300) = 19.78, This is the maximum multiplier.
         return fracExp(BASE_REWARD, secondsLate);
     }
 
     //////////////////// MATH UTILITIES ////////////////////
 
     /**
-     * @dev fraxExp scales up the bean reward based on the blocks late.
-     * the formula is beans * (1.01)^(Blocks Late * 12 second block time).
-     * since block time is capped at 25 blocks,
-     * we only need to check cases 0 - 25
+     * @dev fraxExp scales up the bean reward based on the seconds late.
+     * the formula is beans * (1.01)^(seconds late).
      */
     function fracExp(
         uint256 beans,
@@ -70,7 +65,8 @@ library LibIncentive {
         }
 
         // use an if ladder to determine the scaling factor. If ladder is used over binary search
-        // due to simplicity. Checked every 2 seconds to reduce bytecode size. SecondsLate is rounded up given that beanstalk would rather incentivize slightly more to call sunrise earlier than to incentivize slightly less for a later sunrise.
+        // due to simplicity. Checked every 2 seconds to reduce bytecode size. SecondsLate is rounded up given that beanstalk
+        // would rather incentivize slightly more to call sunrise earlier than to incentivize slightly less for a later sunrise.
         // repeat until 300 seconds:
         if (secondsLate <= 30) {
             if (secondsLate == 0) {
@@ -441,6 +437,9 @@ library LibIncentive {
                 return _scaleReward(beans, 10_677_927);
             }
         } else if (secondsLate <= 270) {
+            if (secondsLate <= 240) {
+                return _scaleReward(beans, 10_892_553);
+            }
             if (secondsLate <= 242) {
                 return _scaleReward(beans, 11_111_494);
             }

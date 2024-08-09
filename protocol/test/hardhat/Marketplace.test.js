@@ -1060,7 +1060,7 @@ describe("Marketplace", function () {
 
       describe("transfers with allowance", async function () {
         beforeEach(async function () {
-          await expect(mockBeanstalk.connect(user).approvePods(user2.address, 0, 100));
+          await mockBeanstalk.connect(user).approvePods(user2.address, 0, 100);
           this.result = await mockBeanstalk
             .connect(user2)
             .transferPlot(user.address, user2.address, 0, 0, 0, 100);

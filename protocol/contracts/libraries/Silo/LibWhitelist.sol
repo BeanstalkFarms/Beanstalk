@@ -16,6 +16,7 @@ import {LibWell, IWell} from "contracts/libraries/Well/LibWell.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {IERC20Decimals} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 
 /**
  * @title LibWhitelist
@@ -121,7 +122,7 @@ library LibWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
@@ -136,6 +137,7 @@ library LibWhitelist {
         verifyGaugePointSelector(gaugePointSelector);
         verifyLiquidityWeightSelector(liquidityWeightSelector);
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -191,7 +193,7 @@ library LibWhitelist {
     function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         uint128 gaugePoints,
@@ -204,6 +206,7 @@ library LibWhitelist {
 
         // verify the gaugePoint and liquidityWeight selector.
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -346,6 +349,7 @@ library LibWhitelist {
     ) internal {
         // check that new implementation is valid.
         verifyOracleImplementation(
+            token,
             oracleImplementation.target,
             oracleImplementation.selector,
             oracleImplementation.encodeType
@@ -400,8 +404,16 @@ library LibWhitelist {
     function dewhitelistToken(address token) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
+        uint256 tokenStatusIndex = LibWhitelistedTokens.findWhitelistStatusIndex(token);
+
         // before dewhitelisting, verify that `libWhitelistedTokens` are updated.
-        LibWhitelistedTokens.updateWhitelistStatus(token, false, false, false, false);
+        LibWhitelistedTokens.updateWhitelistStatus(
+            token,
+            false,
+            false,
+            false,
+            s.sys.silo.whitelistStatuses[tokenStatusIndex].isSoppable // if token was soppable, it should remain so, so that previous sops can be claimed.
+        );
 
         // set the stalkEarnedPerSeason to 1 and update milestone stem.
         // stalkEarnedPerSeason requires a min value of 1.
@@ -440,6 +452,7 @@ library LibWhitelist {
      * is valid for the gauge system.
      */
     function verifyOracleImplementation(
+        address token,
         address oracleImplementation,
         bytes4 selector,
         bytes1 encodeType
@@ -455,7 +468,9 @@ library LibWhitelist {
             (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
         } else {
             // verify you passed in a callable oracle selector
-            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(selector, 0));
+            (success, ) = oracleImplementation.staticcall(
+                abi.encodeWithSelector(selector, IERC20Decimals(token).decimals(), 0)
+            );
         }
 
         require(success, "Whitelist: Invalid Oracle Implementation");
@@ -510,7 +525,7 @@ library LibWhitelist {
     function verifyWhitelistStatus(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv
+        uint48 stalkIssuedPerBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 

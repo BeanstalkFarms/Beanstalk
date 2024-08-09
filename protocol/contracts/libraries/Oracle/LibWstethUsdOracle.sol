@@ -45,4 +45,26 @@ library LibWstethUsdOracle {
                 .mul(LibEthUsdOracle.getEthUsdPrice(lookback))
                 .div(ORACLE_PRECISION);
     }
+
+    /**
+     * @dev Returns the instantaneous USD/wstETH price
+     * Return value has 18 decimal precision.
+     * Returns 0 if the either LibWstethEthOracle or LibEthUsdOracle cannot fetch a valid price.
+     **/
+    function getUsdWstethPrice() internal view returns (uint256) {
+        return getUsdWstethPrice(0);
+    }
+
+    /**
+     * @dev Returns the USD/wstETH price with the option of using a TWA lookback.
+     * Return value has 18 decimal precision.
+     * Returns 0 if the either LibWstethEthOracle or LibEthUsdOracle cannot fetch a valid price.
+     **/
+    function getUsdWstethPrice(uint256 lookback) internal view returns (uint256) {
+        return
+            LibWstethEthOracle
+                .getWstethEthPrice(lookback)
+                .mul(LibEthUsdOracle.getUsdEthPrice(lookback))
+                .div(ORACLE_PRECISION);
+    }
 }

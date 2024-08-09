@@ -9,6 +9,10 @@ import {C} from "contracts/C.sol";
 import {LibUniswapOracleLibrary} from "./LibUniswapOracleLibrary.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
+interface IERC20Decimals {
+    function decimals() external view returns (uint8);
+}
+
 /**
  * @title Uniswap Oracle Library
  * @notice Contains functionalty to read prices from Uniswap V3 pools.
@@ -19,23 +23,48 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 library LibUniswapOracle {
     // All instantaneous queries of Uniswap Oracles should use a 15 minute lookback.
     uint32 internal constant FIFTEEN_MINUTES = 900;
+    uint256 constant PRECISION = 1e6;
 
     /**
-     * @dev Uses `pool`'s Uniswap V3 Oracle to get the TWAP price of `token1` in `token2` over the
-     * last `lookback` seconds.
-     * Return value has 6 decimal precision.
-     * Returns 0 if {IUniswapV3Pool.observe} reverts.
+     * @notice Given a tick and a token amount, calculates the amount of token received in exchange
+     * @param baseTokenAmount Amount of baseToken to be converted.
+     * @param baseToken Address of the ERC20 token contract used as the baseAmount denomination.
+     * @param quoteToken Address of the ERC20 token contract used as the quoteAmount denomination.
+     * @return price Amount of quoteToken. Value has 6 decimal precision.
      */
     function getTwap(
         uint32 lookback,
         address pool,
-        address token1,
-        address token2,
-        uint128 oneToken
+        address baseToken,
+        address quoteToken,
+        uint128 baseTokenAmount
     ) internal view returns (uint256 price) {
         (bool success, int24 tick) = consult(pool, lookback);
         if (!success) return 0;
-        price = LibUniswapOracleLibrary.getQuoteAtTick(tick, oneToken, token1, token2);
+
+        price = LibUniswapOracleLibrary.getQuoteAtTick(
+            tick,
+            baseTokenAmount,
+            baseToken,
+            quoteToken
+        );
+
+        uint256 baseTokenDecimals = IERC20Decimals(baseToken).decimals();
+        uint256 quoteTokenDecimals = IERC20Decimals(quoteToken).decimals();
+        int256 factor = int256(baseTokenDecimals) - int256(quoteTokenDecimals);
+
+        // decimals are the same. i.e. DAI/WETH
+        if (factor == 0) return (price * PRECISION) / (10 ** baseTokenDecimals);
+
+        // scale decimals
+        if (factor > 0) {
+            price = price * (10 ** uint256(factor));
+        } else {
+            price = price / (10 ** uint256(-factor));
+        }
+
+        // set 1e6 precision
+        price = (price * PRECISION) / (10 ** baseTokenDecimals);
     }
 
     /**

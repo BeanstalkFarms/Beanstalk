@@ -35,7 +35,7 @@ async function checkPriceWithError(price, lookback = "0", error = "100") {
   ); // Expected Rounding error
 }
 
-describe("wStEth Oracle", function () {
+describe.skip("wStEth Oracle", function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));

@@ -61,9 +61,9 @@ async function setStethEthChainlinkPrice(price, secondsAgo = 900) {
   );
 }
 
-async function setWstethUsdPrice(price) {
-  await setStethEthChainlinkPrice(price);
-  await setWstethEthUniswapPrice(price);
+async function setWstethUsdPrice(price, wstethEthRatio = "1") {
+  await setStethEthChainlinkPrice(wstethEthRatio);
+  await setWstethEthUniswapPrice(wstethEthRatio);
   await setWstethStethRedemptionPrice("1");
   await setEthUsdChainlinkPrice(price);
 }

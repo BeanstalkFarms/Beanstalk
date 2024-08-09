@@ -175,6 +175,10 @@ library LibBytes {
 
     /**
      * @notice Paste bytes using tractor parameters.
+     *
+     *  OperatorPasteInstrs: Copy bytes32 from operator data into calldata
+     *       [ Padding     | copyByteIndex | pasteCallIndex | pasteByteIndex ]
+     *       [ 2 bytes     | 10 bytes      | 10 bytes       | 10 bytes       ]
      */
     function pasteBytesTractor(
         bytes32 operatorPasteInstr,
@@ -226,6 +230,8 @@ library LibBytes {
     /**
      * @notice Encodes an tractor blueprint operator paste or
      * a clipboard paste param instruction.
+     * @dev If returnPasteParam, values are (copyReturnIndex, copyByteIndex, pasteByteIndex).
+     * @dev If operatorPasteInstr, values are (copyByteIndex, pasteCallIndex, pasteByteIndex).
      */
     function encode(
         uint80 _index0,
@@ -238,6 +244,8 @@ library LibBytes {
     /**
      * @notice Decodes a copyPasteInstruction into the
      * copy return index, copy byte index, and paste byte index.
+     * @dev If returnPasteParam, the return is (copyReturnIndex, copyByteIndex, pasteByteIndex).
+     * @dev If operatorPasteInstr, the return is (copyByteIndex, pasteCallIndex, pasteByteIndex).
      */
     function decode(bytes32 indices) internal pure returns (uint80, uint80, uint80) {
         return (getIndex0(indices), getIndex1(indices), getIndex2(indices));
@@ -246,6 +254,7 @@ library LibBytes {
     /**
      * @notice Returns the index at position 0 in a bytes32 encoded set of indices. Either the copy return index or the paste call index.
      * @dev Used in `pasteBytesClipboard` to choose which return parameter to copy from.
+     * @dev returnPasteParam.copyReturnIndex OR operatorPasteInstr.copyByteIndex.
      */
     function getIndex0(bytes32 indices) internal pure returns (uint80) {
         return uint80(bytes10(indices << 16));
@@ -254,6 +263,7 @@ library LibBytes {
     /**
      * @notice Returns the index at position 1 in a bytes32 encoded set of indices. The copy byte index.
      * @dev Used to determine what byte index to start copying 32 bytes from.
+     * @dev returnPasteParam.copyByteIndex OR operatorPasteInstr.pasteCallIndex.
      */
     function getIndex1(bytes32 indices) internal pure returns (uint80) {
         return uint80(bytes10(indices << 96));
@@ -262,6 +272,7 @@ library LibBytes {
     /**
      * @notice Returns the index at position 2 in a bytes32 encoded set of indices. The paste byte index.
      * @dev Used to determine what byte index to paste in data at.
+     * @dev returnPasteParam.pasteByteIndex OR operatorPasteInstr.pasteByteIndex.
      */
     function getIndex2(bytes32 indices) internal pure returns (uint80) {
         return uint80(bytes10(indices << 176));

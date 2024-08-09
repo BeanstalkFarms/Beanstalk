@@ -205,8 +205,8 @@ contract MockSiloFacet is SiloFacet {
     function mockWhitelistToken(
         address token,
         bytes4 selector,
-        uint16 stalkIssuedPerBdv,
-        uint24 stalkEarnedPerSeason
+        uint48 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason
     ) external {
         s.sys.silo.assetSettings[token].selector = selector;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"

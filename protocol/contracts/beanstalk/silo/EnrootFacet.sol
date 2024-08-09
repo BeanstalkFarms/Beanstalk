@@ -45,7 +45,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         uint256 stalkAdded;
         uint256 bdvAdded;
         int96 stemTip;
-        uint32 stalkPerBdv;
+        uint48 stalkPerBdv;
     }
 
     modifier mowSender(address token) {
@@ -119,7 +119,31 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
-        LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk.toUint128());
+        LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk);
+    }
+
+    function balanceOfRevitalizedStalk(
+        address account,
+        address[] calldata tokens,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) external view returns (uint256 stalk) {
+        uint256 ogBDV;
+        uint256 newBDV;
+        uint256 deltaBDV;
+        for (uint256 i; i < tokens.length; i++) {
+            ogBDV = s.accts[account].deposits[LibBytes.packAddressAndStem(tokens[i], stems[i])].bdv;
+            newBDV = LibTokenSilo.beanDenominatedValue(tokens[i], amounts[i]);
+            deltaBDV = newBDV.sub(ogBDV);
+
+            stalk += deltaBDV.mul(s.sys.silo.assetSettings[tokens[i]].stalkIssuedPerBdv).add(
+                LibSilo.stalkReward(
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(tokens[i]),
+                    uint128(deltaBDV)
+                )
+            );
+        }
     }
 
     /**
@@ -237,7 +261,7 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         int96 stemTip,
-        uint32 stalkPerBdv
+        uint48 stalkPerBdv
     ) private returns (uint256 stalkAdded) {
         LibTokenSilo.addDepositToAccount(
             LibTractor._user(),

@@ -69,7 +69,6 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
         external
         payable
         fundsSafu
-        nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         // require that input and output tokens be wells (Unripe not supported)

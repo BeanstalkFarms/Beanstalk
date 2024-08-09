@@ -32,7 +32,7 @@ async function reseed6(account, L2Beanstalk) {
       urBeanLpBalances
     ],
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
   console.log("-----------------------------------");

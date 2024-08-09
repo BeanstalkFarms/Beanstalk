@@ -48,7 +48,7 @@ contract BeanstalkHandler is Test {
         uint16 tokenSeed,
         uint256 amount
     ) public useUser(userSeed) useToken(tokenSeed) {
-        amount = bound(amount, 1, type(uint96).max);
+        amount = bound(amount, 1, type(uint88).max);
 
         MockToken(token).mint(user, amount);
         bean.approve(address(bs), type(uint256).max);

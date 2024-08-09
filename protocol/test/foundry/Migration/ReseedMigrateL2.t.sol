@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {BeanL2MigrationFacet} from "contracts/beanstalk/migration/BeanL2MigrationFacet.sol";
+import {L2MigrationFacet} from "contracts/beanstalk/migration/L2MigrationFacet.sol";
 import {ReseedL2Migration} from "contracts/beanstalk/init/reseed/L1/ReseedL2Migration.sol";
 import {L1TokenFacet} from "contracts/beanstalk/migration/L1TokenFacet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -36,11 +36,10 @@ contract reeseedMigrateL2 is TestHelper {
         mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 19976370);
 
         // fork base.
-        l2ForkId = vm.createFork(vm.envString("BASE_FORKING_RPC"), 15104866);
+        l2ForkId = vm.createFork(vm.envString("ARBITRUM_FORKING_RPC"), 15104866);
         vm.selectFork(mainnetForkId);
-        vm.label(address(0x866E82a600A1414e583f7F13623F1aC5d58b0Afa), "Base L1 Bridge");
+        vm.label(address(0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f), "Arbitrum L1 Bridge");
         vm.label(BEANSTALK, "Beanstalk");
-        vm.label(C.BEAN, "BEAN");
 
         // perform step 1 of the migration process. (transferring assets to the BCM).
         // this is done on L1.
@@ -58,10 +57,10 @@ contract reeseedMigrateL2 is TestHelper {
         );
 
         string[] memory facetNames = new string[](2);
-        facetNames[0] = "BeanL2MigrationFacet";
+        facetNames[0] = "L2MigrationFacet";
         facetNames[1] = "L1TokenFacet";
         address[] memory newFacetAddresses = new address[](2);
-        newFacetAddresses[0] = address(new BeanL2MigrationFacet()); // deploy the BeanL2MigrationFacet.
+        newFacetAddresses[0] = address(new L2MigrationFacet()); // deploy the L2MigrationFacet.
         newFacetAddresses[1] = address(new L1TokenFacet()); // deploy the L1TokenFacet.
 
         IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](2);
@@ -151,11 +150,51 @@ contract reeseedMigrateL2 is TestHelper {
         assertEq(bs.getInternalBalance(address(100010), token), 1e6);
     }
 
-    // verifies that the user is able to migrate external beans to L2.
-    function test_bean_l2_migration() public {
+    // verifies that the user is able to migrate external beans to L2 and approve a reciever on L2.
+    function test_bean_l2_migration_external() public {
         vm.startPrank(BS_FARMS);
         IERC20(C.BEAN).approve(BEANSTALK, 1e6);
-        BeanL2MigrationFacet(BEANSTALK).migrateL2Beans(BS_FARMS, L2_BEANSTALK, 1e6, 1000000);
+        L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            1e6,
+            LibTransfer.To.EXTERNAL,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+
+        vm.startPrank(BS_FARMS);
+        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+    }
+
+    function test_bean_l2_migration_internal() public {
+        vm.startPrank(BS_FARMS);
+        IERC20(C.BEAN).approve(BEANSTALK, 1e6);
+        L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            1e6,
+            LibTransfer.To.INTERNAL,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
+
+        vm.startPrank(BS_FARMS);
+        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+            BS_FARMS,
+            L2_BEANSTALK,
+            2e14, // max submission cost = 200k gas * 10 gwei
+            200000, // 200k gas to execute on L2
+            10e9 // @10 gwei
+        );
     }
 
     //////// MIGRATION HELPERS ////////

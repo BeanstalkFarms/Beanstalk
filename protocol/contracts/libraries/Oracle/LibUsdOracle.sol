@@ -52,21 +52,13 @@ library LibUsdOracle {
      */
     function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
         if (token == C.WETH) {
-            uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
-            if (ethUsdPrice == 0) return 0;
-            return uint256(1e24).div(ethUsdPrice);
+            return LibEthUsdOracle.getUsdEthPrice(lookback);
         }
         if (token == C.WSTETH) {
-            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(lookback);
-            if (wstethUsdPrice == 0) return 0;
-            return uint256(1e24).div(wstethUsdPrice);
+            return LibWstethUsdOracle.getUsdWstethPrice(lookback);
         }
-
-        uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
-        if (tokenPrice == 0) return 0;
-        // division is a function of the decimals of the token:
-        uint256 decimals = 10 ** IERC20Decimals(token).decimals();
-        return uint256(decimals * CHAINLINK_DENOMINATOR).div(tokenPrice);
+        // tokens that use the custom oracle implementation are called here.
+        return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -81,19 +73,14 @@ library LibUsdOracle {
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
         // oracles that are implmented within beanstalk should be placed here.
         if (token == C.WETH) {
-            uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
-            if (ethUsdPrice == 0) return 0;
-            return ethUsdPrice;
+            return LibEthUsdOracle.getEthUsdPrice(lookback);
         }
         if (token == C.WSTETH) {
-            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(0);
-            if (wstethUsdPrice == 0) return 0;
-            return wstethUsdPrice;
+            return LibWstethUsdOracle.getWstethUsdPrice(lookback);
         }
 
-        // tokens that use the default chainlink oracle implementation,
-        // or a custom oracle implementation are called here.
-        return getTokenPriceFromExternal(token, lookback);
+        // tokens that use the custom oracle implementation are called here.
+        return getTokenPriceFromExternal(token, 0, lookback);
     }
 
     /**
@@ -104,6 +91,7 @@ library LibUsdOracle {
      */
     function getTokenPriceFromExternal(
         address token,
+        uint256 tokenDecimals,
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -127,6 +115,7 @@ library LibUsdOracle {
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    tokenDecimals,
                     lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
@@ -166,6 +155,7 @@ library LibUsdOracle {
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
                 chainlinkOraclePriceAddress,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
                 lookback
             );
 
@@ -177,7 +167,7 @@ library LibUsdOracle {
         if (target == address(0)) target = address(this);
 
         (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, lookback)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback)
         );
 
         if (!success) return 0;

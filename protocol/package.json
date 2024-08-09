@@ -49,6 +49,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@openzeppelin/contracts": "5.0.2",
     "@openzeppelin/contracts-upgradeable": "5.0.2",
+    "@openzeppelin/merkle-tree": "1.0.7",
     "@prb/math": "v2.5.0",
     "@uniswap/v3-core": "v1.0.2-solc-0.8-simulate",
     "axios": "1.6.7",

@@ -89,10 +89,26 @@ const tractorFacetInterface = async () =>
 const drafter = async () => await ethers.getContractAt("Drafter", drafterAddr);
 
 const signRequisition = async (requisition, signer) => {
-  // Ethers treats hash as an unexpectedly encoded string, whereas solidity signs hash as bytes. So arrayify here.
-  requisition.signature = await signer.signMessage(
-    ethers.utils.arrayify(requisition.blueprintHash)
-  );
+  // https://docs.ethers.org/v5/api/signer/#Signer-signTypedData
+  // Ethers lib handles typed encoding according to EIP-712 (incl typehash prefixes).
+  domain = {
+    name: "Tractor", // Hashed under the hood by ethers
+    version: "1.0.0", // Hashed under the hood by ethers
+    chainId: 1,
+    verifyingContract: BEANSTALK
+  };
+  types = {
+    Blueprint: [
+      { name: "publisher", type: "address" },
+      { name: "data", type: "bytes" },
+      { name: "operatorPasteInstrs", type: "bytes32[]" },
+      { name: "maxNonce", type: "uint256" },
+      { name: "startTime", type: "uint256" },
+      { name: "endTime", type: "uint256" }
+    ]
+  };
+  value = requisition.blueprint;
+  requisition.signature = await signer._signTypedData(domain, types, value);
 };
 
 const getNormalBlueprintData = (data) => {
@@ -897,7 +913,7 @@ const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount, ve
 
   // call[1] - Increment counter by 100.
   advancedFarmCalls.push({
-    callData: (await tractorFacetInterface()).encodeFunctionData("updateCounter", [
+    callData: (await tractorFacetInterface()).encodeFunctionData("updatePublisherCounter", [
       counterId,
       CounterUpdateType.INCREASE,
       to6("100")
@@ -907,7 +923,9 @@ const draftDepositInternalBeansWithLimit = async (maxCumulativeDepositAmount, ve
 
   // call[2] - Get counter value (redundant with return of call[1], but illustrative).
   advancedFarmCalls.push({
-    callData: (await tractorFacetInterface()).encodeFunctionData("getCounter", [counterId]),
+    callData: (await tractorFacetInterface()).encodeFunctionData("getPublisherCounter", [
+      counterId
+    ]),
     clipboard: ethers.utils.hexlify("0x000000")
   });
 

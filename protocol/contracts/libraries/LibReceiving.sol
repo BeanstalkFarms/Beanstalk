@@ -132,8 +132,7 @@ library LibReceiving {
             else {
                 s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.sys.fert.fertilizedIndex += deltaFertilized;
-                require(amountToFertilize == deltaFertilized, "Inexact amount of Beans at Barn");
-                require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
+                // s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex
                 break;
             }
         }

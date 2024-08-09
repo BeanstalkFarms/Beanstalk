@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
+import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
@@ -145,6 +145,29 @@ contract SunriseTest is TestHelper {
         uint256 secondsLate = bound(secondsLate, 0, maxTimestamp - block.timestamp);
         skip(secondsLate);
         callSunriseAndCheckEvents(false);
+    }
+
+    /**
+     * @notice general sunrise test. Verfies that sunrise can only be called
+     * once an hour.
+     */
+    function test_multiple_sunrises(uint256 s, uint256 secondsLate) public {
+        // max season is type(uint32).max - 2.
+        s = bound(s, 1, type(uint32).max - 3);
+        season.setCurrentSeasonE(uint32(s));
+        warpToNextSeasonTimestamp();
+
+        uint256 maxTimestamp = (type(uint32).max * SEASON_DURATION + INITIAL_TIMESTAMP - 7200);
+        uint256 secondsLate = bound(secondsLate, 7200, 7200 + maxTimestamp - block.timestamp);
+        skip(secondsLate);
+        callSunriseAndCheckEvents(false);
+        // check that s.season.start has increased.
+
+        IMockFBeanstalk.Season memory seasonStruct = bs.time();
+
+        // verify season will revert.
+        vm.expectRevert("Season: Still current Season.");
+        bs.sunrise();
     }
 
     ///////// STEP SEASON /////////

@@ -69,7 +69,7 @@ async function reseed8(account, L2Beanstalk, mock = false) {
       urBeanLP
     ],
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
 
