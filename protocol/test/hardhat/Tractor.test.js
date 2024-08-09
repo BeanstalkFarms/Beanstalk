@@ -13,6 +13,7 @@ const {
   draftConvertUrBeanToUrLP,
   draftConvert,
   draftDepositInternalBeansWithLimit,
+  draftAutoFarm,
   RATIO_FACTOR,
   ConvertKind
 } = require("./utils/tractor.js");
@@ -79,7 +80,7 @@ describe("Tractor", function () {
 
     await bean.mint(owner.address, to6("10000000000"));
     await this.weth.mint(owner.address, to18("1000000000"));
-    await bean.mint(publisher.address, to6("20000"));
+    await bean.mint(publisher.address, to6("200000000"));
     await this.unripeBean.mint(publisher.address, to6("10000"));
     await this.unripeLP.mint(publisher.address, to6("3162.277660"));
 
@@ -391,6 +392,89 @@ describe("Tractor", function () {
         initPublisherBeans
       );
       expect(operatorPaid, "unpaid operator").to.be.gt(0);
+    });
+
+    it("Auto Farm", async function (verbose = false) {
+      console.log("Auto Farm");
+      // Give publisher Grown Stalk.
+      this.result = await this.siloFacet
+        .connect(publisher)
+        .deposit(bean.address, to6("10000"), EXTERNAL);
+      await this.seasonFacet.siloSunrise(to6("0"));
+      await time.increase(3600); // wait until end of season to get earned
+      await mine(25);
+      expect(
+        await this.siloGettersFacet.balanceOfGrownStalk(publisher.address, bean.address)
+      ).to.eq(toStalk("2"));
+
+      // Give publisher Earned Beans.
+      this.result = await this.siloFacet
+        .connect(publisher)
+        .deposit(bean.address, to6("10000"), EXTERNAL);
+      await this.seasonFacet.siloSunrise(to6("1000"));
+      await time.increase(3600);
+      await mine(25);
+      await this.seasonFacet.siloSunrise(to6("1000"));
+      expect(await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
+
+      // Capture init state.
+      const initPublisherStalkBalance = await this.siloGettersFacet.balanceOfStalk(
+        publisher.address
+      );
+      const initPublisherBeans = await bean.balanceOf(publisher.address);
+      const initOperatorBeans = await bean.balanceOf(operator.address);
+
+      let minEarnedBeans = to6("100");
+      let minMowSeasons = 24;
+      let tipToken = BEAN;
+      let tipAmount = to6("2");
+      let tipFromMode = 0; // EXTERNAL
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftAutoFarm(
+        minEarnedBeans,
+        minMowSeasons,
+        tipToken,
+        tipAmount,
+        tipFromMode,
+        false // verbose
+      );
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+      await signRequisition(this.requisition, publisher);
+      await this.tractorFacet.connect(publisher).publishRequisition(this.requisition);
+
+      // Operator data matches shape expected by blueprint. Each item is in a 32 byte slot.
+      let operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"], // to mode
+        [0] // external
+      );
+
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // Confirm final state.
+      expect(
+        await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address),
+        "publisher Earned Bean did not go to 0"
+      ).to.eq(0);
+
+      const publisherStalkGain =
+        (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
+      const operatorPaid = (await bean.balanceOf(operator.address)) - initOperatorBeans;
+      if (verbose) {
+        console.log(
+          "Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10)
+        );
+        console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      }
+
+      expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
+      expect(await bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
+        initPublisherBeans
+      );
+      expect(operatorPaid, "unpaid operator").to.be.eq(tipAmount);
     });
   });
 

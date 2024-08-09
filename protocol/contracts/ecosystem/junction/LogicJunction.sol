@@ -34,6 +34,14 @@ contract LogicJunction {
         return a != b;
     }
 
+    function and(bool a, bool b) public pure returns (bool) {
+        return a && b;
+    }
+
+    function or(bool a, bool b) public pure returns (bool) {
+        return a || b;
+    }
+
     function bytes32Switch(
         uint256 selector,
         bytes32[] calldata options
