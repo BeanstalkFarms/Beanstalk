@@ -349,15 +349,10 @@ const Chart = ({
   }, [timePeriod]);
 
   useEffect(() => {
-    if (!chart.current || !seriesData?.length) return;
+    if (!timePeriod || !chart.current || !seriesData?.length) return;
     areaSeries.current?.setData(seriesData);
 
-    const storedSetting = localStorage.getItem(`${storageKeyPrefix}TimePeriod`);
-    const storedTimePeriod = storedSetting
-      ? JSON.parse(storedSetting)
-      : undefined;
-
-    chart.current?.timeScale()?.setVisibleRange(storedTimePeriod);
+    chart.current?.timeScale()?.setVisibleRange(timePeriod);
 
     const getDataPoint = (mode: string) => {
       let _time = 0;
@@ -425,7 +420,6 @@ const Chart = ({
 
     function timeRangeChangeHandler(param: Range<Time> | null) {
       if (!param) return;
-      // console.log('param: ', param);
       const lastTimestamp = new Date((param.to.valueOf() as number) * 1000);
       const lastValue =
         seriesData.find((value) => value.time === param.to)?.value || 0;
@@ -443,10 +437,10 @@ const Chart = ({
       });
     }
 
-    chart.current.subscribeCrosshairMove(crosshairMoveHandler);
+    chart.current?.subscribeCrosshairMove(crosshairMoveHandler);
     chart.current
-      .timeScale()
-      .subscribeVisibleTimeRangeChange(timeRangeChangeHandler);
+      ?.timeScale()
+      ?.subscribeVisibleTimeRangeChange(timeRangeChangeHandler);
 
     return () => {
       chart.current?.unsubscribeCrosshairMove(crosshairMoveHandler);
@@ -454,7 +448,7 @@ const Chart = ({
         ?.timeScale()
         .unsubscribeVisibleTimeRangeChange(timeRangeChangeHandler);
     };
-  }, [seriesData, size, storageKeyPrefix]);
+  }, [seriesData, size, storageKeyPrefix, timePeriod]);
 
   const beforeFirstSeason =
     dataPoint && firstDataPoint
@@ -600,22 +594,22 @@ export type SingleAdvancedChartProps = {
   ChartProps;
 
 const SingleAdvancedChart = (props: SingleAdvancedChartProps) => (
-  <Stack position="relative">
-    <Stack
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: '250px',
-        overflow: 'clip',
-      }}
-    >
-      {/* {!props.seriesData.length && !props.isLoading && !props.error ? (
-        <ChartEmptyState />
-      ) : ( */}
+  // <Stack>
+  <Stack
+    sx={{
+      // position: 'relative',
+      width: '100%',
+      height: '250px',
+      overflow: 'clip',
+    }}
+  >
+    {!props.seriesData.length && !props.isLoading && !props.error ? (
+      <ChartEmptyState />
+    ) : (
       <Chart {...props} />
-      {/* )} */}
-    </Stack>
+    )}
   </Stack>
+  // </Stack>
 );
 
 export default SingleAdvancedChart;
