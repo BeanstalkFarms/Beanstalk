@@ -167,7 +167,7 @@ library LibGerminate {
         address account,
         uint32 lastMowedSeason,
         uint32 currentSeason
-    ) internal returns (uint128 firstGerminatingRoots) {
+    ) internal returns (uint256 firstGerminatingRoots) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         bool lastUpdateOdd = isSeasonOdd(lastMowedSeason);
         (uint256 firstStalk, uint256 secondStalk) = getGerminatingStalk(account, lastUpdateOdd);
