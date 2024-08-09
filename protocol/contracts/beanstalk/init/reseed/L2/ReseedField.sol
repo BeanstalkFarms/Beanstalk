@@ -9,12 +9,14 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C} from "contracts/C.sol";
 
 /**
- * @author Brean
+ * @author Brean, Deadmanwalking
  * @notice ReseedField re-initializes the Field.
  * @dev Plots are re-issued to existing farmers. Field is set to L1 state.
  */
 contract ReseedField {
     AppStorage internal s;
+
+    uint256 constant FIELD_ID = 0;
 
     struct Plot {
         uint256 podIndex;
@@ -31,43 +33,18 @@ contract ReseedField {
     /**
      * @notice Re-initializes the field.
      * @param accountPlots the plots for each account
-     * @param totalPods The total number of pods on L1.
-     * @param harvestable The number of harvestable pods on L1.
-     * @param harvested The number of harvested pods on L1.
-     * @param initialTemperature the initial Temperature of the field.
+     * @dev Receives an array of plots for each account and initializes them.
+     * On migration, we just split the array to stay under gas limits.
      */
-    function init(
-        MigratedPlotData[] calldata accountPlots,
-        uint256 totalPods,
-        uint256 harvestable,
-        uint256 harvested,
-        uint256 fieldId,
-        uint8 initialTemperature
-    ) external {
-        uint256 calculatedTotalPods;
+    function init(MigratedPlotData[] calldata accountPlots) external {
         for (uint i; i < accountPlots.length; i++) {
             for (uint j; j < accountPlots[i].plots.length; j++) {
                 uint256 podIndex = accountPlots[i].plots[j].podIndex;
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
-                s.accts[accountPlots[i].account].fields[fieldId].plots[podIndex] = podAmount;
-                s.accts[accountPlots[i].account].fields[fieldId].plotIndexes.push(podIndex);
+                s.accts[accountPlots[i].account].fields[FIELD_ID].plots[podIndex] = podAmount;
+                s.accts[accountPlots[i].account].fields[FIELD_ID].plotIndexes.push(podIndex);
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
-                calculatedTotalPods += podAmount;
             }
         }
-
-        //  perform verfication:
-        require(calculatedTotalPods == totalPods, "ReseedField: totalPods mismatch");
-        require(totalPods >= harvestable, "ReseedField: harvestable mismatch");
-        require(harvestable >= harvested, "ReseedField: harvested mismatch");
-
-        s.sys.fields[fieldId].pods = totalPods;
-        s.sys.fields[fieldId].harvestable = harvestable;
-        s.sys.fields[fieldId].harvested = harvested;
-
-        // soil demand initialization.
-        s.sys.weather.thisSowTime = type(uint32).max;
-        s.sys.weather.lastSowTime = type(uint32).max;
-        s.sys.weather.temp = initialTemperature;
     }
 }

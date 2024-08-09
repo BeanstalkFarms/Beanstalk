@@ -425,7 +425,8 @@ async function upgradeWithNewFacets({
   p = 0,
   verbose = false,
   account = null,
-  verify = false
+  verify = false,
+  checkGas = false
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
 
@@ -598,6 +599,10 @@ async function upgradeWithNewFacets({
     console.log("Upgrade transaction hash: " + result.hash);
     console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
     console.log("Total gas used: " + strDisplay(totalGasUsed));
+    gasLimit = ethers.BigNumber.from("21000000")
+    if (checkGas && totalGasUsed.gt(gasLimit)) {
+      console.log('\x1b[33m%s\x1b[0m', 'Gas used Exceeds Limit!');
+    }
   }
   return result;
 }
