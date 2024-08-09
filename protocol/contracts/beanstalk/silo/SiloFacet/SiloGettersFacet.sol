@@ -90,7 +90,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total amount deposit for all whitelisted tokens across all users.
      * @dev does not include germinating tokens.
      */
-    function getTotalDeposited() external view returns (uint256[] memory depositedAmounts) {
+    function getTotalSiloDeposited() external view returns (uint256[] memory depositedAmounts) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
         depositedAmounts = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
@@ -110,7 +110,7 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total bdv of all whitelisted tokens in the Silo across all users.
      * @dev does not include germinating bdv.
      */
-    function getTotalDepositedBdv() external view returns (uint256[] memory depositedBdvs) {
+    function getTotalSiloDepositedBdv() external view returns (uint256[] memory depositedBdvs) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
         depositedBdvs = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
@@ -189,7 +189,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice returns the bean denominated value ("bdv") of a set of tokens and amounts.
      */
-    function bdv(
+    function bdvs(
         address[] calldata tokens,
         uint256[] calldata amounts
     ) external view returns (uint256 _bdv) {
@@ -432,7 +432,7 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice Returns the balance of Grown Stalk for `account` for multiple tokens.
      */
-    function balanceOfGrownStalk(
+    function balanceOfGrownStalkMultiple(
         address account,
         address[] calldata tokens
     ) external view returns (uint256[] memory grownStalks) {
