@@ -37,4 +37,8 @@ contract MockFertilizerFacet is FertilizerFacet {
     function setBarnRaiseWell(address well) external {
         s.u[C.UNRIPE_LP].underlyingToken = well;
     }
+
+    function setBpf(uint128 bpf) external {
+        s.bpf = bpf;
+    }
 }

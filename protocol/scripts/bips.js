@@ -344,6 +344,52 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
   await deployContract("UsdOracle", oracleAccount, verbose);
 }
 
+async function bipMiscellaneousImprovements(mock = true, account = undefined, verbose = true) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    initFacetName: "InitBipMiscImprovements",
+    facetNames: [
+      "UnripeFacet",
+      "ConvertFacet",
+      "ConvertGettersFacet",
+      "SeasonFacet",
+      "SeasonGettersFacet",
+      "FertilizerFacet"
+    ],
+    libraryNames: [
+      "LibGauge",
+      "LibIncentive",
+      "LibLockedUnderlying",
+      "LibWellMinting",
+      "LibGerminate",
+      "LibConvert"
+    ],
+    facetLibraries: {
+      UnripeFacet: ["LibLockedUnderlying"],
+      ConvertFacet: ["LibConvert"],
+      SeasonFacet: [
+        "LibGauge",
+        "LibIncentive",
+        "LibLockedUnderlying",
+        "LibWellMinting",
+        "LibGerminate"
+      ],
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+    },
+    selectorsToRemove: [],
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
+}
+
 exports.bip29 = bip29;
 exports.bip30 = bip30;
 exports.bip34 = bip34;
@@ -354,3 +400,4 @@ exports.bipSeedGauge = bipSeedGauge;
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin;
 exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth;
 exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth;
+exports.bipMiscellaneousImprovements = bipMiscellaneousImprovements;

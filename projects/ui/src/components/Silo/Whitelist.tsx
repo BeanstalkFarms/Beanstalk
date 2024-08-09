@@ -402,7 +402,53 @@ const Whitelist: FC<{
                                     />
                                   </Box>
                                   <Row>×</Row>
-                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 245 }}>
+                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
+                                    {isUnripeLP ? (
+                                      <Stat
+                                        title="Chop Amount"
+                                        gap={0.25}
+                                        variant="h4"
+                                        amount={`${unripeTokens[token.address]?.penalty?.times(100).toFixed(3)}%`}
+                                        subtitle="The amount of BEANwstETH received for Chopping 1 urBEANwstETH."
+                                      />
+                                    ) : (
+                                      <Stat
+                                        title="Chop Rate"
+                                        gap={0.25}
+                                        variant="h4"
+                                        amount={`1 - ${(
+                                          unripeTokens[token.address]
+                                            ?.chopPenalty || ZERO_BN
+                                        ).toFixed(4)}%`}
+                                        subtitle={
+                                          <>
+                                            The current penalty for Chopping
+                                            <br />
+                                            {token.symbol} for{' '}
+                                            {
+                                              unripeUnderlyingTokens[
+                                                token.address
+                                              ].symbol
+                                            }
+                                            .{' '}
+                                            <Link
+                                              href="https://docs.bean.money/almanac/farm/barn#chopping"
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              underline="hover"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                              }}
+                                            >
+                                              Learn more
+                                            </Link>
+                                          </>
+                                        }
+                                      />
+                                    )}
+                                  </Box>
+                                  <Row>×</Row>
+                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
                                     <Stat
                                       title="% Deposited"
                                       gap={0.25}

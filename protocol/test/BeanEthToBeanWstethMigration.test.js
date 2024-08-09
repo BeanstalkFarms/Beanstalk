@@ -27,7 +27,8 @@ async function fastForwardHour() {
   await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp])
 }
 
-testIfRpcSet('Bean:Eth to Bean:Wsteth Migration', function () {
+// Skipping because this migration already occured.
+describe.skip('Bean:Eth to Bean:Wsteth Migration', function () {
   before(async function () {
 
     [user, user2] = await ethers.getSigners()

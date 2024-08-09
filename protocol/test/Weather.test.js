@@ -82,7 +82,7 @@ describe('Complex Weather', function () {
         await this.fertilizer.setFertilizerE(false, to6('0'))
         await this.season.setYieldE(this.testData.startingWeather)
         await this.season.setBeanToMaxLpGpPerBdvRatio(to18(this.testData.initialPercentToLp))
-        this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
+        await this.bean.connect(user).burn(await this.bean.balanceOf(userAddress))
         this.dsoil = this.testData.lastSoil
         this.startSoil = this.testData.startingSoil
         this.endSoil = this.testData.endingSoil
@@ -138,12 +138,12 @@ describe('Complex Weather', function () {
     })
   })
 
-  // note: podrate is exremely low.
+  // note: podrate is extremely high.
   describe("Extreme Weather", async function () {
     before(async function () {
       await this.season.setLastDSoilE('100000');
       await this.bean.mint(userAddress, '1000000000')
-      await this.field.incrementTotalPodsE('100000000000');
+      await this.field.incrementTotalPodsE('100000000000000');
     })
 
     beforeEach(async function () {
@@ -185,23 +185,13 @@ describe('Complex Weather', function () {
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
       const weather = await this.seasonGetter.weather();
-      expect(weather.t).to.equal(7)
+      expect(weather.t).to.equal(9)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(1000)
     })
 
     it("lastSowTime max", async function () {
       await this.season.setLastSowTimeE('940')
-      await this.season.setNextSowTimeE('1000')
-      await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
-      const weather = await this.seasonGetter.weather();
-      expect(weather.t).to.equal(7)
-      expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
-      expect(weather.lastSowTime).to.equal(1000)
-    })
-
-    it("lastSowTime max", async function () {
-      await this.season.setLastSowTimeE('900')
       await this.season.setNextSowTimeE('1000')
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
       const weather = await this.seasonGetter.weather();
@@ -212,10 +202,20 @@ describe('Complex Weather', function () {
 
     it("lastSowTime max", async function () {
       await this.season.setLastSowTimeE('900')
+      await this.season.setNextSowTimeE('1000')
+      await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
+      const weather = await this.seasonGetter.weather();
+      expect(weather.t).to.equal(10)
+      expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
+      expect(weather.lastSowTime).to.equal(1000)
+    })
+
+    it("lastSowTime max", async function () {
+      await this.season.setLastSowTimeE('900')
       await this.season.setNextSowTimeE(MAX_UINT32)
       await this.season.calcCaseIdE(ethers.utils.parseEther('1'), '1');
       const weather = await this.seasonGetter.weather();
-      expect(weather.t).to.equal(7)
+      expect(weather.t).to.equal(10)
       expect(weather.thisSowTime).to.equal(parseInt(MAX_UINT32))
       expect(weather.lastSowTime).to.equal(parseInt(MAX_UINT32))
     })

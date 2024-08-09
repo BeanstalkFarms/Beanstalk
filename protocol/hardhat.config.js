@@ -12,6 +12,10 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
+// BIP Misc Improvements
+const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
+
+const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
   mintUsdc,
@@ -24,15 +28,12 @@ const {
   mintEth,
   getBeanstalk
 } = require("./utils");
-const { upgradeWithNewFacets } = require("./scripts/diamond");
 const { BEANSTALK, PUBLIUS, BEAN_3_CURVE, PRICE } = require("./test/utils/constants.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMigrateUnripeBeanEthToBeanSteth } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip16, ebip17 } = require("./scripts/ebips.js");
-const { finishWstethMigration } = require("./scripts/beanWstethMigration.js");
-const { impersonateWsteth, impersonateBean } = require("./scripts/impersonate.js");
-const { deployPriceContract } = require("./scripts/price.js");
+const { updateBeanstalkForUI } = require("./scripts/updateBeanstalkForUI.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -225,15 +226,13 @@ task("deployWstethMigration", async function () {
   await bipMigrateUnripeBeanEthToBeanSteth();
 });
 
-task("UI-deployWstethMigration", async function () {
-  await impersonateBean();
-  wsteth = await ethers.getContractAt("MockWsteth", "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0");
-  const stethPerWsteth = await wsteth.stEthPerToken();
-  await impersonateWsteth();
-  await wsteth.setStEthPerToken(stethPerWsteth);
-  await bipMigrateUnripeBeanEthToBeanSteth(true, undefined, true, undefined);
-  await finishWstethMigration(undefined, true);
-  await deployPriceContract();
+
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
+task("updateBeanstalkForUI", async function () {
+  await updateBeanstalkForUI();
 });
 
 /// EBIPS /// 
@@ -343,7 +342,7 @@ module.exports = {
         version: "0.8.17",
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 1000
           }
         }
@@ -357,7 +356,7 @@ module.exports = {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   },
   mocha: {
     timeout: 100000000

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import {
   GrownStalkPerBdvSnapshotsDocument,
@@ -128,6 +129,7 @@ export function useChartSetupData() {
       sdk.tokens.BEAN,
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.UNRIPE_BEAN,
       sdk.tokens.UNRIPE_BEAN_WSTETH,
     ];
@@ -135,6 +137,7 @@ export function useChartSetupData() {
     const lpTokensToChart = [
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.BEAN_ETH_UNIV2_LP,
       BEAN_LUSD_LP[1],
       BEAN_CRV3_V1_LP[1],
