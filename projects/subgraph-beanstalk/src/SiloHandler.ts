@@ -444,19 +444,6 @@ export function handleWhitelistToken(event: WhitelistToken): void {
 
   takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
   setting.save();
-
-  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new WhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.stalk = event.params.stalk;
-  rawEvent.seeds = event.params.seeds;
-  rawEvent.selector = event.params.selector.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 
 export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
@@ -469,20 +456,6 @@ export function handleWhitelistToken_V3(event: WhitelistToken_V3): void {
 
   takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
   setting.save();
-
-  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new WhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.stalk = event.params.stalk;
-  rawEvent.seeds = ZERO_BI;
-  rawEvent.stalkPerSeason = event.params.stalkEarnedPerSeason;
-  rawEvent.selector = event.params.selector.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 // V4 whitelist for seed gauge is in GaugeHandler
 
@@ -497,16 +470,6 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
     silo.dewhitelistedTokens = currentDewhitelist;
     silo.save();
   }
-
-  let id = "dewhitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new DewhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 
 export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSeason): void {

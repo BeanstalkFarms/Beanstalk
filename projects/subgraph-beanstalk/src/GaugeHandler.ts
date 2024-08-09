@@ -158,16 +158,6 @@ export function handleWhitelistToken_BIP45(event: WhitelistToken): void {
 
   takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
   siloSettings.save();
-
-  let id = "whitelistToken-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let rawEvent = new WhitelistTokenEntity(id);
-  rawEvent.hash = event.transaction.hash.toHexString();
-  rawEvent.logIndex = event.logIndex.toI32();
-  rawEvent.protocol = event.address.toHexString();
-  rawEvent.token = event.params.token.toHexString();
-  rawEvent.blockNumber = event.block.number;
-  rawEvent.createdAt = event.block.timestamp;
-  rawEvent.save();
 }
 
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {

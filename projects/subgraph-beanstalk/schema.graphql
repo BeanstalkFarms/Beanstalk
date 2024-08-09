@@ -1491,48 +1491,6 @@ type PodOrderCancelled implements MarketplaceEvent @entity(immutable: true) {
   createdAt: BigInt!
 }
 
-type WhitelistToken implements SiloEvent @entity(immutable: true) {
-  "whitelistToken-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  "Token address whitelisted"
-  token: String!
-  "Stalk per BDV"
-  stalk: BigInt
-  "Seeds per BDV"
-  seeds: BigInt
-  "Stalk earned per season"
-  stalkPerSeason: BigInt
-  "Selector for token"
-  selector: String
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type DewhitelistToken implements SiloEvent @entity(immutable: true) {
-  "dewhitelistToken-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  "Token address dewhitelisted"
-  token: String!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
 # For each applicable address there will be a max of two germinating entities - one even and one odd
 type Germinating @entity {
   "Address-(EVEN|ODD)"
