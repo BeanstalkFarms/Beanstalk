@@ -14,7 +14,7 @@ import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {C} from "../C.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFacet.sol";
 
 /**
  * @title LibGauge
@@ -197,7 +197,7 @@ library LibGauge {
 
         (bool success, bytes memory data) = target.staticcall(
             abi.encodeWithSelector(
-                ss.gaugePointImplementation.selector,
+                selector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
                 percentDepositedBdv
@@ -209,21 +209,6 @@ library LibGauge {
             newGaugePoints := mload(add(data, add(0x20, 0)))
         }
     }
-
-    /**
-     * @notice Calculates the new gauge points for the given token.
-     * @dev Function calls the selector of the token's gauge point function.
-     * Currently all assets uses the default GaugePoint Function.
-     * Returns the current gauge points if failed rather than revert.
-     * {GaugePointFacet.defaultGaugePointFunction()}
-     */
-    function calcGaugePointsFromAddress(
-        address target,
-        bytes4 selector,
-        uint256 gaugePoints,
-        uint256 optimalPercentDepositedBdv,
-        uint256 percentDepositedBdv
-    ) internal view returns (uint256 newGaugePoints) {}
 
     /**
      * @notice Updates the average grown stalk per BDV per Season for whitelisted Beanstalk assets.
@@ -259,7 +244,7 @@ library LibGauge {
 
         // update the average grown stalk per BDV per Season.
         // beanstalk must exist for a minimum of the catchup season in order to update the average.
-        if (s.sys.season.current > s.sys.seedGaugeSettings.targetSeasonsToCatchUp) {
+        if (s.sys.season.current > s.sys.evaluationParameters.targetSeasonsToCatchUp) {
             updateAverageStalkPerBdvPerSeason();
         }
 
@@ -319,7 +304,7 @@ library LibGauge {
         // Thus, safeCast was determined is to be unnecessary.
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = uint128(
             getAverageGrownStalkPerBdv().mul(BDV_PRECISION).div(
-                s.sys.seedGaugeSettings.targetSeasonsToCatchUp
+                s.sys.evaluationParameters.targetSeasonsToCatchUp
             )
         );
         emit UpdateAverageStalkPerBdvPerSeason(s.sys.seedGauge.averageGrownStalkPerBdvPerSeason);
@@ -365,11 +350,11 @@ library LibGauge {
         uint256 beanToMaxLpGpPerBdvRatio
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 beanMaxLpGpRatioRange = s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio -
-            s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
+        uint256 beanMaxLpGpRatioRange = s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio -
+            s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio;
         return
             beanToMaxLpGpPerBdvRatio.mul(beanMaxLpGpRatioRange).div(ONE_HUNDRED_PERCENT).add(
-                s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio
+                s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio
             );
     }
 }

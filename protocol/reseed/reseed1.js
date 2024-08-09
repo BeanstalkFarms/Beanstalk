@@ -62,14 +62,14 @@ async function reseed1(account) {
       }
     }
   }
-  // add the BeanL2MigrationFacet, remove all selectors other than
+  // add the L2MigrationFacet, remove all selectors other than
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: ["BeanL2MigrationFacet"],
+    facetNames: ["L2MigrationFacet", "L1TokenFacet"],
     facetsToRemove: beanstalkSelectors,
-    initFacetName: "InitL2Migration",
+    initFacetName: "ReseedL2Migration",
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
   console.log("-----------------------------------");

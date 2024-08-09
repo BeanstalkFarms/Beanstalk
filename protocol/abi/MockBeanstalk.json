@@ -1566,6 +1566,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      }
+    ],
+    "name": "TractorVersionSet",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -1700,6 +1713,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
         "internalType": "bytes32",
         "name": "counterId",
         "type": "bytes32"
@@ -1711,6 +1729,38 @@
         "internalType": "uint256",
         "name": "count",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "counterId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getPublisherCounter",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTractorVersion",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -1869,7 +1919,7 @@
         "type": "uint256"
       }
     ],
-    "name": "updateCounter",
+    "name": "updatePublisherCounter",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1877,6 +1927,19 @@
         "type": "uint256"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      }
+    ],
+    "name": "updateTractorVersion",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -4642,6 +4705,35 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMigrationHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
         "components": [
           {
             "internalType": "address",
@@ -4709,6 +4801,101 @@
     "name": "redeemDepositsAndInternalBalances",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "depositIds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint128[]",
+            "name": "amounts",
+            "type": "uint128[]"
+          },
+          {
+            "internalType": "uint128[]",
+            "name": "bdvs",
+            "type": "uint128[]"
+          }
+        ],
+        "internalType": "struct L2ContractMigrationFacet.AccountDepositData[]",
+        "name": "deposits",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct L2ContractMigrationFacet.AccountInternalBalance[]",
+        "name": "internalBalances",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ownerRoots",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "verifyMigrationDepositsAndInternalBalances",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "verifyMigrationSignature",
+    "outputs": [],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -5810,7 +5997,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "",
         "type": "tuple"
       }
@@ -6323,7 +6510,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "updatedSeedGaugeSettings",
         "type": "tuple"
       }
@@ -6364,9 +6551,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -6434,9 +6621,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -6509,9 +6696,9 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint32",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint32"
+        "type": "uint48"
       },
       {
         "internalType": "uint32",
@@ -7215,6 +7402,44 @@
         "type": "address"
       }
     ],
+    "name": "getGerminatingStem",
+    "outputs": [
+      {
+        "internalType": "int96",
+        "name": "germinatingStem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGerminatingStems",
+    "outputs": [
+      {
+        "internalType": "int96[]",
+        "name": "germinatingStems",
+        "type": "int96[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
     "name": "getGerminatingTotalDeposited",
     "outputs": [
       {
@@ -7239,6 +7464,35 @@
       {
         "internalType": "uint256",
         "name": "_bdv",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "depositId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getIndexForDepositId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -7629,9 +7883,9 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint48",
             "name": "stalkIssuedPerBdv",
-            "type": "uint32"
+            "type": "uint48"
           },
           {
             "internalType": "uint32",
@@ -7706,28 +7960,6 @@
             "internalType": "struct Implementation",
             "name": "liquidityWeightImplementation",
             "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes4",
-                "name": "selector",
-                "type": "bytes4"
-              },
-              {
-                "internalType": "bytes1",
-                "name": "encodeType",
-                "type": "bytes1"
-              }
-            ],
-            "internalType": "struct Implementation",
-            "name": "oracleImplementation",
-            "type": "tuple"
           }
         ],
         "internalType": "struct AssetSettings",
@@ -7741,6 +7973,19 @@
   {
     "inputs": [],
     "name": "totalEarnedBeans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalRainRoots",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8253,30 +8498,6 @@
         "type": "uint256"
       }
     ],
-    "name": "getTokenPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
     "name": "getTokenPriceFromExternal",
     "outputs": [
       {
@@ -8296,7 +8517,7 @@
         "type": "address"
       }
     ],
-    "name": "getUsdPrice",
+    "name": "getTokenUsdPrice",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8320,7 +8541,50 @@
         "type": "uint256"
       }
     ],
-    "name": "getUsdPriceWithLookback",
+    "name": "getTokenUsdTwap",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getUsdTokenPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUsdTokenTwap",
     "outputs": [
       {
         "internalType": "uint256",
@@ -8345,28 +8609,12 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "currentGaugePoints",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "percentOfDepositedBdv",
-        "type": "uint256"
-      }
-    ],
-    "name": "defaultGaugePointFunction",
+    "inputs": [],
+    "name": "noWeight",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "newGaugePoints",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -9133,7 +9381,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct SeedGaugeSettings",
+        "internalType": "struct EvaluationParameters",
         "name": "",
         "type": "tuple"
       }
@@ -9849,6 +10097,64 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "currentGaugePoints",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "defaultGaugePointFunction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newGaugePoints",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "percentOfDepositedBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "defaultGaugePointFunction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newGaugePoints",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "value",
         "type": "uint256"
       },
@@ -10097,6 +10403,96 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "exploitEarnedBeans",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exploitFertilizer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exploitPodOrderBeans",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exploitSop",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exploitUserInternalTokenBalance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exploitUserSendTokenInternal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revert_netFlow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revert_oneOutFlow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revert_outFlow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revert_supplyChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revert_supplyIncrease",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "stealBeans",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -10211,130 +10607,6 @@
       }
     ],
     "name": "withdrawForConvertE",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "entitlementsMatchBalances",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitBurnBeans",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitBurnStalk0",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitBurnStalk1",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitFertilizer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitMintBeans0",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitMintBeans1",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitMintBeans2",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitMintBeans3",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "sopWell",
-        "type": "address"
-      }
-    ],
-    "name": "exploitSop",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitTokenBalance",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitUserDoubleSendTokenExternal",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitUserInternalTokenBalance",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitUserSendTokenExternal0",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitUserSendTokenExternal1",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "exploitUserSendTokenInternal",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11110,6 +11382,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "token",
         "type": "address"
       },
@@ -11130,39 +11407,6 @@
       }
     ],
     "name": "mockIncrementGermination",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint96",
-        "name": "gaugePoints",
-        "type": "uint96"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "mockInitalizeGaugeForToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11223,6 +11467,39 @@
   {
     "inputs": [],
     "name": "mockUpdateAverageStalkPerBdvPerSeason",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "gaugePointSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "bytes4",
+        "name": "liquidityWeightSelector",
+        "type": "bytes4"
+      },
+      {
+        "internalType": "uint96",
+        "name": "gaugePoints",
+        "type": "uint96"
+      },
+      {
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "mockinitializeGaugeForToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11324,6 +11601,11 @@
         "internalType": "uint256",
         "name": "caseId",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "oracleFailure",
+        "type": "bool"
       }
     ],
     "name": "seedGaugeSunSunrise",
@@ -11811,14 +12093,14 @@
         "type": "bytes4"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint48",
         "name": "stalkIssuedPerBdv",
-        "type": "uint16"
+        "type": "uint48"
       },
       {
-        "internalType": "uint24",
+        "internalType": "uint32",
         "name": "stalkEarnedPerSeason",
-        "type": "uint24"
+        "type": "uint32"
       }
     ],
     "name": "mockWhitelistToken",

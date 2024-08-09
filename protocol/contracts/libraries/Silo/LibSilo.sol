@@ -252,6 +252,17 @@ library LibSilo {
         s.sys.silo.roots = s.sys.silo.roots.sub(roots);
         s.accts[account].roots = s.accts[account].roots.sub(roots);
 
+        // If it is Raining and the account now has less roots than the
+        // account's current rain roots, set the account's rain roots
+        // to the account's current roots and subtract the difference
+        // from Beanstalk's total rain roots.
+        if (s.accts[account].sop.rainRoots > s.accts[account].roots) {
+            uint256 deltaRoots = s.accts[account].sop.rainRoots.sub(s.accts[account].roots);
+            s.accts[account].sop.rainRoots = s.accts[account].roots;
+            // decrease system rain roots
+            s.sys.rain.roots = s.sys.rain.roots.sub(deltaRoots);
+        }
+
         // emit event.
         emit StalkBalanceChanged(account, -int256(stalk), -int256(roots));
     }
@@ -302,6 +313,13 @@ library LibSilo {
         s.accts[sender].roots = s.accts[sender].roots.sub(roots);
         emit StalkBalanceChanged(sender, -int256(stalk), -int256(roots));
 
+        // Rain roots cannot be transferred, burn them
+        if (s.accts[sender].sop.rainRoots > s.accts[sender].roots) {
+            uint256 deltaRoots = s.accts[sender].sop.rainRoots.sub(s.accts[sender].roots);
+            s.accts[sender].sop.rainRoots = s.accts[sender].roots;
+            s.sys.rain.roots = s.sys.rain.roots.sub(deltaRoots);
+        }
+
         // Add Stalk and Roots to the 'recipient' balance.
         s.accts[recipient].stalk = s.accts[recipient].stalk.add(stalk);
         s.accts[recipient].roots = s.accts[recipient].roots.add(roots);
@@ -346,7 +364,7 @@ library LibSilo {
         address recipient,
         address token,
         AssetsRemoved memory ar
-    ) internal {
+    ) external {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 stalkPerBDV = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
 
@@ -431,17 +449,26 @@ library LibSilo {
         uint32 currentSeason = s.sys.season.current;
 
         // End account germination.
+        uint256 firstGerminatingRoots;
         if (lastUpdate < currentSeason) {
-            LibGerminate.endAccountGermination(account, lastUpdate, currentSeason);
+            firstGerminatingRoots = LibGerminate.endAccountGermination(
+                account,
+                lastUpdate,
+                currentSeason
+            );
         }
 
         // sop data only needs to be updated once per season,
         // if it started raining and it's still raining, or there was a sop
+
         if (s.sys.season.rainStart > s.sys.season.stemStartSeason) {
-            if (lastUpdate <= s.sys.season.rainStart && lastUpdate <= currentSeason) {
+            if (
+                (lastUpdate <= s.sys.season.rainStart || s.accts[account].lastRain > 0) &&
+                lastUpdate <= currentSeason
+            ) {
                 // Increments `plenty` for `account` if a Flood has occured.
                 // Saves Rain Roots for `account` if it is Raining.
-                LibFlood.handleRainAndSops(account, lastUpdate);
+                LibFlood.handleRainAndSops(account, lastUpdate, firstGerminatingRoots);
             }
         }
 
@@ -634,7 +661,7 @@ library LibSilo {
 
         // "removing" deposits is equivalent to "burning" a batch of ERC1155 tokens.
         if (emission == ERC1155Event.EMIT_BATCH_EVENT) {
-            emit TransferBatch(msg.sender, account, address(0), removedDepositIDs, amounts);
+            emit TransferBatch(LibTractor._user(), account, address(0), removedDepositIDs, amounts);
         }
 
         emit RemoveDeposits(
@@ -665,9 +692,7 @@ library LibSilo {
         int96 endStem,
         uint128 bdv
     ) internal pure returns (uint256) {
-        uint128 reward = uint128(uint96(endStem.sub(startStem))).mul(bdv).div(PRECISION);
-
-        return reward;
+        return uint256(uint96(endStem.sub(startStem))).mul(bdv);
     }
 
     /**

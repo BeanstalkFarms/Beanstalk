@@ -98,6 +98,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
     }
 
@@ -106,6 +110,10 @@ contract MockSeasonFacet is SeasonFacet {
         for (uint256 i; i < amount; ++i) {
             s.sys.season.current += 1;
             stepOracle();
+            LibGerminate.endTotalGermination(
+                s.sys.season.current,
+                LibWhitelistedTokens.getWhitelistedTokens()
+            );
             mockStartSop();
         }
         s.sys.season.sunriseBlock = uint32(block.number);
@@ -117,6 +125,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         LibFlood.handleRain(2);
     }
 
@@ -126,6 +138,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -136,6 +152,10 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.sunriseBlock = uint32(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
+        LibGerminate.endTotalGermination(
+            s.sys.season.current,
+            LibWhitelistedTokens.getWhitelistedTokens()
+        );
         mockStartSop();
         mockStepSilo(amount);
     }
@@ -147,12 +167,16 @@ contract MockSeasonFacet is SeasonFacet {
         stepSun(deltaB, caseId);
     }
 
-    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId, bool oracleFailure) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.sunriseBlock = uint32(block.number);
-        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, false);
+        updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         stepSun(deltaB, caseId);
+    }
+
+    function seedGaugeSunSunrise(int256 deltaB, uint256 caseId) public {
+        seedGaugeSunSunrise(deltaB, caseId, false);
     }
 
     function sunTemperatureSunrise(int256 deltaB, uint256 caseId, uint32 t) public {
@@ -381,21 +405,22 @@ contract MockSeasonFacet is SeasonFacet {
 
         ds.supportedInterfaces[type(IERC1155).interfaceId] = true;
         ds.supportedInterfaces[0x0e89341c] = true;
+        uint48 stalk = 1e10;
 
         uint24 currentSeason = uint24(s.sys.season.current);
 
         s.sys.silo.assetSettings[C.BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[C.UNRIPE_BEAN].milestoneStem = 0;
 
         s.sys.silo.assetSettings[address(C.unripeLP())].stalkEarnedPerSeason = 2 * 1e6;
-        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = 10000;
+        s.sys.silo.assetSettings[address(C.unripeLP())].stalkIssuedPerBdv = stalk;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneSeason = currentSeason;
         s.sys.silo.assetSettings[address(C.unripeLP())].milestoneStem = 0;
 
@@ -420,8 +445,8 @@ contract MockSeasonFacet is SeasonFacet {
         return uint256(s.sys.weather.temp);
     }
 
-    function getEthUsdPrice() external view returns (uint256) {
-        return LibEthUsdOracle.getEthUsdPrice();
+    function getUsdEthPrice() external view returns (uint256) {
+        return LibEthUsdOracle.getUsdEthPrice();
     }
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256) {
@@ -432,7 +457,8 @@ contract MockSeasonFacet is SeasonFacet {
         return
             LibChainlinkOracle.getPrice(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0
             );
     }
 
@@ -441,6 +467,7 @@ contract MockSeasonFacet is SeasonFacet {
             LibChainlinkOracle.getTwap(
                 C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
                 lookback
             );
     }
@@ -511,7 +538,7 @@ contract MockSeasonFacet is SeasonFacet {
         return currentGaugePoints;
     }
 
-    function mockInitalizeGaugeForToken(
+    function mockinitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -550,6 +577,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function mockIncrementGermination(
+        address account,
         address token,
         uint128 amount,
         uint128 bdv,
@@ -740,5 +768,9 @@ contract MockSeasonFacet is SeasonFacet {
         if (lastSnapshot.length > 0) {
             (deltaB, , , ) = LibWellMinting.twaDeltaB(well, lastSnapshot);
         }
+    }
+
+    function setRecieverForL1Migration(address owner, address reciever) external {
+        s.sys.l2Migration.account[owner].reciever = reciever;
     }
 }

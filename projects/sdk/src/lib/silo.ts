@@ -405,7 +405,8 @@ export class Silo {
    */
   async getSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    return Silo.sdk.tokens.SEEDS.fromHuman(1);
+    // return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
   }
 
   /**

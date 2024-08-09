@@ -63,8 +63,14 @@ export const parseError = (error: any) => {
     case 'UNSUPPORTED_OPERATION':
     case 'CALL_EXCEPTION':
       if (error.reason) {
-        errorMessage.message = error.reason.replace('execution reverted: ', '');
-        return errorMessage;
+        if (error.reason.includes('viem')) {
+          const _message = error.reason.substring(error.reason.indexOf('execution reverted: '));
+          errorMessage.message = _message.replace('execution reverted: ', '');
+          return errorMessage;
+        } else {
+          errorMessage.message = error.reason.replace('execution reverted: ', '');
+          return errorMessage;
+        }
       }
 
       if (error.data && error.data.message) {

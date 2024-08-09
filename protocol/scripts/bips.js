@@ -59,7 +59,6 @@ async function bipMorningAuction(mock = true, account = undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
   }
-
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [

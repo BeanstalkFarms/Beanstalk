@@ -217,6 +217,9 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 newIndex = index.add(harvestablePods);
         s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
         s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+        s.accts[account].fields[fieldId].piIndex[newIndex] =
+            s.accts[account].fields[fieldId].plotIndexes.length -
+            1;
     }
 
     //////////////////// CONFIG /////////////////////
@@ -447,6 +450,16 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         for (uint256 i = 0; i < plotIndexes.length; i++) {
             uint256 index = plotIndexes[i];
             plots[i] = Plot(index, s.accts[account].fields[fieldId].plots[index]);
+        }
+    }
+
+    /**
+     * @notice returns the number of pods owned by `account` in a field.
+     */
+    function balanceOfPods(address account, uint256 fieldId) external view returns (uint256 pods) {
+        uint256[] memory plotIndexes = s.accts[account].fields[fieldId].plotIndexes;
+        for (uint256 i = 0; i < plotIndexes.length; i++) {
+            pods += s.accts[account].fields[fieldId].plots[plotIndexes[i]];
         }
     }
 }

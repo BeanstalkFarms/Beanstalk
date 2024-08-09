@@ -54,11 +54,16 @@ contract Order is Listing {
     ) internal returns (bytes32 id) {
         require(beanAmount > 0, "Marketplace: Order amount must be > 0.");
         require(podOrder.pricePerPod > 0, "Marketplace: Pod price must be greater than 0.");
+        require(
+            podOrder.minFillAmount > 0,
+            "Marketplace: Minimum fill amount must be greater than 0."
+        );
 
         id = _getOrderId(podOrder);
 
         if (s.sys.podOrders[id] > 0) _cancelPodOrder(podOrder, LibTransfer.To.INTERNAL);
         s.sys.podOrders[id] = beanAmount;
+        s.sys.orderLockedBeans += beanAmount;
 
         emit PodOrderCreated(
             podOrder.orderer,
@@ -103,6 +108,7 @@ contract Order is Listing {
         uint256 costInBeans = (podAmount * podOrder.pricePerPod) / 1000000;
         require(costInBeans <= s.sys.podOrders[id], "Marketplace: Not enough beans in order.");
         s.sys.podOrders[id] = s.sys.podOrders[id] - costInBeans;
+        s.sys.orderLockedBeans -= costInBeans;
 
         LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
 
@@ -134,6 +140,7 @@ contract Order is Listing {
     function _cancelPodOrder(PodOrder memory podOrder, LibTransfer.To mode) internal {
         bytes32 id = _getOrderId(podOrder);
         uint256 amountBeans = s.sys.podOrders[id];
+        s.sys.orderLockedBeans -= amountBeans;
         LibTransfer.sendToken(C.bean(), amountBeans, podOrder.orderer, mode);
         delete s.sys.podOrders[id];
         emit PodOrderCancelled(podOrder.orderer, id);

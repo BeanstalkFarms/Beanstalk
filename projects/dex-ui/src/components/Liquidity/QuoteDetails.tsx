@@ -82,11 +82,11 @@ const QuoteDetails = ({
     }
 
     if (type === "FORWARD_SWAP") {
-      return `${quote.estimate.toHuman("short")} ${wellTokens![1].symbol}`;
+      return `${quote.estimate.toHuman("short")} ${wellTokens?.[1].symbol}`;
     }
 
     if (type === "REVERSE_SWAP") {
-      return `${quote.estimate.toHuman("short")} ${wellTokens![0].symbol}`;
+      return `${quote.estimate.toHuman("short")} ${wellTokens?.[0].symbol}`;
     }
 
     if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
@@ -103,7 +103,7 @@ const QuoteDetails = ({
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
       const _quoteValue = inputs as TokenValue[];
       const allTokensValue: string[] = [];
-      if (!wellTokens!.length || wellTokens!.length !== _quoteValue.length) {
+      if (!wellTokens?.length || wellTokens.length !== _quoteValue.length) {
         return null;
       }
       wellTokens?.forEach((token, index) => {
@@ -114,13 +114,13 @@ const QuoteDetails = ({
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
       const _quoteValue = quote?.quote as TokenValue;
-      return `${_quoteValue.toHuman("short")} ${wellTokens![selectedTokenIndex || 0]!.symbol}`;
+      return `${_quoteValue.toHuman("short")} ${wellTokens?.[selectedTokenIndex || 0]?.symbol}`;
     }
 
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced) {
       const _quoteValue = quote?.quote as TokenValue[];
       const allTokensValue: string[] = [];
-      if (!wellTokens!.length || wellTokens!.length !== _quoteValue.length) {
+      if (!wellTokens?.length || wellTokens.length !== _quoteValue.length) {
         return null;
       }
       wellTokens?.forEach((token, index) => {
@@ -139,40 +139,55 @@ const QuoteDetails = ({
           let totalUSDValue = TokenValue.ZERO;
           let valueInUSD;
           if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
-            valueInUSD = tokenPrices![selectedTokenIndex!]!.mul(
-              !Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO
-            );
-            totalUSDValue = totalUSDValue.add(valueInUSD);
+            const price = selectedTokenIndex && tokenPrices?.[selectedTokenIndex] || TokenValue.ZERO;
+            const quoteAmt = !Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO;
+            valueInUSD = price.mul(quoteAmt);
+            totalUSDValue = totalUSDValue.add(valueInUSD || TokenValue.ZERO);
           } else {
             for (let i = 0; i < tokenPrices.length; i++) {
-              valueInUSD = tokenPrices![i]!.mul(
-                removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote)
-                  ? quote.quote[i] || TokenValue.ZERO
-                  : inputs![i] || TokenValue.ZERO
-              );
+              const tokenPrice = tokenPrices[i];
+              if (!tokenPrice) {
+                valueInUSD = TokenValue.ZERO;
+              } else {
+                valueInUSD = tokenPrice.mul(
+                  removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote)
+                    ? quote.quote?.[i] || TokenValue.ZERO
+                    : inputs?.[i] || TokenValue.ZERO
+                );
+              }
               totalUSDValue = totalUSDValue.add(valueInUSD);
             }
           }
           setTokenUSDValue(totalUSDValue);
         } else if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
-          let totalReservesUSDValue = TokenValue.ZERO;
+          let totalReservesUSDValue: TokenValue | null = TokenValue.ZERO;
+          
           for (let i = 0; i < tokenPrices.length; i++) {
-            const reserveValueInUSD = tokenPrices![i]!.mul(tokenReserves[i]!.add(inputs![i] || TokenValue.ZERO));
+            const price = tokenPrices[i];
+            const reserve = tokenReserves[i];
+            if (!totalReservesUSDValue) break;
+            if (!price) {
+              totalReservesUSDValue = null;
+              continue;
+            }
+            const reserveValueInUSD = price && reserve ? price.mul(reserve.add(inputs?.[i] || TokenValue.ZERO)) : TokenValue.ZERO;
             totalReservesUSDValue = totalReservesUSDValue.add(reserveValueInUSD);
           }
+          
           const lpTokenSupply = await wellLpToken?.getTotalSupply();
           if (!lpTokenSupply || lpTokenSupply.eq(TokenValue.ZERO)) {
-            setTokenUSDValue(totalReservesUSDValue);
+            setTokenUSDValue(totalReservesUSDValue || TokenValue.ZERO);
             return;
           }
-          const lpTokenUSDValue = totalReservesUSDValue.div(lpTokenSupply.add(quote?.quote as TokenValue));
+          const newDenominator = lpTokenSupply.add(quote?.quote as TokenValue);
+          const lpTokenUSDValue = newDenominator.gt(0) ? (totalReservesUSDValue || TokenValue.ZERO).div(newDenominator) : TokenValue.ZERO;
           const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
         }
       } else if (type === "FORWARD_SWAP") {
-        setTokenUSDValue(quote!.estimate.mul(tokenPrices![1] || TokenValue.ZERO));
+        setTokenUSDValue(quote?.estimate.mul(tokenPrices?.[1] || 0) || TokenValue.ZERO);
       } else if (type === "REVERSE_SWAP") {
-        setTokenUSDValue(inputs![1].mul(tokenPrices![1] || TokenValue.ZERO));
+        setTokenUSDValue(inputs?.[1].mul(tokenPrices?.[1] || 0) || TokenValue.ZERO);
       }
     };
 
@@ -190,7 +205,7 @@ const QuoteDetails = ({
     }
 
     const currentData = tokenReserves.map(
-      (token, index) => tokenReserves[index]?.mul(tokenPrices![index]!)
+      (token, index) => tokenReserves[index]?.mul(tokenPrices?.[index] || 0)
       //'reservesUSD': tokenReserves[index]!.mul(tokenPrices![index]!)
     );
 
@@ -198,16 +213,16 @@ const QuoteDetails = ({
       if (!quote) return TokenValue.ZERO;
       if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
-          return tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!);
+          return tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && !Array.isArray(quote!.quote)) {
-          return tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices![index]!);
+          return tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
         } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote!.quote)) {
-          return tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices![index]!);
+          return tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices?.[index] || 0);
         } else {
           return TokenValue.ZERO;
         }
       } else {
-        return tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices![index]!);
+        return tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
       }
     });
 
@@ -251,7 +266,7 @@ const QuoteDetails = ({
       <AccordionContainer open={accordionOpen} isShort={type === "FORWARD_SWAP" || type === "REVERSE_SWAP"}>
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-          <QuoteDetailValue>{`$${tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
+          <QuoteDetailValue>{`$${tokenUSDValue.lte(0) ? '--' : tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
         {type !== "FORWARD_SWAP" && type !== "REVERSE_SWAP" && (
           <QuoteDetailLine>

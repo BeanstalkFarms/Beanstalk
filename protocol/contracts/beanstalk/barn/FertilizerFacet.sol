@@ -105,7 +105,7 @@ contract FertilizerFacet is Invariable {
     /**
      * @dev Returns the amount of Fertilizer that can be purchased with `tokenAmountIn` Barn Raise tokens.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
-     * `tokenAmountIn` has 18 decimals, `getEthUsdPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
+     * `tokenAmountIn` has 18 decimals, `getUsdEthPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
     function getMintFertilizerOut(
         uint256 tokenAmountIn
@@ -131,6 +131,14 @@ contract FertilizerFacet is Invariable {
 
     function totalFertilizerBeans() external view returns (uint256 beans) {
         return s.sys.fert.unfertilizedIndex;
+    }
+
+    function rinsedSprouts() external view returns (uint256) {
+        return s.sys.fert.fertilizedPaidIndex;
+    }
+
+    function rinsableSprouts() external view returns (uint256) {
+        return s.sys.fert.fertilizedIndex - s.sys.fert.fertilizedPaidIndex;
     }
 
     function leftoverBeans() external view returns (uint256) {

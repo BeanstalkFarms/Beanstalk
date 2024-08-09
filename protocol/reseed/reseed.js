@@ -25,7 +25,7 @@ async function reseed(
   mock = true,
   log = false,
   start = 0,
-  end = 8
+  end = 9
 ) {
   reseeds = [
     reseed1,
@@ -38,21 +38,21 @@ async function reseed(
     reseed8,
     reseed9
   ];
-  let l2Beanstalk;
+  let l2BeanstalkAddress;
   console.clear();
   await printBeanstalk();
-  for (let i = start; i < end; i++) {
+  for (let i = start; i < reseeds.length; i++) {
     printStage(i, end, mock, log);
     if (i == 0) {
       // migrate beanstalk L1 assets.
       await reseeds[0](account);
     } else if (i == 1 && mock == true) {
       // deploy L2 beanstalk.
-      l2Beanstalk = await reseedDeployL2Beanstalk(account);
-      print("L2 Beanstalk:", l2Beanstalk.address);
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account);
+      console.log("L2 Beanstalk:", l2BeanstalkAddress);
     } else {
       // initialize beanstalk state.
-      await reseeds[i](account, l2Beanstalk);
+      await reseeds[i](account, l2BeanstalkAddress);
     }
   }
   console.log("Reseed successful.");

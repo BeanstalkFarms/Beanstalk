@@ -7,14 +7,18 @@ const WHITELIST_SETTINGS = "./reseed/data/r7-whitelist.json";
 async function reseed7(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed7: whitelist tokens.\n");
-  const [tokens, siloSettings] = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
+  let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
+  let tokens = assets.map((asset) => asset[0]);
+  let siloSettings = assets.map((asset) => asset[1]);
+  let oracle = assets.map((asset) => asset[2]);
+
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
     initFacetName: "ReseedWhitelist",
-    initArgs: [tokens, siloSettings],
+    initArgs: [tokens, siloSettings, oracle],
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
   console.log("-----------------------------------");

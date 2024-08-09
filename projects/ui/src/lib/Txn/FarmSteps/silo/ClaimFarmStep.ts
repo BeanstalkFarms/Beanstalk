@@ -9,6 +9,9 @@ import { ethers } from 'ethers';
 import { EstimatesGas, FarmStep } from '~/lib/Txn/Interface';
 
 // TODO(silo-v3): something about this implementation chain breaks the typing of `this._sdk`
+/**
+ * @deprecated
+ */
 export class ClaimFarmStep extends FarmStep implements EstimatesGas {
   constructor(
     _sdk: BeanstalkSDK,
@@ -22,20 +25,20 @@ export class ClaimFarmStep extends FarmStep implements EstimatesGas {
 
   async estimateGas() {
     const { beanstalk } = this._sdk.contracts;
-    let gasEstimate: ethers.BigNumber;
+    const gasEstimate: ethers.BigNumber = ethers.BigNumber.from(0);
 
     if (this._seasons.length === 1) {
-      gasEstimate = await beanstalk.estimateGas.claimWithdrawal(
-        this._tokenIn.address,
-        this._seasons[0],
-        FarmToMode.INTERNAL
-      );
+      // gasEstimate = await beanstalk.estimateGas.claimWithdrawal(
+      //   this._tokenIn.address,
+      //   this._seasons[0],
+      //   FarmToMode.INTERNAL
+      // );
     }
-    gasEstimate = await beanstalk.estimateGas.claimWithdrawals(
-      this._tokenIn.address,
-      this._seasons,
-      FarmToMode.INTERNAL
-    );
+    // gasEstimate = await beanstalk.estimateGas.claimWithdrawals(
+    //   this._tokenIn.address,
+    //   this._seasons,
+    //   FarmToMode.INTERNAL
+    // );
     console.debug(`[ClaimFarmStep][estimateGas]: `, gasEstimate.toString());
 
     return gasEstimate;

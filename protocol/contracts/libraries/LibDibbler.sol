@@ -37,8 +37,8 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    uint256 private constant L1_BLOCK_TIME = 12;
-    uint256 private constant L2_BLOCK_TIME = 2;
+    uint256 private constant L1_BLOCK_TIME = 1200;
+    uint256 private constant L2_BLOCK_TIME = 25;
 
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
@@ -74,6 +74,7 @@ library LibDibbler {
         bool abovePeg
     ) internal returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 activeField = s.sys.activeField;
 
         uint256 pods;
         if (abovePeg) {
@@ -87,6 +88,8 @@ library LibDibbler {
             pods = beansToPods(beans, _morningTemperature);
         }
 
+        require(pods > 0, "Pods must be greater than 0");
+
         // In the case of an overflow, its equivalent to having no soil left.
         if (s.sys.soil < beans) {
             s.sys.soil = 0;
@@ -94,13 +97,16 @@ library LibDibbler {
             s.sys.soil = s.sys.soil.sub(uint128(beans));
         }
 
-        uint256 index = s.sys.fields[s.sys.activeField].pods;
+        uint256 index = s.sys.fields[activeField].pods;
 
-        s.accts[account].fields[s.sys.activeField].plots[index] = pods;
-        s.accts[account].fields[s.sys.activeField].plotIndexes.push(index);
-        emit Sow(account, s.sys.activeField, index, beans, pods);
+        s.accts[account].fields[activeField].plots[index] = pods;
+        s.accts[account].fields[activeField].plotIndexes.push(index);
+        s.accts[account].fields[activeField].piIndex[index] =
+            s.accts[account].fields[activeField].plotIndexes.length -
+            1;
+        emit Sow(account, activeField, index, beans, pods);
 
-        s.sys.fields[s.sys.activeField].pods += pods;
+        s.sys.fields[activeField].pods += pods;
         _saveSowTime();
         return pods;
     }
@@ -394,6 +400,8 @@ library LibDibbler {
         uint256 i = findPlotIndexForAccount(account, fieldId, plotIndex);
         Field storage field = s.accts[account].fields[fieldId];
         field.plotIndexes[i] = field.plotIndexes[field.plotIndexes.length - 1];
+        field.piIndex[field.plotIndexes[i]] = i;
+        field.piIndex[plotIndex] = type(uint256).max;
         field.plotIndexes.pop();
     }
 
@@ -406,15 +414,6 @@ library LibDibbler {
         uint256 plotIndex
     ) internal view returns (uint256 i) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        Field storage field = s.accts[account].fields[fieldId];
-        uint256[] memory plotIndexes = field.plotIndexes;
-        uint256 length = plotIndexes.length;
-        while (plotIndexes[i] != plotIndex) {
-            i++;
-            if (i >= length) {
-                revert("Id not found");
-            }
-        }
-        return i;
+        return s.accts[account].fields[fieldId].piIndex[plotIndex];
     }
 }

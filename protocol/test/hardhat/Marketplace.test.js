@@ -677,7 +677,7 @@ describe("Marketplace", function () {
           beforeEach(async function () {
             this.userBeanBalance = await bean.balanceOf(user.address);
             this.beanstalkBeanBalance = await bean.balanceOf(mockBeanstalk.address);
-            this.podOrder = PodOrder(user.address, 0, 100000, 1000, 0);
+            this.podOrder = PodOrder(user.address, 0, 100000, 1000, 1);
             this.result = await mockBeanstalk
               .connect(user)
               .createPodOrder(this.podOrder, 500, EXTERNAL);
@@ -698,13 +698,13 @@ describe("Marketplace", function () {
           it("emits an event", async function () {
             await expect(this.result)
               .to.emit(mockBeanstalk, "PodOrderCreated")
-              .withArgs(user.address, this.id, 500, 0, 100000, 1000, 0);
+              .withArgs(user.address, this.id, 500, 0, 100000, 1000, 1);
           });
 
           it("cancels old order, replacing with new order", async function () {
             let newOrder = await mockBeanstalk
               .connect(user)
-              .createPodOrder(PodOrder(user.address, 0, 100000, 1000, 0), 100, EXTERNAL);
+              .createPodOrder(PodOrder(user.address, 0, 100000, 1000, 1), 100, EXTERNAL);
             await expect(newOrder)
               .to.emit(mockBeanstalk, "PodOrderCancelled")
               .withArgs(user.address, this.id);
@@ -944,7 +944,7 @@ describe("Marketplace", function () {
 
       describe("Cancel", async function () {
         beforeEach(async function () {
-          this.podOrder = PodOrder(user.address, 0, 100000, 1000, 0);
+          this.podOrder = PodOrder(user.address, 0, 100000, 1000, 1);
           this.result = await mockBeanstalk
             .connect(user)
             .createPodOrder(this.podOrder, 500, EXTERNAL);
@@ -1060,7 +1060,7 @@ describe("Marketplace", function () {
 
       describe("transfers with allowance", async function () {
         beforeEach(async function () {
-          await expect(mockBeanstalk.connect(user).approvePods(user2.address, 0, 100));
+          await mockBeanstalk.connect(user).approvePods(user2.address, 0, 100);
           this.result = await mockBeanstalk
             .connect(user2)
             .transferPlot(user.address, user2.address, 0, 0, 0, 100);
