@@ -7,6 +7,7 @@ import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -24,7 +25,8 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
-                bytes1(0x01)
+                bytes1(0x01),
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
             )
         );
         uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
@@ -34,7 +36,12 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
+            IMockFBeanstalk.Implementation(
+                WBTC_USDC_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+            )
         );
 
         // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
@@ -44,7 +51,8 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
-                bytes1(0x01)
+                bytes1(0x01),
+                LibChainlinkOracle.FOUR_DAY_TIMEOUT
             )
         );
 
@@ -161,7 +169,8 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 oracleAddress,
                 LSDChainlinkOracle.getPrice.selector,
-                bytes1(0x00)
+                bytes1(0x00),
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT // todo: verify this is the corret timeout for this oracle
             )
         );
         return token;
@@ -175,7 +184,8 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
-                bytes1(0x01)
+                bytes1(0x01),
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
             )
         );
 
@@ -204,7 +214,8 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
-                bytes1(0x01)
+                bytes1(0x01),
+                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
             )
         );
 
@@ -216,6 +227,4 @@ contract OracleTest is TestHelper {
         uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
     }
-
-    // TODO: fork tests to verify the on-chain values currently returned by oracles alignes with mocks?
 }

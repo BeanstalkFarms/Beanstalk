@@ -389,9 +389,10 @@ struct Migration {
  * gaugePoint and liquidityWeight implementations.
  */
 struct Implementation {
-    address target;
+    address target; // 20 bytes
     bytes4 selector;
     bytes1 encodeType;
+    uint32 timeout; // 4 bytes
 }
 
 struct EvaluationParameters {

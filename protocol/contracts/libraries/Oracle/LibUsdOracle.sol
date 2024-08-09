@@ -99,7 +99,7 @@ library LibUsdOracle {
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
-                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    oracleImpl.timeout,
                     tokenDecimals,
                     lookback
                 );
@@ -131,7 +131,7 @@ library LibUsdOracle {
 
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
                 chainlinkOraclePriceAddress,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                oracleImpl.timeout,
                 0,
                 lookback
             );

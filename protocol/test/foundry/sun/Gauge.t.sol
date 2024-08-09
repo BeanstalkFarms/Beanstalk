@@ -195,7 +195,8 @@ contract GaugeTest is TestHelper {
             whitelistedWellTokens[rand],
             address(mlw),
             0x00,
-            mlw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector,
+            uint32(0)
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.

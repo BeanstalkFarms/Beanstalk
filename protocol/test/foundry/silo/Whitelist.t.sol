@@ -9,6 +9,7 @@ import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
@@ -53,7 +54,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         vm.expectRevert("LibDiamond: Must be contract or owner");
@@ -67,7 +68,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
     }
 
@@ -85,7 +86,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
@@ -99,7 +100,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
     }
 
@@ -118,7 +119,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
@@ -132,7 +133,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
     }
 
@@ -152,7 +153,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         vm.expectRevert("Whitelist: Token already whitelisted");
@@ -166,7 +167,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
     }
 
@@ -211,7 +212,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             gaugePoints,
             optimalPercentDepositedBdv,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         verifyWhitelistState(
@@ -265,7 +266,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             gaugePoints,
             optimalPercentDepositedBdv,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), uint32(0))
         );
 
         verifyWhitelistState(
@@ -320,18 +321,20 @@ contract WhitelistTest is TestHelper {
         IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
             address(0),
             bytes4(0),
-            bytes1(0)
+            bytes1(0),
+            uint32(0)
         );
 
         IMockFBeanstalk.Implementation memory gaugePointImplementation = IMockFBeanstalk
             .Implementation(
                 address(0),
                 IMockFBeanstalk.defaultGaugePointFunction.selector,
-                bytes1(0)
+                bytes1(0),
+                uint32(0)
             );
 
         IMockFBeanstalk.Implementation memory liquidityWeightImplementation = IMockFBeanstalk
-            .Implementation(address(0), liquidityWeightSelector, bytes1(0));
+            .Implementation(address(0), liquidityWeightSelector, bytes1(0), uint32(0));
 
         verifyWhitelistEvents(
             token,
