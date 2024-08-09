@@ -18,7 +18,7 @@ function updateFarmTotals(
   recursive: boolean = true
 ): void {
   if (recursive && account != protocol) {
-    updateFarmTotals(protocol, account, token, deltaAmount, timestamp);
+    updateFarmTotals(protocol, protocol, token, deltaAmount, timestamp);
   }
   let asset = loadSiloAsset(account, token);
   asset.farmAmount = asset.farmAmount.plus(deltaAmount);

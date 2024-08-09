@@ -1,18 +1,7 @@
-import { Address, BigInt, Bytes, ethereum, store } from "@graphprotocol/graph-ts";
-import {
-  Silo,
-  SiloDeposit,
-  SiloWithdraw,
-  SiloYield,
-  SiloAsset,
-  WhitelistTokenSetting,
-  WhitelistTokenHourlySnapshot,
-  WhitelistTokenDailySnapshot,
-  TokenYield
-} from "../../generated/schema";
+import { Address, BigInt, Bytes, ethereum, store, log } from "@graphprotocol/graph-ts";
+import { Silo, SiloDeposit, SiloWithdraw, SiloYield, SiloAsset, WhitelistTokenSetting, TokenYield } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 
 /* ===== Base Silo Entities ===== */
 

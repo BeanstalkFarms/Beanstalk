@@ -45,7 +45,7 @@ class AddRemoveDepositsParams {
   seasons: BigInt[] | null; // Seasons not present in v3+
   stems: BigInt[] | null; // Stems not present in v2
   amounts: BigInt[];
-  bdvs: BigInt[] | null; // bdv not present in v2
+  bdvs: BigInt[] | null; // bdv not present in v2 removal
   depositVersion: String;
 }
 
@@ -122,6 +122,10 @@ function removeDeposits(params: AddRemoveDepositsParams): void {
  */
 
 export function handleAddDeposit(event: AddDeposit): void {
+  if (event.params.amount == ZERO_BI && event.params.bdv == ZERO_BI) {
+    // During replant there is at least one such event which should be ignored
+    return;
+  }
   addDeposits({
     event,
     account: event.params.account,
