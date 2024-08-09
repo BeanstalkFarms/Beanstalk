@@ -213,6 +213,7 @@ const normalizeQueryResults = (
   output: SiloTokenDataBySeason
 ): ChartQueryData[] => {
   const map: { [season: number]: ChartQueryData } = {};
+  const timestamps = new Set<Time>();
 
   Object.entries(output).forEach(([_season, entity]) => {
     const season = Number(_season);
@@ -244,12 +245,15 @@ const normalizeQueryResults = (
 
     const value = obj.grownStalkPerBDV.div(obj.depositedBDV);
 
-    if (value.gt(0)) {
+    const time = Number(obj.createdAt) as Time;
+
+    if (value.gt(0) && !timestamps.has(time)) {
       map[season] = {
         customValues: { season: season },
-        time: Number(obj.createdAt) as Time,
+        time: time,
         value: value.toNumber(),
       };
+      timestamps.add(time);
     }
   });
 
@@ -275,7 +279,7 @@ const useAvgSeedsPerBDV = (
 ): readonly [ChartQueryData[], boolean, boolean] => {
   const [queryData, setQueryData] = useState<ChartQueryData[]>([]);
   const [numQueries, setNumQueries] = useState<number>(getNumQueries(range));
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -289,7 +293,7 @@ const useAvgSeedsPerBDV = (
 
   const fetch = useCallback(async () => {
     if (skip) return;
-    console.log('[logoutput/numqueries]: ', numQueries);
+    setLoading(true);
 
     const tokens = [
       sdk.tokens.BEAN_CRV3_LP,
@@ -304,12 +308,10 @@ const useAvgSeedsPerBDV = (
     if (numQueries === 0) {
       setError(true);
       console.error('Invalid range');
-      console.log('[logoutput/err]: Invalid range', range);
       return;
     }
 
     const output: SiloTokenDataBySeason = {};
-    setLoading(true);
     let earliestSeason = 999999999;
     try {
       const fetchData = async (lte: number) =>
@@ -349,18 +351,6 @@ const useAvgSeedsPerBDV = (
 };
 
 export default useAvgSeedsPerBDV;
-
-// const promises = Array.from({ length: numQueries - 1 }, (_, i) => {
-//   const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
-
-//   console.log(`${i}: offset: ${offset}`);
-//   console.log(
-//     `${i}: season_lte: `,
-//     Math.max(0, earliestSeason - offset)
-//   );
-//   return fetchData(Math.max(0, earliestSeason - offset));
-// });
-// await Promise.all(promises);
 
 // const logOutput = (output: SiloTokenDataBySeason) => {
 //   const _output = Object.entries(output).reduce((prev, [k, v]) => {
