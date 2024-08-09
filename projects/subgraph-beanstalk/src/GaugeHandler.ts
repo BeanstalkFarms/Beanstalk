@@ -84,6 +84,13 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
     } else {
       farmerGerminating.save();
     }
+
+    // Need to subtract stalk from system silo. The finished germinating stalk was already added
+    // into system stalk, and there are subsequent StalkBalanceChanged events for this transaction.
+    let systemSilo = loadSilo(event.address);
+    systemSilo.stalk = systemSilo.stalk.plus(event.params.deltaGerminatingStalk);
+    takeSiloSnapshots(systemSilo, event.address, event.block.timestamp);
+    systemSilo.save();
   }
 
   let farmerSilo = loadSilo(event.params.account);

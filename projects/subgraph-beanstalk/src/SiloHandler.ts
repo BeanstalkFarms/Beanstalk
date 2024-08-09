@@ -244,10 +244,11 @@ export function handlePlant(event: Plant): void {
   // This removes the plantable stalk for planted beans.
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
-  const currentSeason = getCurrentSeason(event.address);
   let silo = loadSilo(event.address);
   let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
 
+  // Subtract stalk since it was already added in Reward, and is about to get re-added in StalkBalanceChanged.
+  silo.stalk = silo.stalk.minus(newPlantableStalk);
   silo.plantableStalk = silo.plantableStalk.minus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.minus(event.params.beans);
 

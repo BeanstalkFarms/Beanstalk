@@ -79,6 +79,7 @@ export function handleReward(event: Reward): void {
   let newPlantableStalk = event.params.toSilo.times(BigInt.fromI32(10000)); // Stalk has 10 decimals
 
   silo.beanMints = silo.beanMints.plus(event.params.toSilo);
+  silo.stalk = silo.stalk.plus(newPlantableStalk);
   silo.plantableStalk = silo.plantableStalk.plus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.plus(event.params.toSilo);
 
