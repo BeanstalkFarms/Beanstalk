@@ -29,9 +29,6 @@ contract OracleDeployer is Utils {
     address constant WBTC_USD_CHAINLINK_PRICE_AGGREGATOR =
         address(0xd0C7101eACbB49F3deCcCc166d238410D6D46d57);
 
-    address constant MockChainlinkPriceFeedRegistry =
-        address(0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf);
-
     // new chainlink oracles should be added here.
     address[] public chainlinkOracles = [
         C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
@@ -68,13 +65,6 @@ contract OracleDeployer is Utils {
      * @dev oracles are mocked, and thus require initalization/updates.
      */
     function initChainlink(bool verbose) internal {
-        // deploy mock chainlink priceFeed registry
-        deployCodeTo(
-            "MockChainlinkPriceFeedRegistry.sol",
-            new bytes(0),
-            MockChainlinkPriceFeedRegistry
-        );
-        vm.label(MockChainlinkPriceFeedRegistry, "MockChainlinkPriceFeedRegistry");
         // optional labels to assist in testing.
         vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
         vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
