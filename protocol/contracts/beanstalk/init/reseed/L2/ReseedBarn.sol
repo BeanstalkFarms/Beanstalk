@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -15,11 +14,6 @@ import {C} from "contracts/C.sol";
  * @notice Reseed Barn re-initializes Fertilizer.
  * @dev Fertilizer is re-issued to each holder. Barn raise is set to L1 state.
  */
-
-interface IFertilizer {
-    function init() external;
-}
-
 contract ReseedBarn {
     /**
      * @notice contains data per account for Fertilizer.
@@ -39,31 +33,17 @@ contract ReseedBarn {
         AccountFertilizerData[] accountData;
     }
 
+    // TODO: Replace with address mined from salt (this is the address with the default salt)
+    address internal constant FERTILIZER_PROXY = 0x7B50EbC3E5128F315dc097F7cbd1600399e3E796;
+
     AppStorage internal s;
-    bytes32 internal constant FERTILIZER_PROXY_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000000;
 
     /**
      * @notice deploys Fertilizer and Fertilizer proxy,
      * reissues Fertilizer to each holder.
      */
     function init(Fertilizers[] calldata fertilizerIds) external {
-        // deploy fertilizer implmentation.
-        // TODO: Merge misc-bip to get updated bytecode and mine for salt
-        // TODO: This will have to be moved to a separate contract since we cant initialize all fert
-        // at once due to gas limits
-        Fertilizer fertilizer = new Fertilizer();
-
-        // deploy fertilizer proxy. Set owner to beanstalk.
-        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
-            salt: FERTILIZER_PROXY_SALT
-        }(
-            address(fertilizer), // logic
-            address(this), // admin (diamond)
-            abi.encode(IFertilizer.init.selector) // init data
-        );
-
-        mintFertilizers(Fertilizer(address(fertilizerProxy)), fertilizerIds);
+        mintFertilizers(Fertilizer(FERTILIZER_PROXY), fertilizerIds);
     }
 
     function mintFertilizers(

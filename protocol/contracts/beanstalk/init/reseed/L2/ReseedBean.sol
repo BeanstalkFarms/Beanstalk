@@ -13,18 +13,24 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
+import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/console.sol";
 
 /**
  * @author Brean
- * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth, BeanStable Wells.
+ * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth,
+ * BeanStable Wells and the Fertilizer proxy and implementation.
  * Then adds liquidity to the BeanEth, BeanWsteth, and BeanStable well.
  * @dev each Well is upgradeable and ownable. the owner is `OWNER` when the init is called.
  */
 interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
-
     function initNoWellToken() external;
+}
+
+interface IFertilizer {
+    function init() external;
 }
 
 contract ReseedBean {
@@ -114,6 +120,10 @@ contract ReseedBean {
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
+    // Fertilizer
+    bytes32 internal constant FERTILIZER_PROXY_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000000;
+
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
      * @dev mints bean assets to the beanstalk contract,
@@ -130,6 +140,8 @@ contract ReseedBean {
         ExternalUnripeHolders[] calldata urBean,
         ExternalUnripeHolders[] calldata urBeanLP
     ) external {
+        // deploy the fertilizer proxy and implementation
+        deployFertilizer();
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
         // deploy new unripe bean contract.
@@ -138,6 +150,21 @@ contract ReseedBean {
         deployUnripeLP(unripeLpSupply);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
+    }
+
+    function deployFertilizer() internal {
+        // TODO: Get new bytecode from misc bip and mine for fert salt
+        // deploy fertilizer implementation
+        Fertilizer fertilizer = new Fertilizer();
+        // deploy fertilizer proxy. Set owner to beanstalk.
+        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
+            salt: FERTILIZER_PROXY_SALT
+        }(
+            address(fertilizer), // logic
+            address(this), // admin (diamond)
+            abi.encode(IFertilizer.init.selector) // init data
+        );
+        console.log("Fertilizer deployed at: ", address(fertilizerProxy));
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
