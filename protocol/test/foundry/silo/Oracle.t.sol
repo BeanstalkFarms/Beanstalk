@@ -21,7 +21,11 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01)
+            )
         );
         uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         assertEq(price, 0.00002e8, "price using encode type 0x01");
@@ -32,6 +36,18 @@ contract OracleTest is TestHelper {
             WBTC,
             IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
         );
+
+        // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            C.USDC,
+            IMockFBeanstalk.Implementation(
+                USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01)
+            )
+        );
+
         price = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC);
         // 1 USDC will get ~500 satoshis of BTC at $50k
         // 1 USDC = 1e6
@@ -156,7 +172,11 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01)
+            )
         );
 
         // token price is number of dollars per token, i.e. 50000 USD for 1 WBTC
@@ -181,7 +201,11 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01)
+            )
         );
 
         // WETH price is 1000
