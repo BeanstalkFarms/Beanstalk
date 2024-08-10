@@ -12,7 +12,7 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
 
   return (
     <Stack gap={2}>
-      <Row>
+      <Row justifyContent="space-between">
         <Typography variant="h4" fontWeight={FontWeight.bold}>
           Rewards for Deposited {token.symbol}
         </Typography>
@@ -30,17 +30,22 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           {seedReward.toFormat(6)} Seed.
         </Typography>
       </Typography>
-      <Alert
-        color="info"
-        icon={
-          <InfoOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
-        }
-      >
-        <Typography color="text.secondary">
-          You’ll receive new Beans when the Bean supply grows based on your
-          Stalk.
-        </Typography>
-      </Alert>
+      <Row justifyContent="space-between">
+        <Alert
+          color="info"
+          icon={
+            <InfoOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
+          }
+        >
+          <Typography color="text.secondary">
+            You’ll receive new Beans when the Bean supply grows based on your
+            Stalk.
+          </Typography>
+        </Alert>
+        <Button variant="outlined" size="small">
+          View Bean Supply
+        </Button>
+      </Row>
     </Stack>
   );
 };
