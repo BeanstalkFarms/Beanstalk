@@ -15,24 +15,16 @@ export type CalendarRangePreset =
   | '2Y'
   | 'ALL';
 
-// charts default to 1 week
-const getWeek = (): Range<Time> => {
+const initUseChartTimePeriodState = (prefix: string = 'advancedChart') => {
   const now = Date.now();
-
-  return {
+  // charts default to 1 week
+  const weekData: Range<Time> = {
     from: (subWeeks(now, 1).getTime() / 1000) as Time,
     to: (now / 1000) as Time,
   };
-};
-
-const getTimePeriodState = (prefix: string): Range<Time> => {
-  const storedSetting = localStorage.getItem(`${prefix}TimePeriod`);
-  if (!storedSetting) {
-    const week = getWeek();
-    localStorage.setItem(`${prefix}TimePeriod`, JSON.stringify(week));
-    return week;
-  }
-  return JSON.parse(storedSetting) as Range<Time>;
+  localStorage.setItem(`${prefix}TimePeriod`, JSON.stringify(weekData));
+  localStorage.setItem(`${prefix}Preset`, JSON.stringify('1W'));
+  return weekData;
 };
 
 /**
@@ -40,13 +32,12 @@ const getTimePeriodState = (prefix: string): Range<Time> => {
  */
 const useChartTimePeriodState = (prefix: string = 'advancedChart') => {
   const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(
-    getTimePeriodState(prefix)
+    initUseChartTimePeriodState(prefix)
   );
 
   useEffect(() => {
-    const item = !timePeriod ? getWeek() : timePeriod;
-    localStorage.setItem(`${prefix}TimePeriod`, JSON.stringify(item));
-  }, [prefix, timePeriod]);
+    initUseChartTimePeriodState(prefix);
+  }, [prefix]);
 
   return [timePeriod, setTimePeriod] as const;
 };
