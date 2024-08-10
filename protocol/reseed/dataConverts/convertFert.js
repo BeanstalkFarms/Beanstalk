@@ -38,7 +38,7 @@ function parseFertilizer(inputFilePath, outputFilePath, callback) {
                 callback(writeErr, null);
                 return;
             }
-            callback(null, 'File has been written successfully');
+            callback(null, 'Fertilizer JSON has been written successfully');
         });
     });
 }

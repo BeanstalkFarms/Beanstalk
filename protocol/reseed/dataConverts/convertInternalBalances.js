@@ -31,7 +31,7 @@ function parseInternalBalances(inputFilePath, outputFilePath, callback) {
                 callback(writeErr, null);
                 return;
             }
-            callback(null, 'File has been written successfully');
+            callback(null, 'Internal Balances JSON has been written successfully');
         });
     });
 }

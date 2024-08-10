@@ -38,7 +38,7 @@ function parseField(inputFilePath, outputFilePath, callback) {
                 callback(writeErr, null);
                 return;
             }
-            callback(null, 'File has been written successfully');
+            callback(null, 'Field JSON has been written successfully');
         });
     });
 }
