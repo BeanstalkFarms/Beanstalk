@@ -18,7 +18,7 @@ import {C} from "contracts/C.sol";
 contract ReseedSilo {
     using LibBytes for uint256;
 
-/**
+    /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposit entries
      * for a given token and account.
      */
@@ -65,9 +65,7 @@ contract ReseedSilo {
      * - re-issues stalk to the provided deposit holders.
      * note: token addresses will differ from L1.
      */
-    function init(
-        AccountSiloDeposits[] calldata accountDeposits
-    ) external {
+    function init(AccountSiloDeposits[] calldata accountDeposits) external {
         // initialize deposits.
         reseedSiloDeposit(accountDeposits);
     }
@@ -84,15 +82,18 @@ contract ReseedSilo {
             // for all of account's deposits.
             for (uint256 j; j < accountDeposits[i].dd.length; j++) {
                 // get token and stem from depositId.
-                (address token, int96 stem) = LibBytes.unpackAddressAndStem(accountDeposits[i].dd[j].depositId);
+                (address token, int96 stem) = LibBytes.unpackAddressAndStem(
+                    accountDeposits[i].dd[j].depositId
+                );
                 // add deposit to account.
                 s
                     .accts[accountDeposits[i].account]
                     .deposits[accountDeposits[i].dd[j].depositId]
                     .amount = accountDeposits[i].dd[j].amount;
-                s.accts[accountDeposits[i].account].deposits[accountDeposits[i].dd[j].depositId].bdv = accountDeposits[i]
-                    .dd[j]
-                    .bdv;
+                s
+                    .accts[accountDeposits[i].account]
+                    .deposits[accountDeposits[i].dd[j].depositId]
+                    .bdv = accountDeposits[i].dd[j].bdv;
                 // add deposit to depositIdList.
                 s.accts[accountDeposits[i].account].depositIdList[token].depositIds.push(
                     accountDeposits[i].dd[j].depositId
