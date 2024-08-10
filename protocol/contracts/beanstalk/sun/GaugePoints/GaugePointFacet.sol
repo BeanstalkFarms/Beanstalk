@@ -3,7 +3,6 @@
  */
 
 pragma solidity ^0.8.20;
-import {console} from "forge-std/console.sol";
 
 /**
  * @title GaugePointFacet
@@ -47,7 +46,7 @@ contract GaugePointFacet {
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
-    ) public view returns (uint256 newGaugePoints) {
+    ) public pure returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >
             (optimalPercentDepositedBdv * UPPER_THRESHOLD) / THRESHOLD_PRECISION
@@ -92,7 +91,7 @@ contract GaugePointFacet {
         uint256 optimalPercentBdv,
         uint256 percentBdv,
         bool isAboveOptimal
-    ) private view returns (uint256) {
+    ) private pure returns (uint256) {
         uint256 exsFar;
         uint256 relFar;
         if (isAboveOptimal) {
