@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Chip, Container, Stack } from '@mui/material';
+import { Card, Chip, Container, Stack } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -20,6 +20,8 @@ import { XXLWidth } from '~/components/App/muiTheme';
 
 import { FC } from '~/types';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import TokenDepositsOverview from '~/components/Silo/TokenDepositsOverview';
+import useSdk from '~/hooks/sdk';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -34,6 +36,7 @@ const TokenPage: FC<{}> = () => {
   // Constants
   const whitelist = useWhitelist();
   const pools = usePools();
+  const sdk = useSdk();
 
   // Routing
   let { address } = useParams<{ address: string }>();
@@ -55,7 +58,8 @@ const TokenPage: FC<{}> = () => {
   const pool = pools[address];
 
   // If no data loaded...
-  if (!whitelistedToken) return null;
+  const sdkToken = sdk.tokens.findByAddress(address);
+  if (!whitelistedToken || !sdkToken) return null;
 
   const tokenIsBEAN3CRV =
     address.toLowerCase() === '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49';
@@ -119,7 +123,10 @@ const TokenPage: FC<{}> = () => {
               [breakpoints.up('lg')]: { maxWidth: '850px' },
             })}
           >
-            <SiloAssetOverviewCard token={whitelistedToken} />
+            {false && <SiloAssetOverviewCard token={whitelistedToken} />}
+            <Card sx={{ p: 1, boxSizing: 'border-box' }}>
+              <TokenDepositsOverview token={sdkToken} />
+            </Card>
           </Stack>
           <Stack
             gap={2}

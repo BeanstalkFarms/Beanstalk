@@ -4,6 +4,7 @@ import { Box, Card, CircularProgress, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
   DataGrid,
+  DataGridProps,
   GridColDef,
   GridColumns,
   GridRowId,
@@ -45,7 +46,9 @@ export type TableCardProps = {
   maxRows?: number;
   hideFooter?: true | undefined;
   footNote?: string | undefined;
-};
+  rowSpacing?: number;
+  rowHeight?: number;
+} & DataGridProps;
 
 interface GridRowParams<R extends GridRowModel = GridRowModel> {
   id: GridRowId;
@@ -60,6 +63,11 @@ interface GridRowParams<R extends GridRowModel = GridRowModel> {
 }
 
 const StyledDataGrid = styled(DataGrid)(() => ({
+  '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
+    { outline: 'none' },
+  '& .MuiDataGrid-columnHeader:focus-within': {
+    backgroundColor: 'transparent',
+  },
   '& .germinating-row': {
     backgroundColor: '#b4e16236',
     '&:hover': {
@@ -87,11 +95,21 @@ const TableCard: FC<TableCardProps> = ({
   maxRows = 5,
   hideFooter = false,
   footNote,
+  rowHeight,
+  rowSpacing = 0,
+  ...dataGridProps
 }) => {
   const tableHeight = useMemo(() => {
     if (!rows || rows.length === 0) return '250px';
-    return 60.5 + (hideFooter ? 0 : 36) + Math.min(rows.length, maxRows) * 36;
-  }, [hideFooter, maxRows, rows]);
+    const _rowHeight = (rowHeight || 36) + rowSpacing * 10;
+
+    return (
+      60.5 +
+      (hideFooter ? 0 : 36) +
+      Math.min(rows.length, maxRows) * _rowHeight +
+      rowSpacing * 10
+    );
+  }, [rows, rowSpacing, rowHeight, hideFooter, maxRows]);
 
   // When we need custom, per row, styling, this is where we can defined the rules.
   // Add the class names above in the StyledDataGrid definition.
@@ -174,12 +192,14 @@ const TableCard: FC<TableCardProps> = ({
               sortModel: [sort],
             },
           }}
+          getRowClassName={customRowStyler}
+          {...dataGridProps}
           sx={{
             '& .MuiDataGrid-footerContainer': {
               justifyContent: 'center',
             },
+            ...dataGridProps.sx,
           }}
-          getRowClassName={customRowStyler}
         />
       </Box>
       {footNote && (
