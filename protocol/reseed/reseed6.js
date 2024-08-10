@@ -8,7 +8,7 @@ let mock = true;
 if (mock) {
   depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
 } else {
-  depositsPath = "./reseed/data/r6/r6-deposits.json";
+  depositsPath = "./reseed/data/r6-deposits.json";
 }
 
 async function reseed6(account, L2Beanstalk) {
@@ -17,7 +17,7 @@ async function reseed6(account, L2Beanstalk) {
 
   let beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
 
-  chunkSize = 2;
+  chunkSize = 5;
   depositChunks = splitEntriesIntoChunks(beanDeposits, chunkSize);
 
   for (let i = 0; i < depositChunks.length; i++) {

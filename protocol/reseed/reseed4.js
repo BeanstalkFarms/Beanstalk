@@ -4,7 +4,7 @@ const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
 let farmerPlotsPath;
-let mock = true;
+let mock = false;
 if (mock){
   farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
 } else {

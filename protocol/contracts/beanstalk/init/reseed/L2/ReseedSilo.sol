@@ -20,7 +20,7 @@ contract ReseedSilo {
 
     /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposit entries
-     * for a given token and account.
+     * for a given account.
      */
     struct AccountSiloDeposits {
         address account;
