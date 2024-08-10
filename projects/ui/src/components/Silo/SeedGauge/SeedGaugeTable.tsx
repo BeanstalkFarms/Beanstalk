@@ -25,11 +25,13 @@ import {
 import { ArrowDownward, ArrowUpward, ArrowRight } from '@mui/icons-material';
 import logo from '~/img/tokens/bean-logo.svg';
 import { Link as RouterLink } from 'react-router-dom';
+import { ZERO_BN } from '~/constants';
 
 type GridConfigProps = Pick<GridProps, Breakpoint>;
 
 type ISeedGaugeRow = {
   token: ERC20Token;
+  gaugePointRatio: BigNumber;
 } & TokenSeedGaugeInfo;
 
 type ISeedGaugeColumn = {
@@ -218,15 +220,42 @@ const useTableConfig = (
         ]
       : baseTokens;
 
+    const totalGaugePoints = Object.values(
+      gaugeData.gaugeData
+    ).reduce<BigNumber>(
+      (prev, curr) => prev.plus(curr.gaugePoints || 0),
+      ZERO_BN
+    );
+
     const mappedData = tokens.reduce<ISeedGaugeRow[]>((prev, token) => {
       const gaugeInfo = gaugeData?.gaugeData?.[token.address];
 
       if (gaugeInfo) {
-        return [...prev, { token, ...gaugeInfo }];
+        const ratio = gaugeInfo.gaugePoints.div(totalGaugePoints);
+
+        prev.push({
+          token,
+          ...gaugeInfo,
+          gaugePointRatio: totalGaugePoints.gt(0) ? ratio : ZERO_BN,
+        });
       }
 
       return prev;
     }, []);
+
+    // console.log(
+    //   'mapped: ',
+    //   mappedData.map((d) =>
+    //     Object.entries(d).reduce<any>((prev, [k, v]) => {
+    //       if (v instanceof BigNumber) {
+    //         prev[k] = v.toNumber();
+    //       } else if (v instanceof Token){
+    //         prev[k] = v.symbol;
+    //       }
+    //       return prev;
+    //     }, {})
+    //   )
+    // );
 
     return mappedData;
   }, [sdk, advancedView, gaugeData?.gaugeData]);
@@ -235,9 +264,17 @@ const useTableConfig = (
 };
 
 const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
-  const optimal = row.optimalPctDepositedBdv?.eq(row.currentPctDepositedBdv);
+  const delta = row.optimalPctDepositedBdv
+    .minus(row.currentPctDepositedBdv)
+    .abs();
 
-  if (!row.gaugePoints || row.gaugePoints.lte(0) || optimal) {
+  // Gauge points don't change if between 0.01%
+  const optimal = delta.lt(0.01);
+
+  // seed rewards don't increase if every well has all gauge points
+  const maxed = row.gaugePointRatio.eq(1);
+
+  if (!row.gaugePoints || row.gaugePoints.lte(0) || optimal || maxed) {
     return null;
   }
 
