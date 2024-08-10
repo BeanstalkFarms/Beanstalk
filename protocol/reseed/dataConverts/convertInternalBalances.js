@@ -36,8 +36,8 @@ function parseInternalBalances(inputFilePath, outputFilePath, callback) {
     });
 }
 
-const inputFilePath = "./reseed/converts/storage-accounts20330000.json";
-const outputFilePath = './reseed/converts/outputs/internal-balances.json';
+const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
+const outputFilePath = './reseed/data/r8-internal-balances.json';
 parseInternalBalances(inputFilePath, outputFilePath, (err, message) => {
     if (err) {
         console.error('Error:', err);

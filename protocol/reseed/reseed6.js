@@ -3,13 +3,19 @@ const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BEAN_DEPOSITS = "./reseed/data/r6/bean_deposits.json";
+let depositsPath;
+let mock = true;
+if (mock) {
+  depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
+} else {
+  depositsPath = "./reseed/data/r6/r6-deposits.json";
+}
 
 async function reseed6(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed6: reissue deposits.\n");
 
-  let beanDeposits = JSON.parse(await fs.readFileSync(BEAN_DEPOSITS));
+  let beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
 
   chunkSize = 2;
   depositChunks = splitEntriesIntoChunks(beanDeposits, chunkSize);

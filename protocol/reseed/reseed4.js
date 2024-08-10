@@ -3,15 +3,20 @@ const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-// Todo: get plot data. Example written for testing
-const FARMER_PLOTS = "./reseed/data/r4-field.json";
+let farmerPlotsPath;
+let mock = true;
+if (mock){
+  farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
+} else {
+  farmerPlotsPath = "./reseed/data/r4-field.json";
+}
 
 async function reseed4(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed4: re-initialize the field and plots.\n");
 
   // Read and parse the JSON file
-  const accountPlots = JSON.parse(await fs.readFileSync(FARMER_PLOTS));
+  const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
   chunkSize = 4;
   plotChunks = splitEntriesIntoChunks(accountPlots, chunkSize);

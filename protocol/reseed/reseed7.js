@@ -2,12 +2,18 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 // Files
-const ACCOUNT_STATUSES = "./reseed/data/r7-account-status.json";
+let accountStatusesPath;
+let mock = true;
+if (mock) {
+  accountStatusesPath = "./reseed/data/mocks/r7-account-status-mock.json";
+} else {
+  accountStatusesPath = "./reseed/data/r7-account-status.json";
+}
 
 async function reseed7(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseedAccountStatus:.\n");
-  let statuses = JSON.parse(await fs.readFileSync(ACCOUNT_STATUSES));
+  let statuses = JSON.parse(await fs.readFileSync(accountStatusesPath));
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,

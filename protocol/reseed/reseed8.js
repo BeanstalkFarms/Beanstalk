@@ -3,13 +3,19 @@ const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r8/internal-balances.json";
+let internalBalancesPath;
+let mock = true;
+if (mock) {
+  internalBalancesPath = "./reseed/data/mocks/r8-internal-balances-mock.json";
+} else {
+  internalBalancesPath = "./reseed/data/r8-internal-balances.json";
+}
 
 async function reseed8(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed8: reissue internal balances.\n");
 
-  let beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
+  let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
   chunkSize = 4;
   balanceChunks = splitEntriesIntoChunks(beanBalances, chunkSize);

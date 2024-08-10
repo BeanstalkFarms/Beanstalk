@@ -3,13 +3,19 @@ const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
 // Files
-const BARN_RAISE = "./reseed/data/r5-barn-raise-new.json";
+let barnRaisePath;
+let mock = true;
+if (mock) {
+  barnRaisePath = "./reseed/data/mocks/r5-barn-raise-mock.json";
+} else {
+  barnRaisePath = "./reseed/data/r5-barn-raise.json";
+}
 
 async function reseed5(account, L2Beanstalk) {
   console.log("-----------------------------------");
   console.log("reseed5: reissue fertilizer, reinitialize fertilizer holder state.\n");
   const fertilizerIds = JSON.parse(
-    await fs.readFileSync(BARN_RAISE)
+    await fs.readFileSync(barnRaisePath)
   );
 
   chunkSize = 4;

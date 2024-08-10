@@ -43,8 +43,8 @@ function parseField(inputFilePath, outputFilePath, callback) {
     });
 }
 
-const inputFilePath = "./reseed/converts/storage-accounts20330000.json";
-const outputFilePath = "./reseed/converts/outputs/r4-field.json";
+const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
+const outputFilePath = "./reseed/data/r4-field.json";
 parseField(inputFilePath, outputFilePath, (err, message) => {
     if (err) {
         console.error('Error:', err);
