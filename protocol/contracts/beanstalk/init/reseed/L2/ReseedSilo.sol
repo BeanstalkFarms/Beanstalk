@@ -73,7 +73,7 @@ contract ReseedSilo {
      * @notice reseed the silo deposits.
      * @param accountDeposits an array of account deposits to reseed where each account
      * can have multiple deposits.
-     * @dev the account's stalk and mow statuses are handled in a separate contract. 
+     * @dev the account's stalk and mow statuses are handled in a separate contract.
      */
     function reseedSiloDeposit(AccountSiloDeposits[] calldata accountDeposits) internal {
         // for all accounts
