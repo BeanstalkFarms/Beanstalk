@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseField(inputFilePath, outputFilePath, callback) {
+function parseField(inputFilePath, outputFilePath, chunkSize, callback) {
     fs.readFile(inputFilePath, 'utf8', (err, data) => {
         if (err) {
             callback(err, null);
@@ -21,13 +21,16 @@ function parseField(inputFilePath, outputFilePath, callback) {
                     const plotIndexes = field.plotIndexes;
 
                     if (Object.keys(plots).length > 0 && plotIndexes.length > 0) {
-                        const plotArray = plotIndexes.map((index, idx) => {
-                            const plotKey = Object.keys(plots)[idx];
-                            const amount = plots[plotKey];
-                            return [parseInt(index, 16).toString(), parseInt(amount, 16).toString()];
-                        });
+                        // Split plots into chunks of chunkSize
+                        for (let i = 0; i < plotIndexes.length; i += chunkSize) {
+                            const plotChunk = plotIndexes.slice(i, i + chunkSize).map((index, idx) => {
+                                const plotKey = Object.keys(plots)[i + idx];
+                                const amount = plots[plotKey];
+                                return [parseInt(index, 16).toString(), parseInt(amount, 16).toString()];
+                            });
 
-                        result.push([account, plotArray]);
+                            result.push([account, plotChunk]);
+                        }
                     }
                 }
             }
@@ -45,7 +48,8 @@ function parseField(inputFilePath, outputFilePath, callback) {
 
 const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
 const outputFilePath = "./reseed/data/r4-field.json";
-parseField(inputFilePath, outputFilePath, (err, message) => {
+const chunkSize = 40;
+parseField(inputFilePath, outputFilePath, chunkSize, (err, message) => {
     if (err) {
         console.error('Error:', err);
         return;

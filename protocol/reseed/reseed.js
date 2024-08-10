@@ -27,7 +27,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 11) {
     reseedGlobal, // reseed global variables
     reseed3, // reseedbean + deploy wells on l2
     reseed4, // reseed field
-    // reseed5, // reseed barn (fert)
+    reseed5, // reseed barn (fert)
     reseed6, // reseed silo
     reseed7, // reseed account status
     reseed8, // reseed internal balances

@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseDeposits(inputFilePath, outputFilePath, callback) {
+function parseDeposits(inputFilePath, outputFilePath, chunkSize, callback) {
     fs.readFile(inputFilePath, 'utf8', (err, data) => {
         if (err) {
             callback(err, null);
@@ -13,24 +13,25 @@ function parseDeposits(inputFilePath, outputFilePath, callback) {
         for (const account in accounts) {
             if (accounts.hasOwnProperty(account)) {
                 const deposits = accounts[account].deposits;
-                const depositArray = [];
+                const depositIds = Object.keys(deposits);
 
-                for (const depositId in deposits) {
-                    if (deposits.hasOwnProperty(depositId)) {
-                        const { amount, bdv } = deposits[depositId];
-                        depositArray.push([
-                            depositId,
-                            parseInt(amount, 16).toString(),
-                            parseInt(bdv, 16).toString()
+                if (depositIds.length > 0) {
+                    // Split deposits into chunks of chunkSize
+                    for (let i = 0; i < depositIds.length; i += chunkSize) {
+                        const depositChunk = depositIds.slice(i, i + chunkSize).map(depositId => {
+                            const { amount, bdv } = deposits[depositId];
+                            return [
+                                depositId,
+                                parseInt(amount, 16).toString(),
+                                parseInt(bdv, 16).toString()
+                            ];
+                        });
+
+                        result.push([
+                            account,
+                            depositChunk
                         ]);
                     }
-                }
-
-                if (depositArray.length > 0) {
-                    result.push([
-                        account,
-                        depositArray
-                    ]);
                 }
             }
         }
@@ -47,12 +48,13 @@ function parseDeposits(inputFilePath, outputFilePath, callback) {
 
 const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
 const outputFilePath = "./reseed/data/r6-deposits.json";
-parseDeposits(inputFilePath, outputFilePath, (err, message) => {
+const chunkSize = 40;
+parseDeposits(inputFilePath, outputFilePath, chunkSize, (err, message) => {
     if (err) {
         console.error('Error:', err);
         return;
     }
     console.log(message);
-})
+});
 
 // module.exports = parseDeposits;
