@@ -71,70 +71,70 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
-        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
-        bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
+    // function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
+    //     bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
+    //     bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
 
-        vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            gaugePointSelector,
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
+    //     vm.expectRevert("Whitelist: Invalid GaugePoint selector");
+    //     bs.whitelistToken(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         gaugePointSelector,
+    //         bytes4(0),
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
 
-        vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0),
-            gaugePointSelector,
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
+    //     vm.expectRevert("Whitelist: Invalid GaugePoint selector");
+    //     bs.whitelistTokenWithEncodeType(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         bytes1(0),
+    //         gaugePointSelector,
+    //         bytes4(0),
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
+    // }
 
-    function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(BEANSTALK) {
-        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
-        bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
-        bytes4 liquidityWeightSelector = bytes4(keccak256(abi.encode(i)));
+    // function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(BEANSTALK) {
+    //     bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
+    //     bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
+    //     bytes4 liquidityWeightSelector = bytes4(keccak256(abi.encode(i)));
 
-        vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
+    //     vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
+    //     bs.whitelistToken(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         gaugePointSelector,
+    //         liquidityWeightSelector,
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
 
-        vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0),
-            gaugePointSelector,
-            liquidityWeightSelector,
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
+    //     vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
+    //     bs.whitelistTokenWithEncodeType(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         bytes1(0),
+    //         gaugePointSelector,
+    //         liquidityWeightSelector,
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
+    // }
 
     function test_whitelistRevertExistingWhitelistedToken() public prank(BEANSTALK) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;

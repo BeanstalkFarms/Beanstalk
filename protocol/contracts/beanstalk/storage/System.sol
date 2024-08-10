@@ -74,7 +74,7 @@ struct System {
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
-    Migration migration;
+    L2Migration l2Migration;
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
@@ -374,9 +374,27 @@ struct ShipmentRoute {
     bytes data;
 }
 
-struct Migration {
+/**
+ * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
+ * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
+ * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param _buffer_ Reserved storage for future additions.
+ */
+struct L2Migration {
     uint256 migratedL1Beans;
+    mapping(address => MigrationData) account;
     bytes32[4] _buffer_;
+}
+
+/**
+ * @notice contains data relating to migration.
+ */
+struct MigrationData {
+    address reciever;
+    bool migratedDeposits;
+    bool migratedPlots;
+    bool migratedFert;
+    bool migratedInternalBalances;
 }
 
 /**
