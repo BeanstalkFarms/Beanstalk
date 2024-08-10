@@ -3,8 +3,7 @@
  */
 
 pragma solidity ^0.8.20;
-
-import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title GaugePointFacet
@@ -20,14 +19,19 @@ interface IGaugePointFacet {
 }
 
 contract GaugePointFacet {
-    using LibRedundantMath256 for uint256;
+    uint256 private constant EXTREME_FAR_POINT = 5e18;
+    uint256 private constant RELATIVE_FAR_POINT = 1e18;
+    uint256 private constant RELATIVE_CLOSE_POINT = 0.5e18;
 
-    uint256 private constant ONE_POINT = 1e18;
     uint256 private constant MAX_GAUGE_POINTS = 1000e18;
+    uint256 private constant MAX_PERCENT = 100e6;
 
-    uint256 private constant UPPER_THRESHOLD = 10001;
-    uint256 private constant LOWER_THRESHOLD = 9999;
+    uint256 private constant UPPER_THRESHOLD = 10050;
+    uint256 private constant LOWER_THRESHOLD = 9950;
     uint256 private constant THRESHOLD_PRECISION = 10000;
+    uint256 private constant EXCESSIVELY_FAR = 75e6;
+    uint256 private constant RELATIVELY_FAR = 25e6;
+    uint256 private constant PRECISION = 100e6;
 
     /**
      * @notice DefaultGaugePointFunction
@@ -43,26 +47,93 @@ contract GaugePointFacet {
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv
-    ) public pure returns (uint256 newGaugePoints) {
+    ) public view returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >
-            optimalPercentDepositedBdv.mul(UPPER_THRESHOLD).div(THRESHOLD_PRECISION)
+            (optimalPercentDepositedBdv * UPPER_THRESHOLD) / THRESHOLD_PRECISION
         ) {
+            // Cap gauge points to MAX_PERCENT if it exceeds.
+            if (percentOfDepositedBdv > MAX_PERCENT) {
+                percentOfDepositedBdv = MAX_PERCENT;
+            }
+            uint256 points = getPoints(optimalPercentDepositedBdv, percentOfDepositedBdv, true);
+
             // gauge points cannot go below 0.
-            if (currentGaugePoints <= ONE_POINT) return 0;
-            newGaugePoints = currentGaugePoints.sub(ONE_POINT);
+            if (points < currentGaugePoints) {
+                return currentGaugePoints - points;
+            } else {
+                return 0;
+            }
         } else if (
             percentOfDepositedBdv <
-            optimalPercentDepositedBdv.mul(LOWER_THRESHOLD).div(THRESHOLD_PRECISION)
+            (optimalPercentDepositedBdv * LOWER_THRESHOLD) / THRESHOLD_PRECISION
         ) {
-            newGaugePoints = currentGaugePoints.add(ONE_POINT);
+            uint256 points = getPoints(optimalPercentDepositedBdv, percentOfDepositedBdv, false);
 
-            // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
-            if (newGaugePoints > MAX_GAUGE_POINTS) return MAX_GAUGE_POINTS;
+            if (points + currentGaugePoints < MAX_GAUGE_POINTS) {
+                return currentGaugePoints + points;
+            } else {
+                // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
+                return MAX_GAUGE_POINTS;
+            }
         } else {
-            // If % of deposited BDV is .01% within range of optimal,
+            // If % of deposited BDV is .5% within range of optimal,
             // keep gauge points the same.
             return currentGaugePoints;
         }
+    }
+
+    /**
+     * @notice returns the amount of points to increase or decrease.
+     * @dev the points change depending on the distance the % of deposited BDV
+     * is from the optimal % of deposited BDV.
+     */
+    function getPoints(
+        uint256 optimalPercentBdv,
+        uint256 percentBdv,
+        bool isAboveOptimal
+    ) private view returns (uint256) {
+        uint256 exsFar;
+        uint256 relFar;
+        if (isAboveOptimal) {
+            exsFar = getExtremelyFarAbove(optimalPercentBdv);
+            relFar = getRelativelyFarAbove(optimalPercentBdv);
+            if (percentBdv > exsFar) {
+                return EXTREME_FAR_POINT;
+            } else if (percentBdv > relFar) {
+                return RELATIVE_FAR_POINT;
+            } else {
+                return RELATIVE_CLOSE_POINT;
+            }
+        } else {
+            exsFar = getExtremelyFarBelow(optimalPercentBdv);
+            relFar = getRelativelyFarBelow(optimalPercentBdv);
+
+            if (percentBdv < exsFar) {
+                return EXTREME_FAR_POINT;
+            } else if (percentBdv < relFar) {
+                return RELATIVE_FAR_POINT;
+            } else {
+                return RELATIVE_CLOSE_POINT;
+            }
+        }
+    }
+
+    function getExtremelyFarAbove(uint256 optimalPercentBdv) public pure returns (uint256) {
+        return
+            (((MAX_PERCENT - optimalPercentBdv) * EXCESSIVELY_FAR) / PRECISION) + optimalPercentBdv;
+    }
+
+    function getRelativelyFarAbove(uint256 optimalPercentBdv) public pure returns (uint256) {
+        return
+            (((MAX_PERCENT - optimalPercentBdv) * RELATIVELY_FAR) / PRECISION) + optimalPercentBdv;
+    }
+
+    function getExtremelyFarBelow(uint256 optimalPercentBdv) public pure returns (uint256) {
+        return (optimalPercentBdv * (PRECISION - EXCESSIVELY_FAR)) / PRECISION;
+    }
+
+    function getRelativelyFarBelow(uint256 optimalPercentBdv) public pure returns (uint256) {
+        return (optimalPercentBdv * (PRECISION - RELATIVELY_FAR)) / PRECISION;
     }
 }
