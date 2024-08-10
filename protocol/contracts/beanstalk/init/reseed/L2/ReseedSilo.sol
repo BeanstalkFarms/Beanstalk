@@ -18,13 +18,11 @@ import {C} from "contracts/C.sol";
 contract ReseedSilo {
     using LibBytes for uint256;
 
-    /**
+/**
      * @notice AccountSiloDeposits is a struct that contains the silo deposit entries
      * for a given token and account.
      */
     struct AccountSiloDeposits {
-        address token;
-        int96 stemTip;
         address account;
         AccountDepositData[] dd;
     }
@@ -68,53 +66,52 @@ contract ReseedSilo {
      * note: token addresses will differ from L1.
      */
     function init(
-        // many accounts that have many deposits of a token.
-        AccountSiloDeposits[] calldata deposits
+        AccountSiloDeposits[] calldata accountDeposits
     ) external {
         // initialize deposits.
-        reseedSiloDeposit(deposits);
+        reseedSiloDeposit(accountDeposits);
     }
 
     /**
      * @notice reseed the silo deposits.
-     * @param  deposits an array of account deposits for any token
+     * @param accountDeposits an array of account deposits for any token
      * where each account's deposits can have many entries for the same token.
      * @dev all deposits and accounts are mown to the current season.
      */
-    function reseedSiloDeposit(AccountSiloDeposits[] calldata deposits) internal {
-        // for all deposits of a token and account.
-        for (uint256 i; i < deposits.length; i++) {
+    function reseedSiloDeposit(AccountSiloDeposits[] calldata accountDeposits) internal {
+        // for all accounts
+        for (uint256 i; i < accountDeposits.length; i++) {
             // for all of account's deposits.
-            for (uint256 j; j < deposits[i].dd.length; j++) {
-                // get stem from depositId.
-                (, int96 stem) = LibBytes.unpackAddressAndStem(deposits[i].dd[j].depositId);
+            for (uint256 j; j < accountDeposits[i].dd.length; j++) {
+                // get token and stem from depositId.
+                (address token, int96 stem) = LibBytes.unpackAddressAndStem(accountDeposits[i].dd[j].depositId);
                 // add deposit to account.
                 s
-                    .accts[deposits[i].account]
-                    .deposits[deposits[i].dd[j].depositId]
-                    .amount = deposits[i].dd[j].amount;
-                s.accts[deposits[i].account].deposits[deposits[i].dd[j].depositId].bdv = deposits[i]
+                    .accts[accountDeposits[i].account]
+                    .deposits[accountDeposits[i].dd[j].depositId]
+                    .amount = accountDeposits[i].dd[j].amount;
+                s.accts[accountDeposits[i].account].deposits[accountDeposits[i].dd[j].depositId].bdv = accountDeposits[i]
                     .dd[j]
                     .bdv;
                 // add deposit to depositIdList.
-                s.accts[deposits[i].account].depositIdList[deposits[i].token].depositIds.push(
-                    deposits[i].dd[j].depositId
+                s.accts[accountDeposits[i].account].depositIdList[token].depositIds.push(
+                    accountDeposits[i].dd[j].depositId
                 );
 
                 // emit events.
                 emit AddMigratedDeposit(
-                    deposits[i].account,
-                    deposits[i].token,
+                    accountDeposits[i].account,
+                    token,
                     stem,
-                    deposits[i].dd[j].amount,
-                    deposits[i].dd[j].bdv
+                    accountDeposits[i].dd[j].amount,
+                    accountDeposits[i].dd[j].bdv
                 );
                 emit TransferSingle(
-                    deposits[i].account, // operator
+                    accountDeposits[i].account, // operator
                     address(0), // from
-                    deposits[i].account, // to
-                    deposits[i].dd[j].depositId, // depositID
-                    deposits[i].dd[j].amount // token amount
+                    accountDeposits[i].account, // to
+                    accountDeposits[i].dd[j].depositId, // depositID
+                    accountDeposits[i].dd[j].amount // token amount
                 );
             }
         }
