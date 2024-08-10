@@ -22,6 +22,7 @@ import { FC } from '~/types';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import TokenDepositsOverview from '~/components/Silo/TokenDepositsOverview';
 import useSdk from '~/hooks/sdk';
+import TokenDepositRewards from '~/components/Silo/TokenDepositRewards';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -126,6 +127,9 @@ const TokenPage: FC<{}> = () => {
             {false && <SiloAssetOverviewCard token={whitelistedToken} />}
             <Card sx={{ p: 1, boxSizing: 'border-box' }}>
               <TokenDepositsOverview token={sdkToken} />
+            </Card>
+            <Card sx={{ p: 2 }}>
+              <TokenDepositRewards token={sdkToken} />
             </Card>
           </Stack>
           <Stack
