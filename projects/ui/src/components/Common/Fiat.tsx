@@ -2,7 +2,8 @@ import React from 'react';
 import BigNumber from 'bignumber.js';
 import { Box } from '@mui/material';
 import logo from '~/img/tokens/bean-logo.svg';
-import { Token } from '~/classes';
+import { Token as LegacyToken } from '~/classes';
+import { Token } from '@beanstalk/sdk';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 import useSetting from '~/hooks/app/useSetting';
 import usePrice from '~/hooks/beanstalk/usePrice';
@@ -15,7 +16,7 @@ import { FC } from '~/types';
 const Fiat: FC<{
   /* The USD value of `amount`. If provided, we don't try to derive via `siloTokenToFiat`. */
   value?: BigNumber;
-  token?: Token;
+  token?: LegacyToken | Token;
   amount: BigNumber | undefined;
   allowNegative?: boolean;
   chop?: boolean;
@@ -33,10 +34,16 @@ const Fiat: FC<{
   const siloTokenToFiat = useSiloTokenToFiat();
   const value = _value
     ? // value override provided (in USD terms)
-      denomination === 'usd' ? _value : _value.div(price)
+      denomination === 'usd'
+      ? _value
+      : _value.div(price)
     : // derive value from token amount
-      amount && token ? siloTokenToFiat(token, amount, denomination, chop) : ZERO_BN;
-  const displayValue = truncate ? displayBN(value, allowNegative) : displayFullBN(value, 2, 2);
+      amount && token
+      ? siloTokenToFiat(token, amount, denomination, chop)
+      : ZERO_BN;
+  const displayValue = truncate
+    ? displayBN(value, allowNegative)
+    : displayFullBN(value, 2, 2);
 
   return (
     <Row

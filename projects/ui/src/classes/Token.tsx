@@ -6,6 +6,7 @@ import client from '~/util/wagmi/Client';
 import { toStringBaseUnitBN } from '~/util/Tokens';
 
 /**
+ * @deprecated
  * A currency is any fungible financial instrument, including Ether, all ERC20 tokens, and other chain-native currencies
  */
 export default abstract class Token {

@@ -1,7 +1,8 @@
 import BigNumber from 'bignumber.js';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import Token from '~/classes/Token';
+import LegacyToken from '~/classes/Token';
+import { Token } from '@beanstalk/sdk';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import {
@@ -36,7 +37,7 @@ const useSiloTokenToFiat = () => {
 
   return useCallback(
     (
-      _token: Token,
+      _token: Token | LegacyToken,
       _amount: BigNumber,
       _denomination: Settings['denomination'] = 'usd',
       _chop: boolean = true
@@ -44,12 +45,12 @@ const useSiloTokenToFiat = () => {
       if (!_amount) return ZERO_BN;
 
       /// For Beans, use the aggregate Bean price.
-      if (_token === Bean) {
+      if (_token.address.toLowerCase() === Bean.address.toLowerCase()) {
         return _denomination === 'bdv' ? _amount : _amount.times(price);
       }
 
       /// For Unripe assets
-      if (_token === urBean) {
+      if (_token.address.toLowerCase() === urBean.address.toLowerCase()) {
         const choppedBeans = _chop
           ? _amount.times(unripe[urBean.address]?.chopRate || ZERO_BN)
           : _amount;
@@ -64,7 +65,7 @@ const useSiloTokenToFiat = () => {
       const _poolAddress = _token.address;
       const _amountLP = _amount;
 
-      if (_token === urBeanWstETH) {
+      if (_token.address.toLowerCase() === urBeanWstETH.address.toLowerCase()) {
         // formula for calculating chopped urBEANWstETH LP:
         // userUrLP * totalUnderlyingLP / totalSupplyUrLP * recapPaidPercent
         const underlyingTotalLP = unripe[urBeanWstETH.address]?.underlying;
