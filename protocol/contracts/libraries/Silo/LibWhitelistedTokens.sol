@@ -304,6 +304,11 @@ library LibWhitelistedTokens {
     ) internal view returns (bool isWhitelisted, bool previouslyWhitelisted) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 whitelistedStatusLength = s.sys.silo.whitelistStatuses.length;
+
+        if (whitelistedStatusLength == 0) {
+            return (false, false);
+        }
+
         uint256 i;
         while (s.sys.silo.whitelistStatuses[i].token != token) {
             i++;
