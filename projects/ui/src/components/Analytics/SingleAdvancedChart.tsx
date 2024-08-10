@@ -180,6 +180,7 @@ const Chart = ({
   const handleSetVisibleRange = useCallback(
     (params?: { first?: DataPoint; last?: DataPoint }) => {
       if (!chart.current) return;
+      if (isLoading || isError) return;
       try {
         if (timePeriod?.to && timePeriod?.from) {
           chart.current.timeScale().setVisibleRange(timePeriod);
@@ -197,7 +198,7 @@ const Chart = ({
         chart.current.timeScale().fitContent();
       }
     },
-    [timePeriod]
+    [timePeriod, isLoading, isError]
   );
 
   useEffect(() => {

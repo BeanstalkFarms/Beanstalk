@@ -37,6 +37,123 @@ type SiloTokenDataBySeason = SeasonMap<{
   [address: string]: Partial<MergedQueryData>;
 }>;
 
+const MAX_DATA_PER_QUERY = 1000;
+
+const SEED_GAUGE_DEPLOYMENT_SEASON = 21797;
+
+const BEAN_ETH_MIGRATION_SEASON = 16644;
+
+const MIN_SEASON = 6074;
+
+const apolloFetch = async (
+  document: DocumentNode,
+  first: number,
+  season: number
+) =>
+  apolloClient.query({
+    query: document,
+    variables: { first, season_lte: season },
+    fetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: true,
+  });
+
+// Main hook with improved error handling and performance
+const useAvgSeedsPerBDV = (
+  range: Range<Time> | undefined,
+  skip = false
+): readonly [ChartQueryData[], boolean, boolean] => {
+  const [queryData, setQueryData] = useState<ChartQueryData[]>([]);
+  const [numQueries, setNumQueries] = useState<number>(getNumQueries(range));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const iterations = getNumQueries(range);
+    setNumQueries((prevNumQueries) => Math.max(prevNumQueries, iterations));
+  }, [range]);
+
+  const sdk = useSdk();
+
+  const fetch = useCallback(async () => {
+    if (skip) return;
+    setLoading(true);
+    console.debug('[useAvgSeedsPerBDV/fetch]: fetching...');
+
+    const tokens = [
+      sdk.tokens.BEAN_CRV3_LP,
+      sdk.tokens.BEAN,
+      ...sdk.tokens.siloWhitelistedWellLP,
+    ];
+    const document = createMultiTokenQuery(
+      sdk.contracts.beanstalk.address,
+      tokens
+    );
+
+    const output: SiloTokenDataBySeason = {};
+    let earliestSeason = 999999999;
+    try {
+      if (numQueries === 0) {
+        setError(true);
+        throw new Error(
+          'Avg Seeds Per BDV fetch: Invalid range. Expected numQueries > 0 but got 0.'
+        );
+      }
+
+      const fetchData = async (lte: number) =>
+        apolloFetch(document, MAX_DATA_PER_QUERY, lte).then((r) => {
+          earliestSeason = parseResult(r.data, sdk, tokens, output);
+        });
+
+      await fetchData(earliestSeason);
+
+      if (numQueries > 1) {
+        const seasons: number[] = [];
+        for (let i = 0; i < numQueries - 1; i += 1) {
+          const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
+          const season_lte = Math.max(0, earliestSeason - offset);
+          if (season_lte < MIN_SEASON) break;
+          seasons.push(season_lte);
+        }
+
+        await Promise.all(seasons.map((season) => fetchData(season)));
+      }
+
+      const normalized = normalizeQueryResults(sdk, output);
+      console.debug('[useAvgSeedsPerBDV/fetch]: results: ', {
+        output: getOutputHuman(output),
+        normalized,
+      });
+      setQueryData(normalized);
+    } catch (e) {
+      console.debug('[useAvgSeedsPerBDV/fetch]: FAILED: ', e);
+      console.error(e);
+      setError(true);
+    } finally {
+      console.debug('[useAvgSeedsPerBDV/fetch]: fetch complete...');
+      setLoading(false);
+    }
+  }, [numQueries, sdk, skip]);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return [queryData, loading, error] as const;
+};
+
+export default useAvgSeedsPerBDV;
+
+/// ---------- UTILS ----------
+
+function getNumQueries(range: Range<Time> | undefined): number {
+  const from = Number((range?.from || 0).valueOf());
+  // always fetch to the latest season
+  const to = Number(Date.now() / 1000).valueOf();
+  const numSeasons = Math.floor((to - from) / 3600);
+
+  return Math.ceil(numSeasons / MAX_DATA_PER_QUERY);
+}
+
 function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
   const queryParts = tokens.map(
     (token) => `
@@ -89,32 +206,13 @@ function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
   `;
 }
 
-/// ---------- UTILS ----------
-
-const MAX_DATA_PER_QUERY = 1000;
-
-const SEED_GAUGE_DEPLOYMENT_SEASON = 21797;
-
-const BEAN_ETH_MIGRATION_SEASON = 16644;
-
-const MIN_SEASON = 6074;
-
-const getNumQueries = (range: Range<Time> | undefined): number => {
-  const from = Number((range?.from || 0).valueOf());
-  // always fetch to the latest season
-  const to = Number(Date.now() / 1000).valueOf();
-  const numSeasons = Math.floor((to - from) / 3600);
-
-  return Math.ceil(numSeasons / MAX_DATA_PER_QUERY);
-};
-
-const processTokenData = (
+function processTokenData(
   token: Token,
   sData: SiloAssetsReturn | null,
   wData: WhitelistReturn | null,
   output: SiloTokenDataBySeason,
   sdk: BeanstalkSDK
-) => {
+) {
   const season = sData?.season || wData?.season;
   if (!season) return;
 
@@ -165,14 +263,14 @@ const processTokenData = (
     createdAt: sData?.createdAt || wData?.createdAt || existing.createdAt,
     season,
   };
-};
+}
 
-const parseResult = (
+function parseResult(
   data: any,
   sdk: BeanstalkSDK,
   tokens: Token[],
   output: SiloTokenDataBySeason
-) => {
+) {
   let earliestSeason = Infinity;
 
   tokens.forEach((token) => {
@@ -205,13 +303,13 @@ const parseResult = (
   });
 
   return earliestSeason;
-};
+}
 
 // Optimized data normalization
-const normalizeQueryResults = (
+function normalizeQueryResults(
   sdk: BeanstalkSDK,
   output: SiloTokenDataBySeason
-): ChartQueryData[] => {
+): ChartQueryData[] {
   const map: { [season: number]: ChartQueryData } = {};
   const timestamps = new Set<Time>();
 
@@ -258,118 +356,25 @@ const normalizeQueryResults = (
   });
 
   return Object.values(map).sort((a, b) => Number(a.time) - Number(b.time));
-};
+}
 
-const apolloFetch = async (
-  document: DocumentNode,
-  first: number,
-  season: number
-) =>
-  apolloClient.query({
-    query: document,
-    variables: { first, season_lte: season },
-    fetchPolicy: 'cache-first',
-    notifyOnNetworkStatusChange: true,
-  });
-
-// Main hook with improved error handling and performance
-const useAvgSeedsPerBDV = (
-  range: Range<Time> | undefined,
-  skip = false
-): readonly [ChartQueryData[], boolean, boolean] => {
-  const [queryData, setQueryData] = useState<ChartQueryData[]>([]);
-  const [numQueries, setNumQueries] = useState<number>(getNumQueries(range));
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (skip) return;
-    const iterations = getNumQueries(range);
-    if (iterations <= numQueries) return;
-    setNumQueries(iterations);
-  }, [numQueries, range, skip]);
-
-  const sdk = useSdk();
-
-  const fetch = useCallback(async () => {
-    if (skip) return;
-    setLoading(true);
-
-    const tokens = [
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN,
-      ...sdk.tokens.siloWhitelistedWellLP,
-    ];
-    const document = createMultiTokenQuery(
-      sdk.contracts.beanstalk.address,
-      tokens
+function getOutputHuman(output: SiloTokenDataBySeason) {
+  const _output = Object.entries(output).reduce((prev, [k, v]) => {
+    const obj = Object.entries(v).reduce(
+      (memo, [key, value]) => ({
+        ...memo,
+        [key]: {
+          depositedBDV: value.depositedBDV?.toNumber(),
+          grownStalkPerSeason: value.grownStalkPerSeason?.toNumber(),
+          createdAt: value.createdAt,
+          season: value.season,
+          grownStalkPerBDV: value.grownStalkPerBDV?.toNumber(),
+        },
+      }),
+      {}
     );
+    return { ...prev, [k]: obj };
+  }, {});
 
-    if (numQueries === 0) {
-      setError(true);
-      console.error('Invalid range');
-      return;
-    }
-
-    const output: SiloTokenDataBySeason = {};
-    let earliestSeason = 999999999;
-    try {
-      const fetchData = async (lte: number) =>
-        apolloFetch(document, MAX_DATA_PER_QUERY, lte).then((r) => {
-          earliestSeason = parseResult(r.data, sdk, tokens, output);
-        });
-
-      await fetchData(earliestSeason);
-
-      if (numQueries > 1) {
-        const seasons: number[] = [];
-        for (let i = 0; i < numQueries - 1; i += 1) {
-          const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
-          const season_lte = Math.max(0, earliestSeason - offset);
-          if (season_lte < MIN_SEASON) break;
-          seasons.push(season_lte);
-        }
-
-        await Promise.all(seasons.map((season) => fetchData(season)));
-      }
-
-      setQueryData(normalizeQueryResults(sdk, output));
-    } catch (e) {
-      console.error('[useAverageSeedsPerBDV/fetch]: FAILED: ', e);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numQueries, sdk, skip]);
-
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
-
-  return [queryData, loading, error] as const;
-};
-
-export default useAvgSeedsPerBDV;
-
-// const logOutput = (output: SiloTokenDataBySeason) => {
-//   const _output = Object.entries(output).reduce((prev, [k, v]) => {
-//     const obj = Object.entries(v).reduce(
-//       (memo, [key, value]) => ({
-//         ...memo,
-//         [key]: {
-//           depositedBDV: value.depositedBDV?.toNumber(),
-//           grownStalkPerSeason: value.grownStalkPerSeason?.toNumber(),
-//           createdAt: value.createdAt,
-//           season: value.season,
-//           grownStalkPerBDV: value.grownStalkPerBDV?.toNumber(),
-//         },
-//       }),
-//       {}
-//     );
-//     return { ...prev, [k]: obj };
-//   }, {});
-
-//   // console.log('[logoutput]: result', _output);
-//   return _output;
-// };
+  return _output;
+}

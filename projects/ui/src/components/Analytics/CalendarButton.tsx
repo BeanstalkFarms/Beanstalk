@@ -514,8 +514,8 @@ const CalendarButton: FC<CalendarProps> = ({
   const handleChange = (newRange?: DateRange, _preset?: string) => {
     if (newRange) {
       const newTimePeriod = {
-        from: ((newRange?.from || 0).valueOf() / 1000) as Time,
-        to: ((newRange?.to || Date.now()).valueOf() / 1000) as Time,
+        from: ((newRange.from || 0).valueOf() / 1000) as Time,
+        to: ((newRange.to || Date.now()).valueOf() / 1000) as Time,
       };
       setRange(newRange);
       setTimePeriod(newTimePeriod);
