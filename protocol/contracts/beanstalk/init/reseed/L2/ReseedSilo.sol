@@ -18,7 +18,7 @@ import {C} from "contracts/C.sol";
 contract ReseedSilo {
     using LibBytes for uint256;
 
-/**
+    /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposit entries
      * for a given token and account.
      */
@@ -62,7 +62,6 @@ contract ReseedSilo {
      * @notice Initialize the silo with the given deposits.
      * @dev performs the following:
      * - re-deposits the provided deposits to the silo.
-     * - re-issues stalk to the provided deposit holders.
      * note: token addresses will differ from L1.
      */
     function init(
@@ -74,9 +73,9 @@ contract ReseedSilo {
 
     /**
      * @notice reseed the silo deposits.
-     * @param accountDeposits an array of account deposits for any token
-     * where each account's deposits can have many entries for the same token.
-     * @dev all deposits and accounts are mown to the current season.
+     * @param accountDeposits an array of account deposits to reseed where each account
+     * can have multiple deposits.
+     * @dev the account's stalk and mow statuses are handled in a separate contract. 
      */
     function reseedSiloDeposit(AccountSiloDeposits[] calldata accountDeposits) internal {
         // for all accounts
