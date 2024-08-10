@@ -42,7 +42,7 @@ contract L1RecieverFacetTest is TestHelper {
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
 
-        assertEq(bs.balanceOfStalk(RECIEVER), 10199e6);
+        assertEq(bs.balanceOfStalk(RECIEVER), 10199e12);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         (uint256 amount, uint256 bdv) = bs.getDeposit(RECIEVER, token, stem);
         assertEq(amount, depositAmounts[0]);
