@@ -26,7 +26,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
           Target Seasons to Catch Up is set to 4320 Seasons, or 6 months.
         </Typography>
         <Typography color="text.secondary">
-          This determines the rate at which new Depositors catch up existing
+          This determines the rate at which new Depositors catch up to existing
           Depositors in terms of Grown Stalk per BDV.
         </Typography>
       </Box>
