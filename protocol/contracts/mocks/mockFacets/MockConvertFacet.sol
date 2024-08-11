@@ -23,9 +23,8 @@ contract MockConvertFacet is ConvertFacet {
         address token,
         int96[] memory stems,
         uint256[] memory amounts,
-        uint256 maxTokens
-    ) external // address account
-    {
+        uint256 maxTokens // address account
+    ) external {
         LibSilo._mow(msg.sender, token);
         // if (account == address(0)) account = msg.sender;
         (uint256 stalkRemoved, uint256 bdvRemoved) = LibConvert._withdrawTokens(
@@ -42,9 +41,8 @@ contract MockConvertFacet is ConvertFacet {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
-    ) external // address account
-    {
+        uint256 grownStalk // address account
+    ) external {
         LibSilo._mow(msg.sender, token);
         // if (account == address(0)) account = msg.sender;
         LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk);
