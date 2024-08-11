@@ -67,20 +67,10 @@ const useSiloTokenToFiat = () => {
 
       if (_token.address.toLowerCase() === urBeanWstETH.address.toLowerCase()) {
         // formula for calculating chopped urBEANWstETH LP:
-        // userUrLP * totalUnderlyingLP / totalSupplyUrLP * recapPaidPercent
-        const underlyingTotalLP = unripe[urBeanWstETH.address]?.underlying;
-        const totalSupplyUrLP = unripe[urBeanWstETH.address]?.supply;
-        const recapPaidPercent = unripe[urBeanWstETH.address]?.recapPaidPercent;
-        const choppedLP = _amount
-          .multipliedBy(underlyingTotalLP)
-          .dividedBy(totalSupplyUrLP)
-          .multipliedBy(recapPaidPercent);
+        // amount * penalty (where penalty is amount of beanWstETH for 1 urBeanWstETH)
+        const penalty = unripe[urBeanWstETH.address].penalty;
+        const choppedLP = _amount.times(penalty);
 
-        // console.log(`underlyingTotalLP`, underlyingTotalLP.toString()); // 285772.366579734565388865
-        // console.log(`totalSupplyUrLP`, totalSupplyUrLP.toString()); // 101482689.1786
-        // console.log(`recapPaidPercent`, recapPaidPercent.toString()); // 0.006132
-        // console.log(`amountLP`, _amount.toString()); // 370168.862647
-        // console.log(`choppedLP`, choppedLP.toString()); // 6.39190475675572378624622472
         const lpUsd = beanPools[beanWstETH.address]?.lpUsd || ZERO_BN;
         const lpBdv = beanPools[beanWstETH.address]?.lpBdv || ZERO_BN;
 
