@@ -31,8 +31,9 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
         </Typography>
       </Box>
       <Typography>
-        During periods of few new Deposits, the Grown Stalk per BDV will
-        increase.
+        During periods of many new Deposits, the Grown Stalk per BDV will
+        decrease. During periods of few new Deposits, the Grown Stalk per BDV
+        will increase.
       </Typography>
       <MuiLink
         href="https://docs.bean.money/almanac/protocol/glossary#target-seasons-to-catchup"

@@ -230,7 +230,7 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
             )}
             <Typography>
               {maxLP?.symbol || '--'} is currently the Max LP, i.e., the LP
-              token with the highest Gauge Points per BDV
+              token with the highest Gauge Points per BDV.
             </Typography>
           </Stack>
           <Link
