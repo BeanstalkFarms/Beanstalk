@@ -3618,6 +3618,12 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fieldId",
+        "type": "uint256"
+      },
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "index",
@@ -10268,6 +10274,12 @@
         "internalType": "int8",
         "name": "absChange",
         "type": "int8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fieldId",
+        "type": "uint256"
       }
     ],
     "name": "TemperatureChange",
