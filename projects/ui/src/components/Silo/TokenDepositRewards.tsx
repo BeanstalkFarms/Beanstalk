@@ -4,7 +4,7 @@ import { Token } from '@beanstalk/sdk';
 import Row from '~/components/Common/Row';
 import BigNumber from 'bignumber.js';
 import { InfoOutlined } from '@mui/icons-material';
-import { FontWeight } from '../App/muiTheme';
+import { BeanstalkPalette, FontWeight } from '../App/muiTheme';
 
 const TokenDepositRewards = ({ token }: { token: Token }) => {
   const seedReward = new BigNumber(token.rewards?.seeds?.toHuman() || '0');
@@ -16,7 +16,16 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
         <Typography variant="h4" fontWeight={FontWeight.bold}>
           Rewards for Deposited {token.symbol}
         </Typography>
-        <Button variant="outlined" size="small">
+        <Button
+          variant="outlined-secondary"
+          color="secondary"
+          size="small"
+          sx={{
+            borderRadius: '4px',
+            width: 'fit-content',
+            fontWeight: FontWeight.normal,
+          }}
+        >
           View rewards over time
         </Button>
       </Row>
@@ -30,22 +39,41 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           {seedReward.toFormat(6)} Seed.
         </Typography>
       </Typography>
-      <Row justifyContent="space-between">
-        <Alert
-          color="info"
-          icon={
-            <InfoOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
-          }
+
+      <Alert
+        color="info"
+        icon={
+          <InfoOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
+        }
+        sx={{
+          background: BeanstalkPalette.lightestBlue,
+          borderRadius: '10px',
+          '& .MuiAlert-message': {
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          },
+        }}
+      >
+        <Typography color="text.secondary">
+          You’ll receive new Beans when the Bean supply grows based on your
+          Stalk.
+        </Typography>
+        <Button
+          variant="outlined-secondary"
+          color="secondary"
+          size="small"
+          sx={{
+            borderRadius: '4px',
+            width: 'fit-content',
+            fontWeight: FontWeight.normal,
+          }}
         >
-          <Typography color="text.secondary">
-            You’ll receive new Beans when the Bean supply grows based on your
-            Stalk.
-          </Typography>
-        </Alert>
-        <Button variant="outlined" size="small">
           View Bean Supply
         </Button>
-      </Row>
+      </Alert>
     </Stack>
   );
 };

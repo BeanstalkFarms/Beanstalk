@@ -224,22 +224,15 @@ export default TokenDeposits;
 
 const sharedButtonProps = {
   sx: (theme: any) => ({
-    color: 'text.primary',
-    borderColor: BeanstalkPalette.blue,
     borderRadius: '4px',
-    fontWeight: FontWeight.medium,
-    px: 1,
-    py: 0.75,
-    ':hover': {
-      borderColor: BeanstalkPalette.blue,
-      background: BeanstalkPalette.lightestBlue,
-    },
     width: 'fit-content',
+    fontWeight: FontWeight.normal,
     [theme.breakpoints.down('sm')]: {
       width: '100%',
     },
   }),
-  variant: 'outlined',
+  variant: 'outlined-secondary',
+  color: 'secondary',
   size: 'small',
 } as const;
 
@@ -365,6 +358,9 @@ const baseTableCSS = {
   '& .MuiDataGrid-root': {
     '& .MuiDataGrid-cell': {
       outline: 'none',
+      '&:active': {
+        outline: 'none',
+      },
     },
     '& .MuiDataGrid-virtualScrollerRenderZone': {
       '& .MuiDataGrid-row': {
