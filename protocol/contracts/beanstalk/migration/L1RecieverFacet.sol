@@ -46,8 +46,6 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
-    uint256 internal constant STALK_PRECISION = 1e6;
-
     /**
      * @notice emitted when L1 Beans are migrated to L2.
      */
@@ -387,9 +385,7 @@ contract L1RecieverFacet is ReentrancyGuard {
             );
 
             // calculate the stalk assoicated with the deposit and increment.
-            stalk +=
-                (bdvs[i] * stalkIssuedPerBdv) +
-                (uint256(uint256(uint96(stemTip - stem)) * bdvs[i]) / STALK_PRECISION);
+            stalk += (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i]);
         }
     }
 

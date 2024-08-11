@@ -1054,7 +1054,7 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
         });
       });
 
@@ -1076,7 +1076,7 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
         });
       });
 
@@ -1104,7 +1104,7 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);
@@ -1138,7 +1138,7 @@ describe("Marketplace", function () {
         it("emits events", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);

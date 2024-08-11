@@ -26,7 +26,12 @@ contract SunriseTest is TestHelper {
     event Sunrise(uint256 indexed season);
     event Soil(uint32 indexed season, uint256 soil);
     event Incentivization(address indexed account, uint256 beans);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
     event TotalGerminatingBalanceChanged(
@@ -232,7 +237,7 @@ contract SunriseTest is TestHelper {
 
         // Temperature changes.
         vm.expectEmit(false, false, false, false);
-        emit TemperatureChange(newSeason, 0, 0);
+        emit TemperatureChange(newSeason, 0, 0, bs.activeField());
 
         // Ratio changes.
         if (wellsEnabled) {
