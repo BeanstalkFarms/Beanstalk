@@ -4,7 +4,7 @@ const fs = require("fs");
 /**
  * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
  */
-async function reseed10(account, L2Beanstalk, verbose = true,) {
+async function reseed10(account, L2Beanstalk, mock, verbose = true) {
 
   // get list of facets to deploy:
   let facets = [

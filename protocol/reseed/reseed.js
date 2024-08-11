@@ -1,5 +1,6 @@
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
+const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
 const { reseed4 } = require("./reseed4.js");
 const { reseed5 } = require("./reseed5.js");
@@ -20,11 +21,12 @@ async function printBeanstalk() {
 }
 
 let reseeds;
-async function reseed(account, mock = true, log = false, start = 0, end = 11) {
+async function reseed(account, mock = true, log = false, start = 0, end = 12) {
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseedGlobal, // reseed global variables
+    reseed2, // reseed pod marketplace
     reseed3, // reseedbean + deploy wells on l2
     reseed4, // reseed field
     reseed5, // reseed barn (fert)
@@ -48,7 +50,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 11) {
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, true, mock);
     } else {
       // initialize beanstalk state.
-      await reseeds[i](account, l2BeanstalkAddress);
+      await reseeds[i](account, l2BeanstalkAddress, mock);
     }
   }
   console.log("Reseed successful.");

@@ -2,19 +2,17 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
-// Files
-let depositsPath;
-let mock = true;
-if (mock) {
-  depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
-} else {
-  depositsPath = "./reseed/data/r6-deposits.json";
-}
-
-async function reseed6(account, L2Beanstalk) {
+async function reseed6(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseed6: reissue deposits.\n");
 
+  // Files
+  let depositsPath;
+  if (mock) {
+    depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
+  } else {
+    depositsPath = "./reseed/data/r6-deposits.json";
+  }
   let beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
 
   chunkSize = 5;
