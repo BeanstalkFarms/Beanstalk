@@ -1,209 +1,202 @@
-import { Address, BigInt, Bytes, ethereum, store, log } from "@graphprotocol/graph-ts";
-import { Silo, SiloDeposit, SiloWithdraw, SiloYield, SiloAsset, WhitelistTokenSetting, TokenYield } from "../../generated/schema";
-import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
-import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { takeSiloSnapshots } from "../entities/snapshots/Silo";
+import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
+import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
+import { stemFromSeason } from "./contracts/SiloCalculations";
+import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
 
-/* ===== Base Silo Entities ===== */
+class AddRemoveDepositsParams {
+  event: ethereum.Event;
+  account: Address;
+  token: Address;
+  seasons: BigInt[] | null; // Seasons not present in v3+
+  stems: BigInt[] | null; // Stems not present in v2
+  amounts: BigInt[];
+  bdvs: BigInt[] | null; // bdv not present in v2 removal
+  depositVersion: String;
+}
 
-export function loadSilo(account: Address): Silo {
-  let silo = Silo.load(account.toHexString());
-  if (silo == null) {
-    silo = new Silo(account.toHexString());
-    silo.beanstalk = BEANSTALK.toHexString();
-    if (account !== BEANSTALK) {
-      silo.farmer = account.toHexString();
+export function addDeposits(params: AddRemoveDepositsParams): void {
+  for (let i = 0; i < params.amounts.length; ++i) {
+    let deposit = loadSiloDeposit({
+      account: params.account,
+      token: params.token,
+      depositVersion: params.depositVersion,
+      season: params.seasons != null ? params.seasons![i] : null,
+      stem: params.stems != null ? params.stems![i] : null
+    });
+
+    // Set granular deposit version type
+    if (params.depositVersion == "season") {
+      deposit.depositVersion = "season";
+      // Fill stem according to legacy conversion
+      deposit.stemV31 = stemFromSeason(params.seasons![i].toI32(), params.token);
+    } else {
+      deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
+      deposit.stemV31 = params.event.block.number > GAUGE_BIP45_BLOCK ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
     }
-    silo.whitelistedTokens = [];
-    silo.dewhitelistedTokens = [];
-    silo.depositedBDV = ZERO_BI;
-    silo.stalk = ZERO_BI;
-    silo.plantableStalk = ZERO_BI;
-    silo.seeds = ZERO_BI;
-    silo.grownStalkPerSeason = ZERO_BI;
-    silo.roots = ZERO_BI;
-    silo.germinatingStalk = ZERO_BI;
-    silo.beanMints = ZERO_BI;
-    silo.activeFarmers = 0;
-    silo.save();
+
+    deposit = updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event)!;
+    deposit.save();
+
+    // Ensure that a Farmer entity is set up for this account.
+    loadFarmer(params.account);
+
+    updateDepositInSilo(
+      params.event.address,
+      params.account,
+      params.token,
+      params.amounts[i],
+      params.bdvs![i],
+      params.event.block.timestamp
+    );
   }
-  return silo as Silo;
 }
 
-/* ===== Asset Entities ===== */
+export function removeDeposits(params: AddRemoveDepositsParams): void {
+  for (let i = 0; i < params.amounts.length; ++i) {
+    let deposit = loadSiloDeposit({
+      account: params.account,
+      token: params.token,
+      depositVersion: params.depositVersion,
+      season: params.seasons != null ? params.seasons![i] : null,
+      stem: params.stems != null ? params.stems![i] : null
+    });
 
-export function loadSiloAsset(account: Address, token: Address): SiloAsset {
-  let id = account.toHexString() + "-" + token.toHexString();
-  let asset = SiloAsset.load(id);
+    // Use bdv if it was provided (v2 events dont provide bdv), otherwise infer
+    let removedBdv = params.bdvs != null ? params.bdvs![i] : params.amounts[i].times(deposit.depositedBDV).div(deposit.depositedAmount);
 
-  if (asset == null) {
-    asset = new SiloAsset(id);
-    asset.silo = account.toHexString();
-    asset.token = token.toHexString();
-    asset.depositedBDV = ZERO_BI;
-    asset.depositedAmount = ZERO_BI;
-    asset.withdrawnAmount = ZERO_BI;
-    asset.farmAmount = ZERO_BI;
-    asset.save();
+    // If the amount goes to zero, the deposit is deleted and not returned
+    const updatedDeposit = updateDeposit(deposit, params.amounts[i].neg(), removedBdv.neg(), params.event);
+    if (updatedDeposit !== null) {
+      updatedDeposit.save();
+    }
+
+    // Update protocol totals
+    updateDepositInSilo(
+      params.event.address,
+      params.account,
+      params.token,
+      params.amounts[i].neg(),
+      removedBdv.neg(),
+      params.event.block.timestamp
+    );
   }
-  return asset as SiloAsset;
 }
 
-/* ===== Whitelist Token Settings Entities ===== */
+export function updateDepositInSilo(
+  protocol: Address,
+  account: Address,
+  token: Address,
+  deltaAmount: BigInt,
+  deltaBdv: BigInt,
+  timestamp: BigInt,
+  recurs: boolean = true
+): void {
+  if (recurs && account != protocol) {
+    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+  }
+  let silo = loadSilo(account);
+  silo.depositedBDV = silo.depositedBDV.plus(deltaBdv);
 
-export function addToSiloWhitelist(siloAddress: Address, token: Address): void {
-  let silo = loadSilo(siloAddress);
-  let currentList = silo.whitelistedTokens;
-  currentList.push(token.toHexString());
-  silo.whitelistedTokens = currentList;
+  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, timestamp, false);
+  // Individual farmer seeds cannot be directly tracked due to seed gauge
+  if (account == protocol) {
+    silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(newSeedStalk);
+  }
+  takeSiloSnapshots(silo, protocol, timestamp);
   silo.save();
 }
 
-export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting {
-  let setting = WhitelistTokenSetting.load(token);
-  if (setting == null) {
-    setting = new WhitelistTokenSetting(token);
-    setting.selector = Bytes.empty();
-    setting.stalkEarnedPerSeason = ZERO_BI;
-    setting.stalkIssuedPerBdv = ZERO_BI;
-    setting.milestoneSeason = 0;
-    setting.updatedAt = ZERO_BI;
-    setting.save();
+export function updateDepositInSiloAsset(
+  protocol: Address,
+  account: Address,
+  token: Address,
+  deltaAmount: BigInt,
+  deltaBdv: BigInt,
+  timestamp: BigInt,
+  recurs: boolean = true
+): BigInt {
+  if (recurs && account != protocol) {
+    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+  }
+  let asset = loadSiloAsset(account, token);
 
-    // Check token addresses and set replant seeds/stalk for Unripe due to event timing.
-    if (token == UNRIPE_BEAN) {
-      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-      setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
-      setting.save();
-    } else if (token == UNRIPE_BEAN_3CRV) {
-      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-      setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
-      setting.save();
+  let tokenSettings = loadWhitelistTokenSetting(token);
+  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
+
+  asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
+  asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);
+
+  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  asset.save();
+
+  return newGrownStalk;
+}
+
+export function addWithdrawToSiloAsset(
+  protocol: Address,
+  account: Address,
+  token: Address,
+  deltaAmount: BigInt,
+  timestamp: BigInt,
+  recurs: boolean = true
+): void {
+  if (recurs && account != protocol) {
+    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, timestamp);
+  }
+  let asset = loadSiloAsset(account, token);
+  asset.withdrawnAmount = asset.withdrawnAmount.plus(deltaAmount);
+  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  asset.save();
+}
+
+export function updateStalkBalances(
+  protocol: Address,
+  account: Address,
+  deltaStalk: BigInt,
+  deltaRoots: BigInt,
+  timestamp: BigInt,
+  recurs: boolean = true
+): void {
+  if (recurs && account != protocol) {
+    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, timestamp);
+  }
+  let silo = loadSilo(account);
+  silo.stalk = silo.stalk.plus(deltaStalk);
+  silo.roots = silo.roots.plus(deltaRoots);
+
+  takeSiloSnapshots(silo, protocol, timestamp);
+
+  // Add account to active list if needed
+  if (account !== protocol) {
+    let beanstalk = loadBeanstalk(protocol);
+    let farmerIndex = beanstalk.activeFarmers.indexOf(account.toHexString());
+    if (farmerIndex == -1) {
+      let newFarmers = beanstalk.activeFarmers;
+      newFarmers.push(account.toHexString());
+      beanstalk.activeFarmers = newFarmers;
+      beanstalk.save();
+      silo.activeFarmers += 1;
+    } else if (silo.stalk == ZERO_BI) {
+      let newFarmers = beanstalk.activeFarmers;
+      newFarmers.splice(farmerIndex, 1);
+      beanstalk.activeFarmers = newFarmers;
+      beanstalk.save();
+      silo.activeFarmers -= 1;
     }
   }
-  return setting as WhitelistTokenSetting;
+  silo.save();
 }
 
-/* ===== Deposit Entities ===== */
-
-class SiloDepositID {
-  account: Address;
-  token: Address;
-  depositVersion: String;
-  season: BigInt | null;
-  stem: BigInt | null;
-}
-
-export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
-  // id: Account - Token Address - Deposit Version - (Season|Stem)
-  const seasonOrStem = depositId.depositVersion == "season" ? depositId.season! : depositId.stem!;
-  const id =
-    depositId.account.toHexString() + "-" + depositId.token.toHexString() + "-" + depositId.depositVersion + "-" + seasonOrStem.toString();
-  let deposit = SiloDeposit.load(id);
-  if (deposit == null) {
-    deposit = new SiloDeposit(id);
-    deposit.farmer = depositId.account.toHexString();
-    deposit.token = depositId.token.toHexString();
-    deposit.depositVersion = depositId.depositVersion.toString();
-    if (depositId.season !== null) {
-      deposit.season = depositId.season!.toU32();
-    }
-    deposit.stem = depositId.stem;
-    deposit.stemV31 = ZERO_BI;
-    deposit.depositedAmount = ZERO_BI;
-    deposit.depositedBDV = ZERO_BI;
-    deposit.hashes = [];
-    deposit.createdBlock = ZERO_BI;
-    deposit.updatedBlock = ZERO_BI;
-    deposit.createdAt = ZERO_BI;
-    deposit.updatedAt = ZERO_BI;
-    deposit.save();
+export function updateSeedsBalances(protocol: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: boolean = true): void {
+  if (recurs && account != protocol) {
+    updateSeedsBalances(protocol, protocol, seeds, timestamp);
   }
-  return deposit;
-}
-
-// Updates the given SiloDeposit with new amounts/bdv. If the deposit was fully withdrawn, delete the SiloDeposit.
-export function updateDeposit(deposit: SiloDeposit, deltaAmount: BigInt, deltaBdv: BigInt, event: ethereum.Event): SiloDeposit | null {
-  deposit.depositedAmount = deposit.depositedAmount.plus(deltaAmount);
-  if (deposit.depositedAmount <= ZERO_BI) {
-    store.remove("SiloDeposit", deposit.id);
-    return null;
-  }
-  deposit.depositedBDV = deposit.depositedBDV.plus(deltaBdv);
-  let depositHashes = deposit.hashes;
-  depositHashes.push(event.transaction.hash.toHexString());
-  deposit.hashes = depositHashes;
-  deposit.createdBlock = deposit.createdBlock == ZERO_BI ? event.block.number : deposit.createdBlock;
-  deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
-  deposit.updatedBlock = event.block.number;
-  deposit.updatedAt = event.block.timestamp;
-  return deposit;
-}
-
-/* ===== Withdraw Entities ===== */
-
-export function loadSiloWithdraw(account: Address, token: Address, season: i32): SiloWithdraw {
-  let id = account.toHexString() + "-" + token.toHexString() + "-" + season.toString();
-  let withdraw = SiloWithdraw.load(id);
-  if (withdraw == null) {
-    withdraw = new SiloWithdraw(id);
-    withdraw.farmer = account.toHexString();
-    withdraw.token = token.toHexString();
-    withdraw.withdrawSeason = season;
-    withdraw.claimableSeason = season + 1;
-    withdraw.claimed = false;
-    withdraw.amount = ZERO_BI;
-    withdraw.createdAt = ZERO_BI;
-    withdraw.save();
-  }
-  return withdraw as SiloWithdraw;
-}
-
-/* ===== Yield Entities ===== */
-
-export function loadSiloYield(season: i32, window: i32): SiloYield {
-  let siloYield = SiloYield.load(season.toString() + "-" + window.toString());
-  if (siloYield == null) {
-    siloYield = new SiloYield(season.toString() + "-" + window.toString());
-    siloYield.season = season;
-    siloYield.beta = ZERO_BD;
-    siloYield.u = 0;
-    siloYield.beansPerSeasonEMA = ZERO_BD;
-    siloYield.whitelistedTokens = [];
-    siloYield.createdAt = ZERO_BI;
-
-    if (window == 24) {
-      siloYield.emaWindow = "ROLLING_24_HOUR";
-    } else if (window == 168) {
-      siloYield.emaWindow = "ROLLING_7_DAY";
-    } else if (window == 720) {
-      siloYield.emaWindow = "ROLLING_30_DAY";
-    }
-    siloYield.save();
-  }
-  return siloYield as SiloYield;
-}
-
-export function loadTokenYield(token: Address, season: i32, window: i32): TokenYield {
-  let id = token.concatI32(season).concatI32(window);
-  let tokenYield = TokenYield.load(id);
-  if (tokenYield == null) {
-    tokenYield = new TokenYield(id);
-    tokenYield.token = token;
-    tokenYield.season = season;
-    tokenYield.siloYield = season.toString() + "-" + window.toString();
-    tokenYield.beanAPY = ZERO_BD;
-    tokenYield.stalkAPY = ZERO_BD;
-    tokenYield.createdAt = ZERO_BI;
-    tokenYield.save();
-  }
-  return tokenYield as TokenYield;
-}
-
-export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: string): i32 {
-  for (let j = 0; j < a.length; j++) {
-    if (a[j].token == targetToken) {
-      return j;
-    }
-  }
-  return -1;
+  let silo = loadSilo(account);
+  silo.seeds = silo.seeds.plus(seeds);
+  takeSiloSnapshots(silo, protocol, timestamp);
+  silo.save();
 }

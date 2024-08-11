@@ -1,8 +1,7 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
-import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
-import * as YieldHandler from "../src/YieldHandler";
-import { BI_10, BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/utils/Silo";
+import { assert, describe, test } from "matchstick-as/assembly/index";
+import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/entities/Silo";
 import {
   BEAN_3CRV,
   BEAN_ERC20,
@@ -13,11 +12,13 @@ import {
   LUSD_3POOL
 } from "../../subgraph-core/utils/Constants";
 import { setSeason } from "./utils/Season";
+import { calculateAPYPreGauge } from "../src/utils/legacy/LegacyYield";
+import { calculateGaugeVAPYs, updateSiloVAPYs } from "../src/utils/Yield";
 
 describe("APY Calculations", () => {
   describe("Pre-Gauge", () => {
     test("No Bean mints", () => {
-      const apy = YieldHandler.calculateAPYPreGauge(
+      const apy = calculateAPYPreGauge(
         BigDecimal.fromString("0"), // n
         BigDecimal.fromString("2"), // seedsPerBDV
         BigDecimal.fromString("2"), // seedsPerBeanBDV
@@ -34,14 +35,14 @@ describe("APY Calculations", () => {
     // Sequence recreated here for testing:
     // https://docs.google.com/spreadsheets/d/1h7pPEydeAMze_uZMZzodTB3kvEXz_dGGje4KKm83gRM/edit#gid=1845553589
     test("Yields are higher with 4 seeds", () => {
-      const apy2 = YieldHandler.calculateAPYPreGauge(
+      const apy2 = calculateAPYPreGauge(
         BigDecimal.fromString("1278"),
         BigDecimal.fromString("3"),
         BigDecimal.fromString("3"),
         BigInt.fromString("1636664801904743831"),
         BigInt.fromString("24942000280720")
       );
-      const apy4 = YieldHandler.calculateAPYPreGauge(
+      const apy4 = calculateAPYPreGauge(
         BigDecimal.fromString("1278"),
         BigDecimal.fromString("4.5"),
         BigDecimal.fromString("3"),
@@ -64,7 +65,7 @@ describe("APY Calculations", () => {
   describe("With Seed Gauge", () => {
     test("Token yields - direct calculation", () => {
       // using non-gauge bdv 19556945 + 24417908 + 164986 (Unripe + 3crv after dewhitelisted)
-      const apy = YieldHandler.calculateGaugeVAPYs(
+      const apy = calculateGaugeVAPYs(
         [-1, 0, -2],
         BigDecimal.fromString("1278"),
         [BigDecimal.fromString("100")],
@@ -217,7 +218,7 @@ describe("APY Calculations", () => {
       siloYield.save();
 
       /// Actual entity-based calculation here
-      YieldHandler.updateSiloVAPYs(20000, ZERO_BI, 720);
+      updateSiloVAPYs(BEANSTALK, ZERO_BI, 720);
 
       const desiredPrecision = BigDecimal.fromString("0.0001");
       const beanResult = loadTokenYield(BEAN_ERC20, 20000, 720);
@@ -241,7 +242,7 @@ describe("APY Calculations", () => {
 
     test("Token yields - multiple gauge LP, one with no GP", () => {
       // 0 is beanweth, 1 is beanwsteth
-      const apy = YieldHandler.calculateGaugeVAPYs(
+      const apy = calculateGaugeVAPYs(
         [0, 1],
         BigDecimal.fromString("100"),
         // [BigDecimal.fromString("1"), BigDecimal.fromString("499")],

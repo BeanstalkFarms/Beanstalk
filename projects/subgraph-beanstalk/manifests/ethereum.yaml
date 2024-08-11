@@ -537,12 +537,13 @@ dataSources:
           handler: handleDiamondCut
       file: ../src/DiamondHandler.ts
   - kind: ethereum/contract
-    name: Bean
+    name: BeanERC20-V1
     network: mainnet
     source:
       address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
       abi: ERC20
       startBlock: 12974075
+      endBlock: 14602789
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -552,14 +553,12 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleLegacyTransfer
+          handler: handleTransfer
       file: ../src/BeanHandler.ts
   - kind: ethereum/contract
-    name: Bean-Replanted
+    name: BeanERC20
     network: mainnet
     source:
       address: "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab"
@@ -574,8 +573,6 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer

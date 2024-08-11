@@ -1,16 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import {
-  handleAddDeposit,
-  handleAddDeposit_V3,
-  handleDewhitelistToken,
-  handleRemoveDeposit,
-  handleRemoveDeposit_V3,
-  handleRemoveDeposits,
-  handleWhitelistToken,
-  handleWhitelistToken_V3
-} from "../src/SiloHandler";
-import {
   BEAN_3CRV,
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
@@ -29,10 +19,18 @@ import {
 } from "./event-mocking/Silo";
 import { createDewhitelistTokenEvent, createWhitelistTokenV2Event, createWhitelistTokenV3Event } from "./event-mocking/Whitelist";
 import { ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { stemFromSeason } from "../src/utils/contracts/SiloCalculations";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { setSeason } from "./utils/Season";
+import {
+  handleAddDeposit_v2,
+  handleRemoveDeposit_v2,
+  handleRemoveDeposits_v2,
+  handleWhitelistToken_v2,
+  handleWhitelistToken_v3
+} from "../src/handlers/legacy/LegacySiloHandler";
+import { handleAddDeposit, handleDewhitelistToken, handleRemoveDeposit } from "../src/handlers/SiloHandler";
+import { stemFromSeason } from "../src/utils/contracts/SiloCalculations";
 
 describe("Silo Events", () => {
   afterEach(() => {
@@ -45,7 +43,7 @@ describe("Silo Events", () => {
       let token = BEAN_ERC20.toHexString().toLowerCase();
 
       let newAddDepositEvent = createAddDepositV2Event(account, token, 6100, 1000, 6, 1000);
-      handleAddDeposit(newAddDepositEvent);
+      handleAddDeposit_v2(newAddDepositEvent);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "1000000000");
       assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "season", "6100");
@@ -61,7 +59,7 @@ describe("Silo Events", () => {
       let token = BEAN_ERC20.toHexString().toLowerCase();
 
       let newAddDepositEvent = createAddDepositV3Event(account, token, BigInt.fromU32(1500), 1000, 6, 1000);
-      handleAddDeposit_V3(newAddDepositEvent);
+      handleAddDeposit(newAddDepositEvent);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "1000000000");
       assert.fieldEquals("SiloDeposit", account + "-" + token + "-stem-1500", "stem", "1500");
@@ -73,7 +71,7 @@ describe("Silo Events", () => {
       // with V3.1 stem
       let addDeposit31 = createAddDepositV3Event(account, token, BigInt.fromI64(5700000000), 2500, 6, 2500);
       addDeposit31.block = mockBlock(GAUGE_BIP45_BLOCK.plus(ONE_BI));
-      handleAddDeposit_V3(addDeposit31);
+      handleAddDeposit(addDeposit31);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "3500000000");
       assert.fieldEquals("SiloDeposit", account + "-" + token + "-stem-5700000000", "stem", "5700000000");
@@ -88,10 +86,10 @@ describe("Silo Events", () => {
       let token = BEAN_ERC20.toHexString().toLowerCase();
 
       let newAddDepositEvent = createAddDepositV2Event(account, token, 6100, 1000, 6, 1000);
-      handleAddDeposit(newAddDepositEvent);
+      handleAddDeposit_v2(newAddDepositEvent);
 
       let newRemoveDepositEvent = createRemoveDepositV2Event(account, token, 6100, BigInt.fromString("800000000"));
-      handleRemoveDeposit(newRemoveDepositEvent);
+      handleRemoveDeposit_v2(newRemoveDepositEvent);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "200000000");
       assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedAmount", "200000000");
@@ -105,13 +103,13 @@ describe("Silo Events", () => {
       let token = BEAN_ERC20.toHexString().toLowerCase();
 
       let newAddDepositEvent = createAddDepositV2Event(account, token, 6100, 1000, 6, 1000);
-      handleAddDeposit(newAddDepositEvent);
+      handleAddDeposit_v2(newAddDepositEvent);
 
       let removeEvent = createRemoveDepositV2Event(account, token, 6100, BigInt.fromString("500000000"));
-      handleRemoveDeposit(removeEvent);
+      handleRemoveDeposit_v2(removeEvent);
 
       let removeEvent2 = createRemoveDepositV2Event(account, token, 6100, BigInt.fromString("200000000"));
-      handleRemoveDeposit(removeEvent2);
+      handleRemoveDeposit_v2(removeEvent2);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "300000000");
       assert.fieldEquals("SiloDeposit", account + "-" + token + "-season-6100", "depositedAmount", "300000000");
@@ -121,7 +119,7 @@ describe("Silo Events", () => {
 
       // Remove the deposit completely
       let removeEvent3 = createRemoveDepositV2Event(account, token, 6100, BigInt.fromString("300000000"));
-      handleRemoveDeposit(removeEvent3);
+      handleRemoveDeposit_v2(removeEvent3);
 
       assert.fieldEquals("Silo", account, "depositedBDV", "0");
       assert.notInStore("SiloDeposit", account + "-" + token + "-season-6100");
@@ -135,13 +133,13 @@ describe("Silo Events", () => {
       let token2 = BEAN_3CRV.toHexString().toLowerCase();
 
       let addV2_1 = createAddDepositV2Event(account1, token1, 6100, 1000, 6, 1000);
-      handleAddDeposit(addV2_1);
+      handleAddDeposit_v2(addV2_1);
       let addV3_1 = createAddDepositV3Event(account1, token1, BigInt.fromU32(70), 2000, 6, 2000);
-      handleAddDeposit_V3(addV3_1);
+      handleAddDeposit(addV3_1);
       let addV3_2 = createAddDepositV3Event(account1, token2, BigInt.fromU32(50), 1000, 6, 1000);
-      handleAddDeposit_V3(addV3_2);
+      handleAddDeposit(addV3_2);
       let addV3_3 = createAddDepositV3Event(account2, token2, BigInt.fromU32(90), 5000, 6, 4000);
-      handleAddDeposit_V3(addV3_3);
+      handleAddDeposit(addV3_3);
 
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "depositedBDV", "8000000000");
       assert.fieldEquals("Silo", account1, "depositedBDV", "4000000000");
@@ -153,7 +151,7 @@ describe("Silo Events", () => {
       assert.fieldEquals("SiloAsset", account2 + "-" + token2, "depositedBDV", "4000000000");
 
       let removeV2_1 = createRemoveDepositsV2Event(account1, token1, [6100], [BigInt.fromU32(1000000000)], BigInt.fromU32(1000000000));
-      handleRemoveDeposits(removeV2_1);
+      handleRemoveDeposits_v2(removeV2_1);
       let removeV3_1 = createRemoveDepositV3Event(
         account2,
         token2,
@@ -161,7 +159,7 @@ describe("Silo Events", () => {
         BigInt.fromU32(1500000000),
         BigInt.fromU32(1500000000)
       );
-      handleRemoveDeposit_V3(removeV3_1);
+      handleRemoveDeposit(removeV3_1);
 
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "depositedBDV", "5500000000");
       assert.fieldEquals("Silo", account1, "depositedBDV", "3000000000");
@@ -183,7 +181,7 @@ describe("Silo Events", () => {
       let addV3_1 = createAddDepositV3Event(account, token, BigInt.fromU32(70), 2000, 6, 2000);
       addV3_1.block = mockBlock(ZERO_BI, baseTimestamp);
       setSeason(20000);
-      handleAddDeposit_V3(addV3_1);
+      handleAddDeposit(addV3_1);
 
       assert.fieldEquals("SiloHourlySnapshot", account + "-20000", "depositedBDV", "2000000000");
       assert.fieldEquals("SiloHourlySnapshot", account + "-20000", "deltaDepositedBDV", "2000000000");
@@ -203,7 +201,7 @@ describe("Silo Events", () => {
       let addV3_2 = createAddDepositV3Event(account, token, BigInt.fromU32(50), 1000, 6, 1000);
       addV3_2.block = mockBlock(ZERO_BI, baseTimestamp.plus(hours15));
       setSeason(20015);
-      handleAddDeposit_V3(addV3_2);
+      handleAddDeposit(addV3_2);
 
       assert.fieldEquals("SiloHourlySnapshot", account + "-20015", "depositedBDV", "3000000000");
       assert.fieldEquals("SiloHourlySnapshot", account + "-20015", "deltaDepositedBDV", "1000000000");
@@ -223,7 +221,7 @@ describe("Silo Events", () => {
       let addV3_3 = createAddDepositV3Event(account, token, BigInt.fromU32(90), 5000, 6, 4000);
       addV3_3.block = mockBlock(ZERO_BI, baseTimestamp.plus(hours15).plus(hours15));
       setSeason(20030);
-      handleAddDeposit_V3(addV3_3);
+      handleAddDeposit(addV3_3);
 
       assert.fieldEquals("SiloHourlySnapshot", account + "-20030", "depositedBDV", "7000000000");
       assert.fieldEquals("SiloHourlySnapshot", account + "-20030", "deltaDepositedBDV", "4000000000");
@@ -244,10 +242,12 @@ describe("Silo Events", () => {
 
   describe("Whitelist", () => {
     test("Whitelist token v2", () => {
-      handleWhitelistToken(createWhitelistTokenV2Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
+      handleWhitelistToken_v2(createWhitelistTokenV2Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "whitelistedTokens", "[" + BEAN_ERC20.toHexString() + "]");
 
-      handleWhitelistToken(createWhitelistTokenV2Event(BEAN_WETH_CP2_WELL.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
+      handleWhitelistToken_v2(
+        createWhitelistTokenV2Event(BEAN_WETH_CP2_WELL.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234"))
+      );
       assert.fieldEquals(
         "Silo",
         BEANSTALK.toHexString(),
@@ -257,10 +257,10 @@ describe("Silo Events", () => {
     });
 
     test("Whitelist token v3", () => {
-      handleWhitelistToken_V3(createWhitelistTokenV3Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
+      handleWhitelistToken_v3(createWhitelistTokenV3Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "whitelistedTokens", "[" + BEAN_ERC20.toHexString() + "]");
 
-      handleWhitelistToken_V3(
+      handleWhitelistToken_v3(
         createWhitelistTokenV3Event(BEAN_WETH_CP2_WELL.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234"))
       );
       assert.fieldEquals(
@@ -274,8 +274,10 @@ describe("Silo Events", () => {
     // v4 tested in gauge test
 
     test("Dewhitelist token", () => {
-      handleWhitelistToken(createWhitelistTokenV2Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
-      handleWhitelistToken(createWhitelistTokenV2Event(BEAN_WETH_CP2_WELL.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
+      handleWhitelistToken_v2(createWhitelistTokenV2Event(BEAN_ERC20.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234")));
+      handleWhitelistToken_v2(
+        createWhitelistTokenV2Event(BEAN_WETH_CP2_WELL.toHexString(), "0xabcd1234", ONE_BI, BigInt.fromString("1234"))
+      );
       assert.fieldEquals(
         "Silo",
         BEANSTALK.toHexString(),

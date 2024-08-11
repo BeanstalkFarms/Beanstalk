@@ -1,21 +1,17 @@
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
 import { BigInt } from "@graphprotocol/graph-ts";
-
 import {
-  handleTemperatureChange,
   handleBeanToMaxLpGpPerBdvRatioChange,
   handleGaugePointChange,
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
   handleTotalGerminatingBalanceChanged,
-  handleWhitelistToken_BIP45,
   handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
-} from "../src/GaugeHandler";
-
-import { BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../subgraph-core/utils/Constants";
+} from "../src/handlers/GaugeHandler";
+import { BEAN_ERC20, BEANSTALK } from "../../subgraph-core/utils/Constants";
 import {
   createBeanToMaxLpGpPerBdvRatioChangeEvent,
   createFarmerGerminatingStalkBalanceChangedEvent,
@@ -29,10 +25,12 @@ import {
 import { createWhitelistTokenV4Event } from "./event-mocking/Whitelist";
 import { createTemperatureChangeEvent } from "./event-mocking/Field";
 import { simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
-import { loadSilo } from "../src/utils/Silo";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setSeason } from "./utils/Season";
 import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
+import { loadSilo } from "../src/entities/Silo";
+import { handleWhitelistToken } from "../src/handlers/SiloHandler";
+import { handleTemperatureChange } from "../src/handlers/FieldHandler";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
@@ -174,7 +172,7 @@ describe("Seed Gauge", () => {
 
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
-      handleWhitelistToken_BIP45(
+      handleWhitelistToken(
         createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",
