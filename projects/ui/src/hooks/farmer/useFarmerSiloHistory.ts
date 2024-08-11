@@ -28,7 +28,7 @@ const useFarmerSiloHistory = (
     fetchPolicy: 'cache-and-network',
   });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'cache-and-network',
   });
 
   const queryConfig = useMemo(
@@ -58,11 +58,12 @@ const useFarmerSiloHistory = (
   );
 
   return {
+    // remove the current season's data
     data: {
-      deposits: depositData,
-      stalk: stalkData,
-      seeds: seedsData,
-      grownStalk: grownStalkData,
+      deposits: (depositData || []).slice(0, -1),
+      stalk: (stalkData || []).slice(0, -1),
+      seeds: (seedsData || []).slice(0, -1),
+      grownStalk: (grownStalkData || []).slice(0, -1),
     },
     loading:
       siloRewardsQuery.loading || siloAssetsQuery.loading || priceQuery.loading,
