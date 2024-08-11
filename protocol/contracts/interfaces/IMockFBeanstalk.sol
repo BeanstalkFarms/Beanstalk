@@ -401,7 +401,12 @@ interface IMockFBeanstalk {
     event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
     event Sunrise(uint256 indexed season);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange, uint256 fieldId);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event TokenApproval(
         address indexed owner,
         address indexed spender,

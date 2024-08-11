@@ -8,7 +8,12 @@ import {C} from "contracts/C.sol";
 
 contract CasesTest is TestHelper {
     // Events.
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange, uint256 fieldId);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
