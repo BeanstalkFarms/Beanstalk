@@ -23,6 +23,7 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import TokenDepositsOverview from '~/components/Silo/TokenDepositsOverview';
 import useSdk from '~/hooks/sdk';
 import TokenDepositRewards from '~/components/Silo/TokenDepositRewards';
+import SiloTokenAbout from '~/components/Silo/SiloTokenAbout';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -63,7 +64,7 @@ const TokenPage: FC<{}> = () => {
   if (!whitelistedToken || !sdkToken) return null;
 
   const tokenIsBEAN3CRV =
-    address.toLowerCase() === '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49';
+    address.toLowerCase() === sdk.tokens.BEAN_CRV3_LP.address.toLowerCase();
 
   return (
     <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
@@ -130,6 +131,9 @@ const TokenPage: FC<{}> = () => {
             </Card>
             <Card sx={{ p: 2 }}>
               <TokenDepositRewards token={sdkToken} />
+            </Card>
+            <Card sx={{ p: 2 }}>
+              <SiloTokenAbout token={sdkToken} />
             </Card>
           </Stack>
           <Stack
