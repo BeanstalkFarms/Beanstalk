@@ -12,9 +12,6 @@ require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 
-// BIP Misc Improvements
-const { bipMiscellaneousImprovements } = require("./scripts/bips.js");
-
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
   impersonateSigner,
@@ -39,7 +36,7 @@ const { to6 } = require("./test/hardhat/utils/helpers.js");
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMiscellaneousImprovements } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
