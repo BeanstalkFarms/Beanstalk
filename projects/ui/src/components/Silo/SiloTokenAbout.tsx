@@ -18,14 +18,17 @@ const SiloTokenAbout = ({ token }: { token: Token }) => {
 
   const pools = usePools();
 
-  const underlying = pools[token.address].underlying;
-  const totalBDV = Object.values(balances).reduce<BigNumber>(
-    (prev, curr) => prev.plus(curr.TVD),
-    ZERO_BN
-  );
+  const isPool = token.address in pools;
+
+  const underlying = isPool ? pools[token.address]?.underlying : undefined;
+  // const totalBDV = Object.values(balances).reduce<BigNumber>(
+  //   (prev, curr) => prev.plus(curr.TVD || ZERO_BN),
+  //   ZERO_BN
+  // );
 
   const amounts = balances[token.address];
-  const pctDeposited = amounts.TVD.div(totalBDV).times(100);
+  // const pctDeposited = amounts.TVD.div(totalBDV).times(100);
+  const pctDeposited = ZERO_BN;
 
   const isWell = sdk.pools.getWells().find((w) => w.address === token.address);
 
@@ -54,11 +57,17 @@ const SiloTokenAbout = ({ token }: { token: Token }) => {
           <Row gap={0.25}>
             <TokenIcon token={token} />
             <Typography>
-              {amounts.deposited.amount.toFormat(2, BigNumber.ROUND_HALF_CEIL)}
+              {(amounts?.deposited?.amount || ZERO_BN).toFormat(
+                2,
+                BigNumber.ROUND_HALF_CEIL
+              )}
             </Typography>
           </Row>
           <Typography variant="bodySmall" color="text.secondary">
-            <Fiat token={token} amount={amounts.deposited.amount || ZERO_BN} />
+            <Fiat
+              token={token}
+              amount={amounts?.deposited?.amount || ZERO_BN}
+            />
           </Typography>
         </Stack>
       </Row>
@@ -75,15 +84,17 @@ const SiloTokenAbout = ({ token }: { token: Token }) => {
         <Typography>TODO</Typography>
       </Row>
       <Row>
-        <Alert color="info" icon={<InfoOutlined fontSize="small" />}>
-          <Row gap={0.25}>
-            <TokenIcon token={token} />
-            <Typography>
-              {token.symbol} is the liquidity Well token for{' '}
-              {underlying[0]?.symbol} and {underlying[1]?.symbol}.
-            </Typography>
-          </Row>
-        </Alert>
+        {underlying && (
+          <Alert color="info" icon={<InfoOutlined fontSize="small" />}>
+            <Row gap={0.25}>
+              <TokenIcon token={token} />
+              <Typography>
+                {token.symbol} is the liquidity Well token for{' '}
+                {underlying[0]?.symbol} and {underlying[1]?.symbol}.
+              </Typography>
+            </Row>
+          </Alert>
+        )}
         {isWell && (
           <Button
             variant="outlined"
