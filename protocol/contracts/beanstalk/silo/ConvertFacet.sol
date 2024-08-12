@@ -71,6 +71,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
+        // if the account is 0, set it to `LibTractor._user()`
+        // cp.account is only set upon a anti-lambda-lambda convert.
+        if (cp.account == address(0)) {
+            cp.account = LibTractor._user();
+        }
+
         if (cp.decreaseBDV) {
             require(
                 stems.length == 1 && amounts.length == 1,
@@ -80,10 +86,10 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         require(cp.fromAmount > 0, "Convert: From amount is 0.");
 
-        LibSilo._mow(LibTractor._user(), cp.fromToken);
+        LibSilo._mow(cp.account, cp.fromToken);
 
         // If the fromToken and toToken are different, mow the toToken as well.
-        if (cp.fromToken != cp.toToken) LibSilo._mow(LibTractor._user(), cp.toToken);
+        if (cp.fromToken != cp.toToken) LibSilo._mow(cp.account, cp.toToken);
 
         // Withdraw the tokens from the deposit.
         (pipeData.grownStalk, fromBdv) = LibConvert._withdrawTokens(
@@ -118,6 +124,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         fromAmount = cp.fromAmount;
         toAmount = cp.toAmount;
 
-        emit Convert(LibTractor._user(), cp.fromToken, cp.toToken, cp.fromAmount, cp.toAmount);
+        emit Convert(cp.account, cp.fromToken, cp.toToken, cp.fromAmount, cp.toAmount);
     }
 }
