@@ -68,7 +68,7 @@ const useSiloTokenToFiat = () => {
       if (_token.address.toLowerCase() === urBeanWstETH.address.toLowerCase()) {
         // formula for calculating chopped urBEANWstETH LP:
         // amount * penalty (where penalty is amount of beanWstETH for 1 urBeanWstETH)
-        const penalty = unripe[urBeanWstETH.address].penalty;
+        const penalty = unripe[urBeanWstETH.address]?.penalty || ZERO_BN;
         const choppedLP = _amount.times(penalty);
 
         const lpUsd = beanPools[beanWstETH.address]?.lpUsd || ZERO_BN;
