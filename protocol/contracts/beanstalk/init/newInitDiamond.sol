@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.20;
 
-import {InitializeDiamond} from "contracts/beanstalk/init/InitializeDiamond.sol";
+import {InitalizeDiamond} from "contracts/beanstalk/init/InitalizeDiamond.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -14,12 +14,12 @@ import {C} from "contracts/C.sol";
  * A new bean token and bean:TOKEN well are deployed.
  *
  **/
-contract InitDiamond is InitializeDiamond {
+contract InitDiamond is InitalizeDiamond {
     // initial reward for deploying beanstalk.
     uint256 constant INIT_SUPPLY = 100e6;
 
     function init() external {
-        initializeDiamond(C.BEAN, C.BEAN_ETH_WELL);
+        initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
 
         C.bean().mint(msg.sender, INIT_SUPPLY);
     }
