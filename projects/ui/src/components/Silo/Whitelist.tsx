@@ -95,7 +95,7 @@ const Whitelist: FC<{
 
   return (
     <Card>
-      <Box sx={{ overflowX: 'scroll' }}>
+      <Box sx={{ overflowX: 'auto' }}>
         <Box sx={{ minWidth: '1100px' }}>
           {/* Header */}
           <Box
