@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param farmingStatus Stores whether the function call originated in a Farm-like transaction - Farm, Tractor, PipelineConvert, etc.
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
@@ -46,7 +46,7 @@ struct System {
     bool paused;
     uint128 pausedAt;
     uint256 reentrantStatus;
-    uint256 isFarm;
+    uint256 farmingStatus;
     address ownerCandidate;
     uint256 plenty;
     uint128 soil;

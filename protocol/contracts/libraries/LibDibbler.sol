@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {PRBMath} from "@prb/math/contracts/PRBMath.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import {LibAppStorage, AppStorage} from "./LibAppStorage.sol";
@@ -10,6 +11,9 @@ import {Account, Field} from "contracts/beanstalk/storage/Account.sol";
 import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {C} from "contracts/C.sol";
 
 /**
  * @title LibDibbler
@@ -43,6 +47,43 @@ library LibDibbler {
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     //////////////////// SOW ////////////////////
+
+    function sowWithMin(
+        uint256 beans,
+        uint256 minTemperature,
+        uint256 minSoil,
+        LibTransfer.From mode
+    ) internal returns (uint256 pods) {
+        // `soil` is the remaining Soil
+        (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
+
+        require(soil >= minSoil && beans >= minSoil, "Field: Soil Slippage");
+        require(_morningTemperature >= minTemperature, "Field: Temperature Slippage");
+
+        // If beans >= soil, Sow all of the remaining Soil
+        if (beans < soil) {
+            soil = beans;
+        }
+
+        // 1 Bean is Sown in 1 Soil, i.e. soil = beans
+        pods = _sow(soil, _morningTemperature, abovePeg, mode);
+    }
+
+    /**
+     * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
+     * number of `beanSown`.
+     */
+    function _sow(
+        uint256 beans,
+        uint256 _morningTemperature,
+        bool peg,
+        LibTransfer.From mode
+    ) internal returns (uint256 pods) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
+        pods = sow(beans, _morningTemperature, LibTractor._user(), peg);
+        s.sys.beanSown += SafeCast.toUint128(beans);
+    }
 
     /**
      * @param beans The number of Beans to Sow
@@ -142,6 +183,39 @@ library LibDibbler {
         }
 
         s.sys.weather.thisSowTime = uint32(block.timestamp.sub(s.sys.season.timestamp));
+    }
+
+    /**
+     * @dev Gets the current `soil`, `_morningTemperature` and `abovePeg`. Provided as a gas
+     * optimization to prevent recalculation of {LibDibbler.morningTemperature} for
+     * upstream functions.
+     * Note: the `soil` return value is symmetric with `totalSoil`.
+     */
+    function _totalSoilAndTemperature()
+        private
+        view
+        returns (uint256 soil, uint256 _morningTemperature, bool abovePeg)
+    {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        _morningTemperature = LibDibbler.morningTemperature();
+        abovePeg = s.sys.season.abovePeg;
+
+        // Below peg: Soil is fixed to the amount set during {calcCaseId}.
+        // Morning Temperature is dynamic, starting small and logarithmically
+        // increasing to `s.weather.t` across the first 25 blocks of the Season.
+        if (!abovePeg) {
+            soil = uint256(s.sys.soil);
+        }
+        // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
+        // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
+        // need to scale up the amount of Soil to hold Pods constant.
+        else {
+            soil = LibDibbler.scaleSoilUp(
+                uint256(s.sys.soil), // max soil offered this Season, reached when `t >= 25`
+                uint256(s.sys.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
+                _morningTemperature // temperature adjusted by number of blocks since Sunrise
+            );
+        }
     }
 
     //////////////////// TEMPERATURE ////////////////////

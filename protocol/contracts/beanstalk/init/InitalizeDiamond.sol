@@ -266,7 +266,6 @@ contract InitalizeDiamond {
     }
 
     function initalizeFarmAndTractor() internal {
-        s.sys.isFarm = 1;
         LibTractor._resetPublisher();
         LibTractor._setVersion("1.0.0");
     }

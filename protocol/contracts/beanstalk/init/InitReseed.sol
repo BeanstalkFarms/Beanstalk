@@ -18,7 +18,6 @@ contract InitReseed {
 
     function init(uint32 season) external {
         s.sys.paused = false;
-        s.sys.isFarm = 1;
         s.sys.silo.earnedBeans = 0;
         LibTractor._tractorStorage().activePublisher = payable(address(1));
 
