@@ -10,11 +10,15 @@ import {
   Plant,
   RemoveDeposit,
   RemoveDeposits,
+  RemoveWithdrawal,
+  RemoveWithdrawals,
   SeedsBalanceChanged,
   StalkBalanceChanged,
   UpdatedStalkPerBdvPerSeason,
   WhitelistToken
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
+import { getBeanstalkToken } from "../entities/Beanstalk";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -90,7 +94,14 @@ export function handlePlant(event: Plant): void {
 
   // Remove the asset-only amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
-  updateDepositInSiloAsset(event.address, event.address, BEAN_ERC20, event.params.beans, event.params.beans, event.block.timestamp);
+  updateDepositInSiloAsset(
+    event.address,
+    event.address,
+    getBeanstalkToken(event.address),
+    event.params.beans,
+    event.params.beans,
+    event.block.timestamp
+  );
 }
 
 export function handleWhitelistToken(event: WhitelistToken): void {
@@ -132,4 +143,15 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 
   takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
   siloSettings.save();
+}
+
+// Withdrawal is a legacy feature from replant, but these events are still present
+export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
+  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block.timestamp);
+}
+
+export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
+  for (let i = 0; i < event.params.seasons.length; i++) {
+    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block.timestamp);
+  }
 }

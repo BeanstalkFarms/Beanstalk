@@ -45,6 +45,7 @@ export function handleGaugePointChange(event: GaugePointChange): void {
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
   let silo = loadSilo(event.address);
 
+  // TODO: this is not accurate, the value in this event is pertaining to gauge only and does not include unripe
   silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
@@ -76,6 +77,8 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
     } else {
       farmerGerminating.save();
     }
+
+    // TODO: it is not necessarily the case that this germinating stalk has finished germinating. could be early withdraw
 
     // Need to subtract stalk from system silo. The finished germinating stalk was already added
     // into system stalk, and there are subsequent StalkBalanceChanged events for this transaction.
@@ -109,10 +112,13 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
 }
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.
+// It can also occur if a user withdraws early, before the germinating period completes.
 export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkChanged): void {
   if (event.params.deltaGerminatingStalk == ZERO_BI) {
     return;
   }
+
+  // TODO: handle early withdraw
 
   let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32(), false);
   siloGerminating.season = event.params.germinationSeason.toU32();

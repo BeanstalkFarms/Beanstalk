@@ -9,8 +9,11 @@ import {
   PodListing,
   PodListingCreated as PodListingCreatedEvent,
   PodListingFilled as PodListingFilledEvent,
+  PodListingCancelled as PodListingCancelledEvent,
   PodOrderCreated as PodOrderCreatedEvent,
-  PodOrderFilled as PodOrderFilledEvent
+  PodOrderFilled as PodOrderFilledEvent,
+  PodOrderCancelled as PodOrderCancelledEvent,
+  PodOrder
 } from "../../generated/schema";
 import { getHarvestableIndex, loadFarmer } from "../entities/Beanstalk";
 import { takeMarketSnapshots } from "../entities/snapshots/Marketplace";
@@ -38,6 +41,12 @@ class PodListingCreatedParams {
   pricingType: i32; // for v1, always 0
 }
 
+class PodListingCancelledParams {
+  event: ethereum.Event;
+  account: Address;
+  index: BigInt;
+}
+
 class PodOrderCreatedParams {
   event: ethereum.Event;
   account: Address;
@@ -49,6 +58,12 @@ class PodOrderCreatedParams {
   minFillAmount: BigInt; // for v1, always 0
   pricingFunction: Bytes | null;
   pricingType: i32; // for v1, always 0
+}
+
+class PodOrderCancelledParams {
+  event: ethereum.Event;
+  account: Address;
+  id: Bytes;
 }
 
 // This one is the same for both listing/order fills.
@@ -254,6 +269,46 @@ export function podListingFilled(params: MarketFillParams): void {
   rawEvent.save();
 }
 
+export function podListingCancelled(params: PodListingCancelledParams): void {
+  let listing = PodListing.load(params.account.toHexString() + "-" + params.index.toString());
+  if (listing !== null && listing.status == "ACTIVE") {
+    updateActiveListings(
+      params.event.address,
+      MarketplaceAction.CANCELLED,
+      params.account.toHexString(),
+      listing.index,
+      listing.maxHarvestableIndex
+    );
+    updateMarketListingBalances(
+      params.event.address,
+      params.event.address,
+      ZERO_BI,
+      listing.remainingAmount,
+      ZERO_BI,
+      ZERO_BI,
+      params.event.block.timestamp
+    );
+
+    listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
+    listing.updatedAt = params.event.block.timestamp;
+    listing.save();
+
+    // Save the raw event data
+    let id = "podListingCancelled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+    let rawEvent = new PodListingCancelledEvent(id);
+    rawEvent.hash = params.event.transaction.hash.toHexString();
+    rawEvent.logIndex = params.event.logIndex.toI32();
+    rawEvent.protocol = params.event.address.toHexString();
+    rawEvent.historyID = listing.historyID;
+    rawEvent.account = params.account.toHexString();
+    rawEvent.placeInLine = params.index.plus(listing.start).minus(getHarvestableIndex(params.event.address));
+    rawEvent.index = params.index;
+    rawEvent.blockNumber = params.event.block.number;
+    rawEvent.createdAt = params.event.block.timestamp;
+    rawEvent.save();
+  }
+}
+
 export function podOrderCreated(params: PodOrderCreatedParams): void {
   let order = loadPodOrder(params.id);
   loadFarmer(params.account);
@@ -366,6 +421,39 @@ export function podOrderFilled(params: MarketFillParams): void {
   rawEvent.blockNumber = params.event.block.number;
   rawEvent.createdAt = params.event.block.timestamp;
   rawEvent.save();
+}
+
+export function podOrderCancelled(params: PodOrderCancelledParams): void {
+  let order = PodOrder.load(params.id.toHexString());
+  if (order !== null && order.status == "ACTIVE") {
+    order.status = order.podAmountFilled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
+    order.updatedAt = params.event.block.timestamp;
+    order.save();
+
+    updateActiveOrders(params.event.address, MarketplaceAction.CANCELLED, order.id, order.maxPlaceInLine);
+    updateMarketOrderBalances(
+      params.event.address,
+      params.event.address,
+      ZERO_BI,
+      order.beanAmount.minus(order.beanAmountFilled),
+      ZERO_BI,
+      ZERO_BI,
+      params.event.block.timestamp
+    );
+
+    // Save the raw event data
+    let id = "podOrderCancelled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
+    let rawEvent = new PodOrderCancelledEvent(id);
+    rawEvent.hash = params.event.transaction.hash.toHexString();
+    rawEvent.logIndex = params.event.logIndex.toI32();
+    rawEvent.protocol = params.event.address.toHexString();
+    rawEvent.historyID = order.historyID;
+    rawEvent.account = params.account.toHexString();
+    rawEvent.orderId = params.id.toHexString();
+    rawEvent.blockNumber = params.event.block.number;
+    rawEvent.createdAt = params.event.block.timestamp;
+    rawEvent.save();
+  }
 }
 
 export function updateMarketListingBalances(

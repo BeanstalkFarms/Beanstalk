@@ -2,27 +2,22 @@ import { Address, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddWithdrawal,
-  RemoveWithdrawals,
-  RemoveWithdrawal,
   TransferDepositsCall,
   TransferDepositCall,
-  WhitelistToken as WhitelistToken_v2
-} from "../../../generated/Beanstalk-ABIs/Replanted";
-import {
+  WhitelistToken as WhitelistToken_v2,
   AddDeposit as AddDeposit_v2,
   RemoveDeposit as RemoveDeposit_v2,
   RemoveDeposits as RemoveDeposits_v2
 } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { loadBeanstalk } from "../../entities/Beanstalk";
 import { addToSiloWhitelist, loadSiloWithdraw, loadWhitelistTokenSetting } from "../../entities/Silo";
-import { updateClaimedWithdraw } from "../../utils/legacy/LegacySilo";
 import { addDeposits, addWithdrawToSiloAsset, removeDeposits } from "../../utils/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../../entities/snapshots/WhitelistTokenSetting";
 import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstalk-ABIs/SiloV3";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleAddDeposit_v2(event: AddDeposit_v2): void {
   if (event.params.amount == ZERO_BI && event.params.bdv == ZERO_BI) {
     // During replant there is at least one such event which should be ignored
@@ -40,7 +35,7 @@ export function handleAddDeposit_v2(event: AddDeposit_v2): void {
   });
 }
 
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleRemoveDeposit_v2(event: RemoveDeposit_v2): void {
   removeDeposits({
     event,
@@ -54,7 +49,7 @@ export function handleRemoveDeposit_v2(event: RemoveDeposit_v2): void {
   });
 }
 
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleRemoveDeposits_v2(event: RemoveDeposits_v2): void {
   removeDeposits({
     event,
@@ -68,6 +63,7 @@ export function handleRemoveDeposits_v2(event: RemoveDeposits_v2): void {
   });
 }
 
+// Replant -> SiloV3
 export function handleAddWithdrawal(event: AddWithdrawal): void {
   let withdraw = loadSiloWithdraw(event.params.account, event.params.token, event.params.season.toI32());
   withdraw.amount = withdraw.amount.plus(event.params.amount);
@@ -77,18 +73,9 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
   addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block.timestamp);
 }
 
-// Note: Legacy removals are still possible today.
-export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block.timestamp);
-}
+// Note: Legacy removals are still possible today, and are therefore not Legacy handlers.
 
-export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
-  for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block.timestamp);
-  }
-}
-
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleTransferDepositCall(call: TransferDepositCall): void {
   let beanstalk = loadBeanstalk(call.to);
   let updateFarmers = beanstalk.farmersToUpdate;
@@ -102,7 +89,7 @@ export function handleTransferDepositCall(call: TransferDepositCall): void {
   beanstalk.save();
 }
 
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   let beanstalk = loadBeanstalk(call.to);
   let updateFarmers = beanstalk.farmersToUpdate;
@@ -116,7 +103,7 @@ export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   beanstalk.save();
 }
 
-// Replant -> Silo V3
+// Replant -> SiloV3
 export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
   addToSiloWhitelist(event.address, event.params.token);
 
@@ -129,7 +116,7 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
   setting.save();
 }
 
-// Silo V3 -> Seed Gauge
+// SiloV3 -> SeedGauge
 export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
   addToSiloWhitelist(event.address, event.params.token);
 

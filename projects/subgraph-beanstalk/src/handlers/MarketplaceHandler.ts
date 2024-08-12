@@ -16,8 +16,10 @@ import {
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import {
   MarketplaceAction,
+  podListingCancelled,
   podListingCreated,
   podListingFilled,
+  podOrderCancelled,
   podOrderCreated,
   podOrderFilled,
   updateActiveListings,
@@ -84,66 +86,17 @@ export function handlePodOrderFilled(event: PodOrderFilled): void {
 }
 
 export function handlePodListingCancelled(event: PodListingCancelled): void {
-  let listing = PodListing.load(event.params.account.toHexString() + "-" + event.params.index.toString());
-  if (listing !== null && listing.status == "ACTIVE") {
-    updateActiveListings(
-      event.address,
-      MarketplaceAction.CANCELLED,
-      event.params.account.toHexString(),
-      listing.index,
-      listing.maxHarvestableIndex
-    );
-    updateMarketListingBalances(event.address, event.address, ZERO_BI, listing.remainingAmount, ZERO_BI, ZERO_BI, event.block.timestamp);
-
-    listing.status = listing.filled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
-    listing.updatedAt = event.block.timestamp;
-    listing.save();
-
-    // Save the raw event data
-    let id = "podListingCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-    let rawEvent = new PodListingCancelledEvent(id);
-    rawEvent.hash = event.transaction.hash.toHexString();
-    rawEvent.logIndex = event.logIndex.toI32();
-    rawEvent.protocol = event.address.toHexString();
-    rawEvent.historyID = listing.historyID;
-    rawEvent.account = event.params.account.toHexString();
-    rawEvent.placeInLine = event.params.index.plus(listing.start).minus(getHarvestableIndex(event.address));
-    rawEvent.index = event.params.index;
-    rawEvent.blockNumber = event.block.number;
-    rawEvent.createdAt = event.block.timestamp;
-    rawEvent.save();
-  }
+  podListingCancelled({
+    event,
+    account: event.params.account,
+    index: event.params.index
+  });
 }
 
 export function handlePodOrderCancelled(event: PodOrderCancelled): void {
-  let order = PodOrder.load(event.params.id.toHexString());
-  if (order !== null && order.status == "ACTIVE") {
-    order.status = order.podAmountFilled == ZERO_BI ? "CANCELLED" : "CANCELLED_PARTIAL";
-    order.updatedAt = event.block.timestamp;
-    order.save();
-
-    updateActiveOrders(event.address, MarketplaceAction.CANCELLED, order.id, order.maxPlaceInLine);
-    updateMarketOrderBalances(
-      event.address,
-      event.address,
-      ZERO_BI,
-      order.beanAmount.minus(order.beanAmountFilled),
-      ZERO_BI,
-      ZERO_BI,
-      event.block.timestamp
-    );
-
-    // Save the raw event data
-    let id = "podOrderCancelled-" + event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-    let rawEvent = new PodOrderCancelledEvent(id);
-    rawEvent.hash = event.transaction.hash.toHexString();
-    rawEvent.logIndex = event.logIndex.toI32();
-    rawEvent.protocol = event.address.toHexString();
-    rawEvent.historyID = order.historyID;
-    rawEvent.account = event.params.account.toHexString();
-    rawEvent.orderId = event.params.id.toHexString();
-    rawEvent.blockNumber = event.block.number;
-    rawEvent.createdAt = event.block.timestamp;
-    rawEvent.save();
-  }
+  podOrderCancelled({
+    event,
+    account: event.params.account,
+    id: event.params.id
+  });
 }

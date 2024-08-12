@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { loadSiloYield, loadTokenYield } from "../utils/entities/Silo";
+import { loadSiloYield, loadTokenYield } from "../../entities/Silo";
 
 export function loadSiloCache(SILO_YIELD: string[][]): void {
   for (let i = 0; i < SILO_YIELD.length; i++) {

@@ -6,14 +6,14 @@ import { MetapoolOracle } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { BeanstalkPrice_try_price } from "../../utils/contracts/BeanstalkPrice";
 import { loadSeason } from "../../entities/Beanstalk";
 
-// Pre-Replant only
+// PreReplant -> Replanted
 export function handleSeasonSnapshot(event: SeasonSnapshot): void {
   let season = loadSeason(event.address, event.params.season);
   season.price = toDecimal(event.params.price, 18);
   season.save();
 }
 
-// Replant until Seed Gauge
+// Replanted -> SeedGauge
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   let season = loadSeason(event.address, event.params.season);
   // Attempt to pull from Beanstalk Price contract first

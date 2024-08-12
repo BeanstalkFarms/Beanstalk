@@ -34,8 +34,6 @@ dataSources:
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-        - name: UniswapV2Pair
-          file: ../../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
         - name: CurvePrice

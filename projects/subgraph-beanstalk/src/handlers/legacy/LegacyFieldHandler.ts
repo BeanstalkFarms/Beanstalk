@@ -2,7 +2,7 @@ import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { WeatherChange, SupplyIncrease, SupplyDecrease, SupplyNeutral, FundFundraiser } from "../../../generated/Beanstalk-ABIs/PreReplant";
 import { temperatureChanged, updateFieldTotals } from "../../utils/Field";
 
-// Pre-Replant -> Seed Gauge
+// PreReplant -> SeedGauge
 export function handleWeatherChange(event: WeatherChange): void {
   temperatureChanged({
     event,
@@ -12,7 +12,7 @@ export function handleWeatherChange(event: WeatherChange): void {
   });
 }
 
-// Pre-Replant
+// PreReplant -> Replanted
 export function handleSupplyIncrease(event: SupplyIncrease): void {
   updateFieldTotals(
     event.address,
@@ -28,7 +28,7 @@ export function handleSupplyIncrease(event: SupplyIncrease): void {
   );
 }
 
-// Pre-Replant
+// PreReplant -> Replanted
 export function handleSupplyDecrease(event: SupplyDecrease): void {
   updateFieldTotals(
     event.address,
@@ -44,7 +44,7 @@ export function handleSupplyDecrease(event: SupplyDecrease): void {
   );
 }
 
-// Pre-Replant
+// PreReplant -> Replanted
 export function handleSupplyNeutral(event: SupplyNeutral): void {
   updateFieldTotals(
     event.address,
@@ -60,7 +60,7 @@ export function handleSupplyNeutral(event: SupplyNeutral): void {
   );
 }
 
-// Pre-Replant
+// PreReplant -> Replanted
 export function handleFundFundraiser(event: FundFundraiser): void {
   // Account for the fact that fundraiser sow using no soil.
   updateFieldTotals(

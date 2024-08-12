@@ -18,6 +18,21 @@ export function handleTransferBatch(event: TransferBatch): void {
   }
 }
 
+export function handleChop(event: Chop): void {
+  let id = "chop-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
+  let chop = new ChopEntity(id);
+  chop.hash = event.transaction.hash.toHexString();
+  chop.logIndex = event.transactionLogIndex.toI32();
+  chop.protocol = event.address.toHexString();
+  chop.farmer = event.params.account.toHexString();
+  chop.unripe = event.params.token.toHexString();
+  chop.amount = event.params.amount;
+  chop.underlying = event.params.underlying.toHexString();
+  chop.blockNumber = event.block.number;
+  chop.createdAt = event.block.timestamp;
+  chop.save();
+}
+
 function handleTransfer(fertilizer1155: Address, from: Address, to: Address, id: BigInt, amount: BigInt, blockNumber: BigInt): void {
   let fertilizer = loadFertilizer(fertilizer1155);
   let fertilizerToken = loadFertilizerToken(fertilizer, id, blockNumber);
@@ -37,19 +52,4 @@ function handleTransfer(fertilizer1155: Address, from: Address, to: Address, id:
   let toFertilizerBalance = loadFertilizerBalance(fertilizerToken, toFarmer);
   toFertilizerBalance.amount = toFertilizerBalance.amount.plus(amount);
   toFertilizerBalance.save();
-}
-
-export function handleChop(event: Chop): void {
-  let id = "chop-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
-  let chop = new ChopEntity(id);
-  chop.hash = event.transaction.hash.toHexString();
-  chop.logIndex = event.transactionLogIndex.toI32();
-  chop.protocol = event.address.toHexString();
-  chop.farmer = event.params.account.toHexString();
-  chop.unripe = event.params.token.toHexString();
-  chop.amount = event.params.amount;
-  chop.underlying = event.params.underlying.toHexString();
-  chop.blockNumber = event.block.number;
-  chop.createdAt = event.block.timestamp;
-  chop.save();
 }
