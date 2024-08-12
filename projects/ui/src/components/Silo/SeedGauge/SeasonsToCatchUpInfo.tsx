@@ -36,7 +36,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
         will increase.
       </Typography>
       <MuiLink
-        href="https://docs.bean.money/almanac/protocol/glossary#target-seasons-to-catchup"
+        href="https://docs.bean.money/almanac/farm/silo/seed-gauge-system#grown-stalk-inflation-rate"
         target="_blank"
         underline="always"
         color="primary.main"
