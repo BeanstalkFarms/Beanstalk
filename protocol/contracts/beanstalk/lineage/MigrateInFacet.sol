@@ -20,6 +20,7 @@ contract MigrateInFacet is Invariable {
     /**
      * @notice Process the inbound migration locally.
      * @dev Reverts if failure to mint assets or handle migration in.
+     * @dev Arguments are bytes because different sources may use different encodings.
      */
     function migrateIn(
         address user,
@@ -33,12 +34,5 @@ contract MigrateInFacet is Invariable {
         LibMigrateIn.migrateInDeposits(user, deposits);
         LibMigrateIn.migrateInPlots(user, plots);
         LibMigrateIn.migrateInFertilizer(user, fertilizer);
-    }
-
-    /** 
-     * @notice Adds a supported source from which farmers can migrate.
-     */
-    function addSupportedSource(address source) external fundsSafu noSupplyChange noNetFlow {
-        LibMigrateIn.addSupportedSource(source);
     }
 }

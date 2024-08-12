@@ -138,7 +138,7 @@ contract InitializeDiamond {
 
         // Set the sources that can migrate into this Beanstalk.
         // TODO: Change this from self.
-        LibMigrateIn.addSupportedSource(address(this));
+        s.sys.lineage.supportedSources[address(this)] = true;
     }
 
     /**
