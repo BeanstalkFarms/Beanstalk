@@ -78,14 +78,14 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
       farmerGerminating.save();
     }
 
-    // TODO: it is not necessarily the case that this germinating stalk has finished germinating. could be early withdraw
-
-    // Need to subtract stalk from system silo. The finished germinating stalk was already added
-    // into system stalk, and there are subsequent StalkBalanceChanged events for this transaction.
-    let systemSilo = loadSilo(event.address);
-    systemSilo.stalk = systemSilo.stalk.plus(event.params.deltaGerminatingStalk);
-    takeSiloSnapshots(systemSilo, event.address, event.block.timestamp);
-    systemSilo.save();
+    if (currentSeason >= farmerGerminating.season + 2) {
+      // If germination finished, need to subtract stalk from system silo. This stalk was already added
+      // into system stalk upon sunrise for season - 2.
+      let systemSilo = loadSilo(event.address);
+      systemSilo.stalk = systemSilo.stalk.plus(event.params.deltaGerminatingStalk);
+      takeSiloSnapshots(systemSilo, event.address, event.block.timestamp);
+      systemSilo.save();
+    }
   }
 
   let farmerSilo = loadSilo(event.params.account);
@@ -117,8 +117,6 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
   if (event.params.deltaGerminatingStalk == ZERO_BI) {
     return;
   }
-
-  // TODO: handle early withdraw
 
   let siloGerminating = loadOrCreateGerminating(event.address, event.params.germinationSeason.toU32(), false);
   siloGerminating.season = event.params.germinationSeason.toU32();
