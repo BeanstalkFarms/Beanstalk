@@ -3,8 +3,8 @@ const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = 
 const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require("./pipeline");
-const { to6, to18 } = require('../test/hardhat/utils/helpers.js');
-const { impersonateBeanWstethWell } = require('../utils/well.js');
+const { to6, to18 } = require("../test/hardhat/utils/helpers.js");
+const { impersonateBeanWstethWell } = require("../utils/well.js");
 
 async function bip30(mock = true, account = undefined) {
   if (account == undefined) {
@@ -366,17 +366,23 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
       "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
-      "LibConvert"
+      "LibConvert",
+      "LibPipelineConvert",
+      "LibSilo",
+      "LibShipping",
+      "LibFlood"
     ],
     facetLibraries: {
       UnripeFacet: ["LibLockedUnderlying"],
-      ConvertFacet: ["LibConvert"],
+      ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
       SeasonFacet: [
         "LibGauge",
         "LibIncentive",
         "LibLockedUnderlying",
         "LibWellMinting",
-        "LibGerminate"
+        "LibGerminate",
+        "LibShipping",
+        "LibFlood"
       ],
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },

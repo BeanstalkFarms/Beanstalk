@@ -24,7 +24,8 @@ let user, user2, owner;
 
 let snapshotId;
 
-describe("LockedBeansMainnet", function () {
+// The test can be skipped, given that the miscellaneous bip improvements has already been deployed.
+describe.skip("LockedBeansMainnet", function () {
   before(async function () {
     [user, user2] = await ethers.getSigners();
 

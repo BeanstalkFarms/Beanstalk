@@ -3,7 +3,8 @@ const { BEANSTALK, FERTILIZER } = require("./utils/constants.js");
 const { assert } = require("chai");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot.js");
 
-describe("Fert Upgrade with on-chain metadata", function () {
+// The test can be skipped, given that the miscellaneous bip improvements has already been deployed.
+describe.skip("Fert Upgrade with on-chain metadata", function () {
   before(async function () {
     try {
       await network.provider.request({
