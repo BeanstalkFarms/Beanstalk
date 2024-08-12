@@ -14,7 +14,7 @@ import BigNumber from 'bignumber.js';
 import drySeasonIcon from '~/img/beanstalk/sun/dry-season.svg';
 import rainySeasonIcon from '~/img/beanstalk/sun/rainy-season.svg';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { NEW_BN } from '~/constants';
+import { NEW_BN, ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import { FC } from '~/types';
 import useSeasonsSummary, {
@@ -23,6 +23,7 @@ import useSeasonsSummary, {
 import Row from '~/components/Common/Row';
 import { IconSize } from '~/components/App/muiTheme';
 import SunriseButton from '~/components/Sun/SunriseButton';
+import { LibCases } from '~/lib/Beanstalk/LibCases';
 import FolderMenu from '../FolderMenu';
 import SeasonCard from '../../Sun/SeasonCard';
 
@@ -40,6 +41,13 @@ const getDelta = (value: BigNumber | undefined) => {
   if (!value) return '';
   return value.gte(0) ? '+' : '-';
 };
+
+const maxBean2MaxLPRatio = new BigNumber(
+  LibCases.MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO
+).div(1e18);
+const minBean2MaxLPRatio = new BigNumber(
+  LibCases.MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO
+).div(1e18);
 
 const colConfig: Record<string, SeasonSummaryColumn> = {
   season: {
@@ -106,32 +114,42 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
     ),
   },
   bean2MaxLPScalar: {
-    title: 'Bean:Max LP Scalar',
+    title: 'Bean:Max LP Ratio',
     subtitle: 'Relative reward for Dep. Bean',
     widths: { xs: 1.65 },
-    render: ({ bean2MaxLPRatio }) => (
-      <Stack justifyContent="center" alignItems="flex-end">
-        <Typography variant="bodySmall" align="right">
-          {bean2MaxLPRatio.value?.toFormat(1) || '-'}{' '}
-          {bean2MaxLPRatio.delta && (
-            <Typography
-              component="span"
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              {`(${getDelta(bean2MaxLPRatio.delta)}${
-                bean2MaxLPRatio?.delta?.div(100).abs().toFormat() || '-'
-              })`}
+    render: ({ bean2MaxLPRatio }) => {
+      const isAtMinOrMax =
+        bean2MaxLPRatio.value?.eq(maxBean2MaxLPRatio) ||
+        bean2MaxLPRatio.value?.eq(minBean2MaxLPRatio);
+
+      const delta = isAtMinOrMax
+        ? ZERO_BN
+        : bean2MaxLPRatio?.delta?.div(100).abs();
+
+      return (
+        <Stack justifyContent="center" alignItems="flex-end">
+          <Typography variant="bodySmall" align="right">
+            {bean2MaxLPRatio.value?.toFormat(1) || '-'}{' '}
+            {bean2MaxLPRatio.delta && (
+              <Typography
+                component="span"
+                variant="bodySmall"
+                color="text.secondary"
+              >
+                {`(${getDelta(bean2MaxLPRatio.delta)}${
+                  delta?.toFormat() || '-'
+                }%)`}
+              </Typography>
+            )}
+          </Typography>
+          {bean2MaxLPRatio.display && (
+            <Typography variant="bodySmall" align="right" color="text.tertiary">
+              {bean2MaxLPRatio.display}
             </Typography>
           )}
-        </Typography>
-        {bean2MaxLPRatio.display && (
-          <Typography variant="bodySmall" align="right" color="text.tertiary">
-            {bean2MaxLPRatio.display}
-          </Typography>
-        )}
-      </Stack>
-    ),
+        </Stack>
+      );
+    },
   },
   price: {
     title: 'Price',
