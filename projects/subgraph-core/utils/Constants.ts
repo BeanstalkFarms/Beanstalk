@@ -46,6 +46,7 @@ export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9
 // Milestone blocks
 export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
 export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
+export const NEW_BEAN_TOKEN_BLOCK = BigInt.fromU32(15278082);
 export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
 export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
 

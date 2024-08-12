@@ -3,7 +3,7 @@ import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from ".
 import { BEANSTALK, GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
-import { getBeanstalkToken, loadBeanstalk, loadSeason } from "../entities/Beanstalk";
+import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
 import { takeMarketSnapshots } from "../entities/snapshots/Marketplace";
 import { loadSilo, loadSiloAsset } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
@@ -16,6 +16,7 @@ import { loadPodMarketplace } from "../entities/PodMarketplace";
 import { updateBeanEMA } from "../utils/Yield";
 import { updateExpiredPlots } from "../utils/Marketplace";
 import { updateHarvestablePlots } from "../utils/Field";
+import { getProtocolToken } from "../utils/Constants";
 
 export function handleSunrise(event: Sunrise): void {
   // (Legacy) Update any farmers that had silo transfers from the prior season.
@@ -82,7 +83,7 @@ export function handleReward(event: Reward): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getBeanstalkToken(event.address),
+    getProtocolToken(event.address, event.block.number),
     event.params.toSilo,
     event.params.toSilo,
     event.block.timestamp

@@ -3,13 +3,13 @@ import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { getFertilizerProtocol } from "../utils/Constants";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
   let fertilizer = Fertilizer.load(fertilizerAddress.toHexString());
   if (fertilizer == null) {
     fertilizer = new Fertilizer(fertilizerAddress.toHexString());
-    // TODO: how to assign beanstalk
-    fertilizer.beanstalk = BEANSTALK.toHexString();
+    fertilizer.beanstalk = getFertilizerProtocol(fertilizerAddress).toHexString();
     fertilizer.supply = ZERO_BI;
     fertilizer.save();
   }

@@ -15,6 +15,7 @@ import { calculateAPYPreGauge } from "./legacy/LegacyYield";
 import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
+import { getProtocolFertilizer } from "./Constants";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -412,11 +413,16 @@ function updateGaugePoints(gaugePoints: f64, currentPercent: f64, optimalPercent
 }
 
 function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void {
+  const fertAddress = getProtocolFertilizer(protocol);
+  if (fertAddress == null) {
+    return;
+  }
+
   const beanstalk = loadBeanstalk(protocol);
   const t = beanstalk.lastSeason;
   let siloYield = loadSiloYield(t, window);
   let fertilizerYield = loadFertilizerYield(t, window);
-  let fertilizer = loadFertilizer(Address.fromString(beanstalk.fertilizer1155!));
+  let fertilizer = loadFertilizer(fertAddress);
   let contract = BasinBip.bind(protocol);
   if (t < 6534) {
     let currentFertHumidity = contract.try_getCurrentHumidity();

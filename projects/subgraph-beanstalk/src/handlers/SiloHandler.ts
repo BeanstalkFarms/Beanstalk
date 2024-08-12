@@ -18,7 +18,7 @@ import {
   WhitelistToken
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
-import { getBeanstalkToken } from "../entities/Beanstalk";
+import { getProtocolToken } from "../utils/Constants";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -97,7 +97,7 @@ export function handlePlant(event: Plant): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getBeanstalkToken(event.address),
+    getProtocolToken(event.address, event.block.number),
     event.params.beans,
     event.params.beans,
     event.block.timestamp

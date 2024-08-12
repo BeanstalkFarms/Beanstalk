@@ -1,18 +1,21 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20, FERTILIZER } from "../../../subgraph-core/utils/Constants";
 import { Beanstalk } from "../../generated/schema";
 import { Farmer } from "../../generated/schema";
 import { Season } from "../../generated/schema";
-import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_MAX, ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { getProtocolFertilizer, getProtocolToken } from "../utils/Constants";
 
 export function loadBeanstalk(protocol: Address): Beanstalk {
   let beanstalk = Beanstalk.load(protocol.toHexString());
   if (beanstalk == null) {
     beanstalk = new Beanstalk(protocol.toHexString());
     beanstalk.name = "Beanstalk";
-    // TODO: how to assign token/fertilizer
-    beanstalk.token = BEAN_ERC20.toHexString();
-    beanstalk.fertilizer1155 = FERTILIZER.toHexString();
+    // Pre-replant token currently would not be set
+    beanstalk.token = getProtocolToken(protocol, BI_MAX).toHexString();
+    const fert = getProtocolFertilizer(protocol);
+    if (fert != null) {
+      beanstalk.fertilizer1155 = fert.toHexString();
+    }
     beanstalk.schemaVersion = "2.4.0";
     beanstalk.subgraphVersion = "2.4.0";
     beanstalk.methodologyVersion = "2.4.0";
@@ -69,14 +72,6 @@ export function loadSeason(diamondAddress: Address, id: BigInt): Season {
 export function getBeanstalkToken(protocol: Address): Address {
   let beanstalkEntity = loadBeanstalk(protocol);
   return Address.fromString(beanstalkEntity.token);
-}
-
-export function getBeanstalkFert(protocol: Address): Address | null {
-  let beanstalkEntity = loadBeanstalk(protocol);
-  if (beanstalkEntity.fertilizer1155 !== null) {
-    return Address.fromString(beanstalkEntity.fertilizer1155);
-  }
-  return null;
 }
 
 export function getCurrentSeason(protocol: Address): i32 {
