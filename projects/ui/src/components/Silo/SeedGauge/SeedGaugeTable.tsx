@@ -26,6 +26,7 @@ import { ArrowDownward, ArrowUpward, ArrowRight } from '@mui/icons-material';
 import logo from '~/img/tokens/bean-logo.svg';
 import { Link as RouterLink } from 'react-router-dom';
 import { ZERO_BN } from '~/constants';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 type GridConfigProps = Pick<GridProps, Breakpoint>;
 
@@ -117,7 +118,9 @@ const chipSx = {
 const BDVPctColumns: ISeedGaugeColumn[] = [
   {
     key: 'optimalBDVPct',
-    header: 'Optimal BDV %',
+    header: 'Optimal LP BDV %',
+    headerTooltip:
+      'The Beanstalk DAO sets an optimal distribution of Deposited LP BDV amongst whitelisted LP tokens. Seed rewards adjust for a given whitelisted LP token based on the difference between the current and optimal distribution.',
     render: ({ optimalPctDepositedBdv }) => {
       if (optimalPctDepositedBdv.eq(0)) {
         return <Typography color="text.tertiary">N/A</Typography>;
@@ -180,6 +183,8 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePoints',
     header: 'Gauge Points',
+    headerTooltip:
+      'Gauge Points determine how the Grown Stalk issued in a Season should be distributed between whitelisted LP tokens.',
     render: ({ gaugePoints, isAllocatedGP }) => (
       <Typography color={isAllocatedGP ? 'text.primary' : 'text.tertiary'}>
         {isAllocatedGP ? displayBNValue(gaugePoints, 0) : 'N/A'}
@@ -189,6 +194,8 @@ const advancedViewColumns: ISeedGaugeColumn[] = [
   {
     key: 'gaugePointsPerBDV',
     header: 'Gauge Points per BDV',
+    headerTooltip:
+      'The whitelisted LP token with the highest Gauge Points per BDV is the Max LP token.',
     render: ({ gaugePointsPerBdv, isAllocatedGP }) => (
       <Typography color={isAllocatedGP ? 'text.primary' : 'text.tertiary'}>
         {isAllocatedGP
@@ -242,20 +249,6 @@ const useTableConfig = (
 
       return prev;
     }, []);
-
-    // console.log(
-    //   'mapped: ',
-    //   mappedData.map((d) =>
-    //     Object.entries(d).reduce<any>((prev, [k, v]) => {
-    //       if (v instanceof BigNumber) {
-    //         prev[k] = v.toNumber();
-    //       } else if (v instanceof Token){
-    //         prev[k] = v.symbol;
-    //       }
-    //       return prev;
-    //     }, {})
-    //   )
-    // );
 
     return mappedData;
   }, [sdk, advancedView, gaugeData?.gaugeData]);
@@ -389,7 +382,7 @@ const SeedGaugeTable = ({
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;
 
   return (
-    <Box sx={{ overflowX: 'scroll' }}>
+    <Box sx={{ overflowX: 'auto' }}>
       <Stack sx={{ minWidth: isAdvanced ? '1100px' : 0 }}>
         <Box sx={{ borderBottom: '0.5px solid', borderColor: 'divider' }}>
           <Stack px={3}>
@@ -419,15 +412,25 @@ const SeedGaugeTable = ({
                     key={`sg-header-${column.key}`}
                     sx={lastChildSx}
                   >
-                    <Tooltip title={column.headerTooltip || ''}>
-                      <Typography
-                        color="text.secondary"
-                        align="inherit"
-                        textAlign="inherit"
-                      >
-                        {column.header}
-                      </Typography>
-                    </Tooltip>
+                    <Typography
+                      color="text.secondary"
+                      align="inherit"
+                      textAlign="inherit"
+                    >
+                      {column.header}
+                      {column.headerTooltip ? (
+                        <Tooltip title={column.headerTooltip} placement="top">
+                          <HelpOutlineIcon
+                            sx={{
+                              display: 'inline',
+                              mb: 0.5,
+                              fontSize: '11px',
+                              color: 'text.secondary',
+                            }}
+                          />
+                        </Tooltip>
+                      ) : null}
+                    </Typography>
                   </GridColumn>
                 ))}
               </Grid>

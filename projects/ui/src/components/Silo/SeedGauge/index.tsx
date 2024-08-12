@@ -54,6 +54,7 @@ const SeedGaugeInfoCard = ({
       borderColor: active && 'primary.main',
       ':hover': {
         borderColor: 'primary.main',
+        backgroundColor: 'primary.light',
       },
       [breakpoints.down('md')]: {
         backgroundColor: 'light.main',
@@ -167,6 +168,7 @@ const SeedGaugeSelect = ({
                       {pct ? displayFullBN(pct, 0) : '-'}%
                     </Typography>
                     {i !== clipped.length - 1 ? ', ' : ''}
+                    {/* hacky implementation */}
                     {tokensWithGP.length > clipped.length &&
                     i === clipped.length - 1
                       ? '...'
