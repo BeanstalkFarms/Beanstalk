@@ -8,7 +8,12 @@ import {C} from "contracts/C.sol";
 
 contract CasesTest is TestHelper {
     // Events.
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
@@ -75,7 +80,7 @@ contract CasesTest is TestHelper {
 
         // evaluate and update state.
         vm.expectEmit(true, true, false, false);
-        emit TemperatureChange(1, caseId, 0);
+        emit TemperatureChange(1, caseId, 0, bs.activeField());
         vm.expectEmit(true, true, false, false);
         emit BeanToMaxLpGpPerBdvRatioChange(1, caseId, 0);
 
