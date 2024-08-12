@@ -59,16 +59,12 @@ library LibWstethEthOracle {
      * Returns 0 if the either the Chainlink Oracle or Uniswap Oracle cannot fetch a valid price.
      **/
     function getWstethEthPrice(uint256 lookback) internal view returns (uint256 wstethEthPrice) {
-        uint256 chainlinkPrice = lookback == 0
-            ? LibChainlinkOracle.getPrice(
-                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_DAY_TIMEOUT
-            )
-            : LibChainlinkOracle.getTwap(
-                C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
-                LibChainlinkOracle.FOUR_DAY_TIMEOUT,
-                lookback
-            );
+        uint256 chainlinkPrice = LibChainlinkOracle.getTokenPrice(
+            C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+            LibChainlinkOracle.FOUR_DAY_TIMEOUT,
+            0,
+            lookback
+        );
 
         // Check if the chainlink price is broken or frozen.
         if (chainlinkPrice == 0) return 0;
@@ -86,6 +82,9 @@ library LibWstethEthOracle {
             C.WETH,
             ONE
         );
+
+        // uniswap price is a 1e6, need to convert to 1e18, multiply by 1e12
+        uniswapPrice = uniswapPrice * PRECISION_DENOMINATOR;
 
         // Check if the uniswapPrice oracle fails.
         if (uniswapPrice == 0) return 0;

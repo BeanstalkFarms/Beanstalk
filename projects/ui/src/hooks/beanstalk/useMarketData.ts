@@ -1,81 +1,128 @@
 import BigNumber from 'bignumber.js';
-import { useCallback, useMemo } from 'react';
-import { MarketStatus, useAllPodOrdersQuery } from '~/generated/graphql';
-import useCastApolloQuery from '~/hooks/app/useCastApolloQuery';
+import { useCallback, useEffect, useState } from 'react';
+import { AllPodListingsQuery, AllPodOrdersQuery, MarketStatus, useAllPodListingsLazyQuery, useAllPodOrdersLazyQuery } from '~/generated/graphql';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
-import usePodListings from '~/hooks/beanstalk/usePodListings';
 import {
   castPodListing,
   castPodOrder,
   PodListing,
   PodOrder,
 } from '~/state/farmer/market';
+import useSdk from '../sdk';
 
 const MIN_POD_AMOUNT = 1;
 
 const useMarketData = () => {
-  /// Beanstalk data
+
   const harvestableIndex = useHarvestableIndex();
+  const sdk = useSdk();
+
+  /// status
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const [listings, setListings] = useState<PodListing[] | undefined>();
+  const [orders, setOrders] = useState<PodOrder[] | undefined>();
+
+  const [maxPlaceInLine, setMaxPlaceInLine] = useState<number>(0);
+  const [maxPlotSize, setMaxPlotSize] = useState<number>(0);
 
   /// Queries
-  const listingsQuery = usePodListings({
-    variables: { status: MarketStatus.Active },
-    fetchPolicy: 'cache-and-network',
-    nextFetchPolicy: 'cache-first',
-    notifyOnNetworkStatusChange: true,
-  });
-  const ordersQuery = useAllPodOrdersQuery({
-    variables: { status: MarketStatus.Active },
-    fetchPolicy: 'cache-and-network',
-    nextFetchPolicy: 'cache-first',
-    notifyOnNetworkStatusChange: true,
-  });
+  const [getListings] = useAllPodListingsLazyQuery();
+  const [getOrders] = useAllPodOrdersLazyQuery();
 
-  /// Query status
-  const loading = listingsQuery.loading || ordersQuery.loading;
-  const error = listingsQuery.error || ordersQuery.error;
+  const _fetch = useCallback(
+    async() => {
+      const _listings: AllPodListingsQuery["podListings"] = [];
+      const _orders: AllPodOrdersQuery["podOrders"]  = [];
 
-  /// Cast query data to BigNumber, etc.
-  const listings = useCastApolloQuery<PodListing>(
-    listingsQuery,
-    'podListings',
-    useCallback(
-      (_listing) => castPodListing(_listing, harvestableIndex),
-      [harvestableIndex]
-    ),
-    loading
-  );
-  let orders = useCastApolloQuery<PodOrder>(
-    ordersQuery,
-    'podOrders',
-    castPodOrder,
-    loading
-  );
-  orders = orders?.filter((order) =>
-    order.beanAmountRemaining.gt(MIN_POD_AMOUNT)
-  );
+      let listingsOutputLength = 0;
+      let listingsQueryLoops = 1;
+      let ordersOutputLength = 0;
+      let ordersQueryLoops = 1;
+
+      const harvestableIndexFormatted = 
+        harvestableIndex.multipliedBy(new BigNumber(10).pow(sdk.tokens.BEAN.decimals)).toString();
+  
+      try {
+        setLoading(true);
+        setError(false);    
+        do {
+          if (harvestableIndex?.gt(0)) {
+            const listings = await getListings({
+              variables: { 
+                first: 1000,
+                skip: (listingsQueryLoops * 1000) - 1000,
+                status: MarketStatus.Active,
+                maxHarvestableIndex: harvestableIndexFormatted,
+              },
+              fetchPolicy: 'cache-and-network',
+              nextFetchPolicy: 'cache-first',
+              notifyOnNetworkStatusChange: true,
+            });
+            if (listings.data) {
+              _listings.push(...listings.data.podListings);
+              listingsOutputLength = listings.data.podListings.length;
+              listingsQueryLoops += 1;
+            };
+          };
+        } while ( listingsOutputLength === 1000 );
+        do {
+          const orders = await getOrders({
+            variables: { 
+              first: 1000,
+              skip: (ordersQueryLoops * 1000) - 1000,
+              status: MarketStatus.Active 
+            },
+            fetchPolicy: 'cache-and-network',
+            nextFetchPolicy: 'cache-first',
+            notifyOnNetworkStatusChange: true,
+          });
+          if (orders.data) {
+            _orders.push(...orders.data.podOrders);
+            ordersOutputLength = orders.data.podOrders.length;
+            ordersQueryLoops += 1;
+          };
+        } while ( ordersOutputLength === 1000 );
+        const _listingsOutput = _listings.map((listing: any) => castPodListing(listing, harvestableIndex));
+        setListings(_listingsOutput);
+        const _ordersOutput = _orders.map(castPodOrder).filter((order: any) =>
+          order.beanAmountRemaining.gt(MIN_POD_AMOUNT)
+        );
+        setOrders(_ordersOutput);
+        setLoading(false);
+      } catch (e) {
+        setError(true);
+      };
+    }, 
+  [harvestableIndex]);
+
+  useEffect(() => {
+    _fetch();
+  }, [harvestableIndex]);
 
   /// Calculations
-  const maxPlaceInLine = useMemo(
-    () =>
-      listings
+  useEffect(() => {
+    if (harvestableIndex) {
+      const _maxPlaceInLine = listings
         ? Math.max(
             ...listings.map((l) =>
               new BigNumber(l.index).minus(harvestableIndex).toNumber()
             )
           )
-        : 0,
-    [harvestableIndex, listings]
-  );
-  const maxPlotSize = useMemo(
-    () =>
-      listings
-        ? Math.max(
-            ...listings.map((l) => new BigNumber(l.remainingAmount).toNumber())
-          )
-        : 0,
-    [listings]
-  );
+        : 0;
+      setMaxPlaceInLine(_maxPlaceInLine);
+    };
+  }, [harvestableIndex, listings]);
+
+  useEffect(() => {
+    const _maxPlotSize = listings
+      ? Math.max(
+          ...listings.map((l) => new BigNumber(l.remainingAmount).toNumber())
+        )
+      : 0;
+    setMaxPlotSize(_maxPlotSize);
+  }, [listings]);
 
   return {
     listings,

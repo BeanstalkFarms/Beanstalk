@@ -85,7 +85,7 @@ describe("Unripe Convert", function () {
     await revertToSnapshot(snapshotId);
   });
 
-  describe("calclates beans to peg", async function () {
+  describe("calculates beans to peg", async function () {
     it("p > 1", async function () {
       await this.well
         .connect(user)
@@ -105,7 +105,7 @@ describe("Unripe Convert", function () {
     });
   });
 
-  describe("calclates lp to peg", async function () {
+  describe("calculates lp to peg", async function () {
     it("p > 1", async function () {
       await this.well
         .connect(user)
@@ -193,14 +193,16 @@ describe("Unripe Convert", function () {
         );
         expect(await beanstalk.getGerminatingTotalDepositedBdv(this.unripeLP.address)).to.eq(bdv);
 
-        expect(await beanstalk.totalStalk()).to.eq("1000000000400");
-        expect(await beanstalk.getTotalGerminatingStalk()).to.eq(bdv.mul("10000"));
+        expect(await beanstalk.totalStalk()).to.eq("1000000000400000000");
+        expect(await beanstalk.getTotalGerminatingStalk()).to.eq(bdv.mul("10000000000"));
       });
 
       it("properly updates user values", async function () {
         const bdv = await beanstalk.bdv(this.unripeLP.address, "4711829");
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("1000000000400");
-        expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq(bdv.mul("10000"));
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq("1000000000400000000");
+        expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq(
+          bdv.mul("10000000000")
+        );
       });
 
       it("properly updates user deposits", async function () {
@@ -286,17 +288,12 @@ describe("Unripe Convert", function () {
 
       it("properly updates total values", async function () {
         const bdv = await beanstalk.bdv(this.unripeBean.address, "636776401");
-        // const oldBdv = await beanstalk.bdv(this.unripeLP.address, to6('3'))
 
-        expect(await beanstalk.getTotalDeposited(this.unripeBean.address)).to.eq("0");
-        expect(await beanstalk.getGerminatingTotalDeposited(this.unripeBean.address)).to.eq(
-          "636776401"
-        );
+        expect(await beanstalk.getTotalDeposited(this.unripeBean.address)).to.eq("636776401");
+        expect(await beanstalk.getGerminatingTotalDeposited(this.unripeBean.address)).to.eq("0");
 
-        expect(await beanstalk.getTotalDepositedBdv(this.unripeBean.address)).to.eq("0");
-        expect(await beanstalk.getGerminatingTotalDepositedBdv(this.unripeBean.address)).to.eq(
-          189738509
-        );
+        expect(await beanstalk.getTotalDepositedBdv(this.unripeBean.address)).to.eq("189738509");
+        expect(await beanstalk.getGerminatingTotalDepositedBdv(this.unripeBean.address)).to.eq("0");
         expect(await beanstalk.getTotalDeposited(this.unripeLP.address)).to.eq(to6("0"));
         expect(await beanstalk.getGerminatingTotalDeposited(this.unripeLP.address)).to.eq(to6("0"));
 
@@ -306,15 +303,13 @@ describe("Unripe Convert", function () {
         );
 
         // 379 comes from grown stalk. (189738509/1e6 * 2)
-        expect(await beanstalk.totalStalk()).to.eq(379);
-        expect(await beanstalk.getTotalGerminatingStalk()).to.eq(1897385090000);
+        expect(await beanstalk.totalStalk()).to.eq(toStalk("189.7385090379477018"));
+        expect(await beanstalk.getTotalGerminatingStalk()).to.eq(0);
       });
 
       it("properly updates user values", async function () {
-        const bdv = await beanstalk.bdv(this.unripeBean.address, "636776401");
-        const oldBdv = await beanstalk.bdv(this.unripeLP.address, to6("3"));
-        expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq(1897385090000);
-        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(379);
+        expect(await beanstalk.balanceOfStalk(user.address)).to.eq(toStalk("189.7385090379477018"));
+        expect(await beanstalk.balanceOfGerminatingStalk(user.address)).to.eq(0);
       });
     });
   });

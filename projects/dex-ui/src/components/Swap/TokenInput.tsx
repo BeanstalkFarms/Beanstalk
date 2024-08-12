@@ -30,7 +30,8 @@ type TokenInput = {
   canChangeValue?: boolean;
   debounceTime?: number;
   clamp?: boolean;
-} & Pick<TokenPickerProps, "excludeToken">;
+  balanceLabel?: string;
+} & Pick<TokenPickerProps, "excludeToken" | "tokenOptions">;
 
 export const TokenInput: FC<TokenInput> = ({
   id,
@@ -47,8 +48,10 @@ export const TokenInput: FC<TokenInput> = ({
   canChangeValue = true,
   debounceTime = 500,
   clamp = false,
+  balanceLabel = "balance",
   /// TokenPickerProps
-  excludeToken
+  excludeToken,
+  tokenOptions
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -91,7 +94,13 @@ export const TokenInput: FC<TokenInput> = ({
   if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
   return (
-    <Container width={width} id="token-input" onClick={handleClick} showBalance={showBalance} data-trace="true">
+    <Container
+      width={width}
+      id="token-input"
+      onClick={handleClick}
+      showBalance={showBalance}
+      data-trace="true"
+    >
       <TopRow>
         <BasicInput
           id={id}
@@ -103,13 +112,21 @@ export const TokenInput: FC<TokenInput> = ({
           canChangeValue={!!canChangeValue}
           max={clamp ? balance?.[token.symbol] : undefined}
         />
-        <TokenPicker token={token} editable={canChangeToken} onChange={handleTokenChange} connectorFor={id} excludeToken={excludeToken} />
+        <TokenPicker
+          token={token}
+          editable={canChangeToken}
+          onChange={handleTokenChange}
+          connectorFor={id}
+          excludeToken={excludeToken}
+          tokenOptions={tokenOptions}
+        />
       </TopRow>
 
       {showBalance && (
         <BalanceRow>
           <Balance onClick={handleClickMax}>
-            Balance: {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman("short")}
+            {balanceLabel}:{" "}
+            {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman("short")}
           </Balance>
         </BalanceRow>
       )}

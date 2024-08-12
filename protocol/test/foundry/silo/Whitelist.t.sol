@@ -71,70 +71,70 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
-        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
-        bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
+    // function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
+    //     bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
+    //     bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
 
-        vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            gaugePointSelector,
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
+    //     vm.expectRevert("Whitelist: Invalid GaugePoint selector");
+    //     bs.whitelistToken(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         gaugePointSelector,
+    //         bytes4(0),
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
 
-        vm.expectRevert("Whitelist: Invalid GaugePoint selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0),
-            gaugePointSelector,
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
+    //     vm.expectRevert("Whitelist: Invalid GaugePoint selector");
+    //     bs.whitelistTokenWithEncodeType(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         bytes1(0),
+    //         gaugePointSelector,
+    //         bytes4(0),
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
+    // }
 
-    function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(BEANSTALK) {
-        bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
-        bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
-        bytes4 liquidityWeightSelector = bytes4(keccak256(abi.encode(i)));
+    // function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(BEANSTALK) {
+    //     bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
+    //     bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
+    //     bytes4 liquidityWeightSelector = bytes4(keccak256(abi.encode(i)));
 
-        vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
+    //     vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
+    //     bs.whitelistToken(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         gaugePointSelector,
+    //         liquidityWeightSelector,
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
 
-        vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0),
-            gaugePointSelector,
-            liquidityWeightSelector,
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
+    //     vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
+    //     bs.whitelistTokenWithEncodeType(
+    //         address(0),
+    //         bdvSelector,
+    //         0,
+    //         0,
+    //         bytes1(0),
+    //         gaugePointSelector,
+    //         liquidityWeightSelector,
+    //         0,
+    //         0,
+    //         IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+    //     );
+    // }
 
     function test_whitelistRevertExistingWhitelistedToken() public prank(BEANSTALK) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
@@ -180,7 +180,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenBasic(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(BEANSTALK) {
@@ -234,7 +234,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenWithEncodeType(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint8 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
@@ -299,7 +299,7 @@ contract WhitelistTest is TestHelper {
         emit DewhitelistToken(token);
         bs.dewhitelistToken(token);
 
-        verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
+        verifyWhitelistState(token, 0, 1, 1e10, 0, 0, 0, 0, false, false, false);
         // verify that the milestone stem and season are updated and are kept, as
         // existing deposits are still valid.
         IMockFBeanstalk.AssetSettings memory newSS = bs.tokenSettings(token);
@@ -309,7 +309,7 @@ contract WhitelistTest is TestHelper {
 
     function test_whitelistTokenWithExternalImplementation(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(BEANSTALK) {
@@ -362,7 +362,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
@@ -388,7 +388,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,

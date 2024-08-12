@@ -55,14 +55,32 @@ contract SeasonFacet is Invariable, Weather {
     function _gm(address account, LibTransfer.To mode) private returns (uint256) {
         require(!s.sys.paused, "Season: Paused.");
         require(seasonTime() > s.sys.season.current, "Season: Still current Season.");
+        checkSeasonTime();
         uint32 season = stepSeason();
         int256 deltaB = stepOracle();
-        uint256 caseId = calcCaseIdandUpdate(deltaB);
         LibGerminate.endTotalGermination(season, LibWhitelistedTokens.getWhitelistedTokens());
+        uint256 caseId = calcCaseIdandUpdate(deltaB);
         LibGauge.stepGauge();
         stepSun(deltaB, caseId);
 
         return incentivize(account, mode);
+    }
+
+    /**
+     * @notice checks that 1) Beanstalk is unpaused and
+     * 2) at least 1 period has passed since the last Season change.
+     * @dev in the case where more than 1 period has passed,
+     * s.sys.season.start is updated to reflect the time skipped,
+     * such that multiple sunrises cannot be called in one transaction.
+     */
+    function checkSeasonTime() internal {
+        require(!s.sys.paused, "Season: Paused.");
+        uint32 _seasonTime = seasonTime();
+        uint32 currentSeason = s.sys.season.current;
+        require(_seasonTime > currentSeason, "Season: Still current Season.");
+        if (_seasonTime > currentSeason + 1) {
+            s.sys.season.start += s.sys.season.period.mul(_seasonTime - currentSeason - 1);
+        }
     }
 
     /**

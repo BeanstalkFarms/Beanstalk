@@ -5,14 +5,16 @@ import { FormStateNew } from '~/components/Common/Form';
 import { Action, ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
 import { tokenValueToBN } from '~/util';
+import { AmountsBySource } from '~/hooks/beanstalk/useBalancesUsedBySource';
 
 export function depositSummary(
   to: Token,
   tokens: FormStateNew['tokens'],
+  amountsBySource: AmountsBySource[],
   amountToBDV: (amount: BigNumber) => BigNumber
 ) {
   const summary = tokens.reduce(
-    (agg, curr) => {
+    (agg, curr, idx) => {
       /// If we're doing a "direct deposit", (ex. deposit BEAN into the Silo)
       /// then no swap occurs and the amount deposited = the amount entered.
       /// If we're doing a "swap and deposit" (ex. swap ETH for BEAN and deposit into the Silo)
@@ -41,10 +43,14 @@ export function depositSummary(
           tokenValueToBN(to.getSeeds(to.amount(bdv.toString())))
         );
 
+        const bySource =
+          amountsBySource.length - 1 >= idx ? amountsBySource[idx] : undefined;
+
         // INSTRUCTIONS
         if (curr.amount && curr.amountOut) {
           agg.actions.push({
             type: ActionType.SWAP,
+            amountsBySource: bySource,
             tokenIn: getNewToOldToken(curr.token),
             tokenOut: getNewToOldToken(to),
             amountIn: curr.amount,

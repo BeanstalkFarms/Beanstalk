@@ -20,10 +20,6 @@ interface IERC20Decimals {
     function decimals() external view returns (uint8);
 }
 
-interface ChainlinkPriceFeedRegistry {
-    function getFeed(address base, address quote) external view returns (address aggregator);
-}
-
 /**
  * @title Eth Usd Oracle Library
  * @notice Contains functionalty to fetch the manipulation resistant USD price of different tokens.
@@ -32,10 +28,6 @@ interface ChainlinkPriceFeedRegistry {
  **/
 library LibUsdOracle {
     using LibRedundantMath256 for uint256;
-
-    // the lookup registry for chainlink price feed given a token address.
-    // the chainlink registry address differs between networks.
-    address constant chainlinkRegistry = 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf;
 
     uint256 constant CHAINLINK_DENOMINATOR = 1e6;
 
@@ -52,21 +44,13 @@ library LibUsdOracle {
      */
     function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
         if (token == C.WETH) {
-            uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
-            if (ethUsdPrice == 0) return 0;
-            return uint256(1e24).div(ethUsdPrice);
+            return LibEthUsdOracle.getUsdEthPrice(lookback);
         }
         if (token == C.WSTETH) {
-            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(lookback);
-            if (wstethUsdPrice == 0) return 0;
-            return uint256(1e24).div(wstethUsdPrice);
+            return LibWstethUsdOracle.getUsdWstethPrice(lookback);
         }
-
-        uint256 tokenPrice = getTokenPriceFromExternal(token, lookback);
-        if (tokenPrice == 0) return 0;
-        // division is a function of the decimals of the token:
-        uint256 decimals = 10 ** IERC20Decimals(token).decimals();
-        return uint256(decimals * CHAINLINK_DENOMINATOR).div(tokenPrice);
+        // tokens that use the custom oracle implementation are called here.
+        return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }
 
     function getTokenPrice(address token) internal view returns (uint256) {
@@ -81,19 +65,14 @@ library LibUsdOracle {
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
         // oracles that are implmented within beanstalk should be placed here.
         if (token == C.WETH) {
-            uint256 ethUsdPrice = LibEthUsdOracle.getEthUsdPrice(lookback);
-            if (ethUsdPrice == 0) return 0;
-            return ethUsdPrice;
+            return LibEthUsdOracle.getEthUsdPrice(lookback);
         }
         if (token == C.WSTETH) {
-            uint256 wstethUsdPrice = LibWstethUsdOracle.getWstethUsdPrice(0);
-            if (wstethUsdPrice == 0) return 0;
-            return wstethUsdPrice;
+            return LibWstethUsdOracle.getWstethUsdPrice(lookback);
         }
 
-        // tokens that use the default chainlink oracle implementation,
-        // or a custom oracle implementation are called here.
-        return getTokenPriceFromExternal(token, lookback);
+        // tokens that use the custom oracle implementation are called here.
+        return getTokenPriceFromExternal(token, 0, lookback);
     }
 
     /**
@@ -104,6 +83,7 @@ library LibUsdOracle {
      */
     function getTokenPriceFromExternal(
         address token,
+        uint256 tokenDecimals,
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -114,27 +94,21 @@ library LibUsdOracle {
         if (oracleImpl.encodeType == bytes1(0x01)) {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;
-            if (chainlinkOraclePriceAddress == address(0)) {
-                // use the chainlink registry
-                chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                    token,
-                    0x0000000000000000000000000000000000000348
-                ); // 0x0348 is the address for USD
-            }
 
             // todo: need to update timeout
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
                     LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    tokenDecimals,
                     lookback
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
             // if the encodeType is type 2, use a uniswap oracle implementation.
 
             // the uniswap oracle implementation combines the use of the chainlink and uniswap oracles.
-            // the chainlink oracle is used to get the price of the non-oracle token in order to
-
+            // the chainlink oracle is used to get the price of the non-oracle token (for example USDC) in order to
+            // use that as a dollar representation
             address chainlinkToken = IUniswapV3PoolImmutables(oracleImpl.target).token0();
 
             if (chainlinkToken == token) {
@@ -155,20 +129,12 @@ library LibUsdOracle {
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
 
-            if (chainlinkOraclePriceAddress == address(0)) {
-                // use the chainlink registry
-                chainlinkOraclePriceAddress = ChainlinkPriceFeedRegistry(chainlinkRegistry).getFeed(
-                    chainlinkToken,
-                    0x0000000000000000000000000000000000000348
-                ); // 0x0348 is the address for USD
-            }
-
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
                 chainlinkOraclePriceAddress,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                0,
                 lookback
             );
-
             return tokenPrice.mul(chainlinkTokenPrice).div(CHAINLINK_DENOMINATOR);
         }
 
@@ -177,7 +143,7 @@ library LibUsdOracle {
         if (target == address(0)) target = address(this);
 
         (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, lookback)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback)
         );
 
         if (!success) return 0;

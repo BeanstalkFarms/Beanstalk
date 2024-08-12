@@ -17,9 +17,14 @@ type Props = {
   apy?: TokenValue;
   loading?: boolean;
   tooltipProps?: Partial<Pick<TooltipProps, "offsetX" | "offsetY" | "side">>;
+  returnNullOnNoAPY?: boolean;
 };
 
-export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) => {
+export const WellYieldWithTooltip: React.FC<Props> = ({ 
+  tooltipProps, 
+  well,
+  returnNullOnNoAPY = false,
+}) => {
   const sdk = useSdk();
 
   const bean = sdk.tokens.BEAN;
@@ -37,6 +42,7 @@ export const WellYieldWithTooltip: React.FC<Props> = ({ tooltipProps, well }) =>
   const tooltipWidth = isMobile ? 250 : 360;
 
   if (!apy) {
+    if (returnNullOnNoAPY) return null;
     return <>{"-"}</>;
   }
 

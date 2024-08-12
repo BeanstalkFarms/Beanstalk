@@ -4,6 +4,10 @@ import { Token } from "src/classes/Token";
 import { CurveMetaPool__factory } from "src/constants/generated";
 import { FarmFromMode, FarmToMode } from "../types";
 
+/**
+ * @deprecated
+ * deprecated after beanstalk3 upgrade
+ */
 export class ExchangeUnderlying extends StepClass<BasicPreparedResult> {
   public name: string = "exchangeUnderlying";
 
@@ -69,20 +73,22 @@ export class ExchangeUnderlying extends StepClass<BasicPreparedResult> {
         if (!minAmountOut) throw new Error("ExchangeUnderlying: Missing minAmountOut");
         return {
           target: ExchangeUnderlying.sdk.contracts.beanstalk.address,
-          callData: ExchangeUnderlying.sdk.contracts.beanstalk.interface.encodeFunctionData("exchangeUnderlying", [
-            this.pool,
-            tokenIn.address,
-            tokenOut.address,
-            _amountInStep,
-            minAmountOut,
-            this.fromMode,
-            this.toMode
-          ])
+          callData: ""
+          // callData: ExchangeUnderlying.sdk.contracts.beanstalk.interface.encodeFunctionData("exchangeUnderlying", [
+          //   this.pool,
+          //   tokenIn.address,
+          //   tokenOut.address,
+          //   _amountInStep,
+          //   minAmountOut,
+          //   this.fromMode,
+          //   this.toMode
+          // ])
         };
       },
-      decode: (data: string) => ExchangeUnderlying.sdk.contracts.beanstalk.interface.decodeFunctionData("exchangeUnderlying", data),
-      decodeResult: (result: string) =>
-        ExchangeUnderlying.sdk.contracts.beanstalk.interface.decodeFunctionResult("exchangeUnderlying", result)
+      decode: (data: string) => undefined,
+      // decode: (data: string) => ExchangeUnderlying.sdk.contracts.beanstalk.interface.decodeFunctionData("exchangeUnderlying", data),
+      decodeResult: (result: string) => undefined
+      // ExchangeUnderlying.sdk.contracts.beanstalk.interface.decodeFunctionResult("exchangeUnderlying", result)
     };
   }
 }

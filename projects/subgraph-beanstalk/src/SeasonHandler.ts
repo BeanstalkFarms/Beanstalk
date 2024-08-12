@@ -9,8 +9,12 @@ import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOra
 import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
 import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
-import { expirePodListing, loadPodListing } from "./utils/PodListing";
-import { loadPodMarketplace, loadPodMarketplaceDailySnapshot, loadPodMarketplaceHourlySnapshot } from "./utils/PodMarketplace";
+import {
+  loadPodMarketplace,
+  loadPodMarketplaceDailySnapshot,
+  loadPodMarketplaceHourlySnapshot,
+  updateExpiredPlots
+} from "./utils/PodMarketplace";
 import { loadSeason } from "./utils/Season";
 import { addDepositToSiloAsset, updateStalkWithCalls } from "./SiloHandler";
 import { updateBeanEMA } from "./YieldHandler";
@@ -31,10 +35,11 @@ export function handleSunrise(event: Sunrise): void {
   updateStalkWithCalls(currentSeason - 1, event.block.timestamp, event.block.number);
 
   // Update season metrics
-  //season.harvestableIndex = beanstalkContract.harvestableIndex()
   if (event.params.season == BigInt.fromI32(6075)) {
+    // Replant oracle initialization
     season.price = BigDecimal.fromString("1.07");
-  } // Replant oracle initialization
+  }
+  season.sunriseBlock = event.block.number;
   season.createdAt = event.block.timestamp;
   season.save();
 
@@ -65,26 +70,6 @@ export function handleSunrise(event: Sunrise): void {
   market.save();
   marketHourly.save();
   marketDaily.save();
-
-  let remainingListings = market.listingIndexes;
-
-  // Cancel any pod marketplace listings beyond the index
-  for (let i = 0; i < market.listingIndexes.length; i++) {
-    if (market.listingIndexes[i] < season.harvestableIndex) {
-      expirePodListing(event.address, event.block.timestamp, market.listingIndexes[i]);
-      remainingListings.shift();
-    } else {
-      let listing = loadPodListing(event.address, market.listingIndexes[i]);
-      if (listing.maxHarvestableIndex < season.harvestableIndex) {
-        expirePodListing(event.address, event.block.timestamp, market.listingIndexes[i]);
-        let listingIndex = market.listingIndexes.indexOf(listing.index);
-        remainingListings.splice(listingIndex, 1);
-      }
-    }
-  }
-
-  market.listingIndexes = remainingListings;
-  market.save();
 
   // Create silo entities for the protocol
   let silo = loadSilo(event.address);
@@ -264,5 +249,6 @@ export function handleIncentive(event: Incentivization): void {
   season.harvestableIndex = beanstalk_contract.harvestableIndex();
   season.save();
 
+  updateExpiredPlots(season.harvestableIndex, event.address, event.block.timestamp);
   updateHarvestablePlots(season.harvestableIndex, event.block.timestamp, event.block.number);
 }
