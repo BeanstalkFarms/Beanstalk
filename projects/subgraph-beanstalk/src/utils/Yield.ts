@@ -414,7 +414,7 @@ function updateGaugePoints(gaugePoints: f64, currentPercent: f64, optimalPercent
 
 function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void {
   const fertAddress = getProtocolFertilizer(protocol);
-  if (fertAddress == null) {
+  if (fertAddress === null) {
     return;
   }
 

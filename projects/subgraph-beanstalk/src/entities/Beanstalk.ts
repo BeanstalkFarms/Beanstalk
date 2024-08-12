@@ -13,7 +13,7 @@ export function loadBeanstalk(protocol: Address): Beanstalk {
     // Pre-replant token currently would not be set
     beanstalk.token = getProtocolToken(protocol, BI_MAX).toHexString();
     const fert = getProtocolFertilizer(protocol);
-    if (fert != null) {
+    if (fert !== null) {
       beanstalk.fertilizer1155 = fert.toHexString();
     }
     beanstalk.schemaVersion = "2.4.0";
