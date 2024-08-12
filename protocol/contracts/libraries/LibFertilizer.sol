@@ -221,7 +221,7 @@ library LibFertilizer {
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
         require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
-        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
+        require(LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0])) != 0);
 
         uint256 balanceOfUnderlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
         IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(
