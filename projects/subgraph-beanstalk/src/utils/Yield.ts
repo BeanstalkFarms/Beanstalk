@@ -20,15 +20,18 @@ const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
 const ROLLING_30_DAY_WINDOW = 720;
 
-// Note: minimum value of `t` is 6075
+// Note: minimum allowable season is 6075
 export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
   updateWindowEMA(protocol, timestamp, ROLLING_24_WINDOW);
   updateWindowEMA(protocol, timestamp, ROLLING_7_DAY_WINDOW);
   updateWindowEMA(protocol, timestamp, ROLLING_30_DAY_WINDOW);
 
-  updateSiloVAPYs(protocol, timestamp, ROLLING_24_WINDOW);
-  updateSiloVAPYs(protocol, timestamp, ROLLING_7_DAY_WINDOW);
-  updateSiloVAPYs(protocol, timestamp, ROLLING_30_DAY_WINDOW);
+  if (getCurrentSeason(protocol) > 20_000) {
+    // Earlier values were set by cache
+    updateSiloVAPYs(protocol, timestamp, ROLLING_24_WINDOW);
+    updateSiloVAPYs(protocol, timestamp, ROLLING_7_DAY_WINDOW);
+    updateSiloVAPYs(protocol, timestamp, ROLLING_30_DAY_WINDOW);
+  }
 
   updateFertAPY(protocol, timestamp, ROLLING_24_WINDOW);
   updateFertAPY(protocol, timestamp, ROLLING_7_DAY_WINDOW);
@@ -36,8 +39,7 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
 }
 
 function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): void {
-  const beanstalk = loadBeanstalk(protocol);
-  const t = beanstalk.lastSeason;
+  const t = getCurrentSeason(protocol);
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
 
