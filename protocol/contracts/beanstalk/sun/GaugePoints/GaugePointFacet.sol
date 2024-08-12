@@ -19,8 +19,8 @@ interface IGaugePointFacet {
 
 contract GaugePointFacet {
     uint256 private constant EXTREME_FAR_POINT = 5e18;
-    uint256 private constant RELATIVE_FAR_POINT = 1e18;
-    uint256 private constant RELATIVE_CLOSE_POINT = 0.5e18;
+    uint256 private constant RELATIVE_FAR_POINT = 3e18;
+    uint256 private constant RELATIVE_CLOSE_POINT = 1e18;
 
     uint256 private constant MAX_GAUGE_POINTS = 1000e18;
     uint256 private constant MAX_PERCENT = 100e6;
@@ -28,8 +28,8 @@ contract GaugePointFacet {
     uint256 private constant UPPER_THRESHOLD = 10050;
     uint256 private constant LOWER_THRESHOLD = 9950;
     uint256 private constant THRESHOLD_PRECISION = 10000;
-    uint256 private constant EXCESSIVELY_FAR = 75e6;
-    uint256 private constant RELATIVELY_FAR = 25e6;
+    uint256 private constant EXCESSIVELY_FAR = 66.666666e6;
+    uint256 private constant RELATIVELY_FAR = 33.333333e6;
     uint256 private constant PRECISION = 100e6;
 
     /**
@@ -37,7 +37,7 @@ contract GaugePointFacet {
      * is the default function to calculate the gauge points
      * of an LP asset.
      *
-     * @dev If % of deposited BDV is .01% within range of optimal,
+     * @dev If % of deposited BDV is .5% within range of optimal,
      * keep gauge points the same.
      *
      * Cap gaugePoints to MAX_GAUGE_POINTS to avoid runaway gaugePoints.
@@ -55,22 +55,32 @@ contract GaugePointFacet {
             if (percentOfDepositedBdv > MAX_PERCENT) {
                 percentOfDepositedBdv = MAX_PERCENT;
             }
-            uint256 points = getPoints(optimalPercentDepositedBdv, percentOfDepositedBdv, true);
+            uint256 deltaPoints = getDeltaPoints(
+                optimalPercentDepositedBdv,
+                percentOfDepositedBdv,
+                true
+            );
 
             // gauge points cannot go below 0.
-            if (points < currentGaugePoints) {
-                return currentGaugePoints - points;
+            if (deltaPoints < currentGaugePoints) {
+                return currentGaugePoints - deltaPoints;
             } else {
+                // Cap gaugePoints to 0 if it exceeds.
                 return 0;
             }
         } else if (
             percentOfDepositedBdv <
             (optimalPercentDepositedBdv * LOWER_THRESHOLD) / THRESHOLD_PRECISION
         ) {
-            uint256 points = getPoints(optimalPercentDepositedBdv, percentOfDepositedBdv, false);
+            uint256 deltaPoints = getDeltaPoints(
+                optimalPercentDepositedBdv,
+                percentOfDepositedBdv,
+                false
+            );
 
-            if (points + currentGaugePoints < MAX_GAUGE_POINTS) {
-                return currentGaugePoints + points;
+            // gauge points cannot go above MAX_GAUGE_POINTS.
+            if (deltaPoints + currentGaugePoints < MAX_GAUGE_POINTS) {
+                return currentGaugePoints + deltaPoints;
             } else {
                 // Cap gaugePoints to MAX_GAUGE_POINTS if it exceeds.
                 return MAX_GAUGE_POINTS;
@@ -87,7 +97,7 @@ contract GaugePointFacet {
      * @dev the points change depending on the distance the % of deposited BDV
      * is from the optimal % of deposited BDV.
      */
-    function getPoints(
+    function getDeltaPoints(
         uint256 optimalPercentBdv,
         uint256 percentBdv,
         bool isAboveOptimal
@@ -97,6 +107,7 @@ contract GaugePointFacet {
         if (isAboveOptimal) {
             exsFar = getExtremelyFarAbove(optimalPercentBdv);
             relFar = getRelativelyFarAbove(optimalPercentBdv);
+
             if (percentBdv > exsFar) {
                 return EXTREME_FAR_POINT;
             } else if (percentBdv > relFar) {
