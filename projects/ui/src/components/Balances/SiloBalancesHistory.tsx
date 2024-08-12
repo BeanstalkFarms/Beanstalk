@@ -16,15 +16,6 @@ import MockPlot from '../Silo/MockPlot';
 import BlurComponent from '../Common/ZeroState/BlurComponent';
 import WalletButton from '../Common/Connection/WalletButton';
 
-/*
-  balances: 
-    bean:   132.09  -> $97.26
-    urbean: 797.66  -> $29.69
-    urLP:   8781.71 -> $488.74
-*/
-
-// 466.92 + 28.37 + 92.93
-
 const SiloBalancesHistory: React.FC<{}> = () => {
   //
   const account = useAccount();
@@ -60,10 +51,6 @@ const SiloBalancesHistory: React.FC<{}> = () => {
     keys: SILO_WHITELIST.map((t) => t[1].address),
     error: undefined,
   };
-
-  // React.useEffect(() => {
-  //   console.log('data: ', queryData.data);
-  // }, [queryData.data]);
 
   return (
     <Box sx={{ width: '100%', height: '390px', position: 'relative' }}>
