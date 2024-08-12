@@ -53,7 +53,7 @@ const apolloFetch = async (
   apolloClient.query({
     query: document,
     variables: { first, season_lte: season },
-    fetchPolicy: 'cache-first',
+    fetchPolicy: 'no-cache',
     notifyOnNetworkStatusChange: true,
   });
 
@@ -156,8 +156,7 @@ function getNumQueries(range: Range<Time> | undefined): number {
 
 function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
   const queryParts = tokens.map(
-    (token) => `
-    seasonsSA_${token.symbol}: siloAssetHourlySnapshots(
+    (token) => `seasonsSA_${token.symbol}: siloAssetHourlySnapshots(
       first: $first
       orderBy: season
       orderDirection: desc
@@ -192,8 +191,7 @@ function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
       }
       stalkEarnedPerSeason
       createdAt
-    }
-  `
+    }`
   );
 
   return gql`
@@ -201,7 +199,7 @@ function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
       $first: Int!
       $season_lte: Int!
     ) {
-      ${queryParts.join('')}
+      ${queryParts.join(' ')}
     }
   `;
 }
@@ -375,6 +373,7 @@ function getOutputHuman(output: SiloTokenDataBySeason) {
     );
     return { ...prev, [k]: obj };
   }, {});
+
 
   return _output;
 }

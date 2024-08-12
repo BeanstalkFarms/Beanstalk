@@ -80,9 +80,9 @@ export type SoilDemandParams = {
 
 // ---------- POD RATE ----------
 
-const POD_RATE_LOWER_BOUND = 5; // 5%
-const POD_RATE_OPTIMAL = 15; // 15%
-const POD_RATE_UPPER_BOUND = 25; // 25%
+const POD_RATE_LOWER_BOUND = 0.05; // 5%
+const POD_RATE_OPTIMAL = 0.15; // 15%
+const POD_RATE_UPPER_BOUND = 0.25; // 25%
 
 // ---------- BEAN PRICE ----------
 
