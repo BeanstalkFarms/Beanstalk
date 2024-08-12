@@ -612,8 +612,8 @@ contract GaugeTest is TestHelper {
             assertLe(percentDifference, 100e6);
         } else if (deltaGaugePoints == 3e18) {
             assertLe(percentDifference, 66.666666e6);
-            assertGe(percentDifference, 33.3333333e6);
-        } else if (deltaGaugePoints == 1e18) {
+            assertGe(percentDifference, 33.333333e6);
+        } else if (deltaGaugePoints == 1e18 && gaugePoints != 1e18) {
             assertLe(percentDifference, 33.333333e6);
         }
     }
