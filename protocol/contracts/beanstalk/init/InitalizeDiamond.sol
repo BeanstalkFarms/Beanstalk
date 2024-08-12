@@ -80,18 +80,18 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), uint32(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
             bytes1(0),
-            uint32(0)
+            new bytes(0)
         );
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
             bytes1(0),
-            uint32(0)
+            new bytes(0)
         );
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);

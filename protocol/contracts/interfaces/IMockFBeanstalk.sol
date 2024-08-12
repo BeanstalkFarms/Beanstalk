@@ -144,7 +144,7 @@ interface IMockFBeanstalk {
         address target;
         bytes4 selector;
         bytes1 encodeType;
-        uint32 timeout;
+        bytes data;
     }
 
     struct MowStatus {
@@ -1301,7 +1301,7 @@ interface IMockFBeanstalk {
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
         bytes4 selector,
-        uint32 timeout
+        bytes memory data
     ) external;
 
     function mockWhitelistToken(

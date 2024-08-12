@@ -281,13 +281,13 @@ contract MockSiloFacet is SiloFacet {
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
         bytes4 selector,
-        uint32 timeout
+        bytes memory data
     ) external {
         s.sys.silo.assetSettings[token].liquidityWeightImplementation = Implementation(
             newLiquidityWeightImplementation,
             selector,
             encodeType,
-            timeout
+            data
         );
     }
 

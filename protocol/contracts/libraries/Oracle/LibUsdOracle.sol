@@ -95,11 +95,12 @@ library LibUsdOracle {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;
 
-            // todo: need to update timeout
+            // decode data timeout to uint32
+            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
-                    oracleImpl.timeout,
+                    timeout,
                     tokenDecimals,
                     lookback
                 );
@@ -129,9 +130,10 @@ library LibUsdOracle {
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
 
+            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
                 chainlinkOraclePriceAddress,
-                oracleImpl.timeout,
+                timeout,
                 0,
                 lookback
             );
@@ -143,7 +145,7 @@ library LibUsdOracle {
         if (target == address(0)) target = address(this);
 
         (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
         );
 
         if (!success) return 0;

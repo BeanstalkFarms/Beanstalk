@@ -385,6 +385,7 @@ struct Migration {
  * @param selector The function selector that is used to call on the implementation.
  * @param encodeType The encode type that should be used to encode the function call.
  * The encodeType value depends on the context of each implementation.
+ * @param data Any additional data, for example timeout
  * @dev assumes all future implementations will use the same parameters as the beanstalk
  * gaugePoint and liquidityWeight implementations.
  */
@@ -392,7 +393,7 @@ struct Implementation {
     address target; // 20 bytes
     bytes4 selector;
     bytes1 encodeType;
-    uint32 timeout; // 4 bytes
+    bytes data;
 }
 
 struct EvaluationParameters {

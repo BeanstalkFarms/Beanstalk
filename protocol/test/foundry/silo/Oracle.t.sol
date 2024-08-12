@@ -26,7 +26,7 @@ contract OracleTest is TestHelper {
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
                 bytes1(0x01),
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
             )
         );
         uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
@@ -40,7 +40,7 @@ contract OracleTest is TestHelper {
                 WBTC_USDC_03_POOL,
                 bytes4(0),
                 bytes1(0x02),
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
             )
         );
 
@@ -52,7 +52,7 @@ contract OracleTest is TestHelper {
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
                 bytes1(0x01),
-                LibChainlinkOracle.FOUR_DAY_TIMEOUT
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
             )
         );
 
@@ -170,7 +170,7 @@ contract OracleTest is TestHelper {
                 oracleAddress,
                 LSDChainlinkOracle.getPrice.selector,
                 bytes1(0x00),
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT // todo: verify this is the corret timeout for this oracle
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT) // todo: verify this is the corret timeout for this oracle
             )
         );
         return token;
@@ -185,7 +185,7 @@ contract OracleTest is TestHelper {
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
                 bytes1(0x01),
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
             )
         );
 
@@ -215,7 +215,7 @@ contract OracleTest is TestHelper {
                 WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
                 bytes1(0x01),
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
             )
         );
 

@@ -27,8 +27,9 @@ contract PriceTesterWstethETH is Diamond, Test {
             target: USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
             selector: bytes4(0),
             encodeType: bytes1(0x01),
-            timeout: LibChainlinkOracle.FOUR_DAY_TIMEOUT
+            data: abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT) //  reviewer: use encode or encodePacked?
         });
+
         s.sys.oracleImplementation[C.USDC] = impl;
         uint price = LibUsdOracle.getUsdPrice(C.USDC);
         assertGt(price, 0, "price should be greater than 0 on block 20008200");
@@ -45,7 +46,7 @@ contract PriceTesterWstethETH is Diamond, Test {
             target: USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
             selector: bytes4(0),
             encodeType: bytes1(0x01),
-            timeout: LibChainlinkOracle.FOUR_HOUR_TIMEOUT
+            data: abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
         });
         s.sys.oracleImplementation[C.USDC] = impl;
 
