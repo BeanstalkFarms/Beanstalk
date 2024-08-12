@@ -3,9 +3,9 @@
 pragma solidity ^0.8.20;
 pragma experimental ABIEncoderV2;
 
-import {LibStrings} from "contracts/libraries/LibStrings.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
 import {IBeanstalk} from "./Internalizer.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title FertilizerImage
@@ -13,6 +13,7 @@ import {IBeanstalk} from "./Internalizer.sol";
  */
 
 contract FertilizerImage {
+    using Strings for uint256;
     address internal constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
 
     //////////////////////   CONSTANTS TO ASSEMBLE SVG   ////////////////////////////
@@ -73,7 +74,7 @@ contract FertilizerImage {
                     getFertilizerStatusSvg(_id, bpfRemaining), // FERT_SVG_TOP (available, active)
                     BASE_SVG_END,
                     '<text font-family="sans-serif" font-size="20" x="20" y="490" fill="black" ><tspan dy="0" x="20">', // PRE NUMBER FOR BPF REMAINING
-                    LibStrings.formatUintWith6DecimalsTo2(bpfRemaining), // BPF_REMAINING with 2 decimal places
+                    formatBpRemaining(bpfRemaining), // BPF_REMAINING with 2 decimal places
                     " BPF Remaining </tspan></text></svg>" // END OF SVG
                 )
             );
@@ -109,5 +110,27 @@ contract FertilizerImage {
                     LibBytes64.encode(bytes(string(abi.encodePacked(svg))))
                 )
             );
+    }
+
+    /**
+     * @notice Formats a the bpf remaining value with 6 decimals to a string with 2 decimals.
+     * @param number - The bpf value to format.
+     */
+    function formatBpRemaining(uint256 number) internal pure returns (string memory) {
+        // 6 to 2 decimal places
+        uint256 scaled = number / 10000;
+        // Separate the integer and decimal parts
+        uint256 integerPart = scaled / 100;
+        uint256 decimalPart = scaled % 100;
+        string memory result = integerPart.toString();
+        // Add decimal point
+        result = string(abi.encodePacked(result, "."));
+        // Add leading zero if necessary
+        if (decimalPart < 10) {
+            result = string(abi.encodePacked(result, "0"));
+        }
+        // Add decimal part
+        result = string(abi.encodePacked(result, decimalPart.toString()));
+        return result;
     }
 }

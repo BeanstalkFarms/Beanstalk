@@ -8,10 +8,8 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Fertilizer1155.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
-
 import "./FertilizerImage.sol";
 import {LibBytes64} from "contracts/libraries/LibBytes64.sol";
-import {LibStrings} from "contracts/libraries/LibStrings.sol";
 
 /**
  * @author publius, deadmanwalking
@@ -34,7 +32,7 @@ contract Internalizer is
     FertilizerImage
 {
     using LibRedundantMath128 for uint128;
-    using LibStrings for uint256;
+    using Strings for uint256;
 
     struct Balance {
         uint128 amount;
@@ -83,7 +81,7 @@ contract Internalizer is
                                 '"description": "A trusty constituent of any Farmers toolbox, ERC-1155 FERT has been known to spur new growth on seemingly dead farms. Once purchased and deployed into fertile ground by Farmers, Fertilizer generates new Sprouts: future Beans yet to be repaid by Beanstalk in exchange for doing the work of Replanting the protocol.", "image": "',
                                 imageUri,
                                 '", "attributes": [{ "trait_type": "BPF Remaining","display_type": "boost_number","value": ',
-                                LibStrings.formatUintWith6DecimalsTo2(bpfRemaining),
+                                formatBpRemaining(bpfRemaining),
                                 " }]}"
                             )
                         )
