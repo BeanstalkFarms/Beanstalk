@@ -175,9 +175,10 @@ const useSeasonsSummary = () => {
     useSeasonalLiquidityAndPriceByPoolQuery({
       fetchPolicy: 'cache-and-network',
       variables: {
-        first: Object.keys(pools).length * 25,
+        first: 1000,
         season_gte: maxPrevSeason,
         season_lte: currentSeason,
+        pools: sdk.tokens.siloWhitelistedWellLPAddresses.map((address) => address.toLowerCase())
       },
       context: { subgraph: 'bean' },
       skip: skipQuery || !Object.keys(pools).length,
