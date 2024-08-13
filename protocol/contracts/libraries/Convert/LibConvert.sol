@@ -464,14 +464,15 @@ library LibConvert {
         address token,
         int96[] memory stems,
         uint256[] memory amounts,
-        uint256 maxTokens
+        uint256 maxTokens,
+        address account
     ) internal returns (uint256, uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         require(stems.length == amounts.length, "Convert: stems, amounts are diff lengths.");
 
         AssetsRemovedConvert memory a;
         uint256 i = 0;
-        address user = LibTractor._user();
+        if (account == address(0)) account = LibTractor._user();
 
         // a bracket is included here to avoid the "stack too deep" error.
         {
@@ -495,7 +496,7 @@ library LibConvert {
                     amounts[i] = maxTokens.sub(a.active.tokens);
 
                 a.bdvsRemoved[i] = LibTokenSilo.removeDepositFromAccount(
-                    user,
+                    account,
                     token,
                     stems[i],
                     amounts[i]
@@ -516,9 +517,9 @@ library LibConvert {
             }
             for (i; i < stems.length; ++i) amounts[i] = 0;
 
-            emit RemoveDeposits(user, token, stems, amounts, a.active.tokens, a.bdvsRemoved);
+            emit RemoveDeposits(account, token, stems, amounts, a.active.tokens, a.bdvsRemoved);
 
-            emit LibSilo.TransferBatch(user, user, address(0), a.depositIds, amounts);
+            emit LibSilo.TransferBatch(account, account, address(0), a.depositIds, amounts);
         }
 
         require(a.active.tokens == maxTokens, "Convert: Not enough tokens removed.");
@@ -526,7 +527,7 @@ library LibConvert {
 
         // all deposits converted are not germinating.
         LibSilo.burnActiveStalk(
-            user,
+            account,
             a.active.stalk.add(a.active.bdv.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv))
         );
         return (a.active.stalk, a.active.bdv);
@@ -536,10 +537,12 @@ library LibConvert {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
+        uint256 grownStalk,
+        address account
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
+        if (account == address(0)) account = LibTractor._user();
         GerminationSide side;
 
         // calculate the stem and germination state for the new deposit.
@@ -552,21 +555,21 @@ library LibConvert {
         if (side == GerminationSide.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                LibTractor._user(),
+                account,
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, side);
             // safeCast not needed as stalk is <= max(uint128)
             LibSilo.mintGerminatingStalk(
-                LibTractor._user(),
+                account,
                 uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))),
                 side
             );
-            LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
+            LibSilo.mintActiveStalk(account, grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            LibTractor._user(),
+            account,
             token,
             stem,
             amount,
