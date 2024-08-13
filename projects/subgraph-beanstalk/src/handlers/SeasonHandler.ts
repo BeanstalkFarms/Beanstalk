@@ -83,7 +83,7 @@ export function handleReward(event: Reward): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getProtocolToken(event.address, event.block.number),
+    getProtocolToken(event.address),
     event.params.toSilo,
     event.params.toSilo,
     event.block.timestamp

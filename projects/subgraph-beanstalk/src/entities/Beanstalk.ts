@@ -11,7 +11,7 @@ export function loadBeanstalk(protocol: Address): Beanstalk {
     beanstalk = new Beanstalk(protocol.toHexString());
     beanstalk.name = "Beanstalk";
     // Pre-replant token currently would not be set
-    beanstalk.token = getProtocolToken(protocol, BI_MAX).toHexString();
+    beanstalk.token = getProtocolToken(protocol).toHexString();
     const fert = getProtocolFertilizer(protocol);
     if (fert !== null) {
       beanstalk.fertilizer1155 = fert.toHexString();

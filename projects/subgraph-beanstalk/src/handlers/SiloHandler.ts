@@ -97,7 +97,7 @@ export function handlePlant(event: Plant): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getProtocolToken(event.address, event.block.number),
+    getProtocolToken(event.address),
     event.params.beans,
     event.params.beans,
     event.block.timestamp

@@ -1,9 +1,9 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20, BEAN_ERC20_V1, BEANSTALK, FERTILIZER, NEW_BEAN_TOKEN_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { Address } from "@graphprotocol/graph-ts";
+import { BEAN_ERC20, BEANSTALK, FERTILIZER } from "../../../subgraph-core/utils/Constants";
 
-export function getProtocolToken(protocol: Address, blockNumber: BigInt): Address {
+export function getProtocolToken(protocol: Address): Address {
   if (protocol == BEANSTALK) {
-    return blockNumber < NEW_BEAN_TOKEN_BLOCK ? BEAN_ERC20_V1 : BEAN_ERC20;
+    return BEAN_ERC20;
   }
   throw new Error("Unsupported protocol");
 }

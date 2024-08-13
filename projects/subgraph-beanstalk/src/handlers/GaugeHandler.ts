@@ -45,7 +45,9 @@ export function handleGaugePointChange(event: GaugePointChange): void {
 export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStalkPerBdvPerSeason): void {
   let silo = loadSilo(event.address);
 
-  // TODO: this is not accurate, the value in this event is pertaining to gauge only and does not include unripe
+  // This is not exactly accurate, the value in this event is pertaining to gauge only and does not include unripe.
+  // In practice, seed values for non-gauge assets are negligible.
+  // The correct approach is iterating whitelisted assets each season, multipying bdv and seeds
   silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
   silo.save();
