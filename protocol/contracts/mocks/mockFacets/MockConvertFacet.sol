@@ -32,7 +32,7 @@ contract MockConvertFacet is ConvertFacet {
             stems,
             amounts,
             maxTokens,
-            msg.sender
+            LibTractor._user()
         );
 
         emit MockConvert(stalkRemoved, bdvRemoved);
@@ -46,7 +46,7 @@ contract MockConvertFacet is ConvertFacet {
     ) external {
         LibSilo._mow(msg.sender, token);
         // if (account == address(0)) account = msg.sender;
-        LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk);
+        LibConvert._depositTokensForConvert(token, amount, bdv, grownStalk, LibTractor._user());
     }
 
     function convertInternalE(

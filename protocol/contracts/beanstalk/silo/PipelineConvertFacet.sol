@@ -104,7 +104,7 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
             advancedFarmCalls
         );
 
-        toStem = LibConvert._depositTokensForConvert(outputToken, toAmount, toBdv, grownStalk);
+        toStem = LibConvert._depositTokensForConvert(outputToken, toAmount, toBdv, grownStalk, LibTractor._user());
 
         emit Convert(LibTractor._user(), inputToken, outputToken, fromAmount, toAmount);
     }

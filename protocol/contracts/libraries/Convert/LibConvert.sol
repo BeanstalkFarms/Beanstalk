@@ -537,7 +537,8 @@ library LibConvert {
         address token,
         uint256 amount,
         uint256 bdv,
-        uint256 grownStalk
+        uint256 grownStalk,
+        address user
     ) internal returns (int96 stem) {
         require(bdv > 0 && amount > 0, "Convert: BDV or amount is 0.");
 
@@ -553,21 +554,21 @@ library LibConvert {
         if (side == GerminationSide.NOT_GERMINATING) {
             LibTokenSilo.incrementTotalDeposited(token, amount, bdv);
             LibSilo.mintActiveStalk(
-                LibTractor._user(),
+                user,
                 bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token)).add(grownStalk)
             );
         } else {
             LibTokenSilo.incrementTotalGerminating(token, amount, bdv, side);
             // safeCast not needed as stalk is <= max(uint128)
             LibSilo.mintGerminatingStalk(
-                LibTractor._user(),
+                user,
                 uint128(bdv.mul(LibTokenSilo.stalkIssuedPerBdv(token))),
                 side
             );
-            LibSilo.mintActiveStalk(LibTractor._user(), grownStalk);
+            LibSilo.mintActiveStalk(user, grownStalk);
         }
         LibTokenSilo.addDepositToAccount(
-            LibTractor._user(),
+            user,
             token,
             stem,
             amount,
