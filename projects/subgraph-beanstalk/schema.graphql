@@ -125,7 +125,7 @@ type Silo @entity {
 }
 
 type SiloHourlySnapshot @entity {
-  "ID of silo-Unix Hour Timestamp"
+  "ID of silo - Season"
   id: ID!
   "Season for the snapshot"
   season: Int!
@@ -172,7 +172,7 @@ type SiloHourlySnapshot @entity {
 }
 
 type SiloDailySnapshot @entity {
-  "ID of silo-Unix Hour Timestamp"
+  "ID of silo - Day"
   id: ID!
   "Last season for the snapshot"
   season: Int!
@@ -240,7 +240,7 @@ type SiloAsset @entity {
 }
 
 type SiloAssetHourlySnapshot @entity {
-  "Silo Asset ID - Unix Timestamp"
+  "Silo Asset ID - Season"
   id: ID!
   "Season for the snapshot"
   season: Int!
@@ -267,7 +267,7 @@ type SiloAssetHourlySnapshot @entity {
 }
 
 type SiloAssetDailySnapshot @entity {
-  "Silo Asset ID - Unix Timestamp"
+  "Silo Asset ID - Day"
   id: ID!
   "Last season for the snapshot"
   season: Int!
@@ -399,7 +399,7 @@ type WhitelistTokenHourlySnapshot @entity {
 }
 
 type WhitelistTokenDailySnapshot @entity {
-  "Token address - Unix Timestamp"
+  "Token address - Day"
   id: ID!
   "The season for this snapshot"
   season: Int!
@@ -478,7 +478,7 @@ type Field @entity {
 }
 
 type FieldHourlySnapshot @entity {
-  "Field ID - Unix Timestamp"
+  "Field ID - Season"
   id: ID!
   "Field associated with this snapshot"
   field: Field!
@@ -539,7 +539,7 @@ type FieldHourlySnapshot @entity {
 }
 
 type FieldDailySnapshot @entity {
-  "Field ID - Unix Timestamp"
+  "Field ID - Day"
   id: ID!
   "Field associated with this snapshot"
   field: Field!
@@ -744,7 +744,7 @@ type PodMarketplace @entity {
 }
 
 type PodMarketplaceHourlySnapshot @entity {
-  "Marketplace ID - Unix Timestamp"
+  "Marketplace ID - Season"
   id: ID!
   "Point in time latest season"
   season: Int!
@@ -795,7 +795,7 @@ type PodMarketplaceHourlySnapshot @entity {
 }
 
 type PodMarketplaceDailySnapshot @entity {
-  "Marketplace ID - Unix Timestamp"
+  "Marketplace ID - Day"
   id: ID!
   "Point in time latest season"
   season: Int!
@@ -1488,4 +1488,143 @@ type Germinating @entity {
   tokenAmount: BigInt!
   "Germinating bdv. This only applies to a Token address"
   bdv: BigInt!
+}
+
+type UnripeToken @entity {
+  "Token Address"
+  id: ID!
+  "The ripe token underlying this unripe asset"
+  underlyingToken: String!
+  "The total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "The amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "The bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "The amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "The bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "The chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "The amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "The total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "The total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "The total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
+  "Link to hourly snapshot data"
+  hourlySnapshots: [UnripeTokenHourlySnapshot!]! @derivedFrom(field: "unripeToken")
+  "Link to daily snapshot data"
+  dailySnapshots: [UnripeTokenDailySnapshot!]! @derivedFrom(field: "unripeToken")
+}
+
+type UnripeTokenHourlySnapshot @entity {
+  "UnripeToken ID - Season"
+  id: ID!
+  "Season for the snapshot"
+  season: Int!
+  "Unripe token associated with this snapshot"
+  unripeToken: UnripeToken!
+
+  "Point in time ripe token underlying this unripe asset"
+  underlyingToken: String!
+  "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "Point in time bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "Point in time amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "Point in time bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "Point in time chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "Point in time amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "Point in time total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "Point in time total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "Point in time total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+
+  deltaUnderlyingToken: Boolean!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaTotalUnderlying: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaAmountUnderlyingOne: BigInt!
+  deltaBdvUnderlyingOne: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaChoppableAmountOne: BigInt!
+  deltaChoppableBdvOne: BigInt!
+  deltaChopRate: BigDecimal!
+  deltaRecapPercent: BigDecimal!
+  deltaTotalChoppedAmount: BigInt!
+  deltaTotalChoppedBdv: BigInt!
+  deltaTotalChoppedBdvReceived: BigInt!
+
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
+}
+
+type UnripeTokenDailySnapshot @entity {
+  "UnripeToken ID - Day"
+  id: ID!
+  "Last season for the snapshot"
+  season: Int!
+  "Unripe token associated with this snapshot"
+  unripeToken: UnripeToken!
+
+  "Point in time ripe token underlying this unripe asset"
+  underlyingToken: String!
+  "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "Point in time bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "Point in time amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "Point in time bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "Point in time chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "Point in time amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "Point in time total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "Point in time total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "Point in time total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+
+  deltaUnderlyingToken: Boolean!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaTotalUnderlying: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaAmountUnderlyingOne: BigInt!
+  deltaBdvUnderlyingOne: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaChoppableAmountOne: BigInt!
+  deltaChoppableBdvOne: BigInt!
+  deltaChopRate: BigDecimal!
+  deltaRecapPercent: BigDecimal!
+  deltaTotalChoppedAmount: BigInt!
+  deltaTotalChoppedBdv: BigInt!
+  deltaTotalChoppedBdvReceived: BigInt!
+
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
 }
