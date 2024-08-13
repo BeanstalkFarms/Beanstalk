@@ -140,7 +140,8 @@ library LibWhitelist {
             token,
             oracleImplementation.target,
             oracleImplementation.selector,
-            oracleImplementation.encodeType
+            oracleImplementation.encodeType,
+            oracleImplementation.data
         );
 
         // verify whitelist status of token.
@@ -209,7 +210,8 @@ library LibWhitelist {
             token,
             oracleImplementation.target,
             oracleImplementation.selector,
-            oracleImplementation.encodeType
+            oracleImplementation.encodeType,
+            oracleImplementation.data
         );
         verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
         verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
@@ -352,7 +354,8 @@ library LibWhitelist {
             token,
             oracleImplementation.target,
             oracleImplementation.selector,
-            oracleImplementation.encodeType
+            oracleImplementation.encodeType,
+            oracleImplementation.data
         );
 
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -455,7 +458,8 @@ library LibWhitelist {
         address token,
         address oracleImplementation,
         bytes4 selector,
-        bytes1 encodeType
+        bytes1 encodeType,
+        bytes memory data
     ) internal view {
         bool success;
         // if the encode type is 0x01, verify using the chainlink implementation.
@@ -469,7 +473,7 @@ library LibWhitelist {
         } else {
             // verify you passed in a callable oracle selector
             (success, ) = oracleImplementation.staticcall(
-                abi.encodeWithSelector(selector, IERC20Decimals(token).decimals(), 0)
+                abi.encodeWithSelector(selector, IERC20Decimals(token).decimals(), 0, data)
             );
         }
 

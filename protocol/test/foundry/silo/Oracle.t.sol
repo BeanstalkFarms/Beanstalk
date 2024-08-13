@@ -152,15 +152,13 @@ contract OracleTest is TestHelper {
         address token = address(new MockToken("StakingETH2", "stETH2"));
 
         // deploy new staking eth oracle contract
-        address oracleAddress = address(
-            new LSDChainlinkOracle(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                3600 * 4,
-                address(oracle),
-                3600 * 4,
-                token
-            )
-        );
+        address oracleAddress = address(new LSDChainlinkOracle());
+
+        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _ethTimeout = 3600 * 4;
+        address _xEthChainlinkOracle = address(oracle);
+        uint256 _xEthTimeout = 3600 * 4;
+        address _token = token;
 
         // add oracle implementation to beanstalk:
         vm.prank(BEANSTALK);
@@ -170,7 +168,13 @@ contract OracleTest is TestHelper {
                 oracleAddress,
                 LSDChainlinkOracle.getPrice.selector,
                 bytes1(0x00),
-                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT) // todo: verify this is the corret timeout for this oracle
+                abi.encode(
+                    _ethChainlinkOracle,
+                    _ethTimeout,
+                    _xEthChainlinkOracle,
+                    _xEthTimeout,
+                    _token
+                )
             )
         );
         return token;
