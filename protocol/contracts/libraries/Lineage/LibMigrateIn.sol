@@ -26,7 +26,11 @@ library LibMigrateIn {
 
     event DepositMigratedIn(address indexed user, SourceDeposit deposit);
 
-    uint256 internal constant INBOUND_FIELD = 1;
+    event FertilizerMigratedIn(address indexed user, SourceFertilizer fertilizer);
+
+    event PlotMigratedIn(address indexed user, SourcePlot sourcePlot);
+
+    uint256 internal constant IN_FIELD = 9;
 
     // Definitions must match source migration definitions. May require multiple definitions.
     struct SourceDeposit {
@@ -138,6 +142,7 @@ library LibMigrateIn {
                 sourceFert.amount.toUint128(),
                 s.sys.fert.bpf
             );
+            emit FertilizerMigratedIn(user, sourceFert);
         }
     }
 

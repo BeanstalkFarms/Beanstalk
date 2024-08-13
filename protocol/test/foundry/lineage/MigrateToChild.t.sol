@@ -13,6 +13,8 @@ import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
  * @notice Tests a migration from a Source to Destination Beanstalk.
  */
 contract MigrateToChildTest is TestHelper {
+    uint32 constant REPLANT_SEASON = 6074;
+
     // test accounts
     address[] farmers;
     address payable newBeanstalk;
@@ -38,12 +40,12 @@ contract MigrateToChildTest is TestHelper {
             10 ether // 10 ether.
         );
         initializeUnripeTokens(farmers[0], 100e6, 100e18);
-        mintTokensToUsers(farmers, C.BEAN, 10_000e6);
+        bs.fastForward(REPLANT_SEASON);
+
+        setUpSiloDeposits(10_000e6, farmers);
         passGermination();
 
-        // setUpSiloDepositTest(10_000e6, farmers);
-        addFertilizerBasedOnSprouts(0, 100e6);
-        sowAmountForFarmer(farmers[0], 1_000e6);
+        addFertilizerBasedOnSprouts(REPLANT_SEASON, 100e6);
 
         // // Deploy new Beanstalk.
         // BeanstalkDeployer childDeployer = new BeanstalkDeployer();
@@ -142,7 +144,55 @@ contract MigrateToChildTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    // function test_migrateFertilizer() public {}
+    function test_migrateFertilizer(uint256 ethAmount) public {
+        address user = farmers[2];
+
+        uint128 firstId = bs.getEndBpf();
+        uint256 firstFertAmount = buyFertForUser(user, ethAmount);
+        passGermination();
+        uint128 secondId = bs.getEndBpf();
+        uint256 secondFertAmount = buyFertForUser(user, ethAmount);
+
+        IMockFBeanstalk.SourceFertilizer[] memory ferts = new IMockFBeanstalk.SourceFertilizer[](2);
+        {
+            firstFertAmount /= 3;
+            ferts[0] = IMockFBeanstalk.SourceFertilizer(
+                firstId, // id
+                firstFertAmount, // amount
+                0 // _remainingBpf
+            );
+            ferts[1] = IMockFBeanstalk.SourceFertilizer(
+                secondId, // id
+                secondFertAmount, // amount
+                0 // _remainingBpf
+            );
+        }
+
+        vm.prank(user);
+        bs.migrateOut(
+            // TODO change to not migrate into self, but this requires significant changes to initialization system.
+            BEANSTALK, // Migrate into self
+            new IMockFBeanstalk.SourceDeposit[](0),
+            new IMockFBeanstalk.SourcePlot[](0),
+            ferts,
+            abi.encode("")
+        );
+
+        // NOTE: Cannot do this yet, bc source == destination.
+        // // Verify Source fertilizer.
+        // {
+        //     require(bs.plot(user, 0, 0) == 0, "First source plot amount mismatch");
+        //     require(bs.plot(user, 0, podsPerSow) == 0, "Second source plot amount mismatch");
+        // }
+        // Verify Destination fertilizer.
+        {
+            // require(fertilizer.balanceOf(user, firstId) == firstFertAmount, "Dest fert amount mismatch");
+            require(
+                fertilizer.balanceOf(user, secondId) == secondFertAmount,
+                "Dest fert amount mismatch"
+            );
+        }
+    }
 
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.

@@ -190,39 +190,38 @@ library LibMigrateOut {
         if (fertilizer.length == 0) return fertilizerOut;
         AppStorage storage s = LibAppStorage.diamondStorage();
         fertilizerOut = new bytes[](fertilizer.length);
+
         /*
-        0. Update user
-        1. Decrement s.sys.fert.activeFertilizer
-        2. Decrement s.sys.fert.fertilizer[id]
-        3. Decrement s.sys.fert.unfertilizedIndex
-        4. Check leftoverBeans
+        0. Update user.
+        1. Decrement each fert individually.
+        2. Check leftoverBeans.
         */
         uint256[] memory ids = new uint256[](fertilizer.length);
-        uint256[] memory amounts = new uint256[](fertilizer.length);
         for (uint256 i; i < fertilizer.length; i++) {
             ids[i] = fertilizer[i].id;
-            amounts[i] = fertilizer[i].amount;
-        }
 
-        LibFertilizer.claimFertilized(ids, LibTransfer.To.INTERNAL);
-        (
-            uint256 totalFertilizer,
-            uint128[] memory remainingBpf,
-            uint256 totalUnfertilized
-        ) = LibFertilizer.getAmountsOfIds(account, ids, amounts);
+            // Do not allow duplicate fertilizer IDs.
+            for (uint256 j; j < i; j++) {
+                require(ids[j] != fertilizer[i].id, "Duplicate Fertilizer ID");
+            }
 
-        s.sys.fert.activeFertilizer -= totalFertilizer;
-        s.sys.fert.unfertilizedIndex -= totalUnfertilized;
-        for (uint256 i; i < ids.length; i++) {
-            s.sys.fert.fertilizer[fertilizer[i].id] -= fertilizer[i].amount;
-            fertilizer[i]._remainingBpf = remainingBpf[i];
+            uint128 remainingBpf = fertilizer[i].id - s.sys.fert.bpf;
+            C.fertilizer().beanstalkBurn(
+                account,
+                s.sys.fert.bpf + remainingBpf,
+                uint128(fertilizer[i].amount),
+                s.sys.fert.bpf
+            );
+            LibFertilizer.decrementFertState(fertilizer[i].amount, remainingBpf);
+
+            fertilizer[i]._remainingBpf = remainingBpf;
             fertilizerOut[i] = abi.encode(fertilizer[i]);
         }
 
         // If leftover beans are greater than obligations, drop excess leftovers. Rounding loss.
         uint256 unfertilizedBeans = s.sys.fert.unfertilizedIndex - s.sys.fert.fertilizedIndex;
-        if (unfertilizedBeans > s.sys.fert.leftoverBeans) {
-            s.sys.fert.leftoverBeans = unfertilizedBeans;
+        if (unfertilizedBeans < s.sys.fert.leftoverBeans) {
+            s.sys.fert.leftoverBeans = 0;
         }
     }
 }

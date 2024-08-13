@@ -59,6 +59,15 @@ contract Fertilizer is Internalizer {
         _safeMint(account, id, amount, bytes("0"));
     }
 
+    function beanstalkBurn(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
+        require(_balances[id][account].amount >= amount);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = id;
+        _update(account, ids, bpf);
+        _balances[id][account].lastBpf = bpf;
+        _safeBurn(account, id, amount, bytes("0"));
+    }
+
     function _beforeTokenTransfer(
         address, // operator,
         address from,

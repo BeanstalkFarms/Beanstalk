@@ -73,6 +73,21 @@ library LibFertilizer {
         return id;
     }
 
+    function decrementFertState(
+        uint256 fertilizerAmount,
+        uint128 remainingBpf
+    ) internal returns (uint128 id) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
+
+        s.sys.fert.unfertilizedIndex -= fertilizerAmount * remainingBpf;
+        id = s.sys.fert.bpf + remainingBpf;
+        s.sys.fert.fertilizer[id] -= fertilizerAmount128;
+        s.sys.fert.activeFertilizer -= fertilizerAmount;
+
+        return id;
+    }
+
     function claimFertilized(uint256[] memory ids, LibTransfer.To mode) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
@@ -89,31 +104,6 @@ library LibFertilizer {
         if (id >= END_DECREASE_SEASON) return 200;
         uint128 humidityDecrease = id.sub(REPLANT_SEASON).mul(5);
         humidity = RESTART_HUMIDITY.sub(humidityDecrease);
-    }
-
-    function getAmountsOfIds(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    )
-        external
-        view
-        returns (uint256 totalFertilizer, uint128[] memory remainingBpf, uint256 totalUnfertilized)
-    {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        remainingBpf = new uint128[](ids.length);
-
-        for (uint256 i; i < ids.length; i++) {
-            require(
-                amounts[i] >= C.fertilizer().balanceOf(account, ids[i]),
-                "insufficient fert balance"
-            );
-            totalFertilizer += amounts[i];
-            if (ids[i] > s.sys.fert.bpf) {
-                remainingBpf[i] = uint128(ids[i] - s.sys.fert.bpf);
-                totalUnfertilized += uint256(remainingBpf[i]) * amounts[i];
-            }
-        }
     }
 
     /**
