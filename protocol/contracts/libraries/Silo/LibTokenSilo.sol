@@ -20,7 +20,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "hardhat/console.sol";
 
-
 /**
  * @title LibTokenSilo
  * @author Publius, Pizzaman1337
