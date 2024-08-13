@@ -16,7 +16,6 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {LibMigrateIn} from "contracts/libraries/Lineage/LibMigrateIn.sol";
 import {C} from "contracts/C.sol";
 
 /**
