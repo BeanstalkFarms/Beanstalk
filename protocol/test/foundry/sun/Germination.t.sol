@@ -38,7 +38,7 @@ contract GerminationTest is TestHelper {
      */
     function test_depositGerminates(uint256 amount) public {
         // deposits bean into the silo.
-        (amount, ) = setUpSiloDepositTest(amount, farmers);
+        (amount, ) = setUpSiloDeposits(amount, farmers);
 
         // verify new state of silo.
         checkSiloAndUser(users[1], 0, amount);
@@ -50,7 +50,7 @@ contract GerminationTest is TestHelper {
      */
     function test_depositsContGerminating(uint256 amount) public {
         // deposits bean into the silo.
-        (amount, ) = setUpSiloDepositTest(amount, farmers);
+        (amount, ) = setUpSiloDeposits(amount, farmers);
 
         // call sunrise.
         season.siloSunrise(0);
@@ -65,7 +65,7 @@ contract GerminationTest is TestHelper {
      */
     function test_depositsEndGermination(uint256 amount) public {
         // deposits bean into the silo.
-        (amount, ) = setUpSiloDepositTest(amount, farmers);
+        (amount, ) = setUpSiloDeposits(amount, farmers);
 
         // call sunrise twice.
         season.siloSunrise(0);
@@ -83,7 +83,7 @@ contract GerminationTest is TestHelper {
     function test_withdrawGerminating(uint256 amount) public {
         // deposits bean into the silo.
         int96 stem;
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
+        (amount, stem) = setUpSiloDeposits(amount, farmers);
 
         // withdraw beans from silo from user 1 and 2.
         withdrawDepositForUsers(farmers, C.BEAN, stem, amount, LibTransfer.To.EXTERNAL);
@@ -100,7 +100,7 @@ contract GerminationTest is TestHelper {
     function test_withdrawGerminatingCont(uint256 amount) public {
         // deposits bean into the silo.
         int96 stem;
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
+        (amount, stem) = setUpSiloDeposits(amount, farmers);
 
         // call sunrise.
         season.siloSunrise(0);
@@ -121,7 +121,7 @@ contract GerminationTest is TestHelper {
     function test_transferGerminating(uint256 amount) public {
         // deposits bean into the silo.
         int96 stem;
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
+        (amount, stem) = setUpSiloDeposits(amount, farmers);
         uint256 grownStalk = bs.balanceOfGrownStalk(users[1], C.BEAN);
 
         farmers.push(users[3]);
@@ -141,7 +141,7 @@ contract GerminationTest is TestHelper {
     function test_transferGerminatingCont(uint256 amount) public {
         // deposits bean into the silo.
         int96 stem;
-        (amount, stem) = setUpSiloDepositTest(amount, farmers);
+        (amount, stem) = setUpSiloDeposits(amount, farmers);
         season.siloSunrise(0);
         farmers.push(users[3]);
         farmers.push(users[4]);
@@ -265,7 +265,7 @@ contract GerminationTest is TestHelper {
         address newFarmer
     ) public returns (uint256 _amount) {
         // deposit 'amount' beans to the silo.
-        (_amount, ) = setUpSiloDepositTest(amount, initalFarmers);
+        (_amount, ) = setUpSiloDeposits(amount, initalFarmers);
 
         // call sunrise twice to finish the germination process.
         season.siloSunrise(0);
@@ -277,7 +277,7 @@ contract GerminationTest is TestHelper {
         mintTokensToUsers(farmer, C.BEAN, MAX_DEPOSIT_BOUND);
 
         // deposit into the silo.
-        setUpSiloDepositTest(amount, farmer);
+        setUpSiloDeposits(amount, farmer);
     }
 
     ////// ASSERTIONS //////

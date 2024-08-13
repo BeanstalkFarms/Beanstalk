@@ -518,17 +518,17 @@ contract TestHelper is
     /**
      * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
      * @param amount The amount of beans to deposit.
-     * @return _amount The actual amount of beans deposited.
+     * @return amount The actual amount of beans deposited.
      * @return stem The stem tip for the deposited beans.
      */
-    function setUpSiloDepositTest(
+    function setUpSiloDeposits(
         uint256 amount,
-        address[] memory _farmers
-    ) public returns (uint256 _amount, int96 stem) {
-        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
-
-        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
-        stem = bs.stemTipForToken(C.BEAN);
+        address[] memory users
+    ) public returns (uint256, int96) {
+        amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
+        depositForUsers(users, C.BEAN, amount, LibTransfer.From.EXTERNAL);
+        int96 stem = bs.stemTipForToken(C.BEAN);
+        return (amount, stem);
     }
 
     /**
@@ -545,20 +545,29 @@ contract TestHelper is
         LibTransfer.From mode
     ) public {
         for (uint256 i = 0; i < users.length; i++) {
+            mintTokensToUser(users[i], C.BEAN, amount);
             vm.prank(users[i]);
-            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
+            bs.deposit(token, amount, uint8(mode));
         }
     }
 
     /**
-     * @notice mints `sowAmount` beans for farmer,
-     * issues `sowAmount` of beans to farmer.
-     * sows `sowAmount` of beans.
+     * @notice Sows beans for a user.
      */
-    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
-        bs.setSoilE(sowAmount);
-        mintTokensToUser(farmer, C.BEAN, sowAmount);
-        vm.prank(farmer);
-        bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
+    function sowForUser(address user, uint256 beans) internal returns (uint256 pods) {
+        bs.setSoilE(beans);
+        mintTokensToUser(user, C.BEAN, beans);
+        vm.prank(user);
+        return bs.sow(beans, 0, uint8(LibTransfer.From.EXTERNAL));
+    }
+
+    function buyFertForUser(
+        address user,
+        uint256 ethAmount
+    ) internal returns (uint256 fertilizerAmountOut) {
+        ethAmount = bound(ethAmount, 1e18 / 1000, 100e18);
+        mintTokensToUser(user, bs.getBarnRaiseToken(), ethAmount);
+        vm.prank(user);
+        return bs.mintFertilizer(ethAmount, 0, 0);
     }
 }

@@ -387,7 +387,7 @@ contract FieldTest is TestHelper {
         uint256 pods = (sowAmount * 101) / 100;
         portion = bound(portion, 1, pods - 1);
         field.incrementTotalHarvestableE(activeField, portion);
-        sowAmountForFarmer(farmers[0], sowAmount);
+        sowForUser(farmers[0], sowAmount);
 
         plotIndexes = field.getPlotIndexesFromAccount(farmers[0], activeField);
         plots = field.getPlotsFromAccount(farmers[0], activeField);
@@ -448,7 +448,7 @@ contract FieldTest is TestHelper {
         uint256 sowAmount = rand(0, 10e6);
         uint256 sows = rand(1, 1000);
         for (uint256 i; i < sows; i++) {
-            sowAmountForFarmer(farmers[0], sowAmount);
+            sowForUser(farmers[0], sowAmount);
         }
         verifyPlotIndexAndPlotLengths(farmers[0], activeField, sows);
         uint256 pods = (sowAmount * 101) / 100;
@@ -534,7 +534,7 @@ contract FieldTest is TestHelper {
             field.setActiveField(j, 101);
             uint256 activeField = field.activeField();
             for (uint256 i; i < sowsPerField; i++) {
-                sowAmountForFarmer(farmers[0], sowAmount);
+                sowForUser(farmers[0], sowAmount);
             }
         }
 

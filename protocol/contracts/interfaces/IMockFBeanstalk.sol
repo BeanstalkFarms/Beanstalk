@@ -264,7 +264,10 @@ interface IMockFBeanstalk {
     }
 
     struct SourcePlot {
-        address n;
+        uint256 fieldId;
+        uint256 index;
+        uint256 amount;
+        uint256 existingIndex;
     }
 
     struct SourceFertilizer {
@@ -1655,6 +1658,8 @@ interface IMockFBeanstalk {
         uint256 minSoil,
         uint8 mode
     ) external payable returns (uint256 pods);
+
+    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 
     function stemStartSeason() external view returns (uint16);
 

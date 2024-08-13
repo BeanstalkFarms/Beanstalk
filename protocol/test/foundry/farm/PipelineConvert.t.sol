@@ -1641,13 +1641,12 @@ contract PipelineConvertTest is TestHelper {
     ) public returns (int96 stem) {
         vm.pauseGasMetering();
         // amount = bound(amount, 1e6, 5000e6);
-        bean.mint(user, amount);
 
         // setup array of addresses with user
         address[] memory users = new address[](1);
         users[0] = user;
 
-        (amount, stem) = setUpSiloDepositTest(amount, users);
+        (amount, stem) = setUpSiloDeposits(amount, users);
 
         passGermination();
     }

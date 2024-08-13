@@ -6,6 +6,7 @@ pragma abicoder v2;
 
 import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {C} from "contracts/C.sol";
 
 interface IOwner {
@@ -19,10 +20,13 @@ interface IOwner {
  * @notice Test helper contract to deploy Fertilizer.
  */
 contract FertilizerDeployer is Utils {
+    IFertilizer fertilizer;
+
     function initFertilizer(bool verbose) internal {
         address fertilizerAddress = C.fertilizerAddress();
         deployCodeTo("Fertilizer", fertilizerAddress);
         if (verbose) console.log("Fertilizer deployed at: ", fertilizerAddress);
+        fertilizer = IFertilizer(fertilizerAddress);
     }
 
     function transferFertilizerOwnership(address newOwner) internal {

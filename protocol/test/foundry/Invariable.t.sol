@@ -19,14 +19,14 @@ contract InvariableTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, true);
         MockToken(C.WETH).mint(BEANSTALK, 100_000);
-        
+
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
         mintTokensToUsers(siloUsers, C.BEAN, 100_000e6);
 
-        setUpSiloDepositTest(10_000e6, siloUsers);
+        setUpSiloDeposits(10_000e6, siloUsers);
         addFertilizerBasedOnSprouts(0, 100e6);
-        sowAmountForFarmer(siloUsers[0], 1_000e6);
+        sowForUser(siloUsers[0], 1_000e6);
     }
 
     /**
@@ -47,7 +47,6 @@ contract InvariableTest is TestHelper {
         vm.expectRevert("INV: Insufficient token balance");
         vm.prank(siloUsers[1]);
         bs.advancedFarm(advancedFarmCalls);
-
 
         // Manipulate user internal balance.
         advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
@@ -75,7 +74,7 @@ contract InvariableTest is TestHelper {
         vm.expectRevert("INV: Insufficient token balance");
         vm.prank(siloUsers[1]);
         bs.advancedFarm(advancedFarmCalls);
-        
+
         // Exploit Flood plenty.
         advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
             abi.encodeWithSelector(MockAttackFacet.exploitSop.selector),
