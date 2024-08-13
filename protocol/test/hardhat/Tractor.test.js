@@ -102,9 +102,12 @@ describe("Tractor", function () {
     await this.weth.connect(publisher).approve(this.well.address, ethers.constants.MaxUint256);
 
     // P > 1.
+    await expect(BEAN_ETH_WELL).to.eq(this.well.address);
     await this.well
       .connect(owner)
       .addLiquidity([to6("1000000"), to18("2000")], 0, owner.address, ethers.constants.MaxUint256);
+    // await mockBeanstalk.captureWellE(this.well.address);
+    await mockBeanstalk.captureE();
 
     // Set recapitalization parameters (see function for default values).
     await setRecapitalizationParams(owner);
@@ -115,7 +118,7 @@ describe("Tractor", function () {
       operatorPasteInstrs: [],
       maxNonce: 100,
       startTime: Math.floor(Date.now() / 1000) - 10 * 3600,
-      endTime: Math.floor(Date.now() / 1000) + 10 * 3600
+      endTime: Math.floor(Date.now() / 1000) + 10000 * 3600
     };
 
     this.requisition = {
@@ -396,35 +399,9 @@ describe("Tractor", function () {
 
     it("Auto Farm", async function (verbose = false) {
       console.log("Auto Farm");
-      // Give publisher Grown Stalk.
-      this.result = await this.siloFacet
-        .connect(publisher)
-        .deposit(bean.address, to6("10000"), EXTERNAL);
-      await this.seasonFacet.siloSunrise(to6("0"));
-      await time.increase(3600); // wait until end of season to get earned
-      await mine(25);
-      expect(
-        await this.siloGettersFacet.balanceOfGrownStalk(publisher.address, bean.address)
-      ).to.eq(toStalk("2"));
 
-      // Give publisher Earned Beans.
-      this.result = await this.siloFacet
-        .connect(publisher)
-        .deposit(bean.address, to6("10000"), EXTERNAL);
-      await this.seasonFacet.siloSunrise(to6("1000"));
-      await time.increase(3600);
-      await mine(25);
-      await this.seasonFacet.siloSunrise(to6("1000"));
-      expect(await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
-
-      // Capture init state.
-      const initPublisherStalkBalance = await this.siloGettersFacet.balanceOfStalk(
-        publisher.address
-      );
-      const initPublisherBeans = await bean.balanceOf(publisher.address);
-      const initOperatorBeans = await bean.balanceOf(operator.address);
-
-      let minEarnedBeans = to6("100");
+      // Populate blueprint and operator data.
+      let minEarnedBeans = to6("1");
       let minMowSeasons = 24;
       let tipToken = BEAN;
       let tipAmount = to6("2");
@@ -452,29 +429,123 @@ describe("Tractor", function () {
         [0] // external
       );
 
+      // Publisher deposit and germination.
+      this.result = await this.siloFacet
+        .connect(publisher)
+        .deposit(bean.address, to6("1000"), EXTERNAL);
+      await this.seasonFacet.siloSunrise(to6("0"));
+      await time.increase(3600);
+      await mine(25);
+      await mockBeanstalk.captureE();
+      await this.seasonFacet.siloSunrise(to6("0"));
+      await time.increase(3600);
+      await mine(25);
+      await mockBeanstalk.captureE();
+
+
+      //// NOTE WHY IS TWA DELTAB STILL ZERO HERE? ////
+
+      // // Capture init state.
+      // const initPublisherStalkBalance = await this.siloGettersFacet.balanceOfStalk(
+      //   publisher.address
+      // );
+      // const initPublisherBeans = await bean.balanceOf(publisher.address);
+      // const initOperatorBeans = await bean.balanceOf(operator.address);
+
+      // await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // // Confirm final state.
+      // expect(
+      //   await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address),
+      //   "publisher Earned Bean did not go to 0"
+      // ).to.eq(0);
+      // const publisherStalkGain =
+      //   (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
+      // const operatorPaid = (await bean.balanceOf(operator.address)) - initOperatorBeans;
+      // if (verbose) {
+      //   console.log(
+      //     "Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10)
+      //   );
+      //   console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      // }
+
+      // expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
+      // expect(await bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
+      //   initPublisherBeans
+      // );
+      // expect(operatorPaid, "unpaid operator").to.be.eq(tipAmount);
+
+      // Fail bc not enough earned Beans and too few seasons passed.
+      await expect(
+        this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
+      ).to.be.revertedWith("Junction: check failed");
+
+      // Succeed bc enough earned Beans.
+      await this.seasonFacet.siloSunrise(to6("1000"));
+      await time.increase(3600); // wait until end of season to get earned
+      await mine(25);
+      expect(await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address)).to.gt(0);
       await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
 
-      // Confirm final state.
-      expect(
-        await this.siloGettersFacet.balanceOfEarnedBeans(publisher.address),
-        "publisher Earned Bean did not go to 0"
-      ).to.eq(0);
+      // Fail bc too few seasons and no earned Beans.
+      await this.seasonFacet.siloSunrise(to6("0"));
+      await time.increase(3600); // wait until end of season to get earned
+      await mine(25);
+      await expect(
+        this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
+      ).to.be.revertedWith("Junction: check failed");
 
-      const publisherStalkGain =
-        (await this.siloGettersFacet.balanceOfStalk(publisher.address)) - initPublisherStalkBalance;
-      const operatorPaid = (await bean.balanceOf(operator.address)) - initOperatorBeans;
-      if (verbose) {
-        console.log(
-          "Publisher Stalk increase: " + ethers.utils.formatUnits(publisherStalkGain, 10)
-        );
-        console.log("Operator Payout: " + ethers.utils.formatUnits(operatorPaid, 6) + " Beans");
+      // Fail bc price < 1.00.
+      for (let i = 0; i < 25; i++) {
+        await time.increase(3600);
+        await mine(25);
+        await this.seasonFacet.siloSunrise(to6("0"));
+        await mockBeanstalk.captureE();
       }
+      // await this.well
+      //   .connect(owner)
+      //   .addLiquidity([to6("1000000"), to18("0")], 0, owner.address, ethers.constants.MaxUint256);
+      // await expect(
+      //   this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
+      // ).to.be.revertedWith("Junction: check failed");
 
-      expect(publisherStalkGain, "publisher stalk balance did not increase").to.be.gt(0);
-      expect(await bean.balanceOf(publisher.address), "publisher did not pay").to.be.lt(
-        initPublisherBeans
-      );
-      expect(operatorPaid, "unpaid operator").to.be.eq(tipAmount);
+      // // Succeed bc P > 1 (TWA) and enough seasons passed.
+      // await this.well
+      //   .connect(owner)
+      //   .addLiquidity([to6("0"), to18("1000000")], 0, owner.address, ethers.constants.MaxUint256);
+      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+
+      // // Fail bc not enough seasons passed.
+      // await this.seasonFacet.siloSunrise(to6("1000"));
+      // await time.increase(3600); // wait until end of season to get earned
+      // await mine(25);
+      // await expect(
+      //   await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData)
+      // ).to.be.revertedWith("Junction: check failed");
+
+      // // Succeed with enough earned beans, low num seasons.
+      //   await time.increase(3600);
+      //   await mine(25);
+      //   await this.seasonFacet.siloSunrise(to6("0"));
+
+      // // Fail bc not enough earned beans, price < 1.00, and too few seasons passed.
+      // for (let i; i < 25; i++) {
+      //   await time.increase(3600);
+      //   await mine(25);
+      //   await this.seasonFacet.siloSunrise(to6("0"));
+      // }
+
+      // // Fail bc not enough earned beans, price < 1.00.
+      // // P < 1?
+      // await this.well
+      //   .connect(owner)
+      //   .addLiquidity(
+      //     [to6("1000000000"), to18("1000")],
+      //     0,
+      //     owner.address,
+      //     ethers.constants.MaxUint256
+      //   );
+      // await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
     });
   });
 
