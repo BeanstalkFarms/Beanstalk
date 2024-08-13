@@ -15,7 +15,7 @@ export const addresses = {
   DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
   PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
   ROOT: Address.make("0x77700005BEA4DE0A78b956517f099260C2CA9a26"),
-  USD_ORACLE: Address.make("0xE0AdBED7e2ac72bc7798c5DC33aFD77B068db7Fd"),
+  USD_ORACLE: Address.make("0xb24a70b71e4cca41eb114c2f61346982aa774180"),
   UNWRAP_AND_SEND_ETH_JUNCTION: Address.make("0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"),
 
   // ----------------------------------------

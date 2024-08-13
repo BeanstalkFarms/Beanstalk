@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import {
   LiquiditySupplyRatioDocument,
@@ -97,6 +96,10 @@ type ChartSetupBase = {
    * price scales.
    */
   shortTickFormatter: (v: number) => string | undefined;
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
 };
 
 type ChartSetup = ChartSetupBase & {
