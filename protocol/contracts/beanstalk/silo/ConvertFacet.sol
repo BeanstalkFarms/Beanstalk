@@ -72,8 +72,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
-        console.log("Data: decreaseBDV: %s, account: %s caller: %s", cp.decreaseBDV, cp.account, msg.sender);
-
         // if the account is 0, set it to `LibTractor._user()`
         // cp.account is only set upon a anti-lambda-lambda convert.
         if (cp.account == address(0)) {
@@ -86,6 +84,9 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 "Convert: DecreaseBDV only supports updating one deposit."
             );
         }
+
+        console.log("Data: decreaseBDV: %s, account: %s caller: %s", cp.decreaseBDV, cp.account, msg.sender);
+
 
         require(cp.fromAmount > 0, "Convert: From amount is 0.");
 
@@ -122,8 +123,7 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             cp.toToken,
             cp.toAmount,
             toBdv,
-            pipeData.grownStalk,
-            cp.account
+            pipeData.grownStalk
         );
 
         fromAmount = cp.fromAmount;
