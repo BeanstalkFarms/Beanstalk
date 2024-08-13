@@ -92,8 +92,12 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
             );
         }
 
-        console.log("Data: decreaseBDV: %s, account: %s caller: %s", cp.decreaseBDV, cp.account, msg.sender);
-
+        console.log(
+            "Data: decreaseBDV: %s, account: %s caller: %s",
+            cp.decreaseBDV,
+            cp.account,
+            msg.sender
+        );
 
         require(cp.fromAmount > 0, "Convert: From amount is 0.");
 
