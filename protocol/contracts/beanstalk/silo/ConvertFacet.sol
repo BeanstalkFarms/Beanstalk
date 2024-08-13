@@ -17,7 +17,6 @@ import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibPipelineConvert} from "contracts/libraries/Convert/LibPipelineConvert.sol";
-import "hardhat/console.sol";
 
 /**
  * @author Publius, Brean, DeadManWalking, pizzaman1337, funderberker
@@ -72,13 +71,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
 
         LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
-        console.log(
-            "Data: decreaseBDV: %s, account: %s caller: %s",
-            cp.decreaseBDV,
-            cp.account,
-            msg.sender
-        );
-
         // if the account is 0, set it to `LibTractor._user()`
         // cp.account is only set upon a anti-lambda-lambda convert.
         if (cp.account == address(0)) {
@@ -91,13 +83,6 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
                 "Convert: DecreaseBDV only supports updating one deposit."
             );
         }
-
-        console.log(
-            "Data: decreaseBDV: %s, account: %s caller: %s",
-            cp.decreaseBDV,
-            cp.account,
-            msg.sender
-        );
 
         require(cp.fromAmount > 0, "Convert: From amount is 0.");
 

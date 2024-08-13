@@ -18,7 +18,6 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -360,8 +359,6 @@ library LibTokenSilo {
 
         uint256 crateAmount = s.accts[account].deposits[depositId].amount;
         crateBDV = s.accts[account].deposits[depositId].bdv;
-        console.log("Crate Amount: %s", crateAmount);
-        console.log("Account In remove deposit: %s", account);
         require(amount <= crateAmount, "Silo: Crate balance too low.");
 
         // Partial remove
