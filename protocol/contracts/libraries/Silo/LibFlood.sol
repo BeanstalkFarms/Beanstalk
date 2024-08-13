@@ -106,7 +106,7 @@ library LibFlood {
     function handleRainAndSops(
         address account,
         uint32 lastUpdate,
-        uint128 firstGerminatingRoots
+        uint256 firstGerminatingRoots
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
