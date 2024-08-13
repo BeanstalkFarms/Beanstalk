@@ -104,7 +104,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SiloV3
-      startBlock: 15277986
+      startBlock: 17671557 # BIP-36
       endBlock: 19927634
     mapping:
       kind: ethereum/events
@@ -233,7 +233,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
-      startBlock: 12974075
+      startBlock: 14148509 # BIP-11
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -265,7 +265,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 14148509
       endBlock: 19927634
     mapping:
       kind: ethereum/events
@@ -378,8 +378,6 @@ dataSources:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
-        - event: Sunrise(indexed uint256)
-          handler: handleSunrise
         - event: Reward(indexed uint32,uint256,uint256,uint256)
           handler: handleReward
         - event: WellOracle(indexed uint32,address,int256,bytes)
@@ -390,7 +388,7 @@ dataSources:
           handler: handleIncentive
       file: ../src/handlers/SeasonHandler.ts
   - kind: ethereum/contract
-    name: LegacySeason-PreReplant
+    name: LegacySeason-PreReplant-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
@@ -411,12 +409,12 @@ dataSources:
           handler: handleSeasonSnapshot
       file: ../src/handlers/legacy/LegacySeasonHandler.ts
   - kind: ethereum/contract
-    name: LegacySeason-Replanted
+    name: LegacySeason-Replanted-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
-      startBlock: 12974075
+      startBlock: 15277986 # Replanted
       endBlock: 19927634
     mapping:
       kind: ethereum/events
@@ -431,6 +429,68 @@ dataSources:
         - event: MetapoolOracle(indexed uint32,int256,uint256[2])
           handler: handleMetapoolOracle
       file: ../src/handlers/legacy/LegacySeasonHandler.ts
+  - kind: ethereum/contract
+    name: Season-PreReplant-Replanted
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: PreReplant
+      startBlock: 12974075
+      endBlock: 15277986 # Replanted
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: PreReplant
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ../src/handlers/SeasonHandler.ts
+  - kind: ethereum/contract
+    name: LegacySeason-Replanted-SiloV3
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Replanted
+      startBlock: 15277986 # Replanted
+      endBlock: 17671557 # BIP-36
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleReplantSunrise
+      file: ../src/handlers/legacy/LegacySeasonHandler.ts
+  - kind: ethereum/contract
+    name: Season-SiloV3-
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 17671557 # BIP-36
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ../src/handlers/SeasonHandler.ts
   ###
   # BEAN ERC20
   ###

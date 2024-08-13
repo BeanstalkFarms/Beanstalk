@@ -66,7 +66,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
-    for (let i = REPLANT_SEASON.toU32(); i <= t; i++) {
+    for (let i = REPLANT_SEASON.toI32(); i <= t; i++) {
       let rewardMint = getRewardMinted(i);
       currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
