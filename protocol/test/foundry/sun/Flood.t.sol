@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {TestHelper, C} from "test/foundry/utils/TestHelper.sol";
 import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
-import {MockSeasonFacet, Weather} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 import {SiloGettersFacet} from "contracts/beanstalk/silo/SiloFacet/SiloGettersFacet.sol";
@@ -21,7 +20,6 @@ import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
  */
 contract FloodTest is TestHelper {
     // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
     SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
@@ -575,6 +573,46 @@ contract FloodTest is TestHelper {
         bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+    }
+
+    function testSopUsingRealSunrise() public {
+        address sopWell = C.BEAN_ETH_WELL;
+        setReserves(sopWell, 1000000e6, 1100e18);
+
+        // there's only one well, so sop amount into that well will be the current deltaB
+        int256 currentDeltaB = bs.poolCurrentDeltaB(sopWell);
+
+        // log overallCurrentDeltaB
+        // int256 overallCurrentDeltaB = bs.overallCurrentDeltaB();
+
+        // getSwapOut for how much Beanstalk will get for swapping this amount of beans
+        uint256 amountOut = IWell(sopWell).getSwapOut(
+            IERC20(C.BEAN),
+            IERC20(C.WETH),
+            uint256(currentDeltaB)
+        );
+
+        // take this amount out, multiply by sop precision then divide by rain roots (current roots)
+        uint256 userCalcPlentyPerRoot = (amountOut * C.SOP_PRECISION) / bs.totalRoots(); // 2558534177813719812
+
+        // user plenty will be plenty per root * user roots
+        uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
+            C.SOP_PRECISION; // 25595575914848452999
+
+        //
+        warpToNextSeasonAndUpdateOracles();
+        bs.sunrise(); // not raining, caseId 108
+
+        warpToNextSeasonAndUpdateOracles();
+        bs.sunrise(); // start raining, caseId 114
+
+        warpToNextSeasonAndUpdateOracles();
+        bs.sunrise(); // sop, caseId 114
+
+        IMockFBeanstalk.Season memory s = bs.time();
+        // verify a sop a happened
+        assertEq(s.lastSop, s.rainStart);
+        assertEq(s.lastSopSeason, s.current);
     }
 
     function testCalculateSopPerWell() public pure {
