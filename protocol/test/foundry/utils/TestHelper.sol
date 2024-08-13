@@ -85,7 +85,6 @@ contract TestHelper is
         vm.warp(INITIAL_TIMESTAMP);
 
         // initialize mock tokens.
-        initMockBean(C.BEAN, verbose);
         initMockTokens(verbose);
 
         // initialize Depot:

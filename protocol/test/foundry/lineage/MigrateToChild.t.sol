@@ -46,12 +46,6 @@ contract MigrateToChildTest is TestHelper {
         passGermination();
 
         addFertilizerBasedOnSprouts(REPLANT_SEASON, 100e6);
-
-        // // Deploy new Beanstalk.
-        // BeanstalkDeployer childDeployer = new BeanstalkDeployer();
-        // // initMockBean(C.BEAN, verbose);
-        // newBeanstalk = payable(address(0x69));
-        // childDeployer.setupDiamond(newBeanstalk, false, true);
     }
 
     /**
