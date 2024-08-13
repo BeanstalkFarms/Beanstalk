@@ -49,7 +49,7 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
       <SingleAdvancedChart
         storageKeyPrefix="silo-avg-seeds-per-bdv"
         tooltipTitle="Average Seeds per BDV"
-        tooltipHoverText="The number of Stalk issued per Season per BDV in the silo."
+        tooltipHoverText="The number of Stalk issued per Season per BDV in the Silo."
         valueAxisType="stalk"
         tickFormatter={(val) => new BigNumber(val).toFormat(6)}
         drawPegLine={false}
