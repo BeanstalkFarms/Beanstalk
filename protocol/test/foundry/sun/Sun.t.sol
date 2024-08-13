@@ -429,7 +429,7 @@ contract SunTest is TestHelper {
         int256 twaDeltaB = -1000;
         uint32 currentSeason = bs.season();
         vm.expectEmit();
-        // expect the minimum of the -twaDeltaB and -instDeltaB to be used. 
+        // expect the minimum of the -twaDeltaB and -instDeltaB to be used.
         emit Soil(currentSeason + 1, 1000);
         season.sunSunrise(twaDeltaB, 1);
         assertEq(bs.totalSoil(), 1000);
