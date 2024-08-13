@@ -1,5 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_LP } from "../../../../subgraph-core/utils/Constants";
 import { BI_10 } from "../../../../subgraph-core/utils/Decimals";
 
 const STEM_START_SEASON = 14210;
@@ -19,7 +19,7 @@ function getLegacySeedsPerToken(token: Address): i32 {
     return 2;
   } else if (token == UNRIPE_BEAN) {
     return 2;
-  } else if (token == UNRIPE_BEAN_3CRV) {
+  } else if (token == UNRIPE_LP) {
     return 4;
   } else if (token == BEAN_3CRV) {
     return 4;

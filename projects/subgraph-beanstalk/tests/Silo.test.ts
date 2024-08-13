@@ -8,7 +8,7 @@ import {
   GAUGE_BIP45_BLOCK,
   LUSD_3POOL,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_3CRV
+  UNRIPE_LP
 } from "../../subgraph-core/utils/Constants";
 import {
   createAddDepositV2Event,
@@ -301,5 +301,5 @@ test("Legacy stem calculation", () => {
   assert.bigIntEquals(BigInt.fromI64(-5528000000), stemFromSeason(11446, BEAN_ERC20));
   assert.bigIntEquals(BigInt.fromI64(-31556000000), stemFromSeason(6321, BEAN_3CRV));
   assert.bigIntEquals(BigInt.fromI64(-16272000000), stemFromSeason(6074, UNRIPE_BEAN));
-  assert.bigIntEquals(BigInt.fromI64(-32684000000), stemFromSeason(6039, UNRIPE_BEAN_3CRV));
+  assert.bigIntEquals(BigInt.fromI64(-32684000000), stemFromSeason(6039, UNRIPE_LP));
 });

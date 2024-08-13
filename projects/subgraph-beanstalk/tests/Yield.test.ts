@@ -8,7 +8,7 @@ import {
   BEAN_WETH_CP2_WELL,
   BEANSTALK,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_3CRV,
+  UNRIPE_LP,
   LUSD_3POOL
 } from "../../subgraph-core/utils/Constants";
 import { setSeason } from "./utils/Season";
@@ -152,7 +152,7 @@ describe("APY Calculations", () => {
         BEAN_ERC20.toHexString(),
         BEAN_WETH_CP2_WELL.toHexString(),
         UNRIPE_BEAN.toHexString(),
-        UNRIPE_BEAN_3CRV.toHexString()
+        UNRIPE_LP.toHexString()
       ];
       silo.dewhitelistedTokens = [BEAN_3CRV.toHexString()];
       silo.save();
@@ -175,7 +175,7 @@ describe("APY Calculations", () => {
       urbeanWhitelistSettings.stalkEarnedPerSeason = ZERO_BI;
       urbeanWhitelistSettings.save();
 
-      let urlpWhitelistSettings = loadWhitelistTokenSetting(UNRIPE_BEAN_3CRV);
+      let urlpWhitelistSettings = loadWhitelistTokenSetting(UNRIPE_LP);
       urlpWhitelistSettings.stalkEarnedPerSeason = ZERO_BI;
       urlpWhitelistSettings.save();
 
@@ -196,7 +196,7 @@ describe("APY Calculations", () => {
       urbeanSiloAsset.depositedBDV = BigInt.fromString("19556945000000");
       urbeanSiloAsset.save();
 
-      let urlpSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_BEAN_3CRV);
+      let urlpSiloAsset = loadSiloAsset(BEANSTALK, UNRIPE_LP);
       urlpSiloAsset.depositedBDV = BigInt.fromString("24417908000000");
       urlpSiloAsset.save();
 

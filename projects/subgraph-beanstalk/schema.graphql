@@ -1492,7 +1492,7 @@ type Germinating @entity {
 
 type UnripeToken @entity {
   "Token Address"
-  id: ID!
+  id: Bytes!
   "The ripe token underlying this unripe asset"
   underlyingToken: String!
   "The total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"

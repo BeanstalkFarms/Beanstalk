@@ -659,6 +659,8 @@ dataSources:
       eventHandlers:
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
+        - event: ChangeUnderlying(indexed address,int256)
+          handler: handleChangeUnderlying
       file: ../src/handlers/BarnHandler.ts
   ###
   # SEASON

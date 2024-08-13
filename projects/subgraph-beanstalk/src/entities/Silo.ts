@@ -1,7 +1,17 @@
 import { Address, BigInt, Bytes, ethereum, store, log } from "@graphprotocol/graph-ts";
-import { Silo, SiloDeposit, SiloWithdraw, SiloYield, SiloAsset, WhitelistTokenSetting, TokenYield } from "../../generated/schema";
-import { BEANSTALK, UNRIPE_BEAN, UNRIPE_BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
+import {
+  Silo,
+  SiloDeposit,
+  SiloWithdraw,
+  SiloYield,
+  SiloAsset,
+  WhitelistTokenSetting,
+  TokenYield,
+  UnripeToken
+} from "../../generated/schema";
+import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { getUnripeUnderlying } from "../utils/Constants";
 
 /* ===== Base Silo Entities ===== */
 
@@ -74,13 +84,35 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
       setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
       setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
       setting.save();
-    } else if (token == UNRIPE_BEAN_3CRV) {
+    } else if (token == UNRIPE_LP) {
       setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
       setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
       setting.save();
     }
   }
   return setting as WhitelistTokenSetting;
+}
+
+/* ===== Unripe Entities ===== */
+
+export function loadUnripeToken(token: Address): UnripeToken {
+  let unripe = UnripeToken.load(token);
+  if (unripe == null) {
+    unripe = new UnripeToken(token);
+    unripe.underlyingToken = getUnripeUnderlying(token, ZERO_BI).toHexString();
+    unripe.totalUnderlying = ZERO_BI;
+    unripe.amountUnderlyingOne = ZERO_BI;
+    unripe.bdvUnderlyingOne = ZERO_BI;
+    unripe.choppableAmountOne = ZERO_BI;
+    unripe.choppableBdvOne = ZERO_BI;
+    unripe.chopRate = ZERO_BD;
+    unripe.recapPercent = ZERO_BD;
+    unripe.totalChoppedAmount = ZERO_BI;
+    unripe.totalChoppedBdv = ZERO_BI;
+    unripe.totalChoppedBdvReceived = ZERO_BI;
+    unripe.save();
+  }
+  return unripe as UnripeToken;
 }
 
 /* ===== Deposit Entities ===== */

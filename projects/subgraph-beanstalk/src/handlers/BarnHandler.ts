@@ -1,10 +1,11 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { Chop as ChopEntity } from "../../generated/schema";
-import { Chop } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { ChangeUnderlying, Chop } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { TransferSingle, TransferBatch } from "../../generated/Beanstalk-ABIs/Fertilizer";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
 import { loadFarmer } from "../entities/Beanstalk";
+import { loadUnripeToken } from "../entities/Silo";
 
 export function handleTransferSingle(event: TransferSingle): void {
   handleTransfer(event.address, event.params.from, event.params.to, event.params.id, event.params.value, event.block.number);
@@ -16,6 +17,14 @@ export function handleTransferBatch(event: TransferBatch): void {
     let amount = event.params.values[i];
     handleTransfer(event.address, event.params.from, event.params.to, id, amount, event.block.number);
   }
+}
+
+export function handleChangeUnderlying(event: ChangeUnderlying): void {
+  const unripe = loadUnripeToken(event.params.token);
+  unripe.totalUnderlying = unripe.totalUnderlying.plus(event.params.underlying);
+  // TODO: investigate whether other things need to get calculated, such as recap/bdv/choppable etc.
+  // TODO: snapshot here
+  unripe.save();
 }
 
 export function handleChop(event: Chop): void {
