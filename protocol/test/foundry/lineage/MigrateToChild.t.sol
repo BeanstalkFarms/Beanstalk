@@ -139,7 +139,61 @@ contract MigrateToChildTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    // function test_migratePlots() public {}
+    function test_migratePlots(uint256 sowAmount) public {
+        sowAmount = bound(sowAmount, 100, 1000e6);
+        address user = farmers[2];
+
+        uint256 podsPerSow = sowForUser(user, sowAmount);
+        sowForUser(user, sowAmount);
+
+        IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](2);
+        {
+            uint256 firstPlotAmount = 50;
+            uint256 thirdPlotAmount = 1;
+            uint256 secondPlotAmount = sowAmount - firstPlotAmount - thirdPlotAmount;
+            // Initial Migration of a Plot. With index != 0.
+            plots[0] = IMockFBeanstalk.SourcePlot(
+                0, // fieldId
+                podsPerSow, // plotId
+                podsPerSow, // amount
+                0 // prevDestIndex
+            );
+            // Migration of a plot prior to latest migrated plot.
+            plots[1] = IMockFBeanstalk.SourcePlot(
+                0, // fieldId
+                0, // plotId
+                podsPerSow, // amount
+                0 // prevDestIndex
+            );
+        }
+
+        vm.prank(user);
+        bs.migrateOut(
+            // TODO change to not migrate into self, but this requires significant changes to initialization system.
+            BEANSTALK, // Migrate into self
+            new IMockFBeanstalk.SourceDeposit[](0),
+            plots,
+            new IMockFBeanstalk.SourceFertilizer[](0),
+            abi.encode("")
+        );
+
+        // NOTE: Cannot do this yet, bc source == destination.
+        // // Verify Source plots.
+        // {
+        //     require(bs.plot(user, 0, 0) == 0, "First source plot amount mismatch");
+        //     require(bs.plot(user, 0, podsPerSow) == 0, "Second source plot amount mismatch");
+        //     require(bs.plot(NULL_ADDR, 0, 0) == podsPerSow, "First source null plot amount mismatch");
+        //     require(bs.plot(NULL_ADDR, 0, podsPerSow) == podsPerSow, "Second source null plot amount mismatch");
+        // }
+        // Verify Destination plots.
+        {
+            require(bs.plot(user, 0, 0) == podsPerSow, "First source plot amount mismatch");
+            require(
+                bs.plot(user, 0, podsPerSow) == podsPerSow,
+                "Second source plot amount mismatch"
+            );
+        }
+    }
 
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.

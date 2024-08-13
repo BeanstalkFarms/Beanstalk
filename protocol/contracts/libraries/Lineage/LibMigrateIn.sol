@@ -49,7 +49,7 @@ library LibMigrateIn {
         uint256 fieldId;
         uint256 index;
         uint256 amount;
-        uint256 prevIndex;
+        uint256 existingIndex;
     }
 
     struct SourceFertilizer {
@@ -150,6 +150,11 @@ library LibMigrateIn {
      * @notice Create Plots in alternative Field and assign them to the migrating user.
      * @dev Holes between migrated-in Plots are filled with Slashed Plots.
      * @dev Assumes that no sowing will occur in the same Field as inbound migrations.
+     *
+     * This design is painfully contorted. This is necessary to maintain constant time
+     * harvest operations on a pod line that may contain holes. Null plots represent
+     * hols in such a way that all pods can be accounted for and a plot can be acted
+     * on without any knowledge of other plots.
      */
     function migrateInPlots(address user, bytes[] memory plots) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -159,12 +164,18 @@ library LibMigrateIn {
             SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
             require(sourcePlot.fieldId == 0, "Field unsupported");
             // require(sourcePlot.amount > 1000e6, "Too small");
-            require(sourcePlot.index > s.sys.fields[INBOUND_FIELD].harvestable); // 0 index not supported
-            if (sourcePlot.index > s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex) {
+            require(sourcePlot.index > s.sys.fields[IN_FIELD].harvestable); // 0 index not supported
+            if (sourcePlot.index > s.sys.fields[IN_FIELD].latestMigratedPlotIndex) {
                 _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
             } else {
-                _insertInNullPlot(user, sourcePlot.index, sourcePlot.amount, sourcePlot.prevIndex);
+                _insertInNullPlot(
+                    user,
+                    sourcePlot.index,
+                    sourcePlot.amount,
+                    sourcePlot.existingIndex
+                );
             }
+            emit PlotMigratedIn(user, sourcePlot);
         }
     }
 
@@ -172,37 +183,37 @@ library LibMigrateIn {
         address user,
         uint256 index,
         uint256 amount,
-        uint256 prevIndex
+        uint256 existingIndex
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // prev plot is provided by user, but it is verified in insertion.
-        uint256 nextIndex = prevIndex + s.accts[address(0)].fields[INBOUND_FIELD].plots[prevIndex];
-        require(prevIndex < index, "prevIndex too large");
-        require(nextIndex > index + amount, "nextIndex too small");
-        require(s.accts[address(0)].fields[INBOUND_FIELD].plots[prevIndex] > 0, "non null"); // unneeded
+        uint256 prevAmount = s.accts[address(0)].fields[IN_FIELD].plots[existingIndex];
+        uint256 nextIndex = existingIndex + prevAmount;
+        require(prevAmount > 0, "non null");
+        require(existingIndex <= index, "existingIndex too large");
+        require(nextIndex >= index + amount, "nextIndex too small");
 
-        LibField.deletePlot(address(0), INBOUND_FIELD, prevIndex);
-        LibField.createPlot(address(0), INBOUND_FIELD, prevIndex, index - prevIndex);
-        LibField.createPlot(user, INBOUND_FIELD, index, amount);
-        LibField.createPlot(
-            address(0),
-            INBOUND_FIELD,
-            index + amount,
-            nextIndex - (index + amount)
-        );
+        // Delete existing null plot.
+        LibField.deletePlot(address(0), IN_FIELD, existingIndex);
+
+        // Create preceding null plot, user plot, and following null plot.
+        LibField.createPlot(address(0), IN_FIELD, existingIndex, index - existingIndex);
+        LibField.createPlot(user, IN_FIELD, index, amount);
+        LibField.createPlot(address(0), IN_FIELD, index + amount, nextIndex - (index + amount));
     }
 
     function _insertAfterLastPlot(address user, uint256 index, uint256 amount) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 nextIndex = s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex +
-            s.accts[s.sys.fields[INBOUND_FIELD].latestMigratedPlotOwner].fields[INBOUND_FIELD].plots[
-                s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex
+        uint256 nextIndex = s.sys.fields[IN_FIELD].latestMigratedPlotIndex +
+            s.accts[s.sys.fields[IN_FIELD].latestMigratedPlotOwner].fields[IN_FIELD].plots[
+                s.sys.fields[IN_FIELD].latestMigratedPlotIndex
             ];
 
-        LibField.createPlot(address(0), INBOUND_FIELD, nextIndex, index - nextIndex);
-        LibField.createPlot(user, INBOUND_FIELD, index, amount);
+        // Create preceding null plot and user plot.
+        LibField.createPlot(address(0), IN_FIELD, nextIndex, index - nextIndex);
+        LibField.createPlot(user, IN_FIELD, index, amount);
 
-        s.sys.fields[INBOUND_FIELD].latestMigratedPlotIndex = index;
-        s.sys.fields[INBOUND_FIELD].latestMigratedPlotOwner = user;
+        s.sys.fields[IN_FIELD].latestMigratedPlotIndex = index;
+        s.sys.fields[IN_FIELD].latestMigratedPlotOwner = user;
     }
 }

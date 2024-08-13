@@ -41,7 +41,7 @@ library LibMigrateOut {
         uint256 fieldId;
         uint256 index;
         uint256 amount;
-        uint256 prevDestIndex;
+        uint256 existingIndex;
     }
 
     struct SourceFertilizer {
