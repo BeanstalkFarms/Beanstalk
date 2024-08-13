@@ -24,7 +24,7 @@ import {LibField} from "contracts/libraries/LibField.sol";
 library LibMigrateIn {
     using SafeCast for uint256;
 
-    event SupportedSourceAdded(address source);
+    event DepositMigratedIn(address indexed user, SourceDeposit deposit);
 
     uint256 internal constant INBOUND_FIELD = 1;
 
@@ -117,6 +117,7 @@ library LibMigrateIn {
                     deposit._grownStalk
                 );
             }
+            emit DepositMigratedIn(user, deposit);
         }
     }
 

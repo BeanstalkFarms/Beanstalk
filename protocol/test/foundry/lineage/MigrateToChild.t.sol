@@ -61,42 +61,44 @@ contract MigrateToChildTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    function test_migrateDeposits(uint256 amount) public {
-        amount = bound(amount, 100, 10_000_000e6);
+    function test_migrateDeposits(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, 100, 10_000_000e6);
         address user = farmers[2];
-        mintTokensToUser(user, C.BEAN, amount);
-        depositForUser(user, C.BEAN, amount);
+
+        depositForUser(user, C.BEAN, depositAmount);
         int96 stem = bs.stemTipForToken(C.BEAN);
         passGermination();
+
         // Capture Source state.
-        (uint256 sourceDepositAmount, uint256 sourceDepositBdv) = bs.getDeposit(user, C.BEAN, stem);
-        // Capture Destination state.
-        // Migrate.
-        uint256 firstMigrationAmount = amount / 10;
-        uint256 secondMigrationAmount = amount - firstMigrationAmount;
+        (uint256 depositAmount, uint256 depositBdv) = bs.getDeposit(user, C.BEAN, stem);
+
         IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](2);
-        deposits[0] = IMockFBeanstalk.SourceDeposit(
-            C.BEAN,
-            firstMigrationAmount,
-            stem,
-            new uint256[](2), // Not used for Bean deposits.
-            0, // Not used for Bean deposits.
-            0, // populated by source
-            0, // populated by source
-            address(0), // populated by source
-            0 // populated by source
-        );
-        deposits[1] = IMockFBeanstalk.SourceDeposit(
-            C.BEAN,
-            secondMigrationAmount,
-            stem,
-            new uint256[](2), // Not used for Bean deposits.
-            0, // Not used for Bean deposits.
-            0, // populated by source
-            0, // populated by source
-            address(0), // populated by source
-            0 // populated by source
-        );
+        {
+            uint256 firstMigrationAmount = depositAmount / 10;
+            uint256 secondMigrationAmount = depositAmount - firstMigrationAmount;
+            deposits[0] = IMockFBeanstalk.SourceDeposit(
+                C.BEAN,
+                firstMigrationAmount,
+                stem,
+                new uint256[](2), // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
+                0, // populated by source
+                0, // populated by source
+                address(0), // populated by source
+                0 // populated by source
+            );
+            deposits[1] = IMockFBeanstalk.SourceDeposit(
+                C.BEAN,
+                secondMigrationAmount,
+                stem,
+                new uint256[](2), // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
+                0, // populated by source
+                0, // populated by source
+                address(0), // populated by source
+                0 // populated by source
+            );
+        }
 
         vm.prank(user);
         bs.migrateOut(
@@ -107,16 +109,29 @@ contract MigrateToChildTest is TestHelper {
             new IMockFBeanstalk.SourceFertilizer[](0),
             abi.encode("")
         );
-        int96 destinationStem = bs.stemTipForToken(C.BEAN);
-        // Validate Source state.
-        // Validate Destination state.
-        (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = bs.getDeposit(
-            user,
-            C.BEAN,
-            destinationStem
-        );
-        require(sourceDepositAmount == destinationDepositAmount, "Deposit amount mismatch");
-        require(sourceDepositBdv == destinationDepositBdv, "Deposit bdv mismatch");
+
+        // NOTE: Cannot do this yet, bc source == destination.
+        // // Verify Source deposits.
+        // {
+        //     (uint256 sourceDepositAmount, uint256 sourceDepositBdv) = bs.getDeposit(
+        //         user,
+        //         C.BEAN,
+        //         stem
+        //     );
+        //     require(sourceDepositAmount == 0, "Source deposit amount mismatch");
+        //     require(sourceDepositBdv == 0, "Source deposit bdv mismatch");
+        // }
+        // Verify Destination deposits.
+        {
+            int96 destinationStem = stem;
+            (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = bs.getDeposit(
+                user,
+                C.BEAN,
+                destinationStem
+            );
+            require(depositAmount == destinationDepositAmount, "Dest deposit amount mismatch");
+            require(depositBdv == destinationDepositBdv, "Dest deposit bdv mismatch");
+        }
     }
 
     /**
