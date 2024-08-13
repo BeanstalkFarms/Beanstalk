@@ -1,5 +1,5 @@
 # Use this file for faster testing of whether the subgraph build works
-specVersion: 0.0.4
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
