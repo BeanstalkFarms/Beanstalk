@@ -25,4 +25,8 @@ contract MockWsteth is MockToken {
     function stEthPerToken() external view returns (uint256) {
         return _stEthPerToken;
     }
+
+    function tokensPerStEth() external view returns (uint256) {
+        return 1e36 / _stEthPerToken;
+    }
 }

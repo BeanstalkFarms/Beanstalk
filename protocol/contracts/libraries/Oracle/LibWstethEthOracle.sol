@@ -13,6 +13,8 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
 
 interface IWsteth {
     function stEthPerToken() external view returns (uint256);
+
+    function tokensPerStEth() external view returns (uint256);
 }
 
 /**
@@ -43,6 +45,7 @@ library LibWstethEthOracle {
     uint128 constant ONE = 1e18;
     uint128 constant AVERAGE_DENOMINATOR = 2;
     uint128 constant PRECISION_DENOMINATOR = 1e12;
+    uint256 constant PRECISION_18 = 1e18;
 
     /**
      * @dev Returns the instantaneous wstETH/ETH price
@@ -93,6 +96,63 @@ library LibWstethEthOracle {
             wstethEthPrice = chainlinkPrice.add(uniswapPrice).div(AVERAGE_DENOMINATOR);
             if (wstethEthPrice > stethPerWsteth) wstethEthPrice = stethPerWsteth;
             wstethEthPrice = wstethEthPrice.div(PRECISION_DENOMINATOR);
+        }
+    }
+
+    /**
+     * @dev Returns the instantaneous ETH/WSTETH price
+     * Return value has 6 decimal precision.
+     * Returns 0 if the either the Chainlink Oracle or Uniswap Oracle cannot fetch a valid price.
+     **/
+    function getEthWstethPrice() internal view returns (uint256) {
+        return getEthWstethPrice(0);
+    }
+
+    /**
+     * @dev Returns the wstETH/ETH price with the option of using a TWA lookback.
+     * Return value has  decimal precision.
+     * Returns 0 if the either the Chainlink Oracle or Uniswap Oracle cannot fetch a valid price.
+     **/
+    function getEthWstethPrice(uint256 lookback) internal view returns (uint256 ethWstethPrice) {
+        // fetch the eth/wsteth chainlink price.
+        uint256 chainlinkPrice = LibChainlinkOracle.getTokenPrice(
+            C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+            LibChainlinkOracle.FOUR_DAY_TIMEOUT,
+            18,
+            lookback
+        );
+
+        // Check if the chainlink price is broken or frozen.
+        if (chainlinkPrice == 0) return 0;
+
+        // fetch the wsteth/steth price.
+        uint256 wstethPerSteth = IWsteth(C.WSTETH).tokensPerStEth();
+        chainlinkPrice = chainlinkPrice.mul(wstethPerSteth).div(PRECISION_18);
+
+        // Uniswap V3 only supports a uint32 lookback.
+        if (lookback > type(uint32).max) return 0;
+
+        // fetch the eth/wsteth uniswap twap.
+        uint256 uniswapPrice = LibUniswapOracle.getTwap(
+            lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
+            C.WSTETH_ETH_UNIV3_01_POOL,
+            C.WETH,
+            C.WSTETH,
+            ONE
+        );
+
+        // uniswap price is a 1e6, need to convert to 1e18, multiply by 1e12
+        uniswapPrice = uniswapPrice * PRECISION_DENOMINATOR;
+
+        // Check if the uniswapPrice oracle fails.
+        if (uniswapPrice == 0) return 0;
+
+        if (LibOracleHelpers.getPercentDifference(chainlinkPrice, uniswapPrice) < MAX_DIFFERENCE) {
+            ethWstethPrice = chainlinkPrice.add(uniswapPrice).div(AVERAGE_DENOMINATOR);
+
+            // if the wstethPerSteth is greater than than the eth/wsteth price, set the price to the wstethPerSteth.
+            if (wstethPerSteth > ethWstethPrice) ethWstethPrice = wstethPerSteth;
+            ethWstethPrice = ethWstethPrice.div(PRECISION_DENOMINATOR);
         }
     }
 }
