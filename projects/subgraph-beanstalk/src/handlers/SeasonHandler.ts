@@ -1,65 +1,27 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { BEANSTALK, GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK, GAUGE_BIP45_BLOCK, REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
-import { takeMarketSnapshots } from "../entities/snapshots/Marketplace";
-import { loadSilo, loadSiloAsset } from "../entities/Silo";
+import { loadSilo } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { updateDepositInSiloAsset } from "../utils/Silo";
 import { getBeanstalkPrice } from "../utils/contracts/BeanstalkPrice";
-import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
 import { takeFieldSnapshots } from "../entities/snapshots/Field";
 import { loadField } from "../entities/Field";
-import { loadPodMarketplace } from "../entities/PodMarketplace";
 import { updateBeanEMA } from "../utils/Yield";
 import { updateExpiredPlots } from "../utils/Marketplace";
 import { updateHarvestablePlots } from "../utils/Field";
 import { getProtocolToken } from "../utils/Constants";
+import { sunrise } from "../utils/Season";
 
 export function handleSunrise(event: Sunrise): void {
   // (Legacy) Update any farmers that had silo transfers from the prior season.
   // This is intentionally done before beanstalk.lastSeason gets updated
   updateStalkWithCalls(event.address, event.block.timestamp);
 
-  let currentSeason = event.params.season.toI32();
-  let season = loadSeason(event.address, event.params.season);
-
-  // Update season metrics
-  if (event.params.season == BigInt.fromI32(6075)) {
-    // Replant oracle initialization
-    season.price = BigDecimal.fromString("1.07");
-  }
-  season.sunriseBlock = event.block.number;
-  season.createdAt = event.block.timestamp;
-  season.save();
-
-  // Update field metrics
-  let field = loadField(event.address);
-
-  // -- Field level totals
-  field.season = currentSeason;
-  field.podRate = season.beans == ZERO_BI ? ZERO_BD : toDecimal(field.unharvestablePods, 6).div(toDecimal(season.beans, 6));
-
-  takeFieldSnapshots(field, event.address, event.block.timestamp, event.block.number);
-  field.save();
-
-  // Marketplace Season Update
-  let market = loadPodMarketplace(event.address);
-  market.season = currentSeason;
-  takeMarketSnapshots(market, event.address, event.block.timestamp);
-  market.save();
-
-  // Create silo entities for the protocol
-  let silo = loadSilo(event.address);
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
-  for (let i = 0; i < silo.whitelistedTokens.length; i++) {
-    let siloAsset = loadSiloAsset(event.address, Address.fromString(silo.whitelistedTokens[i]));
-    takeSiloAssetSnapshots(siloAsset, event.address, event.block.timestamp);
-    siloAsset.save();
-  }
-  silo.save();
+  sunrise(event.address, event.params.season, event.block);
 }
 
 export function handleReward(event: Reward): void {
@@ -112,7 +74,7 @@ export function handleSoil(event: Soil): void {
   takeFieldSnapshots(field, event.address, event.block.timestamp, event.block.number);
   field.save();
 
-  if (event.params.season.toI32() >= 6075) {
+  if (event.params.season >= REPLANT_SEASON) {
     updateBeanEMA(event.address, event.block.timestamp);
   }
 }

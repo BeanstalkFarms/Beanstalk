@@ -22,6 +22,7 @@ export function updateClaimedWithdraw(
   asset.save();
 }
 
+// Replanted -> SiloV3
 // This should be run at sunrise for the previous season to update any farmers stalk/seed/roots balances from silo transfers.
 export function updateStalkWithCalls(protocol: Address, timestamp: BigInt): void {
   let beanstalk = loadBeanstalk(protocol);

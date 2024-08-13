@@ -16,12 +16,13 @@ import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
 import { getProtocolFertilizer } from "./Constants";
+import { REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
 const ROLLING_30_DAY_WINDOW = 720;
 
-// Note: minimum allowable season is 6075
+// Note: minimum allowable season is REPLANT_SEASON
 export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
   updateWindowEMA(protocol, timestamp, ROLLING_24_WINDOW);
   updateWindowEMA(protocol, timestamp, ROLLING_7_DAY_WINDOW);
@@ -65,7 +66,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
-    for (let i = 6075; i <= t; i++) {
+    for (let i = REPLANT_SEASON.toU32(); i <= t; i++) {
       let rewardMint = getRewardMinted(i);
       currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
