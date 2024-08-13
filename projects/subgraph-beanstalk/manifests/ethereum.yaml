@@ -883,8 +883,8 @@ dataSources:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
           handler: handleDiamondCut
       file: ../src/handlers/DiamondHandler.ts
-# features:
-#   - grafting
-# graft:
-#   base: QmaZ8zSaXfLAS7pTnXQLeWu1qhtRGu6cSPavGk7scJtnLH
-#   block: 15289930
+features:
+  - grafting
+graft:
+  base: QmaZ8zSaXfLAS7pTnXQLeWu1qhtRGu6cSPavGk7scJtnLH
+  block: 15289930
