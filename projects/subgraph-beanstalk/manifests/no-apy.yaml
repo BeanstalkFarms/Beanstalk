@@ -12,7 +12,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
-      startBlock: 15277986 # Silo currently has no support for pre-exploit
+      startBlock: 15277986 # Replanted (Silo currently has no support for pre-exploit)
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -47,13 +47,13 @@ dataSources:
           handler: handleRemoveWithdrawals
       file: ../src/handlers/SiloHandler.ts
   - kind: ethereum/contract
-    name: LegacySilo-Replanted
+    name: LegacySilo-Replanted-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
-      startBlock: 15277986
-      endBlock: 19927634
+      startBlock: 15277986 # Replanted
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -76,13 +76,13 @@ dataSources:
           handler: handleWhitelistToken_v2
       file: ../src/handlers/legacy/LegacySiloHandler.ts
   - kind: ethereum/contract
-    name: LegacySiloCalls-Replanted
+    name: LegacySiloCalls-Replanted-SiloV3
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
-      startBlock: 15277986
-      endBlock: 19927634
+      startBlock: 15277986 # Replanted
+      endBlock: 17671557 # SiloV3
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -99,13 +99,13 @@ dataSources:
           handler: handleTransferDepositsCall
       file: ../src/handlers/legacy/LegacySiloHandler.ts
   - kind: ethereum/contract
-    name: LegacySilo-SiloV3
+    name: LegacySilo-SiloV3-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SiloV3
-      startBlock: 17671557 # BIP-36
-      endBlock: 19927634
+      startBlock: 17671557 # SiloV3
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -192,13 +192,13 @@ dataSources:
           handler: handleTemperatureChange
       file: ../src/handlers/FieldHandler.ts
   - kind: ethereum/contract
-    name: LegacyField-PreReplant
+    name: LegacyField-PreReplant-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
       startBlock: 12974075
-      endBlock: 19927634
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -233,7 +233,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
-      startBlock: 14148509 # BIP-11
+      startBlock: 14148509 # BIP-11 Pod Marketplace
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -260,13 +260,13 @@ dataSources:
           handler: handlePodOrderCancelled
       file: ../src/handlers/MarketplaceHandler.ts
   - kind: ethereum/contract
-    name: LegacyMarketplace-PreReplant
+    name: LegacyMarketplace-PreReplant-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 14148509
-      endBlock: 19927634
+      startBlock: 14148509 # BIP-11 Pod Marketplace
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -291,13 +291,13 @@ dataSources:
           handler: handlePodListingCancelled_indexed
       file: ../src/handlers/legacy/LegacyMarketplaceHandler.ts
   - kind: ethereum/contract
-    name: LegacyMarketplace-Replanted
+    name: LegacyMarketplace-Replanted-SeedGauge
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
-      startBlock: 15277986
-      endBlock: 19927634
+      startBlock: 15277986 # Replanted
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -394,7 +394,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
       startBlock: 12974075
-      endBlock: 19927634
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -415,7 +415,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
       startBlock: 15277986 # Replanted
-      endBlock: 19927634
+      endBlock: 19927634 # SeedGauge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -457,7 +457,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
       startBlock: 15277986 # Replanted
-      endBlock: 17671557 # BIP-36
+      endBlock: 17671557 # SiloV3
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -477,7 +477,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
-      startBlock: 17671557 # BIP-36
+      startBlock: 17671557 # SiloV3
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -495,12 +495,12 @@ dataSources:
   # BEAN ERC20
   ###
   - kind: ethereum/contract
-    name: Bean-Replant
+    name: Bean-Replanted
     network: mainnet
     source:
       address: "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab"
       abi: ERC20
-      startBlock: 15277986
+      startBlock: 15277986 # Replanted
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -515,13 +515,13 @@ dataSources:
           handler: handleTransfer
       file: ../src/handlers/BeanHandler.ts
   - kind: ethereum/contract
-    name: Bean-PreReplant
+    name: Bean-PreReplant-Exploit
     network: mainnet
     source:
       address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
       abi: ERC20
       startBlock: 12974075
-      endBlock: 14602789
+      endBlock: 14602789 # Exploit
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -544,7 +544,7 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
-      startBlock: 15277986
+      startBlock: 15277986 # Replanted
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -581,8 +581,3 @@ dataSources:
         - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
           handler: handleDiamondCut
       file: ../src/handlers/DiamondHandler.ts
-# features:
-#   - grafting
-# graft:
-#   base: QmQCyzt2SH1dnGyPDaWUCWCxAhdaYwxHa1MgMEJLLizw1L
-#   block: 15278000
