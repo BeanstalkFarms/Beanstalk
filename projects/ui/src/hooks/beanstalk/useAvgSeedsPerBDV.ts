@@ -39,11 +39,9 @@ type SiloTokenDataBySeason = SeasonMap<{
 
 const MAX_DATA_PER_QUERY = 1000;
 
-const SEED_GAUGE_DEPLOYMENT_SEASON = 21797;
+const SEED_GAUGE_DEPLOYMENT_SEASON = 21798;
 
-const BEAN_ETH_MIGRATION_SEASON = 16644;
-
-const MIN_SEASON = 6074;
+const SEED_GAUGE_DEPLOYMENT_TIMESTAMP = 1716408000;
 
 const apolloFetch = async (
   document: DocumentNode,
@@ -61,7 +59,11 @@ const apolloFetch = async (
 const useAvgSeedsPerBDV = (
   range: Range<Time> | undefined,
   skip = false
-): readonly [ChartQueryData[], boolean, boolean] => {
+): readonly [
+  seriesData: ChartQueryData[],
+  isLoading: boolean,
+  isError: boolean,
+] => {
   const [queryData, setQueryData] = useState<ChartQueryData[]>([]);
   const [numQueries, setNumQueries] = useState<number>(getNumQueries(range));
   const [loading, setLoading] = useState(true);
@@ -76,14 +78,11 @@ const useAvgSeedsPerBDV = (
 
   const fetch = useCallback(async () => {
     if (skip) return;
+    setError(false);
     setLoading(true);
     console.debug('[useAvgSeedsPerBDV/fetch]: fetching...');
 
-    const tokens = [
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN,
-      ...sdk.tokens.siloWhitelistedWellLP,
-    ];
+    const tokens = [sdk.tokens.BEAN, ...sdk.tokens.siloWhitelistedWellLP];
     const document = createMultiTokenQuery(
       sdk.contracts.beanstalk.address,
       tokens
@@ -91,6 +90,7 @@ const useAvgSeedsPerBDV = (
 
     const output: SiloTokenDataBySeason = {};
     let earliestSeason = 999999999;
+
     try {
       if (numQueries === 0) {
         setError(true);
@@ -111,7 +111,7 @@ const useAvgSeedsPerBDV = (
         for (let i = 0; i < numQueries - 1; i += 1) {
           const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
           const season_lte = Math.max(0, earliestSeason - offset);
-          if (season_lte < MIN_SEASON) break;
+          if (season_lte < SEED_GAUGE_DEPLOYMENT_SEASON) break;
           seasons.push(season_lte);
         }
 
@@ -119,11 +119,12 @@ const useAvgSeedsPerBDV = (
       }
 
       const normalized = normalizeQueryResults(sdk, output);
+      setQueryData(normalized);
+
       console.debug('[useAvgSeedsPerBDV/fetch]: results: ', {
         output: getOutputHuman(output),
         normalized,
       });
-      setQueryData(normalized);
     } catch (e) {
       console.debug('[useAvgSeedsPerBDV/fetch]: FAILED: ', e);
       console.error(e);
@@ -146,10 +147,18 @@ export default useAvgSeedsPerBDV;
 /// ---------- UTILS ----------
 
 function getNumQueries(range: Range<Time> | undefined): number {
-  const from = Number((range?.from || 0).valueOf());
+  const from = Math.max(
+    Number((range?.from || 0).valueOf()),
+    SEED_GAUGE_DEPLOYMENT_TIMESTAMP
+  );
+
+  console.log('from: ', from);
   // always fetch to the latest season
   const to = Number(Date.now() / 1000).valueOf();
+  console.log('to: ', to);
   const numSeasons = Math.floor((to - from) / 3600);
+  console.log('numSeasons: ', numSeasons);
+  console.log('numQueries: ', Math.ceil(numSeasons / MAX_DATA_PER_QUERY));
 
   return Math.ceil(numSeasons / MAX_DATA_PER_QUERY);
 }
@@ -199,7 +208,7 @@ function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
       $first: Int!
       $season_lte: Int!
     ) {
-      ${queryParts.join(' ')}
+      ${queryParts.join('\n')}
     }
   `;
 }
@@ -212,47 +221,24 @@ function processTokenData(
   sdk: BeanstalkSDK
 ) {
   const season = sData?.season || wData?.season;
-  if (!season) return;
+  if (!season || season < SEED_GAUGE_DEPLOYMENT_SEASON) return;
 
-  if (!output[season]) {
-    output[season] = {};
-  }
+  const { BEAN, SEEDS } = sdk.tokens;
+  output[season] = output[season] || {};
 
-  const { BEAN, SEEDS, BEAN_ETH_WELL_LP, BEAN_CRV3_LP } = sdk.tokens;
   const existing = output[season][token.address] || {};
 
-  let depositedBDV = existing.depositedBDV?.gt(0)
+  const depositedBDV = existing.depositedBDV?.gt(0)
     ? existing.depositedBDV
     : toBNWithDecimals(sData?.depositedBDV || '0', BEAN.decimals);
 
-  let grownStalkPerSeason: BigNumber | undefined;
+  const stalkPerSeason = wData?.stalkEarnedPerSeason
+    ? toBNWithDecimals(wData.stalkEarnedPerSeason, SEEDS.decimals)
+    : undefined;
 
-  // BEFORE seed gauge deployment
-  if (season < SEED_GAUGE_DEPLOYMENT_SEASON) {
-    if (token.equals(BEAN_CRV3_LP)) {
-      grownStalkPerSeason = toBNWithDecimals(
-        season < BEAN_ETH_MIGRATION_SEASON ? '4000000' : '3250000',
-        SEEDS.decimals
-      );
-    }
-
-    if (token.equals(BEAN_ETH_WELL_LP)) {
-      grownStalkPerSeason = toBNWithDecimals('4500000', SEEDS.decimals);
-    }
-  } else {
-    if (token.equals(BEAN_CRV3_LP)) {
-      // don't include these in the average
-      grownStalkPerSeason = ZERO_BN;
-      depositedBDV = ZERO_BN;
-    }
-    const stalkPerSeason =
-      (wData?.stalkEarnedPerSeason &&
-        toBNWithDecimals(wData.stalkEarnedPerSeason, SEEDS.decimals)) ||
-      undefined;
-
-    grownStalkPerSeason =
-      (stalkPerSeason?.gt(0) && stalkPerSeason) || existing.grownStalkPerSeason;
-  }
+  const grownStalkPerSeason = stalkPerSeason?.gt(0)
+    ? stalkPerSeason
+    : existing.grownStalkPerSeason;
 
   output[season][token.address] = {
     ...existing,
@@ -373,7 +359,6 @@ function getOutputHuman(output: SiloTokenDataBySeason) {
     );
     return { ...prev, [k]: obj };
   }, {});
-
 
   return _output;
 }

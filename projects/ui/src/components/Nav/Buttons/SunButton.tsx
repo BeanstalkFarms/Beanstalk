@@ -81,7 +81,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
   },
   maxSoil: {
     title: 'Max Soil',
-    subtitle: 'Max debt to auction',
+    subtitle: 'Beans to lend',
     widths: { xs: 1.35 },
     render: ({ maxSoil }) => (
       <Typography variant="bodySmall" align="right">
@@ -91,7 +91,7 @@ const colConfig: Record<string, SeasonSummaryColumn> = {
   },
   maxTemperature: {
     title: 'Max Temperature',
-    subtitle: 'Max interest of debt at auction',
+    subtitle: 'Max interest rate',
     widths: { xs: 1.65 },
     render: ({ maxTemperature }) => (
       <Stack justifyContent="center" alignItems="flex-end">

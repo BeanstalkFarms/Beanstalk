@@ -56,19 +56,6 @@ const ChartLoadingState = () => (
   </Box>
 );
 
-const ChartEmptyState = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
-    Chart data will load here
-  </Box>
-);
-
 const getTimezoneCorrectedTime = (
   utcTime: Date,
   tickMarkType: TickMarkType
@@ -129,8 +116,8 @@ type ChartProps = OmmitedV2DataProps & {
   tooltipHoverText: string;
   tooltipTitle: string;
   storageKeyPrefix?: string;
-  isLoading?: boolean;
-  isError?: boolean;
+  queryLoading?: boolean;
+  queryError?: boolean;
 };
 
 type DataPoint = {
@@ -145,8 +132,8 @@ const Chart = ({
   drawExploitLine = true,
   seriesData,
   timeState,
-  isLoading,
-  isError,
+  queryLoading,
+  queryError,
   tooltipHoverText,
   storageKeyPrefix,
   tooltipTitle,
@@ -180,7 +167,6 @@ const Chart = ({
   const handleSetVisibleRange = useCallback(
     (params?: { first?: DataPoint; last?: DataPoint }) => {
       if (!chart.current) return;
-      if (isLoading || isError) return;
       try {
         if (timePeriod?.to && timePeriod?.from) {
           chart.current.timeScale().setVisibleRange(timePeriod);
@@ -198,7 +184,7 @@ const Chart = ({
         chart.current.timeScale().fitContent();
       }
     },
-    [timePeriod, isLoading, isError]
+    [timePeriod]
   );
 
   useEffect(() => {
@@ -439,7 +425,7 @@ const Chart = ({
           gap={2}
         >
           <ChartInfoOverlay
-            isLoading={isLoading || false}
+            isLoading={queryLoading || false}
             gap={0}
             title={tooltipTitle}
             titleTooltip={tooltipHoverText}
@@ -456,8 +442,8 @@ const Chart = ({
         </Stack>
       </Box>
       <Box ref={chartContainerRef} sx={{ height: 'calc(100% - 85px)' }}>
-        {isLoading && <ChartLoadingState />}
-        {isError && <ChartErrorState />}
+        {queryLoading && <ChartLoadingState />}
+        {queryError && <ChartErrorState />}
       </Box>
       <ClickAwayListener onClickAway={() => setRightAnchorEl(null)}>
         <Box>
@@ -549,8 +535,8 @@ const Chart = ({
 
 export type SingleAdvancedChartProps = {
   seriesData: ChartQueryData[];
-  isLoading?: boolean;
-  error?: boolean;
+  queryLoading?: boolean;
+  queryError?: boolean;
 } & OmmitedV2DataProps &
   ChartProps;
 

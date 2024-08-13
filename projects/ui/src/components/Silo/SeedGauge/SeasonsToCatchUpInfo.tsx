@@ -12,9 +12,9 @@ import useChartTimePeriodState from '~/hooks/display/useChartTimePeriodState';
 import BigNumber from 'bignumber.js';
 
 type SeasonsToCatchUpInfoProps = {
-  queryData: ChartQueryData[];
-  loading: boolean;
-  error: boolean;
+  seriesData: ChartQueryData[];
+  queryLoading: boolean;
+  queryError: boolean;
   timeState: ReturnType<typeof useChartTimePeriodState>;
 };
 
@@ -49,14 +49,11 @@ const SeasonsToCatchUpInfo = (props: SeasonsToCatchUpInfoProps) => (
       <SingleAdvancedChart
         storageKeyPrefix="silo-avg-seeds-per-bdv"
         tooltipTitle="Average Seeds per BDV"
-        tooltipHoverText="The number of stalk issued per Season for each bean in the Silo."
+        tooltipHoverText="The number of Stalk issued per Season per BDV in the silo."
         valueAxisType="stalk"
-        timeState={props.timeState}
         tickFormatter={(val) => new BigNumber(val).toFormat(6)}
-        seriesData={props.queryData}
-        isLoading={props.loading}
-        error={props.error}
         drawPegLine={false}
+        {...props}
       />
     </Stack>
   </Stack>

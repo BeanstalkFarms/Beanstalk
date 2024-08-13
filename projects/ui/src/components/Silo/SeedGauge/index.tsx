@@ -32,7 +32,7 @@ interface ISeedGaugeInfoCardProps extends ISeedGaugeCardInfo {
 const scrollToBottom = () => {
   window.scrollTo({
     top: document.body.scrollHeight,
-    // behavior: 'smooth',
+    behavior: 'smooth',
   });
 };
 
@@ -217,7 +217,10 @@ const SeedGaugeInfoSelected = ({
 
   const timeState = useChartTimePeriodState('silo-avg-seeds-per-bdv');
 
-  const [query, loading, error] = useAvgSeedsPerBDV(timeState[0], skip);
+  const [seriesData, isLoading, isError] = useAvgSeedsPerBDV(
+    timeState[0],
+    skip
+  );
 
   useEffect(() => {
     // Fetch only if we open the seasonsToCatchUp Tab
@@ -233,9 +236,9 @@ const SeedGaugeInfoSelected = ({
       {activeIndex === 0 ? (
         <SeasonsToCatchUpInfo
           timeState={timeState}
-          queryData={query}
-          error={error}
-          loading={loading}
+          seriesData={seriesData}
+          queryLoading={isLoading}
+          queryError={isError}
         />
       ) : null}
       {activeIndex === 1 ? <Bean2MaxLPRatio data={data} /> : null}
