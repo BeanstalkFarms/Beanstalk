@@ -727,6 +727,10 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: MetapoolOracle(indexed uint32,int256,uint256[2])
           handler: handleMetapoolOracle
