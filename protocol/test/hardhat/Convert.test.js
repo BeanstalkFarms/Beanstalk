@@ -461,12 +461,7 @@ describe("Convert", function () {
         // AMOUNTS []
         ['100']
       )
-      // inital bdv: 1000000
-      // new bdv: 900000
-      // grown stalk: 2e6 (newSiloToken has 1 seed).
-      // gspbdv = grown stalk / new bdv = 2.222222
-      // stem = stemTip - gspbdv: 2 - 2.222222 = -0.222222
-      this.newStem = -222222
+      this.newStem = 1777778
     })
 
     it('Correctly updates deposit stats', async function () {
@@ -484,8 +479,8 @@ describe("Convert", function () {
 
     it('Emits events', async function () {
       await expect(this.result).to.emit(mockBeanstalk, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
-      // await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '900000'); // last param = updated bdv
-      // await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
+      await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '900000'); // last param = updated bdv
+      await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
     })
 
   })
@@ -520,13 +515,7 @@ describe("Convert", function () {
         // AMOUNTS []
         ['100']
       )
-
-      // inital bdv: 1000000
-      // new bdv: 1100000
-      // grown stalk: 2e6 (newSiloToken has 1 seed).
-      // gspbdv = grown stalk / new bdv = 1.818181
-      // stem = stemTip - gspbdv: 2 - 1.818181 = 0.181819
-      this.newStem = 181819
+      this.newStem = 2181819
     })
 
     it('Correctly updates deposit stats', async function () {
@@ -544,8 +533,8 @@ describe("Convert", function () {
 
     it('Emits events', async function () {
       await expect(this.result).to.emit(mockBeanstalk, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
-      // await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '1100000'); // last param = updated bdv
-      // await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
+      await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '1100000'); // last param = updated bdv
+      await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
     })
   })
 
