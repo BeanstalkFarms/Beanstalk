@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
@@ -48,7 +47,6 @@ contract PipelineConvertTest is TestHelper {
     // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
     PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;

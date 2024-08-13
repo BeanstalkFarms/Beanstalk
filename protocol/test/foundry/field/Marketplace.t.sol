@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import {TestHelper, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {C} from "contracts/C.sol";
 
 contract ListingTest is TestHelper {
@@ -12,7 +11,6 @@ contract ListingTest is TestHelper {
     address[] farmers;
 
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);

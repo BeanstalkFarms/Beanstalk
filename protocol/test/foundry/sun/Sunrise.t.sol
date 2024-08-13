@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
@@ -40,9 +39,6 @@ contract SunriseTest is TestHelper {
         int256 delta,
         int256 deltaBdv
     );
-
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // test accounts.
     address[] farmers;
@@ -267,14 +263,5 @@ contract SunriseTest is TestHelper {
         for (uint i; i < lp.length; i++) {
             MockPump(IWell(lp[i]).pumps()[0].target).clearReserves(lp[i]);
         }
-    }
-
-    /**
-     * @notice gets the next time the sunrise can be called,
-     * and warps the time to that timestamp.
-     */
-    function warpToNextSeasonTimestamp() internal noGasMetering {
-        uint256 nextTimestamp = season.getNextSeasonStart();
-        vm.warp(nextTimestamp);
     }
 }
