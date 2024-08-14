@@ -75,10 +75,7 @@ library C {
 
     //////////////////// Tractor ////////////////////
 
-    uint80 internal constant SELECTOR_SIZE = 4;
     uint80 internal constant SLOT_SIZE = 32;
-    uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
-    uint80 internal constant ADDR_SLOT_OFFSET = 12;
     // Special index to indicate the data to copy is the publisher address.
     uint80 internal constant PUBLISHER_COPY_INDEX = type(uint80).max;
     // Special index to indicate the data to copy is the operator address.
