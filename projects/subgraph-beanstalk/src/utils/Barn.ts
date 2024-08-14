@@ -2,7 +2,7 @@ import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
 import { loadFarmer } from "../entities/Beanstalk";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Convert, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { loadUnripeToken, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
 import { getUnripeUnderlying } from "./Constants";
@@ -29,6 +29,8 @@ export function transfer(fertilizer1155: Address, from: Address, to: Address, id
   toFertilizerBalance.amount = toFertilizerBalance.amount.plus(amount);
   toFertilizerBalance.save();
 }
+
+export function chopConvert(event: Convert): void {}
 
 // Update the status for this unripe token using protocol getters. These values fluctuate without related events.
 export function updateUnripeStats(unripe: Address, protocol: Address, block: ethereum.Block): void {

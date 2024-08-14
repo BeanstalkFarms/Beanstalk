@@ -6,6 +6,7 @@ import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/Whitel
 import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
 import {
   AddDeposit,
+  Convert,
   DewhitelistToken,
   Plant,
   RemoveDeposit,
@@ -18,7 +19,8 @@ import {
   WhitelistToken
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
-import { getProtocolToken } from "../utils/Constants";
+import { getProtocolToken, isUnripe } from "../utils/Constants";
+import { chopConvert } from "../utils/Barn";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -57,6 +59,12 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
     bdvs: event.params.bdvs,
     depositVersion: "stem"
   });
+}
+
+export function handleConvert(event: Convert): void {
+  if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
+    chopConvert(event);
+  }
 }
 
 export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {

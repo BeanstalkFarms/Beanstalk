@@ -331,6 +331,8 @@ dataSources:
           handler: handleRemoveDeposit
         - event: RemoveDeposits(indexed address,indexed address,int96[],uint256[],uint256,uint256[])
           handler: handleRemoveDeposits
+        - event: Convert(indexed address,address,address,uint256,uint256
+          handler: handleConvert
         - event: StalkBalanceChanged(indexed address,int256,int256)
           handler: handleStalkBalanceChanged
         - event: SeedsBalanceChanged(indexed address,int256)
