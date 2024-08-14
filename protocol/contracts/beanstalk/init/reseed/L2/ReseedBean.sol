@@ -26,6 +26,7 @@ import "forge-std/console.sol";
  */
 interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
+
     function initNoWellToken() external;
 }
 
@@ -37,11 +38,6 @@ contract ReseedBean {
     struct ExternalUnripeHolders {
         address account;
         uint256 amount;
-    }
-
-    struct WellAmountData {
-        uint256 beansInWell;
-        uint256 nonBeanTokensInWell;
     }
 
     using SafeERC20 for IERC20;
@@ -132,11 +128,8 @@ contract ReseedBean {
      */
     function init(
         uint256 beanSupply,
-        uint256 unripeBeanSupply,
-        uint256 unripeLpSupply,
-        WellAmountData calldata beanEthAmounts,
-        WellAmountData calldata beanWstethAmounts,
-        WellAmountData calldata beanStableAmounts,
+        uint256 internalUrBeanSupply,
+        uint256 internalUnripeLpSupply,
         ExternalUnripeHolders[] calldata urBean,
         ExternalUnripeHolders[] calldata urBeanLP
     ) external {
@@ -144,10 +137,10 @@ contract ReseedBean {
         deployFertilizer();
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
-        // deploy new unripe bean contract.
-        deployUnripeBean(unripeBeanSupply);
+        // deploy new unripe bean contract. Issue external unripe beans and urLP.
+        deployUnripeBean(internalUrBeanSupply, urBean);
         // deploy new unripe lp contract.
-        deployUnripeLP(unripeLpSupply);
+        deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
     }
@@ -178,7 +171,10 @@ contract ReseedBean {
         return bean;
     }
 
-    function deployUnripeBean(uint256 supply) internal returns (BeanstalkERC20) {
+    function deployUnripeBean(
+        uint256 supply,
+        ExternalUnripeHolders[] memory externalUrBean
+    ) internal returns (BeanstalkERC20) {
         BeanstalkERC20 unripeBean = new BeanstalkERC20{salt: UNRIPE_BEAN_SALT}(
             address(this),
             UNRIPE_BEAN_NAME,
@@ -186,10 +182,17 @@ contract ReseedBean {
         );
         unripeBean.mint(address(this), supply);
         console.log("Unripe Bean deployed at: ", address(unripeBean));
+
+        for (uint i; i < externalUrBean.length; i++) {
+            unripeBean.mint(externalUrBean[i].account, externalUrBean[i].amount);
+        }
         return unripeBean;
     }
 
-    function deployUnripeLP(uint256 supply) internal returns (BeanstalkERC20) {
+    function deployUnripeLP(
+        uint256 supply,
+        ExternalUnripeHolders[] memory externalUrLP
+    ) internal returns (BeanstalkERC20) {
         BeanstalkERC20 unripeLP = new BeanstalkERC20{salt: UNRIPE_LP_SALT}(
             address(this),
             UNRIPE_LP_NAME,
@@ -197,6 +200,10 @@ contract ReseedBean {
         );
         unripeLP.mint(address(this), supply);
         console.log("Unripe LP deployed at: ", address(unripeLP));
+
+        for (uint i; i < externalUrLP.length; i++) {
+            unripeLP.mint(externalUrLP[i].account, externalUrLP[i].amount);
+        }
         return unripeLP;
     }
 
@@ -231,6 +238,7 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
+        console.log("well proxy:", wellProxy);
     }
 
     function deployUpgradableWells(address bean) internal {

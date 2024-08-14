@@ -4,11 +4,12 @@ const { reseed3 } = require("./reseed3.js");
 const { reseed4 } = require("./reseed4.js");
 const { reseed5 } = require("./reseed5.js");
 const { reseed6 } = require("./reseed6.js");
+const { reseed7 } = require("./reseed7.js");
 const { reseed8 } = require("./reseed8.js");
 const { reseed9 } = require("./reseed9.js");
 const { reseed10 } = require("./reseed10.js");
 const { reseedGlobal } = require("./reseedGlobal.js");
-const { reseed7 } = require("./reseed7.js");
+const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransfer.js");
 const fs = require("fs");
 
 async function printBeanstalk() {
@@ -25,7 +26,7 @@ async function reseed(account, mock = true, log = false, start = 0, end = 10, on
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseedGlobal, // reseed global variables
-    reseed3, // reseedbean + deploy wells on l2
+    reseed3, // reseed bean + deploy wells on l2
     reseed4, // reseed field
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
@@ -42,13 +43,24 @@ async function reseed(account, mock = true, log = false, start = 0, end = 10, on
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
     if (i == 0 && onlyL2 == false) {
       // migrate beanstalk L1 assets.
-      await reseeds[0](account);
-    } else if (i == 1) {
+      await reseed1(account);
+      continue;
+    }
+    if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, log, mock);
-    } else if (i == reseeds.length - 1 || setState == true) {
-      // initialize beanstalk state add selectors to L2 beanstalk.
+      continue;
+    } 
+    
+    if (setState == true) {
       await reseeds[i](account, l2BeanstalkAddress);
+      continue;
+    }
+    if (i == reseeds.length - 1) {
+      // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
+      await reseedAddLiquidityAndTransfer(account, l2BeanstalkAddress, mock);
+      // initialize beanstalk state add selectors to L2 beanstalk.
+      await reseed10(account, l2BeanstalkAddress, mock);
     }
   }
   console.log("Reseed successful.");

@@ -59,11 +59,6 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
     console.log("stable2:", stable2.address);
   }
 
-  // approve beanstalk:
-  await weth.connect(approver).approve(L2Beanstalk, ethInBeanEthWell[0]);
-  await wsteth.connect(approver).approve(L2Beanstalk, wstEthInBeanWstEthWell[0]);
-  await stable.connect(approver).approve(L2Beanstalk, stableInBeanStableWell[0]);
-
   // call init:
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
@@ -73,9 +68,6 @@ async function reseed3(account, L2Beanstalk, mock = false, deployBasin = true) {
       beanSupply,
       unripeBeanSupply,
       unripeLpSupply,
-      ethInBeanEthWell,
-      wstEthInBeanWstEthWell,
-      stableInBeanStableWell,
       urBean,
       urBeanLP
     ],
