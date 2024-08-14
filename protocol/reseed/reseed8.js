@@ -2,18 +2,17 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
-// Files
-let internalBalancesPath;
-let mock = true;
-if (mock) {
-  internalBalancesPath = "./reseed/data/mocks/r8-internal-balances-mock.json";
-} else {
-  internalBalancesPath = "./reseed/data/r8-internal-balances.json";
-}
-
-async function reseed8(account, L2Beanstalk) {
+async function reseed8(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseed8: reissue internal balances.\n");
+
+  // Files
+  let internalBalancesPath;
+  if (mock) {
+    internalBalancesPath = "./reseed/data/mocks/r8-internal-balances-mock.json";
+  } else {
+    internalBalancesPath = "./reseed/data/r8-internal-balances.json";
+  }
 
   let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 

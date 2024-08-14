@@ -1,12 +1,8 @@
 const fs = require('fs');
 
-function parseFertilizer(inputFilePath, outputFilePath, chunkSize, callback) {
-    fs.readFile(inputFilePath, 'utf8', (err, data) => {
-        if (err) {
-            callback(err, null);
-            return;
-        }
-        
+function parseFertilizer(inputFilePath, outputFilePath, chunkSize) {
+    try {
+        const data = fs.readFileSync(inputFilePath, 'utf8');
         const accounts = JSON.parse(data)._balances;
         const result = [];
 
@@ -36,25 +32,11 @@ function parseFertilizer(inputFilePath, outputFilePath, chunkSize, callback) {
             }
         }
 
-        fs.writeFile(outputFilePath, JSON.stringify(result, null, 2), (writeErr) => {
-            if (writeErr) {
-                callback(writeErr, null);
-                return;
-            }
-            callback(null, 'Fertilizer JSON has been written successfully');
-        });
-    });
+        fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+        console.log('Fertilizer JSON has been written successfully');
+    } catch (err) {
+        console.error('Error:', err);
+    }
 }
 
-const inputFilePath = "./reseed/data/exports/storage-fertilizer20330000.json";
-const outputFilePath = "./reseed/data/r5-barn-raise.json";
-const chunkSize = 40;
-parseFertilizer(inputFilePath, outputFilePath, chunkSize, (err, message) => {
-    if (err) {
-        console.error('Error:', err);
-        return;
-    }
-    console.log(message);
-});
-
-// module.exports = parseFertilizer;
+exports.parseFertilizer = parseFertilizer;

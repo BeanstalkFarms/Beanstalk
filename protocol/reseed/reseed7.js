@@ -2,19 +2,19 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
-// Files
-let accountStatusesPath;
-let mock = false;
-if (mock) {
-  accountStatusesPath = "./reseed/data/mocks/r7-account-status-mock.json";
-} else {
-  accountStatusesPath = "./reseed/data/r7-account-status.json";
-}
-
-async function reseed7(account, L2Beanstalk) {
+async function reseed7(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseedAccountStatus:.\n");
+
+  // Files
+  let accountStatusesPath;
+  if (mock) {
+    accountStatusesPath = "./reseed/data/mocks/r7-account-status-mock.json";
+  } else {
+    accountStatusesPath = "./reseed/data/r7-account-status.json";
+  }
   let statuses = JSON.parse(await fs.readFileSync(accountStatusesPath));
+
 
   chunkSize = 5;
   statusChunks = splitEntriesIntoChunks(statuses, chunkSize);

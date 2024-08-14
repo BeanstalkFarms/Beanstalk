@@ -2,25 +2,22 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
-// Files
-let barnRaisePath;
-let mock = true;
-if (mock) {
-  barnRaisePath = "./reseed/data/mocks/r5-barn-raise-mock.json";
-} else {
-  barnRaisePath = "./reseed/data/r5-barn-raise.json";
-}
-
-async function reseed5(account, L2Beanstalk) {
+async function reseed5(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseed5: reissue fertilizer, reinitialize fertilizer holder state.\n");
-  const fertilizerIds = JSON.parse(
-    await fs.readFileSync(barnRaisePath)
-  );
+
+  // Files
+  let barnRaisePath;
+  if (mock) {
+    barnRaisePath = "./reseed/data/mocks/r5-barn-raise-mock.json";
+  } else {
+    barnRaisePath = "./reseed/data/r5-barn-raise.json";
+  }
+  const fertilizerIds = JSON.parse(await fs.readFileSync(barnRaisePath));
 
   chunkSize = 4;
   fertChunks = splitEntriesIntoChunks(fertilizerIds, chunkSize);
-  
+
   for (let i = 0; i < fertChunks.length; i++) {
     console.log(`Processing chunk ${i + 1} of ${fertChunks.length}`);
     console.log("Data chunk:", fertChunks[i]);

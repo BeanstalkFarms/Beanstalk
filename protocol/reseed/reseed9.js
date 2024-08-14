@@ -6,7 +6,7 @@ const fs = require("fs");
 // Files
 const WHITELIST_SETTINGS = "./reseed/data/r9-whitelist.json";
 
-async function reseed9(account, L2Beanstalk) {
+async function reseed9(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseed8: whitelist tokens.\n");
   let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));

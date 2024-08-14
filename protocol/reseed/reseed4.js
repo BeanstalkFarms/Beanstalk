@@ -2,25 +2,23 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunks } = require("../utils/read.js");
 
-// Files
-let farmerPlotsPath;
-let mock = false;
-if (mock){
-  farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
-} else {
-  farmerPlotsPath = "./reseed/data/r4-field.json";
-}
-
-async function reseed4(account, L2Beanstalk) {
+async function reseed4(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseed4: re-initialize the field and plots.\n");
 
+  // Files
+  let farmerPlotsPath;
+  if (mock) {
+    farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
+  } else {
+    farmerPlotsPath = "./reseed/data/r4-field.json";
+  }
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
   chunkSize = 4;
   plotChunks = splitEntriesIntoChunks(accountPlots, chunkSize);
-  
+
   for (let i = 0; i < plotChunks.length; i++) {
     console.log(`Processing chunk ${i + 1} of ${plotChunks.length}`);
     console.log("Data chunk:", plotChunks[i]);
@@ -37,7 +35,6 @@ async function reseed4(account, L2Beanstalk) {
 
     console.log("-----------------------------------");
   }
-
 }
 
 exports.reseed4 = reseed4;

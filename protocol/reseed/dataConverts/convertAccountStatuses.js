@@ -1,12 +1,8 @@
 const fs = require('fs');
 
-function parseAccountStatus(inputFilePath, outputFilePath, callback) {
-    fs.readFile(inputFilePath, 'utf8', (err, data) => {
-        if (err) {
-            callback(err, null);
-            return;
-        }
-        
+function parseAccountStatus(inputFilePath, outputFilePath) {
+    try {
+        const data = fs.readFileSync(inputFilePath, 'utf8');
         const accounts = JSON.parse(data);
         const result = [];
 
@@ -39,25 +35,11 @@ function parseAccountStatus(inputFilePath, outputFilePath, callback) {
             }
         }
 
-        fs.writeFile(outputFilePath, JSON.stringify(result, null, 2), (writeErr) => {
-            if (writeErr) {
-                callback(writeErr, null);
-                return;
-            }
-            callback(null, 'Account Status JSON has been written successfully');
-        });
-    });
+        fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+        console.log('Account Status JSON has been written successfully');
+    } catch (err) {
+        console.error('Error:', err);
+    }
 }
 
-const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
-const outputFilePath = "./reseed/data/r7-account-status.json";
-parseAccountStatus(inputFilePath, outputFilePath, (err, message) => {
-    if (err) {
-        console.error('Error:', err);
-        return;
-    }
-    console.log(message);
-})
-
-
-// module.exports = parseAccountStatus;
+exports.parseAccountStatus = parseAccountStatus;
