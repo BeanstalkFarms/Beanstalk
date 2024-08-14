@@ -108,7 +108,7 @@ task("reseed", async (mock = true) => {
   await reseed(account);
 });
 
-task("L2 reseed no state" , async () => {
+task("L2 reseed no state", async () => {
   // mint more eth to the bcm to cover gas costs
   let account;
   account = await impersonateSigner(BCM);
@@ -440,5 +440,8 @@ module.exports = {
   paths: {
     sources: "./contracts",
     cache: "./cache"
-  }
+  },
+  ignoreWarnings: [
+    'code["5574"]' // Ignores the specific warning about duplicate definitions
+  ]
 };

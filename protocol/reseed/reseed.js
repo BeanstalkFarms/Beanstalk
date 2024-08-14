@@ -1,8 +1,8 @@
-const { parseAccountStatus } = require('./dataConverts/convertAccountStatuses.js');
-const { parseInternalBalances } = require('./dataConverts/convertInternalBalances.js');
-const { parseDeposits } = require('./dataConverts/convertDeposits.js');
-const { parseFertilizer } = require('./dataConverts/convertFert.js');
-const { parsePodMarketplace } = require('./dataConverts/convertPodMarketplace.js');
+const { parseAccountStatus } = require("./dataConverts/convertAccountStatuses.js");
+const { parseInternalBalances } = require("./dataConverts/convertInternalBalances.js");
+const { parseDeposits } = require("./dataConverts/convertDeposits.js");
+const { parseFertilizer } = require("./dataConverts/convertFert.js");
+const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
@@ -27,7 +27,16 @@ async function printBeanstalk() {
 }
 
 let reseeds;
-async function reseed(account, mock = true, convertData = true, log = false, start = 0, end = 12, onlyL2 = false, setState = true) {
+async function reseed(
+  account,
+  mock = true,
+  convertData = true,
+  log = false,
+  start = 0,
+  end = 12,
+  onlyL2 = false,
+  setState = true
+) {
   if (convertData) parseBeanstalkData();
   reseeds = [
     reseed1, // pause l1 beanstalk
@@ -47,19 +56,21 @@ async function reseed(account, mock = true, convertData = true, log = false, sta
   console.clear();
   await printBeanstalk();
   for (let i = start; i < reseeds.length; i++) {
-    printStage(i, end, mock, log);
+    await printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
+
     if (i == 0 && onlyL2 == false) {
       // migrate beanstalk L1 assets.
       await reseed1(account);
       continue;
     }
+
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, log, mock);
       continue;
-    } 
-    
+    }
+
     if (setState == true) {
       await reseeds[i](account, l2BeanstalkAddress);
       continue;
@@ -88,7 +99,6 @@ async function printStage(i, end, mock, log) {
   } else {
     console.log("==============================================");
   }
-  console.log("Reseeding Beanstalk:");
   console.log(`Mocks Enabled: ${mock}`);
   console.log(`Stage ${i}/${end - 1}: ${getProcessString(i, end - 1)}`);
 }
@@ -102,7 +112,11 @@ function parseBeanstalkData() {
   parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json");
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", 40);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", 40);
-  parsePodMarketplace(marketPath, "./reseed/data/r2/pod-listings.json", "./reseed/data/r2/pod-orders.json");
+  parsePodMarketplace(
+    marketPath,
+    "./reseed/data/r2/pod-listings.json",
+    "./reseed/data/r2/pod-orders.json"
+  );
 }
 
 exports.reseed = reseed;

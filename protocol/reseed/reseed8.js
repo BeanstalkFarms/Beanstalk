@@ -1,8 +1,8 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { splitEntriesIntoChunks } = require("../utils/read.js");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 
-async function reseed8(account, L2Beanstalk, mock) {
+async function reseed8(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
   console.log("reseed8: reissue internal balances.\n");
 
@@ -16,23 +16,25 @@ async function reseed8(account, L2Beanstalk, mock) {
 
   let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
-  chunkSize = 4;
-  balanceChunks = splitEntriesIntoChunks(beanBalances, chunkSize);
+  targetEntriesPerChunk = 800;
+  balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
   const InitFacet = await ethers.getContractFactory("ReseedInternalBalances", account);
   for (let i = 0; i < balanceChunks.length; i++) {
-    console.log(`Processing chunk ${i + 1} of ${balanceChunks.length}`);
-    console.log("Data chunk:", balanceChunks[i]);
+    await updateProgress(i + 1, plotChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", balanceChunks[i]);
+      console.log("-----------------------------------");
+    }
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: InitFacet.address,
       initArgs: [balanceChunks[i]],
       bip: false,
-      verbose: true,
+      verbose: verbose,
       account: account,
       checkGas: true
     });
-    console.log("-----------------------------------");
   }
 }
 

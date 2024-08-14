@@ -1,8 +1,8 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { splitEntriesIntoChunks } = require("../utils/read.js");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 
-async function reseed4(account, L2Beanstalk, mock) {
+async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
   console.log("reseed4: re-initialize the field and plots.\n");
 
@@ -16,24 +16,26 @@ async function reseed4(account, L2Beanstalk, mock) {
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
-  chunkSize = 4;
-  plotChunks = splitEntriesIntoChunks(accountPlots, chunkSize);
+  targetEntriesPerChunk = 800;
+  plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
   const InitFacet = await ethers.getContractFactory("ReseedField", account);
+  console.log(`Starting to process ${plotChunks.length} chunks...`);
   for (let i = 0; i < plotChunks.length; i++) {
-    console.log(`Processing chunk ${i + 1} of ${plotChunks.length}`);
-    console.log("Data chunk:", plotChunks[i]);
+    await updateProgress(i + 1, plotChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", plotChunks[i]);
+      console.log("-----------------------------------");
+    }
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetAddress: InitFacet.address,
       initArgs: [plotChunks[i]],
       bip: false,
-      verbose: true,
+      verbose: verbose,
       account: account,
       checkGas: true
     });
-
-    console.log("-----------------------------------");
   }
 }
 
