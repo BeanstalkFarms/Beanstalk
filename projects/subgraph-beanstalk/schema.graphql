@@ -1512,7 +1512,7 @@ type UnripeTokenHourlySnapshot @entity {
   unripeToken: UnripeToken!
 
   "Point in time ripe token underlying this unripe asset"
-  underlyingToken: String!
+  underlyingToken: WhitelistTokenSetting!
   "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
   totalUnderlying: BigInt!
   "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
@@ -1564,7 +1564,7 @@ type UnripeTokenDailySnapshot @entity {
   unripeToken: UnripeToken!
 
   "Point in time ripe token underlying this unripe asset"
-  underlyingToken: String!
+  underlyingToken: WhitelistTokenSetting!
   "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
   totalUnderlying: BigInt!
   "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"

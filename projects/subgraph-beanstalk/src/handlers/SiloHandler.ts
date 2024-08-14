@@ -20,7 +20,7 @@ import {
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
 import { getProtocolToken, isUnripe } from "../utils/Constants";
-import { chopConvert } from "../utils/Barn";
+import { unripeChopped } from "../utils/Barn";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -63,7 +63,14 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
 
 export function handleConvert(event: Convert): void {
   if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
-    chopConvert(event);
+    unripeChopped({
+      event,
+      type: "convert",
+      account: event.params.account,
+      unripeToken: event.params.fromToken,
+      unripeAmount: event.params.fromAmount,
+      underlyingAmount: event.params.toAmount
+    });
   }
 }
 

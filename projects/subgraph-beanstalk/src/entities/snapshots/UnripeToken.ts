@@ -10,15 +10,15 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, protocol: Add
   const day = BigInt.fromI32(dayFromTimestamp(timestamp));
 
   // Load the snapshot for this season/day
-  const hourlyId = unripeToken.id + "-" + currentSeason.toString();
-  const dailyId = unripeToken.id + "-" + day.toString();
+  const hourlyId = unripeToken.id.toHexString() + "-" + currentSeason.toString();
+  const dailyId = unripeToken.id.toHexString() + "-" + day.toString();
   let baseHourly = UnripeTokenHourlySnapshot.load(hourlyId);
   let baseDaily = UnripeTokenDailySnapshot.load(dailyId);
   if (baseHourly == null && unripeToken.lastHourlySnapshotSeason !== 0) {
-    baseHourly = UnripeTokenHourlySnapshot.load(unripeToken.id + "-" + unripeToken.lastHourlySnapshotSeason.toString());
+    baseHourly = UnripeTokenHourlySnapshot.load(unripeToken.id.toHexString() + "-" + unripeToken.lastHourlySnapshotSeason.toString());
   }
   if (baseDaily == null && unripeToken.lastDailySnapshotDay !== null) {
-    baseDaily = UnripeTokenDailySnapshot.load(unripeToken.id + "-" + unripeToken.lastDailySnapshotDay!.toString());
+    baseDaily = UnripeTokenDailySnapshot.load(unripeToken.id.toHexString() + "-" + unripeToken.lastDailySnapshotDay!.toString());
   }
   const hourly = new UnripeTokenHourlySnapshot(hourlyId);
   const daily = new UnripeTokenDailySnapshot(dailyId);

@@ -65,7 +65,7 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
 function setTokenBdv(token: Address, protocol: Address, whitelistTokenSetting: WhitelistTokenSetting): void {
   // Get bdv if the bdv function is available onchain (not available prior to BIP-16)
   const beanstalk_call = SeedGauge.bind(protocol);
-  const bdvResult = beanstalk_call.try_bdv(token, BI_10.pow(whitelistTokenSetting.decimals));
+  const bdvResult = beanstalk_call.try_bdv(token, BI_10.pow(<u8>whitelistTokenSetting.decimals));
   if (bdvResult.reverted) {
     return;
   }

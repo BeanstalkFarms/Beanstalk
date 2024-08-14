@@ -29,6 +29,8 @@ dataSources:
           handler: handleRemoveDeposit
         - event: RemoveDeposits(indexed address,indexed address,int96[],uint256[],uint256,uint256[])
           handler: handleRemoveDeposits
+        - event: Convert(indexed address,address,address,uint256,uint256)
+          handler: handleConvert
         - event: StalkBalanceChanged(indexed address,int256,int256)
           handler: handleStalkBalanceChanged
         - event: SeedsBalanceChanged(indexed address,int256)
@@ -357,6 +359,8 @@ dataSources:
       eventHandlers:
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
+        - event: ChangeUnderlying(indexed address,int256)
+          handler: handleChangeUnderlying
       file: ../src/handlers/BarnHandler.ts
   ###
   # SEASON
@@ -425,6 +429,10 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: MetapoolOracle(indexed uint32,int256,uint256[2])
           handler: handleMetapoolOracle
