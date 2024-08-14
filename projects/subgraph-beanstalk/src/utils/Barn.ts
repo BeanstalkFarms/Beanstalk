@@ -43,8 +43,7 @@ export function updateUnripeStats(unripe: Address, protocol: Address, block: eth
 
   // Further calculated values
   unripeToken.underlyingToken = getUnripeUnderlying(unripe, block.number).toHexString();
-  const whitelistSetting = loadWhitelistTokenSetting(Address.fromString(unripeToken.underlyingToken));
-  const underlyingBdvOne = getLatestBdv(whitelistSetting)!;
+  const underlyingBdvOne = getLatestBdv(loadWhitelistTokenSetting(Address.fromString(unripeToken.underlyingToken)))!;
   unripeToken.bdvUnderlyingOne = unripeToken.amountUnderlyingOne.times(underlyingBdvOne);
   unripeToken.choppableBdvOne = unripeToken.choppableAmountOne.times(underlyingBdvOne);
 
