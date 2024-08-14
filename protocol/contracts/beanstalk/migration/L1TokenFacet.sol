@@ -19,7 +19,8 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
  * @title L1TokenFacet updates the TokenFacet functions due to the L2 Migration.
  * @dev Beanstalk cannot assume that all tokens in Farm Balances can be transferred to
  * an L2. Addditionally, given that Beans will be re-issued on L2, Beanstalk will need to
- * restrict the transfer of beans and bean assets.
+ * restrict the transfer of beans and bean assets.Permit removed from farm balances due to it
+ * being unwidely used and not necessary for the migration.
  */
 contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
     struct Balance {
