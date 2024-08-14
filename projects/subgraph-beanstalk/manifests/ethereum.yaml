@@ -306,6 +306,31 @@ dataSources:
           handler: handleLoadSilo3_3
       file: ../src/utils/yield_cache/window_3/LoadSilo_3.ts
   ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: PreReplant
+      startBlock: 12974075
+      endBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - _Version
+      abis:
+        - name: PreReplant
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts
+  ###
   # SILO
   ###
   - kind: ethereum/contract
@@ -870,29 +895,6 @@ dataSources:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged
       file: ../src/handlers/FarmHandler.ts
-  ###
-  # DIAMOND
-  ###
-  - kind: ethereum/contract
-    name: Diamond
-    network: mainnet
-    source:
-      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
-      startBlock: 12974075
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      entities:
-        - Beanstalk
-      abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleDiamondCut
-      file: ../src/handlers/DiamondHandler.ts
 features:
   - grafting
 graft:

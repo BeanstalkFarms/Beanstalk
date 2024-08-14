@@ -16,10 +16,6 @@ export function loadBeanstalk(protocol: Address): Beanstalk {
     if (fert !== null) {
       beanstalk.fertilizer1155 = fert.toHexString();
     }
-    beanstalk.schemaVersion = "2.4.0";
-    beanstalk.subgraphVersion = "2.4.0";
-    beanstalk.methodologyVersion = "2.4.0";
-    beanstalk.lastUpgrade = ZERO_BI;
     beanstalk.lastSeason = 1;
     beanstalk.activeFarmers = [];
     beanstalk.farmersToUpdate = [];
