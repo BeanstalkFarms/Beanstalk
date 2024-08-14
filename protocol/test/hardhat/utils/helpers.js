@@ -1,5 +1,6 @@
 var JSONbig = require("json-bigint");
 const fs = require("fs");
+const ethers = require("ethers");
 
 function parseJson(file) {
   var jsonString = fs.readFileSync(file);

@@ -66,16 +66,14 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     EnrootFacet: ["LibSilo"]
   };
 
-  // Season to reseed
-  const season = 12345;
-
-  // upgrade beanstalk with all facets. calls `reseedRestart`
+  // upgrade beanstalk with all facets. calls `InitReseed`
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: facets,
     facetLibraries: facetLibraries,
     libraryNames: libraryNames,
     initFacetName: "InitReseed",
+    initArgs: [],
     bip: false,
     verbose: verbose,
     account: account
