@@ -3,7 +3,7 @@ import { Version } from "../../generated/schema";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
-  versionEntity.versionNumber = "2.4.0";
+  versionEntity.versionNumber = "2.3.1";
   versionEntity.subgraphName = subgraphNameForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);
   versionEntity.save();
@@ -11,7 +11,7 @@ export function handleInitVersion(block: ethereum.Block): void {
 
 function subgraphNameForBlockNumber(blockNumber: BigInt): string {
   if (blockNumber == BigInt.fromU32(12974075)) {
-    return "beanstalk";
+    return "bean";
   }
   throw new Error("Unable to initialize subgraph name for this block number");
 }

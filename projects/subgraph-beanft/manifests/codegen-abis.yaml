@@ -30,7 +30,8 @@ dataSources:
           file: ../abis/barnraise.json
         - name: basin
           file: ../abis/basin.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransferGenesis
-      file: ../src/mappings.ts
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts
