@@ -129,7 +129,9 @@ export function updatePoolValues(
   poolHourly.deltaVolume = poolHourly.deltaVolume.plus(volumeBean);
   poolHourly.deltaVolumeUSD = poolHourly.deltaVolumeUSD.plus(volumeUSD);
   poolHourly.deltaLiquidityUSD = poolHourly.deltaLiquidityUSD.plus(deltaLiquidityUSD);
-  poolHourly.utilization = poolHourly.deltaVolumeUSD.div(poolHourly.liquidityUSD);
+  if (poolHourly.liquidityUSD.gt(ZERO_BD)) {
+    poolHourly.utilization = poolHourly.deltaVolumeUSD.div(poolHourly.liquidityUSD);
+  }
   poolHourly.updatedAt = timestamp;
   poolHourly.save();
 
@@ -140,7 +142,9 @@ export function updatePoolValues(
   poolDaily.deltaVolume = poolDaily.deltaVolume.plus(volumeBean);
   poolDaily.deltaVolumeUSD = poolDaily.deltaVolumeUSD.plus(volumeUSD);
   poolDaily.deltaLiquidityUSD = poolDaily.deltaLiquidityUSD.plus(deltaLiquidityUSD);
-  poolDaily.utilization = poolDaily.deltaVolumeUSD.div(poolDaily.liquidityUSD);
+  if (poolDaily.liquidityUSD.gt(ZERO_BD)) {
+    poolDaily.utilization = poolDaily.deltaVolumeUSD.div(poolDaily.liquidityUSD);
+  }
   poolDaily.updatedAt = timestamp;
   poolDaily.save();
 

@@ -237,7 +237,6 @@ library LibEvaluate {
             }
 
             totalUsdLiquidity = totalUsdLiquidity.add(wellLiquidity);
-
             if (pools[i] == LibBarnRaise.getBarnRaiseWell()) {
                 // Scale down bean supply by the locked beans, if there is fertilizer to be paid off.
                 // Note: This statement is put into the for loop to prevent another extraneous read of

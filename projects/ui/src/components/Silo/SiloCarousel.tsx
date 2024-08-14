@@ -6,7 +6,7 @@ import {
   BEAN_CRV3_LP,
   BEAN_ETH_WELL_LP,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
 } from '~/constants/tokens';
 import earnBeansImg from '~/img/beanstalk/silo/edu/earnBeansImg.png';
 import depositBeanImg from '~/img/beanstalk/silo/edu/depositBeanImg.svg';
@@ -35,7 +35,7 @@ const depositCardContentByToken = {
   [UNRIPE_BEAN[1].address]: {
     img: depositUrBeanImg,
   },
-  [UNRIPE_BEAN_WETH[1].address]: {
+  [UNRIPE_BEAN_WSTETH[1].address]: {
     // TODO: Update this image to use BEAN/WETH logo
     img: depositUrBeanEth,
   },

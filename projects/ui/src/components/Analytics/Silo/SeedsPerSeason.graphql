@@ -1,0 +1,12 @@
+query SeedsPerSeason($token: String!, $first: Int) {
+  seasons: whitelistTokenHourlySnapshots(
+      orderDirection: desc, 
+      orderBy: season,
+      first: $first,
+      where: {token_contains_nocase: $token}
+    ) {
+      stalkEarnedPerSeason
+      season
+      createdAt
+  }
+}
