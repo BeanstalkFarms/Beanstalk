@@ -46,4 +46,20 @@ interface IBeanstalkWellFunction is IWellFunction {
         uint[] calldata ratios,
         bytes calldata data
     ) external pure returns (uint reserve);
+
+    /**
+     * @notice Calculates the rate at which j can be exchanged for i.
+     * @param reserves The reserves of the Well
+     * @param i The index of the token for which the output is being calculated
+     * @param j The index of the token for which 1 token is being exchanged
+     * @param data Well function data provided on every call
+     * @return rate The rate at which j can be exchanged for i
+     * @dev should return with 36 decimal precision
+     */
+    function calcRate(
+        uint256[] calldata reserves,
+        uint256 i,
+        uint256 j,
+        bytes calldata data
+    ) external view returns (uint256 rate);
 }

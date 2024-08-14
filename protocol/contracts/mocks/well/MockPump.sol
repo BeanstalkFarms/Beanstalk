@@ -7,12 +7,14 @@ pragma solidity ^0.8.20;
 
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
 
 /**
  * @title Mock Pump
  */
 
 contract MockPump is IInstantaneousPump, ICumulativePump {
+    uint256 constant CALC_RATE_PRECISION = 1e18;
     struct ReservesData {
         uint256[] instantaneousReserves;
         uint256[] cumulativeReserves;

@@ -13,6 +13,8 @@ import {LibAppStorage} from "../LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
 
 /**
  * @title Well Library
@@ -246,14 +248,17 @@ library LibWell {
             price = 0;
         } else {
             // fetch the bean index from the well in order to properly return the bean price.
+            uint256[] memory reserves = new uint256[](2);
+            reserves[0] = s.sys.twaReserves[well].reserve0;
+            reserves[1] = s.sys.twaReserves[well].reserve1;
+
+            Call memory wellFunction = IWell(well).wellFunction();
+            IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wellFunction.target);
+
             if (getBeanIndexFromWell(well) == 0) {
-                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
-                    s.sys.twaReserves[well].reserve1
-                );
+                price = mfpWf.calcRate(reserves, 0, 1, wellFunction.data);
             } else {
-                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
-                    s.sys.twaReserves[well].reserve0
-                );
+                price = mfpWf.calcRate(reserves, 1, 0, wellFunction.data);
             }
         }
     }
