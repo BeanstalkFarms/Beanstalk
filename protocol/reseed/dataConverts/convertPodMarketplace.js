@@ -7,15 +7,23 @@ function parsePodListings(inputFilePath, outputFilePath, callback) {
             return;
         }
 
-        const storageData = JSON.parse(data);
-        const podListings = storageData.podListings["0"]; // Accessing the podListings object
+        const marketData = JSON.parse(data).listings;
         const result = [];
 
-        for (const podIndex in podListings) {
-            if (podListings.hasOwnProperty(podIndex)) {
-                const podListingId = podListings[podIndex];
-                const podIndexStr = parseInt(podIndex, 10).toString();
-                result.push([podIndexStr, podListingId]);
+        for (const id in marketData) {
+            if (marketData.hasOwnProperty(id)) {
+                const listing = marketData[id];
+                result.push([
+                    id,
+                    listing.account,
+                    listing.index,
+                    listing.start,
+                    listing.amount,
+                    listing.pricePerPod.toString(),
+                    listing.maxHarvestableIndex,
+                    listing.minFillAmount,
+                    listing.mode.toString(),
+                ]);
             }
         }
 
@@ -36,14 +44,20 @@ function parsePodOrders(inputFilePath, outputFilePath, callback) {
             return;
         }
 
-        const storageData = JSON.parse(data);
-        const podOrders = storageData.podOrders; // Accessing the podOrders object
+        const marketData = JSON.parse(data).orders;
         const result = [];
 
-        for (const orderIndex in podOrders) {
-            if (podOrders.hasOwnProperty(orderIndex)) {
-                const orderBeanAmount = podOrders[orderIndex];
-                result.push([orderIndex, parseInt(orderBeanAmount, 16).toString()]);
+        for (const id in marketData) {
+            if (marketData.hasOwnProperty(id)) {
+                const order = marketData[id];
+                result.push([
+                    order.account,
+                    id,
+                    parseInt(order.beanAmount, 16).toString(),
+                    order.pricePerPod.toString(),
+                    order.maxPlaceInLine,
+                    order.minFillAmount
+                ]);
             }
         }
 
@@ -57,9 +71,9 @@ function parsePodOrders(inputFilePath, outputFilePath, callback) {
     });
 }
 
-const inputFilePath = "./reseed/data/exports/storage-system20330000.json";
-const podListingsOutputFilePath = "./reseed/data/r2/pod-listings.json";
-const podOrdersOutputFilePath = "./reseed/data/r2/pod-orders.json";
+const inputFilePath = './reseed/data/exports/market-info20330000.json';
+const podListingsOutputFilePath = './reseed/data/r2/pod-listings.json';
+const podOrdersOutputFilePath = './reseed/data/r2/pod-orders.json';
 
 parsePodListings(inputFilePath, podListingsOutputFilePath, (err, message) => {
     if (err) {

@@ -21,36 +21,47 @@ contract ReseedPodMarket {
 
     uint256 constant FIELD_ID = 0;
 
-    // event MigratedPodListing(
-    //     address indexed lister,
-    //     uint256 fieldId,
-    //     uint256 index,
-    //     uint256 start,
-    //     uint256 podAmount,
-    //     uint24 pricePerPod,
-    //     uint256 maxHarvestableIndex,
-    //     uint256 minFillAmount,
-    //     LibTransfer.To mode
-    // );
+    event MigratedPodListing(
+        address indexed lister,
+        uint256 fieldId,
+        uint256 index,
+        uint256 start,
+        uint256 podAmount,
+        uint24 pricePerPod,
+        uint256 maxHarvestableIndex,
+        uint256 minFillAmount,
+        LibTransfer.To mode
+    );
 
-    // event MigratedPodOrder(
-    //     address indexed orderer,
-    //     bytes32 id,
-    //     uint256 beanAmount,
-    //     uint256 fieldId,
-    //     uint24 pricePerPod,
-    //     uint256 maxPlaceInLine,
-    //     uint256 minFillAmount
-    // );
+    event MigratedPodOrder(
+        address indexed orderer,
+        bytes32 id,
+        uint256 beanAmount,
+        uint256 fieldId,
+        uint24 pricePerPod,
+        uint256 maxPlaceInLine,
+        uint256 minFillAmount
+    );
 
     struct PodListingData {
-        uint256 index;
         bytes32 id;
+        address lister;
+        uint256 index;
+        uint256 start;
+        uint256 podAmount;
+        uint24 pricePerPod;
+        uint256 maxHarvestableIndex;
+        uint256 minFillAmount;
+        LibTransfer.To mode;
     }
 
     struct PodOrderData {
+        address orderer;
         bytes32 id;
         uint256 beanAmount;
+        uint24 pricePerPod;
+        uint256 maxPlaceInLine;
+        uint256 minFillAmount;
     }
 
     // mapping(uint256 => mapping(uint256 => bytes32)) podListings;
@@ -74,6 +85,17 @@ contract ReseedPodMarket {
         for (uint i; i < podListings.length; i++) {
             // set listing index to hash
             s.sys.podListings[FIELD_ID][podListings[i].index] = podListings[i].id;
+            emit MigratedPodListing(
+                podListings[i].lister,
+                FIELD_ID,
+                podListings[i].index,
+                podListings[i].start,
+                podListings[i].podAmount,
+                podListings[i].pricePerPod,
+                podListings[i].maxHarvestableIndex,
+                podListings[i].minFillAmount,
+                podListings[i].mode
+            );
         }
     }
 
@@ -86,6 +108,15 @@ contract ReseedPodMarket {
             // set order hash to bean amount
             s.sys.podOrders[podOrders[i].id] = podOrders[i].beanAmount;
             s.sys.orderLockedBeans += podOrders[i].beanAmount;
+            emit MigratedPodOrder(
+                podOrders[i].orderer,
+                podOrders[i].id,
+                podOrders[i].beanAmount,
+                FIELD_ID,
+                podOrders[i].pricePerPod,
+                podOrders[i].maxPlaceInLine,
+                podOrders[i].minFillAmount
+            );
         }
     }
 }
