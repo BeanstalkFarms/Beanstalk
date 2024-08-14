@@ -15,6 +15,29 @@ contract LSDChainlinkOracle {
     uint256 internal constant ETH_DECIMALS = 18;
 
     /**
+     * @notice decodes data using the same format that the getPrice function uses.
+     * Used to verify the data is encoded correctly.
+     */
+    function decodeData(
+        bytes memory data
+    )
+        external
+        pure
+        returns (
+            address ethChainlinkOracle,
+            uint256 ethTimeout,
+            address xEthChainlinkOracle,
+            uint256 xEthTimeout,
+            address token
+        )
+    {
+        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout, token) = abi.decode(
+            data,
+            (address, uint256, address, uint256, address)
+        );
+    }
+
+    /**
      * @notice returns the price of the token.
      * if decimals are greater than 0, return the USD/TOKEN price.
      * else, return the TOKEN/USD price.

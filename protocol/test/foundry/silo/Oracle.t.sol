@@ -180,6 +180,40 @@ contract OracleTest is TestHelper {
         return token;
     }
 
+    function testLSDChainlinkOracleDecodesDataCorrectly() public {
+        MockChainlinkAggregator oracle = new MockChainlinkAggregator();
+        LSDChainlinkOracle deployedOracle = new LSDChainlinkOracle();
+        address someToken = address(new MockToken("StakingETH2", "stETH2"));
+
+        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _ethTimeout = 3600 * 4;
+        address _xEthChainlinkOracle = address(oracle);
+        uint256 _xEthTimeout = 3600 * 4;
+        address _token = someToken;
+
+        bytes memory data = abi.encode(
+            _ethChainlinkOracle,
+            _ethTimeout,
+            _xEthChainlinkOracle,
+            _xEthTimeout,
+            _token
+        );
+
+        (
+            address ethChainlinkOracle,
+            uint256 ethTimeout,
+            address xEthChainlinkOracle,
+            uint256 xEthTimeout,
+            address token
+        ) = deployedOracle.decodeData(data);
+
+        assertEq(ethChainlinkOracle, _ethChainlinkOracle);
+        assertEq(ethTimeout, _ethTimeout);
+        assertEq(xEthChainlinkOracle, _xEthChainlinkOracle);
+        assertEq(xEthTimeout, _xEthTimeout);
+        assertEq(token, _token);
+    }
+
     function testGetTokenPrice() public {
         // change encode type to 0x02 for wbtc:
         vm.prank(BEANSTALK);
