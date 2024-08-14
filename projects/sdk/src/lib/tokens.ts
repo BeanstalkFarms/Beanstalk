@@ -22,11 +22,14 @@ export class Tokens {
   public readonly USDC: ERC20Token;
   public readonly USDT: ERC20Token;
   public readonly LUSD: ERC20Token;
+  public readonly STETH: ERC20Token;
+  public readonly WSTETH: ERC20Token;
   public readonly BEAN_ETH_UNIV2_LP: ERC20Token;
   public readonly BEAN_ETH_WELL_LP: ERC20Token;
+  public readonly BEAN_WSTETH_WELL_LP: ERC20Token;
   public readonly BEAN_CRV3_LP: ERC20Token;
   public readonly UNRIPE_BEAN: ERC20Token;
-  public readonly UNRIPE_BEAN_WETH: ERC20Token;
+  public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
   public readonly STALK: BeanstalkToken;
   public readonly SEEDS: BeanstalkToken;
   public readonly PODS: BeanstalkToken;
@@ -41,6 +44,9 @@ export class Tokens {
 
   public siloWhitelist: Set<Token>;
   public siloWhitelistAddresses: string[];
+
+  public siloWhitelistedWellLP: Set<Token>;
+  public siloWhitelistedWellLPAddresses: string[];
 
   private map: Map<string, Token>;
 
@@ -79,6 +85,31 @@ export class Tokens {
     this.map.set("eth", this.ETH);
     this.map.set(addresses.WETH.get(chainId), this.WETH);
 
+    ////////// Lido //////////
+    this.STETH = new ERC20Token(
+      chainId,
+      addresses.STETH.get(chainId),
+      18,
+      "stETH",
+      {
+        name: "Liquid staked Ether 2.0",
+        displayDecimals: 4
+      },
+      providerOrSigner
+    );
+
+    this.WSTETH = new ERC20Token(
+      chainId,
+      addresses.WSTETH.get(chainId),
+      18,
+      "wstETH",
+      {
+        name: "Wrapped liquid staked Ether 2.0",
+        displayDecimals: 4
+      },
+      providerOrSigner
+    );
+
     ////////// Beanstalk //////////
 
     this.STALK = new BeanstalkToken(
@@ -116,7 +147,7 @@ export class Tokens {
     );
     this.BEAN.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: this.SEEDS.amount(1), // fill value
     };
 
     this.BEAN_CRV3_LP = new ERC20Token(
@@ -134,7 +165,7 @@ export class Tokens {
     );
     this.BEAN_CRV3_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: TokenValue.ZERO
     };
 
     this.BEAN_ETH_WELL_LP = new ERC20Token(
@@ -143,8 +174,8 @@ export class Tokens {
       18,
       "BEANETH",
       {
-        name: "BEAN:ETH Well LP Token", // see .name()
-        displayName: "BEAN:ETH LP",
+        name: "BEAN:ETH LP", // see .name()
+        displayName: "BEAN:ETH Well LP",
         isLP: true,
         color: "#DFB385"
       },
@@ -152,7 +183,25 @@ export class Tokens {
     );
     this.BEAN_ETH_WELL_LP.rewards = {
       stalk: this.STALK.amount(1),
-      seeds: null
+      seeds: this.SEEDS.amount(1) // fill value
+    };
+
+    this.BEAN_WSTETH_WELL_LP = new ERC20Token(
+      chainId,
+      addresses.BEANWSTETH_WELL.get(chainId),
+      18,
+      "BEANwstETH",
+      {
+        name: "BEAN:wstETH LP",
+        displayName: "BEAN:wstETH Well LP",
+        isLP: true,
+        color: "#DFB385"
+      },
+      providerOrSigner
+    );
+    this.BEAN_WSTETH_WELL_LP.rewards = {
+      stalk: this.STALK.amount(1),
+      seeds: this.SEEDS.amount(1), // fill value
     };
 
     this.UNRIPE_BEAN = new ERC20Token(
@@ -173,29 +222,32 @@ export class Tokens {
     };
     this.UNRIPE_BEAN.isUnripe = true;
 
-    this.UNRIPE_BEAN_WETH = new ERC20Token(
+    this.UNRIPE_BEAN_WSTETH = new ERC20Token(
       chainId,
-      addresses.UNRIPE_BEAN_WETH.get(chainId),
+      addresses.UNRIPE_BEAN_WSTETH.get(chainId),
       6,
-      "urBEANETH",
+      "urBEANwstETH",
       {
-        name: "Unripe BEANETH", // see `.name()`
-        displayName: "Unripe BEAN:ETH LP",
+        name: "Unripe BEANwstETH", // see `.name()`
+        displayName: "Unripe BEAN:wstETH LP",
         displayDecimals: 2
       },
       providerOrSigner
     );
-    this.UNRIPE_BEAN_WETH.rewards = {
+    this.UNRIPE_BEAN_WSTETH.rewards = {
       stalk: this.STALK.amount(1),
       seeds: TokenValue.ZERO
     };
-    this.UNRIPE_BEAN_WETH.isUnripe = true;
+    this.UNRIPE_BEAN_WSTETH.isUnripe = true;
 
     this.map.set(addresses.BEAN.get(chainId), this.BEAN);
     this.map.set(addresses.BEAN_CRV3.get(chainId), this.BEAN_CRV3_LP);
     this.map.set(addresses.BEANWETH_WELL.get(chainId), this.BEAN_ETH_WELL_LP);
+    this.map.set(addresses.BEANWSTETH_WELL.get(chainId), this.BEAN_WSTETH_WELL_LP);
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
-    this.map.set(addresses.UNRIPE_BEAN_WETH.get(chainId), this.UNRIPE_BEAN_WETH);
+    this.map.set(addresses.UNRIPE_BEAN_WSTETH.get(chainId), this.UNRIPE_BEAN_WSTETH);
+    this.map.set(addresses.STETH.get(chainId), this.STETH);
+    this.map.set(addresses.WSTETH.get(chainId), this.WSTETH);
 
     ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
@@ -342,11 +394,24 @@ export class Tokens {
 
     ////////// Groups //////////
 
-    const siloWhitelist = [this.BEAN, this.BEAN_CRV3_LP, this.BEAN_ETH_WELL_LP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_WETH];
+    const whitelistedWellLP = [this.BEAN_ETH_WELL_LP, this.BEAN_WSTETH_WELL_LP];
+
+    const siloWhitelist = [
+      this.BEAN_ETH_WELL_LP,
+      this.BEAN_WSTETH_WELL_LP,
+      this.BEAN,
+      this.BEAN_CRV3_LP,
+      this.UNRIPE_BEAN,
+      this.UNRIPE_BEAN_WSTETH
+    ];
+
+    this.siloWhitelistedWellLP = new Set(whitelistedWellLP);
+    this.siloWhitelistedWellLPAddresses = whitelistedWellLP.map((t) => t.address);
+
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
-    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WETH]);
+    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH]);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
     this.erc20Tokens = new Set([...this.siloWhitelist, this.WETH, this.CRV3, this.DAI, this.USDC, this.USDT]);
     this.balanceTokens = new Set([this.ETH, ...this.erc20Tokens]);
@@ -473,6 +538,15 @@ export class Tokens {
     });
 
     return balances;
+  }
+
+  /**
+   * Returns whether a token is a whitelisted LP token
+   * (e.g., BEAN:WETH Well LP / BEAN:wstETH Well LP)
+   */
+  public getIsWhitelistedWellLPToken(token: Token) {
+    const foundToken = this.map.get(token.address.toLowerCase());
+    return foundToken ? this.siloWhitelistedWellLP.has(foundToken) : false;
   }
 
   //////////////////////// Permit Data ////////////////////////

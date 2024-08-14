@@ -64,42 +64,68 @@ contract ConvertFacet is Invariable, ReentrancyGuard {
         nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
-        address toToken;
-        address fromToken;
-
         // if the convert is a well <> bean convert, cache the state to validate convert.
         LibPipelineConvert.PipelineConvertData memory pipeData = LibPipelineConvert.getConvertState(
             convertData
         );
 
-        (toToken, fromToken, toAmount, fromAmount) = LibConvert.convert(convertData);
+        LibConvert.ConvertParams memory cp = LibConvert.convert(convertData);
 
-        require(fromAmount > 0, "Convert: From amount is 0.");
+        // if the account is 0, set it to `LibTractor._user()`
+        // cp.account is only set upon a anti-lambda-lambda convert.
+        if (cp.account == address(0)) {
+            cp.account = LibTractor._user();
+        }
 
-        LibSilo._mow(LibTractor._user(), fromToken);
-        LibSilo._mow(LibTractor._user(), toToken);
+        if (cp.decreaseBDV) {
+            require(
+                stems.length == 1 && amounts.length == 1,
+                "Convert: DecreaseBDV only supports updating one deposit."
+            );
+        }
 
+        require(cp.fromAmount > 0, "Convert: From amount is 0.");
+
+        LibSilo._mow(cp.account, cp.fromToken);
+
+        // If the fromToken and toToken are different, mow the toToken as well.
+        if (cp.fromToken != cp.toToken) LibSilo._mow(cp.account, cp.toToken);
+
+        // Withdraw the tokens from the deposit.
         (pipeData.grownStalk, fromBdv) = LibConvert._withdrawTokens(
-            fromToken,
+            cp.fromToken,
             stems,
             amounts,
-            fromAmount
+            cp.fromAmount,
+            cp.account
         );
 
         // check for potential penalty
         LibPipelineConvert.checkForValidConvertAndUpdateConvertCapacity(
             pipeData,
             convertData,
-            fromToken,
-            toToken,
+            cp.fromToken,
+            cp.toToken,
             fromBdv
         );
 
-        uint256 newBdv = LibTokenSilo.beanDenominatedValue(toToken, toAmount);
-        toBdv = newBdv > fromBdv ? newBdv : fromBdv;
+        // Calculate the bdv of the new deposit.
+        uint256 newBdv = LibTokenSilo.beanDenominatedValue(cp.toToken, cp.toAmount);
 
-        toStem = LibConvert._depositTokensForConvert(toToken, toAmount, toBdv, pipeData.grownStalk);
+        // If `decreaseBDV` flag is not enabled, set toBDV to the max of the two bdvs.
+        toBdv = (newBdv > fromBdv || cp.decreaseBDV) ? newBdv : fromBdv;
 
-        emit Convert(LibTractor._user(), fromToken, toToken, fromAmount, toAmount);
+        toStem = LibConvert._depositTokensForConvert(
+            cp.toToken,
+            cp.toAmount,
+            toBdv,
+            pipeData.grownStalk,
+            cp.account
+        );
+
+        fromAmount = cp.fromAmount;
+        toAmount = cp.toAmount;
+
+        emit Convert(cp.account, cp.fromToken, cp.toToken, cp.fromAmount, cp.toAmount);
     }
 }

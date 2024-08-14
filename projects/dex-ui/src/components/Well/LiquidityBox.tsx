@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import styled from "styled-components";
 
 import { TokenValue } from "@beanstalk/sdk";
@@ -17,6 +17,7 @@ import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { LoadingItem } from "src/components/LoadingItem";
 import { Well } from "@beanstalk/sdk/Wells";
 import { Info } from "src/components/Icons";
+import useSdk from "src/utils/sdk/useSdk";
 
 type Props = {
   well: Well | undefined;
@@ -34,8 +35,8 @@ const tooltipProps = {
 
 const displayTV = (value?: TokenValue) => (value?.gt(0) ? value.toHuman("short") : "-");
 
-export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
-  const well = useMemo(() => _well, [_well]);
+export const LiquidityBox: FC<Props> = ({ well, loading }) => {
+  const sdk = useSdk();
 
   const { getPositionWithWell } = useLPPositionSummary();
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
@@ -44,6 +45,7 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
   const isWhitelisted = getIsWhitelisted(well);
 
   const { data: lpTokenPriceMap = {} } = useWellLPTokenPrice(well);
+  const sdkToken = well?.lpToken && sdk.tokens.findByAddress(well.lpToken.address);
 
   const lpAddress = well?.lpToken?.address;
   const lpTokenPrice =
@@ -88,7 +90,7 @@ export const LiquidityBox: FC<Props> = ({ well: _well, loading }) => {
                   <Tooltip
                     content={
                       <div className="tooltip-content">
-                        BEANETH LP token holders can Deposit their LP tokens in the{" "}
+                        {sdkToken?.symbol} LP token holders can Deposit their LP tokens in the{" "}
                         <a
                           className="underline"
                           href="https://app.bean.money/#/silo"

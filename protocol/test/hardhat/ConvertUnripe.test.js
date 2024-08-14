@@ -351,15 +351,15 @@ describe("Unripe Convert", function () {
       // CHECK TO SEE THAT RECAP AND PENALTY VALUES ARE UPDATED AFTER THE CONVERT
       it("getters", async function () {
         expect(await mockBeanstalk.getRecapPaidPercent()).to.be.equal(to6("0.01"));
-        expect(await mockBeanstalk.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal("101000");
-        expect(await mockBeanstalk.getPenalty(UNRIPE_BEAN)).to.be.equal(to6("0.00101"));
-        expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6("999.90"));
+        expect(await mockBeanstalk.getUnderlyingPerUnripeToken(UNRIPE_BEAN)).to.be.equal("100949");
+        expect(await mockBeanstalk.getPenalty(UNRIPE_BEAN)).to.be.equal(to6("0.006019"));
+        expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_BEAN)).to.be.equal(to6("999.403698"));
         expect(await mockBeanstalk.isUnripe(UNRIPE_BEAN)).to.be.equal(true);
         // same fert , less supply --> penalty goes down
         expect(await mockBeanstalk.getPenalizedUnderlying(UNRIPE_BEAN, to6("1"))).to.be.equal(
-          to6("0.00101")
+          to6("0.006019")
         );
-        expect(await mockBeanstalk.getUnderlying(UNRIPE_BEAN, to6("1"))).to.be.equal(to6("0.1010"));
+        expect(await mockBeanstalk.getUnderlying(UNRIPE_BEAN, to6("1"))).to.be.equal(to6("0.100949"));
       });
 
       // TOTALS
@@ -367,7 +367,7 @@ describe("Unripe Convert", function () {
         // UNRIPE BEAN DEPOSIT TEST
         expect(await beanstalk.getTotalDeposited(this.unripeBean.address)).to.eq(to6("100"));
         // RIPE BEAN CONVERTED TEST
-        expect(await beanstalk.getTotalDeposited(bean.address)).to.eq(to6("0.1"));
+        expect(await beanstalk.getTotalDeposited(bean.address)).to.eq(to6("0.596302"));
         // TOTAL STALK TEST
         // 0.004 * 3 seasons = 0.012
         expect(await beanstalk.totalStalk()).to.eq(toStalk("20.012"));
@@ -390,7 +390,7 @@ describe("Unripe Convert", function () {
         expect((await beanstalk.getDeposit(user.address, this.unripeBean.address, 0))[0]).to.eq(
           to6("100")
         );
-        expect((await beanstalk.getDeposit(user.address, bean.address, 0))[0]).to.eq(to6("0.1"));
+        expect((await beanstalk.getDeposit(user.address, bean.address, 0))[0]).to.eq(to6("0.596302"));
       });
 
       // EVENTS TEST
@@ -402,10 +402,10 @@ describe("Unripe Convert", function () {
           ]);
         await expect(this.result)
           .to.emit(beanstalk, "AddDeposit")
-          .withArgs(user.address, bean.address, 0, to6("0.1"), to6("10"));
+          .withArgs(user.address, bean.address, 0, to6("0.596302"), to6("10"));
         await expect(this.result)
           .to.emit(beanstalk, "Convert")
-          .withArgs(user.address, this.unripeBean.address, bean.address, to6("100"), to6("0.1"));
+          .withArgs(user.address, this.unripeBean.address, bean.address, to6("100"), to6("0.596302"));
       });
     });
   });

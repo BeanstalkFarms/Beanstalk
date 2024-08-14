@@ -36,7 +36,7 @@ const { to6 } = require("./test/hardhat/utils/helpers.js");
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge } = require("./scripts/bips.js");
+const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMiscellaneousImprovements } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -302,19 +302,31 @@ task("deploySeedGauge", async function () {
   await bipSeedGauge();
 });
 
-/// EBIPS /// 
+task("deployWstethMigration", async function () {
+  await bipMigrateUnripeBeanEthToBeanSteth();
+});
+
+task("deployBipMiscImprovements", async function () {
+  await bipMiscellaneousImprovements();
+});
+
+task("updateBeanstalkForUI", async function () {
+  await updateBeanstalkForUI();
+});
+
+/// EBIPS ///
 
 task("ebip17", async function () {
   await ebip17();
-})
+});
 
 task("ebip16", async function () {
   await ebip16();
-})
+});
 
 task("ebip15", async function () {
   await ebip15();
-})
+});
 
 task("ebip14", async function () {
   await ebip14();

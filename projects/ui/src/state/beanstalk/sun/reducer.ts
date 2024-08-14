@@ -41,6 +41,7 @@ const getInitialState = () => {
       start: NEW_BN,
       period: NEW_BN,
       timestamp: nextSunrise.minus({ hour: 1 }),
+      beanEthStartMintingSeason: 0, // TODO: remove
     },
     morning: {
       isMorning: false,

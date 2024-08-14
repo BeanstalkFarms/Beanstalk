@@ -6,14 +6,14 @@ import {
   PodOrderCancelled,
   PodOrderCreated as PodOrderCreated_v1,
   PodOrderFilled as PodOrderFilled_v1
-} from "../generated/Field/Beanstalk";
-import { PodListingCreated as PodListingCreated_v1_1 } from "../generated/Marketplace-Replanted/Beanstalk";
+} from "../generated/Beanstalk-ABIs/PreReplant";
+import { PodListingCreated as PodListingCreated_v1_1 } from "../generated/Beanstalk-ABIs/Replanted";
 import {
   PodListingCreated as PodListingCreated_v2,
   PodListingFilled as PodListingFilled_v2,
   PodOrderCreated as PodOrderCreated_v2,
   PodOrderFilled as PodOrderFilled_v2
-} from "../generated/BIP29-PodMarketplace/Beanstalk";
+} from "../generated/Beanstalk-ABIs/MarketV2";
 
 import {
   Plot,
@@ -455,8 +455,8 @@ function podListingFilled(params: MarketFillParams): void {
   let fill = loadPodFill(params.event.address, params.index, params.event.transaction.hash.toHexString());
   fill.createdAt = params.event.block.timestamp;
   fill.listing = listing.id;
-  fill.from = params.from.toHexString();
-  fill.to = params.to.toHexString();
+  fill.fromFarmer = params.from.toHexString();
+  fill.toFarmer = params.to.toHexString();
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
@@ -476,8 +476,8 @@ function podListingFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = originalHistoryID;
-  rawEvent.from = params.from.toHexString();
-  rawEvent.to = params.to.toHexString();
+  rawEvent.fromFarmer = params.from.toHexString();
+  rawEvent.toFarmer = params.to.toHexString();
   rawEvent.placeInLine = fill.placeInLine;
   rawEvent.index = params.index;
   rawEvent.start = params.start;
@@ -550,8 +550,8 @@ function podOrderFilled(params: MarketFillParams): void {
 
   fill.createdAt = params.event.block.timestamp;
   fill.order = order.id;
-  fill.from = params.from.toHexString();
-  fill.to = params.to.toHexString();
+  fill.fromFarmer = params.from.toHexString();
+  fill.toFarmer = params.to.toHexString();
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   fill.index = params.index;
@@ -574,8 +574,8 @@ function podOrderFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
-  rawEvent.from = params.from.toHexString();
-  rawEvent.to = params.to.toHexString();
+  rawEvent.fromFarmer = params.from.toHexString();
+  rawEvent.toFarmer = params.to.toHexString();
   rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex(params.event.address));
   rawEvent.index = params.index;
   rawEvent.start = params.start;
