@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
 
 import { useAppSelector } from '~/state';
 import Fiat from '~/components/Common/Fiat';
@@ -8,6 +9,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 
 import { Token } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
+import BigNumber from 'bignumber.js';
 import TokenDeposits from './TokenDeposits';
 
 type ITokenDepositsOverview = {
@@ -39,8 +41,11 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
               <TokenIcon
                 token={token}
                 css={{ height: '24px', marginBottom: '-3px' }}
-              />
-              {deposits?.deposited?.amount.toFormat(2) || '0'}
+              />{' '}
+              {deposits?.deposited?.amount.toFormat(
+                2,
+                BigNumber.ROUND_HALF_DOWN
+              ) || '0'}
             </Typography>
             <Typography variant="h4">
               <Fiat
@@ -51,10 +56,32 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
           </Stack>
         </Stack>
         <Stack direction="row" gap={1}>
-          <Button size="small" variant="outlined" sx={sharedButtonSx}>
+          <Button
+            size="small"
+            color="secondary"
+            variant="outlined-secondary"
+            sx={sharedButtonSx}
+          >
+            <Box
+              component="img"
+              src={minimizeWindowIcon}
+              alt="silo-transfer-deposits"
+              sx={{ mr: '4px' }}
+            />
             Transfer Deposits
           </Button>
-          <Button size="small" variant="outlined" sx={sharedButtonSx}>
+          <Button
+            size="small"
+            color="secondary"
+            variant="outlined-secondary"
+            sx={sharedButtonSx}
+          >
+            <Box
+              component="img"
+              src={deliveryBoxIcon}
+              alt="silo-update-deposits"
+              sx={{ mr: '4px' }}
+            />
             Update Deposits
           </Button>
         </Stack>

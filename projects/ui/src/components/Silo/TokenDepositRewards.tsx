@@ -4,7 +4,8 @@ import { Token } from '@beanstalk/sdk';
 import Row from '~/components/Common/Row';
 import BigNumber from 'bignumber.js';
 import { InfoOutlined } from '@mui/icons-material';
-import { BeanstalkPalette, FontWeight } from '../App/muiTheme';
+import { BeanstalkPalette, FontWeight } from '~/components/App/muiTheme';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 const TokenDepositRewards = ({ token }: { token: Token }) => {
   const seedReward = new BigNumber(token.rewards?.seeds?.toHuman() || '0');
@@ -27,6 +28,9 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           }}
         >
           View rewards over time
+          <OpenInNewIcon
+            sx={{ color: 'inherit', fontSize: 'inherit', ml: '4px' }}
+          />
         </Button>
       </Row>
       <Typography variant="subtitle1">
@@ -39,7 +43,6 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           {seedReward.toFormat(6)} Seed.
         </Typography>
       </Typography>
-
       <Alert
         color="info"
         icon={
@@ -72,6 +75,9 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           }}
         >
           View Bean Supply
+          <OpenInNewIcon
+            sx={{ color: 'inherit', fontSize: 'inherit', ml: '4px' }}
+          />
         </Button>
       </Alert>
     </Stack>

@@ -125,7 +125,9 @@ const WithdrawForm: FC<
           amountOut: ZERO_BN,
           steps: [],
         };
+
       const work = sdk.farm.create();
+
       work.add(
         new sdk.farm.actions.RemoveLiquidityOneToken(
           pool.address,
@@ -283,7 +285,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Withdraw" />
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
