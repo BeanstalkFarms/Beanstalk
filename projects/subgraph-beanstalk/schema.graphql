@@ -21,7 +21,8 @@ enum EmaWindow {
   ROLLING_30_DAY
 }
 
-type _Version @entity {
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
   "= 'subgraph'"
   id: ID!
   "= 'beanstalk'"

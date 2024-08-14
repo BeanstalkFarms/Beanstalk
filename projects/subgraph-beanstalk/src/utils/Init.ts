@@ -1,9 +1,9 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { _Version } from "../../generated/schema";
+import { Version } from "../../generated/schema";
 import { BEANSTALK_BLOCK } from "../../../subgraph-core/utils/Constants";
 
 export function handleInitVersion(block: ethereum.Block): void {
-  const versionEntity = new _Version("subgraph");
+  const versionEntity = new Version("subgraph");
   versionEntity.versionNumber = "2.4.0";
   versionEntity.protocolName = protocolNameForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);
