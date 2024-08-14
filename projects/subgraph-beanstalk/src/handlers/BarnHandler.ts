@@ -6,6 +6,7 @@ import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
 import { loadFarmer } from "../entities/Beanstalk";
 import { loadUnripeToken } from "../entities/Silo";
+import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
 
 export function handleTransferSingle(event: TransferSingle): void {
   handleTransfer(event.address, event.params.from, event.params.to, event.params.id, event.params.value, event.block.number);
@@ -23,7 +24,7 @@ export function handleChangeUnderlying(event: ChangeUnderlying): void {
   const unripe = loadUnripeToken(event.params.token);
   unripe.totalUnderlying = unripe.totalUnderlying.plus(event.params.underlying);
   // TODO: investigate whether other things need to get calculated, such as recap/bdv/choppable etc.
-  // TODO: snapshot here
+  takeUnripeTokenSnapshots(unripe, event.address, event.block.timestamp);
   unripe.save();
 }
 
