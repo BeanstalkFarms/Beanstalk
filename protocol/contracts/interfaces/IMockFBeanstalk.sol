@@ -1040,6 +1040,10 @@ interface IMockFBeanstalk {
 
     function getOddGerminating(address token) external view returns (uint256, uint256);
 
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory);
+
     function getOverallConvertCapacity() external view returns (uint256);
 
     function getPenalizedUnderlying(

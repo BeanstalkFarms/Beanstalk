@@ -246,4 +246,10 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         s.sys.evaluationParameters = updatedSeedGaugeSettings;
         emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
     }
+
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory) {
+        return LibWhitelist.getOracleImplementationForToken(token);
+    }
 }

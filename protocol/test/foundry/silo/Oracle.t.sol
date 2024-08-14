@@ -214,6 +214,23 @@ contract OracleTest is TestHelper {
         assertEq(token, _token);
     }
 
+    function testGetOracleImplementationForToken() public {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+
+        IMockFBeanstalk.Implementation memory oracleImplementation = bs
+            .getOracleImplementationForToken(WBTC);
+        assertEq(oracleImplementation.target, WBTC_USD_CHAINLINK_PRICE_AGGREGATOR);
+    }
+
     function testGetTokenPrice() public {
         // change encode type to 0x02 for wbtc:
         vm.prank(BEANSTALK);

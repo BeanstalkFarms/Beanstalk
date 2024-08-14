@@ -568,4 +568,11 @@ library LibWhitelist {
             );
         }
     }
+
+    function getOracleImplementationForToken(
+        address token
+    ) internal view returns (Implementation memory) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return s.sys.oracleImplementation[token];
+    }
 }
