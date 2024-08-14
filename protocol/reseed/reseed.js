@@ -1,3 +1,8 @@
+const { parseAccountStatus } = require('./dataConverts/convertAccountStatuses.js');
+const { parseInternalBalances } = require('./dataConverts/convertInternalBalances.js');
+const { parseDeposits } = require('./dataConverts/convertDeposits.js');
+const { parseFertilizer } = require('./dataConverts/convertFert.js');
+const { parsePodMarketplace } = require('./dataConverts/convertPodMarketplace.js');
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
@@ -21,7 +26,8 @@ async function printBeanstalk() {
 }
 
 let reseeds;
-async function reseed(account, mock = true, log = false, start = 0, end = 12) {
+async function reseed(account, mock = true, convertData = true, log = false, start = 0, end = 12) {
+  if (convertData) parseBeanstalkData();
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
@@ -73,6 +79,18 @@ async function printStage(i, end, mock, log) {
   console.log("Reseeding Beanstalk:");
   console.log(`Mocks Enabled: ${mock}`);
   console.log(`Stage ${i}/${end - 1}: ${getProcessString(i, end - 1)}`);
+}
+
+function parseBeanstalkData() {
+  const storageAccountsPath = "./reseed/data/exports/storage-accounts20330000.json";
+  const storageFertPath = "./reseed/data/exports/storage-fertilizer20330000.json";
+  const storageSystemPath = "./reseed/data/exports/storage-system20330000.json";
+  const marketPath = "./reseed/data/exports/market-info20330000.json";
+  parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json");
+  parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json");
+  parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", 40);
+  parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", 40);
+  parsePodMarketplace(marketPath, "./reseed/data/r2/pod-listings.json", "./reseed/data/r2/pod-orders.json");
 }
 
 exports.reseed = reseed;
