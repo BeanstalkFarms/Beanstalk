@@ -42,7 +42,7 @@ function parsePodOrders(inputFilePath, outputFilePath) {
         result.push([
           order.account,
           id,
-          parseInt(order.beanAmount, 16).toString(),
+          parseInt(order.orderBeans, 16).toString(),
           order.pricePerPod.toString(),
           order.maxPlaceInLine,
           order.minFillAmount
