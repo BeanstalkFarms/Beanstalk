@@ -14,7 +14,6 @@ import {
   HOW_TO_TRANSFER_DEPOSITS,
   HOW_TO_WITHDRAW_FROM_THE_SILO,
 } from '~/util/Guides';
-import SiloAssetOverviewCard from '~/components/Silo/SiloAssetOverviewCard';
 import PagePath from '~/components/Common/PagePath';
 import { XXLWidth } from '~/components/App/muiTheme';
 
@@ -119,13 +118,13 @@ const TokenPage: FC<{}> = () => {
           <Stack
             width="100%"
             height="100%"
+            gap={2}
             sx={({ breakpoints }) => ({
               width: '100%',
               minWidth: 0,
               [breakpoints.up('lg')]: { maxWidth: '850px' },
             })}
           >
-            {false && <SiloAssetOverviewCard token={whitelistedToken} />}
             <Card sx={{ p: 1, boxSizing: 'border-box' }}>
               <TokenDepositsOverview token={sdkToken} />
             </Card>
