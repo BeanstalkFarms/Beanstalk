@@ -29,8 +29,13 @@ export function transfer(fertilizer1155: Address, from: Address, to: Address, id
   toFertilizerBalance.amount = toFertilizerBalance.amount.plus(amount);
   toFertilizerBalance.save();
 }
-
-export function chopConvert(event: Convert): void {}
+// TODO: need to handle chop converts, which emit a different event. here are examples.
+// When that is done, the chop entity should be abstracted also.
+// https://etherscan.io/tx/0x22a568dcdcb52aa3f2d8a7e2d36fe4e9e25246fe2ebf3ebeee0d4096a0d18313
+// https://etherscan.io/tx/0xf40a95f6d7731e00806a24aaae3701a6496c482e5f301af9c7f865805836ea10
+export function chopConvert(event: Convert): void {
+  //
+}
 
 // Update the status for this unripe token using protocol getters. These values fluctuate without related events.
 export function updateUnripeStats(unripe: Address, protocol: Address, block: ethereum.Block): void {

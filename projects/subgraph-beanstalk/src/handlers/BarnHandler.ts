@@ -27,31 +27,30 @@ export function handleChangeUnderlying(event: ChangeUnderlying): void {
   updateUnripeStats(unripe.id, event.address, event.block);
 }
 
-// TODO: need to handle chop converts, which emit a different event. here are examples.
-// When that is done, the chop entity should be abstracted also.
-// https://etherscan.io/tx/0x22a568dcdcb52aa3f2d8a7e2d36fe4e9e25246fe2ebf3ebeee0d4096a0d18313
-// https://etherscan.io/tx/0xf40a95f6d7731e00806a24aaae3701a6496c482e5f301af9c7f865805836ea10
 export function handleChop(event: Chop): void {
   const unripe = loadUnripeToken(event.params.token);
-  const unripeBdv = getLatestBdv(loadWhitelistTokenSetting(unripe.id))!;
-  const underlyingBdv = getLatestBdv(loadWhitelistTokenSetting(Address.fromString(unripe.underlyingToken)))!;
-  unripe.totalChoppedAmount = unripe.totalChoppedAmount.plus(event.params.amount);
-  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(event.params.amount.times(unripeBdv));
-  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(event.params.underlying.times(underlyingBdv));
-  unripe.save();
-
-  updateUnripeStats(unripe.id, event.address, event.block);
+  const unripeBdvOne = getLatestBdv(loadWhitelistTokenSetting(unripe.id))!;
+  const underlyingBdvOne = getLatestBdv(loadWhitelistTokenSetting(unripe.underlyingToken))!;
 
   let id = "chop-" + event.transaction.hash.toHexString() + "-" + event.transactionLogIndex.toString();
   let chop = new ChopEntity(id);
-  chop.hash = event.transaction.hash.toHexString();
-  chop.logIndex = event.transactionLogIndex.toI32();
-  chop.protocol = event.address.toHexString();
   chop.farmer = event.params.account.toHexString();
-  chop.unripe = event.params.token.toHexString();
-  chop.amount = event.params.amount;
-  chop.underlying = event.params.underlying.toHexString();
+  chop.unripeToken = unripe.id;
+  chop.unripeAmount = event.params.amount;
+  chop.unripeBdv = event.params.amount.times(unripeBdvOne);
+  chop.underlyingToken = unripe.underlyingToken;
+  chop.underlyingAmount = event.params.underlying;
+  chop.underlyingBdv = event.params.underlying.times(underlyingBdvOne);
+  chop.chopRate = unripe.chopRate;
+  chop.hash = event.transaction.hash.toHexString();
   chop.blockNumber = event.block.number;
   chop.createdAt = event.block.timestamp;
   chop.save();
+
+  unripe.totalChoppedAmount = unripe.totalChoppedAmount.plus(chop.unripeAmount);
+  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(chop.unripeBdv);
+  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(chop.underlyingBdv);
+  unripe.save();
+
+  updateUnripeStats(unripe.id, event.address, event.block);
 }

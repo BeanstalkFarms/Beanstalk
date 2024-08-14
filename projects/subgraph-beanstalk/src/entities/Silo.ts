@@ -98,7 +98,7 @@ export function loadUnripeToken(token: Address): UnripeToken {
   let unripe = UnripeToken.load(token);
   if (unripe == null) {
     unripe = new UnripeToken(token);
-    unripe.underlyingToken = getUnripeUnderlying(token, ZERO_BI).toHexString();
+    unripe.underlyingToken = getUnripeUnderlying(token, ZERO_BI);
     unripe.totalUnderlying = ZERO_BI;
     unripe.amountUnderlyingOne = ZERO_BI;
     unripe.bdvUnderlyingOne = ZERO_BI;

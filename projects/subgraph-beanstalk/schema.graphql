@@ -1226,46 +1226,6 @@ type FertilizerYield @entity {
 ##### Event-Level Data #####
 ##################################
 
-### We need to add these in
-
-"""
-An event is any user action that occurs in a protocol. Generally, they are Ethereum events
-emitted by a function in the smart contracts, stored in transaction receipts as event logs.
-However, some user actions of interest are function calls that don't emit events. For example,
-the deposit and withdraw functions in Yearn do not emit any events. In our subgraphs, we still
-store them as events, although they are not technically Ethereum events emitted by smart
-contracts.
-"""
-interface SiloEvent {
-  "{ Event type }-{ Transaction hash }-{ Log index }"
-  id: ID!
-  "Transaction hash of the transaction that emitted this event"
-  hash: String!
-  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
-  logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
-  "Block number of this event"
-  blockNumber: BigInt!
-  "Timestamp of this event"
-  createdAt: BigInt!
-}
-
-interface FieldEvent {
-  "{ Event type }-{ Transaction hash }-{ Log index }"
-  id: ID!
-  "Transaction hash of the transaction that emitted this event"
-  hash: String!
-  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
-  logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
-  "Block number of this event"
-  blockNumber: BigInt!
-  "Timestamp of this event"
-  createdAt: BigInt!
-}
-
 interface MarketplaceEvent {
   "{ Event type }-{ Transaction hash }-{ Log index }"
   id: ID!
@@ -1281,26 +1241,30 @@ interface MarketplaceEvent {
   createdAt: BigInt!
 }
 
-type Chop implements SiloEvent @entity(immutable: true) {
-  "chop-{ Transaction hash }-{ Log index }"
+type Chop @entity(immutable: true) {
+  "(chop|convert)-{ Transaction hash }-{ Log index }"
   id: ID!
+  "Account address"
+  farmer: Farmer!
+  "The unripe token which was chopped"
+  unripeToken: UnripeToken!
+  "Unripe token amount which was chopped"
+  unripeAmount: BigInt!
+  "Bdv of the unripe tokens which were chopped"
+  unripeBdv: BigInt!
+  "The underlying ERC20 token received by `farmer` as a result of this chop"
+  underlyingToken: WhitelistTokenSetting!
+  "Amount of underlying tokens `farmer` received"
+  underlyingAmount: BigInt!
+  "Amount of bdv `farmer` received"
+  underlyingBdv: BigInt!
+  "The effective chop rate for this chop"
+  chopRate: BigDecimal!
   "Transaction hash of the transaction that emitted this event"
   hash: String!
-  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
-  logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
-  "Address chopping"
-  farmer: String!
-  "Unripe token being chopped"
-  unripe: String!
-  "Amount being chopped"
-  amount: BigInt!
-  "Underlying token"
-  underlying: String!
-  "Block number of this event"
+  "The block number of this event"
   blockNumber: BigInt!
-  "Timestamp of this event"
+  "Timestamp of this chop"
   createdAt: BigInt!
 }
 
@@ -1508,7 +1472,7 @@ type UnripeToken @entity {
   "Token Address"
   id: Bytes!
   "The ripe token underlying this unripe asset"
-  underlyingToken: String!
+  underlyingToken: WhitelistTokenSetting!
   "The total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
   totalUnderlying: BigInt!
   "The amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
