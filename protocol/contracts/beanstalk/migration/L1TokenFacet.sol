@@ -19,7 +19,8 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
  * @title L1TokenFacet updates the TokenFacet functions due to the L2 Migration.
  * @dev Beanstalk cannot assume that all tokens in Farm Balances can be transferred to
  * an L2. Addditionally, given that Beans will be re-issued on L2, Beanstalk will need to
- * restrict the transfer of beans and bean assets. Permit removed from farm balances due to complexity.
+ * restrict the transfer of beans and bean assets.Permit removed from farm balances due to it
+ * being unwidely used and not necessary for the migration.
  */
 contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
     struct Balance {
@@ -44,7 +45,7 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
     address internal constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
     address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
     address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
-    address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E;
+    address internal constant BEAN_WSTETH_WELL = 0xBeA0000113B0d182f4064C86B71c315389E4715D;
 
     //////////////////////// Transfer ////////////////////////
 
@@ -66,13 +67,6 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
         LibTransfer.To toMode
     ) external payable {
         checkBeanAsset(address(token));
-        // L1 external -> internal transfers are not supported after the L2 migration.
-        if (fromMode != LibTransfer.From.INTERNAL) {
-            require(
-                toMode == LibTransfer.To.EXTERNAL,
-                "TokenFacet: EXTERNAL->INTERNAL transfers are disabled."
-            );
-        }
         LibTransfer.transferToken(token, msg.sender, recipient, amount, fromMode, toMode);
     }
 
