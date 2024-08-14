@@ -3,7 +3,8 @@ schema:
   file: ../schema.graphql
 dataSources:
   ###
-  # HISTORICAL vAPY CACHE
+  # HISTORICAL vAPY CACHE.
+  # Set to occur one block after the rest of initialization steps, so that the Version entity is loaded.
   ###
   - kind: ethereum/contract
     name: TokenCacheWindow1_1
@@ -11,19 +12,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken1_1
+      blockHandlers:
+        - handler: handleLoadToken1_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_1/LoadToken_1.ts
   - kind: ethereum/contract
     name: TokenCacheWindow1_2
@@ -31,19 +34,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken1_2
+      blockHandlers:
+        - handler: handleLoadToken1_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_1/LoadToken_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow1_1
@@ -51,19 +56,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo1_1
+      blockHandlers:
+        - handler: handleLoadSilo1_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_1/LoadSilo_1.ts
   - kind: ethereum/contract
     name: SiloCacheWindow1_2
@@ -71,19 +78,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo1_2
+      blockHandlers:
+        - handler: handleLoadSilo1_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_1/LoadSilo_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow1_3
@@ -91,19 +100,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo1_3
+      blockHandlers:
+        - handler: handleLoadSilo1_3
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_1/LoadSilo_3.ts
   - kind: ethereum/contract
     name: TokenCacheWindow2_1
@@ -111,19 +122,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken2_1
+      blockHandlers:
+        - handler: handleLoadToken2_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_2/LoadToken_1.ts
   - kind: ethereum/contract
     name: TokenCacheWindow2_2
@@ -131,19 +144,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken2_2
+      blockHandlers:
+        - handler: handleLoadToken2_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_2/LoadToken_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow2_1
@@ -151,19 +166,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo2_1
+      blockHandlers:
+        - handler: handleLoadSilo2_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_2/LoadSilo_1.ts
   - kind: ethereum/contract
     name: SiloCacheWindow2_2
@@ -171,19 +188,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo2_2
+      blockHandlers:
+        - handler: handleLoadSilo2_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_2/LoadSilo_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow2_3
@@ -191,19 +210,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo2_3
+      blockHandlers:
+        - handler: handleLoadSilo2_3
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_2/LoadSilo_3.ts
   - kind: ethereum/contract
     name: TokenCacheWindow3_1
@@ -211,19 +232,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken3_1
+      blockHandlers:
+        - handler: handleLoadToken3_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_3/LoadToken_1.ts
   - kind: ethereum/contract
     name: TokenCacheWindow3_2
@@ -231,19 +254,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadToken3_2
+      blockHandlers:
+        - handler: handleLoadToken3_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_3/LoadToken_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow3_1
@@ -251,19 +276,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo3_1
+      blockHandlers:
+        - handler: handleLoadSilo3_1
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_3/LoadSilo_1.ts
   - kind: ethereum/contract
     name: SiloCacheWindow3_2
@@ -271,19 +298,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo3_2
+      blockHandlers:
+        - handler: handleLoadSilo3_2
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_3/LoadSilo_2.ts
   - kind: ethereum/contract
     name: SiloCacheWindow3_3
@@ -291,19 +320,21 @@ dataSources:
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
-      startBlock: 12974075
+      startBlock: 12974076
+      endBlock: 12974076
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Diamond
+        - SiloYield
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      eventHandlers:
-        - event: DiamondCut((address,uint8,bytes4[])[],address,bytes)
-          handler: handleLoadSilo3_3
+      blockHandlers:
+        - handler: handleLoadSilo3_3
+          filter:
+            kind: once
       file: ../src/utils/yield_cache/window_3/LoadSilo_3.ts
   ###
   # INITIALIZATION

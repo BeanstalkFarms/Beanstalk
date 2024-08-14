@@ -1,14 +1,7 @@
-import { ZERO_BI } from "../../../../../subgraph-core/utils/Decimals";
-import { DiamondCut } from "../../../../generated/Beanstalk-ABIs/PreReplant";
-import { loadBeanstalk } from "../../../entities/Beanstalk";
+import { ethereum } from "@graphprotocol/graph-ts";
 import { loadSiloCache } from "../CacheLoader";
 import { SILO_YIELD_24_HOUR_10_000 } from "./HistoricSilo_10_000";
 
-export function handleLoadSilo1_1(event: DiamondCut): void {
-  let beanstalk = loadBeanstalk(event.address);
-
-  // Load the historical vAPY figures in bulk at start
-  if (beanstalk.lastUpgrade == ZERO_BI) {
-    loadSiloCache(SILO_YIELD_24_HOUR_10_000);
-  }
+export function handleLoadSilo1_1(block: ethereum.Block): void {
+  loadSiloCache(SILO_YIELD_24_HOUR_10_000);
 }
