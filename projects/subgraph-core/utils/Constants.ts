@@ -43,6 +43,8 @@ export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");
 
 export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
 
+export const REPLANT_SEASON = BigInt.fromU32(6075);
+
 // Milestone blocks
 export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
 export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
