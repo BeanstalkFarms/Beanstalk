@@ -76,3 +76,13 @@ export function getTokenDecimals(token: Address): i32 {
   }
   throw new Error("Unsupported token");
 }
+
+export function isUnripe(token: Address): boolean {
+  const unripeTokens = [UNRIPE_BEAN, UNRIPE_LP];
+  for (let i = 0; i < unripeTokens.length; ++i) {
+    if (unripeTokens[i] == token) {
+      return true;
+    }
+  }
+  return false;
+}

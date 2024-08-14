@@ -11,6 +11,8 @@ import { loadField } from "../entities/Field";
 import { setBdv, takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 import { WhitelistTokenSetting } from "../../generated/schema";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { isUnripe } from "./Constants";
+import { updateUnripeStats } from "./Barn";
 
 export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block): void {
   let currentSeason = season.toI32();
@@ -53,6 +55,10 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
     takeWhitelistTokenSettingSnapshots(whitelistTokenSetting, protocol, block.timestamp);
     whitelistTokenSetting.save();
     setTokenBdv(token, protocol, whitelistTokenSetting);
+
+    if (isUnripe(token)) {
+      updateUnripeStats(token, protocol, block);
+    }
   }
 }
 

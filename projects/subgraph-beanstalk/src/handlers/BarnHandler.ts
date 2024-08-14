@@ -4,7 +4,7 @@ import { ChangeUnderlying, Chop } from "../../generated/Beanstalk-ABIs/SeedGauge
 import { TransferSingle, TransferBatch } from "../../generated/Beanstalk-ABIs/Fertilizer";
 import { loadUnripeToken } from "../entities/Silo";
 import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
-import { transfer } from "../utils/Barn";
+import { transfer, updateUnripeStats } from "../utils/Barn";
 
 export function handleTransferSingle(event: TransferSingle): void {
   transfer(event.address, event.params.from, event.params.to, event.params.id, event.params.value, event.block.number);
@@ -21,9 +21,11 @@ export function handleTransferBatch(event: TransferBatch): void {
 export function handleChangeUnderlying(event: ChangeUnderlying): void {
   const unripe = loadUnripeToken(event.params.token);
   unripe.totalUnderlying = unripe.totalUnderlying.plus(event.params.underlying);
-  // TODO: investigate whether other things need to get calculated, such as recap/bdv/choppable etc.
-  takeUnripeTokenSnapshots(unripe, event.address, event.block.timestamp);
+  // Snapshots are taken in the below method, updateUnripeStats
   unripe.save();
+
+  // Update other stats using protocol getters
+  updateUnripeStats(unripe.id, event.address, event.block);
 }
 
 export function handleChop(event: Chop): void {
