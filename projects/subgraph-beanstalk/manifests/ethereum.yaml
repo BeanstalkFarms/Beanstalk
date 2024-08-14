@@ -679,6 +679,8 @@ dataSources:
       abis:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: Reward(indexed uint32,uint256,uint256,uint256)
           handler: handleReward
@@ -890,5 +892,5 @@ dataSources:
 features:
   - grafting
 graft:
-  base: QmaZ8zSaXfLAS7pTnXQLeWu1qhtRGu6cSPavGk7scJtnLH
-  block: 15289930
+  base: QmRiA7YzTJA5wHXjJzE2ksTK88BTq1XHQCLBfWmumittVn
+  block: 19927660
