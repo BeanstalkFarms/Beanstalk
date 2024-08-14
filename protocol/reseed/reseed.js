@@ -20,7 +20,7 @@ async function printBeanstalk() {
 }
 
 let reseeds;
-async function reseed(account, mock = true, log = false, start = 0, end = 11) {
+async function reseed(account, mock = true, log = false, start = 0, end = 10, onlyL2 = false, setState = true) {
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
@@ -40,14 +40,14 @@ async function reseed(account, mock = true, log = false, start = 0, end = 11) {
   for (let i = start; i < reseeds.length; i++) {
     printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
-    if (i == 0) {
+    if (i == 0 && onlyL2 == false) {
       // migrate beanstalk L1 assets.
       await reseeds[0](account);
-    } else if (i == 1 && mock == true) {
+    } else if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
-      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, true, mock);
-    } else {
-      // initialize beanstalk state.
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, log, mock);
+    } else if (i == reseeds.length - 1 || setState == true) {
+      // initialize beanstalk state add selectors to L2 beanstalk.
       await reseeds[i](account, l2BeanstalkAddress);
     }
   }
