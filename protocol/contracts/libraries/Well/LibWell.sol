@@ -240,7 +240,7 @@ library LibWell {
      * @notice returns the price in terms of TKN/BEAN.
      * (if eth is 1000 beans, this function will return 1000e6);
      */
-    function getBeanTokenPriceFromTwaReserves(address well) internal view returns (uint256 price) {
+    function getTokenBeanPriceFromTwaReserves(address well) internal view returns (uint256 price) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // s.sys.twaReserve[well] should be set prior to this function being called.
         // 'price' is in terms of reserve0:reserve1.

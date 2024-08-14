@@ -84,7 +84,7 @@ library LibEvaluate {
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
             // compute a valid price this Season.
             // deltaB > 0 implies that address(well) != address(0).
-            uint256 beanTknPrice = LibWell.getBeanTokenPriceFromTwaReserves(well);
+            uint256 beanTknPrice = LibWell.getTokenBeanPriceFromTwaReserves(well);
             if (beanTknPrice > 1) {
                 uint256 beanUsdPrice = uint256(1e30).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(beanTknPrice)
