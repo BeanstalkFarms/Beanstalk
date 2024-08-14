@@ -18,14 +18,14 @@ async function reseed4(account, L2Beanstalk, mock) {
 
   chunkSize = 4;
   plotChunks = splitEntriesIntoChunks(accountPlots, chunkSize);
-
+  const InitFacet = await ethers.getContractFactory("ReseedField", account);
   for (let i = 0; i < plotChunks.length; i++) {
     console.log(`Processing chunk ${i + 1} of ${plotChunks.length}`);
     console.log("Data chunk:", plotChunks[i]);
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
-      initFacetName: "ReseedField",
+      initFacetAddress: InitFacet.address,
       initArgs: [plotChunks[i]],
       bip: false,
       verbose: true,

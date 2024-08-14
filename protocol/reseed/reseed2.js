@@ -17,7 +17,6 @@ async function reseed2(account, L2Beanstalk, mock) {
   }
   const podListings = JSON.parse(await fs.readFileSync(podListingsPath));
   const podOrders = JSON.parse(await fs.readFileSync(podOrdersPath));
-
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
     facetNames: [],
