@@ -20,9 +20,9 @@ library LibChainlinkOracle {
     uint256 constant PRECISION = 1e6; // use 6 decimal precision.
 
     // timeout for Oracles with a 1 hour heartbeat.
-    uint32 constant FOUR_HOUR_TIMEOUT = 14400;
+    uint256 constant FOUR_HOUR_TIMEOUT = 14400;
     // timeout for Oracles with a 1 day heartbeat.
-    uint32 constant FOUR_DAY_TIMEOUT = 345600;
+    uint256 constant FOUR_DAY_TIMEOUT = 345600;
 
     struct TwapVariables {
         uint256 cumulativePrice;
