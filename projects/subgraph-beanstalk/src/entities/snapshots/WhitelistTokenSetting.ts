@@ -144,3 +144,23 @@ export function takeWhitelistTokenSettingSnapshots(
   whitelistTokenSetting.lastHourlySnapshotSeason = currentSeason;
   whitelistTokenSetting.lastDailySnapshotDay = day;
 }
+
+// Set bdv on hourly and daily. Snapshots must have already been created.
+export function setBdv(bdv: BigInt, whitelistTokenSetting: WhitelistTokenSetting): void {
+  const hourly = WhitelistTokenHourlySnapshot.load(
+    whitelistTokenSetting.id + "-" + whitelistTokenSetting.lastHourlySnapshotSeason.toString()
+  )!;
+  const daily = WhitelistTokenDailySnapshot.load(whitelistTokenSetting.id + "-" + whitelistTokenSetting.lastDailySnapshotDay!.toString())!;
+  hourly.bdv = bdv;
+  daily.bdv = bdv;
+  hourly.save();
+  daily.save();
+}
+
+// Returns the latest hourly bdv for the requested token. Can be null if bdv function isnt implemented onchain yet.
+export function getLatestBdv(whitelistTokenSetting: WhitelistTokenSetting): BigInt | null {
+  const hourly = WhitelistTokenHourlySnapshot.load(
+    whitelistTokenSetting.id + "-" + whitelistTokenSetting.lastHourlySnapshotSeason.toString()
+  )!;
+  return hourly.bdv;
+}

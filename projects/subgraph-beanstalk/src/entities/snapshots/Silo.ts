@@ -134,9 +134,8 @@ export function takeSiloSnapshots(silo: Silo, protocol: Address, timestamp: BigI
 }
 
 // Set case id on hourly snapshot. Snapshot must have already been created.
-export function setSiloHourlyCaseId(caseId: BigInt, silo: Silo, protocol: Address): void {
-  const currentSeason = getCurrentSeason(protocol);
-  const hourly = SiloHourlySnapshot.load(silo.id + "-" + currentSeason.toString())!;
+export function setSiloHourlyCaseId(caseId: BigInt, silo: Silo): void {
+  const hourly = SiloHourlySnapshot.load(silo.id + "-" + silo.lastHourlySnapshotSeason.toString())!;
   hourly.caseId = caseId;
   hourly.save();
 }

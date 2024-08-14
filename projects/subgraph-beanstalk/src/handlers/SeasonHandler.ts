@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { BEANSTALK, GAUGE_BIP45_BLOCK, REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
 import { loadSilo } from "../entities/Silo";

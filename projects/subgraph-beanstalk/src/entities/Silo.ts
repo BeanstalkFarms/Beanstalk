@@ -11,7 +11,7 @@ import {
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getUnripeUnderlying } from "../utils/Constants";
+import { getTokenDecimals, getUnripeUnderlying } from "../utils/Constants";
 
 /* ===== Base Silo Entities ===== */
 
@@ -76,19 +76,18 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     setting.stalkEarnedPerSeason = ZERO_BI;
     setting.stalkIssuedPerBdv = ZERO_BI;
     setting.milestoneSeason = 0;
+    setting.decimals = getTokenDecimals(token);
     setting.updatedAt = ZERO_BI;
-    setting.save();
 
     // Check token addresses and set replant seeds/stalk for Unripe due to event timing.
     if (token == UNRIPE_BEAN) {
       setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
       setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
-      setting.save();
     } else if (token == UNRIPE_LP) {
       setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
       setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
-      setting.save();
     }
+    setting.save();
   }
   return setting as WhitelistTokenSetting;
 }

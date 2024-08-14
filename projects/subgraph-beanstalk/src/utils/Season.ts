@@ -3,11 +3,14 @@ import { loadSeason } from "../entities/Beanstalk";
 import { loadPodMarketplace } from "../entities/PodMarketplace";
 import { takeMarketSnapshots } from "../entities/snapshots/Marketplace";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
-import { loadSilo, loadSiloAsset } from "../entities/Silo";
+import { loadSilo, loadSiloAsset, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
 import { takeFieldSnapshots } from "../entities/snapshots/Field";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadField } from "../entities/Field";
+import { setBdv, takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
+import { WhitelistTokenSetting } from "../../generated/schema";
+import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block): void {
   let currentSeason = season.toI32();
@@ -35,10 +38,28 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
   // Create silo entities for the protocol
   let silo = loadSilo(protocol);
   takeSiloSnapshots(silo, protocol, block.timestamp);
+  silo.save();
+  // TODO: include dewhitelsited
   for (let i = 0; i < silo.whitelistedTokens.length; i++) {
-    let siloAsset = loadSiloAsset(protocol, Address.fromString(silo.whitelistedTokens[i]));
+    const token = Address.fromString(silo.whitelistedTokens[i]);
+
+    let siloAsset = loadSiloAsset(protocol, token);
     takeSiloAssetSnapshots(siloAsset, protocol, block.timestamp);
     siloAsset.save();
+
+    let whitelistTokenSetting = loadWhitelistTokenSetting(token);
+    takeWhitelistTokenSettingSnapshots(whitelistTokenSetting, protocol, block.timestamp);
+    whitelistTokenSetting.save();
+    setTokenBdv(token, protocol, whitelistTokenSetting);
   }
-  silo.save();
+}
+
+function setTokenBdv(token: Address, protocol: Address, whitelistTokenSetting: WhitelistTokenSetting): void {
+  // Get bdv if the bdv function is available onchain (not available prior to BIP-16)
+  const beanstalk_call = SeedGauge.bind(protocol);
+  const bdvResult = beanstalk_call.try_bdv(token, BI_10.pow(whitelistTokenSetting.decimals));
+  if (bdvResult.reverted) {
+    return;
+  }
+  setBdv(bdvResult.value, whitelistTokenSetting);
 }

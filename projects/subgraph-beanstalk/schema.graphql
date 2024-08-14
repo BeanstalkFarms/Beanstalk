@@ -360,6 +360,10 @@ type WhitelistTokenSetting @entity {
   hourlySnapshots: [WhitelistTokenHourlySnapshot!]! @derivedFrom(field: "token")
   "Link to daily snapshot data"
   dailySnapshots: [WhitelistTokenDailySnapshot!]! @derivedFrom(field: "token")
+
+  # Unique to the main entity, not on dailySnapshots
+  "Number of decimals in this token"
+  decimals: Int!
 }
 
 type WhitelistTokenHourlySnapshot @entity {
@@ -396,6 +400,11 @@ type WhitelistTokenHourlySnapshot @entity {
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to the snapshot, and not on the main entity
+  "Point in time hourly bdv"
+  bdv: BigInt
+  deltaBdv: BigInt
 }
 
 type WhitelistTokenDailySnapshot @entity {
@@ -432,6 +441,11 @@ type WhitelistTokenDailySnapshot @entity {
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to the snapshot, and not on the main entity
+  "Point in time daily bdv"
+  bdv: BigInt
+  deltaBdv: BigInt
 }
 
 type Field @entity {

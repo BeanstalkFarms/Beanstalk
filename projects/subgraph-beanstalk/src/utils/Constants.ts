@@ -1,9 +1,13 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
   BEAN_3CRV,
+  BEAN_3CRV_V1,
   BEAN_ERC20,
+  BEAN_ERC20_V1,
+  BEAN_LUSD_V1,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
+  BEAN_WETH_V1,
   BEAN_WSTETH_CP2_WELL,
   BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
   BEANSTALK,
@@ -46,4 +50,20 @@ export function getUnripeUnderlying(unripeToken: Address, blockNumber: BigInt): 
     }
   }
   throw new Error("Unsupported unripe token");
+}
+
+// TODO: fill this in
+export function getTokenDecimals(token: Address): i32 {
+  if (token == BEAN_ERC20) {
+  } else if (token == UNRIPE_BEAN) {
+  } else if (token == UNRIPE_LP) {
+  } else if (token == BEAN_3CRV) {
+  } else if (token == BEAN_WETH_CP2_WELL) {
+  } else if (token == BEAN_WSTETH_CP2_WELL) {
+  } else if (token == BEAN_ERC20_V1) {
+  } else if (token == BEAN_WETH_V1) {
+  } else if (token == BEAN_3CRV_V1) {
+  } else if (token == BEAN_LUSD_V1) {
+  }
+  throw new Error("Unsupported token");
 }

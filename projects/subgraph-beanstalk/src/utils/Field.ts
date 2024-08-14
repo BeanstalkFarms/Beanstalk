@@ -432,7 +432,7 @@ export function temperatureChanged(params: TemperatureChangedParams): void {
   field.save();
 
   // Set caseId on the hourly snapshot
-  setFieldHourlyCaseId(params.caseId, field, protocol);
+  setFieldHourlyCaseId(params.caseId, field);
 }
 
 export function updateFieldTotals(
@@ -477,7 +477,7 @@ export function updateFieldTotals(
 
   // Set extra info on the hourly snapshot
   if (field.soil == ZERO_BI) {
-    setHourlySoilSoldOut(blockNumber, field, protocol);
+    setHourlySoilSoldOut(blockNumber, field);
   }
 }
 

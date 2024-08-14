@@ -29,7 +29,7 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
     silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio!.plus(event.params.absChange);
   }
   takeSiloSnapshots(silo, event.address, event.block.timestamp);
-  setSiloHourlyCaseId(event.params.caseId, silo, event.address);
+  setSiloHourlyCaseId(event.params.caseId, silo);
   silo.save();
 }
 

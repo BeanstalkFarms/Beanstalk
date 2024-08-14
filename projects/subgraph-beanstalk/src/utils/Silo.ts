@@ -200,3 +200,5 @@ export function updateSeedsBalances(protocol: Address, account: Address, seeds: 
   takeSiloSnapshots(silo, protocol, timestamp);
   silo.save();
 }
+
+export function updateWhitelistdBdvs(protocol: Address): void {}

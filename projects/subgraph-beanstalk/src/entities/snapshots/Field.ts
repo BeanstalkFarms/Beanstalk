@@ -182,17 +182,15 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
 }
 
 // Set case id on hourly. Snapshot must have already been created.
-export function setFieldHourlyCaseId(caseId: BigInt, field: Field, protocol: Address): void {
-  const currentSeason = getCurrentSeason(protocol);
-  const hourly = FieldHourlySnapshot.load(field.id + "-" + currentSeason.toString())!;
+export function setFieldHourlyCaseId(caseId: BigInt, field: Field): void {
+  const hourly = FieldHourlySnapshot.load(field.id + "-" + field.lastHourlySnapshotSeason.toString())!;
   hourly.caseId = caseId;
   hourly.save();
 }
 
 // Set soil sold out info on the hourly. Snapshot must have already been created.
-export function setHourlySoilSoldOut(soldOutBlock: BigInt, field: Field, protocol: Address): void {
-  const currentSeason = getCurrentSeason(protocol);
-  const hourly = FieldHourlySnapshot.load(field.id + "-" + currentSeason.toString())!;
+export function setHourlySoilSoldOut(soldOutBlock: BigInt, field: Field): void {
+  const hourly = FieldHourlySnapshot.load(field.id + "-" + field.lastHourlySnapshotSeason.toString())!;
   hourly.blocksToSoldOutSoil = soldOutBlock.minus(hourly.seasonBlock);
   hourly.soilSoldOut = true;
   hourly.save();
