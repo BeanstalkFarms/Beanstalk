@@ -52,18 +52,27 @@ export function getUnripeUnderlying(unripeToken: Address, blockNumber: BigInt): 
   throw new Error("Unsupported unripe token");
 }
 
-// TODO: fill this in
 export function getTokenDecimals(token: Address): i32 {
   if (token == BEAN_ERC20) {
+    return 6;
   } else if (token == UNRIPE_BEAN) {
+    return 6;
   } else if (token == UNRIPE_LP) {
+    return 6;
   } else if (token == BEAN_3CRV) {
+    return 18;
   } else if (token == BEAN_WETH_CP2_WELL) {
+    return 18;
   } else if (token == BEAN_WSTETH_CP2_WELL) {
+    return 18;
   } else if (token == BEAN_ERC20_V1) {
+    return 6;
   } else if (token == BEAN_WETH_V1) {
+    return 18;
   } else if (token == BEAN_3CRV_V1) {
+    return 18;
   } else if (token == BEAN_LUSD_V1) {
+    return 18;
   }
   throw new Error("Unsupported token");
 }

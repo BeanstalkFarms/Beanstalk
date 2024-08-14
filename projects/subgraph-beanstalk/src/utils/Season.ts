@@ -39,9 +39,11 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
   let silo = loadSilo(protocol);
   takeSiloSnapshots(silo, protocol, block.timestamp);
   silo.save();
-  // TODO: include dewhitelsited
-  for (let i = 0; i < silo.whitelistedTokens.length; i++) {
-    const token = Address.fromString(silo.whitelistedTokens[i]);
+
+  // Update all whitelisted/dewhitelisted token info
+  const siloTokens = silo.whitelistedTokens.concat(silo.dewhitelistedTokens);
+  for (let i = 0; i < siloTokens.length; i++) {
+    const token = Address.fromString(siloTokens[i]);
 
     let siloAsset = loadSiloAsset(protocol, token);
     takeSiloAssetSnapshots(siloAsset, protocol, block.timestamp);
