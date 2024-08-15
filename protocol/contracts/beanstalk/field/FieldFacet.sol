@@ -118,7 +118,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 minSoil,
         LibTransfer.From mode
     )
-        public
+        external
         payable
         fundsSafu
         noSupplyIncrease
