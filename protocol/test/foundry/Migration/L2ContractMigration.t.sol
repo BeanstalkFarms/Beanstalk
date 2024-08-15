@@ -15,7 +15,7 @@ contract L2ContractMigrationTest is TestHelper {
     uint256 SIG_TEST_ACCOUNT_PK = 123456789;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
     }
 
     /**

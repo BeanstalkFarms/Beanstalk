@@ -124,7 +124,7 @@ contract PipelineConvertTest is TestHelper {
     );
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // initialize farmers.
         farmers.push(users[1]);

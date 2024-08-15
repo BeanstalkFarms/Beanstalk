@@ -10,7 +10,7 @@ import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
  */
 contract OracleTest is TestHelper {
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
     }
 
     function test_getUsdPrice() public {

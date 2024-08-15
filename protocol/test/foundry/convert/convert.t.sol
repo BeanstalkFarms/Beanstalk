@@ -44,7 +44,7 @@ contract ConvertTest is TestHelper {
     address well;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
         well = C.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);

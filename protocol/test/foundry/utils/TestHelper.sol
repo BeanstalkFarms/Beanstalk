@@ -17,6 +17,8 @@ import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
+import {LibAltC} from "test/foundry/utils/LibAltC.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
@@ -34,6 +36,9 @@ import {Pipeline} from "contracts/pipeline/Pipeline.sol";
  * @title TestHelper
  * @author Brean
  * @notice Test helper contract for Beanstalk tests.
+ *
+ * This contract represents the initialization of a fresh Beanstalk system for testing.
+ * All deployment addresses for Beanstalk ecosystem contracts are set in this contract.
  */
 contract TestHelper is
     Test,
@@ -49,7 +54,7 @@ contract TestHelper is
 
     Pipeline pipeline;
 
-    MockToken bean = MockToken(C.BEAN);
+    MockToken bean;
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
@@ -73,7 +78,24 @@ contract TestHelper is
     /**
      * @notice initializes the state of the beanstalk contracts for testing.
      */
-    function initializeBeanstalkTestState(bool mock, bool verbose) public {
+    function initializeBeanstalkTestState(bool mock, bool alt, bool verbose) public {
+        // Set the deployment addresses of various Beanstalk components.
+        if (!alt) {
+            BEANSTALK = payable(LibConstant.BEANSTALK);
+            bean = MockToken(C.BEAN);
+            FERTILIZER = C.fertilizerAddress();
+            BEAN_ETH_WELL = C.BEAN_ETH_WELL;
+            BEAN_WSTETH_WELL = C.BEAN_WSTETH_WELL;
+            vm.label(BEANSTALK, "Beanstalk_");
+        } else {
+            BEANSTALK = payable(LibAltC.BEANSTALK);
+            bean = MockToken(LibAltC.BEAN);
+            FERTILIZER = LibAltC.FERTILIZER;
+            BEAN_ETH_WELL = LibAltC.BEAN_ETH_WELL;
+            BEAN_WSTETH_WELL = LibAltC.BEAN_WSTETH_WELL;
+            vm.label(BEANSTALK, "Alt_Beanstalk");
+        }
+
         // general mock interface for beanstalk.
         bs = IMockFBeanstalk(BEANSTALK);
 
@@ -144,7 +166,7 @@ contract TestHelper is
         address user,
         uint256 unripeBeanAmount,
         uint256 unripeLpAmount
-    ) internal {
+    ) public {
         // mint tokens to users.
         mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
         mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
@@ -221,7 +243,7 @@ contract TestHelper is
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal returns (uint256) {
+    ) public returns (uint256) {
         return addLiquidityToWell(users[0], well, beanAmount, nonBeanTokenAmount);
     }
 
@@ -233,7 +255,7 @@ contract TestHelper is
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal returns (uint256 lpOut) {
+    ) public returns (uint256 lpOut) {
         (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
 
         // mint and sync.

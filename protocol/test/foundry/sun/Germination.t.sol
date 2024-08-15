@@ -22,7 +22,7 @@ contract GerminationTest is TestHelper {
     address[] farmers;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // mint 1000 beans to user 1 and user 2 (user 0 is the beanstalk deployer).
         farmers.push(users[1]);

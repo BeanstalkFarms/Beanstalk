@@ -22,7 +22,7 @@ contract GaugeTest is TestHelper {
     MockLiquidityWeight lw = MockLiquidityWeight(BEANSTALK);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // deploy mockLiquidityWeight contract for testing.
         lw = new MockLiquidityWeight(0.5e18);

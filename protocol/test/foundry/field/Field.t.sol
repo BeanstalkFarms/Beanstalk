@@ -20,7 +20,7 @@ contract FieldTest is TestHelper {
     address[] farmers;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);

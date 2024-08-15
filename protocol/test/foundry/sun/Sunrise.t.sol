@@ -48,7 +48,7 @@ contract SunriseTest is TestHelper {
     uint256 constant SEASON_DURATION = 3600;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
         farmers.push(users[1]);
 
         // add liquidity for the bean weth well, and bean wsteth well.

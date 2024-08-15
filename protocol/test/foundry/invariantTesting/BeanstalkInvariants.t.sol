@@ -25,7 +25,7 @@ contract BeanstalkInvariants is TestHelper {
     function setUp() public {
         // vm.createSelectFork(vm.envString("FORKING_RPC"), 19976370);
 
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(

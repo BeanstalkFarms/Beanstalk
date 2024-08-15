@@ -17,7 +17,7 @@ contract InvariableTest is TestHelper {
     address[] siloUsers = new address[](3);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, true);
+        initializeBeanstalkTestState(true, false, true);
         MockToken(C.WETH).mint(BEANSTALK, 100_000);
 
         siloUsers = createUsers(3);

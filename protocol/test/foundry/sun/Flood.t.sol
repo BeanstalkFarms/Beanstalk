@@ -33,7 +33,7 @@ contract FloodTest is TestHelper {
     event SeasonOfPlentyField(uint256 toField);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
         // init user.
         farmers.push(users[1]);
         vm.prank(farmers[0]);

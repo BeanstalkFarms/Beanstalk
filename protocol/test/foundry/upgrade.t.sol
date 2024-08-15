@@ -50,7 +50,7 @@ contract UpgradeDiamond is TestHelper {
         );
     }
 
-    function testWoohoo() public pure {
+    function testWoohoo() public view {
         // verify facet is added (call woohoo()).
         assertEq(MockUpgradeFacet(BEANSTALK).woohoo(), 1);
     }

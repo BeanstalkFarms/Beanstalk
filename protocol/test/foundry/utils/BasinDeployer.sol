@@ -49,6 +49,9 @@ contract BasinDeployer is Utils {
     string constant BEAN_WETH_WELL_NAME = "BEAN:WETH Constant Product 2 Well";
     string constant BEAN_WETH_WELL_SYMBOL = "BEANWETHCP2w";
 
+    address BEAN_ETH_WELL;
+    address BEAN_WSTETH_WELL;
+
     // a list of well functions, pumps, and well implementations.
     address public aquifer;
 
@@ -63,6 +66,7 @@ contract BasinDeployer is Utils {
      * at current mainnet addresses.
      */
     function initBasin(bool mock, bool verbose) internal {
+
         if (verbose) console.log("deploying Basin...");
         deployBasin(verbose);
 
@@ -174,14 +178,14 @@ contract BasinDeployer is Utils {
         }
 
         // deploy bean eth well:
-        wells.push(deployBeanCp2Well([C.BEAN_ETH_WELL, C.WETH], _pump));
+        wells.push(deployBeanCp2Well([BEAN_ETH_WELL, C.WETH], _pump));
         if (verbose) console.log("Bean Eth well deployed at:", wells[0]);
-        vm.label(C.BEAN_ETH_WELL, "BEAN/ETH Well");
+        vm.label(BEAN_ETH_WELL, "BEAN/ETH Well");
 
         // deploy bean wsteth well:
-        wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
+        wells.push(deployBeanCp2Well([BEAN_WSTETH_WELL, C.WSTETH], _pump));
         if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
-        vm.label(C.BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
+        vm.label(BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
     }
 
     function deployExtraWells(bool mock, bool verbose) internal {

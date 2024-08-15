@@ -77,7 +77,6 @@ contract BeanstalkDeployer is Utils {
         users = createUsers(6);
         deployer = users[0];
         vm.label(deployer, "Deployer");
-        vm.label(diamondAddr, "Beanstalk");
 
         // Create cuts.
 

@@ -19,7 +19,7 @@ contract SunTest is TestHelper {
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, true);
+        initializeBeanstalkTestState(true, false, true);
     }
 
     /**

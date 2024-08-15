@@ -37,7 +37,7 @@ contract CasesTest is TestHelper {
     int256 deltaB;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(well, 10000e6, 10 ether);

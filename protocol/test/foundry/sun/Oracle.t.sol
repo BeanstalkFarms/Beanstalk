@@ -38,7 +38,7 @@ contract OracleTest is TestHelper {
     address[] lps;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
         farmers.push(users[1]);
 
         // add liquidity for the bean weth well, and bean wsteth well.

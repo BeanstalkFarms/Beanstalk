@@ -37,7 +37,7 @@ contract WhitelistTest is TestHelper {
     event DewhitelistToken(address indexed token);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
     }
 
     // reverts if not owner.
