@@ -64,9 +64,6 @@ contract ReseedPodMarket {
         uint256 minFillAmount;
     }
 
-    // mapping(uint256 => mapping(uint256 => bytes32)) podListings;
-    // mapping(bytes32 => uint256) podOrders;
-
     /**
      * @notice Re-initializes the pod marketplace.
      * @param podListings the pod listings in the marketplace at the time of migration
@@ -110,7 +107,6 @@ contract ReseedPodMarket {
         for (uint i; i < podOrders.length; i++) {
             // set order hash to bean amount
             s.sys.podOrders[podOrders[i].id] = podOrders[i].beanAmount;
-            s.sys.orderLockedBeans += podOrders[i].beanAmount;
             emit MigratedPodOrder(
                 podOrders[i].orderer,
                 podOrders[i].id,

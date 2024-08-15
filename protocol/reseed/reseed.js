@@ -3,6 +3,7 @@ const { parseInternalBalances } = require("./dataConverts/convertInternalBalance
 const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
+const { parseGlobals } = require("./dataConverts/convertGlobal.js");
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
@@ -108,6 +109,7 @@ function parseBeanstalkData() {
   const storageFertPath = "./reseed/data/exports/storage-fertilizer20330000.json";
   const storageSystemPath = "./reseed/data/exports/storage-system20330000.json";
   const marketPath = "./reseed/data/exports/market-info20330000.json";
+  parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json");
   parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json");
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", 40);
