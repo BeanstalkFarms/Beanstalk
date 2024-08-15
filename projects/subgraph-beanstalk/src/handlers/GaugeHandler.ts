@@ -8,7 +8,13 @@ import {
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { deleteGerminating, loadGerminating, loadOrCreateGerminating } from "../entities/Germinating";
+import {
+  deleteGerminating,
+  getFarmerGerminatingBugOffset,
+  loadGerminating,
+  loadOrCreateGerminating,
+  savePrevFarmerGerminatingEvent
+} from "../entities/Germinating";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BEAN_WETH_CP2_WELL } from "../../../subgraph-core/utils/Constants";
 import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
@@ -71,9 +77,13 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
     farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.deltaGerminatingStalk);
     farmerGerminating.save();
   } else {
+    // Adjusts for the event's inherent bug when both even/odd germination complete in the same txn
+    const bugfixStalkOffset = getFarmerGerminatingBugOffset(event.params.account, event);
+    const actualDeltaGerminatingStalk = event.params.deltaGerminatingStalk.plus(bugfixStalkOffset);
+
     // Germinating stalk is being removed. It therefore must have created the entity already
     let farmerGerminating = loadGerminating(event.params.account, event.params.germinationState);
-    farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.deltaGerminatingStalk);
+    farmerGerminating.stalk = farmerGerminating.stalk.plus(actualDeltaGerminatingStalk);
     if (farmerGerminating.stalk == ZERO_BI) {
       deleteGerminating(farmerGerminating);
     } else {
@@ -84,10 +94,13 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
       // If germination finished, need to subtract stalk from system silo. This stalk was already added
       // into system stalk upon sunrise for season - 2.
       let systemSilo = loadSilo(event.address);
-      systemSilo.stalk = systemSilo.stalk.plus(event.params.deltaGerminatingStalk);
+      systemSilo.stalk = systemSilo.stalk.plus(actualDeltaGerminatingStalk);
       takeSiloSnapshots(systemSilo, event.address, event.block.timestamp);
       systemSilo.save();
     }
+
+    // Also for the event bug adjustment
+    savePrevFarmerGerminatingEvent(event.params.account, event, event.params.deltaGerminatingStalk);
   }
 
   let farmerSilo = loadSilo(event.params.account);

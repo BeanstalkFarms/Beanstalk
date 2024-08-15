@@ -1472,6 +1472,19 @@ type Germinating @entity {
   bdv: BigInt!
 }
 
+# This entity exists solely for resolving the issue in LibGerminate when deposits from multiple seasons
+# complete their germination (the event emission itself has a bug)
+type PrevFarmerGerminatingEvent @entity {
+  "Farmer address"
+  id: Bytes!
+  "The `block.number` of the `FarmerGerminatingStalkBalanceChanged` event"
+  eventBlock: BigInt!
+  "The `logIndex` of the `FarmerGerminatingStalkBalanceChanged` event"
+  logIndex: BigInt!
+  "The value for `deltaGerminatingStalk` from this previous `FarmerGerminatingStalkBalanceChanged` event."
+  deltaGerminatingStalk: BigInt!
+}
+
 type UnripeToken @entity {
   "Token Address"
   id: Bytes!
