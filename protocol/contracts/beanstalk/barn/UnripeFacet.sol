@@ -350,6 +350,21 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     }
 
     /**
+     * @notice Returns the locked beans given the cumulative reserves and timestamp.
+     */
+    function getLockedBeansFromTwaReserves(
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) external view returns (uint256) {
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
+            LibBarnRaise.getBarnRaiseWell(),
+            cumulativeReserves,
+            timestamp
+        );
+        return LibUnripe.getLockedBeans(twaReserves);
+    }
+
+    /**
      * @notice returns the amount of dollars recapitalized in the barn raise.
      */
     function getRecapitalized() external view returns (uint256) {
