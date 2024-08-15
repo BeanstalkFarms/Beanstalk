@@ -802,7 +802,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: PreReplant
+      abi: SeedGauge
       startBlock: 12974075
       endBlock: 15277986 # Replanted
     mapping:
@@ -812,8 +812,8 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
