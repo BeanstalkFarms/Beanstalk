@@ -13,7 +13,10 @@ async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
     deployerSigner = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
     await mintEth(deployerSigner.address);
   } else {
-    deployerSigner = new ethers.Wallet(process.env.DIAMOND_DEPLOYER_PRIVATE_KEY, ethers.provider);
+    // addded for testing purposes
+    deployerSigner = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+    await mintEth(deployerSigner.address);
+    // deployerSigner = new ethers.Wallet(process.env.DIAMOND_DEPLOYER_PRIVATE_KEY, ethers.provider);
   }
 
   const beanstalkDiamond = await deployDiamond({

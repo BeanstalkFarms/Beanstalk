@@ -1,13 +1,18 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
-// Files
-const GLOBAL_SETTINGS = "./reseed/data/global.json";
-
-async function reseedGlobal(account, L2Beanstalk) {
+async function reseedGlobal(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseedGlobal: reseedGlobal.\n");
-  let settings = JSON.parse(await fs.readFileSync(GLOBAL_SETTINGS));
+
+  // Files
+  let globalsPath;
+  if (mock) {
+    globalsPath = "./reseed/data/mocks/global.json";
+  } else {
+    globalsPath = "./reseed/data/global.json";
+  }
+  let settings = JSON.parse(await fs.readFileSync(globalsPath));
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
