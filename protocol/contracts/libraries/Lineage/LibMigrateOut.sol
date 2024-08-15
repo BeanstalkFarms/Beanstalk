@@ -23,8 +23,13 @@ import {LibField} from "contracts/libraries/LibField.sol";
  * @notice Library handling outbound migration and burning of protocol assets.
  */
 library LibMigrateOut {
-    // Need to define structs locally to contain additional migration information.
+    event DepositMigratedOut(address indexed user, SourceDeposit deposit);
 
+    event FertilizerMigratedOut(address indexed user, SourceFertilizer fertilizer);
+
+    event PlotMigratedOut(address indexed user, SourcePlot sourcePlot);
+
+    // Need to define structs locally to contain additional migration information.
     struct SourceDeposit {
         address token;
         uint256 amount;
@@ -108,7 +113,7 @@ library LibMigrateOut {
                 uint256[] memory tokenAmountsOut = IWell(deposits[i].token).removeLiquidity(
                     deposits[i].amount,
                     deposits[i].sourceMinTokenAmountsOut,
-                    destination,
+                    address(this),
                     block.number
                 );
 
@@ -137,6 +142,7 @@ library LibMigrateOut {
             }
 
             depositsOut[i] = abi.encode(deposits[i]);
+            emit DepositMigratedOut(user, deposits[i]);
         }
     }
 
@@ -176,6 +182,9 @@ library LibMigrateOut {
 
             // Update Field counters.
             s.sys.fields[plot.fieldId].pods -= plot.amount;
+
+            plotsOut[i] = abi.encode(plot);
+            emit PlotMigratedOut(account, plot);
         }
     }
 
@@ -216,6 +225,7 @@ library LibMigrateOut {
 
             fertilizer[i]._remainingBpf = remainingBpf;
             fertilizerOut[i] = abi.encode(fertilizer[i]);
+            emit FertilizerMigratedOut(account, fertilizer[i]);
         }
 
         // If leftover beans are greater than obligations, drop excess leftovers. Rounding loss.

@@ -58,6 +58,8 @@ library LibMigrateIn {
         uint128 _remainingBpf;
     }
 
+    uint256 internal constant IN_FIELD = 9;
+
     // Mint assets locally.
     // Underlying external ERC20s have already been transferred to destination beanstalk.
     // msg.sender == source instance
