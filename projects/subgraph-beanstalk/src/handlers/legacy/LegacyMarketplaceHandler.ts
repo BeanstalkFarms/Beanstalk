@@ -6,12 +6,10 @@ import {
   PodOrderFilled as PodOrderFilled_v1,
   PodListingCancelled as PodListingCancelled_indexed
 } from "../../../generated/Beanstalk-ABIs/PreReplant";
-import { PodListingCancelled } from "../../../../subgraph-bean/generated/Bean-ABIs/SeedGauge";
 import { PodListingCreated as PodListingCreated_v1_1 } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { podListingCancelled, podListingCreated, podListingFilled, podOrderCreated, podOrderFilled } from "../../utils/Marketplace";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { loadPodListing, loadPodOrder } from "../../entities/PodMarketplace";
-import { handlePodListingCancelled } from "../MarketplaceHandler";
 
 // PreReplant -> Replanted
 export function handlePodListingCreated_v1(event: PodListingCreated_v1): void {

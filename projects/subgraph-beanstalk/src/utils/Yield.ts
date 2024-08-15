@@ -16,7 +16,7 @@ import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Be
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
 import { getProtocolFertilizer } from "./Constants";
 import { REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
-import { SeedGauge } from "../../../subgraph-bean/generated/Bean-ABIs/SeedGauge";
+import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
