@@ -426,9 +426,13 @@ async function upgradeWithNewFacets({
   verbose = false,
   account = null,
   verify = false,
-  checkGas = false
+  checkGas = false,
+  reportGas = true,
+  initFacetNameInfo = undefined
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
+  let initFacetDeploymentGas = ethers.BigNumber.from("0");
+  let initFacetCallGas = ethers.BigNumber.from("0");
 
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
@@ -552,6 +556,7 @@ async function upgradeWithNewFacets({
       }
       const receipt = await initFacet.deployTransaction.wait();
       if (verbose) console.log(`Init Diamond deploy gas used: ` + strDisplay(receipt.gasUsed));
+      initFacetDeploymentGas = initFacetDeploymentGas.add(receipt.gasUsed);
       totalGasUsed = totalGasUsed.add(receipt.gasUsed);
       if (verbose) console.log("Deployed init facet: " + initFacet.address);
     } else {
@@ -593,6 +598,7 @@ async function upgradeWithNewFacets({
       .diamondCut(diamondCut, initFacetAddress, functionCall);
   }
   const receipt = await result.wait();
+  initFacetCallGas = receipt.gasUsed;
   totalGasUsed = totalGasUsed.add(receipt.gasUsed);
   if (verbose) {
     console.log("------");
@@ -603,6 +609,14 @@ async function upgradeWithNewFacets({
     if (checkGas && totalGasUsed.gt(gasLimit)) {
       console.log('\x1b[33m%s\x1b[0m', 'Gas used Exceeds Limit!');
     }
+  }
+  if (reportGas) {
+    const filePath = "./reseed/data/gas-report.csv";
+    const name = initFacetName || initFacetNameInfo;
+    if (!fs.existsSync(filePath)) {
+      fs.appendFileSync(filePath, "initFacetName, initFacetDeploymentGas, initFacetCallGas, totalGasUsed\n");
+    }
+    fs.appendFileSync(filePath, `${name}, ${initFacetDeploymentGas}, ${initFacetCallGas}, ${totalGasUsed}\n`);
   }
   return result;
 }

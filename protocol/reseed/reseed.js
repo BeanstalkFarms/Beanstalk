@@ -30,7 +30,7 @@ async function printBeanstalk() {
 let reseeds;
 async function reseed(
   account,
-  mock = true,
+  mock = false,
   convertData = true,
   log = false,
   start = 0,
@@ -39,6 +39,8 @@ async function reseed(
   setState = true
 ) {
   if (convertData) parseBeanstalkData();
+  // delete prev gas report
+  if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond

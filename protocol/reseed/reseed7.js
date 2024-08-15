@@ -31,7 +31,8 @@ async function reseed7(account, L2Beanstalk, mock, verbose = false) {
       initArgs: [statusChunks[i]],
       bip: false,
       verbose: verbose,
-      account: account
+      account: account,
+      initFacetNameInfo: "ReseedAccountStatus"
     });
   }
 }

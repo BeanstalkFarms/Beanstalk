@@ -16,7 +16,7 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
 
   let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
-  targetEntriesPerChunk = 800;
+  targetEntriesPerChunk = 1000;
   balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
   const InitFacet = await ethers.getContractFactory("ReseedInternalBalances", account);
   for (let i = 0; i < balanceChunks.length; i++) {
@@ -33,7 +33,8 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
       bip: false,
       verbose: verbose,
       account: account,
-      checkGas: true
+      checkGas: true,
+      initFacetNameInfo: "ReseedInternalBalances"
     });
   }
 }

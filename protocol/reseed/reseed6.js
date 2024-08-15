@@ -32,7 +32,8 @@ async function reseed6(account, L2Beanstalk, mock, verbose = false) {
       bip: false,
       verbose: verbose,
       account: account,
-      checkGas: true
+      checkGas: true,
+      initFacetNameInfo: "ReseedSilo"
     });
   }
 }
