@@ -291,7 +291,7 @@ library LibWell {
     }
 
     /**
-     * @notice returns the twa reserves for well, 
+     * @notice returns the twa reserves for well,
      * given the cumulative reserves and timestamp.
      * @dev wrapped in a try/catch to return gracefully.
      */
@@ -301,12 +301,14 @@ library LibWell {
         uint40 timestamp
     ) internal view returns (uint256[] memory) {
         Call[] memory pump = IWell(well).pumps();
-        try ICumulativePump(pump[0].target).readTwaReserves(
-            well,
-            cumulativeReserves,
-            timestamp,
-            pump[0].data
-        ) returns (uint[] memory twaReserves, bytes memory) {
+        try
+            ICumulativePump(pump[0].target).readTwaReserves(
+                well,
+                cumulativeReserves,
+                timestamp,
+                pump[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory) {
             return twaReserves;
         } catch {
             return (new uint256[](2));
