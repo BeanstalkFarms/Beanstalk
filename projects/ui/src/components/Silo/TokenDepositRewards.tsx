@@ -46,7 +46,10 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
       <Alert
         color="info"
         icon={
-          <InfoOutlined fontSize="small" sx={{ color: 'text.secondary' }} />
+          <InfoOutlined
+            fontSize="small"
+            sx={{ fontSize: '1rem', color: 'text.secondary' }}
+          />
         }
         sx={{
           background: BeanstalkPalette.lightestBlue,

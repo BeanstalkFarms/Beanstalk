@@ -378,6 +378,12 @@ const baseTableCSS = {
     fontWeight: FontWeight.medium,
     fontSize: FontSize.base,
   },
+  '& .MuiDataGrid-cell': {
+    outline: 'none',
+    '&:active': {
+      outline: 'none',
+    },
+  },
 } as const;
 
 const baseRowCSS = {
