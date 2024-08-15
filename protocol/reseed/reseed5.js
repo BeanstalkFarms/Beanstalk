@@ -17,7 +17,8 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
 
   targetEntriesPerChunk = 800;
   fertChunks = await splitEntriesIntoChunksOptimized(fertilizerIds, targetEntriesPerChunk);
-  const InitFacet = await ethers.getContractFactory("ReseedBarn", account);
+  const InitFacet = await (await ethers.getContractFactory("ReseedBarn", account)).deploy();
+  await InitFacet.deployed();
   for (let i = 0; i < fertChunks.length; i++) {
     await updateProgress(i + 1, plotChunks.length);
     if (verbose) {
@@ -27,6 +28,7 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
+      initFacetName: "ReseedBarn",
       initFacetAddress: InitFacet.address,
       initArgs: [fertChunks[i]],
       bip: false,

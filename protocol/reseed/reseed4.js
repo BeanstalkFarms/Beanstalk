@@ -18,17 +18,16 @@ async function reseed4(account, L2Beanstalk, mock, verbose = false) {
 
   targetEntriesPerChunk = 800;
   plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
-  const InitFacet = await ethers.getContractFactory("ReseedField", account);
+  const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
+  await InitFacet.deployed();
   console.log(`Starting to process ${plotChunks.length} chunks...`);
   for (let i = 0; i < plotChunks.length; i++) {
     await updateProgress(i + 1, plotChunks.length);
-    if (verbose) {
-      console.log("Data chunk:", plotChunks[i]);
-      console.log("-----------------------------------");
-    }
+    console.log("-----------------------------------");
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
+      initFacetName: "ReseedField",
       initFacetAddress: InitFacet.address,
       initArgs: [plotChunks[i]],
       bip: false,

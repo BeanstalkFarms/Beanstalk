@@ -47,13 +47,13 @@ async function reseed(
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
     reseed3, // reseedbean + deploy wells on l2
-    reseed4, // reseed field
-    reseed5, // reseed barn (fert)
-    reseed6, // reseed silo
-    reseed7, // reseed account status
-    reseed8, // reseed internal balances
-    reseed9, // reseed whitelist
-    reseed10 // add selectors to l2
+    reseed4 // reseed field
+    // reseed5, // reseed barn (fert)
+    // reseed6, // reseed silo
+    // reseed7, // reseed account status
+    // reseed8, // reseed internal balances
+    // reseed9, // reseed whitelist
+    // reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
   console.clear();

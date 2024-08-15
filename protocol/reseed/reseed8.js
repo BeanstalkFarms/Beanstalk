@@ -18,7 +18,10 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
 
   targetEntriesPerChunk = 1000;
   balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
-  const InitFacet = await ethers.getContractFactory("ReseedInternalBalances", account);
+  const InitFacet = await (
+    await ethers.getContractFactory("ReseedInternalBalances", account)
+  ).deploy();
+  await InitFacet.deployed();
   for (let i = 0; i < balanceChunks.length; i++) {
     await updateProgress(i + 1, plotChunks.length);
     if (verbose) {
@@ -28,7 +31,8 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
-      initFacetName: InitFacet.address,
+      initFacetName: "ReseedInternalBalances",
+      initFacetAddress: InitFacet.address,
       initArgs: [balanceChunks[i]],
       bip: false,
       verbose: verbose,

@@ -17,7 +17,10 @@ async function reseed7(account, L2Beanstalk, mock, verbose = false) {
 
   targetEntriesPerChunk = 800;
   statusChunks = await splitEntriesIntoChunksOptimized(statuses, targetEntriesPerChunk);
-  const InitFacet = await ethers.getContractFactory("ReseedAccountStatus", account);
+  const InitFacet = await (
+    await ethers.getContractFactory("ReseedAccountStatus", account)
+  ).deploy();
+  await InitFacet.deployed();
   for (let i = 0; i < statusChunks.length; i++) {
     await updateProgress(i + 1, plotChunks.length);
     if (verbose) {
@@ -27,6 +30,7 @@ async function reseed7(account, L2Beanstalk, mock, verbose = false) {
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
+      initFacetName: "ReseedAccountStatus",
       initFacetAddress: InitFacet.address,
       initArgs: [statusChunks[i]],
       bip: false,

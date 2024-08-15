@@ -133,7 +133,7 @@ async function deployDiamond({
   return deployedDiamond;
 }
 
-async function deploy ({
+async function deploy({
   diamondName,
   initDiamond,
   facets,
@@ -562,7 +562,7 @@ async function upgradeWithNewFacets({
     } else {
       if (verbose) console.log("Using init facet: " + initFacet.address);
     }
-    functionCall = initFacet.interface.encodeFunctionData("init", initArgs);
+    functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
     if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
     initFacetAddress = initFacet.address;
   }
@@ -605,27 +605,33 @@ async function upgradeWithNewFacets({
     console.log("Upgrade transaction hash: " + result.hash);
     console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
     console.log("Total gas used: " + strDisplay(totalGasUsed));
-    gasLimit = ethers.BigNumber.from("21000000")
+    gasLimit = ethers.BigNumber.from("21000000");
     if (checkGas && totalGasUsed.gt(gasLimit)) {
-      console.log('\x1b[33m%s\x1b[0m', 'Gas used Exceeds Limit!');
+      console.log("\x1b[33m%s\x1b[0m", "Gas used Exceeds Limit!");
     }
   }
   if (reportGas) {
     const filePath = "./reseed/data/gas-report.csv";
     const name = initFacetName || initFacetNameInfo;
     if (!fs.existsSync(filePath)) {
-      fs.appendFileSync(filePath, "initFacetName, initFacetDeploymentGas, initFacetCallGas, totalGasUsed\n");
+      fs.appendFileSync(
+        filePath,
+        "initFacetName, initFacetDeploymentGas, initFacetCallGas, totalGasUsed\n"
+      );
     }
-    fs.appendFileSync(filePath, `${name}, ${initFacetDeploymentGas}, ${initFacetCallGas}, ${totalGasUsed}\n`);
+    fs.appendFileSync(
+      filePath,
+      `${name}, ${initFacetDeploymentGas}, ${initFacetCallGas}, ${totalGasUsed}\n`
+    );
   }
   return result;
 }
 
-exports.upgrade = upgrade
-exports.upgradeWithNewFacets = upgradeWithNewFacets
-exports.getSelectors = getSelectors
-exports.deployFacets = deployFacets
-exports.deploy = deploy
-exports.inFacets = inFacets
-exports.upgrade = upgrade
-exports.deployDiamond = deployDiamond
+exports.upgrade = upgrade;
+exports.upgradeWithNewFacets = upgradeWithNewFacets;
+exports.getSelectors = getSelectors;
+exports.deployFacets = deployFacets;
+exports.deploy = deploy;
+exports.inFacets = inFacets;
+exports.upgrade = upgrade;
+exports.deployDiamond = deployDiamond;
