@@ -835,6 +835,8 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleReplantSunrise
@@ -929,5 +931,5 @@ dataSources:
 # features:
 #   - grafting
 # graft:
-#   base: QmfJpxvEjd4BdhtGr42MVtjbgnz9PPUmJ35wf7XtCJXeaC
-#   block: 15279870
+#   base: QmRJCKP5nLjUNtR2ZZ9F62iBGiKLdkGPX7GzBZLgVfnz3c
+#   block: 15289930

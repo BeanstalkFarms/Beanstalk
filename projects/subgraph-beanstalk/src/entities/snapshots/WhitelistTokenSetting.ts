@@ -162,17 +162,17 @@ export function setBdv(bdv: BigInt, whitelistTokenSetting: WhitelistTokenSetting
   // (the current season snapshots were already created)
   const prevHourly = WhitelistTokenHourlySnapshot.load(
     whitelistTokenSetting.id.toHexString() + "-" + (whitelistTokenSetting.lastHourlySnapshotSeason - 1).toString()
-  )!;
+  );
   const prevDaily = WhitelistTokenDailySnapshot.load(
     whitelistTokenSetting.id.toHexString() + "-" + (whitelistTokenSetting.lastDailySnapshotDay!.toI32() - 1).toString()
-  )!;
+  );
 
-  if (prevHourly != null) {
+  if (prevHourly != null && prevHourly.bdv !== null) {
     hourly.deltaBdv = hourly.bdv!.minus(prevHourly.bdv!);
   } else {
     hourly.deltaBdv = hourly.bdv;
   }
-  if (prevDaily != null) {
+  if (prevDaily != null && prevDaily.bdv !== null) {
     daily.deltaBdv = daily.bdv!.minus(prevDaily.bdv!);
   } else {
     daily.deltaBdv = daily.bdv;
