@@ -50,6 +50,7 @@ contract ReseedGlobal {
         uint256 stalk;
         uint256 roots;
         uint256 earnedBeans;
+        uint256 orderLockedBeans;
         address[] tokens;
         AssetSilo[] balances;
         UnripeSettings[] u;
@@ -131,6 +132,7 @@ contract ReseedGlobal {
         s.sys.silo.stalk = silo.stalk;
         s.sys.silo.roots = silo.roots;
         s.sys.silo.earnedBeans = silo.earnedBeans;
+        s.sys.orderLockedBeans = silo.orderLockedBeans;
 
         // loop through tokens:
         for (uint i; i < silo.tokens.length; i++) {
