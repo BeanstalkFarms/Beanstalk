@@ -152,13 +152,9 @@ function getNumQueries(range: Range<Time> | undefined): number {
     SEED_GAUGE_DEPLOYMENT_TIMESTAMP
   );
 
-  console.log('from: ', from);
   // always fetch to the latest season
   const to = Number(Date.now() / 1000).valueOf();
-  console.log('to: ', to);
   const numSeasons = Math.floor((to - from) / 3600);
-  console.log('numSeasons: ', numSeasons);
-  console.log('numQueries: ', Math.ceil(numSeasons / MAX_DATA_PER_QUERY));
 
   return Math.ceil(numSeasons / MAX_DATA_PER_QUERY);
 }
