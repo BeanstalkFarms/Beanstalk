@@ -96,7 +96,7 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
-task("reseed", async (mock = true) => {
+task("reseed", async (mock = true, onlyL2 = false, setState = true) => {
   // mint more eth to the bcm to cover gas costs
   let account;
   if (mock) {
@@ -105,7 +105,23 @@ task("reseed", async (mock = true) => {
   } else {
     // account = BCM signer
   }
-  await reseed(account);
+  if (onlyL2) {
+    if (setState) {
+      // deploy L2 contracts only, with state changes
+      await reseed(account, true, true, false, 0, 12, true, true);
+    } else {
+      // deploy L2 contracts only, no state changes
+      await reseed(account, true, true, false, 0, 12, true, false);
+    }
+  } else {
+    if (setState) {
+      // execute L1 + L2, set state.
+      await reseed(account);
+    } else {
+      // execute L1 + L2, no state initialization.
+      await reseed(account, true, true, false, 0, 12, false, false);
+    }
+  }
 });
 
 task("L2 reseed no state", async () => {
@@ -113,8 +129,6 @@ task("L2 reseed no state", async () => {
   let account;
   account = await impersonateSigner(BCM);
   await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
-
-  await reseed(account, true, false, 0, 11, true, false);
 });
 
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
