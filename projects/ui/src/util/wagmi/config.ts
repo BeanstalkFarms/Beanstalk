@@ -26,9 +26,7 @@ const chains: readonly [Chain, ...Chain[]] = !SHOW_DEV
 const transports: Record<number, Transport> = !SHOW_DEV
   ? { [mainnet.id]: http(MAINNET_RPC) }
   : {
-      [localFork.id]: http(localFork.rpcUrls.default.http[0], {
-        batch: true,
-      }),
+      [localFork.id]: http(localFork.rpcUrls.default.http[0]),
       [mainnet.id]: http(MAINNET_RPC),
     };
 
