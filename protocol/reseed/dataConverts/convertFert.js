@@ -1,14 +1,14 @@
 const fs = require('fs');
 
-function parseFertilizer(inputFilePath, outputFilePath) {
+function parseFertilizer(inputFilePath, outputFilePath, contractAccounts) {
     try {
         const data = fs.readFileSync(inputFilePath, 'utf8');
-        const accounts = JSON.parse(data)._balances;
+        const balances = JSON.parse(data)._balances;
         const result = [];
 
-        for (const fertilizerId in accounts) {
-            if (accounts.hasOwnProperty(fertilizerId)) {
-                const accountData = accounts[fertilizerId];
+        for (const fertilizerId in balances) {
+            if (balances.hasOwnProperty(fertilizerId)) {
+                const accountData = balances[fertilizerId];
                 const accountIds = Object.keys(accountData);
 
                 if (accountIds.length > 0) {
@@ -20,6 +20,14 @@ function parseFertilizer(inputFilePath, outputFilePath) {
                             parseInt(lastBpf, 16).toString()
                         ];
                     });
+                    
+                    // remove contract accounts from the list
+                    for (let i = 0; i < contractAccounts.length; i++) {
+                        const index = accountArray.findIndex(account => account[0] === contractAccounts[i]);
+                        if (index > -1) {
+                            accountArray.splice(index, 1);
+                        }
+                    }
 
                     result.push([
                         parseInt(fertilizerId, 16).toString(),
