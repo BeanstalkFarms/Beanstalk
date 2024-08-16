@@ -287,7 +287,7 @@ const SingleTokenDepositDialogContent = ({
     <Row justifyContent="space-between" alignItems="flex-start">
       <Typography>Value</Typography>
       <Stack justifyContent="flex-start" alignItems="flex-end">
-        <Row gap={0.3}>
+        <Row gap={0.5}>
           <TokenIcon token={token} css={{ height: '16px' }} />
           <Typography>
             {row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
@@ -302,7 +302,7 @@ const SingleTokenDepositDialogContent = ({
     <Stack>
       <Row justifyContent="space-between" alignItems="flex-start">
         <Typography>Stalk</Typography>
-        <Row gap={0.3}>
+        <Row gap={0.25}>
           <TokenIcon token={STALK} css={{ maxHeight: '1em' }} />
           <Typography>
             {row.stalk.total.toFormat(2, BigNumberJS.ROUND_DOWN)}
