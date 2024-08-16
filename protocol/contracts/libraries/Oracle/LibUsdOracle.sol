@@ -8,8 +8,7 @@ import {C} from "contracts/C.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
@@ -43,13 +42,8 @@ library LibUsdOracle {
      * (> 900 seconds) to protect against manipulation.
      */
     function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
-        if (token == C.WETH) {
-            return LibEthUsdOracle.getUsdEthPrice(lookback);
-        }
-        if (token == C.WSTETH) {
-            return LibWstethUsdOracle.getUsdWstethPrice(lookback);
-        }
-        // tokens that use the custom oracle implementation are called here.
+        // call external implementation for token
+        // note passing decimals controls pricing order (token:usd vs usd:token)
         return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }
 
@@ -63,15 +57,7 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
-        // oracles that are implmented within beanstalk should be placed here.
-        if (token == C.WETH) {
-            return LibEthUsdOracle.getEthUsdPrice(lookback);
-        }
-        if (token == C.WSTETH) {
-            return LibWstethUsdOracle.getWstethUsdPrice(lookback);
-        }
-
-        // tokens that use the custom oracle implementation are called here.
+        // call external implementation for token
         return getTokenPriceFromExternal(token, 0, lookback);
     }
 
@@ -95,11 +81,12 @@ library LibUsdOracle {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;
 
-            // todo: need to update timeout
+            // decode data timeout to uint32
+            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
-                    LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                    timeout,
                     tokenDecimals,
                     lookback
                 );
@@ -129,9 +116,10 @@ library LibUsdOracle {
             Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
             address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
 
+            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
                 chainlinkOraclePriceAddress,
-                LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
+                timeout,
                 0,
                 lookback
             );
@@ -143,7 +131,7 @@ library LibUsdOracle {
         if (target == address(0)) target = address(this);
 
         (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
         );
 
         if (!success) return 0;

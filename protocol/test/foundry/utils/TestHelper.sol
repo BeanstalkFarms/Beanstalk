@@ -107,6 +107,9 @@ contract TestHelper is
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
+
+        // initialize oracle configuration
+        initWhitelistOracles(verbose);
     }
 
     /**
@@ -150,8 +153,6 @@ contract TestHelper is
             // unique ERC20s should be appended here.
             if (token == C.WETH) {
                 mock = "MockWETH.sol";
-            } else if (token == C.WSTETH) {
-                mock = "MockWsteth.sol";
             }
             deployCodeTo(mock, abi.encode(name, symbol), token);
             MockToken(token).setDecimals(decimals);

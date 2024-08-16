@@ -106,18 +106,25 @@ contract MockInitDiamond is InitalizeDiamond {
         view
         returns (AssetSettings[] memory assetSettings)
     {
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
-        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory oracleImpl = Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0),
+            new bytes(0)
+        );
 
         assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -168,7 +175,7 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         // note: no error checking:
         s.sys.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -183,12 +190,14 @@ contract MockInitDiamond is InitalizeDiamond {
             gaugePointImplementation: Implementation(
                 address(0),
                 IGaugePointFacet.defaultGaugePointFunction.selector,
-                bytes1(0)
+                bytes1(0),
+                new bytes(0)
             ),
             liquidityWeightImplementation: Implementation(
                 address(0),
                 ILiquidityWeightFacet.maxWeight.selector,
-                bytes1(0)
+                bytes1(0),
+                new bytes(0)
             )
         });
 
