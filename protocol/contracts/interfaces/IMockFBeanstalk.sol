@@ -1263,7 +1263,6 @@ interface IMockFBeanstalk {
 
     function migrationNeeded(address account) external view returns (bool hasMigrated);
 
-    // Lineage migrations.
     function transmitOut(
         address destination,
         SourceDeposit[] calldata sourceDeposits,

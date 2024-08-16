@@ -29,7 +29,7 @@ contract TransmitInFacet is Invariable {
         bytes[] calldata fertilizer,
         bytes calldata // data
     ) external fundsSafu {
-        require(s.sys.lineage.supportedSources[msg.sender], "Unsupported source");
+        require(s.sys.supportedSourceForks[msg.sender], "Unsupported source");
 
         LibTransmitIn.transmitInDeposits(user, deposits);
         LibTransmitIn.transmitInPlots(user, plots);

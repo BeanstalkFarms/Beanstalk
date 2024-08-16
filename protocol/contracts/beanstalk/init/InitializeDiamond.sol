@@ -136,8 +136,8 @@ contract InitializeDiamond {
         LibTractor._tractorStorage().activePublisher = payable(address(1));
 
         // Set the sources that can migrate into this Beanstalk.
-        // TODO: Change this from self.
-        s.sys.lineage.supportedSources[address(this)] = true;
+        // TODO: Change this based on each fork instance.
+        // s.sys.supportedSourceForks[address()] = true;
     }
 
     /**

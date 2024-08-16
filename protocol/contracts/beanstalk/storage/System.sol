@@ -74,7 +74,7 @@ struct System {
     mapping(address => Implementation) oracleImplementation;
     SeedGaugeSettings seedGaugeSettings;
     SeasonOfPlenty sop;
-    Lineage lineage;
+    mapping(address => bool) supportedSourceForks;
 }
 
 /**
@@ -418,11 +418,6 @@ struct SeedGaugeSettings {
 struct SeasonOfPlenty {
     mapping(address => uint256) plentyPerSopToken;
     mapping(uint32 => mapping(address => uint256)) sops;
-}
-
-struct Lineage {
-    // uint256 startTime;
-    mapping(address => bool) supportedSources;
 }
 
 /**

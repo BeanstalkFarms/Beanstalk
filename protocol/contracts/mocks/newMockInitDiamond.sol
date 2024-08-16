@@ -41,7 +41,7 @@ contract MockInitDiamond is InitializeDiamond {
         initializeUnripeAssets(underlyingUrLPWell);
 
         // Set accepted source (ie parent) to be original Beanstalk.
-        s.sys.lineage.supportedSources[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5] = true;
+        s.sys.supportedSourceForks[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5] = true;
     }
 
     function initializeUnripeAssets(address well) internal {
