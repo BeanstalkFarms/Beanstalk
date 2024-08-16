@@ -19,7 +19,7 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
  */
 contract TransmitToForkTest is TestHelper {
     IMockFBeanstalk newBs;
-    address NEW_BEANSTALK;
+    address newBsAddr;
 
     uint256 SRC_FIELD = 0;
     uint256 DEST_FIELD = 1;
@@ -75,7 +75,7 @@ contract TransmitToForkTest is TestHelper {
         );
 
         newBs = IMockFBeanstalk(altEcosystem.bs());
-        NEW_BEANSTALK = address(newBs);
+        newBsAddr = address(newBs);
         vm.prank(deployer);
         newBs.addField();
         newBs.fastForward(100);
@@ -135,18 +135,18 @@ contract TransmitToForkTest is TestHelper {
 
             // Check events for burning and minting of bean token.
             vm.expectEmit();
-            emit IERC20.Transfer(BEANSTALK, ZERO_ADDR, firstMigrationAmount);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, firstMigrationAmount);
             vm.expectEmit();
-            emit IERC20.Transfer(BEANSTALK, ZERO_ADDR, secondMigrationAmount);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, secondMigrationAmount);
             vm.expectEmit();
-            emit IERC20.Transfer(ZERO_ADDR, NEW_BEANSTALK, firstMigrationAmount);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, firstMigrationAmount);
             vm.expectEmit();
-            emit IERC20.Transfer(ZERO_ADDR, NEW_BEANSTALK, secondMigrationAmount);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, secondMigrationAmount);
         }
 
         vm.prank(user);
         bs.transmitOut(
-            NEW_BEANSTALK,
+            newBsAddr,
             deposits,
             new IMockFBeanstalk.SourcePlot[](0),
             new IMockFBeanstalk.SourceFertilizer[](0),
@@ -213,7 +213,7 @@ contract TransmitToForkTest is TestHelper {
 
         vm.prank(user);
         bs.transmitOut(
-            NEW_BEANSTALK,
+            newBsAddr,
             new IMockFBeanstalk.SourceDeposit[](0),
             plots,
             new IMockFBeanstalk.SourceFertilizer[](0),
@@ -275,18 +275,18 @@ contract TransmitToForkTest is TestHelper {
 
             // Check events for expected burning and minting of Fertilizer.
             vm.expectEmit();
-            emit IERC1155.TransferSingle(BEANSTALK, user, ZERO_ADDR, id0, transAmount0);
+            emit IERC1155.TransferSingle(address(bs), user, ZERO_ADDR, id0, transAmount0);
             vm.expectEmit();
-            emit IERC1155.TransferSingle(BEANSTALK, user, ZERO_ADDR, id1, transAmount1);
+            emit IERC1155.TransferSingle(address(bs), user, ZERO_ADDR, id1, transAmount1);
             vm.expectEmit();
-            emit IERC1155.TransferSingle(NEW_BEANSTALK, ZERO_ADDR, user, id0, transAmount0);
+            emit IERC1155.TransferSingle(newBsAddr, ZERO_ADDR, user, id0, transAmount0);
             vm.expectEmit();
-            emit IERC1155.TransferSingle(NEW_BEANSTALK, ZERO_ADDR, user, id1, transAmount1);
+            emit IERC1155.TransferSingle(newBsAddr, ZERO_ADDR, user, id1, transAmount1);
         }
 
         vm.prank(user);
         bs.transmitOut(
-            NEW_BEANSTALK, // Transmit into self
+            newBsAddr, // Transmit into self
             new IMockFBeanstalk.SourceDeposit[](0),
             new IMockFBeanstalk.SourcePlot[](0),
             ferts,
