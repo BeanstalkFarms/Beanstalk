@@ -49,23 +49,17 @@ contract Fertilizer is Internalizer {
         uint256 id,
         uint128 amount,
         uint128 bpf
-    ) external onlyOwner {
-        if (_balances[id][account].amount > 0) {
-            uint256[] memory ids = new uint256[](1);
-            ids[0] = id;
-            _update(account, ids, bpf);
-        }
-        _balances[id][account].lastBpf = bpf;
-        _safeMint(account, id, amount, bytes("0"));
+    ) external virtual onlyOwner {
+        _beanstalkMint(account, id, amount, bpf);
     }
 
-    function beanstalkBurn(address account, uint256 id, uint128 amount, uint128 bpf) external onlyOwner {
-        require(_balances[id][account].amount >= amount);
-        uint256[] memory ids = new uint256[](1);
-        ids[0] = id;
-        _update(account, ids, bpf);
-        _balances[id][account].lastBpf = bpf;
-        _safeBurn(account, id, amount, bytes("0"));
+    function beanstalkBurn(
+        address account,
+        uint256 id,
+        uint128 amount,
+        uint128 bpf
+    ) external virtual onlyOwner {
+        _beanstalkBurn(account, id, amount, bpf);
     }
 
     function _beforeTokenTransfer(
@@ -100,6 +94,25 @@ contract Fertilizer is Internalizer {
             }
         }
         emit ClaimFertilizer(ids, beans);
+    }
+
+    function _beanstalkMint(address account, uint256 id, uint128 amount, uint128 bpf) internal {
+        if (_balances[id][account].amount > 0) {
+            uint256[] memory ids = new uint256[](1);
+            ids[0] = id;
+            _update(account, ids, bpf);
+        }
+        _balances[id][account].lastBpf = bpf;
+        _safeMint(account, id, amount, bytes("0"));
+    }
+
+    function _beanstalkBurn(address account, uint256 id, uint128 amount, uint128 bpf) internal {
+        require(_balances[id][account].amount >= amount);
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = id;
+        _update(account, ids, bpf);
+        _balances[id][account].lastBpf = bpf;
+        _safeBurn(account, id, amount, bytes("0"));
     }
 
     function balanceOfFertilized(

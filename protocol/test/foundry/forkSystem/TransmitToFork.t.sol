@@ -12,6 +12,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 /**
  * @notice Tests migrations to a child fork from og Beanstalk.
@@ -126,6 +127,12 @@ contract TransmitToForkTest is TestHelper {
                 address(0), // populated by source
                 0 // populated by source
             );
+
+            // Note that both the source and destination forks use the same Bean contract. This
+            // is not how the system is expected to be used, but is a limitation of constants within
+            // solidity, particularly in a diamond structure. Ownership limitations of Bean
+            // burning and minting are bypassed in MockToken, for testing purposes.
+
             // Check events for burning and minting of bean token.
             vm.expectEmit();
             emit IERC20.Transfer(BEANSTALK, ZERO_ADDR, firstMigrationAmount);
@@ -236,50 +243,72 @@ contract TransmitToForkTest is TestHelper {
     function test_transmitFertilizer(uint256 ethAmount) public {
         address user = farmers[2];
 
-        uint128 firstId = bs.getEndBpf();
-        uint256 firstFertAmount = buyFertForUser(user, ethAmount);
-        passGermination();
-        uint128 secondId = bs.getEndBpf();
-        uint256 secondFertAmount = buyFertForUser(user, ethAmount);
+        uint128 id0 = bs.getEndBpf();
+        uint256 fertAmount0 = buyFertForUser(user, ethAmount);
+        uint256 transAmount0 = fertAmount0 / 3;
+        passGermination(); // change the fert id
+        uint128 id1 = bs.getEndBpf();
+        uint256 fertAmount1 = buyFertForUser(user, ethAmount);
+        uint256 transAmount1 = fertAmount1;
+        uint256 totalTrans = transAmount0 + transAmount1;
+
+        uint256 srcInitUnfert = bs.totalUnfertilizedBeans();
+        uint256 srcInitActiveFert = bs.getActiveFertilizer();
 
         IMockFBeanstalk.SourceFertilizer[] memory ferts = new IMockFBeanstalk.SourceFertilizer[](2);
         {
-            firstFertAmount /= 3;
             ferts[0] = IMockFBeanstalk.SourceFertilizer(
-                firstId, // id
-                firstFertAmount, // amount
+                id0, // id
+                transAmount0, // amount
                 0 // _remainingBpf
             );
             ferts[1] = IMockFBeanstalk.SourceFertilizer(
-                secondId, // id
-                secondFertAmount, // amount
+                id1, // id
+                transAmount1, // amount
                 0 // _remainingBpf
             );
+
+            // Note that both the source and destination forks use the same Fertilizer contract. This
+            // is not how the system is expected to be used, but is a limitation of constants within
+            // solidity, particularly in a diamond structure. Ownership limitations of Fertilizer
+            // burning and minting are bypassed in MockFertilizer, for testing purposes.
+
+            // Check events for expected burning and minting of Fertilizer.
+            vm.expectEmit();
+            emit IERC1155.TransferSingle(BEANSTALK, user, ZERO_ADDR, id0, transAmount0);
+            vm.expectEmit();
+            emit IERC1155.TransferSingle(BEANSTALK, user, ZERO_ADDR, id1, transAmount1);
+            vm.expectEmit();
+            emit IERC1155.TransferSingle(NEW_BEANSTALK, ZERO_ADDR, user, id0, transAmount0);
+            vm.expectEmit();
+            emit IERC1155.TransferSingle(NEW_BEANSTALK, ZERO_ADDR, user, id1, transAmount1);
         }
 
         vm.prank(user);
         bs.transmitOut(
-            // TODO change to not transmit into self, but this requires significant changes to initialization system.
-            BEANSTALK, // Transmit into self
+            NEW_BEANSTALK, // Transmit into self
             new IMockFBeanstalk.SourceDeposit[](0),
             new IMockFBeanstalk.SourcePlot[](0),
             ferts,
             abi.encode("")
         );
 
-        // NOTE: Cannot do this yet, bc source == destination.
-        // // Verify Source fertilizer.
-        // {
-        //     require(bs.plot(user, 0, 0) == 0, "First source plot amount mismatch");
-        //     require(bs.plot(user, 0, podsPerSow) == 0, "Second source plot amount mismatch");
-        // }
+        // Verify Source fertilizer state.
+        {
+            require(bs.totalUnfertilizedBeans() < srcInitUnfert, "Src unfert amt");
+            require(bs.getActiveFertilizer() == srcInitActiveFert - totalTrans, "Src afert amt");
+        }
         // Verify Destination fertilizer.
         {
-            // require(fertilizer.balanceOf(user, firstId) == firstFertAmount, "Dest fert amount mismatch");
-            require(
-                fertilizer.balanceOf(user, secondId) == secondFertAmount,
-                "Dest fert amount mismatch"
-            );
+            require(newBs.getFertilizer(id0) == transAmount0, "Dest fert0 amt");
+            require(newBs.getFertilizer(id1) == transAmount1, "Dest fert1 amt");
+            require(newBs.totalUnfertilizedBeans() > totalTrans, "Dest unfert");
+            require(newBs.getActiveFertilizer() == totalTrans, "Dest fert1 amt");
+        }
+        // Balance of Fertilizer is unchanged, since both src and dest use the same Fert contract.
+        {
+            require(fertilizer.balanceOf(user, id0) == fertAmount0, "fert0 amt");
+            require(fertilizer.balanceOf(user, id1) == fertAmount1, "fert1 amt");
         }
     }
 

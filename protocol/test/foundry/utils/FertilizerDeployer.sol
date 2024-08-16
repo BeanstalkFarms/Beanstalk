@@ -23,8 +23,8 @@ contract FertilizerDeployer is Utils {
     IFertilizer fertilizer;
 
     function initFertilizer(bool verbose) internal {
-        deployCodeTo("Fertilizer", FERTILIZER);
-        if (verbose) console.log("Fertilizer deployed at: ", FERTILIZER);
+        deployCodeTo("MockFertilizer", FERTILIZER);
+        if (verbose) console.log("MockFertilizer deployed at: ", FERTILIZER);
         fertilizer = IFertilizer(FERTILIZER);
     }
 
