@@ -19,7 +19,6 @@ const {
   impersonatePrice,
   impersonateChainlinkAggregator,
   impersonateUniswapV3,
-  impersonateWsteth,
   impersonatePipeline,
   impersonateToken
 } = require("./impersonate.js");
@@ -401,7 +400,6 @@ async function getFacetData(mock = true) {
  */
 async function impersonateERC20s() {
   await impersonateWeth();
-  await impersonateWsteth();
 
   // New default ERC20s should be added here.
   tokens = [

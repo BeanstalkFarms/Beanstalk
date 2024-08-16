@@ -177,5 +177,4 @@ exports.impersonateBeanstalk = impersonateBeanstalk;
 exports.impersonateChainlinkAggregator = chainlinkAggregator;
 exports.impersonateContract = impersonateContract;
 exports.impersonateUniswapV3 = uniswapV3;
-exports.impersonateWsteth = wsteth;
 exports.impersonatePipeline = impersonatePipeline;
