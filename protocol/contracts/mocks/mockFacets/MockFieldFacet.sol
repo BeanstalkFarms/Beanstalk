@@ -60,9 +60,8 @@ contract MockFieldFacet is FieldFacet {
                         // delta == 0, same block as sunrise
                         if (delta < 1) {
                             return LibDibbler.TEMPERATURE_PRECISION;
-                        }
-                        // delta == 1
-                        else {
+                        } else {
+                            // delta == 1
                             return _scaleTemperature(279415312704, initalTemp);
                         }
                     }

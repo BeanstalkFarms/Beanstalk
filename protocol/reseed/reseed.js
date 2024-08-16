@@ -19,18 +19,15 @@ const { reseed10 } = require("./reseed10.js");
 const { reseedGlobal } = require("./reseedGlobal.js");
 const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransfer.js");
 const fs = require("fs");
-
-async function printBeanstalk() {
-  console.log("\n");
-  console.log("");
-  const text = fs.readFileSync("./reseed/data/reseed.txt");
-  console.log(text.toString());
-  console.log("");
-}
+const { upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { impersonateSigner } = require("../utils/signer.js");
+const { mintEth } = require("../utils/");
 
 let reseeds;
 async function reseed(
-  account,
+  owner,
+  beanstalkDeployer,
+  l2owner,
   mock = false,
   convertData = true,
   log = false,
@@ -57,6 +54,7 @@ async function reseed(
     reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
+
   console.clear();
   await printBeanstalk();
   for (let i = start; i < reseeds.length; i++) {
@@ -65,25 +63,44 @@ async function reseed(
 
     if (i == 0 && onlyL2 == false) {
       // migrate beanstalk L1 assets.
-      await reseed1(account);
+      await reseed1(owner);
       continue;
     }
 
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
-      l2BeanstalkAddress = await reseedDeployL2Beanstalk(account, log, mock);
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
       continue;
     }
 
     if (setState == true) {
-      await reseeds[i](account, l2BeanstalkAddress, mock);
+      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
       continue;
+    }
+    if (i == reseeds.length - 2) {
+      // prior to the last reseed (i.e, adding facets to L2 beanstalk),
+      // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
+      await upgradeWithNewFacets({
+        diamondAddress: l2BeanstalkAddress,
+        facetNames: [],
+        initFacetName: "ReseedTransferOwnership",
+        initArgs: [l2owner],
+        bip: false,
+        verbose: verbose,
+        account: beanstalkDeployer,
+        checkGas: true,
+        initFacetNameInfo: "ReseedTransferOwnership"
+      });
     }
     if (i == reseeds.length - 1) {
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
-      await reseedAddLiquidityAndTransfer(account, l2BeanstalkAddress, mock);
+      await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, mock);
+
+      // claim ownership of beanstalk:
+      await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
+
       // initialize beanstalk state add selectors to L2 beanstalk.
-      await reseed10(account, l2BeanstalkAddress, mock);
+      await reseed10(l2owner, l2BeanstalkAddress, mock);
     }
   }
   console.log("Reseed successful.");
@@ -124,6 +141,14 @@ function parseBeanstalkData() {
     "./reseed/data/r2/pod-listings.json",
     "./reseed/data/r2/pod-orders.json"
   );
+}
+
+async function printBeanstalk() {
+  console.log("\n");
+  console.log("");
+  const text = fs.readFileSync("./reseed/data/reseed.txt");
+  console.log(text.toString());
+  console.log("");
 }
 
 exports.reseed = reseed;

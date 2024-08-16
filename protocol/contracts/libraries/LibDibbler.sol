@@ -174,9 +174,8 @@ library LibDibbler {
                         // delta == 0, same block as sunrise
                         if (delta < 1) {
                             return TEMPERATURE_PRECISION;
-                        }
-                        // delta == 1
-                        else {
+                        } else {
+                            // delta == 1
                             return _scaleTemperature(279415312704);
                         }
                     }

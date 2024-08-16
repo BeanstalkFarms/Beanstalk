@@ -15,7 +15,6 @@ import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "forge-std/console.sol";
 
 /**
  * @author Brean
