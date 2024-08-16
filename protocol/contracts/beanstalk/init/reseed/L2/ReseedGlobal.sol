@@ -54,8 +54,8 @@ contract ReseedGlobal {
         address[] tokens;
         AssetSilo[] balances;
         UnripeSettings[] u;
-        Deposited[] germDepositEven;
         Deposited[] germDepositOdd;
+        Deposited[] germDepositEven;
         uint32[] unclaimedGerminatingSeasons;
         GerminatingSilo[] unclaimedGerminating;
     }
@@ -144,7 +144,7 @@ contract ReseedGlobal {
         }
 
         for (uint i; i < silo.germDepositEven.length; i++) {
-            s.sys.silo.germinating[GerminationSide.ODD][silo.tokens[i]] = silo.germDepositEven[i];
+            s.sys.silo.germinating[GerminationSide.ODD][silo.tokens[i]] = silo.germDepositOdd[i];
             s.sys.silo.germinating[GerminationSide.EVEN][silo.tokens[i]] = silo.germDepositEven[i];
         }
 
