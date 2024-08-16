@@ -114,7 +114,7 @@ function parseBeanstalkData() {
   const storageSystemPath = "./reseed/data/exports/storage-system20330000.json";
   const marketPath = "./reseed/data/exports/market-info20330000.json";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
-  parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json");
+  parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
   parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json", contractAccounts);
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
