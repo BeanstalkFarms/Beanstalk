@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.20;
 
-interface IMigrateInFacet {
-    function migrateIn(
+interface ITransmitInFacet {
+    function transmitIn(
         address user,
         bytes[] calldata deposits,
         bytes[] calldata plots,

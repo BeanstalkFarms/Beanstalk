@@ -108,16 +108,16 @@ struct Silo {
  * @param pods The pod index; the total number of Pods ever minted.
  * @param processed Amount of Pods that have ever been Harvested or Slashed.
  * @param harvestable Index of Pods that have ever been Harvestable. Included Processed Pods.
- * @param latestMigratedPlotIndex The index of the latest Plot that has been migrated in.
- * @param latestMigratedPlotOwner The owner of the latest Plot that has been migrated in.
+ * @param latestTransmittedPlotIndex The index of the latest Plot that has been transmitted in.
+ * @param latestTransmittedPlotOwner The owner of the latest Plot that has been transmitted in.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
     uint256 pods;
     uint256 processed;
     uint256 harvestable;
-    uint256 latestMigratedPlotIndex;
-    address latestMigratedPlotOwner;
+    uint256 latestTransmittedPlotIndex;
+    address latestTransmittedPlotOwner;
     bytes32[6] _buffer;
 }
 

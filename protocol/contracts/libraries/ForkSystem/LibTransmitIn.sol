@@ -17,24 +17,24 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
- * @title LibMigrateIn
+ * @title LibTransmitIn
  * @author funderbrker
  * @notice Library handling inbound migration and minting of protocol assets.
  */
-library LibMigrateIn {
+library LibTransmitIn {
     using SafeCast for uint256;
 
-    event DepositMigratedIn(address indexed user, SourceDeposit deposit);
+    event DepositTransmittedIn(address indexed user, SourceDeposit deposit);
 
-    event FertilizerMigratedIn(address indexed user, SourceFertilizer fertilizer);
+    event FertilizerTransmittedIn(address indexed user, SourceFertilizer fertilizer);
 
-    event PlotMigratedIn(address indexed user, SourcePlot sourcePlot);
+    event PlotTransmittedIn(address indexed user, SourcePlot sourcePlot);
 
     // Definitions must match source migration definitions. May require multiple definitions.
     struct SourceDeposit {
         address token;
         uint256 amount;
-        int96 stem;
+        int96 stem; // unused
         uint256[] sourceMinTokenAmountsOut; // LP only
         uint256 destMinLpOut; // LP only
         uint256 _grownStalk; // not stalk // need to change logic
@@ -62,7 +62,7 @@ library LibMigrateIn {
     // Underlying external ERC20s have already been transferred to destination beanstalk.
     // msg.sender == source instance
     // Use _depositTokensForConvert() to calculate stem (includes germination logic, germiantion safety provided by source beanstalk).
-    function migrateInDeposits(address user, bytes[] calldata deposits) internal {
+    function transmitInDeposits(address user, bytes[] calldata deposits) internal {
         if (deposits.length == 0) return;
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
         for (uint256 i = 0; i < deposits.length; i++) {
@@ -121,14 +121,14 @@ library LibMigrateIn {
                     deposit._grownStalk
                 );
             }
-            emit DepositMigratedIn(user, deposit);
+            emit DepositTransmittedIn(user, deposit);
         }
     }
 
     /**
      * @notice Mint equivalent fertilizer to the user such that they retain all remaining BPF.
      */
-    function migrateInFertilizer(address user, bytes[] memory fertilizer) internal {
+    function transmitInFertilizer(address user, bytes[] memory fertilizer) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (fertilizer.length == 0) return;
         for (uint256 i = 0; i < fertilizer.length; i++) {
@@ -142,13 +142,13 @@ library LibMigrateIn {
                 sourceFert.amount.toUint128(),
                 s.sys.fert.bpf
             );
-            emit FertilizerMigratedIn(user, sourceFert);
+            emit FertilizerTransmittedIn(user, sourceFert);
         }
     }
 
     /**
      * @notice Create Plots in alternative Field and assign them to the migrating user.
-     * @dev Holes between migrated-in Plots are filled with Slashed Plots.
+     * @dev Holes between transmitted-in Plots are filled with Slashed Plots.
      * @dev Assumes that no sowing will occur in the same Field as inbound migrations.
      *
      * This design is painfully contorted. This is necessary to maintain constant time
@@ -156,16 +156,17 @@ library LibMigrateIn {
      * hols in such a way that all pods can be accounted for and a plot can be acted
      * on without any knowledge of other plots.
      */
-    function migrateInPlots(address user, bytes[] memory plots) internal {
+    function transmitInPlots(address user, bytes[] memory plots) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (plots.length == 0) return;
+        // require(s.sys.fields[IN_FIELD].sourcePlot.existingIndex); prev plot will be non-zero if preceding plot net yet transmitted, otherwise zero
         // This Destination configuration expects all source Plots to be in the same Field.
         for (uint256 i; i < plots.length; i++) {
             SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
             require(sourcePlot.fieldId == 0, "Field unsupported");
             // require(sourcePlot.amount > 1000e6, "Too small");
             require(sourcePlot.index >= s.sys.fields[IN_FIELD].harvestable, "index already harvestable");
-            if (sourcePlot.index > s.sys.fields[IN_FIELD].latestMigratedPlotIndex) {
+            if (sourcePlot.index > s.sys.fields[IN_FIELD].latestTransmittedPlotIndex) {
                 _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
             } else {
                 _insertInNullPlot(
@@ -175,10 +176,15 @@ library LibMigrateIn {
                     sourcePlot.existingIndex
                 );
             }
-            emit PlotMigratedIn(user, sourcePlot);
+            emit PlotTransmittedIn(user, sourcePlot);
         }
     }
 
+    // Assumes that 'previous' plot is owned by null. <- this may be true bc null plots are always injected (line is complete), but we have to allow case where existingIndex = index (and verify that existingIndex.amount is not zero).
+    // if plot before is already transmitted, the "prevPlot" should be the null plot that begins at index.
+    //
+    // What if pods up to index-1 are transmitted? it is ok, but need to have index == existingIndex
+    // What if pods from index + size + 1 are transmitted? it is ok, nextIndex == index + amount
     function _insertInNullPlot(
         address user,
         uint256 index,
@@ -202,18 +208,19 @@ library LibMigrateIn {
         LibField.createPlot(address(0), IN_FIELD, index + amount, nextIndex - (index + amount));
     }
 
+    // Assumes the latest plot is NOT null?
     function _insertAfterLastPlot(address user, uint256 index, uint256 amount) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 nextIndex = s.sys.fields[IN_FIELD].latestMigratedPlotIndex +
-            s.accts[s.sys.fields[IN_FIELD].latestMigratedPlotOwner].fields[IN_FIELD].plots[
-                s.sys.fields[IN_FIELD].latestMigratedPlotIndex
+        uint256 nextIndex = s.sys.fields[IN_FIELD].latestTransmittedPlotIndex +
+            s.accts[s.sys.fields[IN_FIELD].latestTransmittedPlotOwner].fields[IN_FIELD].plots[
+                s.sys.fields[IN_FIELD].latestTransmittedPlotIndex
             ];
 
         // Create preceding null plot and user plot.
         LibField.createPlot(address(0), IN_FIELD, nextIndex, index - nextIndex);
         LibField.createPlot(user, IN_FIELD, index, amount);
 
-        s.sys.fields[IN_FIELD].latestMigratedPlotIndex = index;
-        s.sys.fields[IN_FIELD].latestMigratedPlotOwner = user;
+        s.sys.fields[IN_FIELD].latestTransmittedPlotIndex = index;
+        s.sys.fields[IN_FIELD].latestTransmittedPlotOwner = user;
     }
 }

@@ -18,16 +18,16 @@ import {LibMarket} from "contracts/libraries/LibMarket.sol";
 import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
- * @title LibMigrateOut
+ * @title LibTransmitOut
  * @author funderbrker
  * @notice Library handling outbound migration and burning of protocol assets.
  */
-library LibMigrateOut {
-    event DepositMigratedOut(address indexed user, SourceDeposit deposit);
+library LibTransmitOut {
+    event DepositTransmittedOut(address indexed user, SourceDeposit deposit);
 
-    event FertilizerMigratedOut(address indexed user, SourceFertilizer fertilizer);
+    event FertilizerTransmittedOut(address indexed user, SourceFertilizer fertilizer);
 
-    event PlotMigratedOut(address indexed user, SourcePlot sourcePlot);
+    event PlotTransmittedOut(address indexed user, SourcePlot sourcePlot);
 
     // Need to define structs locally to contain additional migration information.
     struct SourceDeposit {
@@ -67,9 +67,9 @@ library LibMigrateOut {
     // remove in balanced ratio? with UI setting minimum out of each asset...
     /**
      * @notice Withdraw deposits and sends underlying ERC20 of asset. Burns Beans.
-     * @return depositsOut The set of deposits to migrate, encoded as bytes.
+     * @return depositsOut The set of deposits to transmit, encoded as bytes.
      */
-    function migrateOutDeposits(
+    function transmitOutDeposits(
         address user,
         address destination,
         SourceDeposit[] memory deposits
@@ -142,17 +142,17 @@ library LibMigrateOut {
             }
 
             depositsOut[i] = abi.encode(deposits[i]);
-            emit DepositMigratedOut(user, deposits[i]);
+            emit DepositTransmittedOut(user, deposits[i]);
         }
     }
 
     /**
      * @notice Slashes plots, which can later be burned. Populates and encodes migration data.
-     * @return plotsOut The plots to migrate, encoded as bytes.
+     * @return plotsOut The plots to transmit, encoded as bytes.
      * @dev Slashes the Pods by setting the owner to 0x0. They remain in Pod line until they
      *      become harvestable and can be Burned.
      */
-    function migrateOutPlots(
+    function transmitOutPlots(
         address account,
         SourcePlot[] memory plots
     ) internal returns (bytes[] memory plotsOut) {
@@ -162,7 +162,7 @@ library LibMigrateOut {
         for (uint256 i; i < plots.length; i++) {
             SourcePlot memory plot = plots[i];
             uint256 pods = s.accts[account].fields[plot.fieldId].plots[plot.index];
-            require(plot.amount > 0, "No Pods to migrate");
+            require(plot.amount > 0, "No Pods to transmit");
             require(pods >= plot.amount, "Insufficient Pods");
 
             // Remove Plots from user.
@@ -184,15 +184,15 @@ library LibMigrateOut {
             s.sys.fields[plot.fieldId].pods -= plot.amount;
 
             plotsOut[i] = abi.encode(plot);
-            emit PlotMigratedOut(account, plot);
+            emit PlotTransmittedOut(account, plot);
         }
     }
 
     /**
      * @notice Burns Fertilizer. Populates and encodes migration data.
-     * @return fertilizerOut The Fertilizer to migrate, encoded as bytes.
+     * @return fertilizerOut The Fertilizer to transmit, encoded as bytes.
      */
-    function migrateOutFertilizer(
+    function transmitOutFertilizer(
         address account,
         SourceFertilizer[] memory fertilizer
     ) internal returns (bytes[] memory fertilizerOut) {
@@ -225,7 +225,7 @@ library LibMigrateOut {
 
             fertilizer[i]._remainingBpf = remainingBpf;
             fertilizerOut[i] = abi.encode(fertilizer[i]);
-            emit FertilizerMigratedOut(account, fertilizer[i]);
+            emit FertilizerTransmittedOut(account, fertilizer[i]);
         }
 
         // If leftover beans are greater than obligations, drop excess leftovers. Rounding loss.

@@ -47,8 +47,8 @@ contract BeanstalkDeployer is Utils {
         "ClaimFacet",
         "OracleFacet",
         "L2ContractMigrationFacet",
-        "MigrateOutFacet",
-        "MigrateInFacet"
+        "TransmitOutFacet",
+        "TransmitInFacet"
     ];
 
     // Facets that have a mock counter part should be appended here.

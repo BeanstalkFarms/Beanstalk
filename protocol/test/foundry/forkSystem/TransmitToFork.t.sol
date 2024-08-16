@@ -6,7 +6,7 @@ import {C} from "contracts/C.sol";
 import {LibAltC} from "test/foundry/utils/LibAltC.sol";
 import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
-import {LibMigrateOut} from "contracts/libraries/Lineage/LibMigrateOut.sol";
+import {LibTransmitOut} from "contracts/libraries/ForkSystem/LibTransmitOut.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
@@ -16,7 +16,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
  * @notice Tests migrations to a child fork from og Beanstalk.
  */
-contract MigrateToForkTest is TestHelper {
+contract TransmitToForkTest is TestHelper {
     IMockFBeanstalk newBs;
     address NEW_BEANSTALK;
 
@@ -84,12 +84,12 @@ contract MigrateToForkTest is TestHelper {
      * @notice Performs migrations that should revert.
      * @dev Can revert at source if assets do not exist or destination if assets not compatible.
      */
-    // function test_migrateRevert() public {}
+    // function test_transmitRevert() public {}
 
     /**
      * @notice Performs a migration of all asset types from a Source to Destination fork.
      */
-    function test_migrateDeposits(uint256 depositAmount) public {
+    function test_transmitDeposits(uint256 depositAmount) public {
         depositAmount = bound(depositAmount, 100, 10_000_000e6);
         address user = farmers[2];
 
@@ -138,7 +138,7 @@ contract MigrateToForkTest is TestHelper {
         }
 
         vm.prank(user);
-        bs.migrateOut(
+        bs.transmitOut(
             NEW_BEANSTALK,
             deposits,
             new IMockFBeanstalk.SourcePlot[](0),
@@ -177,7 +177,7 @@ contract MigrateToForkTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    function test_migratePlots(uint256 sowAmount) public {
+    function test_transmitPlots(uint256 sowAmount) public {
         sowAmount = bound(sowAmount, 100, 1000e6);
         address user = farmers[2];
 
@@ -195,7 +195,7 @@ contract MigrateToForkTest is TestHelper {
                 podsPerSow, // amount
                 0 // prevDestIndex
             );
-            // Migration of a plot prior to latest migrated plot.
+            // Migration of a plot prior to latest transmitted plot.
             plots[1] = IMockFBeanstalk.SourcePlot(
                 SRC_FIELD, // fieldId
                 0, // plotId
@@ -205,7 +205,7 @@ contract MigrateToForkTest is TestHelper {
         }
 
         vm.prank(user);
-        bs.migrateOut(
+        bs.transmitOut(
             NEW_BEANSTALK,
             new IMockFBeanstalk.SourceDeposit[](0),
             plots,
@@ -233,7 +233,7 @@ contract MigrateToForkTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination fork.
      */
-    function test_migrateFertilizer(uint256 ethAmount) public {
+    function test_transmitFertilizer(uint256 ethAmount) public {
         address user = farmers[2];
 
         uint128 firstId = bs.getEndBpf();
@@ -258,9 +258,9 @@ contract MigrateToForkTest is TestHelper {
         }
 
         vm.prank(user);
-        bs.migrateOut(
-            // TODO change to not migrate into self, but this requires significant changes to initialization system.
-            BEANSTALK, // Migrate into self
+        bs.transmitOut(
+            // TODO change to not transmit into self, but this requires significant changes to initialization system.
+            BEANSTALK, // Transmit into self
             new IMockFBeanstalk.SourceDeposit[](0),
             new IMockFBeanstalk.SourcePlot[](0),
             ferts,
@@ -286,5 +286,5 @@ contract MigrateToForkTest is TestHelper {
     /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    // function test_migrateAll() public {}
+    // function test_transmitAll() public {}
 }
