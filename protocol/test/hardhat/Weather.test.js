@@ -131,7 +131,8 @@ describe("Complex Weather", function () {
               .withArgs(
                 await beanstalk.season(),
                 this.testData.Code,
-                this.testData.newWeather - this.testData.startingWeather
+                this.testData.newWeather - this.testData.startingWeather,
+                0
               );
         });
 

@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
@@ -50,7 +49,6 @@ contract PipelineConvertTest is TestHelper {
     MockSiloFacet silo = MockSiloFacet(BEANSTALK);
     MockPipelineConvertFacet pipelineConvert = MockPipelineConvertFacet(BEANSTALK);
     PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     DepotFacet depot = DepotFacet(BEANSTALK);
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
@@ -2237,5 +2235,126 @@ contract PipelineConvertTest is TestHelper {
 
         // get new deltaB
         deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+    }
+
+    // verifies there's no way to withdraw from a deposit without losing grown stalk
+    function testWithdrawWithoutLosing() public {
+        // users[1] is the attacker
+        int96 stem;
+        uint beanAmountToConvert = 2; // the amount of bean to convert
+        uint beanAmountToWithdraw = 1000e6 - 2; // the amount of bean to withdraw
+
+        // manipulate well so we won't have a penalty applied
+        setDeltaBforWell(int256(beanAmountToConvert), beanEthWell, C.WETH);
+        stem = depositBeanAndPassGermination(beanAmountToConvert + beanAmountToWithdraw, users[1]);
+
+        uint256 attackerBalanceBefore = IERC20(C.BEAN).balanceOf(users[1]);
+        uint256 grownStalkBefore = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+
+        // Create arrays for stem and amount
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCallsExtractBeans(
+            beanAmountToWithdraw,
+            beanAmountToConvert
+        );
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = beanAmountToConvert + beanAmountToWithdraw;
+
+        vm.prank(users[1]); // do this as user 1
+        (int96 toStem, , , , ) = convert.pipelineConvert(
+            C.BEAN, // input token
+            stems, // stems
+            amounts, // amount
+            beanEthWell, // token out
+            beanToLPFarmCalls // farmData
+        );
+
+        uint256 grownStalkAfter = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        assertLt(
+            grownStalkAfter,
+            grownStalkBefore,
+            "grown stalk should be lower after extraction convert"
+        );
+    }
+
+    function createBeanToLPFarmCallsExtractBeans(
+        uint256 amountOfBeanTransferredOut,
+        uint256 amountOfBeanConverted
+    ) internal view returns (AdvancedFarmCall[] memory output) {
+        // setup transfer to myself
+        bytes memory transferEncoded = abi.encodeWithSelector(
+            IERC20.transfer.selector,
+            users[1],
+            amountOfBeanTransferredOut
+        );
+
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            beanEthWell,
+            MAX_UINT256
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = amountOfBeanConverted;
+        tokenAmountsIn[1] = 0;
+
+        // encode Add liqudity.
+        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
+            IWell.addLiquidity.selector,
+            tokenAmountsIn, // tokenAmountsIn
+            0, // min out
+            C.PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes:
+        AdvancedPipeCall[] memory advancedPipeCalls = new AdvancedPipeCall[](100);
+
+        uint256 callCounter = 0;
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            C.BEAN, // target
+            transferEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            C.BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 2: Add One sided Liquidity into the well.
+        advancedPipeCalls[callCounter++] = AdvancedPipeCall(
+            beanEthWell, // target
+            addLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        assembly {
+            mstore(advancedPipeCalls, callCounter)
+        }
+
+        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
+        // AdvancedFarmCall calls any function on the beanstalk diamond.
+        // advancedPipe is one of the functions that its calling.
+        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
+        // AdvancedPipe can call any arbitrary function.
+        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
+
+        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
+            depot.advancedPipe.selector,
+            advancedPipeCalls,
+            0
+        );
+
+        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
+        return advancedFarmCalls;
     }
 }

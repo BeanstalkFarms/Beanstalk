@@ -14,12 +14,13 @@ import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
  * @author funderberker, 0xm00neth
  */
-contract TractorFacet is Invariable {
+contract TractorFacet is Invariable, ReentrancyGuard {
     using LibBytes for bytes32;
     using LibRedundantMath256 for uint256;
 
@@ -66,7 +67,7 @@ contract TractorFacet is Invariable {
      */
     function updateTractorVersion(
         string calldata version
-    ) external fundsSafu noNetFlow noSupplyChange {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         LibTractor._setVersion(version);
     }
@@ -84,7 +85,7 @@ contract TractorFacet is Invariable {
      */
     function publishRequisition(
         LibTractor.Requisition calldata requisition
-    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) nonReentrant {
         emit PublishRequisition(requisition);
     }
 
@@ -93,7 +94,7 @@ contract TractorFacet is Invariable {
      */
     function cancelBlueprint(
         LibTractor.Requisition calldata requisition
-    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) {
+    ) external fundsSafu noNetFlow noSupplyChange verifyRequisition(requisition) nonReentrant {
         require(msg.sender == requisition.blueprint.publisher, "TractorFacet: not publisher");
         LibTractor._cancelBlueprint(requisition.blueprintHash);
         emit CancelBlueprint(requisition.blueprintHash);
@@ -109,6 +110,7 @@ contract TractorFacet is Invariable {
         external
         payable
         fundsSafu
+        nonReentrantFarm
         verifyRequisition(requisition)
         runBlueprint(requisition)
         returns (bytes[] memory results)
@@ -173,7 +175,7 @@ contract TractorFacet is Invariable {
         bytes32 counterId,
         LibTractor.CounterUpdateType updateType,
         uint256 amount
-    ) external fundsSafu noNetFlow noSupplyChange returns (uint256 count) {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 count) {
         uint256 newCount;
         if (updateType == LibTractor.CounterUpdateType.INCREASE) {
             newCount = getPublisherCounter(counterId).add(amount);

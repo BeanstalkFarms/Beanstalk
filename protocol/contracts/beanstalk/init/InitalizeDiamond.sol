@@ -267,8 +267,7 @@ contract InitalizeDiamond {
         s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
-    function initalizeFarmAndTractor() public {
-        s.sys.isFarm = 1;
+    function initalizeFarmAndTractor() internal {
         LibTractor._resetPublisher();
         LibTractor._setVersion("1.0.0");
     }

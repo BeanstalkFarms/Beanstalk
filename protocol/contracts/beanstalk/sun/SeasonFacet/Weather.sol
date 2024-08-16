@@ -48,7 +48,12 @@ contract Weather is Sun {
      * @param absChange The absolute change in Temperature.
      * @dev formula: T_n = T_n-1 +/- bT
      */
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
 
     /**
      * @notice Emitted when the grownStalkToLP changes.
@@ -139,7 +144,7 @@ contract Weather is Sun {
             s.sys.weather.temp = uint32(t + uint256(int256(bT)));
         }
 
-        emit TemperatureChange(s.sys.season.current, caseId, bT);
+        emit TemperatureChange(s.sys.season.current, caseId, bT, s.sys.activeField);
     }
 
     /**

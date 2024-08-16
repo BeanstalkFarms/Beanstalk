@@ -78,7 +78,7 @@ contract BasinDeployer is Utils {
         // new well functions should be added here.
         DeployData[] memory wfDeployData = new DeployData[](1);
         wfDeployData[0] = DeployData(
-            "./node_modules/@beanstalk/wells/out/ConstantProduct2.sol/ConstantProduct2.json",
+            "./node_modules/@beanstalk/wells1.1/out/ConstantProduct2.sol/ConstantProduct2.json",
             CP2,
             new bytes(0)
         );
@@ -87,7 +87,7 @@ contract BasinDeployer is Utils {
         DeployData[] memory pumpsDeployData = new DeployData[](2);
         // multi flow pump
         pumpsDeployData[0] = DeployData(
-            "./node_modules/@beanstalk/wells/out/MultiFlowPump.sol/MultiFlowPump.json",
+            "./node_modules/@beanstalk/wells1.1/out/MultiFlowPump.sol/MultiFlowPump.json",
             MFP,
             abi.encode(MAX_LP_SUPPLY_INCREASE, MAX_LP_SUPPLY_DECREASE, CAP_INTERVAL, ALPHA)
         );
@@ -97,7 +97,7 @@ contract BasinDeployer is Utils {
         // new well implementations should be added here.
         DeployData[] memory wellImplementationDeployData = new DeployData[](1);
         wellImplementationDeployData[0] = DeployData(
-            "./node_modules/@beanstalk/wells/out/Well.sol/Well.json",
+            "./node_modules/@beanstalk/wells1.1/out/Well.sol/Well.json",
             WELL_IMPLMENTATION,
             new bytes(0)
         );

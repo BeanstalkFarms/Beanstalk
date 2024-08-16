@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param farmingStatus Stores whether the function call originated in a Farm-like transaction - Farm, Tractor, PipelineConvert, etc.
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
@@ -46,7 +46,7 @@ struct System {
     bool paused;
     uint128 pausedAt;
     uint256 reentrantStatus;
-    uint256 isFarm;
+    uint256 farmingStatus;
     address ownerCandidate;
     uint256 plenty;
     uint128 soil;
@@ -74,7 +74,7 @@ struct System {
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
-    Migration migration;
+    L2Migration l2Migration;
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
@@ -374,9 +374,27 @@ struct ShipmentRoute {
     bytes data;
 }
 
-struct Migration {
+/**
+ * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
+ * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
+ * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param _buffer_ Reserved storage for future additions.
+ */
+struct L2Migration {
     uint256 migratedL1Beans;
+    mapping(address => MigrationData) account;
     bytes32[4] _buffer_;
+}
+
+/**
+ * @notice contains data relating to migration.
+ */
+struct MigrationData {
+    address reciever;
+    bool migratedDeposits;
+    bool migratedPlots;
+    bool migratedFert;
+    bool migratedInternalBalances;
 }
 
 /**

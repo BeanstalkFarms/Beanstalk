@@ -94,7 +94,10 @@ contract SeasonGettersFacet {
      * @notice Returns the total Delta B across all whitelisted minting liquidity Wells.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        deltaB = LibWellMinting.check(C.BEAN_ETH_WELL);
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            deltaB = deltaB.add(LibWellMinting.check(tokens[i]));
+        }
     }
 
     /**
@@ -105,12 +108,20 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
-    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB) {
+    function poolCurrentDeltaB(address pool) public view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
             (deltaB) = LibDeltaB.currentDeltaB(pool);
             return deltaB;
         } else {
             revert("Oracle: Pool not supported");
+        }
+    }
+
+    function cumulativeCurrentDeltaB(
+        address[] calldata pools
+    ) external view returns (int256 deltaB) {
+        for (uint256 i; i < pools.length; i++) {
+            deltaB += poolCurrentDeltaB(pools[i]);
         }
     }
 

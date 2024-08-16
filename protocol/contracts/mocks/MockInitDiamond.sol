@@ -41,7 +41,6 @@ contract MockInitDiamond is InitWhitelist, InitWhitelistStatuses, Weather {
         s.sys.season.start = s.sys.season.period > 0
             ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
-        s.sys.isFarm = 1;
         s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;
         s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 = 1;

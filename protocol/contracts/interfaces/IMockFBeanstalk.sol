@@ -322,6 +322,7 @@ interface IMockFBeanstalk {
     event PlotTransfer(
         address indexed from,
         address indexed to,
+        uint256 fieldId,
         uint256 indexed index,
         uint256 amount
     );
@@ -401,7 +402,12 @@ interface IMockFBeanstalk {
     event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
     event Sunrise(uint256 indexed season);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event TokenApproval(
         address indexed owner,
         address indexed spender,
@@ -1907,4 +1913,12 @@ interface IMockFBeanstalk {
         address token,
         uint256 lookback
     ) external view returns (uint256 tokenPrice);
+
+    function approveReciever(address owner, address reciever) external;
+
+    function getReciever(address owner) external view returns (address);
+
+    function setRecieverForL1Migration(address owner, address reciever) external;
+
+    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 }

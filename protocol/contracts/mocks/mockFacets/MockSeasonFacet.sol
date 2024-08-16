@@ -751,4 +751,8 @@ contract MockSeasonFacet is SeasonFacet {
             (deltaB, , , ) = LibWellMinting.twaDeltaB(well, lastSnapshot);
         }
     }
+
+    function setRecieverForL1Migration(address owner, address reciever) external {
+        s.sys.l2Migration.account[owner].reciever = reciever;
+    }
 }

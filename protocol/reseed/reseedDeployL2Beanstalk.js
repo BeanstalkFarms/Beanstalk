@@ -6,7 +6,7 @@ const { impersonateSigner, mintEth } = require("../utils");
  * @dev account: the account to deploy the beanstalk with.
  * Todo: facets should be added post-migration to prevent users from interacting.
  */
-async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
+async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
   // impersonate `account`:
   let signer;
   if (mock) {
@@ -17,14 +17,13 @@ async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
   }
 
   const beanstalkDiamond = await deployDiamond({
-      diamondName: "L2BeanstalkDiamond",
-      owner: account,
-      args: [],
-      verbose: verbose
-    });
-  
+    diamondName: "L2BeanstalkDiamond",
+    owner: account,
+    args: [],
+    verbose: verbose
+  });
+
   return beanstalkDiamond.address;
 }
-
 
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;

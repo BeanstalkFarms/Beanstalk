@@ -9,6 +9,7 @@ import "forge-std/Test.sol";
 ////// Mocks //////
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 
 ///// TEST HELPERS //////
 import {BeanstalkDeployer} from "test/foundry/utils/BeanstalkDeployer.sol";
@@ -46,6 +47,7 @@ contract TestHelper is
     Pipeline pipeline;
 
     MockToken bean = MockToken(C.BEAN);
+    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
@@ -346,6 +348,21 @@ contract TestHelper is
         }
     }
 
+    function updateAllChainlinkOraclesWithPreviousData() internal {
+        address[] memory lp = bs.getWhitelistedLpTokens();
+        address chainlinkOracle;
+        for (uint i; i < lp.length; i++) {
+            // oracles will need to be added here,
+            // as obtaining the chainlink oracle to well is not feasible on chain.
+            if (lp[i] == C.BEAN_ETH_WELL) {
+                chainlinkOracle = chainlinkOracles[0];
+            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
+                chainlinkOracle = chainlinkOracles[1];
+            }
+            updateChainlinkOracleWithPreviousData(chainlinkOracle);
+        }
+    }
+
     function setDeltaBForWellsWithEntropy(
         uint256 entropy
     ) internal returns (int256[] memory deltaBPerWell) {
@@ -530,5 +547,19 @@ contract TestHelper is
         mintTokensToUser(farmer, C.BEAN, sowAmount);
         vm.prank(farmer);
         bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
+    }
+
+    /**
+     * @notice gets the next time the sunrise can be called,
+     * and warps the time to that timestamp.
+     */
+    function warpToNextSeasonTimestamp() internal noGasMetering {
+        uint256 nextTimestamp = season.getNextSeasonStart();
+        vm.warp(nextTimestamp);
+    }
+
+    function warpToNextSeasonAndUpdateOracles() internal noGasMetering {
+        warpToNextSeasonTimestamp();
+        updateAllChainlinkOraclesWithPreviousData();
     }
 }

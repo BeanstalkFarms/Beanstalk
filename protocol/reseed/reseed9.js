@@ -4,8 +4,7 @@ const fs = require("fs");
 /**
  * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
  */
-async function reseed9(account, L2Beanstalk, verbose = true,) {
-
+async function reseed9(account, L2Beanstalk, verbose = false) {
   // get list of facets to deploy:
   let facets = [
     "SeasonFacet", // SUN
@@ -45,7 +44,7 @@ async function reseed9(account, L2Beanstalk, verbose = true,) {
     "LibShipping",
     "LibFlood",
     "LibSilo",
-    "LibPipelineConvert",
+    "LibPipelineConvert"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -64,10 +63,10 @@ async function reseed9(account, L2Beanstalk, verbose = true,) {
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
     SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
+    EnrootFacet: ["LibSilo"]
   };
 
-  // Season to reseed 
+  // Season to reseed
   const season = 12345;
 
   // upgrade beanstalk with all facets. calls `reseedRestart`
