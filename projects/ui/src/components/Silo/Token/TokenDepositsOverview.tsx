@@ -4,13 +4,13 @@ import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
 
 import { useAppSelector } from '~/state';
 import Fiat from '~/components/Common/Fiat';
-import { FontWeight } from '~/components/App/muiTheme';
+import { FontSize, FontWeight } from '~/components/App/muiTheme';
 import TokenIcon from '~/components/Common/TokenIcon';
 
 import { Token } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 import BigNumber from 'bignumber.js';
-import TokenDeposits from './TokenDeposits';
+import FarmerTokenDeposits from './FarmerTokenDeposits';
 
 type ITokenDepositsOverview = {
   token: Token;
@@ -20,6 +20,7 @@ const sharedButtonSx = {
   color: 'text.primary',
   borderColor: 'secondary',
   borderRadius: '4px',
+  fontSize: FontSize.base,
   fontWeight: FontWeight.medium,
   px: 1,
   py: 0.75,
@@ -42,15 +43,16 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
                 token={token}
                 css={{ height: '24px', marginBottom: '-3px' }}
               />{' '}
-              {deposits?.deposited?.amount.toFormat(
+              {(deposits?.deposited?.amount || ZERO_BN).toFormat(
                 2,
                 BigNumber.ROUND_HALF_DOWN
-              ) || '0'}
+              )}
             </Typography>
             <Typography variant="h4">
               <Fiat
                 amount={deposits?.deposited?.amount || ZERO_BN}
                 token={token}
+                defaultDisplay="-"
               />
             </Typography>
           </Stack>
@@ -60,33 +62,49 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
             size="small"
             color="secondary"
             variant="outlined-secondary"
-            sx={sharedButtonSx}
+            startIcon={
+              <Box
+                component="img"
+                src={minimizeWindowIcon}
+                height="16px"
+                width="auto"
+              />
+            }
           >
-            <Box
-              component="img"
-              src={minimizeWindowIcon}
-              alt="silo-transfer-deposits"
-              sx={{ mr: '4px' }}
-            />
-            Transfer Deposits
+            Transfer
+            <Typography
+              component="span"
+              fontWeight="inherit"
+              display={{ xs: 'none', md: 'inline' }}
+            >
+              {' Deposits'}
+            </Typography>
           </Button>
           <Button
             size="small"
             color="secondary"
             variant="outlined-secondary"
-            sx={sharedButtonSx}
+            startIcon={
+              <Box
+                component="img"
+                src={deliveryBoxIcon}
+                height="20px"
+                width="auto"
+              />
+            }
           >
-            <Box
-              component="img"
-              src={deliveryBoxIcon}
-              alt="silo-update-deposits"
-              sx={{ mr: '4px' }}
-            />
-            Update Deposits
+            Update
+            <Typography
+              fontWeight="inherit"
+              component="span"
+              display={{ xs: 'none', md: 'inline' }}
+            >
+              {' Deposits'}
+            </Typography>
           </Button>
         </Stack>
       </Stack>
-      <TokenDeposits
+      <FarmerTokenDeposits
         token={token}
         siloBalance={farmerDeposits[token.address]}
         selectType="single"

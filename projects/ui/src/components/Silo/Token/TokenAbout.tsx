@@ -1,6 +1,6 @@
 import React from 'react';
 import { Token } from '@beanstalk/sdk';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Link } from 'react-router-dom';
 import Row from '~/components/Common/Row';
@@ -12,9 +12,10 @@ import useSdk from '~/hooks/sdk';
 import useSeedGauge from '~/hooks/beanstalk/useSeedGauge';
 import useTVD from '~/hooks/beanstalk/useTVD';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import TokenIcon from '../Common/TokenIcon';
-import Fiat from '../Common/Fiat';
-import { BeanstalkPalette, FontWeight } from '../App/muiTheme';
+import { trimAddress } from '~/util';
+import TokenIcon from '../../Common/TokenIcon';
+import Fiat from '../../Common/Fiat';
+import { BeanstalkPalette, FontWeight } from '../../App/muiTheme';
 
 const TokenAbout = ({ token }: { token: Token }) => {
   const balances = useAppSelector((s) => s._beanstalk.silo.balances);
@@ -29,16 +30,12 @@ const TokenAbout = ({ token }: { token: Token }) => {
   const gaugePoints = data.gaugeData[token.address]?.gaugePoints || ZERO_BN;
 
   const underlying = isPool ? pools[token.address]?.underlying : undefined;
-  // const totalBDV = Object.values(balances).reduce<BigNumber>(
-  //   (prev, curr) => prev.plus(curr.TVD || ZERO_BN),
-  //   ZERO_BN
-  // );
 
   const amounts = balances[token.address];
-  // const pctDeposited = amounts.TVD.div(totalBDV).times(100);
-  console.log('pctTotalTVD: ', pctTotalTVD.toString());
 
-  const isWell = sdk.pools.getWells().find((w) => w.address === token.address);
+  const isWell = sdk.tokens.siloWhitelistedWellLPAddresses.find(
+    (a) => a === token.address
+  );
 
   return (
     <Stack gap={2}>
@@ -53,7 +50,12 @@ const TokenAbout = ({ token }: { token: Token }) => {
           color="text.primary"
           sx={{ textDecoration: 'underline' }}
         >
-          {token.address}
+          <Typography component="span" display={{ xs: 'none', md: 'inline' }}>
+            {token.address}
+          </Typography>
+          <Typography component="span" display={{ xs: 'inline', md: 'none' }}>
+            {trimAddress(token.address)}
+          </Typography>
         </Typography>
       </Row>
       <Row justifyContent="space-between" alignItems="flex-start">
@@ -99,20 +101,37 @@ const TokenAbout = ({ token }: { token: Token }) => {
           icon={
             <InfoOutlined sx={{ fontSize: '1rem', color: 'text.secondary' }} />
           }
-          sx={{
+          sx={(t) => ({
             background: BeanstalkPalette.lightestBlue,
             borderRadius: '10px',
+            '& .MuiAlert-icon': {
+              display: 'none',
+            },
             '& .MuiAlert-message': {
               width: '100%',
               display: 'flex',
               flexDirection: 'row',
+              gap: 2,
               justifyContent: 'space-between',
               alignItems: 'center',
+              [t.breakpoints.down('md')]: {
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+              },
             },
-          }}
+          })}
         >
-          <Row gap={0.5}>
-            <TokenIcon token={token} css={{ height: '20px', mb: '2px' }} />
+          <Row gap={0.5} alignItems="flex-start">
+            <InfoOutlined
+              sx={{
+                fontSize: '1rem',
+                color: 'text.secondary',
+                mt: 0.1,
+              }}
+            />
+            <Box display={{ xs: 'none', md: 'block' }}>
+              <TokenIcon token={token} css={{ height: '20px' }} />
+            </Box>
             <Typography color="text.secondary" fontWeight={FontWeight.medium}>
               {token.symbol} is the liquidity Well token for{' '}
               {underlying[0]?.symbol} and {underlying[1]?.symbol}.
@@ -130,12 +149,16 @@ const TokenAbout = ({ token }: { token: Token }) => {
               borderRadius: '4px',
               width: 'fit-content',
               fontWeight: FontWeight.medium,
+              px: 1,
+              py: 0.75,
             }}
           >
-            View liquidity
-            <OpenInNewIcon
-              sx={{ color: 'inherit', fontSize: 'inherit', ml: '4px' }}
-            />
+            <Typography>
+              View liquidity{' '}
+              <OpenInNewIcon
+                sx={{ color: 'inherit', fontSize: 'inherit', mb: -0.3 }}
+              />
+            </Typography>
           </Button>
         </Alert>
       )}

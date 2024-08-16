@@ -21,6 +21,7 @@ const Fiat: FC<{
   allowNegative?: boolean;
   chop?: boolean;
   truncate?: boolean;
+  defaultDisplay?: string;
 }> = ({
   value: _value,
   token,
@@ -28,6 +29,7 @@ const Fiat: FC<{
   allowNegative = false,
   chop = true,
   truncate = false,
+  defaultDisplay = '?',
 }) => {
   const [denomination] = useSetting('denomination');
   const price = usePrice();
@@ -74,7 +76,7 @@ const Fiat: FC<{
           <span>{displayValue}</span>
         </>
       ) : (
-        <span>?</span>
+        <span>{defaultDisplay}</span>
       )}
     </Row>
   );

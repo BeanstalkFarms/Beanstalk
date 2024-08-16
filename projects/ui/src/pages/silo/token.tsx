@@ -19,10 +19,10 @@ import { XXLWidth } from '~/components/App/muiTheme';
 
 import { FC } from '~/types';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
-import TokenDepositsOverview from '~/components/Silo/TokenDepositsOverview';
+import TokenDepositsOverview from '~/components/Silo/Token/TokenDepositsOverview';
 import useSdk from '~/hooks/sdk';
-import TokenDepositRewards from '~/components/Silo/TokenDepositRewards';
-import TokenAbout from '~/components/Silo/TokenAbout';
+import TokenDepositRewards from '~/components/Silo/Token/TokenDepositRewards';
+import TokenAbout from '~/components/Silo/Token/TokenAbout';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,

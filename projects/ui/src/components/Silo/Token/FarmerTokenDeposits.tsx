@@ -12,7 +12,15 @@ import {
 import { useAccount } from 'wagmi';
 import { transform, trimAddress } from '~/util';
 import { GridColumns } from '@mui/x-data-grid';
-import { Button, Dialog, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import { SEEDS, STALK } from '~/constants/tokens';
 import { CheckCircleRounded, CircleOutlined } from '@mui/icons-material';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -26,12 +34,14 @@ import {
 } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
+import { minimizeWindowIcon } from '~/img/icon';
+import NorthEastIcon from '@mui/icons-material/NorthEast';
 
 type TokenDepositRow = LegacyDepositCrate & { id: string };
 
 type TokenDepositsSelectType = 'single' | 'multi' | 'view';
 
-const TokenDeposits = ({
+const FarmerTokenDeposits = ({
   token,
   siloBalance,
   selectType,
@@ -41,7 +51,10 @@ const TokenDeposits = ({
   selectType?: TokenDepositsSelectType;
 }) => {
   const sdk = useSdk();
+  const theme = useTheme();
   const { address: account } = useAccount();
+
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -86,20 +99,28 @@ const TokenDeposits = ({
       },
       {
         field: 'amount',
-        flex: 0.9,
+        flex: isMobile ? 1 : 0.9,
         headerName: 'Amount',
-        align: 'right',
-        headerAlign: 'right',
+        align: isMobile ? 'left' : 'right',
+        headerAlign: isMobile ? 'left' : 'right',
         valueGetter: (params) => params.row.amount.toNumber(),
         renderCell: (params) => (
-          <Stack alignItems="flex-end">
-            <Stack direction="row" gap={0.5} alignItems="flex-end">
+          <Stack width="100%">
+            <Stack
+              direction="row"
+              gap={0.5}
+              width="100%"
+              justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+            >
               <TokenIcon token={token} css={{ marginBottom: '2px' }} />
-              <Typography align="right">
+              <Typography>
                 {params.row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
               </Typography>
             </Stack>
-            <Typography color="text.secondary">
+            <Typography
+              color="text.secondary"
+              textAlign={{ xs: 'left', md: 'right' }}
+            >
               <Fiat token={token} amount={params.row.amount} />
             </Typography>
           </Stack>
@@ -108,7 +129,7 @@ const TokenDeposits = ({
       },
       {
         field: 'stalk',
-        flex: 1.4,
+        flex: isMobile ? 1 : 1.4,
         headerName: 'Stalk',
         align: 'right',
         headerAlign: 'right',
@@ -119,8 +140,20 @@ const TokenDeposits = ({
               <TokenIcon token={STALK} />
               {params.row.stalk.total.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
             </Typography>
-            <Typography align="right" color="text.secondary">
-              Grown since Deposit:{' '}
+            <Typography
+              align="right"
+              color="text.secondary"
+              display="inline-flex"
+            >
+              Grown
+              <Typography
+                component="span"
+                display={{ xs: 'none', md: 'block' }}
+                ml={{ xs: 0, md: 0.25 }}
+              >
+                since Deposit
+              </Typography>
+              :{' '}
               {params.row.stalk.grown.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
             </Typography>
           </Stack>
@@ -152,7 +185,7 @@ const TokenDeposits = ({
     ];
 
     return cols;
-  }, [selectType, selected, token]);
+  }, [isMobile, selectType, selected, token]);
 
   const handleSelect = (id: string) => {
     if (selectType === 'view') return;
@@ -194,15 +227,23 @@ const TokenDeposits = ({
         onlyTable
         rowSpacing={1}
         rowHeight={65}
+        columnVisibilityModel={{
+          id: !isMobile,
+          amount: true,
+          stalk: true,
+          seeds: true,
+        }}
         {...(rows.length < 10 ? { hideFooter: true } : {})}
         tableCss={{
           ...baseTableCSS,
           px: 0,
-          // pt: 0,
           '& .MuiDataGrid-row': {
             ...baseRowCSS,
             cursor: isSelectableType ? 'pointer' : 'default',
           },
+        }}
+        classes={{
+          cell: 'data-grid-cell-overflow',
         }}
       />
       {account && selectedDeposits.length === 1 && (
@@ -218,23 +259,7 @@ const TokenDeposits = ({
   );
 };
 
-export default TokenDeposits;
-
-// ---------- Dialog ----------
-
-const sharedButtonProps = {
-  sx: (theme: any) => ({
-    borderRadius: '4px',
-    width: 'fit-content',
-    fontWeight: FontWeight.normal,
-    [theme.breakpoints.down('sm')]: {
-      width: '100%',
-    },
-  }),
-  variant: 'outlined-secondary',
-  color: 'secondary',
-  size: 'small',
-} as const;
+export default FarmerTokenDeposits;
 
 const SingleTokenDepositDialogContent = ({
   row,
@@ -324,20 +349,51 @@ const SingleTokenDepositDialogContent = ({
         <Typography>{row.seeds.toFormat(2, BigNumberJS.ROUND_DOWN)}</Typography>
       </Row>
     </Row>
-
     <Row
       direction={{ xs: 'column', sm: 'row' }}
       gap={1}
       justifyContent="space-between"
+      sx={(t) => ({
+        button: {
+          [t.breakpoints.down('sm')]: {
+            width: '100%',
+          },
+          'img, svg': {
+            height: '16px',
+            width: 'auto',
+          },
+        },
+      })}
     >
-      <Button {...sharedButtonProps}>Transfer</Button>
-      <Button {...sharedButtonProps}>Update Deposit</Button>
-      <Button {...sharedButtonProps}>View on Etherscan</Button>
+      <Button
+        variant="outlined-secondary"
+        color="secondary"
+        size="small"
+        startIcon={<Box component="img" src={minimizeWindowIcon} />}
+      >
+        Transfer
+      </Button>
+      <Button
+        variant="outlined-secondary"
+        color="secondary"
+        size="small"
+        startIcon={<Box component="img" src={minimizeWindowIcon} />}
+      >
+        Update Deposit
+      </Button>
+      <Button
+        variant="outlined-secondary"
+        color="secondary"
+        size="small"
+        endIcon={<NorthEastIcon />}
+      >
+        View on Etherscan
+      </Button>
     </Row>
   </Stack>
 );
 
-// ---------- Components + Utils ----------
+// ---------- Components ----------
 
 const CircleSelect = ({ isSelected }: { isSelected: boolean }) => {
   const Component = isSelected ? CheckCircleRounded : CircleOutlined;
@@ -354,10 +410,13 @@ const CircleSelect = ({ isSelected }: { isSelected: boolean }) => {
   );
 };
 
+// ---------- CSS ----------
+
 const baseTableCSS = {
   '& .MuiDataGrid-root': {
     '& .MuiDataGrid-cell': {
       outline: 'none',
+      overflow: 'visible',
       '&:active': {
         outline: 'none',
       },
@@ -384,6 +443,12 @@ const baseTableCSS = {
       outline: 'none',
     },
   },
+
+  // enable overflow of text in cells
+  '.data-grid-cell-overflow': {
+    whiteSpace: 'nobreak !important',
+    overflow: 'visible !important',
+  },
 } as const;
 
 const baseRowCSS = {
@@ -397,7 +462,7 @@ const baseRowCSS = {
   width: '100%',
   '&:hover': {
     outlineColor: BeanstalkPalette.blue,
-    backgroundColor: BeanstalkPalette.lightestBlue,
+    backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,
   },
   '& >.MuiDataGrid-cell': {
     minHeight: '65px !important',
