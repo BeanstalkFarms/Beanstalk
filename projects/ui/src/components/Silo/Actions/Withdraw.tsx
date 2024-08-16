@@ -101,11 +101,12 @@ const WithdrawForm: FC<
   );
 
   const claimableTokens = useMemo(
-    // FIXME: Temporarily disabled Withdraws of Bean:ETH LP in Bean/WETH, needs routing code
+    // FIXME: Disable remove single sided liquidity for Well tokens for now.
     () => [
       whitelistedToken,
       ...((whitelistedToken.isLP &&
         whitelistedToken !== sdk.tokens.BEAN_ETH_WELL_LP &&
+        whitelistedToken !== sdk.tokens.BEAN_WSTETH_WELL_LP &&
         pool?.tokens) ||
         []),
     ],
