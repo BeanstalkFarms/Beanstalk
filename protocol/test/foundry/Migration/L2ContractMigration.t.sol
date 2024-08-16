@@ -28,7 +28,7 @@ contract L2ContractMigrationTest is TestHelper {
             bytes32[] memory proof
         ) = get_mock_migration_data();
 
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationDepositsAndInternalBalances(
+        L2ContractMigrationFacet(address(bs)).verifyMigrationDepositsAndInternalBalances(
             TEST_ACCOUNT,
             accountDepositData,
             accountInternalBalance,
@@ -48,7 +48,7 @@ contract L2ContractMigrationTest is TestHelper {
         ) = get_mock_migration_data();
 
         vm.expectRevert();
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationDepositsAndInternalBalances(
+        L2ContractMigrationFacet(address(bs)).verifyMigrationDepositsAndInternalBalances(
             TEST_ACCOUNT,
             accountDepositData,
             accountInternalBalance,
@@ -63,7 +63,7 @@ contract L2ContractMigrationTest is TestHelper {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert();
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationSignature(
+        L2ContractMigrationFacet(address(bs)).verifyMigrationSignature(
             test_account,
             test_account,
             type(uint256).max,
@@ -74,7 +74,7 @@ contract L2ContractMigrationTest is TestHelper {
     // verifies that the signature works for a given owner, reciever, and deadline.
     function test_valid_migration_signature(address newAddress) public {
         address test_account = vm.addr(SIG_TEST_ACCOUNT_PK);
-        bytes32 _hash = L2ContractMigrationFacet(BEANSTALK).getMigrationHash(
+        bytes32 _hash = L2ContractMigrationFacet(address(bs)).getMigrationHash(
             test_account,
             newAddress,
             type(uint256).max
@@ -82,7 +82,7 @@ contract L2ContractMigrationTest is TestHelper {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIG_TEST_ACCOUNT_PK, _hash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        L2ContractMigrationFacet(BEANSTALK).verifyMigrationSignature(
+        L2ContractMigrationFacet(address(bs)).verifyMigrationSignature(
             test_account,
             newAddress,
             type(uint256).max,

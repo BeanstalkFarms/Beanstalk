@@ -30,10 +30,6 @@ contract ConvertTest is TestHelper {
         uint256 toAmount
     );
 
-    // Interfaces.
-    MockConvertFacet convert = MockConvertFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-
     // MockTokens.
     MockToken weth = MockToken(C.WETH);
 
@@ -121,7 +117,7 @@ contract ConvertTest is TestHelper {
 
         vm.expectRevert("Convert: Not enough tokens removed.");
         vm.prank(farmers[0]);
-        convert.convert(convertData, stems, amounts);
+        bs.convert(convertData, stems, amounts);
     }
 
     /**
@@ -143,7 +139,7 @@ contract ConvertTest is TestHelper {
         amounts[0] = uint256(beanAmount);
 
         vm.expectRevert("Silo: Crate balance too low.");
-        convert.convert(convertData, new int96[](1), amounts);
+        bs.convert(convertData, new int96[](1), amounts);
     }
 
     //////////// BEAN -> WELL ////////////
@@ -168,7 +164,7 @@ contract ConvertTest is TestHelper {
 
         vm.expectRevert("Convert: P must be >= 1.");
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), new uint256[](1));
+        bs.convert(convertData, new int96[](1), new uint256[](1));
     }
 
     /**
@@ -204,7 +200,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], C.BEAN, well, expectedBeansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), amounts);
+        bs.convert(convertData, new int96[](1), amounts);
 
         assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, "BEAN -> WELL maxAmountIn should be 0");
     }
@@ -236,7 +232,7 @@ contract ConvertTest is TestHelper {
         // vm.expectEmit();
         emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), amounts);
+        bs.convert(convertData, new int96[](1), amounts);
 
         int256 newDeltaB = LibDeltaB.currentDeltaB(well);
 
@@ -275,7 +271,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
-        convert.convert(convertData, stems, amounts);
+        bs.convert(convertData, stems, amounts);
 
         // verify deltaB.
         assertEq(
@@ -290,7 +286,7 @@ contract ConvertTest is TestHelper {
         C.bean().mint(farmers[0], 20000e6);
         vm.prank(farmers[0]);
         bs.deposit(C.BEAN, 10000e6, 0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
         vm.prank(farmers[0]);
         bs.deposit(C.BEAN, 10000e6, 0);
 
@@ -320,7 +316,7 @@ contract ConvertTest is TestHelper {
 
         vm.expectRevert("Convert: P must be < 1.");
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), new uint256[](1));
+        bs.convert(convertData, new int96[](1), new uint256[](1));
     }
 
     /**
@@ -350,7 +346,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, C.BEAN, maxLPin, beansAddedToWell);
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), amounts);
+        bs.convert(convertData, new int96[](1), amounts);
 
         assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, "WELL -> BEAN maxAmountIn should be 0");
     }
@@ -368,7 +364,7 @@ contract ConvertTest is TestHelper {
         );
 
         vm.expectRevert("Convert: Invalid Well");
-        convert.convert(convertData, new int96[](1), new uint256[](1));
+        bs.convert(convertData, new int96[](1), new uint256[](1));
     }
 
     /**
@@ -382,7 +378,7 @@ contract ConvertTest is TestHelper {
         setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
         uint256 initalWellBeanBalance = bean.balanceOf(well);
         uint256 initalLPbalance = MockToken(well).totalSupply();
-        uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+        uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
         uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
         lpConverted = bound(lpConverted, minLp, lpMinted / 2);
@@ -408,7 +404,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
         vm.prank(farmers[0]);
-        convert.convert(convertData, new int96[](1), amounts);
+        bs.convert(convertData, new int96[](1), amounts);
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
         assertEq(
@@ -427,7 +423,7 @@ contract ConvertTest is TestHelper {
             "well LP balance does not equal initalLPbalance - lpConverted"
         );
         assertEq(
-            bean.balanceOf(BEANSTALK),
+            bean.balanceOf(address(bs)),
             initalBeanBalance + expectedAmtOut,
             "bean balance does not equal initalBeanBalance + expectedAmtOut"
         );
@@ -444,7 +440,7 @@ contract ConvertTest is TestHelper {
         setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
         uint256 initalWellBeanBalance = bean.balanceOf(well);
         uint256 initalLPbalance = MockToken(well).totalSupply();
-        uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+        uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
         uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
         lpConverted = bound(lpConverted, minLp, lpMinted);
@@ -474,7 +470,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
         vm.prank(farmers[0]);
-        convert.convert(convertData, stems, amounts);
+        bs.convert(convertData, stems, amounts);
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
         assertEq(
@@ -493,7 +489,7 @@ contract ConvertTest is TestHelper {
             "well LP balance does not equal initalLPbalance - lpConverted"
         );
         assertEq(
-            bean.balanceOf(BEANSTALK),
+            bean.balanceOf(address(bs)),
             initalBeanBalance + expectedAmtOut,
             "bean balance does not equal initalBeanBalance + expectedAmtOut"
         );
@@ -504,10 +500,10 @@ contract ConvertTest is TestHelper {
         // note: LP is minted with an price of 1000 beans.
         lpMinted = mintBeanLPtoUser(farmers[0], 100000e6, 1000e6);
         vm.startPrank(farmers[0]);
-        MockToken(well).approve(BEANSTALK, type(uint256).max);
+        MockToken(well).approve(address(bs), type(uint256).max);
 
         bs.deposit(well, lpMinted / 2, 0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
         bs.deposit(well, lpMinted - (lpMinted / 2), 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
@@ -574,7 +570,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, well, initalAmount, initalAmount);
         vm.prank(farmers[0]);
-        (int96 toStem, , , , ) = convert.convert(convertData, stems, amounts);
+        (int96 toStem, , , , ) = bs.convert(convertData, stems, amounts);
 
         (uint256 updatedAmount, uint256 updatedBdv) = bs.getDeposit(farmers[0], well, toStem);
         // the stem of a deposit increased, because the stalkPerBdv of the deposit decreased.
@@ -617,7 +613,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, well, initalAmount, initalAmount);
         vm.prank(farmers[0]);
-        (int96 toStem, , , , ) = convert.convert(convertData, stems, amounts);
+        (int96 toStem, , , , ) = bs.convert(convertData, stems, amounts);
 
         (uint256 updatedAmount, uint256 updatedBdv) = bs.getDeposit(farmers[0], well, toStem);
         assertEq(toStem, int96(0), "stems should be equal");
@@ -651,7 +647,7 @@ contract ConvertTest is TestHelper {
         vm.expectEmit();
         emit Convert(farmers[0], well, well, lpCombined, lpCombined);
         vm.prank(farmers[0]);
-        convert.convert(convertData, stems, amounts);
+        bs.convert(convertData, stems, amounts);
 
         // verify old deposits are gone.
         // see `multipleWellDepositSetup` to understand the deposits.
@@ -694,7 +690,7 @@ contract ConvertTest is TestHelper {
     //     setReserves(well, bean.balanceOf(well) + deltaB, weth.balanceOf(well));
     //     uint256 initalWellBeanBalance = bean.balanceOf(well);
     //     uint256 initalLPbalance = MockToken(well).totalSupply();
-    //     uint256 initalBeanBalance = bean.balanceOf(BEANSTALK);
+    //     uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
     //     uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
     //     lpConverted = bound(lpConverted, minLp, lpMinted / 2);
@@ -720,7 +716,7 @@ contract ConvertTest is TestHelper {
     //     vm.expectEmit();
     //     emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
     //     vm.prank(farmers[0]);
-    //     convert.convert(
+    //     bs.convert(
     //         convertData,
     //         new int96[](1),
     //         amounts
@@ -730,6 +726,6 @@ contract ConvertTest is TestHelper {
     //     assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
     //     assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
     //     assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
-    //     assertEq(bean.balanceOf(BEANSTALK), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
+    //     assertEq(bean.balanceOf(address(bs)), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');
     // }
 }

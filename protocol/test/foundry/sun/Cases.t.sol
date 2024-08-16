@@ -11,9 +11,6 @@ contract CasesTest is TestHelper {
     event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-
     address well = C.BEAN_ETH_WELL;
     uint256 constant EX_LOW = 0;
     uint256 constant RES_LOW = 1;
@@ -71,7 +68,7 @@ contract CasesTest is TestHelper {
         l2SR = (caseId / 36) % 4;
 
         // set beanstalk state based on parameters.
-        deltaB = season.setBeanstalkState(price, podRate, changeInSoilDemand, l2SR, well);
+        deltaB = bs.setBeanstalkState(price, podRate, changeInSoilDemand, l2SR, well);
 
         // evaluate and update state.
         vm.expectEmit(true, true, false, false);
@@ -79,7 +76,7 @@ contract CasesTest is TestHelper {
         vm.expectEmit(true, true, false, false);
         emit BeanToMaxLpGpPerBdvRatioChange(1, caseId, 0);
 
-        uint256 caseId = season.mockCalcCaseIdandUpdate(deltaB);
+        uint256 caseId = bs.mockCalcCaseIdandUpdate(deltaB);
         (, int8 bT, , int80 bL) = bs.getChangeFromCaseId(caseId);
 
         // CASE INVARIENTS
@@ -156,8 +153,8 @@ contract CasesTest is TestHelper {
     function testSowTimeSoldOutSlower(uint256 lastSowTime, uint256 thisSowTime) public {
         // set podrate to reasonably high,
         // as we want to verify temp changes as a function of soil demand.
-        season.setPodRate(RES_HIGH);
-        season.setPrice(ABOVE_PEG, well);
+        bs.setPodRate(RES_HIGH);
+        bs.setPrice(ABOVE_PEG, well);
 
         // 10% temp for easier testing.
         bs.setMaxTempE(10);
@@ -167,14 +164,14 @@ contract CasesTest is TestHelper {
         lastSowTime = bound(lastSowTime, 601, 3599);
         thisSowTime = bound(thisSowTime, lastSowTime + 61, 3660);
 
-        season.setLastSowTimeE(uint32(lastSowTime));
-        season.setNextSowTimeE(uint32(thisSowTime));
+        bs.setLastSowTimeE(uint32(lastSowTime));
+        bs.setNextSowTimeE(uint32(thisSowTime));
 
         // calc caseId
-        season.calcCaseIdE(1, 0);
+        bs.calcCaseIdE(1, 0);
 
         // beanstalk should record this season's sow time,
-        // and set it as last sow time for next season.
+        // and set it as last sow time for next bs.
         IMockFBeanstalk.Weather memory w = bs.weather();
         assertEq(uint256(w.lastSowTime), thisSowTime);
         assertEq(uint256(w.thisSowTime), type(uint32).max);
@@ -191,8 +188,8 @@ contract CasesTest is TestHelper {
     function testSowTimeSoldOutSowSameTime(uint256 lastSowTime, uint256 thisSowTime) public {
         // set podrate to reasonably high,
         // as we want to verify temp changes as a function of soil demand.
-        season.setPodRate(RES_HIGH);
-        season.setPrice(ABOVE_PEG, well);
+        bs.setPodRate(RES_HIGH);
+        bs.setPrice(ABOVE_PEG, well);
 
         // 10% temp for easier testing.
         bs.setMaxTempE(10);
@@ -202,14 +199,14 @@ contract CasesTest is TestHelper {
         lastSowTime = bound(lastSowTime, 600, 3600);
         thisSowTime = bound(thisSowTime, lastSowTime, lastSowTime + 60);
 
-        season.setLastSowTimeE(uint32(lastSowTime));
-        season.setNextSowTimeE(uint32(thisSowTime));
+        bs.setLastSowTimeE(uint32(lastSowTime));
+        bs.setNextSowTimeE(uint32(thisSowTime));
 
         // calc caseId
-        season.calcCaseIdE(1, 0);
+        bs.calcCaseIdE(1, 0);
 
         // beanstalk should record this season's sow time,
-        // and set it as last sow time for next season.
+        // and set it as last sow time for next bs.
         IMockFBeanstalk.Weather memory w = bs.weather();
         assertEq(uint256(w.lastSowTime), thisSowTime);
         assertEq(uint256(w.thisSowTime), type(uint32).max);
@@ -226,8 +223,8 @@ contract CasesTest is TestHelper {
     function testSowTimeSoldOutFaster(uint256 lastSowTime, uint256 thisSowTime) public {
         // set podrate to reasonably high,
         // as we want to verify temp changes as a function of soil demand.
-        season.setPodRate(RES_HIGH);
-        season.setPrice(ABOVE_PEG, well);
+        bs.setPodRate(RES_HIGH);
+        bs.setPrice(ABOVE_PEG, well);
 
         // 10% temp for easier testing.
         bs.setMaxTempE(10);
@@ -237,14 +234,14 @@ contract CasesTest is TestHelper {
         lastSowTime = bound(lastSowTime, 601, 3600);
         thisSowTime = bound(thisSowTime, 1, lastSowTime - 61);
 
-        season.setLastSowTimeE(uint32(lastSowTime));
-        season.setNextSowTimeE(uint32(thisSowTime));
+        bs.setLastSowTimeE(uint32(lastSowTime));
+        bs.setNextSowTimeE(uint32(thisSowTime));
 
         // calc caseId
-        season.calcCaseIdE(1, 0);
+        bs.calcCaseIdE(1, 0);
 
         // beanstalk should record this season's sow time,
-        // and set it as last sow time for next season.
+        // and set it as last sow time for next bs.
         IMockFBeanstalk.Weather memory w = bs.weather();
         assertEq(uint256(w.lastSowTime), thisSowTime);
         assertEq(uint256(w.thisSowTime), type(uint32).max);

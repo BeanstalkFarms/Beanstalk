@@ -79,25 +79,26 @@ contract TestHelper is
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool alt, bool verbose) public {
+        address payable bsAddr;
         // Set the deployment addresses of various Beanstalk components.
         if (!alt) {
-            BEANSTALK = payable(LibConstant.BEANSTALK);
+            bsAddr = payable(LibConstant.BEANSTALK);
             bean = MockToken(C.BEAN);
             FERTILIZER = C.fertilizerAddress();
             BEAN_ETH_WELL = C.BEAN_ETH_WELL;
             BEAN_WSTETH_WELL = C.BEAN_WSTETH_WELL;
-            vm.label(BEANSTALK, "Beanstalk_");
+            vm.label(bsAddr, "Beanstalk_");
         } else {
-            BEANSTALK = payable(LibAltC.BEANSTALK);
+            bsAddr = payable(LibAltC.BEANSTALK);
             bean = MockToken(LibAltC.BEAN);
             FERTILIZER = LibAltC.FERTILIZER;
             BEAN_ETH_WELL = LibAltC.BEAN_ETH_WELL;
             BEAN_WSTETH_WELL = LibAltC.BEAN_WSTETH_WELL;
-            vm.label(BEANSTALK, "Alt_Beanstalk");
+            vm.label(bsAddr, "Alt_Beanstalk");
         }
 
         // general mock interface for beanstalk.
-        bs = IMockFBeanstalk(BEANSTALK);
+        bs = IMockFBeanstalk(bsAddr);
 
         // initialize misc contracts.
         initMisc();
@@ -124,10 +125,10 @@ contract TestHelper is
         // deploy fertilizer contract, and transfer ownership to beanstalk.
         // note: does not initailize barn raise.
         initFertilizer(verbose);
-        transferFertilizerOwnership(BEANSTALK);
+        transferFertilizerOwnership(bsAddr);
 
         // initialize Diamond, initialize users:
-        setupDiamond(BEANSTALK, mock, verbose);
+        setupDiamond(bsAddr, mock, verbose);
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
@@ -135,7 +136,7 @@ contract TestHelper is
         // TODO: upon deployment, setup these state settings
         initStateSettings();
 
-        vm.prank(BEANSTALK);
+        vm.prank(bsAddr);
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
@@ -215,7 +216,7 @@ contract TestHelper is
     function maxApproveBeanstalk(address[] memory users) public {
         for (uint i; i < users.length; i++) {
             vm.prank(users[i]);
-            C.bean().approve(BEANSTALK, type(uint256).max);
+            C.bean().approve(address(bs), type(uint256).max);
         }
     }
 
@@ -236,7 +237,7 @@ contract TestHelper is
     function mintTokensToUser(address user, address token, uint256 amount) internal {
         MockToken(token).mint(user, amount);
         vm.prank(user);
-        MockToken(token).approve(BEANSTALK, type(uint256).max);
+        MockToken(token).approve(address(bs), type(uint256).max);
     }
 
     function addLiquidityToWell(
@@ -344,7 +345,7 @@ contract TestHelper is
             MockToken(token).mint(user, amount);
         }
         outputAmount = amount;
-        MockToken(token).approve(BEANSTALK, amount);
+        MockToken(token).approve(address(bs), amount);
         bs.deposit(token, amount, 0);
     }
 

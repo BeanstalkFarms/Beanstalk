@@ -10,8 +10,6 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
  * @dev common utilities for forge tests
  */
 contract Utils is Test {
-    // beanstalk
-    address payable public BEANSTALK;
     IMockFBeanstalk public bs;
     address internal deployer;
 

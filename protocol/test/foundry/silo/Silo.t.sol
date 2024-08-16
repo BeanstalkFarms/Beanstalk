@@ -11,9 +11,6 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
  * @notice Tests the functionality of the Silo.
  */
 contract SiloTest is TestHelper {
-    // Interfaces.
-    MockSiloFacet silo = MockSiloFacet(BEANSTALK);
-
     // test accounts
     address[] farmers;
 

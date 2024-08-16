@@ -45,11 +45,10 @@ contract PipelineConvertTest is TestHelper {
     using LibRedundantMath256 for uint256;
 
     // Interfaces.
-    // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
-    MockSiloFacet silo = MockSiloFacet(BEANSTALK);
-    PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-    DepotFacet depot = DepotFacet(BEANSTALK);
+    MockSiloFacet silo;
+    PipelineConvertFacet convert;
+    MockSeasonFacet season;
+    DepotFacet depot;
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
     MiscHelperContract miscHelper = new MiscHelperContract();
@@ -129,6 +128,11 @@ contract PipelineConvertTest is TestHelper {
         // initialize farmers.
         farmers.push(users[1]);
         farmers.push(users[2]);
+
+        silo = MockSiloFacet(address(bs));
+        convert = PipelineConvertFacet(address(bs));
+        season = MockSeasonFacet(address(bs));
+        depot = DepotFacet(address(bs));
 
         // add initial liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
@@ -1674,7 +1678,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(users[1]);
-        MockToken(well).approve(BEANSTALK, type(uint256).max);
+        MockToken(well).approve(address(bs), type(uint256).max);
 
         vm.prank(users[1]);
         (uint256 depositedAmount, uint256 _bdv, int96 theStem) = silo.deposit(
@@ -1795,7 +1799,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(user);
-        MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
+        MockToken(beanEthWell).approve(address(bs), type(uint256).max);
     }
 
     function removeEthFromWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
@@ -1819,7 +1823,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(user);
-        MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
+        MockToken(beanEthWell).approve(address(bs), type(uint256).max);
     }
 
     /**

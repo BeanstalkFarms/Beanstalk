@@ -28,9 +28,6 @@ contract OracleTest is TestHelper {
         int256 deltaBdv
     );
 
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
-
     // test accounts.
     address[] farmers;
 
@@ -63,7 +60,7 @@ contract OracleTest is TestHelper {
         // upon the first sunrise call of a well, the well cumulative reserves are initialized,
         // and will not return a deltaB. We initialize the well cumulative reserves here.
         // See: {LibWellMinting.capture}
-        season.initOracleForAllWhitelistedWells();
+        bs.initOracleForAllWhitelistedWells();
 
         // chainlink oracles need to be initialized for the wells.
         initializeChainlinkOraclesForWhitelistedWells();
@@ -90,7 +87,7 @@ contract OracleTest is TestHelper {
             vm.expectEmit();
             emit WellOracle(currentSeason, lps[i], deltaB, data);
         }
-        season.captureE();
+        bs.captureE();
     }
 
     /**
@@ -111,12 +108,12 @@ contract OracleTest is TestHelper {
             );
             // deltaB may differ by 1 due to rounding errors.
             // validate poolDeltaB with calculated deltaB.
-            int256 poolDeltaB = season.getPoolDeltaBWithoutCap(lps[i]);
+            int256 poolDeltaB = bs.getPoolDeltaBWithoutCap(lps[i]);
             assertApproxEqAbs(poolDeltaB, deltaBPerWell[i], 1);
             vm.expectEmit();
             emit WellOracle(currentSeason, lps[i], poolDeltaB, data);
         }
-        season.captureE();
+        bs.captureE();
     }
 
     /**

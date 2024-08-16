@@ -15,16 +15,16 @@ contract OracleTest is TestHelper {
 
     function test_getUsdPrice() public {
         // encode type 0x01
-        uint256 price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
+        uint256 price = OracleFacet(address(bs)).getUsdPrice(WBTC);
         assertEq(price, 50000e6);
 
         // change encode type to 0x02:
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
         );
-        price = OracleFacet(BEANSTALK).getUsdPrice(WBTC);
+        price = OracleFacet(address(bs)).getUsdPrice(WBTC);
         assertApproxEqRel(price, 50000e6, 0.001e18);
     }
 }

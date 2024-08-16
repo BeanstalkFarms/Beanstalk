@@ -13,14 +13,16 @@ contract FieldTest is TestHelper {
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
     // Interfaces.
-    MockFieldFacet field = MockFieldFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
+    MockFieldFacet field;
+    MockSeasonFacet season;
 
     // test accounts
     address[] farmers;
 
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
+        field = MockFieldFacet(address(bs));
+        season = MockSeasonFacet(address(bs));
 
         // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
@@ -255,7 +257,7 @@ contract FieldTest is TestHelper {
             farmer1BeansBeforeSow + farmer2BeansBeforeSow - totalAmountSown,
             "invalid bean supply"
         );
-        assertEq(C.bean().balanceOf(BEANSTALK), 0, "beans remaining in beanstalk");
+        assertEq(C.bean().balanceOf(address(bs)), 0, "beans remaining in beanstalk");
 
         assertEq(field.totalPods(0), totalPodsIssued, "invalid total pods");
         assertEq(field.totalUnharvestable(0), totalPodsIssued, "invalid unharvestable");
@@ -361,7 +363,7 @@ contract FieldTest is TestHelper {
         uint256 expectedPods
     ) public view {
         assertEq(bs.getBalance(account, C.BEAN), preBeanBalance - sowedAmount, "balanceOf");
-        assertEq(C.bean().balanceOf(BEANSTALK), 0, "field balanceOf");
+        assertEq(C.bean().balanceOf(address(bs)), 0, "field balanceOf");
         assertEq(C.bean().totalSupply(), preTotalBalance - sowedAmount, "total supply");
 
         //// FIELD STATE ////

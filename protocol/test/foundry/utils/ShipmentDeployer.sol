@@ -27,17 +27,17 @@ contract ShipmentDeployer is Utils {
     address shipmentPlannerFour;
 
     function initShipping(bool verbose) internal {
-        bs = IBS(BEANSTALK);
-
-        // Create Field, set active, and initialize Temperature.
+        // Create two Fields, set active, and initialize Temperature.
+        // vm.prank(deployer);
+        // bs.addField();
         vm.prank(deployer);
         bs.addField();
         vm.prank(deployer);
         bs.setActiveField(0, 1);
 
         // Deploy the planner, which will determine points and caps of each route.
-        shipmentPlanner = address(new ShipmentPlanner(BEANSTALK));
-        shipmentPlannerFour = address(new ShipmentPlannerFour(BEANSTALK));
+        shipmentPlanner = address(new ShipmentPlanner(address(bs)));
+        shipmentPlannerFour = address(new ShipmentPlannerFour(address(bs)));
 
         // Set up three routes: the Silo, Barn, and a Field.
         setRoutes_siloAndBarnAndField();
@@ -82,7 +82,7 @@ contract ShipmentDeployer is Utils {
     }
 
     function setRoutes_siloAndFields() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](1 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -107,7 +107,7 @@ contract ShipmentDeployer is Utils {
      * @dev Need to add Fields before calling.
      */
     function setRoutes_siloAndBarnAndField() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](2 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -137,7 +137,7 @@ contract ShipmentDeployer is Utils {
      * @dev Need to add Fields before calling.
      */
     function setRoutes_siloAndBarnAndTwoFields() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         require(fieldCount == 2, "Must have 2 Fields to set routes");
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](2 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({
