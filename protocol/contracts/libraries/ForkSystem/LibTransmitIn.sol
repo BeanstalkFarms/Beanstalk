@@ -67,6 +67,9 @@ library LibTransmitIn {
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
         for (uint256 i = 0; i < deposits.length; i++) {
             SourceDeposit memory deposit = abi.decode(deposits[i], (SourceDeposit));
+
+            _alterDeposit(deposit);
+
             // NOTE give 1:1 token + BDV ??
             C.bean().mint(address(this), deposit._burnedBeans);
 
@@ -134,6 +137,8 @@ library LibTransmitIn {
         for (uint256 i = 0; i < fertilizer.length; i++) {
             SourceFertilizer memory sourceFert = abi.decode(fertilizer[i], (SourceFertilizer));
 
+            _alterFertilizer(sourceFert);
+
             // Update Beanstalk state and mint Fert to user. Bypasses standard minting calcs.
             LibFertilizer.IncrementFertState(sourceFert.amount, sourceFert._remainingBpf);
             C.fertilizer().beanstalkMint(
@@ -163,9 +168,15 @@ library LibTransmitIn {
         // This Destination configuration expects all source Plots to be in the same Field.
         for (uint256 i; i < plots.length; i++) {
             SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
+
+            _alterPlot(sourcePlot);
+
             require(sourcePlot.fieldId == 0, "Field unsupported");
             // require(sourcePlot.amount > 1000e6, "Too small");
-            require(sourcePlot.index >= s.sys.fields[IN_FIELD].harvestable, "index already harvestable");
+            require(
+                sourcePlot.index >= s.sys.fields[IN_FIELD].harvestable,
+                "index already harvestable"
+            );
             if (sourcePlot.index > s.sys.fields[IN_FIELD].latestTransmittedPlotIndex) {
                 _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
             } else {
@@ -222,5 +233,20 @@ library LibTransmitIn {
 
         s.sys.fields[IN_FIELD].latestTransmittedPlotIndex = index;
         s.sys.fields[IN_FIELD].latestTransmittedPlotOwner = user;
+    }
+
+    function _alterDeposit(SourceDeposit memory deposit) private {
+        // NOTE this is a placeholder for future child-specific logic.
+        return;
+    }
+
+    function _alterFertilizer(SourceFertilizer memory fertilizer) private {
+        // NOTE this is a placeholder for future child-specific logic.
+        return;
+    }
+
+    function _alterPlot(SourcePlot memory plot) private {
+        // NOTE this is a placeholder for future child-specific logic.
+        return;
     }
 }
