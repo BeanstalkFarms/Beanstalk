@@ -98,23 +98,20 @@ task("getTime", async function () {
 
 task("reseed", async (mock = true) => {
   // mint more eth to the bcm to cover gas costs
-  let account;
-  if (mock) {
-    account = await impersonateSigner(BCM);
-    await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
-  } else {
-    // account = BCM signer
-  }
-  await reseed(account);
+  let bcm = await impersonateSigner(BCM);
+  let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  await mintEth(bcm.address);
+  await mintEth(beanstalkDeployer.address);
+  await reseed(bcm, beanstalkDeployer);
 });
 
 task("L2 reseed no state", async () => {
   // mint more eth to the bcm to cover gas costs
-  let account;
-  account = await impersonateSigner(BCM);
-  await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
-
-  await reseed(account, true, false, 0, 11, true, false);
+  let account = await impersonateSigner(BCM);
+  let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  await mintEth(BCM);
+  await mintEth(beanstalkDeployer.address);
+  await reseed(account, beanstalkDeployer, true, false, 0, 11, true, false);
 });
 
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
