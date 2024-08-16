@@ -100,18 +100,24 @@ task("reseed", async (mock = true) => {
   // mint more eth to the bcm to cover gas costs
   let bcm = await impersonateSigner(BCM);
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  // todo: get l2bcm once deployed.
+  let l2bcm = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f8");
   await mintEth(bcm.address);
   await mintEth(beanstalkDeployer.address);
-  await reseed(bcm, beanstalkDeployer);
+  await mintEth(l2bcm.address);
+  await reseed(bcm, beanstalkDeployer, l2bcm);
 });
 
 task("L2 reseed no state", async () => {
   // mint more eth to the bcm to cover gas costs
-  let account = await impersonateSigner(BCM);
+  let bcm = await impersonateSigner(BCM);
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  // todo: get l2bcm once deployed.
+  let l2bcm = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f8");
   await mintEth(BCM);
   await mintEth(beanstalkDeployer.address);
-  await reseed(account, beanstalkDeployer, true, false, 0, 11, true, false);
+  await mintEth(l2bcm.address);
+  await reseed(bcm, beanstalkDeployer, l2bcm, true, false, 0, 11, true, false);
 });
 
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
