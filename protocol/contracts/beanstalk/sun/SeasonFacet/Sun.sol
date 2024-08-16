@@ -53,10 +53,9 @@ contract Sun is Oracle, Distribution {
 
             setSoilAbovePeg(s.sys.fields[s.sys.activeField].harvestable - priorHarvestable, caseId);
             s.sys.season.abovePeg = true;
-        }
-        // Below peg
-        else {
+        } else {
             setSoilBelowPeg(deltaB);
+            // Below peg
             s.sys.season.abovePeg = false;
         }
     }

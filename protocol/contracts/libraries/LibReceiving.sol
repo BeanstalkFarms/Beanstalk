@@ -127,13 +127,12 @@ library LibReceiving {
                 // Calculate BPF beyond the first Fertilizer edge.
                 remainingBpf = (amountToFertilize - deltaFertilized) / s.sys.fert.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
-            }
-            // Else, if there is no more fertilizer. Matches plan cap.
-            else {
+            } else {
                 s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.sys.fert.fertilizedIndex += deltaFertilized;
                 require(amountToFertilize == deltaFertilized, "Inexact amount of Beans at Barn");
                 require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
+                // Else, if there is no more fertilizer. Matches plan cap.
                 break;
             }
         }
