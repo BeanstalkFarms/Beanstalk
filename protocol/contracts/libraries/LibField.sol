@@ -25,7 +25,7 @@ library LibField {
     }
 
     /**
-     * @dev Plot indexes not tracked for null address.
+     * @dev Plot indexes are not tracked for null address.
      */
     function deletePlot(address account, uint256 fieldId, uint256 index) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();

@@ -156,7 +156,7 @@ library LibMigrateOut {
         address account,
         SourcePlot[] memory plots
     ) internal returns (bytes[] memory plotsOut) {
-        if (plotsOut.length == 0) return plotsOut;
+        if (plots.length == 0) return plotsOut;
         AppStorage storage s = LibAppStorage.diamondStorage();
         plotsOut = new bytes[](plots.length);
         for (uint256 i; i < plots.length; i++) {

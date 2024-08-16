@@ -30,8 +30,6 @@ library LibMigrateIn {
 
     event PlotMigratedIn(address indexed user, SourcePlot sourcePlot);
 
-    uint256 internal constant IN_FIELD = 9;
-
     // Definitions must match source migration definitions. May require multiple definitions.
     struct SourceDeposit {
         address token;
@@ -58,7 +56,7 @@ library LibMigrateIn {
         uint128 _remainingBpf;
     }
 
-    uint256 internal constant IN_FIELD = 9;
+    uint256 internal constant IN_FIELD = 1;
 
     // Mint assets locally.
     // Underlying external ERC20s have already been transferred to destination beanstalk.
@@ -166,7 +164,7 @@ library LibMigrateIn {
             SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
             require(sourcePlot.fieldId == 0, "Field unsupported");
             // require(sourcePlot.amount > 1000e6, "Too small");
-            require(sourcePlot.index > s.sys.fields[IN_FIELD].harvestable); // 0 index not supported
+            require(sourcePlot.index >= s.sys.fields[IN_FIELD].harvestable, "index already harvestable");
             if (sourcePlot.index > s.sys.fields[IN_FIELD].latestMigratedPlotIndex) {
                 _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
             } else {

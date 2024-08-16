@@ -32,7 +32,7 @@ contract MigrateOutFacet is Invariable {
             destination,
             sourceDeposits
         );
-        bytes[] memory plots; // = LibMigrateOut.migrateOutPlots(LibTractor._user(), sourcePlots);
+        bytes[] memory plots = LibMigrateOut.migrateOutPlots(LibTractor._user(), sourcePlots);
         bytes[] memory fertilizer = LibMigrateOut.migrateOutFertilizer(
             LibTractor._user(),
             sourceFertilizer

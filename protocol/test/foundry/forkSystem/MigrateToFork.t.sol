@@ -20,6 +20,9 @@ contract MigrateToForkTest is TestHelper {
     IMockFBeanstalk newBs;
     address NEW_BEANSTALK;
 
+    uint256 SRC_FIELD = 0;
+    uint256 DEST_FIELD = 1;
+
     uint32 constant REPLANT_SEASON = 6074;
 
     address ZERO_ADDR = LibConstant.ZERO_ADDRESS;
@@ -72,6 +75,8 @@ contract MigrateToForkTest is TestHelper {
 
         newBs = IMockFBeanstalk(altEcosystem.bs());
         NEW_BEANSTALK = address(newBs);
+        vm.prank(deployer);
+        newBs.addField();
         newBs.fastForward(100);
     }
 
@@ -177,31 +182,31 @@ contract MigrateToForkTest is TestHelper {
         address user = farmers[2];
 
         uint256 podsPerSow = sowForUser(user, sowAmount);
-        uint256 halfPlot = podsPerSow / 2;
+        uint256 partialAmt = podsPerSow / 3;
+        uint256 remainingAmt = podsPerSow - partialAmt;
         sowForUser(user, sowAmount);
 
         IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](2);
         {
             // Initial Migration of a Plot. With index != 0.
             plots[0] = IMockFBeanstalk.SourcePlot(
-                0, // fieldId
+                SRC_FIELD, // fieldId
                 podsPerSow, // plotId
                 podsPerSow, // amount
                 0 // prevDestIndex
             );
             // Migration of a plot prior to latest migrated plot.
             plots[1] = IMockFBeanstalk.SourcePlot(
-                0, // fieldId
+                SRC_FIELD, // fieldId
                 0, // plotId
-                halfPlot, // amount
+                partialAmt, // amount
                 0 // prevDestIndex
             );
         }
 
         vm.prank(user);
         bs.migrateOut(
-            // TODO change to not migrate into self, but this requires significant changes to initialization system.
-            NEW_BEANSTALK, // Migrate into self
+            NEW_BEANSTALK,
             new IMockFBeanstalk.SourceDeposit[](0),
             plots,
             new IMockFBeanstalk.SourceFertilizer[](0),
@@ -210,16 +215,18 @@ contract MigrateToForkTest is TestHelper {
 
         // Verify Source plots.
         {
-            require(bs.plot(user, 0, 0) == 0, "1st src plot amount");
-            require(bs.plot(user, 0, podsPerSow) == halfPlot, "2nd src plot amount");
-            require(bs.plot(user, 0, podsPerSow + halfPlot) == halfPlot, "2.5 src plot amount");
-            require(bs.plot(ZERO_ADDR, 0, 0) == podsPerSow, "1st src null plot amount");
-            require(bs.plot(ZERO_ADDR, 0, podsPerSow) == halfPlot, "2nd src null plot amount");
+            require(bs.plot(user, SRC_FIELD, 0) == 0, "1st src amt");
+            require(bs.plot(user, SRC_FIELD, partialAmt) == remainingAmt, "1.5 src amt");
+            require(bs.plot(user, SRC_FIELD, podsPerSow) == 0, "2nd src amt");
+            require(bs.plot(ZERO_ADDR, SRC_FIELD, 0) == partialAmt, "1st src null amt");
+            require(bs.plot(ZERO_ADDR, SRC_FIELD, partialAmt) == 0, "1.5 src null amt");
+            require(bs.plot(ZERO_ADDR, SRC_FIELD, podsPerSow) == podsPerSow, "2nd src null amt");
         }
         // Verify Destination plots.
         {
-            require(newBs.plot(user, 0, 0) == podsPerSow, "1st src plot amount");
-            require(newBs.plot(user, 0, podsPerSow) == podsPerSow, "2nd src plot amount");
+            require(newBs.plot(user, DEST_FIELD, 0) == partialAmt, "1st dest amt");
+            require(newBs.plot(ZERO_ADDR, DEST_FIELD, partialAmt) == remainingAmt, "1.5 dest amt");
+            require(newBs.plot(user, DEST_FIELD, podsPerSow) == podsPerSow, "2nd dest amt");
         }
     }
 
