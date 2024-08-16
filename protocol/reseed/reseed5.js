@@ -15,12 +15,13 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   }
   const fertilizerIds = JSON.parse(await fs.readFileSync(barnRaisePath));
 
-  targetEntriesPerChunk = 800;
+  // Keep this lower due to fert id 100663296
+  targetEntriesPerChunk = 100;
   fertChunks = await splitEntriesIntoChunksOptimized(fertilizerIds, targetEntriesPerChunk);
   const InitFacet = await (await ethers.getContractFactory("ReseedBarn", account)).deploy();
   await InitFacet.deployed();
   for (let i = 0; i < fertChunks.length; i++) {
-    await updateProgress(i + 1, plotChunks.length);
+    await updateProgress(i + 1, fertChunks.length);
     if (verbose) {
       console.log("Data chunk:", fertChunks[i]);
       console.log("-----------------------------------");

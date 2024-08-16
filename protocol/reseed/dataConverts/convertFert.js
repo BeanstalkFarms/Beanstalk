@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseFertilizer(inputFilePath, outputFilePath, chunkSize) {
+function parseFertilizer(inputFilePath, outputFilePath) {
     try {
         const data = fs.readFileSync(inputFilePath, 'utf8');
         const accounts = JSON.parse(data)._balances;
@@ -12,22 +12,19 @@ function parseFertilizer(inputFilePath, outputFilePath, chunkSize) {
                 const accountIds = Object.keys(accountData);
 
                 if (accountIds.length > 0) {
-                    // Split accounts into chunks of chunkSize
-                    for (let i = 0; i < accountIds.length; i += chunkSize) {
-                        const accountChunk = accountIds.slice(i, i + chunkSize).map(account => {
-                            const { amount, lastBpf } = accountData[account];
-                            return [
-                                account,
-                                parseInt(amount, 16).toString(),
-                                parseInt(lastBpf, 16).toString()
-                            ];
-                        });
+                    const accountArray = accountIds.map(account => {
+                        const { amount, lastBpf } = accountData[account];
+                        return [
+                            account,
+                            parseInt(amount, 16).toString(),
+                            parseInt(lastBpf, 16).toString()
+                        ];
+                    });
 
-                        result.push([
-                            parseInt(fertilizerId, 16).toString(),
-                            accountChunk
-                        ]);
-                    }
+                    result.push([
+                        parseInt(fertilizerId, 16).toString(),
+                        accountArray
+                    ]);
                 }
             }
         }

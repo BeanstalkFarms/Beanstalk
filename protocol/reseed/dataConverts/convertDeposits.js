@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function parseDeposits(inputFilePath, outputFilePath, chunkSize) {
+function parseDeposits(inputFilePath, outputFilePath) {
     try {
         const data = fs.readFileSync(inputFilePath, 'utf8');
         const accounts = JSON.parse(data);
@@ -12,22 +12,16 @@ function parseDeposits(inputFilePath, outputFilePath, chunkSize) {
                 const depositIds = Object.keys(deposits);
 
                 if (depositIds.length > 0) {
-                    // Split deposits into chunks of chunkSize
-                    for (let i = 0; i < depositIds.length; i += chunkSize) {
-                        const depositChunk = depositIds.slice(i, i + chunkSize).map(depositId => {
-                            const { amount, bdv } = deposits[depositId];
-                            return [
-                                depositId,
-                                parseInt(amount, 16).toString(),
-                                parseInt(bdv, 16).toString()
-                            ];
-                        });
+                    const depositArray = depositIds.map(depositId => {
+                        const { amount, bdv } = deposits[depositId];
+                        return [
+                            depositId,
+                            parseInt(amount, 16).toString(),
+                            parseInt(bdv, 16).toString()
+                        ];
+                    });
 
-                        result.push([
-                            account,
-                            depositChunk
-                        ]);
-                    }
+                    result.push([account, depositArray]);
                 }
             }
         }
