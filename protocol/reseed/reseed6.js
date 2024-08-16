@@ -20,7 +20,7 @@ async function reseed6(account, L2Beanstalk, mock, verbose = false) {
   const InitFacet = await (await ethers.getContractFactory("ReseedSilo", account)).deploy();
   await InitFacet.deployed();
   for (let i = 0; i < depositChunks.length; i++) {
-    await updateProgress(i + 1, plotChunks.length);
+    await updateProgress(i + 1, depositChunks.length);
     if (verbose) {
       console.log("Data chunk:", depositChunks[i]);
       console.log("-----------------------------------");

@@ -1,5 +1,6 @@
 const { parseAccountStatus } = require("./dataConverts/convertAccountStatuses.js");
 const { parseInternalBalances } = require("./dataConverts/convertInternalBalances.js");
+const { parseField } = require("./dataConverts/convertField.js");
 const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
@@ -43,7 +44,7 @@ async function reseed(
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
-    reseed3, // reseedbean + deploy wells on l2
+    reseed3, // reseedbean + deploy fert +  deploy wells on l2
     reseed4, // reseed field
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
@@ -124,15 +125,17 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
+  const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
   const storageAccountsPath = "./reseed/data/exports/storage-accounts20330000.json";
   const storageFertPath = "./reseed/data/exports/storage-fertilizer20330000.json";
   const storageSystemPath = "./reseed/data/exports/storage-system20330000.json";
   const marketPath = "./reseed/data/exports/market-info20330000.json";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json");
-  parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json");
-  parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", 40);
-  parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", 40);
+  parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json", contractAccounts);
+  parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
+  parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
+  parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);
   parsePodMarketplace(
     marketPath,
     "./reseed/data/r2/pod-listings.json",

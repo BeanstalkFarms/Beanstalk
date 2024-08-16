@@ -1,33 +1,38 @@
 const fs = require('fs');
 
-function parseFertilizer(inputFilePath, outputFilePath, chunkSize) {
+function parseFertilizer(inputFilePath, outputFilePath, contractAccounts) {
     try {
         const data = fs.readFileSync(inputFilePath, 'utf8');
-        const accounts = JSON.parse(data)._balances;
+        const balances = JSON.parse(data)._balances;
         const result = [];
 
-        for (const fertilizerId in accounts) {
-            if (accounts.hasOwnProperty(fertilizerId)) {
-                const accountData = accounts[fertilizerId];
+        for (const fertilizerId in balances) {
+            if (balances.hasOwnProperty(fertilizerId)) {
+                const accountData = balances[fertilizerId];
                 const accountIds = Object.keys(accountData);
 
                 if (accountIds.length > 0) {
-                    // Split accounts into chunks of chunkSize
-                    for (let i = 0; i < accountIds.length; i += chunkSize) {
-                        const accountChunk = accountIds.slice(i, i + chunkSize).map(account => {
-                            const { amount, lastBpf } = accountData[account];
-                            return [
-                                account,
-                                parseInt(amount, 16).toString(),
-                                parseInt(lastBpf, 16).toString()
-                            ];
-                        });
-
-                        result.push([
-                            parseInt(fertilizerId, 16).toString(),
-                            accountChunk
-                        ]);
+                    const accountArray = accountIds.map(account => {
+                        const { amount, lastBpf } = accountData[account];
+                        return [
+                            account,
+                            parseInt(amount, 16).toString(),
+                            parseInt(lastBpf, 16).toString()
+                        ];
+                    });
+                    
+                    // remove contract accounts from the list
+                    for (let i = 0; i < contractAccounts.length; i++) {
+                        const index = accountArray.findIndex(account => account[0] === contractAccounts[i]);
+                        if (index > -1) {
+                            accountArray.splice(index, 1);
+                        }
                     }
+
+                    result.push([
+                        parseInt(fertilizerId, 16).toString(),
+                        accountArray
+                    ]);
                 }
             }
         }
