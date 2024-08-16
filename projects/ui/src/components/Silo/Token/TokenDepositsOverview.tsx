@@ -4,27 +4,17 @@ import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
 
 import { useAppSelector } from '~/state';
 import Fiat from '~/components/Common/Fiat';
-import { FontSize, FontWeight } from '~/components/App/muiTheme';
+import { FontWeight } from '~/components/App/muiTheme';
 import TokenIcon from '~/components/Common/TokenIcon';
 
 import { Token } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 import BigNumber from 'bignumber.js';
-import FarmerTokenDeposits from './FarmerTokenDeposits';
+import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
 
 type ITokenDepositsOverview = {
   token: Token;
 };
-
-const sharedButtonSx = {
-  color: 'text.primary',
-  borderColor: 'secondary',
-  borderRadius: '4px',
-  fontSize: FontSize.base,
-  fontWeight: FontWeight.medium,
-  px: 1,
-  py: 0.75,
-} as const;
 
 const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
   const farmerDeposits = useAppSelector((s) => s._farmer.silo.balances);
@@ -104,7 +94,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
           </Button>
         </Stack>
       </Stack>
-      <FarmerTokenDeposits
+      <FarmerTokenDepositsTable
         token={token}
         siloBalance={farmerDeposits[token.address]}
         selectType="single"

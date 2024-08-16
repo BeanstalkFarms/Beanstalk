@@ -37,11 +37,11 @@ import AddressIcon from '~/components/Common/AddressIcon';
 import { minimizeWindowIcon } from '~/img/icon';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 
-type TokenDepositRow = LegacyDepositCrate & { id: string };
+export type FarmerTokenDepositRow = LegacyDepositCrate & { id: string };
 
 type TokenDepositsSelectType = 'single' | 'multi' | 'view';
 
-const FarmerTokenDeposits = ({
+const FarmerTokenDepositsTable = ({
   token,
   siloBalance,
   selectType,
@@ -64,7 +64,7 @@ const FarmerTokenDeposits = ({
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
   const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
-  const rows: TokenDepositRow[] = useMemo(
+  const rows: FarmerTokenDepositRow[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
         id: deposit.stem?.toString(),
@@ -77,7 +77,7 @@ const FarmerTokenDeposits = ({
   const selectedDeposits = rows.filter((row) => selected.has(row.id));
 
   const columns = React.useMemo(() => {
-    const cols: GridColumns<TokenDepositRow> = [
+    const cols: GridColumns<FarmerTokenDepositRow> = [
       {
         field: 'id',
         flex: 0.75,
@@ -259,14 +259,14 @@ const FarmerTokenDeposits = ({
   );
 };
 
-export default FarmerTokenDeposits;
+export default FarmerTokenDepositsTable;
 
 const SingleTokenDepositDialogContent = ({
   row,
   account,
   token,
 }: {
-  row: TokenDepositRow;
+  row: FarmerTokenDepositRow;
   token: Token;
   account: string;
 }) => (
