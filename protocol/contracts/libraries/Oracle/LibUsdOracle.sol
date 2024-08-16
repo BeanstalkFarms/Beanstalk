@@ -8,7 +8,7 @@ import {C} from "contracts/C.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
