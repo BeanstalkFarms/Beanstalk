@@ -1,4 +1,4 @@
-const {
+/*const {
   BEAN_ETH_WELL,
   WETH,
   BEAN,
@@ -38,11 +38,6 @@ async function finishWstethMigration(mock = true, verbose = false) {
   if (verbose) console.log(`Migrating ${wethBalance} WETH`);
   if (verbose) console.log(`Migrating ${wethBalance} Bean`);
 
-  const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
-  const stethPerWsteth = await wsteth.stEthPerToken();
-
-  const wstethAmount = wethBalance.mul(ethers.utils.parseEther("1")).div(stethPerWsteth);
-
   await wsteth.mint(owner.address, wstethAmount);
   if (verbose) console.log(`Migrating ${await wsteth.balanceOf(owner.address)} WSTETH`);
 
@@ -73,3 +68,4 @@ async function migrateBeanEthToBeanWSteth() {
 
 exports.finishWstethMigration = finishWstethMigration;
 exports.migrateBeanEthToBeanWSteth = migrateBeanEthToBeanWSteth;
+*/

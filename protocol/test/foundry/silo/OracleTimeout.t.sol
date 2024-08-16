@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import {C} from "contracts/C.sol";
-import "../../../contracts/libraries/Oracle/LibWstethEthOracle.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";

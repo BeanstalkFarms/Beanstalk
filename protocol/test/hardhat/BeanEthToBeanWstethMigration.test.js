@@ -75,8 +75,6 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
     }
 
     await impersonateBean();
-    this.wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
-    const stethPerToken = await this.wsteth.stEthPerToken();
     await impersonateWsteth();
     await this.wsteth.setStEthPerToken(stethPerToken);
 

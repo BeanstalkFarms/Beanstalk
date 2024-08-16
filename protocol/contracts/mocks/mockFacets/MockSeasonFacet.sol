@@ -12,8 +12,6 @@ import "../MockToken.sol";
 import "contracts/libraries/LibBytes.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
-import {LibWstethEthOracle} from "contracts/libraries/Oracle/LibWstethEthOracle.sol";
-import {LibWstethUsdOracle} from "contracts/libraries/Oracle/LibWstethUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
@@ -470,22 +468,6 @@ contract MockSeasonFacet is SeasonFacet {
                 0,
                 lookback
             );
-    }
-
-    function getWstethUsdPrice() external view returns (uint256) {
-        return LibWstethUsdOracle.getWstethUsdPrice(0);
-    }
-
-    function getWstethUsdTwap(uint256 lookback) external view returns (uint256) {
-        return LibWstethUsdOracle.getWstethUsdPrice(lookback);
-    }
-
-    function getWstethEthPrice() external view returns (uint256) {
-        return LibWstethEthOracle.getWstethEthPrice(0);
-    }
-
-    function getWstethEthTwap(uint256 lookback) external view returns (uint256) {
-        return LibWstethEthOracle.getWstethEthPrice(lookback);
     }
 
     function setBeanToMaxLpGpPerBdvRatio(uint128 percent) external {

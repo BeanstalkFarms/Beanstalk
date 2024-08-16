@@ -238,7 +238,7 @@ contract ConvertTest is TestHelper {
         vm.prank(farmers[0]);
         convert.convert(convertData, new int96[](1), amounts);
 
-        int256 newDeltaB = LibDeltaB.currentDeltaB(well);
+        int256 newDeltaB = bs.poolCurrentDeltaB(well);
 
         // verify deltaB.
         // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');

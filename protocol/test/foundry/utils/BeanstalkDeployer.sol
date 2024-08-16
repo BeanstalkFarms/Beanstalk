@@ -19,6 +19,7 @@ import {MockAttackFacet} from "contracts/mocks/mockFacets/MockAttackFacet.sol";
 import {MockConvertFacet, ConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet, SiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
+import {MockPipelineConvertFacet, PipelineConvertFacet} from "contracts/mocks/mockFacets/MockPipelineConvertFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
 /**
@@ -43,7 +44,6 @@ contract BeanstalkDeployer is Utils {
         "SeasonGettersFacet",
         "DepotFacet",
         "MarketplaceFacet",
-        "PipelineConvertFacet",
         "ClaimFacet",
         "OracleFacet",
         "L2ContractMigrationFacet"
@@ -57,7 +57,8 @@ contract BeanstalkDeployer is Utils {
         "SiloFacet", // MockSiloFacet
         "UnripeFacet", // MockUnripeFacet
         "ConvertFacet", // MockConvertFacet
-        "SeasonFacet" // MockSeasonFacet
+        "SeasonFacet", // MockSeasonFacet
+        "PipelineConvertFacet" // MockPipelineConvertFacet
     ];
     address[] facetAddresses;
 
@@ -130,6 +131,12 @@ contract BeanstalkDeployer is Utils {
                     facetAddress = address(new MockSiloFacet());
                 } else {
                     facetAddress = address(new SiloFacet());
+                }
+            } else if (hashedName == keccak256(abi.encode("PipelineConvertFacet"))) {
+                if (mock) {
+                    facetAddress = address(new MockPipelineConvertFacet());
+                } else {
+                    facetAddress = address(new PipelineConvertFacet());
                 }
             } else {
                 facetAddress = address(deployCode(facet));

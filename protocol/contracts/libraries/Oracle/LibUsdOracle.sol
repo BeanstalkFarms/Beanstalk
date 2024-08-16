@@ -8,7 +8,6 @@ import {C} from "contracts/C.sol";
 import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
-import {LibWstethUsdOracle} from "./LibWstethUsdOracle.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
@@ -43,13 +42,8 @@ library LibUsdOracle {
      * (> 900 seconds) to protect against manipulation.
      */
     function getUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
-        if (token == C.WETH) {
-            return LibEthUsdOracle.getUsdEthPrice(lookback);
-        }
-        if (token == C.WSTETH) {
-            return LibWstethUsdOracle.getUsdWstethPrice(lookback);
-        }
-        // tokens that use the custom oracle implementation are called here.
+        // call external implementation for token
+        // note passing decimals controls pricing order (token:usd vs usd:token)
         return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }
 
@@ -63,15 +57,7 @@ library LibUsdOracle {
      * (ignoring decimal precision)
      */
     function getTokenPrice(address token, uint256 lookback) internal view returns (uint256) {
-        // oracles that are implmented within beanstalk should be placed here.
-        if (token == C.WETH) {
-            return LibEthUsdOracle.getEthUsdPrice(lookback);
-        }
-        if (token == C.WSTETH) {
-            return LibWstethUsdOracle.getWstethUsdPrice(lookback);
-        }
-
-        // tokens that use the custom oracle implementation are called here.
+        // call external implementation for token
         return getTokenPriceFromExternal(token, 0, lookback);
     }
 
