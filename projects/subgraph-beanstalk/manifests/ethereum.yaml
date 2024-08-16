@@ -928,8 +928,8 @@ dataSources:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged
       file: ../src/handlers/FarmHandler.ts
-# features:
-#   - grafting
-# graft:
-#   base: QmRJCKP5nLjUNtR2ZZ9F62iBGiKLdkGPX7GzBZLgVfnz3c
-#   block: 15289930
+features:
+  - grafting
+graft:
+  base: QmUqT47H7o3gcZ2mHRJf2J5hpitWDYxsMmacGeuvo1wKU7
+  block: 19927630

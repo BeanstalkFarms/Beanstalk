@@ -73,10 +73,10 @@ export function getFarmerGerminatingBugOffset(account: Address, event: ethereum.
   return ZERO_BI;
 }
 
-function germinationSeasonCategory(season: i32): string {
+export function germinationSeasonCategory(season: i32): string {
   return season % 2 == 0 ? "EVEN" : "ODD";
 }
 
-function germinationEnumCategory(enumValue: i32): string {
+export function germinationEnumCategory(enumValue: i32): string {
   return enumValue == 0 ? "ODD" : "EVEN";
 }

@@ -10,6 +10,8 @@ import {
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import {
   deleteGerminating,
+  germinationEnumCategory,
+  germinationSeasonCategory,
   getFarmerGerminatingBugOffset,
   loadGerminating,
   loadOrCreateGerminating,
@@ -72,8 +74,15 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
   const currentSeason = getCurrentSeason(event.address);
 
   if (event.params.deltaGerminatingStalk > ZERO_BI) {
-    // Germinating stalk is being added in the current season
-    let farmerGerminating = loadOrCreateGerminating(event.params.account, currentSeason, true);
+    // Germinating stalk is added. It is possible to begin germination in the prior season rather than the
+    // current season when converting. See ConvertFacet._depositTokensForConvert for more information.
+    // If the event's germinationState doesnt match with the current season, use the prior season.
+    const germinatingSeason =
+      germinationSeasonCategory(currentSeason) === germinationEnumCategory(event.params.germinationState)
+        ? currentSeason
+        : currentSeason - 1;
+
+    let farmerGerminating = loadOrCreateGerminating(event.params.account, germinatingSeason, true);
     farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.deltaGerminatingStalk);
     farmerGerminating.save();
   } else {
