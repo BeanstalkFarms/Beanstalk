@@ -108,6 +108,15 @@ task("reseed", async (mock = true) => {
   await reseed(account);
 });
 
+task("L2 reseed no state", async () => {
+  // mint more eth to the bcm to cover gas costs
+  let account;
+  account = await impersonateSigner(BCM);
+  await hre.network.provider.send("hardhat_setBalance", [BCM, "0x21E19E0C9BAB2400000"]);
+
+  await reseed(account, true, false, 0, 11, true, false);
+});
+
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
   // The path (relative to the root of `protocol` directory) where all modules sit.
   const modulesDir = path.join("contracts", "beanstalk");
@@ -431,5 +440,8 @@ module.exports = {
   paths: {
     sources: "./contracts",
     cache: "./cache"
-  }
+  },
+  ignoreWarnings: [
+    'code["5574"]' // Ignores the specific warning about duplicate definitions
+  ]
 };

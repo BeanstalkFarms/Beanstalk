@@ -1,12 +1,8 @@
 const fs = require('fs');
 
-function parseField(inputFilePath, outputFilePath, chunkSize, callback) {
-    fs.readFile(inputFilePath, 'utf8', (err, data) => {
-        if (err) {
-            callback(err, null);
-            return;
-        }
-        
+function parseField(inputFilePath, outputFilePath, chunkSize) {
+    try {
+        const data = fs.readFileSync(inputFilePath, 'utf8');
         const accounts = JSON.parse(data);
         const result = [];
 
@@ -36,25 +32,11 @@ function parseField(inputFilePath, outputFilePath, chunkSize, callback) {
             }
         }
 
-        fs.writeFile(outputFilePath, JSON.stringify(result, null, 2), (writeErr) => {
-            if (writeErr) {
-                callback(writeErr, null);
-                return;
-            }
-            callback(null, 'Field JSON has been written successfully');
-        });
-    });
+        fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+        console.log('Field JSON has been written successfully');
+    } catch (err) {
+        console.error('Error:', err);
+    }
 }
 
-const inputFilePath = "./reseed/data/exports/storage-accounts20330000.json";
-const outputFilePath = "./reseed/data/r4-field.json";
-const chunkSize = 40;
-parseField(inputFilePath, outputFilePath, chunkSize, (err, message) => {
-    if (err) {
-        console.error('Error:', err);
-        return;
-    }
-    console.log(message);
-});
-
-// module.exports = parseField;
+exports.parseField = parseField;

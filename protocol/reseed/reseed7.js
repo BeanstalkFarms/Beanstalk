@@ -1,37 +1,43 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { splitEntriesIntoChunks } = require("../utils/read.js");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 
-// Files
-let accountStatusesPath;
-let mock = false;
-if (mock) {
-  accountStatusesPath = "./reseed/data/mocks/r7-account-status-mock.json";
-} else {
-  accountStatusesPath = "./reseed/data/r7-account-status.json";
-}
-
-async function reseed7(account, L2Beanstalk) {
+async function reseed7(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
   console.log("reseedAccountStatus:.\n");
-  let statuses = JSON.parse(await fs.readFileSync(accountStatusesPath));
 
-  chunkSize = 5;
-  statusChunks = splitEntriesIntoChunks(statuses, chunkSize);
+  // Files
+  let accountStatusesPath;
+  if (mock) {
+    accountStatusesPath = "./reseed/data/mocks/r7-account-status-mock.json";
+  } else {
+    accountStatusesPath = "./reseed/data/r7-account-status.json";
+  }
+  const statuses = JSON.parse(await fs.readFileSync(accountStatusesPath));
 
+  targetEntriesPerChunk = 800;
+  statusChunks = await splitEntriesIntoChunksOptimized(statuses, targetEntriesPerChunk);
+  const InitFacet = await (
+    await ethers.getContractFactory("ReseedAccountStatus", account)
+  ).deploy();
+  await InitFacet.deployed();
   for (let i = 0; i < statusChunks.length; i++) {
-    console.log(`Processing chunk ${i + 1} of ${statusChunks.length}`);
-    console.log("Data chunk:", statusChunks[i]);
+    await updateProgress(i + 1, plotChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", statusChunks[i]);
+      console.log("-----------------------------------");
+    }
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: "ReseedAccountStatus",
+      initFacetAddress: InitFacet.address,
       initArgs: [statusChunks[i]],
       bip: false,
-      verbose: true,
-      account: account
+      verbose: verbose,
+      account: account,
+      initFacetNameInfo: "ReseedAccountStatus"
     });
-    console.log("-----------------------------------");
   }
 }
 exports.reseed7 = reseed7;

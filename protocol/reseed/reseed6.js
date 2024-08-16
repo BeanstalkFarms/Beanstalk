@@ -1,39 +1,42 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { splitEntriesIntoChunks } = require("../utils/read.js");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 
-// Files
-let depositsPath;
-let mock = true;
-if (mock) {
-  depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
-} else {
-  depositsPath = "./reseed/data/r6-deposits.json";
-}
-
-async function reseed6(account, L2Beanstalk) {
+async function reseed6(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
   console.log("reseed6: reissue deposits.\n");
 
-  let beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
+  // Files
+  let depositsPath;
+  if (mock) {
+    depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
+  } else {
+    depositsPath = "./reseed/data/r6-deposits.json";
+  }
+  const beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
 
-  chunkSize = 5;
-  depositChunks = splitEntriesIntoChunks(beanDeposits, chunkSize);
-
+  targetEntriesPerChunk = 800;
+  depositChunks = await splitEntriesIntoChunksOptimized(beanDeposits, targetEntriesPerChunk);
+  const InitFacet = await (await ethers.getContractFactory("ReseedSilo", account)).deploy();
+  await InitFacet.deployed();
   for (let i = 0; i < depositChunks.length; i++) {
-    console.log(`Processing chunk ${i + 1} of ${depositChunks.length}`);
-    console.log("Data chunk:", depositChunks[i]);
+    await updateProgress(i + 1, plotChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", depositChunks[i]);
+      console.log("-----------------------------------");
+    }
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: "ReseedSilo",
+      initFacetAddress: InitFacet.address,
       initArgs: [depositChunks[i]],
       bip: false,
-      verbose: true,
+      verbose: verbose,
       account: account,
-      checkGas: true
+      checkGas: true,
+      initFacetNameInfo: "ReseedSilo"
     });
-    console.log("-----------------------------------");
   }
 }
 

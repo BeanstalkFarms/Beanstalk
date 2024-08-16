@@ -133,7 +133,7 @@ async function deployDiamond({
   return deployedDiamond;
 }
 
-async function deploy ({
+async function deploy({
   diamondName,
   initDiamond,
   facets,
@@ -426,9 +426,13 @@ async function upgradeWithNewFacets({
   verbose = false,
   account = null,
   verify = false,
-  checkGas = false
+  checkGas = false,
+  reportGas = true,
+  initFacetNameInfo = undefined
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
+  let initFacetDeploymentGas = ethers.BigNumber.from("0");
+  let initFacetCallGas = ethers.BigNumber.from("0");
 
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
@@ -552,12 +556,13 @@ async function upgradeWithNewFacets({
       }
       const receipt = await initFacet.deployTransaction.wait();
       if (verbose) console.log(`Init Diamond deploy gas used: ` + strDisplay(receipt.gasUsed));
+      initFacetDeploymentGas = initFacetDeploymentGas.add(receipt.gasUsed);
       totalGasUsed = totalGasUsed.add(receipt.gasUsed);
       if (verbose) console.log("Deployed init facet: " + initFacet.address);
     } else {
       if (verbose) console.log("Using init facet: " + initFacet.address);
     }
-    functionCall = initFacet.interface.encodeFunctionData("init", initArgs);
+    functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
     if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
     initFacetAddress = initFacet.address;
   }
@@ -593,25 +598,40 @@ async function upgradeWithNewFacets({
       .diamondCut(diamondCut, initFacetAddress, functionCall);
   }
   const receipt = await result.wait();
+  initFacetCallGas = receipt.gasUsed;
   totalGasUsed = totalGasUsed.add(receipt.gasUsed);
   if (verbose) {
     console.log("------");
     console.log("Upgrade transaction hash: " + result.hash);
     console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
     console.log("Total gas used: " + strDisplay(totalGasUsed));
-    gasLimit = ethers.BigNumber.from("21000000")
+    gasLimit = ethers.BigNumber.from("21000000");
     if (checkGas && totalGasUsed.gt(gasLimit)) {
-      console.log('\x1b[33m%s\x1b[0m', 'Gas used Exceeds Limit!');
+      console.log("\x1b[33m%s\x1b[0m", "Gas used Exceeds Limit!");
     }
+  }
+  if (reportGas) {
+    const filePath = "./reseed/data/gas-report.csv";
+    const name = initFacetName || initFacetNameInfo;
+    if (!fs.existsSync(filePath)) {
+      fs.appendFileSync(
+        filePath,
+        "initFacetName,initFacetDeploymentGas,initFacetCallGas,totalGasUsed\n"
+      );
+    }
+    fs.appendFileSync(
+      filePath,
+      `${name}, ${initFacetDeploymentGas}, ${initFacetCallGas}, ${totalGasUsed}\n`
+    );
   }
   return result;
 }
 
-exports.upgrade = upgrade
-exports.upgradeWithNewFacets = upgradeWithNewFacets
-exports.getSelectors = getSelectors
-exports.deployFacets = deployFacets
-exports.deploy = deploy
-exports.inFacets = inFacets
-exports.upgrade = upgrade
-exports.deployDiamond = deployDiamond
+exports.upgrade = upgrade;
+exports.upgradeWithNewFacets = upgradeWithNewFacets;
+exports.getSelectors = getSelectors;
+exports.deployFacets = deployFacets;
+exports.deploy = deploy;
+exports.inFacets = inFacets;
+exports.upgrade = upgrade;
+exports.deployDiamond = deployDiamond;
