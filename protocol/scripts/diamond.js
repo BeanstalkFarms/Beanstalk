@@ -616,7 +616,7 @@ async function upgradeWithNewFacets({
     if (!fs.existsSync(filePath)) {
       fs.appendFileSync(
         filePath,
-        "initFacetName, initFacetDeploymentGas, initFacetCallGas, totalGasUsed\n"
+        "initFacetName,initFacetDeploymentGas,initFacetCallGas,totalGasUsed\n"
       );
     }
     fs.appendFileSync(

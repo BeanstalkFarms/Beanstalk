@@ -75,7 +75,7 @@ async function reseed(
     }
 
     if (setState == true) {
-      await reseeds[i](account, l2BeanstalkAddress);
+      await reseeds[i](account, l2BeanstalkAddress, mock);
       continue;
     }
     if (i == reseeds.length - 1) {
