@@ -362,6 +362,31 @@ dataSources:
             kind: once
       file: ../src/utils/Init.ts
   ###
+  # EXPLOIT
+  ###
+  - kind: ethereum/contract
+    name: Exploit
+    network: mainnet
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: ERC20
+      startBlock: 14602789 # Exploit
+      endBlock: 14602789 # Exploit
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      blockHandlers:
+        - handler: handleExploit
+          filter:
+            kind: once
+      file: ../src/handlers/BeanHandler.ts
+  ###
   # SILO
   ###
   - kind: ethereum/contract

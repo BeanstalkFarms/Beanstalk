@@ -23,6 +23,15 @@ export function getProtocolToken(protocol: Address): Address {
   throw new Error("Unsupported protocol");
 }
 
+export function getTokenProtocol(token: Address): Address {
+  if (token == BEAN_ERC20) {
+    return BEANSTALK;
+  } else if (token == BEAN_ERC20_V1) {
+    return BEANSTALK;
+  }
+  throw new Error("Unsupported protocol token");
+}
+
 export function getProtocolFertilizer(protocol: Address): Address | null {
   if (protocol == BEANSTALK) {
     return FERTILIZER;
