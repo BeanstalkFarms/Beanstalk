@@ -9,9 +9,14 @@ const {
   impersonateBeanWstethWell,
   impersonateBeanEthWell
 } = require("../../utils/well.js");
-const { setEthUsdChainlinkPrice } = require("../../utils/oracle.js");
+const {
+  setEthUsdChainlinkPrice,
+  setWstethUsdPrice,
+  setStethEthChainlinkPrice
+} = require("../../utils/oracle.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const fs = require("fs");
+const { initWhitelistOracles } = require("../../scripts/deploy.js");
 
 let user, user2, owner;
 
@@ -27,7 +32,6 @@ describe("BeanstalkPrice", function () {
 
     await impersonateBeanEthWell();
     await impersonateBeanWstethWell();
-    console.log("test");
     this.beanEthWell = await ethers.getContractAt("IWell", BEAN_ETH_WELL);
     this.beanWstethWell = await ethers.getContractAt("IWell", BEAN_WSTETH_WELL);
     this.wellToken = await ethers.getContractAt("IERC20", this.beanEthWell.address);
@@ -40,11 +44,15 @@ describe("BeanstalkPrice", function () {
     await setReserves(owner, this.beanEthWell, [to6("1000000"), to18("1000")]);
     await setReserves(owner, this.beanWstethWell, [to6("1000000"), to18("1000")]);
     await setEthUsdChainlinkPrice("1000");
+    await setStethEthChainlinkPrice("1");
 
     const BeanstalkPrice = await ethers.getContractFactory("BeanstalkPrice");
     const _beanstalkPrice = await BeanstalkPrice.deploy(beanstalk.address);
     await _beanstalkPrice.deployed();
     this.beanstalkPrice = await ethers.getContractAt("BeanstalkPrice", _beanstalkPrice.address);
+
+    // setup whitelist config
+    await initWhitelistOracles();
   });
 
   beforeEach(async function () {
@@ -60,7 +68,7 @@ describe("BeanstalkPrice", function () {
       const p = await this.beanstalkPrice.price();
       // price is within +/- 1 due to rounding
       expect(p.price).to.equal("999999");
-      expect(p.liquidity).to.equal("1999998000000");
+      expect(p.liquidity).to.equal("3999996000000");
       expect(p.deltaB).to.be.eq("0");
     });
 
@@ -76,8 +84,8 @@ describe("BeanstalkPrice", function () {
       const p = await this.beanstalkPrice.price();
       const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address);
 
-      expect(p.price).to.equal("1999996");
-      expect(p.liquidity).to.equal("1999996000000");
+      expect(p.price).to.equal("1499997");
+      expect(p.liquidity).to.equal("3999994000000");
       expect(p.deltaB).to.equal("207106781186");
 
       expect(w.price).to.equal("1999996");
@@ -97,8 +105,8 @@ describe("BeanstalkPrice", function () {
       const p = await this.beanstalkPrice.price();
       const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address);
 
-      expect(p.price).to.equal("499999");
-      expect(p.liquidity).to.equal("1999996000000");
+      expect(p.price).to.equal("749999");
+      expect(p.liquidity).to.equal("3999994000000");
       expect(p.deltaB).to.equal("-585786437627");
 
       expect(w.price).to.equal("499999");
