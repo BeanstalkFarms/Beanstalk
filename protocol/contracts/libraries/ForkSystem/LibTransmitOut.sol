@@ -162,6 +162,7 @@ library LibTransmitOut {
         plotsOut = new bytes[](plots.length);
         for (uint256 i; i < plots.length; i++) {
             SourcePlot memory plot = plots[i];
+            require(plot.index >= s.sys.fields[plot.fieldId].harvestable, "Already harvestable");
             uint256 pods = s.accts[account].fields[plot.fieldId].plots[plot.index];
             require(plot.amount > 0, "No Pods to transmit");
             require(pods >= plot.amount, "Insufficient Pods");
