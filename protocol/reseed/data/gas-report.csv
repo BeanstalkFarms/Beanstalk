@@ -1,7 +1,7 @@
 initFacetName,initFacetDeploymentGas,initFacetCallGas,totalGasUsed
-ReseedGlobal, 1393642, 9146740, 10540382
-ReseedPodMarket, 373297, 9111038, 9484335
-ReseedBean, 6049879, 10369335, 16419214
+ReseedBean, 6021742, 10347166, 16368908
+ReseedGlobal, 1393642, 9146728, 10540370
+ReseedPodMarket, 373297, 9111050, 9484347
 ReseedField, 0, 15285610, 15285610
 ReseedField, 0, 29139828, 29139828
 ReseedField, 0, 19212390, 19212390
@@ -145,4 +145,4 @@ ReseedInternalBalances, 0, 9106331, 9106331
 ReseedInternalBalances, 0, 9105611, 9105611
 ReseedInternalBalances, 0, 3713142, 3713142
 ReseedWhitelist, 504829, 1590822, 2095651
-InitReseed, 163801, 10305667, 98303256
+InitReseed, 163801, 10112648, 97904151

@@ -20,8 +20,7 @@ const { reseedGlobal } = require("./reseedGlobal.js");
 const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransfer.js");
 const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
-const { impersonateSigner } = require("../utils/signer.js");
-const { mintEth } = require("../utils/");
+const { getBeanstalk } = require("../utils/contracts.js");
 
 let reseeds;
 async function reseed({
@@ -33,7 +32,7 @@ async function reseed({
   log = false,
   start = 0,
   end = 12,
-  onlyL2 = false,
+  deployL1 = true,
   setState = true
 }) {
   if (convertData) parseBeanstalkData();
@@ -42,9 +41,9 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
+    reseed3, // reseedbean + deploy fert +  deploy wells on l2
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
-    reseed3, // reseedbean + deploy fert +  deploy wells on l2
     reseed4, // reseed field
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
@@ -61,18 +60,23 @@ async function reseed({
     await printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
     if (i == 0) {
-      if (onlyL2 == false) {
+      if (deployL1 == true) {
         // migrate beanstalk L1 assets.
         await reseed1(owner);
-        continue;
-      } else {
-        continue;
+        return;
       }
+      continue;
     }
 
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
+      continue;
+    }
+
+    if (i == 2) {
+      // deploy beans addresses.
+      await reseed3(beanstalkDeployer, l2BeanstalkAddress, mock);
       continue;
     }
 
@@ -85,11 +89,11 @@ async function reseed({
       // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
       await upgradeWithNewFacets({
         diamondAddress: l2BeanstalkAddress,
-        facetNames: [],
+        facetNames: ["OwnershipFacet"],
         initFacetName: "ReseedTransferOwnership",
-        initArgs: [l2owner],
+        initArgs: [l2owner.address],
         bip: false,
-        verbose: verbose,
+        verbose: false,
         account: beanstalkDeployer,
         checkGas: true,
         initFacetNameInfo: "ReseedTransferOwnership"
@@ -97,7 +101,7 @@ async function reseed({
     }
     if (i == reseeds.length - 1) {
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
-      await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, mock);
+      await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
 
       // claim ownership of beanstalk:
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
