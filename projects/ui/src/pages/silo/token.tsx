@@ -4,9 +4,9 @@ import { Card, Chip, Container, Stack } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { ERC20Token } from '~/classes/Token';
+import { ERC20Token as LegacyERC20Token } from '~/classes/Token';
 import usePools from '~/hooks/beanstalk/usePools';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
+import { useSdkWhitelist } from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
   HOW_TO_CONVERT_DEPOSITS,
@@ -20,9 +20,16 @@ import { XXLWidth } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import TokenDepositsOverview from '~/components/Silo/Token/TokenDepositsOverview';
-import useSdk from '~/hooks/sdk';
+import useSdk, { getNewToOldToken } from '~/hooks/sdk';
 import TokenDepositRewards from '~/components/Silo/Token/TokenDepositRewards';
 import TokenAbout from '~/components/Silo/Token/TokenAbout';
+import {
+  TokenDepositsProvider,
+  useTokenDepositsContext,
+} from '~/components/Silo/Token/TokenDepositsContext';
+import { Token } from '@beanstalk/sdk';
+import Pool from '~/classes/Pool';
+import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -35,7 +42,7 @@ const SILO_ACTIONS_MAX_WIDTH = '480px';
 
 const TokenPage: FC<{}> = () => {
   // Constants
-  const whitelist = useWhitelist();
+  const whitelist = useSdkWhitelist();
   const pools = usePools();
   const sdk = useSdk();
 
@@ -59,8 +66,8 @@ const TokenPage: FC<{}> = () => {
   const pool = pools[address];
 
   // If no data loaded...
-  const sdkToken = sdk.tokens.findByAddress(address);
-  if (!whitelistedToken || !sdkToken) return null;
+  const token = sdk.tokens.findByAddress(address);
+  if (!whitelistedToken || !token) return null;
 
   const tokenIsBEAN3CRV =
     address.toLowerCase() === sdk.tokens.BEAN_CRV3_LP.address.toLowerCase();
@@ -114,42 +121,69 @@ const TokenPage: FC<{}> = () => {
             }
           />
         )}
-        <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
-          <Stack
-            width="100%"
-            height="100%"
-            gap={2}
-            sx={({ breakpoints }) => ({
-              width: '100%',
-              minWidth: 0,
-              [breakpoints.up('lg')]: { maxWidth: '850px' },
-            })}
-          >
-            <Card sx={{ p: 1 }}>
-              <TokenDepositsOverview token={sdkToken} />
-            </Card>
-            <Card sx={{ p: 2 }}>
-              <TokenDepositRewards token={sdkToken} />
-            </Card>
-            <Card sx={{ p: 2 }}>
-              <TokenAbout token={sdkToken} />
-            </Card>
-          </Stack>
-          <Stack
-            gap={2}
-            width="100%"
-            sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
-          >
-            <SiloActions
-              pool={pool}
-              token={whitelistedToken as ERC20Token}
-              siloBalance={siloBalance}
-            />
-          </Stack>
-        </Stack>
+        <TokenDepositsProvider>
+          <TokenPageContent
+            token={token}
+            pool={pool}
+            siloBalance={siloBalance}
+          />
+        </TokenDepositsProvider>
       </Stack>
     </Container>
   );
 };
 
 export default TokenPage;
+
+function TokenPageContent({
+  token,
+  pool,
+  siloBalance,
+}: {
+  token: Token;
+  pool: Pool;
+  siloBalance: FarmerSiloTokenBalance;
+}) {
+  const { slug } = useTokenDepositsContext();
+
+  if (slug === 'token') {
+    const legacyToken = getNewToOldToken(token);
+    return (
+      <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
+        <Stack
+          width="100%"
+          height="100%"
+          gap={2}
+          sx={({ breakpoints }) => ({
+            width: '100%',
+            minWidth: 0,
+            [breakpoints.up('lg')]: { maxWidth: '850px' },
+          })}
+        >
+          <Card sx={{ p: 1 }}>
+            <TokenDepositsOverview token={token} />
+          </Card>
+          <Card sx={{ p: 2 }}>
+            <TokenDepositRewards token={token} />
+          </Card>
+          <Card sx={{ p: 2 }}>
+            <TokenAbout token={token} />
+          </Card>
+        </Stack>
+        <Stack
+          gap={2}
+          width="100%"
+          sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
+        >
+          <SiloActions
+            pool={pool}
+            token={legacyToken as LegacyERC20Token}
+            siloBalance={siloBalance}
+          />
+        </Stack>
+      </Stack>
+    );
+  }
+
+  return null;
+}
