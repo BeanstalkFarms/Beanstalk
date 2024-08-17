@@ -40,38 +40,20 @@ contract TransmitToForkTest is TestHelper {
         // max approve.
         maxApproveBeanstalk(farmers);
 
-        // Initialize well to balances. (1000 BEAN/ETH)
-        addLiquidityToWell(
-            C.BEAN_ETH_WELL,
-            10000e6, // 10,000 Beans
-            10 ether // 10 ether.
-        );
-        addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
-            10000e6, // 10,000 Beans
-            10 ether // 10 ether.
-        );
+        // Initialize well to balances. Both source and Destination share this well.
+        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1000e18);
         initializeUnripeTokens(farmers[0], 100e6, 100e18);
-        bs.fastForward(REPLANT_SEASON);
 
         setUpSiloDeposits(10_000e6, farmers);
         passGermination();
+
+        bs.fastForward(REPLANT_SEASON);
 
         addFertilizerBasedOnSprouts(REPLANT_SEASON, 100e6);
 
         // Deploy new Beanstalk fork.
         TestHelper altEcosystem = new TestHelper();
         altEcosystem.initializeBeanstalkTestState(true, true, false);
-        altEcosystem.addLiquidityToWell(
-            C.BEAN_ETH_WELL,
-            10000e6, // 10,000 Beans
-            10 ether // 10 ether.
-        );
-        altEcosystem.addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
-            10000e6, // 10,000 Beans
-            10 ether // 10 ether.
-        );
 
         newBs = IMockFBeanstalk(altEcosystem.bs());
         newBsAddr = address(newBs);
@@ -86,29 +68,43 @@ contract TransmitToForkTest is TestHelper {
      */
     // function test_transmitRevert() public {}
 
+    // fuzz?  if deposit amount == 0 ?
+
     /**
      * @notice Performs a migration of all asset types from a Source to Destination fork.
      */
-    function test_transmitDeposits(uint256 depositAmount) public {
-        depositAmount = bound(depositAmount, 100, 10_000_000e6);
+    function test_transmitDeposits(uint256 beanDepositAmount, uint256 lpDepositAmount) public {
+        beanDepositAmount = bound(beanDepositAmount, 100, 100_000e6);
+        lpDepositAmount = bound(lpDepositAmount, 1e18, 5e18);
         address user = farmers[2];
 
-        depositForUser(user, C.BEAN, depositAmount);
-        int96 stem = bs.stemTipForToken(C.BEAN);
+        passGermination();
+        depositForUser(user, C.BEAN, beanDepositAmount);
+        int96 beanStem = bs.stemTipForToken(C.BEAN);
+        depositForUser(user, C.BEAN_ETH_WELL, lpDepositAmount);
+        int96 lpStem = bs.stemTipForToken(C.BEAN_ETH_WELL);
         passGermination();
 
         // Capture Source state.
-        (uint256 depositAmount, uint256 depositBdv) = bs.getDeposit(user, C.BEAN, stem);
+        (, uint256 beanDepositBdv) = bs.getDeposit(user, C.BEAN, beanStem);
+        require(beanDepositBdv > 0, "Source Bean deposit bdv");
+        uint256 lpDepositBdv;
+        (lpDepositAmount, lpDepositBdv) = bs.getDeposit(user, C.BEAN_ETH_WELL, lpStem);
+        require(lpDepositBdv > 0, "Source LP deposit bdv");
 
-        IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](2);
+        uint256 migrationAmountLp = lpDepositAmount / 2;
+
+        IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](3);
         {
-            uint256 firstMigrationAmount = depositAmount / 10;
-            uint256 secondMigrationAmount = depositAmount - firstMigrationAmount;
+            uint256 migrationAmount0 = beanDepositAmount / 10;
+            uint256 migrationAmount1 = beanDepositAmount - migrationAmount0;
+
             deposits[0] = IMockFBeanstalk.SourceDeposit(
                 C.BEAN,
-                firstMigrationAmount,
-                stem,
+                migrationAmount0,
+                beanStem,
                 new uint256[](2), // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
                 0, // Not used for Bean deposits.
                 0, // populated by source
                 0, // populated by source
@@ -117,10 +113,26 @@ contract TransmitToForkTest is TestHelper {
             );
             deposits[1] = IMockFBeanstalk.SourceDeposit(
                 C.BEAN,
-                secondMigrationAmount,
-                stem,
+                migrationAmount1,
+                beanStem,
                 new uint256[](2), // Not used for Bean deposits.
                 0, // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
+                0, // populated by source
+                0, // populated by source
+                address(0), // populated by source
+                0 // populated by source
+            );
+            uint256[] memory minTokensOut = new uint256[](2);
+            minTokensOut[0] = 1;
+            minTokensOut[1] = 1;
+            deposits[2] = IMockFBeanstalk.SourceDeposit(
+                C.BEAN_ETH_WELL,
+                migrationAmountLp,
+                lpStem,
+                minTokensOut,
+                migrationAmountLp, // min dest lp amount, 1:1 bc shared bean & well
+                type(uint256).max,
                 0, // populated by source
                 0, // populated by source
                 address(0), // populated by source
@@ -134,13 +146,21 @@ contract TransmitToForkTest is TestHelper {
 
             // Check events for burning and minting of bean token.
             vm.expectEmit();
-            emit IERC20.Transfer(address(bs), ZERO_ADDR, firstMigrationAmount);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, migrationAmount0);
             vm.expectEmit();
-            emit IERC20.Transfer(address(bs), ZERO_ADDR, secondMigrationAmount);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, migrationAmount1);
+            vm.expectEmit(true, true, false, false);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, 0); // LP Burn
+            vm.expectEmit(true, true, false, false);
+            emit IERC20.Transfer(address(bs), ZERO_ADDR, 0); // Bean half burn
             vm.expectEmit();
-            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, firstMigrationAmount);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, migrationAmount0);
             vm.expectEmit();
-            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, secondMigrationAmount);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, migrationAmount1);
+            vm.expectEmit(true, true, false, false);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, 1); // Bean half mint
+            vm.expectEmit(true, true, false, false);
+            emit IERC20.Transfer(ZERO_ADDR, newBsAddr, 1); // LP mint
         }
 
         vm.prank(user);
@@ -157,26 +177,44 @@ contract TransmitToForkTest is TestHelper {
             (uint256 sourceDepositAmount, uint256 sourceDepositBdv) = bs.getDeposit(
                 user,
                 C.BEAN,
-                stem
+                beanStem
             );
-            require(sourceDepositAmount == 0, "Source deposit amount mismatch");
-            require(sourceDepositBdv == 0, "Source deposit bdv mismatch");
+            require(sourceDepositAmount == 0, "Source bean deposit amt");
+            require(sourceDepositBdv == 0, "Source bean deposit bdv");
+            (sourceDepositAmount, sourceDepositBdv) = bs.getDeposit(user, C.BEAN_ETH_WELL, lpStem);
+            require(
+                sourceDepositAmount == lpDepositAmount - migrationAmountLp,
+                "Source lp deposit amt"
+            );
+            require(sourceDepositBdv < lpDepositBdv, "Source lp deposit bdv");
         }
         // Verify Destination deposits.
         {
             uint256[] memory destDepositIds = newBs
                 .getTokenDepositsForAccount(user, C.BEAN)
                 .depositIds;
-            require(destDepositIds.length == 1, "Dest deposit count mismatch");
+            require(destDepositIds.length == 1, "Dest deposit count");
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
             (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = newBs.getDeposit(
                 user,
-                C.BEAN, // TODO: Can this be made into a new Bean token?
+                C.BEAN,
                 stem
             );
-            require(stem < newBs.stemTipForToken(token), "Dest deposit stem too high");
-            require(depositAmount == destinationDepositAmount, "Dest deposit amount mismatch");
-            require(depositBdv == destinationDepositBdv, "Dest deposit bdv mismatch");
+            require(stem < newBs.stemTipForToken(token), "Dest Bean deposit stem too high");
+            require(beanDepositAmount == destinationDepositAmount, "Dest Bean deposit amount");
+            require(beanDepositBdv == destinationDepositBdv, "Dest Bean deposit bdv");
+
+            destDepositIds = newBs.getTokenDepositsForAccount(user, C.BEAN_ETH_WELL).depositIds;
+            require(destDepositIds.length == 1, "Dest deposit count");
+            (token, stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
+            (destinationDepositAmount, destinationDepositBdv) = newBs.getDeposit(
+                user,
+                C.BEAN_ETH_WELL,
+                stem
+            );
+            require(stem < newBs.stemTipForToken(C.BEAN_ETH_WELL), "Dest lp dep stem too high");
+            require(migrationAmountLp == destinationDepositAmount, "Dest lp deposit amount");
+            require(0 < destinationDepositBdv, "Dest lp deposit bdv");
         }
     }
 

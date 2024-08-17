@@ -34,9 +34,10 @@ library LibTransmitIn {
     struct SourceDeposit {
         address token;
         uint256 amount;
-        int96 stem; // unused
+        int96 stem;
         uint256[] sourceMinTokenAmountsOut; // LP only
         uint256 destMinLpOut; // LP only
+        uint256 lpDeadline; // LP only
         uint256 _grownStalk; // not stalk // need to change logic
         uint256 _burnedBeans;
         address _transferredToken; // NOTE what if LP type is not supported at destination?
@@ -64,7 +65,7 @@ library LibTransmitIn {
     // Use _depositTokensForConvert() to calculate stem (includes germination logic, germiantion safety provided by source beanstalk).
     function transmitInDeposits(address user, bytes[] calldata deposits) internal {
         if (deposits.length == 0) return;
-        address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedTokens();
+        address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < deposits.length; i++) {
             SourceDeposit memory deposit = abi.decode(deposits[i], (SourceDeposit));
 
@@ -98,7 +99,7 @@ library LibTransmitIn {
                         tokenAmountsIn,
                         deposit.destMinLpOut,
                         address(this),
-                        block.number
+                        deposit.lpDeadline
                     );
 
                     LibConvert._depositTokensForConvert(

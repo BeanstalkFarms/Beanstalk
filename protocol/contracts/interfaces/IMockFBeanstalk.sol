@@ -257,6 +257,7 @@ interface IMockFBeanstalk {
         int96 stem;
         uint256[] sourceMinTokenAmountsOut; // LP only
         uint256 destMinLpOut; // LP only
+        uint256 lpDeadline;
         uint256 _grownStalk; // not stalk // need to change logic
         uint256 _burnedBeans;
         address _transferredToken; // NOTE what if LP type is not supported at destination?

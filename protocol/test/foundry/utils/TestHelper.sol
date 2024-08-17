@@ -79,21 +79,15 @@ contract TestHelper is
      * @notice initializes the state of the beanstalk contracts for testing.
      */
     function initializeBeanstalkTestState(bool mock, bool alt, bool verbose) public {
+        bean = MockToken(C.BEAN);
+        FERTILIZER = C.fertilizerAddress();
         address payable bsAddr;
         // Set the deployment addresses of various Beanstalk components.
         if (!alt) {
             bsAddr = payable(LibConstant.BEANSTALK);
-            bean = MockToken(C.BEAN);
-            FERTILIZER = C.fertilizerAddress();
-            BEAN_ETH_WELL = C.BEAN_ETH_WELL;
-            BEAN_WSTETH_WELL = C.BEAN_WSTETH_WELL;
             vm.label(bsAddr, "Beanstalk_");
         } else {
             bsAddr = payable(LibAltC.BEANSTALK);
-            bean = MockToken(LibAltC.BEAN);
-            FERTILIZER = LibAltC.FERTILIZER;
-            BEAN_ETH_WELL = LibAltC.BEAN_ETH_WELL;
-            BEAN_WSTETH_WELL = LibAltC.BEAN_WSTETH_WELL;
             vm.label(bsAddr, "Alt_Beanstalk");
         }
 
