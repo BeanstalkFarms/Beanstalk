@@ -205,11 +205,10 @@ library LibDibbler {
         // increasing to `s.weather.t` across the first 25 blocks of the Season.
         if (!abovePeg) {
             soil = uint256(s.sys.soil);
-        }
-        // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
-        // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
-        // need to scale up the amount of Soil to hold Pods constant.
-        else {
+        } else {
+            // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
+            // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
+            // need to scale up the amount of Soil to hold Pods constant.
             soil = LibDibbler.scaleSoilUp(
                 uint256(s.sys.soil), // max soil offered this Season, reached when `t >= 25`
                 uint256(s.sys.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
