@@ -315,6 +315,7 @@ interface IMockFBeanstalk {
     event CancelBlueprint(bytes32 blueprintHash);
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
+    event ClaimFertilizer(uint256[] ids, uint256 beans);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
     event Convert(
         address indexed account,

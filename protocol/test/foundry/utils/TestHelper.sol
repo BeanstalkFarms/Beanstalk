@@ -587,7 +587,7 @@ contract TestHelper is
         address user,
         uint256 ethAmount
     ) internal returns (uint256 fertilizerAmountOut) {
-        ethAmount = bound(ethAmount, 1e18 / 1000, 100e18);
+        ethAmount = bound(ethAmount, 1e18, 100e18);
         mintTokensToUser(user, bs.getBarnRaiseToken(), ethAmount);
         vm.prank(user);
         return bs.mintFertilizer(ethAmount, 0, 0);

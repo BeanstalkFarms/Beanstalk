@@ -46,7 +46,6 @@ contract TransmitToForkTest is TestHelper {
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
-
         addLiquidityToWell(
             C.BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
@@ -245,12 +244,15 @@ contract TransmitToForkTest is TestHelper {
 
         uint128 id0 = bs.getEndBpf();
         uint256 fertAmount0 = buyFertForUser(user, ethAmount);
-        uint256 transAmount0 = fertAmount0 / 3;
+        uint256 transAmount0 = fertAmount0;
         passGermination(); // change the fert id
         uint128 id1 = bs.getEndBpf();
         uint256 fertAmount1 = buyFertForUser(user, ethAmount);
         uint256 transAmount1 = fertAmount1;
         uint256 totalTrans = transAmount0 + transAmount1;
+
+        // Rinsable sprouts at source. Very small to avoid finishing any fert.
+        bs.sunSunrise(100, 0);
 
         uint256 srcInitUnfert = bs.totalUnfertilizedBeans();
         uint256 srcInitActiveFert = bs.getActiveFertilizer();
@@ -309,6 +311,27 @@ contract TransmitToForkTest is TestHelper {
         {
             require(fertilizer.balanceOf(user, id0) == fertAmount0, "fert0 amt");
             require(fertilizer.balanceOf(user, id1) == fertAmount1, "fert1 amt");
+        }
+        // Fert is rinsible at destination.
+        {
+            uint256[] memory ids = new uint256[](2);
+            ids[0] = id0;
+            ids[1] = id1;
+
+            // Empty rinse.
+            vm.expectEmit();
+            emit IMockFBeanstalk.ClaimFertilizer(ids, 0);
+            vm.prank(user);
+            newBs.claimFertilized(ids, 0);
+
+            // Non empty rinse.
+            // This check will fail if a partial fert is transmitted, due to shared Fert contract.
+            uint256 mintedBeans = 300e6;
+            newBs.sunSunrise(int256(mintedBeans), 0);
+            vm.expectEmit();
+            emit IERC20.Transfer(address(newBs), user, mintedBeans / 2 - newBs.leftoverBeans());
+            vm.prank(user);
+            newBs.claimFertilized(ids, 0);
         }
     }
 

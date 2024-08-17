@@ -18,6 +18,17 @@ contract MockFertilizer is Fertilizer {
     /**
      * @dev No access control for testing.
      */
+    function beanstalkUpdate(
+        address account,
+        uint256[] memory ids,
+        uint128 bpf
+    ) external override returns (uint256) {
+        return __update(account, ids, uint256(bpf));
+    }
+
+    /**
+     * @dev No access control for testing.
+     */
     function beanstalkMint(
         address account,
         uint256 id,

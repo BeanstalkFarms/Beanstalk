@@ -56,12 +56,12 @@ library LibFertilizer {
 
     function IncrementFertState(
         uint256 fertilizerAmount,
-        uint128 bpf
+        uint128 remainingBpf
     ) internal returns (uint128 id) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
-        s.sys.fert.unfertilizedIndex += fertilizerAmount * bpf;
-        id = s.sys.fert.bpf + bpf;
+        s.sys.fert.unfertilizedIndex += fertilizerAmount * remainingBpf;
+        id = s.sys.fert.bpf + remainingBpf;
         s.sys.fert.fertilizer[id] += fertilizerAmount128;
         s.sys.fert.activeFertilizer += fertilizerAmount;
 
@@ -69,7 +69,7 @@ library LibFertilizer {
         if (s.sys.fert.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
         push(id);
-        emit SetFertilizer(id, bpf);
+        emit SetFertilizer(id, remainingBpf);
         return id;
     }
 

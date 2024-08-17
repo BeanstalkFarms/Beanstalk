@@ -40,7 +40,7 @@ contract Fertilizer is Internalizer {
         address account,
         uint256[] memory ids,
         uint128 bpf
-    ) external onlyOwner returns (uint256) {
+    ) external virtual onlyOwner returns (uint256) {
         return __update(account, ids, uint256(bpf));
     }
 
