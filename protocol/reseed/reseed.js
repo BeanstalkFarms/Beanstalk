@@ -24,7 +24,7 @@ const { impersonateSigner } = require("../utils/signer.js");
 const { mintEth } = require("../utils/");
 
 let reseeds;
-async function reseed(
+async function reseed({
   owner,
   beanstalkDeployer,
   l2owner,
@@ -35,7 +35,7 @@ async function reseed(
   end = 12,
   onlyL2 = false,
   setState = true
-) {
+}) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
   if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
@@ -60,11 +60,14 @@ async function reseed(
   for (let i = start; i < reseeds.length; i++) {
     await printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
-
-    if (i == 0 && onlyL2 == false) {
-      // migrate beanstalk L1 assets.
-      await reseed1(owner);
-      continue;
+    if (i == 0) {
+      if (onlyL2 == false) {
+        // migrate beanstalk L1 assets.
+        await reseed1(owner);
+        continue;
+      } else {
+        continue;
+      }
     }
 
     if (i == 1) {
@@ -132,7 +135,11 @@ function parseBeanstalkData() {
   const marketPath = "./reseed/data/exports/market-info20330000.json";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
-  parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json", contractAccounts);
+  parseInternalBalances(
+    storageAccountsPath,
+    "./reseed/data/r8-internal-balances.json",
+    contractAccounts
+  );
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
   parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);

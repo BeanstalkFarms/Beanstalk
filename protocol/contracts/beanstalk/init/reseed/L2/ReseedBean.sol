@@ -15,6 +15,7 @@ import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {console} from "hardhat/console.sol";
 
 /**
  * @author Brean
@@ -62,16 +63,15 @@ contract ReseedBean {
 
     // Basin
 
-    // TODO: change once addresses are finalized.
-    address internal constant AQUIFER = address(0xBA51AAAA95aeEFc1292515b36D86C51dC7877773);
+    address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
     address internal constant CONSTANT_PRODUCT_2 =
-        address(0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26);
+        address(0xBA5104f2df98974A83CD10d16E24282ce6Bb647f);
     // TODO: Replace with actual address.
-    address internal constant STABLE_2 = address(0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26);
+    address internal constant STABLE_2 = address(0xd771D7C0e1EBE89C9E9F663824851BB89b926d1a);
     // TODO: Replace with actual address.
     address internal constant UPGRADEABLE_WELL_IMPLEMENTATION =
-        address(0x8685A763F97b6228e4CF65F8B6993BFecc932e2b);
-    address internal constant MULTIFLOW_PUMP = address(0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17);
+        address(0x2706A171ECb68E0038378D40Dd1d136361d0cB7d);
+    address internal constant MULTIFLOW_PUMP = address(0xBA510482E3e6B96C88A1fe34Ce58385fB554C9a9);
 
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
@@ -221,6 +221,9 @@ contract ReseedBean {
             wellFunction,
             pumps
         );
+        console.log("encoded data:");
+        console.logBytes(immutableData);
+        console.logBytes(initData);
 
         // Bore upgradeable well
         address _well = IAquifer(AQUIFER).boreWell(
@@ -229,6 +232,8 @@ contract ReseedBean {
             initData,
             salt
         );
+
+        console.log("well:", _well);
 
         // Deploy proxy
         address wellProxy = address(
@@ -251,8 +256,8 @@ contract ReseedBean {
         cp2.target = CONSTANT_PRODUCT_2;
 
         // stable2
-        uint256 beanDecimals = 1e6;
-        uint256 stableDecimals = 1e6;
+        uint256 beanDecimals = 6;
+        uint256 stableDecimals = 6;
         bytes memory stable2Data = abi.encode(beanDecimals, stableDecimals);
         Call memory stable2 = Call(STABLE_2, stable2Data);
 
@@ -262,6 +267,8 @@ contract ReseedBean {
         bytes
             memory mfpData = hex"3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         pumps[0] = Call(MULTIFLOW_PUMP, mfpData);
+
+        console.log("beanEth:");
 
         // BEAN/ETH well
         deployUpgradebleWell(
