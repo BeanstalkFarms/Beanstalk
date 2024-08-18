@@ -8,7 +8,6 @@ import "contracts/libraries/LibRedundantMath256.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibWhitelistedTokens.sol";
-import "../../libraries/Well/LibWell.sol";
 import "../../libraries/LibTractor.sol";
 
 /**

@@ -14,6 +14,12 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import "forge-std/console.sol";
+
+interface IERC20Decimals {
+    function decimals() external view returns (uint8);
+}
 
 /**
  * @title Well Library
@@ -25,6 +31,8 @@ library LibWell {
 
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
+
+    uint256 private constant BEAN_UNIT = 1e6;
 
     function getRatiosAndBeanIndex(
         IERC20[] memory tokens
@@ -252,14 +260,92 @@ library LibWell {
             reserves[1] = s.sys.twaReserves[well].reserve1;
 
             Call memory wellFunction = IWell(well).wellFunction();
-            IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wellFunction.target);
 
             if (getBeanIndexFromWell(well) == 0) {
-                price = mfpWf.calcRate(reserves, 0, 1, wellFunction.data);
+                price = calculateTokenBeanPriceFromReserves(well, 1, reserves, wellFunction);
             } else {
-                price = mfpWf.calcRate(reserves, 1, 0, wellFunction.data);
+                price = calculateTokenBeanPriceFromReserves(well, 0, reserves, wellFunction);
             }
+
+            /*console.log("reserves 0: ", s.sys.twaReserves[well].reserve0);
+            console.log("reserves 1: ", s.sys.twaReserves[well].reserve1);
+
+            if (getBeanIndexFromWell(well) == 0) {
+                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve1
+                );
+            } else {
+                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
+                    s.sys.twaReserves[well].reserve0
+                );
+            }
+            console.log("original code final price: ", price);*/
         }
+    }
+
+    function calculateTokenBeanPriceFromReserves(
+        address well,
+        uint256 nonBeanIndex,
+        uint256[] memory reserves,
+        Call memory wellFunction
+    ) internal view returns (uint256 price) {
+        address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
+        // uint256 lpTokenSupply = IERC20(well).totalSupply(); // calculate this from reserves?
+        uint256 lpTokenSupply = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+            reserves,
+            wellFunction.data
+        );
+        uint256 beanIndex = nonBeanIndex == 0 ? 1 : 0;
+
+        console.log("beanIndex: ", beanIndex);
+        console.log("nonBeanIndex: ", nonBeanIndex);
+
+        console.log("reserves[0]: ", reserves[0]);
+        console.log("reserves[1]: ", reserves[1]);
+
+        uint256 newReserve;
+        if (nonBeanIndex == 0) {
+            uint256[] memory modifiedReserves = new uint256[](2);
+            modifiedReserves[0] = reserves[0];
+            modifiedReserves[1] = reserves[1] + BEAN_UNIT;
+            console.log("modifiedReserves[0]: ", modifiedReserves[0]);
+            console.log("modifiedReserves[1]: ", modifiedReserves[1]);
+            newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
+                modifiedReserves,
+                nonBeanIndex,
+                lpTokenSupply,
+                wellFunction.data
+            );
+        } else {
+            uint256[] memory modifiedReserves = new uint256[](2);
+            modifiedReserves[0] = reserves[0] + BEAN_UNIT;
+            modifiedReserves[1] = reserves[1];
+            console.log("modifiedReserves[0]: ", modifiedReserves[0]);
+            console.log("modifiedReserves[1]: ", modifiedReserves[1]);
+            newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
+                modifiedReserves,
+                nonBeanIndex,
+                lpTokenSupply,
+                wellFunction.data
+            );
+        }
+        console.log("reserves[beanIndex]: ", reserves[nonBeanIndex]);
+        console.log("newReserve: ", newReserve);
+        uint256 delta;
+        if (nonBeanIndex == 1) {
+            delta = reserves[nonBeanIndex] - newReserve;
+        } else {
+            delta = newReserve - reserves[nonBeanIndex];
+        }
+        console.log("delta: ", delta);
+        console.log("delta * BEAN_UNIT: ", delta * BEAN_UNIT);
+        console.log(
+            "10 ** IERC20Decimals(nonBeanToken).decimals(): ",
+            10 ** IERC20Decimals(nonBeanToken).decimals()
+        );
+        price = (delta * BEAN_UNIT) / (10 ** IERC20Decimals(nonBeanToken).decimals());
+
+        console.log("final price: ", price);
     }
 
     function getTwaReservesFromStorageOrBeanstalkPump(
