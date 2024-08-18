@@ -144,6 +144,7 @@ interface IMockFBeanstalk {
         address target;
         bytes4 selector;
         bytes1 encodeType;
+        bytes data;
     }
 
     struct MowStatus {
@@ -1045,6 +1046,10 @@ interface IMockFBeanstalk {
 
     function getOddGerminating(address token) external view returns (uint256, uint256);
 
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory);
+
     function getOverallConvertCapacity() external view returns (uint256);
 
     function getPenalizedUnderlying(
@@ -1305,7 +1310,8 @@ interface IMockFBeanstalk {
         address token,
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
-        bytes4 selector
+        bytes4 selector,
+        bytes memory data
     ) external;
 
     function mockWhitelistToken(

@@ -26,7 +26,7 @@ const { mintEth, mintBeans } = require("../../utils/mint.js");
 const { ConvertEncoder } = require("./utils/encoder.js");
 const { setReserves, getWellContractAt } = require("../../utils/well.js");
 const { toBN } = require("../../utils/helpers.js");
-const { impersonateBean, impersonateWsteth } = require("../../scripts/impersonate.js");
+const { impersonateBean } = require("../../scripts/impersonate.js");
 const { testIfRpcSet } = require("./utils/test.js");
 const { deployBasinV1_1Upgrade, deployBasinV1_1 } = require("../../scripts/basinV1_1.js");
 const { addAdminControls } = require("../../utils/admin.js");
@@ -75,8 +75,6 @@ describe.skip("Bean:Eth to Bean:Wsteth Migration", function () {
     }
 
     await impersonateBean();
-    this.wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
-    const stethPerToken = await this.wsteth.stEthPerToken();
     await impersonateWsteth();
     await this.wsteth.setStEthPerToken(stethPerToken);
 

@@ -137,14 +137,8 @@ contract SiloFacet is Invariable, TokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 _bdv) {
-        if (sender != LibTractor._user()) {
-            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
-        }
-        LibSilo._mow(sender, token);
-        // Need to update the recipient's Silo as well.
-        LibSilo._mow(recipient, token);
-        _bdv = _transferDeposit(sender, recipient, token, stem, amount);
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant returns (uint256 _bdv) {
+        return _transferDeposit(sender, recipient, token, stem, amount);
     }
 
     /**
@@ -220,7 +214,7 @@ contract SiloFacet is Invariable, TokenSilo {
         (address token, int96 cumulativeGrownStalkPerBDV) = LibBytes.unpackAddressAndStem(
             depositId
         );
-        transferDeposit(sender, recipient, token, cumulativeGrownStalkPerBDV, amount);
+        _transferDeposit(sender, recipient, token, cumulativeGrownStalkPerBDV, amount);
     }
 
     /**
@@ -251,7 +245,7 @@ contract SiloFacet is Invariable, TokenSilo {
         int96 stem;
         for (uint i; i < depositIds.length; ++i) {
             (token, stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
-            transferDeposit(sender, recipient, token, stem, amounts[i]);
+            _transferDeposit(sender, recipient, token, stem, amounts[i]);
         }
     }
 }

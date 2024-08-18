@@ -11,6 +11,8 @@ import {C} from "contracts/C.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockUniswapV3Pool} from "contracts/mocks/uniswap/MockUniswapV3Pool.sol";
 import {MockUniswapV3Factory} from "contracts/mocks/uniswap/MockUniswapV3Factory.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 
 /**
  * @title OracleDeployer
@@ -28,6 +30,11 @@ contract OracleDeployer is Utils {
 
     address constant WBTC_USD_CHAINLINK_PRICE_AGGREGATOR =
         address(0xd0C7101eACbB49F3deCcCc166d238410D6D46d57);
+
+    // timeout for Oracles with a 1 hour heartbeat.
+    uint256 constant FOUR_HOUR_TIMEOUT = 14400;
+    // timeout for Oracles with a 1 day heartbeat.
+    uint256 constant FOUR_DAY_TIMEOUT = 345600;
 
     // new chainlink oracles should be added here.
     address[] public chainlinkOracles = [
@@ -152,5 +159,59 @@ contract OracleDeployer is Utils {
             x = 1e14;
         }
         price = x / (_price + 1);
+    }
+
+    function initWhitelistOracles(bool verbose) internal {
+        // init ETH:USD oracle
+        updateOracleImplementationForTokenUsingChainlinkAggregator(
+            C.WETH,
+            C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR
+        );
+        setupWstethOracleImplementation();
+    }
+
+    function updateOracleImplementationForTokenUsingChainlinkAggregator(
+        address token,
+        address oracleAddress
+    ) internal {
+        IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
+            oracleAddress,
+            bytes4(0),
+            bytes1(0x01),
+            abi.encode(FOUR_HOUR_TIMEOUT)
+        );
+
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(token, oracleImplementation);
+
+        console.log("Updated oracle implementation for token: ", token, " to: ", oracleAddress);
+    }
+
+    function setupWstethOracleImplementation() internal {
+        // deploy new staking eth oracle contract
+        address oracleAddress = address(new LSDChainlinkOracle());
+
+        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _ethTimeout = 3600 * 4;
+        address _xEthChainlinkOracle = C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _xEthTimeout = 3600 * 4;
+        address _token = C.WSTETH;
+
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            _token,
+            IMockFBeanstalk.Implementation(
+                oracleAddress,
+                LSDChainlinkOracle.getPrice.selector,
+                bytes1(0x00),
+                abi.encode(
+                    _ethChainlinkOracle,
+                    _ethTimeout,
+                    _xEthChainlinkOracle,
+                    _xEthTimeout,
+                    _token
+                )
+            )
+        );
     }
 }

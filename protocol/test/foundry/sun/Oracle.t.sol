@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
@@ -32,9 +31,6 @@ contract OracleTest is TestHelper {
         int256 delta,
         int256 deltaBdv
     );
-
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // test accounts.
     address[] farmers;

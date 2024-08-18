@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IWell, IERC20, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {C} from "contracts/C.sol";
 
 contract CasesTest is TestHelper {
@@ -15,9 +14,6 @@ contract CasesTest is TestHelper {
         uint256 fieldId
     );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
-
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     address well = C.BEAN_ETH_WELL;
     uint256 constant EX_LOW = 0;

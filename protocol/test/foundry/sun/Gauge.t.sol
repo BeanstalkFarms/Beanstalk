@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
@@ -19,7 +18,6 @@ contract GaugeTest is TestHelper {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     MockLiquidityWeight mlw = MockLiquidityWeight(BEANSTALK);
     GaugePointPrice gpP;
 
@@ -195,7 +193,8 @@ contract GaugeTest is TestHelper {
             whitelistedWellTokens[rand],
             address(mlw),
             0x00,
-            mlw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector,
+            new bytes(0)
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.

@@ -66,37 +66,6 @@ describe("Depot Facet", function () {
         expect(await bean.balanceOf(user3.address)).to.be.equal(to6("100"));
       });
     });
-
-    describe("Multi Pipe", async function () {
-      beforeEach(async function () {
-        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(
-          to6("0")
-        );
-
-        await bean.mint(pipeline.address, to6("100"));
-        const approve = await bean.interface.encodeFunctionData("approve", [
-          beanstalk.address,
-          to6("100")
-        ]);
-        const tokenTransfer = beanstalk.interface.encodeFunctionData("transferToken", [
-          bean.address,
-          user.address,
-          to6("100"),
-          0,
-          1
-        ]);
-        await beanstalk.connect(user).multiPipe([
-          [bean.address, approve],
-          [beanstalk.address, tokenTransfer]
-        ]);
-      });
-
-      it("approves and transfers beans via beanstalk", async function () {
-        expect(await beanstalk.getInternalBalance(user.address, bean.address)).to.be.equal(
-          to6("100")
-        );
-      });
-    });
   });
 
   describe("Ether Pipe", async function () {
@@ -127,31 +96,20 @@ describe("Depot Facet", function () {
           beanstalk.address,
           to18("1")
         ]);
-        selector3 = beanstalk.interface.encodeFunctionData("transferToken", [
-          WETH,
-          user.address,
-          to18("1"),
-          0,
-          1
-        ]);
         data = encodeAdvancedData(0, to18("1"));
         data23 = encodeAdvancedData(0);
         await beanstalk.connect(user).advancedPipe(
           [
             [WETH, selector, data],
-            [WETH, selector2, data23],
-            [beanstalk.address, selector3, data23]
+            [WETH, selector2, data23]
           ],
           to18("1"),
           { value: to18("1") }
         );
       });
 
-      it("wraps Eth and transfers to user internal", async function () {
-        expect(await this.weth.balanceOf(beanstalk.address)).to.be.equal(to18("1"));
-        expect(await beanstalk.getInternalBalance(user.address, this.weth.address)).to.be.equal(
-          to18("1")
-        );
+      it("wraps Eth and approves beanstalk to use", async function () {
+        expect(await this.weth.balanceOf(pipeline.address)).to.be.equal(to18("1"));
         expect(await ethers.provider.getBalance(WETH)).to.be.equal(to18("1"));
       });
     });

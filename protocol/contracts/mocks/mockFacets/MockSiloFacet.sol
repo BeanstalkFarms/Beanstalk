@@ -8,7 +8,6 @@ import "contracts/libraries/LibRedundantMath256.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibWhitelistedTokens.sol";
-import "../../libraries/Well/LibWell.sol";
 import "../../libraries/LibTractor.sol";
 
 /**
@@ -280,12 +279,14 @@ contract MockSiloFacet is SiloFacet {
         address token,
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
-        bytes4 selector
+        bytes4 selector,
+        bytes memory data
     ) external {
         s.sys.silo.assetSettings[token].liquidityWeightImplementation = Implementation(
             newLiquidityWeightImplementation,
             selector,
-            encodeType
+            encodeType,
+            data
         );
     }
 

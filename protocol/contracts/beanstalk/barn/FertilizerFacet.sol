@@ -91,11 +91,12 @@ contract FertilizerFacet is Invariable, ReentrancyGuard {
 
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
+     * @dev Entrance cycle from Fertilizer contract.
      */
     function payFertilizer(
         address account,
         uint256 amount
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
         require(msg.sender == C.fertilizerAddress());
         s.sys.fert.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
