@@ -10,9 +10,10 @@ import {C} from "contracts/C.sol";
 ////// INTERFACES //////
 import {Call, IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {MockPump} from "contracts/mocks/well/MockPump.sol";
 
 /**
- * @title TestHelper
+ * @title BasinDeployer
  * @author Brean
  * @notice Test helper contract for Beanstalk tests.
  */
@@ -216,6 +217,9 @@ contract BasinDeployer is Utils {
         address[2] memory wellAddressAndNonBeanToken,
         address pump
     ) internal returns (address) {
+        // initialize pump with 0 values.
+        uint256[] memory _init0 = new uint256[](2);
+        MockPump(pump).updateNoBytes(wellAddressAndNonBeanToken[0], _init0);
         return
             deployWellAtAddressNoData(
                 wellAddressAndNonBeanToken[0],

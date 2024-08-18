@@ -232,6 +232,10 @@ library LibWellMinting {
         try
             IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data)
         returns (uint[] memory instReserves) {
+            // if well is not initialized, return 0.
+            if (instReserves.length == 0) {
+                return 0;
+            }
             //                                          well, reserves,   snapshot,  lookback
             (int256 deltaB, , , ) = getDeltaBInfoFromWell(well, instReserves, new bytes(0), 0);
             return (deltaB);

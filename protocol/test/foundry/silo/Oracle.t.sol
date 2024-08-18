@@ -175,23 +175,20 @@ contract OracleTest is TestHelper {
             _ethChainlinkOracle,
             _ethTimeout,
             _xEthChainlinkOracle,
-            _xEthTimeout,
-            _token
+            _xEthTimeout
         );
 
         (
             address ethChainlinkOracle,
             uint256 ethTimeout,
             address xEthChainlinkOracle,
-            uint256 xEthTimeout,
-            address token
+            uint256 xEthTimeout
         ) = deployedOracle.decodeData(data);
 
         assertEq(ethChainlinkOracle, _ethChainlinkOracle);
         assertEq(ethTimeout, _ethTimeout);
         assertEq(xEthChainlinkOracle, _xEthChainlinkOracle);
         assertEq(xEthTimeout, _xEthTimeout);
-        assertEq(token, _token);
     }
 
     function testGetOracleImplementationForToken() public {

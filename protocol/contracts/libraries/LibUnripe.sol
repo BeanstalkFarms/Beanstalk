@@ -12,7 +12,6 @@ import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IWellFunction} from "contracts/interfaces/basin/IWellFunction.sol";
 import {LibLockedUnderlying} from "./LibLockedUnderlying.sol";
 import {LibFertilizer} from "./LibFertilizer.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title LibUnripe
@@ -206,7 +205,6 @@ library LibUnripe {
         if (totalUsdNeeded == 0) {
             return 1e6; // if zero usd needed, full recap has happened
         }
-        console.log("total usd needed:", totalUsdNeeded);
         return s.sys.fert.recapitalized.mul(DECIMALS).div(totalUsdNeeded);
     }
 

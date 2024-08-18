@@ -291,7 +291,7 @@ contract GaugeTest is TestHelper {
         uint256 totalUnderlying = bs.getTotalUnderlying(C.UNRIPE_BEAN);
         assertEq(
             bs.getLockedBeansUnderlyingUnripeBean(),
-            (totalUnderlying * 0.4363321054081788e18) / 1e18
+            (totalUnderlying * 0.4587658967980477e18) / 1e18
         );
     }
 
@@ -314,7 +314,7 @@ contract GaugeTest is TestHelper {
         burntBeans = bound(burntBeans, 0, 10000000e6 - 1e6);
         uint256 lockedBeansPercent = burnBeansAndCheckLockedBeans(burntBeans);
         // 1e-12% precision.
-        assertApproxEqRel(lockedBeansPercent, 0.4587658968e18, 1e6); // see {LibLockedUnderlying}
+        assertApproxEqRel(lockedBeansPercent, 0.458765896798e18, 1e6); // see {LibLockedUnderlying}
     }
 
     function test_lockedBeansSupply5Million(uint256 burntBeans) public {

@@ -5,7 +5,6 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @title LibLockedUnderlying
@@ -27,9 +26,6 @@ library LibLockedUnderlying {
         uint256 recapPercentPaid
     ) external view returns (uint256 lockedUnderlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        console.log("getLockedUnderlying");
-        console.log(s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying);
-        console.log(getPercentLockedUnderlying(unripeToken, recapPercentPaid));
         return
             s
                 .sys
@@ -67,7 +63,6 @@ library LibLockedUnderlying {
         uint256 recapPercentPaid
     ) private view returns (uint256 percentLockedUnderlying) {
         uint256 unripeSupply = IERC20(unripeToken).totalSupply().div(DECIMALS);
-        console.log(unripeSupply);
         if (unripeSupply < 1_000_000) return 0; // If < 1_000_000 Assume all supply is unlocked.
         if (unripeSupply > 90_000_000) {
             if (recapPercentPaid > 0.1e6) {
