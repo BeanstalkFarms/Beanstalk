@@ -10,7 +10,6 @@ import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/console.sol";
 
-
 interface IFertilizer {
     function init() external;
 }
@@ -41,4 +40,3 @@ contract ReseedDeployFertilizer {
         console.log("Fertilizer deployed at: ", address(fertilizerProxy));
     }
 }
-
