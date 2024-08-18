@@ -103,14 +103,14 @@ async function reseed({
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
       await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
 
-  //     // claim ownership of beanstalk:
-  //     await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
+      // claim ownership of beanstalk:
+      await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
 
-  //     // initialize beanstalk state add selectors to L2 beanstalk.
-  //     await reseed10(l2owner, l2BeanstalkAddress, mock);
-  //   }
-  // }
-  // console.log("Reseed successful.");
+      // initialize beanstalk state add selectors to L2 beanstalk.
+      await reseed10(l2owner, l2BeanstalkAddress, mock);
+    }
+  }
+  console.log("Reseed successful.");
 }
 
 function getProcessString(processed, total) {
