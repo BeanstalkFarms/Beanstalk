@@ -101,7 +101,11 @@ contract ReseedSilo {
                 s.accts[accountDeposits[i].account].depositIdList[token].depositIds.push(
                     accountDeposits[i].dd[j].depositId
                 );
-
+                // set deposit id to index mapping, after adding deposit to deposit list
+                // this way the length of the depositIds array is always >0.
+                s.accts[accountDeposits[i].account].depositIdList[token].idIndex[
+                    accountDeposits[i].dd[j].depositId
+                ] = s.accts[accountDeposits[i].account].depositIdList[token].depositIds.length - 1;
                 // emit events.
                 emit AddMigratedDeposit(
                     accountDeposits[i].account,

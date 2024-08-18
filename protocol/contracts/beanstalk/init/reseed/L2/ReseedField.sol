@@ -43,6 +43,10 @@ contract ReseedField {
                 uint256 podAmount = accountPlots[i].plots[j].podAmounts;
                 s.accts[accountPlots[i].account].fields[FIELD_ID].plots[podIndex] = podAmount;
                 s.accts[accountPlots[i].account].fields[FIELD_ID].plotIndexes.push(podIndex);
+                // Set the plot index after the push to ensure length is > 0.
+                s.accts[accountPlots[i].account].fields[FIELD_ID].piIndex[podIndex] =
+                    s.accts[accountPlots[i].account].fields[FIELD_ID].plotIndexes.length -
+                    1;
                 emit MigratedPlot(accountPlots[i].account, podIndex, podAmount);
             }
         }

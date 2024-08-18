@@ -35,7 +35,6 @@ contract ReseedGlobal {
         SeedGauge sg;
         Rain r;
         EvaluationParameters ep;
-        Migration migration;
         ShipmentRoute[] shipmentRoutes;
     }
 
@@ -84,7 +83,7 @@ contract ReseedGlobal {
      */
     function init(ReseedSystemData calldata system) external {
         s.sys.reentrantStatus = 1;
-        s.sys.isFarm = 1;
+        s.sys.farmingStatus = 1;
         s.sys.activeField = 0;
         s.sys.fieldCount = 1;
 
