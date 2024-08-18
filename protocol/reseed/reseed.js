@@ -7,7 +7,6 @@ const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
-const { reseedDeployFertilizer } = require("./reseedDeployFertilizer.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
 const { reseed4 } = require("./reseed4.js");
@@ -34,7 +33,7 @@ async function reseed({
   start = 0,
   end = 12,
   deployL1 = true,
-  setState = true
+  setState = true,
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -72,7 +71,6 @@ async function reseed({
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
-      await reseedDeployFertilizer(beanstalkDeployer, l2BeanstalkAddress, mock);
       continue;
     }
 

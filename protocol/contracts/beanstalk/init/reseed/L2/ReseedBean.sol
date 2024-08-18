@@ -13,6 +13,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/console.sol";
 
 /**
@@ -24,8 +25,11 @@ import "forge-std/console.sol";
  */
 interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
-
     function initNoWellToken() external;
+}
+
+interface IFertilizer {
+    function init() external;
 }
 
 contract ReseedBean {
@@ -108,6 +112,10 @@ contract ReseedBean {
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
 
+    // Fertilizer
+    bytes32 internal constant FERTILIZER_PROXY_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000000;
+
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
      * @dev mints bean assets to the beanstalk contract,
@@ -119,8 +127,10 @@ contract ReseedBean {
         uint256 internalUrBeanSupply,
         uint256 internalUnripeLpSupply,
         ExternalUnripeHolders[] calldata urBean,
-        ExternalUnripeHolders[] calldata urBeanLP
+        ExternalUnripeHolders[] calldata urBeanLP,
+        address fertImplementation
     ) external {
+        // deployFertilizerProxy(fertImplementation);
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
         // deploy new unripe bean contract. Issue external unripe beans and urLP.
@@ -129,6 +139,18 @@ contract ReseedBean {
         deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
+    }
+
+    function deployFertilizerProxy(address fertImplementation) internal {
+        // deploy fertilizer proxy. Set owner to beanstalk.
+        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
+            salt: FERTILIZER_PROXY_SALT
+        }(
+            fertImplementation, // logic
+            address(this), // admin (diamond)
+            abi.encode(IFertilizer.init.selector) // init data
+        );
+        console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
