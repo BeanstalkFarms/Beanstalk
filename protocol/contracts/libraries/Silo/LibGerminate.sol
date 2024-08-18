@@ -206,7 +206,7 @@ library LibGerminate {
             totalRootsFromGermination = totalRootsFromGermination.add(roots);
             emit FarmerGerminatingStalkBalanceChanged(
                 account,
-                -int256(uint256(germinatingStalk)),
+                -int256(uint256(secondStalk)),
                 germState
             );
         }

@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../../interfaces/IERC4494.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+
 import {LibTractor} from "../../libraries/LibTractor.sol";
 
 /**
@@ -18,7 +20,7 @@ import {LibTractor} from "../../libraries/LibTractor.sol";
  * @dev To transfer ERC-20 tokens, use {TokenFacet.transferToken}.
  **/
 
-contract TokenSupportFacet is Invariable {
+contract TokenSupportFacet is Invariable, ReentrancyGuard {
     /**
      *
      * ERC-20
@@ -36,7 +38,7 @@ contract TokenSupportFacet is Invariable {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public payable fundsSafu noNetFlow noSupplyChange {
+    ) public payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         token.permit(owner, spender, value, deadline, v, r, s);
     }
 
@@ -54,7 +56,7 @@ contract TokenSupportFacet is Invariable {
         IERC721 token,
         address to,
         uint256 id
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         token.safeTransferFrom(LibTractor._user(), to, id);
     }
 
@@ -68,7 +70,7 @@ contract TokenSupportFacet is Invariable {
         uint256 tokenId,
         uint256 deadline,
         bytes memory sig
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         token.permit(spender, tokenId, deadline, sig);
     }
 
@@ -87,7 +89,7 @@ contract TokenSupportFacet is Invariable {
         address to,
         uint256 id,
         uint256 value
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         token.safeTransferFrom(LibTractor._user(), to, id, value, new bytes(0));
     }
 
@@ -100,7 +102,7 @@ contract TokenSupportFacet is Invariable {
         address to,
         uint256[] calldata ids,
         uint256[] calldata values
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         token.safeBatchTransferFrom(LibTractor._user(), to, ids, values, new bytes(0));
     }
 }

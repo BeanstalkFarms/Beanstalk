@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
@@ -26,7 +25,12 @@ contract SunriseTest is TestHelper {
     event Sunrise(uint256 indexed season);
     event Soil(uint32 indexed season, uint256 soil);
     event Incentivization(address indexed account, uint256 beans);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
     event TotalGerminatingBalanceChanged(
@@ -35,9 +39,6 @@ contract SunriseTest is TestHelper {
         int256 delta,
         int256 deltaBdv
     );
-
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // test accounts.
     address[] farmers;
@@ -232,7 +233,7 @@ contract SunriseTest is TestHelper {
 
         // Temperature changes.
         vm.expectEmit(false, false, false, false);
-        emit TemperatureChange(newSeason, 0, 0);
+        emit TemperatureChange(newSeason, 0, 0, bs.activeField());
 
         // Ratio changes.
         if (wellsEnabled) {
@@ -262,14 +263,5 @@ contract SunriseTest is TestHelper {
         for (uint i; i < lp.length; i++) {
             MockPump(IWell(lp[i]).pumps()[0].target).clearReserves(lp[i]);
         }
-    }
-
-    /**
-     * @notice gets the next time the sunrise can be called,
-     * and warps the time to that timestamp.
-     */
-    function warpToNextSeasonTimestamp() internal noGasMetering {
-        uint256 nextTimestamp = season.getNextSeasonStart();
-        vm.warp(nextTimestamp);
     }
 }

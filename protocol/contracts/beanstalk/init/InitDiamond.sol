@@ -50,7 +50,6 @@ contract InitDiamond is Weather {
 
         s.sys.weather.thisSowTime = type(uint32).max;
         s.sys.weather.lastSowTime = type(uint32).max;
-        s.sys.isFarm = 1;
 
         s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
         s.sys.twaReserves[C.BEAN_ETH_WELL].reserve0 = 1;

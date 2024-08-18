@@ -11,42 +11,30 @@ pragma solidity ^0.8.20;
  * @dev This is done by multiplying the price of xETH/ETH by the price of ETH/USD.
  */
 contract LSDChainlinkOracle {
-    address immutable ethChainlinkOracle;
-    uint256 immutable ethTimeout;
-    address immutable xEthChainlinkOracle;
-    uint256 immutable xEthTimeout;
-    address immutable token;
-
     uint256 internal constant PRECISION = 1e6;
     uint256 internal constant ETH_DECIMALS = 18;
 
     /**
-     * @dev assumes the chainlinkOracle returns the xETH/ETH price.
+     * @notice decodes data using the same format that the getPrice function uses.
+     * Used to verify the data is encoded correctly.
      */
-    constructor(
-        address _ethChainlinkOracle,
-        uint256 _ethTimeout,
-        address _xEthChainlinkOracle,
-        uint256 _xEthTimeout,
-        address _token
-    ) {
-        ethChainlinkOracle = _ethChainlinkOracle;
-        ethTimeout = _ethTimeout;
-        xEthChainlinkOracle = _xEthChainlinkOracle;
-        xEthTimeout = _xEthTimeout;
-        token = _token;
-    }
-
-    function getToken() external view returns (address) {
-        return token;
-    }
-
-    function getEthChainlinkOracle() external view returns (address, uint256) {
-        return (ethChainlinkOracle, ethTimeout);
-    }
-
-    function getxEthChainlinkOracle() external view returns (address, uint256) {
-        return (xEthChainlinkOracle, xEthTimeout);
+    function decodeData(
+        bytes memory data
+    )
+        external
+        pure
+        returns (
+            address ethChainlinkOracle,
+            uint256 ethTimeout,
+            address xEthChainlinkOracle,
+            uint256 xEthTimeout,
+            address token
+        )
+    {
+        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout, token) = abi.decode(
+            data,
+            (address, uint256, address, uint256, address)
+        );
     }
 
     /**
@@ -56,7 +44,19 @@ contract LSDChainlinkOracle {
      * TOKEN/USD has 6 decimal precision, whereas USD/TOKEN has the token's decimal precision.
      * @dev if lookback is set to 0, use the instanteous price, else use the TWAP.
      */
-    function getPrice(uint256 decimals, uint256 lookback) external view returns (uint256) {
+    function getPrice(
+        uint256 decimals,
+        uint256 lookback,
+        bytes memory data
+    ) external view returns (uint256) {
+        (
+            address ethChainlinkOracle,
+            uint256 ethTimeout,
+            address xEthChainlinkOracle,
+            uint256 xEthTimeout,
+            address token
+        ) = abi.decode(data, (address, uint256, address, uint256, address));
+
         // get the price of xETH/ETH or ETH/xETH, depending on decimals.
         uint256 xEthEthPrice = LibChainlinkOracle.getTokenPrice(
             xEthChainlinkOracle,

@@ -29,7 +29,9 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * @notice Removes a token from the Silo Whitelist.
      * @dev Can only be called by Beanstalk or Beanstalk owner.
      */
-    function dewhitelistToken(address token) external payable fundsSafu noNetFlow noSupplyChange {
+    function dewhitelistToken(
+        address token
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.dewhitelistToken(token);
     }
@@ -63,7 +65,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv,
         Implementation memory oracleImplementation
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -106,7 +108,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv,
         Implementation memory oracleImplementation
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.whitelistToken(
             token,
@@ -182,7 +184,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     function updateStalkPerBdvPerSeasonForToken(
         address token,
         uint32 stalkEarnedPerSeason
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(token, stalkEarnedPerSeason);
     }
@@ -196,7 +198,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint64 optimalPercentDepositedBdv
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,
@@ -245,5 +247,11 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         LibDiamond.enforceIsOwnerOrContract();
         s.sys.evaluationParameters = updatedSeedGaugeSettings;
         emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
+    }
+
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory) {
+        return LibWhitelist.getOracleImplementationForToken(token);
     }
 }

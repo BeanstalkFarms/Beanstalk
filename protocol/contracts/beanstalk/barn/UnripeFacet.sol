@@ -303,7 +303,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         require(
             s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,

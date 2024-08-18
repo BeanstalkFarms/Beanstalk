@@ -7,6 +7,7 @@ pragma solidity ^0.8.20;
 import {C} from "contracts/C.sol";
 import {AppStorage} from "../storage/AppStorage.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
@@ -23,7 +24,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet is Invariable {
+contract FertilizerFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
     using LibRedundantMath128 for uint128;
@@ -31,8 +32,6 @@ contract FertilizerFacet is Invariable {
     event SetFertilizer(uint128 id, uint128 bpf);
 
     uint256 private constant FERTILIZER_AMOUNT_PRECISION = 1e24;
-
-    AppStorage internal s;
 
     struct Supply {
         uint128 endBpf;
@@ -47,7 +46,7 @@ contract FertilizerFacet is Invariable {
     function claimFertilized(
         uint256[] calldata ids,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
         uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
         s.sys.fert.fertilizedPaidIndex += amount;
         LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
@@ -64,7 +63,7 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable fundsSafu noOutFlow returns (uint256 fertilizerAmountOut) {
+    ) external payable fundsSafu noOutFlow nonReentrant returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = _getMintFertilizerOut(
             tokenAmountIn,
             LibBarnRaise.getBarnRaiseToken()
@@ -92,6 +91,7 @@ contract FertilizerFacet is Invariable {
 
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
+     * @dev Entrance cycle from Fertilizer contract.
      */
     function payFertilizer(
         address account,

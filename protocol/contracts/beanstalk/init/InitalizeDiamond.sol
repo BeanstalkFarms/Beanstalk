@@ -80,16 +80,18 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
@@ -265,8 +267,7 @@ contract InitalizeDiamond {
         s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
-    function initalizeFarmAndTractor() public {
-        s.sys.isFarm = 1;
+    function initalizeFarmAndTractor() internal {
         LibTractor._resetPublisher();
         LibTractor._setVersion("1.0.0");
     }

@@ -116,7 +116,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
     function mow(
         address account,
         address token
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibSilo._mow(account, token);
     }
 
@@ -124,7 +124,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
     function mowMultiple(
         address account,
         address[] calldata tokens
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         for (uint256 i; i < tokens.length; ++i) {
             LibSilo._mow(account, tokens[i]);
         }
@@ -151,6 +151,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
         fundsSafu
         noNetFlow
         noSupplyChange
+        nonReentrant
         returns (uint256 beans, int96 stem)
     {
         return _plant(LibTractor._user());

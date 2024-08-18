@@ -15,7 +15,7 @@ import "../LibTractor.sol";
 library LibEth {
     function refundEth() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (address(this).balance > 0 && s.sys.isFarm != 2) {
+        if (address(this).balance > 0) {
             (bool success, ) = LibTractor._user().call{value: address(this).balance}(new bytes(0));
             require(success, "Eth transfer Failed.");
         }

@@ -7,6 +7,7 @@ import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -21,7 +22,12 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
         );
         uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         assertEq(price, 0.00002e8, "price using encode type 0x01");
@@ -30,8 +36,26 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
+            IMockFBeanstalk.Implementation(
+                WBTC_USDC_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
         );
+
+        // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            C.USDC,
+            IMockFBeanstalk.Implementation(
+                USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+
         price = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC);
         // 1 USDC will get ~500 satoshis of BTC at $50k
         // 1 USDC = 1e6
@@ -128,15 +152,13 @@ contract OracleTest is TestHelper {
         address token = address(new MockToken("StakingETH2", "stETH2"));
 
         // deploy new staking eth oracle contract
-        address oracleAddress = address(
-            new LSDChainlinkOracle(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-                3600 * 4,
-                address(oracle),
-                3600 * 4,
-                token
-            )
-        );
+        address oracleAddress = address(new LSDChainlinkOracle());
+
+        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _ethTimeout = 3600 * 4;
+        address _xEthChainlinkOracle = address(oracle);
+        uint256 _xEthTimeout = 3600 * 4;
+        address _token = token;
 
         // add oracle implementation to beanstalk:
         vm.prank(BEANSTALK);
@@ -145,10 +167,68 @@ contract OracleTest is TestHelper {
             IMockFBeanstalk.Implementation(
                 oracleAddress,
                 LSDChainlinkOracle.getPrice.selector,
-                bytes1(0x00)
+                bytes1(0x00),
+                abi.encode(
+                    _ethChainlinkOracle,
+                    _ethTimeout,
+                    _xEthChainlinkOracle,
+                    _xEthTimeout,
+                    _token
+                )
             )
         );
         return token;
+    }
+
+    function testLSDChainlinkOracleDecodesDataCorrectly() public {
+        MockChainlinkAggregator oracle = new MockChainlinkAggregator();
+        LSDChainlinkOracle deployedOracle = new LSDChainlinkOracle();
+        address someToken = address(new MockToken("StakingETH2", "stETH2"));
+
+        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        uint256 _ethTimeout = 3600 * 4;
+        address _xEthChainlinkOracle = address(oracle);
+        uint256 _xEthTimeout = 3600 * 4;
+        address _token = someToken;
+
+        bytes memory data = abi.encode(
+            _ethChainlinkOracle,
+            _ethTimeout,
+            _xEthChainlinkOracle,
+            _xEthTimeout,
+            _token
+        );
+
+        (
+            address ethChainlinkOracle,
+            uint256 ethTimeout,
+            address xEthChainlinkOracle,
+            uint256 xEthTimeout,
+            address token
+        ) = deployedOracle.decodeData(data);
+
+        assertEq(ethChainlinkOracle, _ethChainlinkOracle);
+        assertEq(ethTimeout, _ethTimeout);
+        assertEq(xEthChainlinkOracle, _xEthChainlinkOracle);
+        assertEq(xEthTimeout, _xEthTimeout);
+        assertEq(token, _token);
+    }
+
+    function testGetOracleImplementationForToken() public {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+
+        IMockFBeanstalk.Implementation memory oracleImplementation = bs
+            .getOracleImplementationForToken(WBTC);
+        assertEq(oracleImplementation.target, WBTC_USD_CHAINLINK_PRICE_AGGREGATOR);
     }
 
     function testGetTokenPrice() public {
@@ -156,7 +236,12 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
         );
 
         // token price is number of dollars per token, i.e. 50000 USD for 1 WBTC
@@ -181,7 +266,12 @@ contract OracleTest is TestHelper {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+            IMockFBeanstalk.Implementation(
+                WBTC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
         );
 
         // WETH price is 1000
@@ -192,6 +282,4 @@ contract OracleTest is TestHelper {
         uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
         assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
     }
-
-    // TODO: fork tests to verify the on-chain values currently returned by oracles alignes with mocks?
 }

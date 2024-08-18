@@ -21,6 +21,10 @@ library C {
     uint256 private constant LEGACY_CHAIN_ID = 1;
     uint256 private constant CHAIN_ID = 1;
 
+    //////////////////// Reentrancy ////////////////////
+    uint256 internal constant NOT_ENTERED = 1;
+    uint256 internal constant ENTERED = 2;
+
     //////////////////// Season ////////////////////
 
     /// @dev The length of a Season meaured in seconds.
@@ -52,7 +56,7 @@ library C {
     address internal constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-    address internal constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
+    address internal constant PIPELINE = 0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0;
 
     //////////////////// Well ////////////////////
 
@@ -71,10 +75,7 @@ library C {
 
     //////////////////// Tractor ////////////////////
 
-    uint80 internal constant SELECTOR_SIZE = 4;
     uint80 internal constant SLOT_SIZE = 32;
-    uint80 internal constant ARGS_START_INDEX = SELECTOR_SIZE + SLOT_SIZE;
-    uint80 internal constant ADDR_SLOT_OFFSET = 12;
     // Special index to indicate the data to copy is the publisher address.
     uint80 internal constant PUBLISHER_COPY_INDEX = type(uint80).max;
     // Special index to indicate the data to copy is the operator address.

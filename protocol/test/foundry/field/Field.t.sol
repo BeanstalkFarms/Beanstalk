@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {C} from "contracts/C.sol";
 
 contract FieldTest is TestHelper {
@@ -14,7 +13,6 @@ contract FieldTest is TestHelper {
 
     // Interfaces.
     MockFieldFacet field = MockFieldFacet(BEANSTALK);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // test accounts
     address[] farmers;

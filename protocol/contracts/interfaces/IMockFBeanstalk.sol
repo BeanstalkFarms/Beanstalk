@@ -144,6 +144,7 @@ interface IMockFBeanstalk {
         address target;
         bytes4 selector;
         bytes1 encodeType;
+        bytes data;
     }
 
     struct MowStatus {
@@ -321,6 +322,7 @@ interface IMockFBeanstalk {
     event PlotTransfer(
         address indexed from,
         address indexed to,
+        uint256 fieldId,
         uint256 indexed index,
         uint256 amount
     );
@@ -400,7 +402,12 @@ interface IMockFBeanstalk {
     event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
     event Sunrise(uint256 indexed season);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event TokenApproval(
         address indexed owner,
         address indexed spender,
@@ -1039,6 +1046,10 @@ interface IMockFBeanstalk {
 
     function getOddGerminating(address token) external view returns (uint256, uint256);
 
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory);
+
     function getOverallConvertCapacity() external view returns (uint256);
 
     function getPenalizedUnderlying(
@@ -1299,7 +1310,8 @@ interface IMockFBeanstalk {
         address token,
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
-        bytes4 selector
+        bytes4 selector,
+        bytes memory data
     ) external;
 
     function mockWhitelistToken(

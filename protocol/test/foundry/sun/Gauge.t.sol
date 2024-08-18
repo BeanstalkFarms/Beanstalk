@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
@@ -19,7 +18,6 @@ contract GaugeTest is TestHelper {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
     MockLiquidityWeight mlw = MockLiquidityWeight(BEANSTALK);
     GaugePointPrice gpP;
 
@@ -195,7 +193,8 @@ contract GaugeTest is TestHelper {
             whitelistedWellTokens[rand],
             address(mlw),
             0x00,
-            mlw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector,
+            new bytes(0)
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
@@ -555,6 +554,69 @@ contract GaugeTest is TestHelper {
         }
     }
 
+    function testDefaultGaugePointFunction(
+        uint256 gaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) public {
+        gaugePoints = bound(gaugePoints, 1e18, 1000e18);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+
+        uint256 newGaugePoints = gpP.defaultGaugePointFunction(
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+
+        uint256 extFarAbove = gpP.getExtremelyFarAbove(optimalPercentDepositedBdv);
+        uint256 relFarAbove = gpP.getRelativelyFarAbove(optimalPercentDepositedBdv);
+        uint256 extFarBelow = gpP.getExtremelyFarBelow(optimalPercentDepositedBdv);
+        uint256 relFarBelow = gpP.getRelativelyFarBelow(optimalPercentDepositedBdv);
+
+        assertLe(extFarAbove, 100e6);
+        assertGe(extFarAbove, optimalPercentDepositedBdv);
+        assertLe(relFarAbove, 100e6);
+        assertGe(relFarAbove, optimalPercentDepositedBdv);
+
+        assertGe(extFarBelow, 0);
+        assertLe(extFarBelow, optimalPercentDepositedBdv);
+        assertGe(relFarBelow, 0);
+        assertLe(relFarBelow, optimalPercentDepositedBdv);
+
+        assertGe(newGaugePoints, 0);
+        assertLe(newGaugePoints, 1000e18);
+
+        uint256 deltaGaugePoints;
+        if (newGaugePoints > gaugePoints) {
+            deltaGaugePoints = newGaugePoints - gaugePoints;
+        } else {
+            deltaGaugePoints = gaugePoints - newGaugePoints;
+        }
+
+        uint256 percentDifference;
+        if (percentOfDepositedBdv > optimalPercentDepositedBdv) {
+            percentDifference = getPercentDifference(
+                100e6 - optimalPercentDepositedBdv,
+                100e6 - percentOfDepositedBdv
+            );
+        } else {
+            percentDifference = getPercentDifference(
+                optimalPercentDepositedBdv,
+                percentOfDepositedBdv
+            );
+        }
+
+        if (deltaGaugePoints == 5e18) {
+            assertLe(percentDifference, 100e6);
+        } else if (deltaGaugePoints == 3e18) {
+            assertLe(percentDifference, 66.666666e6);
+            assertGe(percentDifference, 33.333333e6);
+        } else if (deltaGaugePoints == 1e18 && gaugePoints != 1e18) {
+            assertLe(percentDifference, 33.333333e6);
+        }
+    }
+
     ////////////////////// GAUGE HELPERS //////////////////////
 
     function addLiquidityAndReturnNonBeanValue(
@@ -707,5 +769,20 @@ contract GaugeTest is TestHelper {
         assertEq(ssg.lpToSupplyRatioOptimal, 0);
         assertEq(ssg.lpToSupplyRatioLowerBound, 0);
         assertEq(ssg.excessivePriceThreshold, 0);
+    }
+
+    function getPercentDifference(
+        uint optimal,
+        uint current
+    ) internal pure returns (uint256 percentDifference) {
+        if (optimal == 0) {
+            return type(uint256).max;
+        }
+        if (optimal < current) {
+            percentDifference = ((current - optimal) * 100e6) / optimal;
+        } else {
+            percentDifference = ((optimal - current) * 100e6) / optimal;
+        }
+        return percentDifference;
     }
 }

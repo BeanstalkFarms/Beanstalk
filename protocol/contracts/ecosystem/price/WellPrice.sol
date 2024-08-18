@@ -6,14 +6,15 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
-import {LibUsdOracle} from "../../libraries/Oracle/LibUsdOracle.sol";
 import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 
 interface IBeanstalk {
     function bdv(address token, uint256 amount) external view returns (uint256);
 
-    function poolDeltaB(address pool) external view returns (int256);
+    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
+
+    function getUsdTokenPrice(address token) external view returns (uint256);
 }
 
 interface dec {
@@ -59,7 +60,7 @@ contract WellPrice {
 
         // swap 1 bean of the opposite asset to get the usd price
         // price = amtOut/tknOutPrice
-        uint256 assetPrice = LibUsdOracle.getUsdPrice(pool.tokens[tknIndex]);
+        uint256 assetPrice = BEANSTALK.getUsdTokenPrice(pool.tokens[tknIndex]);
         if (assetPrice > 0) {
             pool.price = well
                 .getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
@@ -71,32 +72,10 @@ contract WellPrice {
         // and multiplying by 2 to get the total liquidity of the pool.
         pool.liquidity = pool.balances[beanIndex].mul(pool.price).mul(2).div(PRICE_PRECISION);
 
-        pool.deltaB = getDeltaB(wellAddress, wellTokens, wellBalances);
+        pool.deltaB = BEANSTALK.poolCurrentDeltaB(wellAddress);
         pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
         try BEANSTALK.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
             pool.lpBdv = bdv;
         } catch {}
-    }
-
-    function getDeltaB(
-        address well,
-        IERC20[] memory tokens,
-        uint256[] memory reserves
-    ) internal view returns (int256 deltaB) {
-        Call memory wellFunction = IWell(well).wellFunction();
-        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
-            tokens
-        );
-        // If the USD Oracle oracle call fails, we can't compute deltaB
-        if (!success) return 0;
-
-        uint256 beansAtPeg = IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        );
-
-        deltaB = beansAtPeg.toInt256() - reserves[beanIndex].toInt256();
     }
 }
