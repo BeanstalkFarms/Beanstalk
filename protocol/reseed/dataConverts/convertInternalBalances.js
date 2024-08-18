@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { convertToBigNum } = require("../../utils/read.js");
 
 function parseInternalBalances(inputFilePath, outputFilePath, contractAccounts) {
   try {
@@ -14,7 +15,7 @@ function parseInternalBalances(inputFilePath, outputFilePath, contractAccounts) 
             const balance = internalBalances[tokenAddress];
             // do not include contract accounts
             if (!contractAccounts.includes(account)) {
-              result.push([account, tokenAddress, parseInt(balance, 16)]);
+              result.push([account, tokenAddress, convertToBigNum(balance)]);
             }
           }
         }

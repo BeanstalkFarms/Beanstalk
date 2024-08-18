@@ -1,11 +1,15 @@
 const fs = require("fs");
-const readline = require("readline");
+const { BigNumber } = require("ethers");
 
 async function readPrune() {
   const contents = await fs.readFileSync("contracts/C.sol", "utf-8");
   let num = contents.split("INITIAL_HAIRCUT = ")[1].split(";")[0];
   num = parseFloat(num).toString();
   return num;
+}
+
+function convertToBigNum(value) {
+  return BigNumber.from(value).toString();
 }
 
 function splitEntriesIntoChunks(entries, chunkSize) {
@@ -77,3 +81,4 @@ exports.readPrune = readPrune;
 exports.splitEntriesIntoChunks = splitEntriesIntoChunks;
 exports.splitEntriesIntoChunksOptimized = splitEntriesIntoChunksOptimized;
 exports.updateProgress = updateProgress;
+exports.convertToBigNum = convertToBigNum;

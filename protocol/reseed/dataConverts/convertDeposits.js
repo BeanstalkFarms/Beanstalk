@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { convertToBigNum } = require("../../utils/read.js");
 
 function parseDeposits(inputFilePath, outputFilePath, contractAccounts) {
   try {
@@ -14,9 +15,9 @@ function parseDeposits(inputFilePath, outputFilePath, contractAccounts) {
         if (depositIds.length > 0) {
           const depositArray = depositIds.map((depositId) => {
             const { amount, bdv } = deposits[depositId];
-            return [depositId, parseInt(amount, 16).toString(), parseInt(bdv, 16).toString()];
+            return [depositId, convertToBigNum(amount), convertToBigNum(bdv)];
           });
-          
+
           // do not include contract accounts
           if (!contractAccounts.includes(account)) {
             result.push([account, depositArray]);

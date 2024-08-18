@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { convertToBigNum } = require("../../utils/read.js");
 
 function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
   try {
@@ -9,7 +10,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
     for (const account in accounts) {
       if (accounts.hasOwnProperty(account)) {
         const accountData = accounts[account];
-        const stalk = accountData.stalk ? parseInt(accountData.stalk, 16).toString() : "0";
+        const stalk = accountData.stalk ? convertToBigNum(accountData.stalk) : "0";
         const mowStatuses = accountData.mowStatuses;
         const tokenAddresses = [];
         const mowStatusArray = [];
@@ -19,7 +20,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
             tokenAddresses.push(tokenAddress);
             const lastStem = mowStatuses[tokenAddress].lastStem;
             const bdv = mowStatuses[tokenAddress].bdv;
-            mowStatusArray.push([parseInt(lastStem, 16).toString(), parseInt(bdv, 16).toString()]);
+            mowStatusArray.push([convertToBigNum(lastStem), convertToBigNum(bdv)]);
           }
         }
 

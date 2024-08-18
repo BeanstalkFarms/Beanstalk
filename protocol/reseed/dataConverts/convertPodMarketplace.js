@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { convertToBigNum } = require("../../utils/read.js");
 
 function parsePodListings(inputFilePath, outputFilePath) {
   try {
@@ -12,12 +13,12 @@ function parsePodListings(inputFilePath, outputFilePath) {
         result.push([
           id,
           listing.account,
-          listing.index,
-          listing.start,
-          listing.amount,
+          convertToBigNum(listing.index),
+          convertToBigNum(listing.start),
+          convertToBigNum(listing.amount),
           listing.pricePerPod.toString(),
-          listing.maxHarvestableIndex,
-          listing.minFillAmount,
+          convertToBigNum(listing.maxHarvestableIndex),
+          convertToBigNum(listing.minFillAmount),
           listing.mode.toString()
         ]);
       }
@@ -42,10 +43,10 @@ function parsePodOrders(inputFilePath, outputFilePath) {
         result.push([
           order.account,
           id,
-          parseInt(order.orderBeans, 16).toString(),
+          convertToBigNum(order.orderBeans),
           order.pricePerPod.toString(),
-          order.maxPlaceInLine,
-          order.minFillAmount
+          convertToBigNum(order.maxPlaceInLine),
+          convertToBigNum(order.minFillAmount)
         ]);
       }
     }
