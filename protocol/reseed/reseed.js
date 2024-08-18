@@ -33,7 +33,8 @@ async function reseed({
   start = 0,
   end = 12,
   deployL1 = true,
-  setState = true
+  setState = true,
+  deployBasin = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -41,7 +42,7 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseed3, // reseedbean + deploy fert +  deploy wells on l2
+    reseed3, // reseedbean + deploy wells on l2
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
     reseed4, // reseed field
@@ -75,8 +76,13 @@ async function reseed({
     }
 
     if (i == 2) {
+      // deploy fertilizer (TODO: Remove when fert is deployed on L2)
+      const Fert = await ethers.getContractFactory("Fertilizer");
+      const fertilizerImplementation = await Fert.deploy();
+      await fertilizerImplementation.deployed();
+      console.log("Fertilizer Implementation:", fertilizerImplementation.address);
       // deploy beans addresses.
-      await reseed3(beanstalkDeployer, l2BeanstalkAddress, mock);
+      await reseed3(beanstalkDeployer, l2BeanstalkAddress, deployBasin, fertilizerImplementation.address, mock);
       continue;
     }
 
@@ -102,10 +108,8 @@ async function reseed({
     if (i == reseeds.length - 1) {
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
       await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
-
       // claim ownership of beanstalk:
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
-
       // initialize beanstalk state add selectors to L2 beanstalk.
       await reseed10(l2owner, l2BeanstalkAddress, mock);
     }
