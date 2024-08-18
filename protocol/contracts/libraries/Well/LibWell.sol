@@ -14,6 +14,11 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
+import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+
+interface IERC20Decimals {
+    function decimals() external view returns (uint8);
+}
 
 /**
  * @title Well Library
@@ -25,6 +30,8 @@ library LibWell {
 
     // The BDV Selector that all Wells should be whitelisted with.
     bytes4 internal constant WELL_BDV_SELECTOR = 0xc84c7727;
+
+    uint256 private constant BEAN_UNIT = 1e6;
 
     function getRatiosAndBeanIndex(
         IERC20[] memory tokens
@@ -252,14 +259,43 @@ library LibWell {
             reserves[1] = s.sys.twaReserves[well].reserve1;
 
             Call memory wellFunction = IWell(well).wellFunction();
-            IMultiFlowPumpWellFunction mfpWf = IMultiFlowPumpWellFunction(wellFunction.target);
 
             if (getBeanIndexFromWell(well) == 0) {
-                price = mfpWf.calcRate(reserves, 0, 1, wellFunction.data);
+                price = calculateTokenBeanPriceFromReserves(well, 0, 1, reserves, wellFunction);
             } else {
-                price = mfpWf.calcRate(reserves, 1, 0, wellFunction.data);
+                price = calculateTokenBeanPriceFromReserves(well, 1, 0, reserves, wellFunction);
             }
         }
+    }
+
+    function calculateTokenBeanPriceFromReserves(
+        address well,
+        uint256 beanIndex,
+        uint256 nonBeanIndex,
+        uint256[] memory reserves,
+        Call memory wellFunction
+    ) internal view returns (uint256 price) {
+        address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
+        uint256 lpTokenSupply = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+            reserves,
+            wellFunction.data
+        );
+
+        uint256 oldReserve = reserves[nonBeanIndex];
+        reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
+        uint256 newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
+            reserves,
+            nonBeanIndex,
+            lpTokenSupply,
+            wellFunction.data
+        );
+        uint256 delta;
+        if (nonBeanIndex == 1) {
+            delta = oldReserve - newReserve;
+        } else {
+            delta = newReserve - oldReserve;
+        }
+        price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
     }
 
     function getTwaReservesFromStorageOrBeanstalkPump(
