@@ -34,7 +34,7 @@ contract ReseedBarn {
     }
 
     // TODO: Replace with address mined from salt (this is the address with the default salt)
-    address internal constant FERTILIZER_PROXY = 0x7B50EbC3E5128F315dc097F7cbd1600399e3E796;
+    address internal constant FERTILIZER_PROXY = 0xC59f881074Bf039352C227E21980317e6b969c8A;
 
     AppStorage internal s;
 
