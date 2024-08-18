@@ -15,6 +15,7 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent={{ md: 'space-between' }}
+        alignItems={{ md: 'center' }}
         gap={2}
       >
         <Typography variant="h4" fontWeight={FontWeight.bold}>

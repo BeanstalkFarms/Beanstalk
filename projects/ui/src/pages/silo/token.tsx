@@ -4,7 +4,6 @@ import { Card, Container, Stack, Typography } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { ERC20Token as LegacyERC20Token } from '~/classes/Token';
 import usePools from '~/hooks/beanstalk/usePools';
 import { useSdkWhitelist } from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
@@ -20,7 +19,6 @@ import { FontWeight, XXLWidth } from '~/components/App/muiTheme';
 import { FC } from '~/types';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import TokenDepositsOverview from '~/components/Silo/Token/TokenDepositsOverview';
-import { getNewToOldToken } from '~/hooks/sdk';
 import TokenDepositRewards from '~/components/Silo/Token/TokenDepositRewards';
 import TokenAbout from '~/components/Silo/Token/TokenAbout';
 import {
@@ -86,7 +84,7 @@ const PagePathContent = ({
   </>
 );
 
-const DefaultContent = ({ token, pool, siloBalance }: TokenPageBaseProps) => (
+const DefaultContent = ({ token }: Pick<TokenPageBaseProps, 'token'>) => (
   <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
     <Stack
       width="100%"
@@ -113,11 +111,7 @@ const DefaultContent = ({ token, pool, siloBalance }: TokenPageBaseProps) => (
       width="100%"
       sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
     >
-      <SiloActions
-        pool={pool}
-        token={getNewToOldToken(token) as LegacyERC20Token}
-        siloBalance={siloBalance}
-      />
+      <SiloActions token={token} />
     </Stack>
   </Stack>
 );
@@ -132,7 +126,11 @@ const TransferContent = ({
     </Module>
     <Module
       sx={{
-        maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH, width: '100%', height: '100%' },
+        maxWidth: {
+          lg: SILO_ACTIONS_MAX_WIDTH,
+          width: '100%',
+          height: '100%',
+        },
       }}
     >
       <ModuleHeader>
@@ -161,7 +159,7 @@ const SlugSwitchContent = (props: TokenPageBaseProps) => {
               title={isTransferView ? 'Transfer Deposits' : undefined}
             />
           )}
-          {isTokenView && <DefaultContent {...props} />}
+          {isTokenView && <DefaultContent token={props.token} />}
           {isTransferView && <TransferContent {...props} />}
         </Stack>
       </Container>
@@ -179,16 +177,12 @@ const TokenPage: FC<{}> = () => {
 
   const whitelistedToken = whitelist?.[address || ''];
 
-  // Ensure this address is a whitelisted token
   if (!address || !whitelistedToken) {
     return <div>Not found</div>;
   }
 
-  // Load this Token from the whitelist
   const siloBalance = farmerSilo.balances[whitelistedToken.address];
 
-  // Most Silo Tokens will have a corresponding Pool.
-  // If one is available, show a PoolCard with state info.
   const pool = pools[address];
 
   return (
