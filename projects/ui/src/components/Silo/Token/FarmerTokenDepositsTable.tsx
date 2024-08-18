@@ -36,15 +36,18 @@ import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
 import { minimizeWindowIcon } from '~/img/icon';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
+import {
+  TokenDepositsContextType,
+  TokenDepositsSelectType,
+  useTokenDepositsContext,
+} from './TokenDepositsContext';
 
 export type FarmerTokenDepositRow = LegacyDepositCrate & { id: string };
-
-type TokenDepositsSelectType = 'single' | 'multi' | 'view';
 
 const FarmerTokenDepositsTable = ({
   token,
   siloBalance,
-  selectType,
+  selectType = 'single',
 }: {
   token: Token;
   siloBalance: FarmerSiloTokenBalance;
@@ -53,13 +56,12 @@ const FarmerTokenDepositsTable = ({
   const sdk = useSdk();
   const theme = useTheme();
   const { address: account } = useAccount();
+  const { selected, setSelected, clear, setSlug } = useTokenDepositsContext();
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
   const [modalOpen, setModalOpen] = useState<boolean>(false);
-
-  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
@@ -106,17 +108,10 @@ const FarmerTokenDepositsTable = ({
         valueGetter: (params) => params.row.amount.toNumber(),
         renderCell: (params) => (
           <Stack width="100%">
-            <Stack
-              direction="row"
-              gap={0.5}
-              width="100%"
-              justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-            >
-              <TokenIcon token={token} css={{ marginBottom: '2px' }} />
-              <Typography>
-                {params.row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
-              </Typography>
-            </Stack>
+            <Typography textAlign={{ xs: 'left', md: 'right' }}>
+              <TokenIcon token={token} css={{ marginBottom: '-2px' }} />{' '}
+              {params.row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+            </Typography>
             <Typography
               color="text.secondary"
               textAlign={{ xs: 'left', md: 'right' }}
@@ -188,30 +183,16 @@ const FarmerTokenDepositsTable = ({
   }, [isMobile, selectType, selected, token]);
 
   const handleSelect = (id: string) => {
-    if (selectType === 'view') return;
-    const newSelected = new Set([...selected]);
-
-    if (selectType === 'single') {
-      const exists = newSelected.has(id);
-      newSelected.clear();
-      if (!exists) {
-        setSelected(newSelected.add(id));
-        setModalOpen(true);
-        return;
-      }
-    }
-    if (!newSelected.delete(id)) newSelected.add(id);
-    setSelected(newSelected);
+    const selectCallback =
+      selectType === 'single' ? () => setModalOpen(true) : undefined;
+    setSelected(id, selectType, selectCallback);
   };
 
   const handleModalClose = () => {
-    if (selectType === 'single' && !!selected.size) {
-      setSelected(new Set());
-    }
+    clear();
     setModalOpen(false);
   };
 
-  const isSelectableType = selectType !== 'view';
   const state = !account ? 'disconnected' : 'ready';
 
   return (
@@ -239,7 +220,7 @@ const FarmerTokenDepositsTable = ({
           px: 0,
           '& .MuiDataGrid-row': {
             ...baseRowCSS,
-            cursor: isSelectableType ? 'pointer' : 'default',
+            cursor: 'pointer',
           },
         }}
         classes={{
@@ -252,6 +233,7 @@ const FarmerTokenDepositsTable = ({
             row={selectedDeposits[0]}
             account={account}
             token={token}
+            setSlug={setSlug}
           />
         </Dialog>
       )}
@@ -265,10 +247,12 @@ const SingleTokenDepositDialogContent = ({
   row,
   account,
   token,
+  setSlug,
 }: {
   row: FarmerTokenDepositRow;
   token: Token;
   account: string;
+  setSlug: TokenDepositsContextType['setSlug'];
 }) => (
   <Stack p={2} gap={2} width="100%" maxWidth={{ xs: '100%', md: '491px' }}>
     {/* Deposit */}
@@ -370,6 +354,7 @@ const SingleTokenDepositDialogContent = ({
         color="secondary"
         size="small"
         startIcon={<Box component="img" src={minimizeWindowIcon} />}
+        onClick={() => setSlug('transfer')}
       >
         Transfer
       </Button>
@@ -378,6 +363,7 @@ const SingleTokenDepositDialogContent = ({
         color="secondary"
         size="small"
         startIcon={<Box component="img" src={minimizeWindowIcon} />}
+        onClick={() => setSlug('lambda')}
       >
         Update Deposit
       </Button>

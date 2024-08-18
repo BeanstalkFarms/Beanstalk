@@ -8,14 +8,24 @@ import React, {
 import useTabs from '~/hooks/display/useTabs';
 import { exists } from '~/util/UI';
 
+export type TokenDepositsSelectType = 'single' | 'multi';
+
 type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
+
 const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
 
-type TokenDepositsContextType = {
-  deposits: Set<string>;
+export type TokenDepositsContextType = {
+  selected: Set<string>;
   slug: SiloTokenSlug;
-  toggleDeposit: (depositId: string) => void;
-  setSlug: (slug: SiloTokenSlug | undefined | null) => void;
+  setSelected: (
+    depositId: string,
+    selectType: TokenDepositsSelectType,
+    callback?: () => void
+  ) => void;
+  setSlug: (
+    slug: SiloTokenSlug | undefined | null,
+    callback?: () => void
+  ) => void;
   clear: () => void;
 };
 
@@ -35,15 +45,25 @@ export const TokenDepositsProvider = (props: { children: React.ReactNode }) => {
 
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
 
-  const toggleDeposit = useCallback(
-    (depositId: string) => {
+  const handleSetSelected = useCallback(
+    (
+      depositId: string,
+      selectType: TokenDepositsSelectType,
+      callback?: () => void
+    ) => {
       const copy = new Set(selected);
-      if (copy.has(depositId)) {
-        copy.delete(depositId);
-      } else {
+      if (selectType === 'single') {
+        const inSelected = copy.has(depositId);
+        copy.clear();
+        if (!inSelected) {
+          copy.add(depositId);
+        }
+      } else if (!copy.delete(depositId)) {
         copy.add(depositId);
       }
+
       setSelected(copy);
+      callback?.();
     },
     [selected]
   );
@@ -51,7 +71,8 @@ export const TokenDepositsProvider = (props: { children: React.ReactNode }) => {
   const clear = useCallback(() => setSelected(new Set()), []);
 
   const setSlug = useCallback(
-    (action: SiloTokenSlug | undefined | null) => {
+    (action: SiloTokenSlug | undefined | null, callback?: () => void) => {
+      callback?.();
       if (exists(action)) {
         const index = SLUGS.indexOf(action as SiloTokenSlug);
         if (index > -1) {
@@ -68,10 +89,10 @@ export const TokenDepositsProvider = (props: { children: React.ReactNode }) => {
   return (
     <TokenDepositsContext.Provider
       value={{
-        deposits: selected,
+        selected,
         slug: slugIndexMap[slugIndex],
         setSlug,
-        toggleDeposit,
+        setSelected: handleSetSelected,
         clear,
       }}
     >

@@ -11,6 +11,7 @@ import { Token } from '@beanstalk/sdk';
 import { ZERO_BN } from '~/constants';
 import BigNumber from 'bignumber.js';
 import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
+import { useTokenDepositsContext } from './TokenDepositsContext';
 
 type ITokenDepositsOverview = {
   token: Token;
@@ -19,6 +20,7 @@ type ITokenDepositsOverview = {
 const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
   const farmerDeposits = useAppSelector((s) => s._farmer.silo.balances);
   const deposits = farmerDeposits[token.address];
+  const { setSlug } = useTokenDepositsContext();
 
   return (
     <Stack>
@@ -60,6 +62,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
                 width="auto"
               />
             }
+            onClick={() => setSlug('transfer')}
           >
             Transfer
             <Typography
