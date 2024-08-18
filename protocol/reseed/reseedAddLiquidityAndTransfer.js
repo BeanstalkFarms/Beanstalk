@@ -1,11 +1,11 @@
 const { MAX_UINT256, L2_WETH, L2_WSTETH, L2_USDC } = require("../test/hardhat/utils/constants.js");
 const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
-
+const { impersonateToken } = require("../scripts/impersonate.js");
 // TODO: Replace with L2 well addresses.
 const WellAddresses = [
-  "0x441657D23F030E9F8Ce68b518AC6952Abc4e8c5E", // BEAN/WETH
-  "0x96B57c91eDe37fc09CD8016526F99015271a7c02", // BEAN/WstETH
-  "0xA6D38498fb88bB79DA89de007aF86E051f7DA8ea" // BEAN/USDC
+  "0x2871ac50d1FEa78421f1126619042aCBc5f3798A", // BEAN/WETH
+  "0x2DDC71c375852aeDe6371Af7a708C99690339418", // BEAN/WstETH
+  "0x98b20D27D21C72c5f88CdF90E808A95121f6168F" // BEAN/USDC
 ];
 
 const NonBeanToken = [
@@ -31,23 +31,34 @@ const beanAmounts = [
 async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, verbose = true) {
   console.log("-----------------------------------");
   console.log("adds liquidity to wells and transfers to l2 beanstalk.\n");
-  const bean = await ethers.getContractFactory("MockToken", "0x", account);
+
+  // todo: update bean address once finalized.
+  await impersonateToken("0xe64718A6d44406dE942d3d0f591E370B22263382", 6);
+  const bean = await ethers.getContractAt(
+    "MockToken",
+    "0xe64718a6d44406de942d3d0f591e370b22263382"
+  );
   // add liquidity and transfer to L2 Beanstalk:
   for (let i = 0; i < WellAddresses.length; i++) {
-    const well = await ethers.getContractFactory("Well", wellAddresses[i], account);
-    const wellERC20 = await ethers.getContractFactory("IERC20", WellAddresses[i], account);
-    const token = await ethers.getContractFactory("MockToken", NonBeanToken[i], account);
+    console.log("test");
+    const well = await ethers.getContractAt("IWell", WellAddresses[i], account);
+    const wellERC20 = await ethers.getContractAt("IERC20", WellAddresses[i], account);
+    const token = await ethers.getContractAt("MockToken", NonBeanToken[i], account);
+    const decimals = await token.decimals();
+    await impersonateToken(NonBeanToken[i], decimals);
     if (mock) {
       // mint tokens to add liquidity:
-      await token.mint(account, nonBeanAmounts[i]);
-      await bean.mint(account, beanAmounts[i]);
+      await token.mint(account.address, nonBeanAmounts[i]);
+      await bean.mint(account.address, beanAmounts[i]);
     }
-    // add liquidity to well:
+    console.log("test2");
     await token.approve(well.address, nonBeanAmounts[i]);
     await bean.approve(well.address, beanAmounts[i]);
-    await well.addLiquidity([nonBeanAmounts[i], beanAmounts[i]], 0, account, MAX_UINT256);
-    // transfer to L2 Beanstalk:
-    await wellERC20.transfer(L2Beanstalk, wellERC20.balanceOf(account));
+    // add liquidity to well, to L2 Beanstalk:
+    console.log("test3");
+    await well
+      .connect(account)
+      .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
   }
 }
 
