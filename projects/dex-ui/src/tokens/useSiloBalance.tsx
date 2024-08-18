@@ -1,5 +1,7 @@
 import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getIsValidEthereumAddress } from "src/utils/addresses";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { useAccount } from "wagmi";
 
@@ -7,10 +9,8 @@ export const useSiloBalance = (token: Token) => {
   const { address } = useAccount();
   const sdk = useSdk();
 
-  const key = ["silo", "balance", sdk, token.symbol];
-
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: key,
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
+    queryKey: queryKeys.siloBalance(token.address),
 
     queryFn: async (): Promise<TokenValue> => {
       let balance: TokenValue;
@@ -18,7 +18,9 @@ export const useSiloBalance = (token: Token) => {
         balance = TokenValue.ZERO;
       } else {
         const sdkLPToken = sdk.tokens.findByAddress(token.address);
-        const result = await sdk.silo.getBalance(sdkLPToken!, address, { source: DataSource.LEDGER });
+        const result = await sdk.silo.getBalance(sdkLPToken!, address, {
+          source: DataSource.LEDGER
+        });
         balance = result.amount;
       }
       return balance;
@@ -33,50 +35,36 @@ export const useSiloBalance = (token: Token) => {
   return { data, isLoading, error, refetch, isFetching };
 };
 
-export const useSiloBalanceMany = (tokens: Token[]) => {
+export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
+  const setQueryData = useSetScopedQueryData();
+  const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
 
-  const queryClient = useQueryClient();
-
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["silo", "balance", sdk, ...tokens.map((token) => token.symbol)],
-
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
+    queryKey: queryKeys.siloBalancesAll,
     queryFn: async () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;
 
-      /**
-       * For some reason the symbol sdk.tokens.findByAddress returns a
-       * token with symbol of BEANETH & the token symbol stored in the well is BEANWETHCP2w
-       *
-       * We find the silo balance using the token with symbol BEANETH &
-       * then use BEANWETHCP2w as the key in the resultMap
-       */
-      const _tokens = tokens
-        .map((token) => {
-          return {
-            token,
-            sdkToken: sdk.tokens.findByAddress(token.address)
-          };
-        })
-        .filter((tk) => tk.sdkToken !== undefined);
-
-      const result = await Promise.all(
-        _tokens.map((item) =>
-          sdk.silo
-            .getBalance(item.sdkToken!, address, { source: DataSource.LEDGER })
-            .then((result) => ({ token: item.token, amount: result.amount }))
+      const results = await Promise.all(
+        wellTokens.map((token) =>
+          sdk.silo.getBalance(token, address, { source: DataSource.LEDGER })
         )
       );
 
-      result.forEach((val) => {
-        resultMap[val.token.symbol] = val.amount;
-        queryClient.setQueryData(["silo", "balance", sdk, val.token.symbol], val.amount);
+      results.forEach((val, i) => {
+        const token = wellTokens[i];
+        resultMap[token.address] = val.amount;
+        setQueryData(queryKeys.siloBalance(token.address), () => {
+          return val.amount;
+        });
       });
 
       return resultMap;
-    }
+    },
+    enabled: getIsValidEthereumAddress(address) && !!wellTokens.length,
+    retry: false
   });
 
   return { data, isLoading, error, refetch, isFetching };

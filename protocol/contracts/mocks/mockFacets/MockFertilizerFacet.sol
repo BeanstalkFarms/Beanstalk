@@ -47,4 +47,8 @@ contract MockFertilizerFacet is FertilizerFacet {
         );
         LibFertilizer.addFertilizer(seasonAdded, tokenAmountIn, fertilizerAmount, minLpOut);
     }
+
+    function setBpf(uint128 bpf) external {
+        s.sys.fert.bpf = bpf;
+    }
 }

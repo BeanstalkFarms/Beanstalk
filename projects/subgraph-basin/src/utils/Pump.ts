@@ -1,5 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { BoreWellPumpsStruct } from "../../generated/Aquifer/Aquifer";
+import { BoreWellPumpsStruct } from "../../generated/Basin-ABIs/Aquifer";
 import { Pump } from "../../generated/schema";
 
 export function loadOrCreatePump(pumpData: BoreWellPumpsStruct, wellAddress: Address): Pump {

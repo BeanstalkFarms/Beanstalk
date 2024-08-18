@@ -8,17 +8,17 @@
     "directory": "projects/subgraph-beanstalk"
   },
   "scripts": {
-    "codegen": "graph codegen",
-    "build": "graph build",
+    "codegen": "rm -rf ./generated && graph codegen ./manifests/codegen-abis.yaml",
+    "build": "echo Using manifest at ./manifests/$1.yaml && yarn codegen && graph build ./manifests/$1.yaml",
     "test": "graph test",
     "testd": "docker run -it --rm --mount type=bind,source=\"$(pwd)\"/matchstick-docker.yaml,target=/matchstick/matchstick.yaml --mount type=bind,source=\"$(pwd)\"/../../,target=/matchstick/repo-mounted/ matchstick",
     "testd-named": "../subgraph-core/tests/scripts/docker-run-named.sh",
-    "create-local": "graph create --node http://127.0.0.1:8020/ beanstalk",
-    "remove-local": "graph remove --node http://127.0.0.1:8020/ beanstalk",
-    "deploy-local": "graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 beanstalk"
+    "create-local": "echo Using manifest at ./manifests/$1.yaml && graph create --node http://127.0.0.1:8020/ beanstalk_$1",
+    "remove-local": "echo Using manifest at ./manifests/$1.yaml && graph remove --node http://127.0.0.1:8020/ beanstalk_$1",
+    "deploy-local": "echo Using manifest at ./manifests/$1.yaml && yarn codegen && graph deploy --node http://127.0.0.1:8020/ --ipfs http://127.0.0.1:5001 beanstalk_$1 ./manifests/$1.yaml"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.69.0",
+    "@graphprotocol/graph-cli": "0.79.2",
     "@graphprotocol/graph-ts": "0.34.0"
   },
   "devDependencies": {

@@ -7,8 +7,8 @@ import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import {
   BEAN,
   UNRIPE_BEAN,
-  BEAN_ETH_WELL_LP,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
+  BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
@@ -21,9 +21,9 @@ const useSiloTokenToFiat = () => {
   ///
   const getChainToken = useGetChainToken();
   const Bean = getChainToken(BEAN);
+  const beanWstETH = getChainToken(BEAN_WSTETH_WELL_LP);
   const urBean = getChainToken(UNRIPE_BEAN);
-  const beanWeth = getChainToken(BEAN_ETH_WELL_LP);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
 
   ///
   const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
@@ -64,24 +64,14 @@ const useSiloTokenToFiat = () => {
       const _poolAddress = _token.address;
       const _amountLP = _amount;
 
-      if (_token === urBeanWeth) {
-        // formula for calculating chopped urBEANETH:
-        // userUrLP * totalUnderlyingLP / totalSupplyUrLP * recapPaidPercent
-        const underlyingTotalLP = unripe[urBeanWeth.address]?.underlying;
-        const totalSupplyUrLP = unripe[urBeanWeth.address]?.supply;
-        const recapPaidPercent = unripe[urBeanWeth.address]?.recapPaidPercent;
-        const choppedLP = _amount
-          .multipliedBy(underlyingTotalLP)
-          .dividedBy(totalSupplyUrLP)
-          .multipliedBy(recapPaidPercent);
+      if (_token === urBeanWstETH) {
+        // formula for calculating chopped urBEANWstETH LP:
+        // amount * penalty (where penalty is amount of beanWstETH for 1 urBeanWstETH)
+        const penalty = unripe[urBeanWstETH.address]?.penalty || ZERO_BN;
+        const choppedLP = _amount.times(penalty);
 
-        // console.log(`underlyingTotalLP`, underlyingTotalLP.toString()); // 285772.366579734565388865
-        // console.log(`totalSupplyUrLP`, totalSupplyUrLP.toString()); // 101482689.1786
-        // console.log(`recapPaidPercent`, recapPaidPercent.toString()); // 0.006132
-        // console.log(`amountLP`, _amount.toString()); // 370168.862647
-        // console.log(`choppedLP`, choppedLP.toString()); // 6.39190475675572378624622472
-        const lpUsd = beanPools[beanWeth.address]?.lpUsd || ZERO_BN;
-        const lpBdv = beanPools[beanWeth.address]?.lpBdv || ZERO_BN;
+        const lpUsd = beanPools[beanWstETH.address]?.lpUsd || ZERO_BN;
+        const lpBdv = beanPools[beanWstETH.address]?.lpBdv || ZERO_BN;
 
         return _denomination === 'bdv'
           ? lpBdv?.multipliedBy(_chop ? choppedLP : _amount)
@@ -97,7 +87,7 @@ const useSiloTokenToFiat = () => {
 
       return _denomination === 'bdv' ? bdv : usd;
     },
-    [Bean, beanPools, beanWeth, price, unripe, urBean, urBeanWeth]
+    [Bean, beanPools, beanWstETH, price, unripe, urBean, urBeanWstETH]
   );
 };
 

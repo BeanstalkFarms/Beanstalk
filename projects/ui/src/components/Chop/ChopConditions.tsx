@@ -9,13 +9,13 @@ import {
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useSelector } from 'react-redux';
-import { displayBN, displayFullBN } from '../../util';
-import { BeanstalkPalette, FontSize } from '../App/muiTheme';
 import { AppState } from '~/state';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { UNRIPE_BEAN } from '~/constants/tokens';
 
 import { FC } from '~/types';
+import { BeanstalkPalette, FontSize } from '../App/muiTheme';
+import { displayBN, displayFullBN } from '../../util';
 
 const ChopConditions: FC<{}> = () => {
   const { fertilized, recapFundedPct, unfertilized } = useSelector<
@@ -33,7 +33,7 @@ const ChopConditions: FC<{}> = () => {
       <Stack gap={1}>
         <Typography variant="h4">Chop Conditions</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={6} md={3.7}>
+          <Grid item xs={6}>
             <Stack gap={0.5}>
               <Tooltip
                 title="The claim to future Ripe assets you are forfeiting by Chopping."
@@ -69,7 +69,7 @@ const ChopConditions: FC<{}> = () => {
               )}
             </Stack>
           </Grid>
-          <Grid item xs={6} md={3.7}>
+          <Grid item xs={6}>
             <Stack gap={0.5}>
               <Tooltip
                 title="The ratio of Ripe to Unripe assets."
@@ -84,24 +84,6 @@ const ChopConditions: FC<{}> = () => {
               </Tooltip>
               <Typography variant="bodyLarge" fontWeight="400">
                 {displayFullBN(recapFundedPct.times(100), 2)}%
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid item xs={6} md={4.6}>
-            <Stack gap={0.5}>
-              <Tooltip
-                title="The percentage of Sprouts that have become Rinsable."
-                placement="top"
-              >
-                <Typography variant="body1">
-                  Debt Repaid to Fertilizer&nbsp;
-                  <HelpOutlineIcon
-                    sx={{ color: 'text.secondary', fontSize: FontSize.sm }}
-                  />
-                </Typography>
-              </Tooltip>
-              <Typography variant="bodyLarge" fontWeight="400">
-                {pctDebtRepaid.times(100).toFixed(4)}%
               </Typography>
             </Stack>
           </Grid>

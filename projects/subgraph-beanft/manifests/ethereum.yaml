@@ -1,6 +1,6 @@
 specVersion: 0.0.5
 schema:
-  file: ./schema.graphql
+  file: ../schema.graphql
 dataSources:
   - kind: ethereum
     name: genesis
@@ -18,11 +18,11 @@ dataSources:
         - Collection
       abis:
         - name: genesis
-          file: ./abis/genesis.json
+          file: ../abis/genesis.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransferGenesis
-      file: ./src/mappings.ts
+      file: ../src/mappings.ts
   - kind: ethereum
     name: winter
     network: mainnet
@@ -39,11 +39,11 @@ dataSources:
         - Collection
       abis:
         - name: winter
-          file: ./abis/winter.json
+          file: ../abis/winter.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransferWinter
-      file: ./src/mappings.ts
+      file: ../src/mappings.ts
   - kind: ethereum
     name: barnraise
     network: mainnet
@@ -60,13 +60,13 @@ dataSources:
         - Collection
       abis:
         - name: barnraise
-          file: ./abis/barnraise.json
+          file: ../abis/barnraise.json
       eventHandlers:
         - event: ConsecutiveTransfer(indexed uint256,uint256,indexed address,indexed address)
           handler: handleConsecutiveTransferBarnRaise
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransferBarnRaise
-      file: ./src/mappings.ts
+      file: ../src/mappings.ts
   - kind: ethereum
     name: basin
     network: mainnet
@@ -83,11 +83,10 @@ dataSources:
         - Collection
       abis:
         - name: basin
-          file: ./abis/basin.json
+          file: ../abis/basin.json
       eventHandlers:
         - event: ConsecutiveTransfer(indexed uint256,uint256,indexed address,indexed address)
           handler: handleConsecutiveTransferBasin
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransferBasin
-      file: ./src/mappings.ts
-
+      file: ../src/mappings.ts

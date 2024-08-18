@@ -94,7 +94,8 @@ contract SeasonGettersFacet {
      * @notice Returns the total Delta B across all whitelisted minting liquidity Wells.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        if (tokens.length == 0) return 0;
         for (uint256 i = 0; i < tokens.length; i++) {
             deltaB = deltaB.add(LibWellMinting.check(tokens[i]));
         }

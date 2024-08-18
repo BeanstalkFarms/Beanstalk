@@ -28,10 +28,8 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { useSigner } from '~/hooks/ledger/useSigner';
 import useAccount from '~/hooks/ledger/useAccount';
 import usePreferredToken, {
   PreferredToken,
@@ -45,7 +43,7 @@ import {
 } from '~/util';
 import {
   UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
+  UNRIPE_BEAN_WSTETH,
   UNRIPE_TOKENS,
 } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
@@ -59,6 +57,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import { useUnripe } from '~/state/bean/unripe/updater';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
@@ -276,16 +275,17 @@ const PREFERRED_TOKENS: PreferredToken[] = [
     minimum: new BigNumber(1),
   },
   {
-    token: UNRIPE_BEAN_WETH,
+    token: UNRIPE_BEAN_WSTETH,
     minimum: new BigNumber(1),
   },
 ];
 
 const Chop: FC<{}> = () => {
   /// Ledger
+  const sdk = useSdk();
   const account = useAccount();
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
+  const beanstalk = sdk.contracts.beanstalk;
+  const [refetchUnripe] = useUnripe();
 
   /// Farmer
   const farmerBalances = useFarmerBalances();
@@ -313,7 +313,7 @@ const Chop: FC<{}> = () => {
       values: ChopFormValues,
       formActions: FormikHelpers<ChopFormValues>
     ) => {
-      let txToast;
+      const txToast = new TransactionToast({});
       try {
         middleware.before();
 
@@ -323,7 +323,7 @@ const Chop: FC<{}> = () => {
         if (!state.amount?.gt(0))
           throw new Error('No Unfertilized token to Chop.');
 
-        txToast = new TransactionToast({
+        txToast.setToastMessages({
           loading: `Chopping ${displayFullBN(state.amount)} ${
             state.token.symbol
           }...`,
@@ -339,20 +339,22 @@ const Chop: FC<{}> = () => {
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([refetchFarmerBalances()]); // should we also refetch the penalty?
+        await Promise.all([refetchFarmerBalances(), refetchUnripe()]);
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        if (txToast) {
-          txToast.error(err);
-        } else {
-          const errorToast = new TransactionToast({});
-          errorToast.error(err);
-        }
+        txToast.error(err);
         formActions.setSubmitting(false);
       }
     },
-    [account, beanstalk, refetchFarmerBalances, farmerBalances, middleware]
+    [
+      account,
+      beanstalk,
+      farmerBalances,
+      middleware,
+      refetchFarmerBalances,
+      refetchUnripe,
+    ]
   );
 
   return (

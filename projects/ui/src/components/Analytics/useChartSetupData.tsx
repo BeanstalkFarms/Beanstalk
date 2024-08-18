@@ -96,6 +96,10 @@ type ChartSetupBase = {
    * price scales.
    */
   shortTickFormatter: (v: number) => string | undefined;
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
 };
 
 type ChartSetup = ChartSetupBase & {
@@ -121,13 +125,15 @@ export function useChartSetupData() {
       sdk.tokens.BEAN,
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WETH,
+      sdk.tokens.UNRIPE_BEAN_WSTETH,
     ];
 
     const lpTokensToChart = [
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.BEAN_ETH_UNIV2_LP,
       BEAN_LUSD_LP[1],
       BEAN_CRV3_V1_LP[1],

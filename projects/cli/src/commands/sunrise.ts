@@ -16,6 +16,7 @@ export const sunrise = async (sdk, chain, { force }) => {
   }
 
   await callSunrise(sdk);
+  await sdk.provider.send("evm_mine", []);
 
   if (diff > 1) {
     console.log(`You are still behind by ${diff - 1} seasons. May need to call it again.`);
@@ -27,7 +28,9 @@ async function callSunrise(sdk: BeanstalkSDK) {
     const res = await sdk.contracts.beanstalk.sunrise();
     await res.wait();
     const season = await sdk.contracts.beanstalk.season();
-    console.log(`${chalk.bold.greenBright("sunrise()")} called. New season is ${chalk.bold.yellowBright(season)}`);
+    console.log(
+      `${chalk.bold.greenBright("sunrise()")} called. New season is ${chalk.bold.yellowBright(season)}`
+    );
   } catch (err: any) {
     console.log(`sunrise() call failed: ${err.reason}`);
   }

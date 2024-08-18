@@ -74,7 +74,7 @@ const Overview: FC<{
 
     const _season = dataPoint ? dataPoint.season : season;
     const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
-    const _value = dataPoint ? BigNumber(dataPoint.value) : breakdown.states.deposited.value;
+    const _value = BigNumber(dataPoint?.value ?? latestData?.value ?? 0);
 
     return (
       <Stat
@@ -97,7 +97,7 @@ const Overview: FC<{
         sx={{ ml: 0 }}
       />
     )},
-    [breakdown.states.deposited.value, data.deposits, season]
+    [data.deposits, season]
   );
 
   const stalkStats = useCallback((dataPoint: BaseDataPoint | undefined) => {

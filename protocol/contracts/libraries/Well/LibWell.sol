@@ -331,6 +331,31 @@ library LibWell {
     }
 
     /**
+     * @notice returns the twa reserves for well,
+     * given the cumulative reserves and timestamp.
+     * @dev wrapped in a try/catch to return gracefully.
+     */
+    function getTwaReservesFromPump(
+        address well,
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) internal view returns (uint256[] memory) {
+        Call[] memory pump = IWell(well).pumps();
+        try
+            ICumulativePump(pump[0].target).readTwaReserves(
+                well,
+                cumulativeReserves,
+                timestamp,
+                pump[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory) {
+            return twaReserves;
+        } catch {
+            return (new uint256[](2));
+        }
+    }
+
+    /**
      * @notice gets the TwaLiquidity of a given well.
      * @dev only supports wells that are whitelisted in beanstalk.
      * the initial timestamp and reserves is the timestamp of the start

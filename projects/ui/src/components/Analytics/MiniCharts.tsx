@@ -8,10 +8,10 @@ import ChartV2 from './ChartV2';
 import { useChartSetupData } from './useChartSetupData';
 
 type QueryData = {
-  time: Time,
-  value: number,
+  time: Time;
+  value: number;
   customValues: {
-    season: number
+    season: number;
   };
 };
 
@@ -48,7 +48,7 @@ const MiniCharts: FC<{}> = () => {
       const output: any[] = [];
       const timestamps = new Map();
 
-      const maxRetries = 8
+      const maxRetries = 8;
       for (let retries = 0; retries < maxRetries; retries += 1) {
         console.debug('[MiniChart] Fetching data...');
         try {
@@ -60,9 +60,13 @@ const MiniCharts: FC<{}> = () => {
 
             const currentSeason = season.toNumber();
 
-            const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
+            const iterations = getAllData
+              ? Math.ceil(currentSeason / 1000) + 1
+              : 1;
             for (let j = 0; j < iterations; j += 1) {
-              const startSeason = getAllData ? currentSeason - j * 1000 : 999999999;
+              const startSeason = getAllData
+                ? currentSeason - j * 1000
+                : 999999999;
               if (startSeason <= 0) continue;
               promises.push(
                 apolloClient
@@ -86,28 +90,34 @@ const MiniCharts: FC<{}> = () => {
                         if (!timestamps.has(seasonData.season)) {
                           timestamps.set(
                             seasonData.season,
-                            Number(seasonData[chartSetupData[chartId].timeScaleKey])
+                            Number(
+                              seasonData[chartSetupData[chartId].timeScaleKey]
+                            )
                           );
                         }
-                        const formattedTime = timestamps.get(seasonData.season);
+                        const fmt = chartSetupData[chartId]?.dataFormatter;
+                        const _seasonData = fmt?.(seasonData) || seasonData;
+                        const formattedTime = timestamps.get(
+                          _seasonData.season
+                        );
                         const formattedValue = chartSetupData[
                           chartId
                         ].valueFormatter(
-                          seasonData[chartSetupData[chartId].priceScaleKey]
+                          _seasonData[chartSetupData[chartId].priceScaleKey]
                         );
-                        output[chartId][seasonData.season] = {
+                        output[chartId][_seasonData.season] = {
                           time: formattedTime,
                           value: formattedValue,
                           customValues: {
-                            season: seasonData.season
-                          }
+                            season: _seasonData.season,
+                          },
                         };
                       }
                     });
                   })
               );
-            };
-          };
+            }
+          }
           await Promise.all(promises);
           output.forEach((dataSet, index) => {
             output[index] = dataSet.filter(Boolean);
@@ -120,10 +130,10 @@ const MiniCharts: FC<{}> = () => {
           console.error(e);
           if (retries === maxRetries - 1) {
             setError(true);
-          };
-        };
-      };
-    };
+          }
+        }
+      }
+    }
 
     setLoading(true);
     getSeasonData();
@@ -134,7 +144,10 @@ const MiniCharts: FC<{}> = () => {
     <>
       <Box display="flex" flexDirection="row" gap={2}>
         {selectedCharts.map((chart, index) => (
-          <Card key={`selectedMiniChart${index}`} sx={{ width: '100%', height: '15vh', minHeight: 150 }}>
+          <Card
+            key={`selectedMiniChart${index}`}
+            sx={{ width: '100%', height: '15vh', minHeight: 150 }}
+          >
             {loading ? (
               <Box
                 sx={{
@@ -146,8 +159,7 @@ const MiniCharts: FC<{}> = () => {
               >
                 <CircularProgress variant="indeterminate" />
               </Box>
-            ) : 
-            error ? (
+            ) : error ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -158,8 +170,7 @@ const MiniCharts: FC<{}> = () => {
               >
                 Error fetching data
               </Box>
-            ) :
-            (
+            ) : (
               <ChartV2
                 formattedData={queryData}
                 selected={[chart]}

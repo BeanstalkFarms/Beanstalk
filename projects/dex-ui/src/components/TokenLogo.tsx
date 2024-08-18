@@ -1,9 +1,8 @@
 import { Token } from "@beanstalk/sdk";
 import React from "react";
-import { images } from "src/assets/images/tokens";
 import { size } from "src/breakpoints";
 import { FC } from "src/types";
-import { useTokenMetadata } from "src/tokens/useTokenMetadata";
+import { useTokenImage } from "src/tokens/useTokenMetadata";
 import styled from "styled-components";
 
 type Props = {
@@ -13,9 +12,8 @@ type Props = {
   isLP?: boolean;
 };
 
-export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) => {
-  const metadata = useTokenMetadata(token?.address);
-  const img = getImg({ metadata, token, isLP });
+export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP: _isLP = false }) => {
+  const img = useTokenImage(token);
 
   return (
     <Container
@@ -28,17 +26,6 @@ export const TokenLogo: FC<Props> = ({ size, mobileSize, token, isLP = false }) 
     </Container>
   );
 };
-
-const getImg = ({ metadata, token, isLP }: { metadata: ReturnType<typeof useTokenMetadata>, token?: Token, isLP?: boolean  }) => {
-  if (token?.logo && !token?.logo?.includes("DEFAULT.svg")) {
-    return token.logo;
-  };
-  if (metadata?.logo && !metadata?.logo?.includes("DEFAULT.svg")) {
-    return metadata.logo;
-  };
-
-  return isLP ? images.LP : images.DEFAULT;
-}
 
 type ContainerProps = {
   width: number;

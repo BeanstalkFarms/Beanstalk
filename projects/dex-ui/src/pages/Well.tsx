@@ -314,7 +314,7 @@ export const Well = () => {
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnYield isWhitelisted={isWhitelistedWell} />
+              <LearnYield token={well?.lpToken} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
               <LearnWellFunction well={well} />

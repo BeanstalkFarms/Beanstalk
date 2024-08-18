@@ -63,7 +63,6 @@ async function main(
 
   const accounts = await ethers.getSigners();
   const account = await accounts[0].getAddress();
-
   if (verbose) {
     console.log("Account: " + account);
     console.log("---");
