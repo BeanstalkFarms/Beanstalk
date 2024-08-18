@@ -20,9 +20,10 @@ const { reseedGlobal } = require("./reseedGlobal.js");
 const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransfer.js");
 const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { getBeanstalk } = require("../utils/contracts.js");
 
 let reseeds;
-async function reseed(
+async function reseed({
   owner,
   beanstalkDeployer,
   l2owner,
@@ -31,68 +32,76 @@ async function reseed(
   log = false,
   start = 0,
   end = 12,
-  onlyL2 = false,
+  deployL1 = true,
   setState = true
-) {
+}) {
   if (convertData) parseBeanstalkData();
-  // // delete prev gas report
-  // if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
-  // reseeds = [
-  //   reseed1, // pause l1 beanstalk
-  //   reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-  //   reseedGlobal, // reseed global variables
-  //   reseed2, // reseed pod marketplace
-  //   reseed3, // reseedbean + deploy fert +  deploy wells on l2
-  //   reseed4, // reseed field
-  //   reseed5, // reseed barn (fert)
-  //   reseed6, // reseed silo
-  //   reseed7, // reseed account status
-  //   reseed8, // reseed internal balances
-  //   reseed9, // reseed whitelist
-  //   reseed10 // add selectors to l2
-  // ];
-  // let l2BeanstalkAddress;
+  // delete prev gas report
+  if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
+  reseeds = [
+    reseed1, // pause l1 beanstalk
+    reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
+    reseed3, // reseedbean + deploy fert +  deploy wells on l2
+    reseedGlobal, // reseed global variables
+    reseed2, // reseed pod marketplace
+    reseed4, // reseed field
+    reseed5, // reseed barn (fert)
+    reseed6, // reseed silo
+    reseed7, // reseed account status
+    reseed8, // reseed internal balances
+    reseed9, // reseed whitelist
+    reseed10 // add selectors to l2
+  ];
+  let l2BeanstalkAddress;
 
-  // console.clear();
-  // await printBeanstalk();
-  // for (let i = start; i < reseeds.length; i++) {
-  //   await printStage(i, end, mock, log);
-  //   console.log("L2 Beanstalk:", l2BeanstalkAddress);
+  console.clear();
+  await printBeanstalk();
+  for (let i = start; i < reseeds.length; i++) {
+    await printStage(i, end, mock, log);
+    console.log("L2 Beanstalk:", l2BeanstalkAddress);
+    if (i == 0) {
+      if (deployL1 == true) {
+        // migrate beanstalk L1 assets.
+        await reseed1(owner);
+        return;
+      }
+      continue;
+    }
 
-  //   if (i == 0 && onlyL2 == false) {
-  //     // migrate beanstalk L1 assets.
-  //     await reseed1(owner);
-  //     continue;
-  //   }
+    if (i == 1) {
+      // deploy L2 beanstalk with predetermined address.
+      l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
+      continue;
+    }
 
-  //   if (i == 1) {
-  //     // deploy L2 beanstalk with predetermined address.
-  //     l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
-  //     continue;
-  //   }
+    if (i == 2) {
+      // deploy beans addresses.
+      await reseed3(beanstalkDeployer, l2BeanstalkAddress, mock);
+      continue;
+    }
 
-  //   if (setState == true) {
-  //     await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
-  //     continue;
-  //   }
-  //   if (i == reseeds.length - 2) {
-  //     // prior to the last reseed (i.e, adding facets to L2 beanstalk),
-  //     // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
-  //     await upgradeWithNewFacets({
-  //       diamondAddress: l2BeanstalkAddress,
-  //       facetNames: [],
-  //       initFacetName: "ReseedTransferOwnership",
-  //       initArgs: [l2owner],
-  //       bip: false,
-  //       verbose: verbose,
-  //       account: beanstalkDeployer,
-  //       checkGas: true,
-  //       initFacetNameInfo: "ReseedTransferOwnership"
-  //     });
-  //   }
-  //   if (i == reseeds.length - 1) {
-  //     // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
-  //     await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, mock);
+    if (setState == true) {
+      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
+      continue;
+    }
+    if (i == reseeds.length - 2) {
+      // prior to the last reseed (i.e, adding facets to L2 beanstalk),
+      // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
+      await upgradeWithNewFacets({
+        diamondAddress: l2BeanstalkAddress,
+        facetNames: ["OwnershipFacet"],
+        initFacetName: "ReseedTransferOwnership",
+        initArgs: [l2owner.address],
+        bip: false,
+        verbose: false,
+        account: beanstalkDeployer,
+        checkGas: true,
+        initFacetNameInfo: "ReseedTransferOwnership"
+      });
+    }
+    if (i == reseeds.length - 1) {
+      // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
+      await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
 
   //     // claim ownership of beanstalk:
   //     await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
@@ -130,7 +139,11 @@ function parseBeanstalkData() {
   const marketPath = "./reseed/data/exports/market-info20330000.json";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
-  parseInternalBalances(storageAccountsPath, "./reseed/data/r8-internal-balances.json", contractAccounts);
+  parseInternalBalances(
+    storageAccountsPath,
+    "./reseed/data/r8-internal-balances.json",
+    contractAccounts
+  );
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
   parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);

@@ -29,8 +29,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "FertilizerFacet", // BARN
     "UnripeFacet",
     "EnrootFacet",
-    "PauseFacet", // DIAMOND
-    "OwnershipFacet"
+    "PauseFacet" // DIAMOND
   ];
 
   // A list of public libraries that need to be deployed separately.
