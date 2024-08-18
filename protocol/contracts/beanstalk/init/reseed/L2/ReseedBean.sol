@@ -13,10 +13,7 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
-import {Fertilizer} from "contracts/tokens/Fertilizer/Fertilizer.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/console.sol";
-import {console} from "hardhat/console.sol";
 
 /**
  * @author Brean
@@ -29,10 +26,6 @@ interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
 
     function initNoWellToken() external;
-}
-
-interface IFertilizer {
-    function init() external;
 }
 
 contract ReseedBean {
@@ -63,7 +56,6 @@ contract ReseedBean {
         0x0000000000000000000000000000000000000000000000000000000000000002;
 
     // Basin
-
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
     address internal constant CONSTANT_PRODUCT_2 =
         address(0xBA5104f2df98974A83CD10d16E24282ce6Bb647f);
@@ -116,10 +108,6 @@ contract ReseedBean {
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
 
-    // Fertilizer
-    bytes32 internal constant FERTILIZER_PROXY_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000000;
-
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
      * @dev mints bean assets to the beanstalk contract,
@@ -133,8 +121,6 @@ contract ReseedBean {
         ExternalUnripeHolders[] calldata urBean,
         ExternalUnripeHolders[] calldata urBeanLP
     ) external {
-        // deploy the fertilizer proxy and implementation
-        deployFertilizer();
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
         // deploy new unripe bean contract. Issue external unripe beans and urLP.
@@ -143,21 +129,6 @@ contract ReseedBean {
         deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
-    }
-
-    function deployFertilizer() internal {
-        // TODO: Get new bytecode from misc bip and mine for fert salt
-        // deploy fertilizer implementation
-        Fertilizer fertilizer = new Fertilizer();
-        // deploy fertilizer proxy. Set owner to beanstalk.
-        TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
-            salt: FERTILIZER_PROXY_SALT
-        }(
-            address(fertilizer), // logic
-            address(this), // admin (diamond)
-            abi.encode(IFertilizer.init.selector) // init data
-        );
-        console.log("Fertilizer deployed at: ", address(fertilizerProxy));
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -231,8 +202,6 @@ contract ReseedBean {
             salt
         );
 
-        console.log("well:", _well);
-
         // Deploy proxy
         address wellProxy = address(
             new ERC1967Proxy{salt: salt}(
@@ -240,7 +209,6 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
-        console.log("well proxy:", wellProxy);
     }
 
     function deployUpgradableWells(address bean) internal {
@@ -265,8 +233,6 @@ contract ReseedBean {
         bytes
             memory mfpData = hex"3ffeef368eb04325c526c2246eec3e5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000603ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000003ff9eb851eb851eb851eb851eb851eb8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003ff747ae147ae147ae147ae147ae147a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000023ff747ae147ae147ae147ae147ae147a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         pumps[0] = Call(MULTIFLOW_PUMP, mfpData);
-
-        console.log("beanEth:");
 
         // BEAN/ETH well
         deployUpgradebleWell(

@@ -7,6 +7,7 @@ const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
 const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
+const { reseedDeployFertilizer } = require("./reseedDeployFertilizer.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
 const { reseed4 } = require("./reseed4.js");
@@ -41,7 +42,7 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseed3, // reseedbean + deploy fert +  deploy wells on l2
+    reseed3, // reseedbean + deploy wells on l2
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
     reseed4, // reseed field
@@ -71,6 +72,7 @@ async function reseed({
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
+      await reseedDeployFertilizer(beanstalkDeployer, l2BeanstalkAddress, mock);
       continue;
     }
 
@@ -102,10 +104,8 @@ async function reseed({
     if (i == reseeds.length - 1) {
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
       await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
-
       // claim ownership of beanstalk:
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
-
       // initialize beanstalk state add selectors to L2 beanstalk.
       await reseed10(l2owner, l2BeanstalkAddress, mock);
     }
