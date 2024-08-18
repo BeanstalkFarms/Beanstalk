@@ -67,6 +67,7 @@ library LibLockedUnderlying {
         uint256 recapPercentPaid
     ) private view returns (uint256 percentLockedUnderlying) {
         uint256 unripeSupply = IERC20(unripeToken).totalSupply().div(DECIMALS);
+        console.log(unripeSupply);
         if (unripeSupply < 1_000_000) return 0; // If < 1_000_000 Assume all supply is unlocked.
         if (unripeSupply > 90_000_000) {
             if (recapPercentPaid > 0.1e6) {

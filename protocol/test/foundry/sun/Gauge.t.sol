@@ -310,22 +310,22 @@ contract GaugeTest is TestHelper {
     function test_lockedBeansSupply10Million(uint256 burntBeans) public {
         initializeLockedBeans();
         // initial supply is 20 million urBean.
-        // deduct 10m < x< 15m and verify that locked beans amount are within a range.
-        burntBeans = bound(burntBeans, 10000000e6 + 1e6, 15000000e6 - 1e6);
+        // deduct 0 < x< 10m and verify that locked beans amount are within a range.
+        burntBeans = bound(burntBeans, 0, 10000000e6 - 1e6);
         uint256 lockedBeansPercent = burnBeansAndCheckLockedBeans(burntBeans);
         // 1e-12% precision.
-        assertApproxEqRel(lockedBeansPercent, 0.5156047910307769e18, 1e6); // see {LibLockedUnderlying}
+        assertApproxEqRel(lockedBeansPercent, 0.4587658968e18, 1e6); // see {LibLockedUnderlying}
     }
 
     function test_lockedBeansSupply5Million(uint256 burntBeans) public {
         initializeLockedBeans();
 
         // initial supply is 20 million urBean.
-        // deduct 15m < x< 19m and verify that locked beans amount are within a range.
-        burntBeans = bound(burntBeans, 15000000e6 + 1e6, 19000000e6 - 1e6);
+        // deduct 10m < x< 19m and verify that locked beans amount are within a range.
+        burntBeans = bound(burntBeans, 10000000e6 + 1e6, 19000000e6 - 1e6);
         uint256 lockedBeansPercent = burnBeansAndCheckLockedBeans(burntBeans);
         // 1e-12% precision.
-        assertApproxEqRel(lockedBeansPercent, 0.5795008171102514e18, 1e6); // see {LibLockedUnderlying}
+        assertApproxEqRel(lockedBeansPercent, 0.460273768141e18, 1e6); // see {LibLockedUnderlying}
     }
 
     /**
@@ -642,8 +642,8 @@ contract GaugeTest is TestHelper {
         // mint 20m unripe LP, add 20m beans worth of underlying:
         addUnderlyingToUnripeLP(20000000e6, 2000000e6);
 
-        // set s.recapitalized to 100, and 1000 sprouts fertilized:
-        bs.setPenaltyParams(100e6, 1000e6);
+        // set s.recapitalized to 4032696.8e6 (10612360000000 * 0.38), and 1000 sprouts fertilized:
+        bs.setPenaltyParams(4032696.8e6, 1000e6);
     }
 
     function addUnderlyingToUnripeBean(
