@@ -9,7 +9,6 @@
 } = require("../test/hardhat/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner } = require("../utils");
 const { bipMigrateUnripeBeanEthToBeanSteth } = require("./bips");
-const { impersonateWsteth } = require("./impersonate");
 const { getWeth } = require("../utils/contracts.js");
 
 const ETH_STETH_POOL = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022";

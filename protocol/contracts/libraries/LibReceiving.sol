@@ -127,11 +127,10 @@ library LibReceiving {
                 // Calculate BPF beyond the first Fertilizer edge.
                 remainingBpf = (amountToFertilize - deltaFertilized) / s.sys.fert.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
-            }
-            // Else, if there is no more fertilizer. Matches plan cap.
-            else {
+            } else {
                 s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.sys.fert.fertilizedIndex += deltaFertilized;
+                // Else, if there is no more fertilizer. Matches plan cap.
                 // s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex
                 break;
             }

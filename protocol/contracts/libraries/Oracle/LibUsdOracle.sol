@@ -81,8 +81,8 @@ library LibUsdOracle {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;
 
-            // decode data timeout to uint32
-            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
+            // decode data timeout to uint256
+            uint256 timeout = abi.decode(oracleImpl.data, (uint256));
             return
                 LibChainlinkOracle.getTokenPrice(
                     chainlinkOraclePriceAddress,
