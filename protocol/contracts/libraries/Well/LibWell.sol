@@ -262,9 +262,9 @@ library LibWell {
             Call memory wellFunction = IWell(well).wellFunction();
 
             if (getBeanIndexFromWell(well) == 0) {
-                price = calculateTokenBeanPriceFromReserves(well, 1, reserves, wellFunction);
+                price = calculateTokenBeanPriceFromReserves(well, 0, 1, reserves, wellFunction);
             } else {
-                price = calculateTokenBeanPriceFromReserves(well, 0, reserves, wellFunction);
+                price = calculateTokenBeanPriceFromReserves(well, 1, 0, reserves, wellFunction);
             }
 
             /*console.log("reserves 0: ", s.sys.twaReserves[well].reserve0);
@@ -285,6 +285,7 @@ library LibWell {
 
     function calculateTokenBeanPriceFromReserves(
         address well,
+        uint256 beanIndex,
         uint256 nonBeanIndex,
         uint256[] memory reserves,
         Call memory wellFunction
@@ -295,47 +296,22 @@ library LibWell {
             reserves,
             wellFunction.data
         );
-        uint256 beanIndex = nonBeanIndex == 0 ? 1 : 0;
 
-        console.log("beanIndex: ", beanIndex);
-        console.log("nonBeanIndex: ", nonBeanIndex);
-
-        console.log("reserves[0]: ", reserves[0]);
-        console.log("reserves[1]: ", reserves[1]);
-
-        uint256 newReserve;
-        if (nonBeanIndex == 0) {
-            uint256[] memory modifiedReserves = new uint256[](2);
-            modifiedReserves[0] = reserves[0];
-            modifiedReserves[1] = reserves[1] + BEAN_UNIT;
-            console.log("modifiedReserves[0]: ", modifiedReserves[0]);
-            console.log("modifiedReserves[1]: ", modifiedReserves[1]);
-            newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
-                modifiedReserves,
-                nonBeanIndex,
-                lpTokenSupply,
-                wellFunction.data
-            );
-        } else {
-            uint256[] memory modifiedReserves = new uint256[](2);
-            modifiedReserves[0] = reserves[0] + BEAN_UNIT;
-            modifiedReserves[1] = reserves[1];
-            console.log("modifiedReserves[0]: ", modifiedReserves[0]);
-            console.log("modifiedReserves[1]: ", modifiedReserves[1]);
-            newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
-                modifiedReserves,
-                nonBeanIndex,
-                lpTokenSupply,
-                wellFunction.data
-            );
-        }
+        uint256 oldReserve = reserves[nonBeanIndex];
+        reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
+        uint256 newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
+            reserves,
+            nonBeanIndex,
+            lpTokenSupply,
+            wellFunction.data
+        );
         console.log("reserves[beanIndex]: ", reserves[nonBeanIndex]);
         console.log("newReserve: ", newReserve);
         uint256 delta;
         if (nonBeanIndex == 1) {
-            delta = reserves[nonBeanIndex] - newReserve;
+            delta = oldReserve - newReserve;
         } else {
-            delta = newReserve - reserves[nonBeanIndex];
+            delta = newReserve - oldReserve;
         }
         console.log("delta: ", delta);
         console.log("delta * BEAN_UNIT: ", delta * BEAN_UNIT);
@@ -343,7 +319,7 @@ library LibWell {
             "10 ** IERC20Decimals(nonBeanToken).decimals(): ",
             10 ** IERC20Decimals(nonBeanToken).decimals()
         );
-        price = (delta * BEAN_UNIT) / (10 ** IERC20Decimals(nonBeanToken).decimals());
+        price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
 
         console.log("final price: ", price);
     }
