@@ -34966,15 +34966,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-solidity@npm:1.4.0":
-  version: 1.4.0
-  resolution: "prettier-plugin-solidity@npm:1.4.0"
+"prettier-plugin-solidity@npm:1.4.1":
+  version: 1.4.1
+  resolution: "prettier-plugin-solidity@npm:1.4.1"
   dependencies:
     "@solidity-parser/parser": "npm:^0.18.0"
     semver: "npm:^7.5.4"
   peerDependencies:
     prettier: ">=2.3.0"
-  checksum: 10/96f6dd0cda6a5c069f6b48281c4df27e1fa28396ab7bdfe59d84e60ca3303d7675365d2a2db3006680cb6ea4d4f1a87d292df7b3fb32deaa9403f653e86f5b46
+  checksum: 10/8bd0b20cd1a0973bfdbb4e035d5dae9ff229a7f6475c4e31e99b85d74f77625c0a874835df23e51d36750139aa2e5c5d900a366d1cdff16edfe52b3550b7e2da
   languageName: node
   linkType: hard
 
@@ -37353,7 +37353,7 @@ __metadata:
     jest-serial-runner: "npm:1.2.1"
     lint-staged: "npm:13.3.0"
     prettier: "npm:3.3.3"
-    prettier-plugin-solidity: "npm:1.4.0"
+    prettier-plugin-solidity: "npm:1.4.1"
     ts-jest: "npm:29.1.2"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.3.3"
