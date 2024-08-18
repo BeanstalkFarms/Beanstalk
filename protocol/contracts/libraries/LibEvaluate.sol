@@ -14,6 +14,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {System, EvaluationParameters, Weather} from "contracts/beanstalk/storage/System.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -89,9 +90,11 @@ library LibEvaluate {
                 address nonBeanToken = address(LibWell.getNonBeanTokenFromWell(well));
                 uint256 nonBeanTokenDecimals = IERC20Decimals(nonBeanToken).decimals();
                 // n+12 (n+6 because rpice is 6 decimals, so add additional 6 to result in 12) (n being number of decimals in non-bean token)
-                uint256 beanUsdPrice = uint256(nonBeanTokenDecimals * 1e12).div(
+                uint256 beanUsdPrice = uint256(10 ** (12 + nonBeanTokenDecimals)).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(tokenBeanPrice)
                 );
+                console.log(LibWell.getUsdTokenPriceForWell(well));
+                console.log("beanUsdPrice:", beanUsdPrice);
                 if (beanUsdPrice > ep.excessivePriceThreshold) {
                     // p > excessivePriceThreshold
                     return caseId = 6;
