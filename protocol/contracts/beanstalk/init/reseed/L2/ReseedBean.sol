@@ -18,7 +18,7 @@ import "forge-std/console.sol";
 /**
  * @author Brean
  * @notice ReseedBean deploys the Bean, UnripeBean, UnripeLP ERC20s, and the BeanEth, BeanWsteth,
- * BeanStable Wells and the Fertilizer proxy and implementation.
+ * BeanStable Wells.
  * Then adds liquidity to the BeanEth, BeanWsteth, and BeanStable well.
  * @dev each Well is upgradeable and ownable. the owner is `OWNER` when the init is called.
  */
