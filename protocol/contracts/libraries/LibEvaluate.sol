@@ -88,7 +88,6 @@ library LibEvaluate {
             if (tokenBeanPrice > 1) {
                 address nonBeanToken = address(LibWell.getNonBeanTokenFromWell(well));
                 uint256 nonBeanTokenDecimals = IERC20Decimals(nonBeanToken).decimals();
-                // n+12 (n+6 because rpice is 6 decimals, so add additional 6 to result in 12) (n being number of decimals in non-bean token)
                 uint256 beanUsdPrice = uint256(10 ** (12 + nonBeanTokenDecimals)).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(tokenBeanPrice)
                 );
