@@ -130,7 +130,7 @@ contract ReseedBean {
         ExternalUnripeHolders[] calldata urBeanLP,
         address fertImplementation
     ) external {
-        // deployFertilizerProxy(fertImplementation);
+        deployFertilizerProxy(fertImplementation);
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
         // deploy new unripe bean contract. Issue external unripe beans and urLP.

@@ -34,6 +34,7 @@ async function reseed({
   end = 12,
   deployL1 = true,
   setState = true,
+  deployBasin = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -75,8 +76,13 @@ async function reseed({
     }
 
     if (i == 2) {
+      // deploy fertilizer (TODO: Remove when fert is deployed on L2)
+      const Fert = await ethers.getContractFactory("Fertilizer");
+      const fertilizerImplementation = await Fert.deploy();
+      await fertilizerImplementation.deployed();
+      console.log("Fertilizer Implementation:", fertilizerImplementation.address);
       // deploy beans addresses.
-      await reseed3(beanstalkDeployer, l2BeanstalkAddress, mock);
+      await reseed3(beanstalkDeployer, l2BeanstalkAddress, deployBasin, fertilizerImplementation.address, mock);
       continue;
     }
 

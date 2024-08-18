@@ -23,7 +23,7 @@ const EXTERNAL_UNRIPE = "./reseed/data/mocks/r3/L2_external_unripe_balances.json
  * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
  * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
  */
-async function reseed3(account, L2Beanstalk, mock, deployBasin = true) {
+async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImplementation, mock) {
   verbose = true;
   console.log("-----------------------------------");
   console.log("reseed3: deploy bean tokens.\n");
@@ -60,7 +60,7 @@ async function reseed3(account, L2Beanstalk, mock, deployBasin = true) {
   }
 
   // TODO: Replace with actual fert address on the L2
-  const fertilizerImplementation = "0x7B50EbC3E5128F315dc097F7cbd1600399e3E796";
+  // const fertilizerImplementation = "0x7B50EbC3E5128F315dc097F7cbd1600399e3E796";
 
   // call init:
   await upgradeWithNewFacets({
