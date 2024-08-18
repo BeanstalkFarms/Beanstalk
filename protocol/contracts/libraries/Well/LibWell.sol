@@ -15,7 +15,6 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import "forge-std/console.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -266,20 +265,6 @@ library LibWell {
             } else {
                 price = calculateTokenBeanPriceFromReserves(well, 1, 0, reserves, wellFunction);
             }
-
-            /*console.log("reserves 0: ", s.sys.twaReserves[well].reserve0);
-            console.log("reserves 1: ", s.sys.twaReserves[well].reserve1);
-
-            if (getBeanIndexFromWell(well) == 0) {
-                price = uint256(s.sys.twaReserves[well].reserve0).mul(1e18).div(
-                    s.sys.twaReserves[well].reserve1
-                );
-            } else {
-                price = uint256(s.sys.twaReserves[well].reserve1).mul(1e18).div(
-                    s.sys.twaReserves[well].reserve0
-                );
-            }
-            console.log("original code final price: ", price);*/
         }
     }
 
@@ -291,7 +276,6 @@ library LibWell {
         Call memory wellFunction
     ) internal view returns (uint256 price) {
         address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
-        // uint256 lpTokenSupply = IERC20(well).totalSupply(); // calculate this from reserves?
         uint256 lpTokenSupply = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
             reserves,
             wellFunction.data
@@ -305,23 +289,13 @@ library LibWell {
             lpTokenSupply,
             wellFunction.data
         );
-        console.log("reserves[beanIndex]: ", reserves[nonBeanIndex]);
-        console.log("newReserve: ", newReserve);
         uint256 delta;
         if (nonBeanIndex == 1) {
             delta = oldReserve - newReserve;
         } else {
             delta = newReserve - oldReserve;
         }
-        console.log("delta: ", delta);
-        console.log("delta * BEAN_UNIT: ", delta * BEAN_UNIT);
-        console.log(
-            "10 ** IERC20Decimals(nonBeanToken).decimals(): ",
-            10 ** IERC20Decimals(nonBeanToken).decimals()
-        );
         price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
-
-        console.log("final price: ", price);
     }
 
     function getTwaReservesFromStorageOrBeanstalkPump(

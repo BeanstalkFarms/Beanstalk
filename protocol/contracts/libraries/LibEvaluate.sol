@@ -14,7 +14,6 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {System, EvaluationParameters, Weather} from "contracts/beanstalk/storage/System.sol";
-import {console} from "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -93,8 +92,6 @@ library LibEvaluate {
                 uint256 beanUsdPrice = uint256(10 ** (12 + nonBeanTokenDecimals)).div(
                     LibWell.getUsdTokenPriceForWell(well).mul(tokenBeanPrice)
                 );
-                console.log(LibWell.getUsdTokenPriceForWell(well));
-                console.log("beanUsdPrice:", beanUsdPrice);
                 if (beanUsdPrice > ep.excessivePriceThreshold) {
                     // p > excessivePriceThreshold
                     return caseId = 6;
