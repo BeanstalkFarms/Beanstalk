@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title LibLockedUnderlying
@@ -26,6 +27,9 @@ library LibLockedUnderlying {
         uint256 recapPercentPaid
     ) external view returns (uint256 lockedUnderlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("getLockedUnderlying");
+        console.log(s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying);
+        console.log(getPercentLockedUnderlying(unripeToken, recapPercentPaid));
         return
             s
                 .sys
@@ -267,9 +271,11 @@ library LibLockedUnderlying {
                 } else if (recapPercentPaid > 0.01e6) {
                     if (recapPercentPaid > 0.015e6) {
                         return 0.9431133124739901e18; // 10,000,000, 0.02
-                    } else if (recapPercentPaid > 0.01e6) {
+                    } else {
                         return 0.956746537865208e18; // 10,000,000, 0.015
-                    } else if (recapPercentPaid > 0.005e6) {
+                    }
+                } else {
+                    if (recapPercentPaid > 0.005e6) {
                         return 0.970761430644659e18; // 10,000,000, 0.01
                     } else {
                         return 0.9851737226151924e18; // 10,000,000, 0.005
@@ -372,9 +378,11 @@ library LibLockedUnderlying {
                 } else if (recapPercentPaid > 0.01e6) {
                     if (recapPercentPaid > 0.015e6) {
                         return 0.9549574715005937e18; // 1,000,000, 0.02
-                    } else if (recapPercentPaid > 0.01e6) {
+                    } else {
                         return 0.9659746571972349e18; // 1,000,000, 0.015
-                    } else if (recapPercentPaid > 0.005e6) {
+                    }
+                } else {
+                    if (recapPercentPaid > 0.005e6) {
                         return 0.9771524700936202e18; // 1,000,000, 0.01
                     } else {
                         return 0.988493406058558e18; // 1,000,000, 0.005
