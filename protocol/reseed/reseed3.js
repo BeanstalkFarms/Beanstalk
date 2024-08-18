@@ -76,7 +76,7 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
       fertilizerImplementation
     ],
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
 

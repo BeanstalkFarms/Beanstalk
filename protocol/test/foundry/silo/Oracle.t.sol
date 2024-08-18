@@ -16,29 +16,30 @@ contract OracleTest is TestHelper {
         initializeBeanstalkTestState(true, false);
     }
 
-    // 1 WBTC = 50000 USD
-    // 1e8 = 50000 USD
-    function test_getUsdPrice() public {
+    function testUniswapOracleImplementation() public {
+        // encode type 0x01
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
         );
-
-        // encode type 0x01
         uint256 price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
-        // 1e8 / 50000 = 2000
-        assertEq(price, 2000);
+        assertEq(price, 0.00002e8, "price using encode type 0x01");
 
-        // change encode type to 0x02, with a wbtc/usdc pool.
-        // todo: fix once oracle fixes come in.
-        // vm.prank(BEANSTALK);
-        // bs.updateOracleImplementationForToken(
-        //     WBTC,
-        //     IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
-        // );
-        // price = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
-        // assertApproxEqRel(price, 2000, 0.001e18);
+        // change encode type to 0x02:
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(WBTC_USDC_03_POOL, bytes4(0), bytes1(0x02))
+        );
+        price = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC);
+        // 1 USDC will get ~500 satoshis of BTC at $50k
+        // 1 USDC = 1e6
+        // 1 wBTC = 1e8
+        // $50,000/100000000*1000000 = 500
+        // function returns uint256(1e24).div(tokenPrice);
+        // expected delta is 0.2004008016032064%
+        assertApproxEqRel(price, 50000e6, 0.001e18, "price using encode type 0x02");
     }
 
     /**
@@ -149,4 +150,48 @@ contract OracleTest is TestHelper {
         );
         return token;
     }
+
+    function testGetTokenPrice() public {
+        // change encode type to 0x02 for wbtc:
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+        );
+
+        // token price is number of dollars per token, i.e. 50000 USD for 1 WBTC
+        uint256 tokenPriceEth = OracleFacet(BEANSTALK).getTokenUsdPrice(C.WETH); // 1000e6
+        assertEq(tokenPriceEth, 1000e6, "getTokenUsdPrice eth");
+
+        // number of tokens received per dollar
+        uint256 usdPriceEth = OracleFacet(BEANSTALK).getUsdTokenPrice(C.WETH); // 1e15 which is 1e18 (1 eth in wei) / 1000 (weth price 1000), you get 1/1000th of 1 eth for $1
+        assertEq(usdPriceEth, 1e18 / 1000, "getUsdTokenPrice eth");
+
+        uint256 tokenPriceWBTC = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC); // should be 50000e6
+        assertEq(tokenPriceWBTC, 50000e6, "getTokenUsdPrice wbtc");
+
+        // number of tokens received per dollar
+        uint256 usdPriceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC); // $1 = 0.00002 wbtc, wbtc is 8 decimals,
+        assertEq(usdPriceWBTC, 0.00002e8, "getUsdTokenPrice wbtc");
+    }
+
+    // test provided by T1MOH
+    function test_getUsdTokenPrice_whenExternalToken_priceIsInvalid() public {
+        // pre condition: encode type 0x01
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01))
+        );
+
+        // WETH price is 1000
+        uint256 priceWETH = OracleFacet(BEANSTALK).getUsdTokenPrice(C.WETH);
+        assertEq(priceWETH, 1e15); //  1e18/1e3 = 1e15
+
+        // WBTC price is 50000
+        uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
+        assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
+    }
+
+    // TODO: fork tests to verify the on-chain values currently returned by oracles alignes with mocks?
 }

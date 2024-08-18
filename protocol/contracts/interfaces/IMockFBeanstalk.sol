@@ -1901,4 +1901,12 @@ interface IMockFBeanstalk {
         address token,
         uint256 lookback
     ) external view returns (uint256 tokenPrice);
+
+    function approveReciever(address owner, address reciever) external;
+
+    function getReciever(address owner) external view returns (address);
+
+    function setRecieverForL1Migration(address owner, address reciever) external;
+
+    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 }

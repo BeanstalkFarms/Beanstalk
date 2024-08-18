@@ -112,7 +112,7 @@ library LibFlood {
 
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.sys.season.lastSopSeason > lastUpdate) {
-            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens
             for (uint i; i < tokens.length; i++) {
                 s.accts[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
                     account,
@@ -151,7 +151,7 @@ library LibFlood {
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.sys.season.lastSop == s.sys.season.rainStart) {
-                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens (need to update account-level PPR for all tokens)
                 for (uint i; i < tokens.length; i++) {
                     s.accts[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sys.sop.sops[
                         s.sys.season.lastSop
@@ -259,7 +259,6 @@ library LibFlood {
         quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
     }
 
-    // Reviewer note: This works, but there's got to be a way to make this more gas efficient
     function quickSort(
         WellDeltaB[] memory arr,
         int left,
@@ -269,13 +268,29 @@ library LibFlood {
 
         // Choose the median of left, right, and middle as pivot (improves performance on random data)
         uint mid = uint(left) + (uint(right) - uint(left)) / 2;
-        WellDeltaB memory pivot = arr[uint(left)].deltaB > arr[uint(mid)].deltaB
-            ? (
-                arr[uint(left)].deltaB < arr[uint(right)].deltaB
-                    ? arr[uint(left)]
-                    : arr[uint(right)]
-            )
-            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
+        WellDeltaB memory pivot;
+
+        if (arr[uint(left)].deltaB > arr[uint(mid)].deltaB) {
+            if (arr[uint(left)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(left)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(mid)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(mid)];
+                }
+            }
+        } else {
+            if (arr[uint(mid)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(mid)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(left)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(left)];
+                }
+            }
+        }
 
         int i = left;
         int j = right;
@@ -290,7 +305,7 @@ library LibFlood {
         }
 
         if (left < j) {
-            return quickSort(arr, left, j);
+            arr = quickSort(arr, left, j);
         }
         if (i < right) {
             return quickSort(arr, i, right);

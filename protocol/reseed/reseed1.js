@@ -47,7 +47,7 @@ async function reseed1(account) {
     facetsToRemove: beanstalkSelectors,
     initFacetName: "ReseedL2Migration",
     bip: false,
-    verbose: true,
+    verbose: false,
     account: account
   });
   console.log("-----------------------------------");

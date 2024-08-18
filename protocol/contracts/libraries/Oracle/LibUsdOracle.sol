@@ -57,7 +57,6 @@ library LibUsdOracle {
         if (token == C.WSTETH) {
             return LibWstethUsdOracle.getUsdWstethPrice(lookback);
         }
-
         // tokens that use the custom oracle implementation are called here.
         return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback);
     }

@@ -82,16 +82,40 @@ contract SiloGettersFacet is ReentrancyGuard {
      * @notice Get the total amount of `token` currently Deposited in the Silo across all users.
      * @dev does not include germinating tokens.
      */
-    function getTotalDeposited(address token) external view returns (uint256) {
+    function getTotalDeposited(address token) public view returns (uint256) {
         return s.sys.silo.balances[token].deposited;
+    }
+
+    /**
+     * @notice Get the total amount deposit for all whitelisted tokens across all users.
+     * @dev does not include germinating tokens.
+     */
+    function getTotalDeposited() external view returns (uint256[] memory depositedAmounts) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        depositedAmounts = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            depositedAmounts[i] = getTotalDeposited(tokens[i]);
+        }
     }
 
     /**
      * @notice Get the total bdv of `token` currently Deposited in the Silo across all users.
      * @dev does not include germinating bdv.
      */
-    function getTotalDepositedBdv(address token) external view returns (uint256) {
+    function getTotalDepositedBdv(address token) public view returns (uint256) {
         return s.sys.silo.balances[token].depositedBdv;
+    }
+
+    /**
+     * @notice Get the total bdv of all whitelisted tokens in the Silo across all users.
+     * @dev does not include germinating bdv.
+     */
+    function getTotalDepositedBdv() external view returns (uint256[] memory depositedBdvs) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        depositedBdvs = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            depositedBdvs[i] = getTotalDepositedBdv(tokens[i]);
+        }
     }
 
     /**
@@ -158,8 +182,20 @@ contract SiloGettersFacet is ReentrancyGuard {
     /**
      * @notice returns the bean denominated value ("bdv") of a token amount.
      */
-    function bdv(address token, uint256 amount) external view returns (uint256 _bdv) {
+    function bdv(address token, uint256 amount) public view returns (uint256 _bdv) {
         _bdv = LibTokenSilo.beanDenominatedValue(token, amount);
+    }
+
+    /**
+     * @notice returns the bean denominated value ("bdv") of a set of tokens and amounts.
+     */
+    function bdv(
+        address[] calldata tokens,
+        uint256[] calldata amounts
+    ) external view returns (uint256 _bdv) {
+        for (uint256 i; i < tokens.length; i++) {
+            _bdv += bdv(tokens[i], amounts[i]);
+        }
     }
 
     //////////////////////// UTILTIES ////////////////////////
@@ -384,13 +420,26 @@ contract SiloGettersFacet is ReentrancyGuard {
      *
      * @dev This passes in the last stem the user mowed at and the current stem
      */
-    function balanceOfGrownStalk(address account, address token) external view returns (uint256) {
+    function balanceOfGrownStalk(address account, address token) public view returns (uint256) {
         return
             LibSilo._balanceOfGrownStalk(
                 s.accts[account].mowStatuses[token].lastStem, //last stem farmer mowed
                 LibTokenSilo.stemTipForToken(token), //get latest stem for this token
                 s.accts[account].mowStatuses[token].bdv
             );
+    }
+
+    /**
+     * @notice Returns the balance of Grown Stalk for `account` for multiple tokens.
+     */
+    function balanceOfGrownStalk(
+        address account,
+        address[] calldata tokens
+    ) external view returns (uint256[] memory grownStalks) {
+        grownStalks = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            grownStalks[i] = balanceOfGrownStalk(account, tokens[i]);
+        }
     }
 
     /**
@@ -434,6 +483,24 @@ contract SiloGettersFacet is ReentrancyGuard {
         return balanceOfEarnedBeans(account).mul(C.STALK_PER_BEAN);
     }
 
+    function balanceOfPlantableSeeds(address account) external view returns (uint256) {
+        return
+            balanceOfEarnedBeans(account) * s.sys.silo.assetSettings[C.BEAN].stalkEarnedPerSeason;
+    }
+
+    /**
+     * @dev Get the number of Stalk per BDV per Season for a set of whitelisted tokens.
+     * 6 decimal precision: 1e10 units = 1 stalk per season
+     */
+    function stalkEarnedPerSeason(
+        address[] calldata tokens
+    ) external view returns (uint256[] memory stalkEarnedPerSeasons) {
+        stalkEarnedPerSeasons = new uint256[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            stalkEarnedPerSeasons[i] = LibTokenSilo.stalkEarnedPerSeason(tokens[i]);
+        }
+    }
+
     /**
      * @notice Return the balance of Deposited BDV of `token` for a given `account`.
      */
@@ -462,8 +529,21 @@ contract SiloGettersFacet is ReentrancyGuard {
     function getMowStatus(
         address account,
         address token
-    ) external view returns (MowStatus memory mowStatus) {
+    ) public view returns (MowStatus memory mowStatus) {
         mowStatus = s.accts[account].mowStatuses[token];
+    }
+
+    /**
+     * @notice Return the Mow Status for multiple tokens for a given `account`.
+     */
+    function getMowStatus(
+        address account,
+        address[] calldata tokens
+    ) external view returns (MowStatus[] memory mowStatuses) {
+        mowStatuses = new MowStatus[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            mowStatuses[i] = getMowStatus(account, tokens[i]);
+        }
     }
 
     //////////////////////// SEASON OF PLENTY ////////////////////////
@@ -502,7 +582,7 @@ contract SiloGettersFacet is ReentrancyGuard {
         sop.lastRain = s.accts[account].lastRain;
         sop.lastSop = s.accts[account].lastSop;
         sop.roots = s.accts[account].sop.rainRoots;
-        address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        address[] memory wells = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes previously whitelisted tokens
         sop.farmerSops = new FarmerSops[](wells.length);
         for (uint256 i; i < wells.length; i++) {
             PerWellPlenty memory wellSop = s.accts[account].sop.perWellPlenty[wells[i]];
@@ -530,6 +610,17 @@ contract SiloGettersFacet is ReentrancyGuard {
      */
     function stemTipForToken(address token) external view returns (int96 _stemTip) {
         _stemTip = LibTokenSilo.stemTipForToken(token);
+    }
+
+    /**
+     * @notice Returns the stemTip for all whitelisted tokens.
+     */
+    function getStemTips() external view returns (int96[] memory _stemTips) {
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        _stemTips = new int96[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            _stemTips[i] = LibTokenSilo.stemTipForToken(tokens[i]);
+        }
     }
 
     function calculateStemForTokenFromGrownStalk(
@@ -590,6 +681,20 @@ contract SiloGettersFacet is ReentrancyGuard {
         address account
     ) external view returns (TokenDepositId[] memory deposits) {
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        deposits = new TokenDepositId[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            deposits[i] = getTokenDepositsForAccount(account, tokens[i]);
+        }
+    }
+
+    /**
+     * @notice returns the deposits for an account for all specified tokens.
+     * @notice if a user has no deposits, the function will return an empty array.
+     */
+    function getDepositsForAccount(
+        address account,
+        address[] calldata tokens
+    ) external view returns (TokenDepositId[] memory deposits) {
         deposits = new TokenDepositId[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             deposits[i] = getTokenDepositsForAccount(account, tokens[i]);

@@ -37,8 +37,8 @@ library LibDibbler {
     /// Soil to be "sold out"; affects how Temperature is adjusted.
     uint256 private constant SOIL_SOLD_OUT_THRESHOLD = 1e6;
 
-    uint256 private constant L1_BLOCK_TIME = 12;
-    uint256 private constant L2_BLOCK_TIME = 2;
+    uint256 private constant L1_BLOCK_TIME = 1200;
+    uint256 private constant L2_BLOCK_TIME = 25;
 
     event Sow(address indexed account, uint256 fieldId, uint256 index, uint256 beans, uint256 pods);
 
