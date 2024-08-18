@@ -19,7 +19,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 contract DepotFacet is Invariable, ReentrancyGuard {
     // Pipeline V1.0.1
-    address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
+    address private constant PIPELINE = 0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0;
 
     /**
      * @notice Pipe a PipeCall through Pipeline.
