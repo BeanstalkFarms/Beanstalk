@@ -393,6 +393,7 @@ input StatementsWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  network: String
   space: String
   space_in: [String]
 }
