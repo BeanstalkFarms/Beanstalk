@@ -52,7 +52,7 @@ function toBN(a) {
 }
 
 async function advanceTime(time) {
-  let timestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  let timestamp = (await hre.ethers.provider.getBlock("latest")).timestamp;
   timestamp += time;
   await hre.network.provider.request({
     method: "evm_setNextBlockTimestamp",
