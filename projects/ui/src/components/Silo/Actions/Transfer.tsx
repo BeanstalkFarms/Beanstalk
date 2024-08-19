@@ -90,9 +90,21 @@ const TransferForm: FC<
   const earnedStalk = transform(farmerSilo.stalk.earned, 'tokenValue', STALK);
   const earnedSeeds = transform(farmerSilo.seeds.earned, 'tokenValue', SEEDS);
 
+  const depositedBalance = useMemo(() => {
+    const amt = selectedDeposits.reduce((acc, deposit) => {
+      if (deposit?.amount) {
+        return acc.add(deposit.amount);
+      }
+      return acc;
+    }, TokenValue.ZERO);
+    return amt;
+  }, [selectedDeposits]);
+
   // Results
   const withdrawResult = useMemo(() => {
-    const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
+    const formAmount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
+    const amount = TokenValue.min(formAmount, depositedBalance);
+
     const deposits = selectedDeposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !deposits.length)) return null;
@@ -102,12 +114,13 @@ const TransferForm: FC<
     return WithdrawFarmStep.calculateWithdraw(
       sdk.silo.siloWithdraw,
       whitelistedToken,
-      deposits,
+      selectedDeposits,
       amount,
       season.toNumber()
     );
   }, [
     BEAN,
+    depositedBalance,
     isUsingPlant,
     plantAndDoX,
     sdk.silo.siloWithdraw,
@@ -123,15 +136,6 @@ const TransferForm: FC<
   );
 
   // derived
-  const depositedBalance = useMemo(() => {
-    const amt = selectedDeposits.reduce((acc, deposit) => {
-      if (deposit?.amount) {
-        return acc.add(deposit.amount);
-      }
-      return acc;
-    }, TokenValue.ZERO);
-    return amt;
-  }, [selectedDeposits]);
 
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 

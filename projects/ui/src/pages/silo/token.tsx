@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Card, Container, Stack, Typography } from '@mui/material';
+import { Box, Card, Container, Stack, Typography, Button } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -34,6 +34,8 @@ import {
 } from '~/components/Common/Module';
 import TokenLambdaConvert from '~/components/Silo/Token/TokenLambdaConvert';
 import ToggleTabGroup from '~/components/Common/ToggleTabGroup';
+import Row from '~/components/Common/Row';
+import CloseIcon from '@mui/icons-material/Close';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -44,44 +46,11 @@ const guides = [
 
 const SILO_ACTIONS_MAX_WIDTH = '480px';
 
-type TokenPageBaseProps = {
+type Props = {
   token: ERC20Token;
 };
 
-const PagePathContent = ({
-  token,
-  title,
-}: {
-  token: ERC20Token;
-  title?: string;
-}) => (
-  <>
-    <PagePath
-      items={[
-        { path: '/silo', title: 'Silo' },
-        {
-          path: `/silo/${token.address}`,
-          title: token.name,
-        },
-      ]}
-    />
-    <PageHeaderSecondary
-      title={title || token.name}
-      titleAlign="left"
-      icon={<TokenIcon css={{ marginBottom: -3 }} token={token} />}
-      returnPath="/silo"
-      hideBackButton
-      control={
-        <GuideButton
-          title="The Farmers' Almanac: Silo Guides"
-          guides={guides}
-        />
-      }
-    />
-  </>
-);
-
-const DefaultContent = ({ token }: Pick<TokenPageBaseProps, 'token'>) => (
+const DefaultContent = (props: Props) => (
   <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
     <Stack
       width="100%"
@@ -94,13 +63,13 @@ const DefaultContent = ({ token }: Pick<TokenPageBaseProps, 'token'>) => (
       })}
     >
       <Card sx={{ p: 1 }}>
-        <TokenDepositsOverview token={token} />
+        <TokenDepositsOverview {...props} />
       </Card>
       <Card sx={{ p: 2 }}>
-        <TokenDepositRewards token={token} />
+        <TokenDepositRewards {...props} />
       </Card>
       <Card sx={{ p: 2 }}>
-        <TokenAbout token={token} />
+        <TokenAbout {...props} />
       </Card>
     </Stack>
     <Stack
@@ -108,15 +77,36 @@ const DefaultContent = ({ token }: Pick<TokenPageBaseProps, 'token'>) => (
       width="100%"
       sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
     >
-      <SiloActions token={token} />
+      <SiloActions {...props} />
     </Stack>
   </Stack>
 );
 
-const TransferContent = ({ token }: Omit<TokenPageBaseProps, 'pool'>) => (
+const TransferContent = ({
+  token,
+  handleClose,
+}: Props & {
+  handleClose: () => void;
+}) => (
   <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
-    <Module sx={{ p: 2, width: '100%' }}>
-      <TokenTransferDeposits token={token} />
+    <Module sx={{ width: '100%', height: '100%' }}>
+      <ModuleHeader pb={1}>
+        <Row justifyContent="space-between">
+          <Typography variant="h4">Select Deposits to Transfer</Typography>
+          <Button
+            variant="outlined-secondary"
+            color="secondary"
+            size="small"
+            endIcon={<CloseIcon fontSize="inherit" />}
+            onClick={handleClose}
+          >
+            Close
+          </Button>
+        </Row>
+      </ModuleHeader>
+      <ModuleContent px={2}>
+        <TokenTransferDeposits token={token} />
+      </ModuleContent>
     </Module>
     <Module
       sx={{
@@ -127,7 +117,7 @@ const TransferContent = ({ token }: Omit<TokenPageBaseProps, 'pool'>) => (
         },
       }}
     >
-      <ModuleHeader>
+      <ModuleHeader pb={1}>
         <Typography fontWeight={FontWeight.bold}>Transfer Deposits</Typography>
       </ModuleHeader>
       <ModuleContent>
@@ -137,63 +127,117 @@ const TransferContent = ({ token }: Omit<TokenPageBaseProps, 'pool'>) => (
   </Stack>
 );
 
-const LambdaConvertContent = (props: Pick<TokenPageBaseProps, 'token'>) => (
+const LambdaConvertContent = ({
+  token,
+  handleClose,
+}: Props & {
+  handleClose: () => void;
+}) => (
   <Stack width="100%" alignItems="center">
-    <Module sx={{ p: 2, width: '100%', maxWidth: '903px' }}>
-      <TokenLambdaConvert {...props} />
+    <Module sx={{ width: '100%', maxWidth: '903px' }}>
+      <ModuleHeader pb={1}>
+        <Row justifyContent="space-between">
+          <Typography variant="h4">Update Deposits</Typography>
+          <Button
+            variant="outlined-secondary"
+            color="secondary"
+            size="small"
+            endIcon={<CloseIcon fontSize="inherit" />}
+            onClick={handleClose}
+          >
+            Close
+          </Button>
+        </Row>
+      </ModuleHeader>
+      <ModuleContent px={2}>
+        <TokenLambdaConvert token={token} />
+      </ModuleContent>
     </Module>
   </Stack>
 );
 
-const SlugSwitchContent = ({ token }: TokenPageBaseProps) => {
-  const { slug, setSlug } = useTokenDepositsContext();
-
-  const isTokenView = slug === 'token' || !slug;
-  const isTransferView = slug === 'transfer';
-  const isLambdaView = slug === 'lambda';
-  const isAntiLambdaView = slug === 'anti-lambda';
+const TokenLambdasView = () => {
+  const { token, slug, setSlug, clear } = useTokenDepositsContext();
 
   return (
     <>
-      <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
-        <Stack gap={2} width="100%">
-          {(isTokenView || isTransferView) && (
-            <>
-              <PagePathContent
-                token={token}
-                title={isTransferView ? 'Transfer Deposits' : undefined}
-              />
-              {isTokenView && <DefaultContent token={token} />}
-              {isTransferView && <TransferContent token={token} />}
-            </>
-          )}
-          {(isAntiLambdaView || isLambdaView) && (
-            <>
-              <Box
-                sx={{
-                  alignSelf: 'center',
-                  backgroundColor: 'white',
-                  borderRadius: 1,
-                  border: `1px solid`,
-                  borderColor: 'divider',
-                  background: 'background.main',
-                }}
-              >
-                <ToggleTabGroup<SiloTokenSlug>
-                  selected={slug}
-                  setSelected={(v: SiloTokenSlug) => setSlug(v)}
-                  options={[
-                    { label: 'My Deposits', value: 'lambda' },
-                    { label: "Other's Deposits", value: 'anti-lambda' },
-                  ]}
-                />
-              </Box>
-              {isLambdaView && <LambdaConvertContent token={token} />}
-            </>
-          )}
-        </Stack>
-      </Container>
+      <Box
+        sx={{
+          alignSelf: 'center',
+          backgroundColor: 'white',
+          borderRadius: 1,
+          border: `1px solid`,
+          borderColor: 'divider',
+          background: 'background.main',
+        }}
+      >
+        <ToggleTabGroup<SiloTokenSlug>
+          selected={slug}
+          setSelected={(v) => setSlug(v, clear)}
+          options={[
+            { label: 'My Deposits', value: 'lambda' },
+            { label: "Other's Deposits", value: 'anti-lambda' },
+          ]}
+        />
+      </Box>
+      {slug === 'lambda' && (
+        <LambdaConvertContent
+          token={token}
+          handleClose={() => setSlug('token', clear)}
+        />
+      )}
     </>
+  );
+};
+
+const TokenOrTransferView = () => {
+  const { token, slug, setSlug, clear } = useTokenDepositsContext();
+
+  return (
+    <>
+      <PagePath
+        items={[
+          { path: '/silo', title: 'Silo' },
+          {
+            path: `/silo/${token.address}`,
+            title: token.name,
+          },
+        ]}
+      />
+      <PageHeaderSecondary
+        title={slug === 'transfer' ? 'Transfer Deposits' : token.name}
+        titleAlign="left"
+        icon={<TokenIcon css={{ marginBottom: '-3px' }} token={token} />}
+        returnPath="/silo"
+        hideBackButton
+        control={
+          <GuideButton
+            title="The Farmers' Almanac: Silo Guides"
+            guides={guides}
+          />
+        }
+      />
+      {slug === 'token' && <DefaultContent token={token} />}
+      {slug === 'transfer' && (
+        <TransferContent
+          token={token}
+          handleClose={() => setSlug('token', clear)}
+        />
+      )}
+    </>
+  );
+};
+
+const SlugSwitchContent = () => {
+  const { slug } = useTokenDepositsContext();
+
+  return (
+    <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
+      <Stack gap={2} width="100%">
+        {(slug === 'token' || slug === 'transfer') && <TokenOrTransferView />}
+        {(slug === 'lambda' || slug === 'anti-lambda') && <TokenLambdasView />}
+      </Stack>
+    </Container>
   );
 };
 
@@ -210,7 +254,7 @@ const TokenPage: FC<{}> = () => {
 
   return (
     <TokenDepositsProvider token={whitelistedToken}>
-      <SlugSwitchContent token={whitelistedToken} />
+      <SlugSwitchContent />
     </TokenDepositsProvider>
   );
 };

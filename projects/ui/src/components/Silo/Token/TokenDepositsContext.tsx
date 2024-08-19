@@ -24,6 +24,7 @@ const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
 
 export type TokenDepositsContextType = {
   selected: Set<string>;
+  token: ERC20Token;
   slug: SiloTokenSlug;
   balances: TokenSiloBalance<TokenValue> | undefined;
   depositsById: Record<string, Deposit<TokenValue>>;
@@ -32,6 +33,7 @@ export type TokenDepositsContextType = {
     selectType: TokenDepositsSelectType,
     callback?: () => void
   ) => void;
+  setWithIds: (depositIds: string[]) => void;
   setSlug: (
     slug: SiloTokenSlug | undefined | null,
     callback?: () => void
@@ -68,30 +70,31 @@ export const TokenDepositsProvider = (props: {
     return map;
   }, [siloBalances?.deposits]);
 
-  const handleSetSelected = useCallback(
-    (
-      depositId: string,
-      selectType: TokenDepositsSelectType,
-      callback?: () => void
-    ) => {
-      const copy = new Set(selected);
-      if (selectType === 'single') {
-        const inSelected = copy.has(depositId);
-        copy.clear();
-        if (!inSelected) {
-          copy.add(depositId);
-        }
-      } else if (!copy.delete(depositId)) {
+  const handleSetSelected = (
+    depositId: string,
+    selectType: TokenDepositsSelectType,
+    callback?: () => void
+  ) => {
+    const copy = new Set(selected);
+    if (selectType === 'single') {
+      const inSelected = copy.has(depositId);
+      copy.clear();
+      if (!inSelected) {
         copy.add(depositId);
       }
+    } else if (!copy.delete(depositId)) {
+      copy.add(depositId);
+    }
 
-      setSelected(copy);
-      callback?.();
-    },
-    [selected]
-  );
+    setSelected(copy);
+    callback?.();
+  };
 
-  const clear = useCallback(() => setSelected(new Set()), []);
+  const handleSetMulti = (depositIds: string[]) => {
+    setSelected(new Set(depositIds));
+  };
+
+  const clear = () => setSelected(new Set());
 
   const setSlug = useCallback(
     (action: SiloTokenSlug | undefined | null, callback?: () => void) => {
@@ -113,11 +116,13 @@ export const TokenDepositsProvider = (props: {
     <TokenDepositsContext.Provider
       value={{
         selected,
+        token: props.token,
         balances: siloBalances,
         depositsById: depositMap,
-        slug: slugIndexMap[slugIndex],
+        slug: slugIndexMap[slugIndex] || 'token',
         setSlug,
         setSelected: handleSetSelected,
+        setWithIds: handleSetMulti,
         clear,
       }}
     >

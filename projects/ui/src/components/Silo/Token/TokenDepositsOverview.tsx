@@ -16,7 +16,7 @@ type ITokenDepositsOverview = {
 };
 
 const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
-  const { setSlug, balances } = useTokenDepositsContext();
+  const { balances, setSlug } = useTokenDepositsContext();
 
   const depositedAmount = balances?.amount || TokenValue.ZERO;
   const amount = new BigNumber(depositedAmount.toHuman());

@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useMemo, useState } from 'react';
-import { ERC20Token, Token, TokenValue } from '@beanstalk/sdk-core';
+import { Token, TokenValue } from '@beanstalk/sdk-core';
 import BigNumberJS from 'bignumber.js';
 import { BigNumber } from 'ethers';
 import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
-import useSdk from '~/hooks/sdk';
 
 import { useAccount } from 'wagmi';
 import { formatTV, transform, trimAddress } from '~/util';
@@ -53,19 +52,16 @@ const FarmerTokenDepositsTable = ({
   token: Token;
   selectType?: TokenDepositsSelectType;
 }) => {
-  const sdk = useSdk();
-  const theme = useTheme();
   const { address: account } = useAccount();
+  const mowStatus = useAppSelector((s) => s._farmer.silo.mowStatuses);
   const { selected, depositsById, setSelected, clear, setSlug } =
     useTokenDepositsContext();
-  const mowStatus = useAppSelector((s) => s._farmer.silo.mowStatuses);
-
+  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
-  const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
+  const stemTip = useStemTipForToken(token) || BigNumber.from(0);
   const lastStem = mowStatus.get(token)?.lastStem || BigNumber.from(0);
   const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
 
