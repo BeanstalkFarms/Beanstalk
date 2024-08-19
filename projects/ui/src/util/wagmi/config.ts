@@ -1,8 +1,7 @@
 import { http, createConfig } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
-import { injected, safe, walletConnect } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { Chain, type Transport } from 'viem';
-import { localFork } from './chains';
+import { localFork, mainnet } from './chains';
 
 const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 
@@ -38,7 +37,7 @@ export const config = createConfig({
     walletConnect({
       projectId: WALLET_CONNECT_PROJECT_ID,
     }),
-    safe(),
+    // safe(),
   ],
 });
 

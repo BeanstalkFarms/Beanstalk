@@ -86,9 +86,9 @@ export default function useDataFeedTokenPrices() {
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
       usdOracle.getEthUsdPrice(),
-      usdOracle.getEthUsdTwap(0),
+      usdOracle.getEthUsdTwap(3600),
       usdOracle.getWstethUsdPrice(),
-      usdOracle.getWstethUsdTwap(0),
+      usdOracle.getWstethUsdTwap(3600),
       crv3Pool.get_virtual_price(),
     ]);
 
