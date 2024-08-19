@@ -7,7 +7,7 @@ import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { loadUnripeToken, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
 import { getUnripeUnderlying } from "./Constants";
-import { toDecimal } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, toDecimal } from "../../../subgraph-core/utils/Decimals";
 import { getLatestBdv } from "../entities/snapshots/WhitelistTokenSetting";
 
 class ChopParams {
@@ -42,8 +42,10 @@ export function transfer(fertilizer1155: Address, from: Address, to: Address, id
 
 export function unripeChopped(params: ChopParams): void {
   const unripe = loadUnripeToken(params.unripeToken);
-  const unripeBdvOne = getLatestBdv(loadWhitelistTokenSetting(Address.fromBytes(unripe.id)))!;
-  const underlyingBdvOne = getLatestBdv(loadWhitelistTokenSetting(Address.fromBytes(unripe.underlyingToken)))!;
+  const unripeWhitelist = loadWhitelistTokenSetting(Address.fromBytes(unripe.id));
+  const underlyingWhitelist = loadWhitelistTokenSetting(Address.fromBytes(unripe.underlyingToken));
+  const unripeBdvOne = getLatestBdv(unripeWhitelist)!;
+  const underlyingBdvOne = getLatestBdv(underlyingWhitelist)!;
 
   let id = params.type + "-" + params.event.transaction.hash.toHexString() + "-" + params.event.transactionLogIndex.toString();
   let chop = new ChopEntity(id);
@@ -61,8 +63,8 @@ export function unripeChopped(params: ChopParams): void {
   chop.save();
 
   unripe.totalChoppedAmount = unripe.totalChoppedAmount.plus(chop.unripeAmount);
-  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(chop.unripeBdv);
-  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(chop.underlyingBdv);
+  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(chop.unripeBdv).div(BI_10.pow(<u8>unripeWhitelist.decimals));
+  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(chop.underlyingBdv).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
   unripe.save();
 
   updateUnripeStats(Address.fromBytes(unripe.id), params.event.address, params.event.block);
@@ -81,10 +83,11 @@ export function updateUnripeStats(unripe: Address, protocol: Address, block: eth
 
   // Further calculated values
   unripeToken.underlyingToken = getUnripeUnderlying(unripe, block.number);
-  const underlyingBdvOne = getLatestBdv(loadWhitelistTokenSetting(Address.fromBytes(unripeToken.underlyingToken)));
+  const underlyingWhitelist = loadWhitelistTokenSetting(Address.fromBytes(unripeToken.underlyingToken));
+  const underlyingBdvOne = getLatestBdv(underlyingWhitelist);
   if (underlyingBdvOne !== null) {
-    unripeToken.bdvUnderlyingOne = unripeToken.amountUnderlyingOne.times(underlyingBdvOne);
-    unripeToken.choppableBdvOne = unripeToken.choppableAmountOne.times(underlyingBdvOne);
+    unripeToken.bdvUnderlyingOne = unripeToken.amountUnderlyingOne.times(underlyingBdvOne).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
+    unripeToken.choppableBdvOne = unripeToken.choppableAmountOne.times(underlyingBdvOne).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
   }
 
   takeUnripeTokenSnapshots(unripeToken, protocol, block.timestamp);
