@@ -1,10 +1,7 @@
 import { http, createConfig } from 'wagmi';
 import { injected, walletConnect } from 'wagmi/connectors';
 import { Chain, type Transport } from 'viem';
-import { mainnet as main } from 'wagmi/chains';
 import { localFork, mainnet } from './chains';
-
-const k = main;
 
 const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 
