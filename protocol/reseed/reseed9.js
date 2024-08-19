@@ -16,13 +16,7 @@ async function reseed9(account, L2Beanstalk, mock) {
   let oracles = assets.map((asset) => asset[3]);
 
   // deploy LSD chainlink oracle for whitelist:
-  await deployContract("LSDChainlinkOracle", account, true, [
-    // "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", // ETH/USD oracle.
-    // "14400", // 4 hours
-    // "0xE141425bc1594b8039De6390db1cDaf4397EA22b", // LSD/ETH oracle.
-    // "345600", // 4 days
-    // L2_WEETH // LSD token
-  ]);
+  await deployContract("LSDChainlinkOracle", account, true, []);
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
