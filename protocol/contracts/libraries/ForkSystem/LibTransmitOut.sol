@@ -182,9 +182,6 @@ library LibTransmitOut {
                 s.accts[account].fields[s.sys.activeField].plotIndexes.push(newIndex);
             }
 
-            // Update Field counters.
-            s.sys.fields[plot.fieldId].pods -= plot.amount;
-
             plotsOut[i] = abi.encode(plot);
             emit PlotTransmittedOut(account, plot);
         }

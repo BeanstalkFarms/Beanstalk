@@ -29,6 +29,8 @@ contract InitDistribution {
     AppStorage internal s;
     IBeanstalk beanstalk;
 
+    uint256 internal constant ACTIVE_FIELD = 0;
+
     function init(address shipmentPlanner) external {
         beanstalk = IBeanstalk(address(this));
         require(
@@ -48,7 +50,7 @@ contract InitDistribution {
             shipmentPlanner,
             ShipmentPlanner.getFieldPlan.selector,
             ShipmentRecipient.FIELD,
-            abi.encode(uint256(0))
+            abi.encode(ACTIVE_FIELD)
         );
 
         shipmentRoutes[2] = ShipmentRoute(
@@ -60,7 +62,7 @@ contract InitDistribution {
 
         beanstalk.setShipmentRoutes(shipmentRoutes);
         beanstalk.addField();
-        beanstalk.setActiveField(0, 1);
+        beanstalk.setActiveField(ACTIVE_FIELD, 1);
 
         // TODO: Initialize Field values from priors.
     }

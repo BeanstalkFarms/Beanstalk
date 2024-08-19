@@ -35,7 +35,7 @@ contract TransmitToForkTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
 
-        farmers = createUsers(3);
+        farmers = createUsers(5);
 
         // max approve.
         maxApproveBeanstalk(farmers);
@@ -54,11 +54,13 @@ contract TransmitToForkTest is TestHelper {
         // Deploy new Beanstalk fork.
         TestHelper altEcosystem = new TestHelper();
         altEcosystem.initializeBeanstalkTestState(true, true, false);
-
         newBs = IMockFBeanstalk(altEcosystem.bs());
         newBsAddr = address(newBs);
         vm.prank(deployer);
         newBs.addField();
+        // Set to use two fields.
+        altEcosystem.setRoutes_siloAndBarnAndTwoFields();
+
         newBs.fastForward(100);
     }
 
@@ -272,6 +274,57 @@ contract TransmitToForkTest is TestHelper {
             require(newBs.plot(ZERO_ADDR, DEST_FIELD, partialAmt) == remainingAmt, "1.5 dest amt");
             require(newBs.plot(user, DEST_FIELD, podsPerSow) == podsPerSow, "2nd dest amt");
         }
+
+        // Migrate a plot that is already harvestable and a plot that is beyond the source init length.
+        uint256 pods;
+        user = farmers[4];
+        {
+            uint256 alreadyHarvestableIndex = bs.podIndex(SRC_FIELD);
+            uint256 pods0 = sowForUser(user, sowAmount);
+            newBs.sunSunrise(500_000e6, 0);
+
+            sowForUser(farmers[3], 2_000_000e6);
+            uint256 beyondEndOfLineIndex = bs.podIndex(SRC_FIELD);
+            uint256 pods1 = sowForUser(user, sowAmount) / 2; // partial
+
+            // Initial Migration of a Plot. With index != 0.
+            plots[0] = IMockFBeanstalk.SourcePlot(
+                SRC_FIELD, // fieldId
+                alreadyHarvestableIndex, // plotId
+                pods0, // amount
+                0 // prevDestIndex, not used bc already harvestable
+            );
+            // Migration of a plot prior to latest transmitted plot.
+            plots[1] = IMockFBeanstalk.SourcePlot(
+                SRC_FIELD, // fieldId
+                beyondEndOfLineIndex, // plotId
+                pods1, // amount
+                0 // prevDestIndex, not used bc beyond end of line
+            );
+            pods = pods0 + pods1;
+
+            vm.prank(user);
+            bs.transmitOut(
+                newBsAddr,
+                new IMockFBeanstalk.SourceDeposit[](0),
+                plots,
+                new IMockFBeanstalk.SourceFertilizer[](0),
+                abi.encode("")
+            );
+        }
+        // Verify Destination plots by harvesting.
+        {
+            newBs.sunSunrise(10_000_000e6, 0);
+            uint256[] memory plotIds = newBs.getPlotIndexesFromAccount(user, DEST_FIELD);
+            for (uint256 i; i < plotIds.length; i++) {
+                require(plotIds[i] >= C.SOURCE_POD_LINE_LENGTH, "plot not pushed");
+            }
+            require(plotIds.length == 2, "dest plot count");
+            vm.expectEmit();
+            emit IMockFBeanstalk.Harvest(user, DEST_FIELD, plotIds, pods);
+            vm.prank(user);
+            newBs.harvest(DEST_FIELD, plotIds, 0);
+        }
     }
 
     /**
@@ -367,7 +420,7 @@ contract TransmitToForkTest is TestHelper {
             uint256 mintedBeans = 300e6;
             newBs.sunSunrise(int256(mintedBeans), 0);
             vm.expectEmit();
-            emit IERC20.Transfer(address(newBs), user, mintedBeans / 2 - newBs.leftoverBeans());
+            emit IERC20.Transfer(address(newBs), user, mintedBeans / 3 - newBs.leftoverBeans());
             vm.prank(user);
             newBs.claimFertilized(ids, 0);
         }

@@ -97,6 +97,10 @@ library C {
     // Special index to indicate the data to copy is the operator address.
     uint80 internal constant OPERATOR_COPY_INDEX = type(uint80).max - 1;
 
+    //////////////////// Fork ////////////////////
+    uint256 internal constant DEST_FIELD = 1;
+    uint256 internal constant SOURCE_POD_LINE_LENGTH = 1_000_000e6;
+
     function getSeasonPeriod() internal pure returns (uint256) {
         return CURRENT_SEASON_PERIOD;
     }

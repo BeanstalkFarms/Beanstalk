@@ -10,6 +10,8 @@ import "contracts/beanstalk/init/InitializeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
+import {LibTransmitIn} from "contracts/libraries/ForkSystem/LibTransmitIn.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
@@ -42,6 +44,7 @@ contract MockInitDiamond is InitializeDiamond {
 
         // Set accepted source (ie parent) to be original Beanstalk.
         s.sys.supportedSourceForks[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5] = true;
+        LibTransmitIn._initDestinationField();
     }
 
     function initializeUnripeAssets(address well) internal {

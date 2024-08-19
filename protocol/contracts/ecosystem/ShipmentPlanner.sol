@@ -69,6 +69,7 @@ contract ShipmentPlanner {
         uint256 fieldId = abi.decode(data, (uint256));
         require(fieldId < beanstalk.fieldCount(), "Field does not exist");
         if (!beanstalk.isHarvesting(fieldId)) return shipmentPlan;
+        // TODO: Set to handle multiple fields, if needed.
         return ShipmentPlan({points: FIELD_POINTS, cap: beanstalk.totalUnharvestable(fieldId)});
     }
 

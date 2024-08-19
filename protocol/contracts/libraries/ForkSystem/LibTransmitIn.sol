@@ -57,12 +57,11 @@ library LibTransmitIn {
         uint128 _remainingBpf;
     }
 
-    uint256 internal constant IN_FIELD = 1;
-
-    // Mint assets locally.
-    // Underlying external ERC20s have already been transferred to destination beanstalk.
-    // msg.sender == source instance
-    // Use _depositTokensForConvert() to calculate stem (includes germination logic, germiantion safety provided by source beanstalk).
+    /**
+     * @notice Mint and deposit new Beans and LP to the user, along with grown stalk.
+     * @dev Mints Bean and LP at 1:1 ratio with source. This assumption can be altered in children.
+     * @dev Underlying non-Bean tokens must already be transferred to this address.
+     */
     function transmitInDeposits(address user, bytes[] calldata deposits) internal {
         if (deposits.length == 0) return;
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
@@ -71,7 +70,6 @@ library LibTransmitIn {
 
             _alterDeposit(deposit);
 
-            // NOTE give 1:1 token + BDV ??
             C.bean().mint(address(this), deposit._burnedBeans);
 
             // If LP deposit.
@@ -131,6 +129,12 @@ library LibTransmitIn {
 
     /**
      * @notice Mint equivalent fertilizer to the user such that they retain all remaining BPF.
+     *
+     * If there is a large gap in migrated plots then the line can be instantly pushed
+     * all the way to the end of the hole. So if only one plot migrates, line can
+     * immediately skip to that plot, even if it is at the end of the line.
+     * Could partially mitigate with a no-sunrise migration window or a time delay
+     * until inbound line can harvest.
      */
     function transmitInFertilizer(address user, bytes[] memory fertilizer) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -157,29 +161,27 @@ library LibTransmitIn {
      * @dev Holes between transmitted-in Plots are filled with Slashed Plots.
      * @dev Assumes that no sowing will occur in the same Field as inbound migrations.
      *
-     * This design is painfully contorted. This is necessary to maintain constant time
+     * This contorted design is necessary to maintain constant time
      * harvest operations on a pod line that may contain holes. Null plots represent
-     * hols in such a way that all pods can be accounted for and a plot can be acted
+     * holes in such a way that all pods can be accounted for and a plot can be acted
      * on without any knowledge of other plots.
      */
     function transmitInPlots(address user, bytes[] memory plots) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (plots.length == 0) return;
-        // require(s.sys.fields[IN_FIELD].sourcePlot.existingIndex); prev plot will be non-zero if preceding plot net yet transmitted, otherwise zero
-        // This Destination configuration expects all source Plots to be in the same Field.
         for (uint256 i; i < plots.length; i++) {
             SourcePlot memory sourcePlot = abi.decode(plots[i], (SourcePlot));
 
             _alterPlot(sourcePlot);
 
             require(sourcePlot.fieldId == 0, "Field unsupported");
-            // require(sourcePlot.amount > 1000e6, "Too small");
-            require(
-                sourcePlot.index >= s.sys.fields[IN_FIELD].harvestable,
-                "index already harvestable"
-            );
-            if (sourcePlot.index > s.sys.fields[IN_FIELD].latestTransmittedPlotIndex) {
-                _insertAfterLastPlot(user, sourcePlot.index, sourcePlot.amount);
+            // If the plot has missed harvesting or it was sown after destination deployment,
+            // append the Plot to the end of the Pod line.
+            if (
+                sourcePlot.index < s.sys.fields[C.DEST_FIELD].harvestable ||
+                sourcePlot.index > C.SOURCE_POD_LINE_LENGTH
+            ) {
+                _plotPush(user, sourcePlot.amount);
             } else {
                 _insertInNullPlot(
                     user,
@@ -192,11 +194,11 @@ library LibTransmitIn {
         }
     }
 
-    // Assumes that 'previous' plot is owned by null. <- this may be true bc null plots are always injected (line is complete), but we have to allow case where existingIndex = index (and verify that existingIndex.amount is not zero).
-    // if plot before is already transmitted, the "prevPlot" should be the null plot that begins at index.
-    //
-    // What if pods up to index-1 are transmitted? it is ok, but need to have index == existingIndex
-    // What if pods from index + size + 1 are transmitted? it is ok, nextIndex == index + amount
+    /**
+     * @notice Insert a plot into an existing null plot.
+     * @dev Requires that the existing plot is owned by null. This is possible bc null plots are
+     *      always injected into gaps.
+     */
     function _insertInNullPlot(
         address user,
         uint256 index,
@@ -205,35 +207,51 @@ library LibTransmitIn {
     ) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // prev plot is provided by user, but it is verified in insertion.
-        uint256 prevAmount = s.accts[address(0)].fields[IN_FIELD].plots[existingIndex];
-        uint256 nextIndex = existingIndex + prevAmount;
-        require(prevAmount > 0, "non null");
+        uint256 existingAmount = s.accts[address(0)].fields[C.DEST_FIELD].plots[existingIndex];
+        uint256 endIndex = existingIndex + existingAmount;
+        require(existingAmount > 0, "existingIndex non null");
         require(existingIndex <= index, "existingIndex too large");
-        require(nextIndex >= index + amount, "nextIndex too small");
+        require(endIndex >= index + amount, "endIndex too small");
+        uint256 followingIndex = index + amount;
+        uint256 followingAmount = endIndex - followingIndex;
 
         // Delete existing null plot.
-        LibField.deletePlot(address(0), IN_FIELD, existingIndex);
+        LibField.deletePlot(address(0), C.DEST_FIELD, existingIndex);
 
         // Create preceding null plot, user plot, and following null plot.
-        LibField.createPlot(address(0), IN_FIELD, existingIndex, index - existingIndex);
-        LibField.createPlot(user, IN_FIELD, index, amount);
-        LibField.createPlot(address(0), IN_FIELD, index + amount, nextIndex - (index + amount));
+        LibField.createPlot(address(0), C.DEST_FIELD, existingIndex, index - existingIndex);
+        LibField.createPlot(user, C.DEST_FIELD, index, amount);
+        LibField.createPlot(address(0), C.DEST_FIELD, followingIndex, followingAmount);
+        if (followingIndex > s.sys.fields[C.DEST_FIELD].latestTransmittedPlotIndex) {
+            _updateLatestPlot(address(0), followingIndex, followingAmount);
+        }
     }
 
-    // Assumes the latest plot is NOT null?
-    function _insertAfterLastPlot(address user, uint256 index, uint256 amount) private {
+    /**
+     * @notice Insert a plot after the last existing in the Field. Null or non-null.
+     */
+    function _plotPush(address user, uint256 amount) private {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 nextIndex = s.sys.fields[IN_FIELD].latestTransmittedPlotIndex +
-            s.accts[s.sys.fields[IN_FIELD].latestTransmittedPlotOwner].fields[IN_FIELD].plots[
-                s.sys.fields[IN_FIELD].latestTransmittedPlotIndex
-            ];
+        uint256 index = s.sys.fields[C.DEST_FIELD].latestTransmittedPlotIndex +
+            s
+                .accts[s.sys.fields[C.DEST_FIELD].latestTransmittedPlotOwner]
+                .fields[C.DEST_FIELD]
+                .plots[s.sys.fields[C.DEST_FIELD].latestTransmittedPlotIndex];
 
         // Create preceding null plot and user plot.
-        LibField.createPlot(address(0), IN_FIELD, nextIndex, index - nextIndex);
-        LibField.createPlot(user, IN_FIELD, index, amount);
+        LibField.createPlot(user, C.DEST_FIELD, index, amount);
+        _updateLatestPlot(user, index, amount);
+    }
 
-        s.sys.fields[IN_FIELD].latestTransmittedPlotIndex = index;
-        s.sys.fields[IN_FIELD].latestTransmittedPlotOwner = user;
+    function _updateLatestPlot(address user, uint256 index, uint256 amount) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.sys.fields[C.DEST_FIELD].latestTransmittedPlotOwner = user;
+        s.sys.fields[C.DEST_FIELD].latestTransmittedPlotIndex = index;
+        s.sys.fields[C.DEST_FIELD].pods = index + amount;
+    }
+
+    function _initDestinationField() internal {
+        _plotPush(address(0), C.SOURCE_POD_LINE_LENGTH);
     }
 
     function _alterDeposit(SourceDeposit memory deposit) private {
