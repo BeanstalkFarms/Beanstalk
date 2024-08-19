@@ -38,6 +38,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param rain See {Rain}.
  * @param _buffer_2 Reserved storage for future additions.
  * @param oracleImplementation A mapping from token to its oracle implementation.
+ * @param supportedSourceForks a mapping of addresses that can transmit into this Beanstalk instance.
  */
 struct System {
     bool paused;
@@ -110,6 +111,7 @@ struct Silo {
  * @param harvestable Index of Pods that have ever been Harvestable. Included Processed Pods.
  * @param latestTransmittedPlotIndex The index of the latest Plot that has been transmitted in.
  * @param latestTransmittedPlotOwner The owner of the latest Plot that has been transmitted in.
+ * @param srcInitPods The amount of pods in source beanstalk field at destination deployment.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
@@ -118,7 +120,8 @@ struct Field {
     uint256 harvestable;
     uint256 latestTransmittedPlotIndex;
     address latestTransmittedPlotOwner;
-    bytes32[6] _buffer;
+    uint256 srcInitPods;
+    bytes32[5] _buffer;
 }
 
 /**

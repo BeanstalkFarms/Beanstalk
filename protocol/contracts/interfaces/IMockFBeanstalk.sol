@@ -1623,6 +1623,8 @@ interface IMockFBeanstalk {
 
     function setMaxTempE(uint32 number) external;
 
+    function initDestinationField(uint256 srcInitPods) external;
+
     function setMerkleRootE(address unripeToken, bytes32 root) external;
 
     function setNextSowTimeE(uint32 _time) external;

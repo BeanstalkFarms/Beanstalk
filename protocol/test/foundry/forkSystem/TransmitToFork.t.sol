@@ -23,6 +23,7 @@ contract TransmitToForkTest is TestHelper {
 
     uint256 SRC_FIELD = 0;
     uint256 DEST_FIELD = 1;
+    uint256 SRC_INIT_PODS = 1_000_000e6;
 
     uint32 constant REPLANT_SEASON = 6074;
 
@@ -58,6 +59,7 @@ contract TransmitToForkTest is TestHelper {
         newBsAddr = address(newBs);
         vm.prank(deployer);
         newBs.addField();
+        newBs.initDestinationField(SRC_INIT_PODS);
         // Set to use two fields.
         altEcosystem.setRoutes_siloAndBarnAndTwoFields();
 
@@ -309,7 +311,7 @@ contract TransmitToForkTest is TestHelper {
             newBs.sunSunrise(10_000_000e6, 0);
             uint256[] memory plotIds = newBs.getPlotIndexesFromAccount(user, DEST_FIELD);
             for (uint256 i; i < plotIds.length; i++) {
-                require(plotIds[i] >= C.SOURCE_POD_LINE_LENGTH, "plot not pushed");
+                require(plotIds[i] >= SRC_INIT_PODS, "plot not pushed");
             }
             require(plotIds.length == 2, "dest plot count");
             vm.expectEmit();
@@ -560,7 +562,7 @@ contract TransmitToForkTest is TestHelper {
         );
 
         uint256 sowAmount = 1000e6;
-        uint256 plotIndex =  bs.podIndex(SRC_FIELD);
+        uint256 plotIndex = bs.podIndex(SRC_FIELD);
         uint256 podsAmount = sowForUser(user, sowAmount);
         // Initial Migration of a Plot. With index != 0.
         plots[0] = IMockFBeanstalk.SourcePlot(

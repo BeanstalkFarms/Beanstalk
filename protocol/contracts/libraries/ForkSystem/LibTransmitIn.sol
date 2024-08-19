@@ -179,7 +179,7 @@ library LibTransmitIn {
             // append the Plot to the end of the Pod line.
             if (
                 sourcePlot.index < s.sys.fields[C.DEST_FIELD].harvestable ||
-                sourcePlot.index > C.SOURCE_POD_LINE_LENGTH
+                sourcePlot.index > s.sys.fields[C.DEST_FIELD].srcInitPods
             ) {
                 _plotPush(user, sourcePlot.amount);
             } else {
@@ -250,8 +250,10 @@ library LibTransmitIn {
         s.sys.fields[C.DEST_FIELD].pods = index + amount;
     }
 
-    function _initDestinationField() internal {
-        _plotPush(address(0), C.SOURCE_POD_LINE_LENGTH);
+    function _initDestinationField(uint256 srcInitPods) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.sys.fields[C.DEST_FIELD].srcInitPods = srcInitPods;
+        _plotPush(address(0), srcInitPods);
     }
 
     function _alterDeposit(SourceDeposit memory deposit) private {

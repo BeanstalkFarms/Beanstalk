@@ -44,7 +44,9 @@ contract MockInitDiamond is InitializeDiamond {
 
         // Set accepted source (ie parent) to be original Beanstalk.
         s.sys.supportedSourceForks[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5] = true;
-        LibTransmitIn._initDestinationField();
+        // TODO: Set this based on configured source.
+        uint256 srcInitPods = 0;
+        LibTransmitIn._initDestinationField(srcInitPods);
     }
 
     function initializeUnripeAssets(address well) internal {

@@ -8,6 +8,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {LibPRBMathRoundable} from "contracts/libraries/LibPRBMathRoundable.sol";
 import "contracts/libraries/LibRedundantMath256.sol";
 import "contracts/beanstalk/field/FieldFacet.sol";
+import {LibTransmitIn} from "contracts/libraries/ForkSystem/LibTransmitIn.sol";
 
 /**
  * @author Publius, Brean
@@ -214,5 +215,9 @@ contract MockFieldFacet is FieldFacet {
 
     function setMaxTemp(uint32 t) external {
         s.sys.weather.temp = t;
+    }
+
+    function initDestinationField(uint256 srcInitPods) external {
+        LibTransmitIn._initDestinationField(srcInitPods);
     }
 }
