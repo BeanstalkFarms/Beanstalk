@@ -18,7 +18,7 @@ import { exists } from '~/util/UI';
 
 export type TokenDepositsSelectType = 'single' | 'multi';
 
-type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
+export type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
 
 const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
 

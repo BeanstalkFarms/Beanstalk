@@ -440,8 +440,8 @@ const baseTableCSS = {
       backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,
     },
     '& >.MuiDataGrid-cell': {
-      minHeight: '63px !important',
-      maxHeight: '63px !important',
+      minHeight: '65px !important',
+      maxHeight: '65px !important',
     },
     cursor: 'pointer',
   },

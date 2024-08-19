@@ -80,6 +80,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
                   width="auto"
                 />
               }
+              onClick={() => setSlug('lambda')}
             >
               Update
               <Typography

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Container, Stack, Typography } from '@mui/material';
+import { Box, Card, Container, Stack, Typography } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
@@ -20,6 +20,7 @@ import TokenDepositsOverview from '~/components/Silo/Token/TokenDepositsOverview
 import TokenDepositRewards from '~/components/Silo/Token/TokenDepositRewards';
 import TokenAbout from '~/components/Silo/Token/TokenAbout';
 import {
+  SiloTokenSlug,
   TokenDepositsProvider,
   useTokenDepositsContext,
 } from '~/components/Silo/Token/TokenDepositsContext';
@@ -31,6 +32,8 @@ import {
   ModuleContent,
   ModuleHeader,
 } from '~/components/Common/Module';
+import TokenLambdaConvert from '~/components/Silo/Token/TokenLambdaConvert';
+import ToggleTabGroup from '~/components/Common/ToggleTabGroup';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -134,24 +137,60 @@ const TransferContent = ({ token }: Omit<TokenPageBaseProps, 'pool'>) => (
   </Stack>
 );
 
-const SlugSwitchContent = (props: TokenPageBaseProps) => {
-  const { slug } = useTokenDepositsContext();
+const LambdaConvertContent = (props: Pick<TokenPageBaseProps, 'token'>) => (
+  <Stack width="100%" alignItems="center">
+    <Module sx={{ p: 2, width: '100%', maxWidth: '903px' }}>
+      <TokenLambdaConvert {...props} />
+    </Module>
+  </Stack>
+);
+
+const SlugSwitchContent = ({ token }: TokenPageBaseProps) => {
+  const { slug, setSlug } = useTokenDepositsContext();
 
   const isTokenView = slug === 'token' || !slug;
   const isTransferView = slug === 'transfer';
+  const isLambdaView = slug === 'lambda';
+  const isAntiLambdaView = slug === 'anti-lambda';
 
   return (
     <>
       <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
         <Stack gap={2} width="100%">
           {(isTokenView || isTransferView) && (
-            <PagePathContent
-              token={props.token}
-              title={isTransferView ? 'Transfer Deposits' : undefined}
-            />
+            <>
+              <PagePathContent
+                token={token}
+                title={isTransferView ? 'Transfer Deposits' : undefined}
+              />
+              {isTokenView && <DefaultContent token={token} />}
+              {isTransferView && <TransferContent token={token} />}
+            </>
           )}
-          {isTokenView && <DefaultContent token={props.token} />}
-          {isTransferView && <TransferContent {...props} />}
+          {(isAntiLambdaView || isLambdaView) && (
+            <>
+              <Box
+                sx={{
+                  alignSelf: 'center',
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  border: `1px solid`,
+                  borderColor: 'divider',
+                  background: 'background.main',
+                }}
+              >
+                <ToggleTabGroup<SiloTokenSlug>
+                  selected={slug}
+                  setSelected={(v: SiloTokenSlug) => setSlug(v)}
+                  options={[
+                    { label: 'My Deposits', value: 'lambda' },
+                    { label: "Other's Deposits", value: 'anti-lambda' },
+                  ]}
+                />
+              </Box>
+              {isLambdaView && <LambdaConvertContent token={token} />}
+            </>
+          )}
         </Stack>
       </Container>
     </>
