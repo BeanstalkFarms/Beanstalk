@@ -19,8 +19,9 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
   const { setSlug, balances } = useTokenDepositsContext();
 
   const depositedAmount = balances?.amount || TokenValue.ZERO;
-
   const amount = new BigNumber(depositedAmount.toHuman());
+
+  const hasDeposits = Boolean(balances?.deposits?.length);
 
   return (
     <Stack>
@@ -33,7 +34,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
             <Typography variant="h1">
               <TokenIcon
                 token={token}
-                css={{ height: '24px', marginBottom: '-3px' }}
+                css={{ height: '24px', marginBottom: '-1px' }}
               />{' '}
               {amount.toFormat(2, BigNumber.ROUND_DOWN)}
             </Typography>
@@ -42,53 +43,55 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
             </Typography>
           </Stack>
         </Stack>
-        <Stack direction="row" gap={1}>
-          <Button
-            size="small"
-            color="secondary"
-            variant="outlined-secondary"
-            startIcon={
-              <Box
-                component="img"
-                src={minimizeWindowIcon}
-                height="16px"
-                width="auto"
-              />
-            }
-            onClick={() => setSlug('transfer')}
-          >
-            Transfer
-            <Typography
-              component="span"
-              fontWeight="inherit"
-              display={{ xs: 'none', md: 'inline' }}
+        {hasDeposits && (
+          <Stack direction="row" gap={1}>
+            <Button
+              size="small"
+              color="secondary"
+              variant="outlined-secondary"
+              startIcon={
+                <Box
+                  component="img"
+                  src={minimizeWindowIcon}
+                  height="16px"
+                  width="auto"
+                />
+              }
+              onClick={() => setSlug('transfer')}
             >
-              {' Deposits'}
-            </Typography>
-          </Button>
-          <Button
-            size="small"
-            color="secondary"
-            variant="outlined-secondary"
-            startIcon={
-              <Box
-                component="img"
-                src={deliveryBoxIcon}
-                height="20px"
-                width="auto"
-              />
-            }
-          >
-            Update
-            <Typography
-              fontWeight="inherit"
-              component="span"
-              display={{ xs: 'none', md: 'inline' }}
+              Transfer
+              <Typography
+                component="span"
+                fontWeight="inherit"
+                display={{ xs: 'none', md: 'inline' }}
+              >
+                {' Deposits'}
+              </Typography>
+            </Button>
+            <Button
+              size="small"
+              color="secondary"
+              variant="outlined-secondary"
+              startIcon={
+                <Box
+                  component="img"
+                  src={deliveryBoxIcon}
+                  height="20px"
+                  width="auto"
+                />
+              }
             >
-              {' Deposits'}
-            </Typography>
-          </Button>
-        </Stack>
+              Update
+              <Typography
+                fontWeight="inherit"
+                component="span"
+                display={{ xs: 'none', md: 'inline' }}
+              >
+                {' Deposits'}
+              </Typography>
+            </Button>
+          </Stack>
+        )}
       </Stack>
       <FarmerTokenDepositsTable token={token} selectType="single" />
     </Stack>

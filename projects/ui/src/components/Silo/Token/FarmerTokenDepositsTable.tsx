@@ -204,18 +204,17 @@ const FarmerTokenDepositsTable = ({
         rows={rows}
         columns={columns}
         state={state}
-        maxRows={10}
         density="standard"
         onlyTable
         rowSpacing={1}
         rowHeight={65}
+        maxRows={isMobile ? 5 : 10}
         columnVisibilityModel={{
           id: !isMobile,
           amount: true,
           stalk: true,
           seeds: true,
         }}
-        {...(rows.length < 10 ? { hideFooter: true } : {})}
         tableCss={baseTableCSS}
         classes={{
           cell: 'data-grid-cell-overflow',
@@ -441,8 +440,8 @@ const baseTableCSS = {
       backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,
     },
     '& >.MuiDataGrid-cell': {
-      minHeight: '65px !important',
-      maxHeight: '65px !important',
+      minHeight: '63px !important',
+      maxHeight: '63px !important',
     },
     cursor: 'pointer',
   },

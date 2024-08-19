@@ -101,11 +101,12 @@ const TableCard: FC<TableCardProps> = ({
 }) => {
   const tableHeight = useMemo(() => {
     if (!rows || rows.length === 0) return '250px';
-    const _rowHeight = (rowHeight || 36) + rowSpacing * 10;
+    const _spacingHeight = rowSpacing * 10;
+    const _rowHeight = (rowHeight || 36) + _spacingHeight;
+    const _footerHeight = hideFooter ? 0 : 36;
+    const _allRowsHeight = Math.min(rows.length, maxRows) * _rowHeight;
 
-    return (
-      60.5 + (hideFooter ? 0 : 36) + Math.min(rows.length, maxRows) * _rowHeight
-    );
+    return 60.5 + _footerHeight + _allRowsHeight + _spacingHeight;
   }, [rows, rowSpacing, rowHeight, hideFooter, maxRows]);
 
   // When we need custom, per row, styling, this is where we can defined the rules.
