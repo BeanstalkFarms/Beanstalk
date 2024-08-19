@@ -155,11 +155,6 @@ function parseGlobals(inputFilePath, outputFilePath) {
         ? convertToBigNum(data.evaluationParameters.excessivePriceThreshold)
         : "0"
     ],
-    // Migration
-    [
-      data.migration?.migratedL1Beans ? convertToBigNum(data.migration.migratedL1Beans) : "0",
-      Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
-    ],
     // ShipmentRoute
     data.shipmentRoutes.length
       ? data.shipmentRoutes.map((route) => [
