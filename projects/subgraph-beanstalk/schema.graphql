@@ -21,86 +21,67 @@ enum EmaWindow {
   ROLLING_30_DAY
 }
 
-type Beanstalk @entity {
-  " Smart contract address of the protocol's main contract (Factory, Registry, etc) "
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
   id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
 
-  " Name of the protocol, including version. e.g. Uniswap v3 "
+type Beanstalk @entity {
+  "Smart contract address of the protocol's main contract (Factory, Registry, etc) "
+  id: ID!
+  "Name of the protocol, including version. e.g. Uniswap v3"
   name: String!
-
-  " Slug of protocol, including version. e.g. uniswap-v3 "
-  slug: String!
-
-  " Version of the subgraph schema, in SemVer format (e.g. 1.0.0) "
-  schemaVersion: String!
-
-  " Version of the subgraph implementation, in SemVer format (e.g. 1.0.0) "
-  subgraphVersion: String!
-
-  " Version of the methodology used to compute metrics, loosely based on SemVer format (e.g. 1.0.0) "
-  methodologyVersion: String!
-
-  " Timestamp of the latest DiamondCut call "
-  lastUpgrade: BigInt!
-
-  " Season specific data "
+  "Bean token address of the protocol"
+  token: String!
+  "Address of the fertilizer contract"
+  fertilizer1155: String
+  "Season specific data"
   seasons: [Season!]! @derivedFrom(field: "beanstalk")
-
-  " Silo level data "
+  "Silo level data"
   silo: Silo! @derivedFrom(field: "beanstalk")
-
-  " Field level data "
+  "Field level data"
   field: Field! @derivedFrom(field: "beanstalk")
-
-  " Last season called "
+  "Last season called"
   lastSeason: Int!
-
-  " Array of the addresses for all active farmers in the silo "
+  "Array of the addresses for all active farmers in the silo"
   activeFarmers: [String!]!
-
-  " Array of the addresses for all farmers that had silo transfers and need stalk/seeds/roots updated "
+  "Array of the addresses for all farmers that had silo transfers and need stalk/seeds/roots updated"
   farmersToUpdate: [String!]!
 }
 
-# An entity that holds season level data
 type Season @entity {
-  " Season Number"
+  "Season Number"
   id: ID!
-
-  " Beanstalk Contract Address "
+  "Beanstalk Contract Address"
   beanstalk: Beanstalk!
-
-  " Season number in Int form for sorting "
+  "Season number in Int form for sorting"
   season: Int!
-
-  " Block in which the season start was triggered by the sunrise call "
+  "Block in which the season start was triggered by the sunrise call"
   sunriseBlock: BigInt!
-
-  " Block timestamp when sunrise was called "
+  "Block timestamp when sunrise was called"
   createdAt: BigInt!
-
-  " Price of BEAN during sunrise "
+  "Price of BEAN during sunrise"
   price: BigDecimal!
-
-  " Total Bean supply "
+  "Total Bean supply"
   beans: BigInt!
-
-  " Bean Market Cap "
+  "Bean Market Cap"
   marketCap: BigDecimal!
-
-  " Time weighted deltaB "
+  "Time weighted deltaB"
   deltaB: BigInt!
-
-  " Change in Bean supply "
+  "Change in Bean supply"
   deltaBeans: BigInt!
-
-  " Amount of Beans minted during sunrise "
+  "Amount of Beans minted during sunrise"
   rewardBeans: BigInt!
-
-  " Amount of Beans paid to sunrise caller "
+  "Amount of Beans paid to sunrise caller"
   incentiveBeans: BigInt!
-
-  " New harvestable index for the season "
+  "New harvestable index for the season"
   harvestableIndex: BigInt!
 }
 
@@ -137,6 +118,10 @@ type Silo @entity {
   beanMints: BigInt!
   "Current number of active farmers deposited in the silo"
   activeFarmers: Int!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [SiloHourlySnapshot!]! @derivedFrom(field: "silo")
   "Link to daily snapshot data"
@@ -144,7 +129,7 @@ type Silo @entity {
 }
 
 type SiloHourlySnapshot @entity {
-  "ID of silo-Unix Hour Timestamp"
+  "ID of silo - Season"
   id: ID!
   "Season for the snapshot"
   season: Int!
@@ -170,32 +155,28 @@ type SiloHourlySnapshot @entity {
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
   activeFarmers: Int!
-  "Point in time delta BDV of all deposited assets"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta stalk balance"
   deltaStalk: BigInt!
-  "Point in time current plantable stalk for bean seigniorage not yet claimed"
   deltaPlantableStalk: BigInt!
-  "Point in time delta seeds balance"
   deltaSeeds: BigInt!
-  "Point in time delta roots balance"
   deltaRoots: BigInt!
-  "Point in time germinating stalk balance"
   deltaGerminatingStalk: BigInt!
-  "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
-  "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
-  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
-  caseId: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # caseId is unique to hourly snapshot
+  "[Seed Gauge] The caseId used in the seasonal adjustment of beanToMaxLpGpPerBdvRatio"
+  caseId: BigInt
 }
 
 type SiloDailySnapshot @entity {
-  "ID of silo-Unix Hour Timestamp"
+  "ID of silo - Day"
   id: ID!
   "Last season for the snapshot"
   season: Int!
@@ -221,22 +202,16 @@ type SiloDailySnapshot @entity {
   beanMints: BigInt!
   "Point in time current number of active farmers deposited in the silo"
   activeFarmers: Int!
-  "Point in time delta BDV of all deposited assets"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta stalk balance"
   deltaStalk: BigInt!
-  "Point in time current plantable stalk for bean seigniorage not yet claimed"
   deltaPlantableStalk: BigInt!
-  "Point in time delta seeds balance"
   deltaSeeds: BigInt!
-  "Point in time delta roots balance"
   deltaRoots: BigInt!
-  "Point in time germinating stalk balance"
   deltaGerminatingStalk: BigInt!
-  "Point in time delta total for bean mints sent to the silo"
   deltaBeanMints: BigInt!
-  "Point in time delta number of active farmers deposited in the silo"
   deltaActiveFarmers: Int!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -250,14 +225,18 @@ type SiloAsset @entity {
   silo: Silo!
   "Token address for this asset"
   token: String!
-  "Current BDV of deposits"
-  depositedBDV: BigInt!
   "Current Token amount of deposits"
   depositedAmount: BigInt!
+  "Current BDV of deposits"
+  depositedBDV: BigInt!
   "Current Token amount of silo withdrawals"
   withdrawnAmount: BigInt!
   "Current internal (farm) balance of the asset"
   farmAmount: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [SiloAssetHourlySnapshot!]! @derivedFrom(field: "siloAsset")
   "Link to daily snapshot data"
@@ -265,7 +244,7 @@ type SiloAsset @entity {
 }
 
 type SiloAssetHourlySnapshot @entity {
-  "Silo Asset ID - Unix Timestamp"
+  "Silo Asset ID - Season"
   id: ID!
   "Season for the snapshot"
   season: Int!
@@ -279,14 +258,12 @@ type SiloAssetHourlySnapshot @entity {
   withdrawnAmount: BigInt!
   "Point in time current internal (farm) balance of the asset"
   farmAmount: BigInt!
-  "Point in time delta BDV of deposits"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta Token amount of deposits"
   deltaDepositedAmount: BigInt!
-  "Point in time delta Token amount of silo withdrawals"
   deltaWithdrawnAmount: BigInt!
-  "Point in time delta internal (farm) balance of the asset"
   deltaFarmAmount: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -294,7 +271,7 @@ type SiloAssetHourlySnapshot @entity {
 }
 
 type SiloAssetDailySnapshot @entity {
-  "Silo Asset ID - Unix Timestamp"
+  "Silo Asset ID - Day"
   id: ID!
   "Last season for the snapshot"
   season: Int!
@@ -308,14 +285,12 @@ type SiloAssetDailySnapshot @entity {
   withdrawnAmount: BigInt!
   "Point in time current internal (farm) balance of the asset"
   farmAmount: BigInt!
-  "Point in time delta BDV of deposits"
+
   deltaDepositedBDV: BigInt!
-  "Point in time delta Token amount of deposits"
   deltaDepositedAmount: BigInt!
-  "Point in time delta Token amount of silo withdrawals"
   deltaWithdrawnAmount: BigInt!
-  "Point in time delta internal (farm) balance of the asset"
   deltaFarmAmount: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -381,10 +356,18 @@ type WhitelistTokenSetting @entity {
   optimalPercentDepositedBdv: BigInt
   "Last timestamp entity was updated"
   updatedAt: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [WhitelistTokenHourlySnapshot!]! @derivedFrom(field: "token")
   "Link to daily snapshot data"
   dailySnapshots: [WhitelistTokenDailySnapshot!]! @derivedFrom(field: "token")
+
+  # Unique to the main entity, not on dailySnapshots
+  "Number of decimals in this token"
+  decimals: Int!
 }
 
 type WhitelistTokenHourlySnapshot @entity {
@@ -410,15 +393,29 @@ type WhitelistTokenHourlySnapshot @entity {
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
   optimalPercentDepositedBdv: BigInt
+
+  deltaStalkEarnedPerSeason: BigInt!
+  deltaStalkIssuedPerBdv: BigInt!
+  deltaMilestoneSeason: Int!
+  deltaGaugePoints: BigInt
+  deltaOptimalPercentDepositedBdv: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to the snapshot, and not on the main entity
+  "Point in time hourly bdv"
+  bdv: BigInt
+  deltaBdv: BigInt
 }
 
 type WhitelistTokenDailySnapshot @entity {
-  "Token address - Unix Timestamp"
+  "Token address - Day"
   id: ID!
+  "The season for this snapshot"
+  season: Int!
   "WhitelistTokenSetting associated with this snapshot"
   token: WhitelistTokenSetting!
   "Encoded BDV selector"
@@ -437,14 +434,26 @@ type WhitelistTokenDailySnapshot @entity {
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
   optimalPercentDepositedBdv: BigInt
+
+  deltaStalkEarnedPerSeason: BigInt!
+  deltaStalkIssuedPerBdv: BigInt!
+  deltaMilestoneSeason: Int!
+  deltaGaugePoints: BigInt
+  deltaOptimalPercentDepositedBdv: BigInt
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to the snapshot, and not on the main entity
+  "Point in time daily bdv"
+  bdv: BigInt
+  deltaBdv: BigInt
 }
 
 type Field @entity {
-  " Contract address for this field or farmer "
+  "Contract address for this field or farmer"
   id: ID!
   "Contract address of beanstalk"
   beanstalk: Beanstalk!
@@ -476,6 +485,10 @@ type Field @entity {
   podIndex: BigInt!
   "Current pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [FieldHourlySnapshot!]! @derivedFrom(field: "field")
   "Link to daily snapshot data"
@@ -483,7 +496,7 @@ type Field @entity {
 }
 
 type FieldHourlySnapshot @entity {
-  "Field ID - Unix Timestamp"
+  "Field ID - Season"
   id: ID!
   "Field associated with this snapshot"
   field: Field!
@@ -507,40 +520,44 @@ type FieldHourlySnapshot @entity {
   harvestedPods: BigInt!
   "Point in time amount of soil remaining"
   soil: BigInt!
+  "Point in time amount of soil issued"
+  issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
-  "Point in time delta number of unique sowers"
+
+  deltaTemperature: Int!
+  deltaRealRateOfReturn: BigDecimal!
   deltaNumberOfSowers: Int!
-  "Point in time delta number of sows"
   deltaNumberOfSows: Int!
-  "Point in time delta total of sown beans"
   deltaSownBeans: BigInt!
-  "Point in time delta non-harvestable pods"
   deltaUnharvestablePods: BigInt!
-  "Point in time delta harvestable pods"
   deltaHarvestablePods: BigInt!
-  "Point in time delta harvested pods"
   deltaHarvestedPods: BigInt!
-  "Point in time amount of soil issued"
-  issuedSoil: BigInt!
-  "Number of blocks between sunrise and soil being sold out"
-  blocksToSoldOutSoil: BigInt!
-  "Bool flag if soil sold out for the season"
-  soilSoldOut: Boolean!
-  "The caseId used in the seasonal adjustment of temperature"
-  caseId: BigInt!
-  "Creation Block Number"
-  blockNumber: BigInt!
+  deltaSoil: BigInt!
+  deltaIssuedSoil: BigInt!
+  deltaPodIndex: BigInt!
+  deltaPodRate: BigDecimal!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
   updatedAt: BigInt!
+
+  # These are unique to hourly snapshot
+  "The caseId used in the seasonal adjustment of temperature"
+  caseId: BigInt
+  "Block that started this season/at time of snapshot creation"
+  seasonBlock: BigInt!
+  "Number of blocks between sunrise and soil being sold out"
+  blocksToSoldOutSoil: BigInt
+  "Bool flag if soil sold out for the season"
+  soilSoldOut: Boolean!
 }
 
 type FieldDailySnapshot @entity {
-  "Field ID - Unix Timestamp"
+  "Field ID - Day"
   id: ID!
   "Field associated with this snapshot"
   field: Field!
@@ -564,24 +581,26 @@ type FieldDailySnapshot @entity {
   harvestedPods: BigInt!
   "Point in time amount of soil remaining"
   soil: BigInt!
+  "Point in time amount of soil issued"
+  issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
-  "Point in time delta number of unique sowers"
+
+  deltaTemperature: Int!
+  deltaRealRateOfReturn: BigDecimal!
   deltaNumberOfSowers: Int!
-  "Point in time delta number of sows"
   deltaNumberOfSows: Int!
-  "Point in time delta total of sown beans"
   deltaSownBeans: BigInt!
-  "Point in time delta non-harvestable pods"
   deltaUnharvestablePods: BigInt!
-  "Point in time delta harvestable pods"
   deltaHarvestablePods: BigInt!
-  "Point in time delta harvested pods"
   deltaHarvestedPods: BigInt!
-  "Point in time amount of soil issued"
-  issuedSoil: BigInt!
+  deltaSoil: BigInt!
+  deltaIssuedSoil: BigInt!
+  deltaPodIndex: BigInt!
+  deltaPodRate: BigDecimal!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -606,35 +625,31 @@ type Farmer @entity {
 
 type SiloDeposit @entity {
   """
-  Pre Silo V3:
-  Account - Token Address - Season
-
-  Post Silo-V3:
-  Account - Token Address - Stem
+  Account - Token Address - Deposit Version - (Season|Stem)
   """
   id: ID!
   "Farmer address"
   farmer: Farmer!
   "Token Address"
   token: String!
+  "Version of deposit. Options are season, v3, v3.1. `season` type includes those deposits which are calculated according to their silo v1 deposits pre-explout"
+  depositVersion: String!
   "Season of deposit"
-  season: Int!
-  "Stem of deposit - Introduced in Silo V3"
+  season: Int
+  "Stem of deposit"
   stem: BigInt
-  "Current token amount deposited"
-  amount: BigInt!
-  "Original token amount deposited"
+  "Silo v3.1 equivalent stem. This value will always be assigned regardless of the deposit version."
+  stemV31: BigInt!
+  "Token amount deposited"
   depositedAmount: BigInt!
-  "Token amount withdrawn"
-  withdrawnAmount: BigInt!
-  "Current BDV of the deposit"
-  bdv: BigInt!
   "Original deposited BDV"
   depositedBDV: BigInt!
-  "Withdrawn BDV"
-  withdrawnBDV: BigInt!
-  "Transaction hashes for multiple deposits in one season"
+  "Transaction hashes pertaining to this deposit"
   hashes: [String!]!
+  "Block of first deposit"
+  createdBlock: BigInt!
+  "Block when last updated"
+  updatedBlock: BigInt!
   "Timestamp of first deposit"
   createdAt: BigInt!
   "Timestamp when last updated"
@@ -656,8 +671,6 @@ type SiloWithdraw @entity {
   claimed: Boolean!
   "Token amount withdrawn"
   amount: BigInt!
-  "Transaction hash of withdrawal"
-  hashes: [String!]!
   "Timestamp created"
   createdAt: BigInt!
 }
@@ -700,7 +713,7 @@ type Plot @entity {
 }
 
 type PodMarketplace @entity {
-  " Contract address of beanstalk "
+  "Contract address of beanstalk"
   id: ID!
   "Current season of the marketplace"
   season: Int!
@@ -738,6 +751,10 @@ type PodMarketplace @entity {
   podVolume: BigInt!
   "Cumulative bean volume between listings and orders"
   beanVolume: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
   "Link to hourly snapshot data"
   hourlySnapshots: [PodMarketplaceHourlySnapshot!]! @derivedFrom(field: "podMarketplace")
   "Link to daily snapshot data"
@@ -745,7 +762,7 @@ type PodMarketplace @entity {
 }
 
 type PodMarketplaceHourlySnapshot @entity {
-  "Marketplace ID - Unix Timestamp"
+  "Marketplace ID - Season"
   id: ID!
   "Point in time latest season"
   season: Int!
@@ -775,30 +792,20 @@ type PodMarketplaceHourlySnapshot @entity {
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
-  "Point in time current delta pods listed for sale"
+
   deltaListedPods: BigInt!
-  "Point in time current delta of total pods listed"
   deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
-  "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
-  "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta ordered beans in pod orders created"
   deltaOrderBeans: BigInt!
-  "Point in time current delta available ordered beans in pod orders"
   deltaAvailableOrderBeans: BigInt!
-  "Point in time current delta filled ordered beans in pod orders"
   deltaFilledOrderBeans: BigInt!
-  "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
-  "Point in time current delta bean volume between listings and orders"
   deltaBeanVolume: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -806,7 +813,7 @@ type PodMarketplaceHourlySnapshot @entity {
 }
 
 type PodMarketplaceDailySnapshot @entity {
-  "Marketplace ID - Unix Timestamp"
+  "Marketplace ID - Day"
   id: ID!
   "Point in time latest season"
   season: Int!
@@ -836,30 +843,20 @@ type PodMarketplaceDailySnapshot @entity {
   podVolume: BigInt!
   "Point in time current cumulative bean volume between listings and orders"
   beanVolume: BigInt!
-  "Point in time current delta pods listed for sale"
+
   deltaListedPods: BigInt!
-  "Point in time current delta of total pods listed"
   deltaAvailableListedPods: BigInt!
-  "Point in time current delta pod listings filled"
   deltaFilledListedPods: BigInt!
-  "Point in time current delta pod listings that expired"
   deltaExpiredListedPods: BigInt!
-  "Point in time current delta pod listings that were cancelled"
   deltaCancelledListedPods: BigInt!
-  "Point in time current delta ordered beans in pod orders created"
   deltaOrderBeans: BigInt!
-  "Point in time current delta available ordered beans in pod orders"
   deltaAvailableOrderBeans: BigInt!
-  "Point in time current delta filled ordered beans in pod orders"
   deltaFilledOrderBeans: BigInt!
-  "Point in time current delta pod orders filled"
   deltaFilledOrderedPods: BigInt!
-  "Point in time current delta cancelled ordered beans in pod orders"
   deltaCancelledOrderBeans: BigInt!
-  "Point in time current delta pod volume between listings and orders"
   deltaPodVolume: BigInt!
-  "Point in time current delta bean volume between listings and orders"
   deltaBeanVolume: BigInt!
+
   "Timestamp of initial snapshot creation"
   createdAt: BigInt!
   "Timestamp of last entity update"
@@ -1174,6 +1171,8 @@ type PodFill @entity {
 type Fertilizer @entity {
   "Token address for fert"
   id: ID!
+  "Address of parent beanstalk"
+  beanstalk: String!
   "Total overall suppy of fert tokens"
   supply: BigInt!
   tokens: [FertilizerToken!]! @derivedFrom(field: "fertilizer")
@@ -1231,328 +1230,66 @@ type FertilizerYield @entity {
 ##### Event-Level Data #####
 ##################################
 
-### We need to add these in
-
-"""
-An event is any user action that occurs in a protocol. Generally, they are Ethereum events
-emitted by a function in the smart contracts, stored in transaction receipts as event logs.
-However, some user actions of interest are function calls that don't emit events. For example,
-the deposit and withdraw functions in Yearn do not emit any events. In our subgraphs, we still
-store them as events, although they are not technically Ethereum events emitted by smart
-contracts.
-"""
-interface SiloEvent {
-  " { Event type }-{ Transaction hash }-{ Log index } "
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-interface FieldEvent {
-  " { Event type }-{ Transaction hash }-{ Log index } "
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
 interface MarketplaceEvent {
-  " { Event type }-{ Transaction hash }-{ Log index } "
+  "{ Event type }-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
-type PodTransfer implements FieldEvent @entity(immutable: true) {
-  " podtransfer-{ Transaction hash }-{ Log index } "
+type Chop @entity(immutable: true) {
+  "(chop|convert)-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Account address"
+  farmer: Farmer!
+  "The unripe token which was chopped"
+  unripeToken: UnripeToken!
+  "Unripe token amount which was chopped"
+  unripeAmount: BigInt!
+  "Bdv of the unripe tokens which were chopped"
+  unripeBdv: BigInt!
+  "The underlying ERC20 token received by `farmer` as a result of this chop"
+  underlyingToken: WhitelistTokenSetting!
+  "Amount of underlying tokens `farmer` received"
+  underlyingAmount: BigInt!
+  "Amount of bdv `farmer` received"
+  underlyingBdv: BigInt!
+  "The effective chop rate for this chop"
+  chopRate: BigDecimal!
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Address that received the pods "
-  toFarmer: String!
-  " Address that sent the pods "
-  fromFarmer: String!
-  " Index of the pods sent"
-  index: BigInt!
-  " Total pods being sent"
-  pods: BigInt!
-  " Block number of this event "
+  "The block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type Harvest implements FieldEvent @entity(immutable: true) {
-  "harvest-{ Transaction hash }-{ Log index } "
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Address harvesting beans "
-  farmer: String!
-  " Plots being harvested "
-  plots: [BigInt!]!
-  " Total beans harvested "
-  beans: BigInt!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type Chop implements SiloEvent @entity(immutable: true) {
-  "chop-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Address chopping "
-  farmer: String!
-  " Unripe token being chopped "
-  unripe: String!
-  " Amount being chopped"
-  amount: BigInt!
-  " Underlying token "
-  underlying: String!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type Incentive implements SiloEvent @entity(immutable: true) {
-  "incentive-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Address incentivized "
-  caller: String!
-  " Amount minted as incentive"
-  amount: BigInt!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type Reward implements SiloEvent @entity(immutable: true) {
-  "reward-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Season of reward "
-  season: Int!
-  " Amount minted to pod line"
-  toField: BigInt!
-  " Amount minted to silo"
-  toSilo: BigInt!
-  " Amount minted to fertilizer"
-  toFertilizer: BigInt!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type MetapoolOracle implements SiloEvent @entity(immutable: true) {
-  "metapoolOracle-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Season of oracle "
-  season: Int!
-  " DeltaB for season"
-  deltaB: BigInt!
-  " Cumulative balance A"
-  balanceA: BigInt!
-  " Cumulative balance B"
-  balanceB: BigInt!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type WellOracle implements SiloEvent @entity(immutable: true) {
-  "wellOracle-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Season of oracle "
-  season: Int!
-  " DeltaB for season"
-  deltaB: BigInt!
-  " Time weighted cumulative reserves "
-  cumulativeReserves: Bytes!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type AddDeposit implements SiloEvent @entity(immutable: true) {
-  "addDeposit-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Account adding deposit"
-  account: String!
-  " Token added"
-  token: String!
-  " Season of deposit added "
-  season: Int!
-  " Stem of deposit added "
-  stem: BigInt
-  " Amount of token added "
-  amount: BigInt!
-  " BDV of the deposit "
-  bdv: BigInt!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type RemoveDeposit implements SiloEvent @entity(immutable: true) {
-  "removeDeposit-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Account removing deposit"
-  account: String!
-  " Token removed"
-  token: String!
-  " Season of deposit removed "
-  season: Int!
-  " Stem of deposit removed "
-  stem: BigInt
-  " Amount of token removed "
-  amount: BigInt!
-  " BDV of deposit removed "
-  bdv: BigInt
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type StalkChange implements SiloEvent @entity(immutable: true) {
-  "stalkChange-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Account removing deposit"
-  account: String!
-  " Token removed"
-  delta: BigInt!
-  " Season when the change happened "
-  season: Int!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type SeedChange implements SiloEvent @entity(immutable: true) {
-  "seedChange-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  " Account removing deposit"
-  account: String!
-  " Token removed"
-  delta: BigInt!
-  " Season when the change happened "
-  season: Int!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this chop"
   createdAt: BigInt!
 }
 
 type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   "podListingCreated-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
-  " Account creating the listing"
+  "Account creating the listing"
   account: String!
   "Where these pods were in line when listed"
   placeInLine: BigInt!
-  " Index of the plot listed"
+  "Index of the plot listed"
   index: BigInt!
-  " Start value of the plot listed "
+  "Start value of the plot listed"
   start: BigInt!
   "Amount of pods listed"
   amount: BigInt!
@@ -1568,22 +1305,22 @@ type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   pricingFunction: Bytes
   "Pricing Type"
   pricingType: Int
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
 type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   "podListingFilled-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
   "Account selling pods"
   fromFarmer: String!
@@ -1599,49 +1336,49 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   amount: BigInt!
   "Beans paid to fill the listing"
   costInBeans: BigInt
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
 type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   "seedChange-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
-  " Account cancelling listing"
+  "Account cancelling listing"
   account: String!
   "Where these pods were in line when cancelled"
   placeInLine: BigInt!
-  " Index of plot listing being cancelled"
+  "Index of plot listing being cancelled"
   index: BigInt!
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
 type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCreated-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
-  " Account creating the listing"
+  "Account creating the listing"
   account: String!
-  " ID of the pod order"
+  "ID of the pod order"
   orderId: String!
   """
   The represented value emitted with this event changed with BIP-29 at block 15277986
@@ -1657,22 +1394,22 @@ type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   pricingFunction: Bytes
   "Pricing Type"
   pricingType: Int
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
 type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderFilled-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
   "Account selling pods"
   fromFarmer: String!
@@ -1688,72 +1425,30 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   amount: BigInt!
   "Beans paid to fill the order"
   costInBeans: BigInt
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
 type PodOrderCancelled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCancelled-{ Transaction hash }-{ Log index }"
   id: ID!
-  " Transaction hash of the transaction that emitted this event "
+  "Transaction hash of the transaction that emitted this event"
   hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  " The protocol this transaction belongs to "
+  "The protocol this transaction belongs to"
   protocol: Beanstalk!
-  " Historical ID for joins"
+  "Historical ID for joins"
   historyID: String!
-  " Account cancelling listing"
+  "Account cancelling listing"
   account: String!
-  " ID of order cancelled"
+  "ID of order cancelled"
   orderId: String!
-  " Block number of this event "
+  "Block number of this event"
   blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type WhitelistToken implements SiloEvent @entity(immutable: true) {
-  "whitelistToken-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  "Token address whitelisted"
-  token: String!
-  "Stalk per BDV"
-  stalk: BigInt
-  "Seeds per BDV"
-  seeds: BigInt
-  "Stalk earned per season"
-  stalkPerSeason: BigInt
-  "Selector for token"
-  selector: String
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
-  createdAt: BigInt!
-}
-
-type DewhitelistToken implements SiloEvent @entity(immutable: true) {
-  "dewhitelistToken-{ Transaction hash }-{ Log index }"
-  id: ID!
-  " Transaction hash of the transaction that emitted this event "
-  hash: String!
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
-  logIndex: Int!
-  " The protocol this transaction belongs to "
-  protocol: Beanstalk!
-  "Token address dewhitelisted"
-  token: String!
-  " Block number of this event "
-  blockNumber: BigInt!
-  " Timestamp of this event "
+  "Timestamp of this event"
   createdAt: BigInt!
 }
 
@@ -1769,10 +1464,162 @@ type Germinating @entity {
   isFarmer: Boolean!
   "The season in which the germination started"
   season: Int!
-  "Germinating stalk. This only applies to farmer/Beanstalk address"
+  "Germinating stalk. This only applies to farmer/protocol address"
   stalk: BigInt!
   "Germinating tokens. This only applies to a Token address"
   tokenAmount: BigInt!
   "Germinating bdv. This only applies to a Token address"
   bdv: BigInt!
+}
+
+# This entity exists solely for resolving the issue in LibGerminate when deposits from multiple seasons
+# complete their germination (the event emission itself has a bug)
+type PrevFarmerGerminatingEvent @entity {
+  "Farmer address"
+  id: Bytes!
+  "The `block.number` of the `FarmerGerminatingStalkBalanceChanged` event"
+  eventBlock: BigInt!
+  "The `logIndex` of the `FarmerGerminatingStalkBalanceChanged` event"
+  logIndex: BigInt!
+  "The value for `deltaGerminatingStalk` from this previous `FarmerGerminatingStalkBalanceChanged` event."
+  deltaGerminatingStalk: BigInt!
+}
+
+type UnripeToken @entity {
+  "Token Address"
+  id: Bytes!
+  "The ripe token underlying this unripe asset"
+  underlyingToken: WhitelistTokenSetting!
+  "The total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "The amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "The bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "The amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "The bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "The chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "The amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "The total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "The total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "The total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+  "Season when the previous hourly snapshot was taken/updated"
+  lastHourlySnapshotSeason: Int
+  "Day of when the previous daily snapshot was taken/updated"
+  lastDailySnapshotDay: BigInt
+  "Link to hourly snapshot data"
+  hourlySnapshots: [UnripeTokenHourlySnapshot!]! @derivedFrom(field: "unripeToken")
+  "Link to daily snapshot data"
+  dailySnapshots: [UnripeTokenDailySnapshot!]! @derivedFrom(field: "unripeToken")
+}
+
+type UnripeTokenHourlySnapshot @entity {
+  "UnripeToken ID - Season"
+  id: ID!
+  "Season for the snapshot"
+  season: Int!
+  "Unripe token associated with this snapshot"
+  unripeToken: UnripeToken!
+
+  "Point in time ripe token underlying this unripe asset"
+  underlyingToken: WhitelistTokenSetting!
+  "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "Point in time bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "Point in time amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "Point in time bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "Point in time chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "Point in time amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "Point in time total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "Point in time total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "Point in time total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+
+  deltaUnderlyingToken: Boolean!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaTotalUnderlying: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaAmountUnderlyingOne: BigInt!
+  deltaBdvUnderlyingOne: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaChoppableAmountOne: BigInt!
+  deltaChoppableBdvOne: BigInt!
+  deltaChopRate: BigDecimal!
+  deltaRecapPercent: BigDecimal!
+  deltaTotalChoppedAmount: BigInt!
+  deltaTotalChoppedBdv: BigInt!
+  deltaTotalChoppedBdvReceived: BigInt!
+
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
+}
+
+type UnripeTokenDailySnapshot @entity {
+  "UnripeToken ID - Day"
+  id: ID!
+  "Last season for the snapshot"
+  season: Int!
+  "Unripe token associated with this snapshot"
+  unripeToken: UnripeToken!
+
+  "Point in time ripe token underlying this unripe asset"
+  underlyingToken: WhitelistTokenSetting!
+  "Point in time total amount of `underlyingToken` for this unripe token (getTotalUnderlying)"
+  totalUnderlying: BigInt!
+  "Point in time amount of `underlyingToken` corresponding to one of this unripe token (getUnderlyingPerUnripeToken)"
+  amountUnderlyingOne: BigInt!
+  "Point in time bdv of `amountUnderlyingOne` of `underlyingToken`. Assumed to not always be the same as bdv(id)"
+  bdvUnderlyingOne: BigInt!
+  "Point in time amount of `underlyingToken` which would be received if one of this unripe token were to be chopped (getPenalty)"
+  choppableAmountOne: BigInt!
+  "Point in time bdv that would be received if one of this unripe token were to be chopped"
+  choppableBdvOne: BigInt!
+  "Point in time chop rate, in percent (getPercentPenalty)"
+  chopRate: BigDecimal!
+  "Point in time amount recapitalized, in percent (getRecapFundedPercent)"
+  recapPercent: BigDecimal!
+  "Point in time total amount of this unripe token which has been chopped"
+  totalChoppedAmount: BigInt!
+  "Point in time total bdv of this unripe token which has been chopped"
+  totalChoppedBdv: BigInt!
+  "Point in time total bdv of all `underlyingToken` that has been received from chopping"
+  totalChoppedBdvReceived: BigInt!
+
+  deltaUnderlyingToken: Boolean!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaTotalUnderlying: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaAmountUnderlyingOne: BigInt!
+  deltaBdvUnderlyingOne: BigInt!
+  "Note that the contents of this field are nonsense when deltaUnderlyingToken = true"
+  deltaChoppableAmountOne: BigInt!
+  deltaChoppableBdvOne: BigInt!
+  deltaChopRate: BigDecimal!
+  deltaRecapPercent: BigDecimal!
+  deltaTotalChoppedAmount: BigInt!
+  deltaTotalChoppedBdv: BigInt!
+  deltaTotalChoppedBdvReceived: BigInt!
+
+  "Timestamp of initial snapshot creation"
+  createdAt: BigInt!
+  "Timestamp of last entity update"
+  updatedAt: BigInt!
 }

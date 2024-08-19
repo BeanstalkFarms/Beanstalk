@@ -1,7 +1,32 @@
-specVersion: 0.0.5
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
+  ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: mainnet
+    source:
+      address: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79"
+      abi: genesis
+      startBlock: 13323594
+      endBlock: 13323594
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: genesis
+          file: ../abis/genesis.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts
   - kind: ethereum
     name: genesis
     network: mainnet

@@ -8,7 +8,7 @@ import {
   BEANSTALK,
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_3CRV
+  UNRIPE_LP
 } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -46,7 +46,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
 
   const recapPaidPercent = new BigDecimal(recapPercentResult.value).div(BigDecimal.fromString("1000000"));
   const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(UNRIPE_BEAN, recapPaidPercent);
-  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(UNRIPE_BEAN_3CRV, recapPaidPercent);
+  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(UNRIPE_LP, recapPaidPercent);
   const underlyingLpPool = getUnderlyingUnripe(blockNumber);
 
   const poolBeanReserves = loadOrCreatePool(underlyingLpPool.toHexString(), blockNumber).reserves[0];

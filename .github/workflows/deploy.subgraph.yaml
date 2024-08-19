@@ -28,7 +28,7 @@ jobs:
             exit 1
           fi
           # Check if the subgraph is a valid selection
-          if [[ "${{ github.event.inputs.subgraph }}" != "beanstalk" && "${{ github.event.inputs.subgraph }}" != "bean" && "${{ github.event.inputs.subgraph }}" != "basin" && "${{ github.event.inputs.subgraph }}" != "beanft" ]]; then
+          if [[ ! "${{ github.event.inputs.subgraph }}" =~ ^(beanstalk|bean|basin|beanft) ]]; then
             echo "Error: Subgraph must be one of 'beanstalk', 'bean', 'basin', 'beanft'."
             exit 1
           fi

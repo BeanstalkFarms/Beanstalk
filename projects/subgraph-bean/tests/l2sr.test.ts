@@ -8,7 +8,7 @@ import {
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
-  UNRIPE_BEAN_3CRV
+  UNRIPE_LP
 } from "../../subgraph-core/utils/Constants";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
@@ -46,10 +46,10 @@ describe("L2SR", () => {
     test("Calculation - block 19736119", () => {
       mockSeedGaugeLockedBeansReverts(mockReserves, mockReservesTime);
       mockERC20TokenSupply(UNRIPE_BEAN, BigInt.fromString("109291429462926"));
-      mockERC20TokenSupply(UNRIPE_BEAN_3CRV, BigInt.fromString("88784724593495"));
+      mockERC20TokenSupply(UNRIPE_LP, BigInt.fromString("88784724593495"));
       const recapPaidPercent = BigDecimal.fromString("0.045288");
       const lockedUnderlyingBean = LibLockedUnderlying_getPercentLockedUnderlying(UNRIPE_BEAN, recapPaidPercent);
-      const lockedUnderlyingLp = LibLockedUnderlying_getPercentLockedUnderlying(UNRIPE_BEAN_3CRV, recapPaidPercent);
+      const lockedUnderlyingLp = LibLockedUnderlying_getPercentLockedUnderlying(UNRIPE_LP, recapPaidPercent);
 
       assert.assertTrue(lockedUnderlyingBean.equals(BigDecimal.fromString("0.6620572696973799")));
       assert.assertTrue(lockedUnderlyingLp.equals(BigDecimal.fromString("0.6620572696973799")));
@@ -60,7 +60,7 @@ describe("L2SR", () => {
 
       mockGetRecapPaidPercent(BigDecimal.fromString("0.045288"));
       mockGetTotalUnderlying(UNRIPE_BEAN, BigInt.fromString("24584183207621"));
-      mockGetTotalUnderlying(UNRIPE_BEAN_3CRV, BigInt.fromString("246676046856767267392929"));
+      mockGetTotalUnderlying(UNRIPE_LP, BigInt.fromString("246676046856767267392929"));
       mockERC20TokenSupply(BEAN_WETH_CP2_WELL, BigInt.fromString("256164804872196346760208"));
 
       const lockedBeans = calcLockedBeans(BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
