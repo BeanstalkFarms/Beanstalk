@@ -151,7 +151,16 @@ export type FarmerSilo = FarmerSiloBalances &
   FarmerSiloRewards & {
     migrationNeeded: boolean | undefined;
     balancesSdk: Map<Token, TokenSiloBalance>;
+    mowStatuses: MowStatusTokenMap;
     loading?: boolean;
     error?: string;
     ran: boolean;
   };
+
+export type MowStatusTokenMap = Map<
+  Token,
+  {
+    lastStem: ethers.BigNumber;
+    bdv: ethers.BigNumber;
+  }
+>;

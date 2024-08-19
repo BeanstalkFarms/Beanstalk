@@ -1,11 +1,19 @@
+import {
+  Deposit,
+  ERC20Token,
+  TokenSiloBalance,
+  TokenValue,
+} from '@beanstalk/sdk';
 import React, {
   createContext,
   SyntheticEvent,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from 'react';
 import useTabs from '~/hooks/display/useTabs';
+import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import { exists } from '~/util/UI';
 
 export type TokenDepositsSelectType = 'single' | 'multi';
@@ -17,6 +25,8 @@ const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
 export type TokenDepositsContextType = {
   selected: Set<string>;
   slug: SiloTokenSlug;
+  balances: TokenSiloBalance<TokenValue> | undefined;
+  depositsById: Record<string, Deposit<TokenValue>>;
   setSelected: (
     depositId: string,
     selectType: TokenDepositsSelectType,
@@ -40,10 +50,23 @@ const TokenDepositsContext = createContext<TokenDepositsContextType | null>(
   null
 );
 
-export const TokenDepositsProvider = (props: { children: React.ReactNode }) => {
+export const TokenDepositsProvider = (props: {
+  children: React.ReactNode;
+  token: ERC20Token;
+}) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
+
+  const siloBalances = useFarmerSiloBalanceSdk(props.token);
+
+  const depositMap = useMemo(() => {
+    const map: Record<string, Deposit<TokenValue>> = {};
+    siloBalances?.deposits.forEach((deposit) => {
+      map[deposit.stem.toString()] = deposit; // fix me later to use depositId
+    });
+
+    return map;
+  }, [siloBalances?.deposits]);
 
   const handleSetSelected = useCallback(
     (
@@ -90,6 +113,8 @@ export const TokenDepositsProvider = (props: { children: React.ReactNode }) => {
     <TokenDepositsContext.Provider
       value={{
         selected,
+        balances: siloBalances,
+        depositsById: depositMap,
         slug: slugIndexMap[slugIndex],
         setSlug,
         setSelected: handleSetSelected,

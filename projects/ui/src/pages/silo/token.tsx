@@ -4,7 +4,6 @@ import { Card, Container, Stack, Typography } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
-import usePools from '~/hooks/beanstalk/usePools';
 import { useSdkWhitelist } from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
@@ -17,7 +16,6 @@ import PagePath from '~/components/Common/PagePath';
 import { FontWeight, XXLWidth } from '~/components/App/muiTheme';
 
 import { FC } from '~/types';
-import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import TokenDepositsOverview from '~/components/Silo/Token/TokenDepositsOverview';
 import TokenDepositRewards from '~/components/Silo/Token/TokenDepositRewards';
 import TokenAbout from '~/components/Silo/Token/TokenAbout';
@@ -26,8 +24,6 @@ import {
   useTokenDepositsContext,
 } from '~/components/Silo/Token/TokenDepositsContext';
 import { ERC20Token } from '@beanstalk/sdk';
-import Pool from '~/classes/Pool';
-import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import TokenTransferDeposits from '~/components/Silo/Token/TokenTransferDeposits';
 import Transfer from '~/components/Silo/Actions/Transfer';
 import {
@@ -47,8 +43,6 @@ const SILO_ACTIONS_MAX_WIDTH = '480px';
 
 type TokenPageBaseProps = {
   token: ERC20Token;
-  pool: Pool;
-  siloBalance: FarmerSiloTokenBalance;
 };
 
 const PagePathContent = ({
@@ -116,13 +110,10 @@ const DefaultContent = ({ token }: Pick<TokenPageBaseProps, 'token'>) => (
   </Stack>
 );
 
-const TransferContent = ({
-  token,
-  siloBalance,
-}: Omit<TokenPageBaseProps, 'pool'>) => (
+const TransferContent = ({ token }: Omit<TokenPageBaseProps, 'pool'>) => (
   <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
     <Module sx={{ p: 2, width: '100%' }}>
-      <TokenTransferDeposits token={token} siloBalance={siloBalance} />
+      <TokenTransferDeposits token={token} />
     </Module>
     <Module
       sx={{
@@ -172,26 +163,15 @@ const TokenPage: FC<{}> = () => {
   address = address?.toLowerCase();
 
   const whitelist = useSdkWhitelist();
-  const farmerSilo = useFarmerSilo();
-  const pools = usePools();
-
   const whitelistedToken = whitelist?.[address || ''];
 
   if (!address || !whitelistedToken) {
     return <div>Not found</div>;
   }
 
-  const siloBalance = farmerSilo.balances[whitelistedToken.address];
-
-  const pool = pools[address];
-
   return (
-    <TokenDepositsProvider>
-      <SlugSwitchContent
-        token={whitelistedToken}
-        pool={pool}
-        siloBalance={siloBalance}
-      />
+    <TokenDepositsProvider token={whitelistedToken}>
+      <SlugSwitchContent token={whitelistedToken} />
     </TokenDepositsProvider>
   );
 };

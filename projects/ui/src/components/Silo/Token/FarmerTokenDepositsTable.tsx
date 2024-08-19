@@ -1,16 +1,13 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useMemo, useState } from 'react';
-import { ERC20Token, Token } from '@beanstalk/sdk-core';
+import { ERC20Token, Token, TokenValue } from '@beanstalk/sdk-core';
 import BigNumberJS from 'bignumber.js';
 import { BigNumber } from 'ethers';
 import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
 import useSdk from '~/hooks/sdk';
-import {
-  FarmerSiloTokenBalance,
-  LegacyDepositCrate,
-} from '~/state/farmer/silo';
+
 import { useAccount } from 'wagmi';
-import { transform, trimAddress } from '~/util';
+import { formatTV, transform, trimAddress } from '~/util';
 import { GridColumns } from '@mui/x-data-grid';
 import {
   Box,
@@ -36,27 +33,32 @@ import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
 import { minimizeWindowIcon } from '~/img/icon';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
+import { Deposit } from '@beanstalk/sdk';
+import { useAppSelector } from '~/state';
 import {
   TokenDepositsContextType,
   TokenDepositsSelectType,
   useTokenDepositsContext,
 } from './TokenDepositsContext';
 
-export type FarmerTokenDepositRow = LegacyDepositCrate & { id: string };
+export type FarmerTokenDepositRow = Deposit<TokenValue> & {
+  id: string;
+  mowableStalk: TokenValue;
+};
 
 const FarmerTokenDepositsTable = ({
   token,
-  siloBalance,
   selectType = 'single',
 }: {
   token: Token;
-  siloBalance: FarmerSiloTokenBalance;
   selectType?: TokenDepositsSelectType;
 }) => {
   const sdk = useSdk();
   const theme = useTheme();
   const { address: account } = useAccount();
-  const { selected, setSelected, clear, setSlug } = useTokenDepositsContext();
+  const { selected, depositsById, setSelected, clear, setSlug } =
+    useTokenDepositsContext();
+  const mowStatus = useAppSelector((s) => s._farmer.silo.mowStatuses);
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -64,17 +66,17 @@ const FarmerTokenDepositsTable = ({
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
-  const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
+  const lastStem = mowStatus.get(token)?.lastStem || BigNumber.from(0);
   const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
-  const rows: FarmerTokenDepositRow[] = useMemo(
-    () =>
-      siloBalance?.deposited.crates.map((deposit) => ({
-        id: deposit.stem?.toString(),
-        mowableStalk: deposit.bdv?.multipliedBy(deltaStem).div(10000),
-        ...deposit,
-      })) || [],
-    [siloBalance?.deposited.crates, deltaStem]
-  );
+
+  const rows: FarmerTokenDepositRow[] = useMemo(() => {
+    const rowData = Object.entries(depositsById).map(([key, deposit]) => ({
+      id: key,
+      mowableStalk: deposit.bdv?.mul(deltaStem.toNumber()).div(10000),
+      ...deposit,
+    }));
+    return rowData;
+  }, [depositsById, deltaStem]);
 
   const selectedDeposits = rows.filter((row) => selected.has(row.id));
 
@@ -110,7 +112,7 @@ const FarmerTokenDepositsTable = ({
           <Stack width="100%">
             <Typography textAlign={{ xs: 'left', md: 'right' }}>
               <TokenIcon token={token} css={{ marginBottom: '-2px' }} />{' '}
-              {params.row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+              {formatTV(params.row.amount, 2)}
             </Typography>
             <Typography
               color="text.secondary"
@@ -133,7 +135,7 @@ const FarmerTokenDepositsTable = ({
           <Stack alignItems="flex-end">
             <Typography align="right">
               <TokenIcon token={STALK} />
-              {params.row.stalk.total.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+              {formatTV(params.row.stalk.total, 2)}
             </Typography>
             <Typography
               align="right"
@@ -148,8 +150,7 @@ const FarmerTokenDepositsTable = ({
               >
                 since Deposit
               </Typography>
-              :{' '}
-              {params.row.stalk.grown.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+              : {formatTV(params.row.stalk.grown, 2)}
             </Typography>
           </Stack>
         ),
@@ -171,7 +172,7 @@ const FarmerTokenDepositsTable = ({
           >
             <TokenIcon token={SEEDS} />
             <Typography>
-              {params.row.seeds.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+              {formatTV(params.row.seeds, 2, BigNumberJS.ROUND_HALF_CEIL)}
             </Typography>
           </Stack>
         ),
@@ -274,7 +275,7 @@ const SingleTokenDepositDialogContent = ({
         <Row gap={0.5}>
           <TokenIcon token={token} css={{ height: '16px' }} />
           <Typography>
-            {row.amount.toFormat(2, BigNumberJS.ROUND_HALF_CEIL)}
+            {formatTV(row.amount, 2, BigNumberJS.ROUND_HALF_CEIL)}
           </Typography>
         </Row>
         <Typography color="text.secondary" variant="bodySmall">
@@ -289,7 +290,7 @@ const SingleTokenDepositDialogContent = ({
         <Row gap={0.25}>
           <TokenIcon token={STALK} css={{ maxHeight: '1em' }} />
           <Typography>
-            {row.stalk.total.toFormat(2, BigNumberJS.ROUND_DOWN)}
+            {formatTV(row.stalk.total, 2, BigNumberJS.ROUND_HALF_CEIL)}
           </Typography>
         </Row>
       </Row>
@@ -306,7 +307,7 @@ const SingleTokenDepositDialogContent = ({
           variant="bodySmall"
           fontWeight={FontWeight.normal}
         >
-          {row.stalk.base.toFormat(2, BigNumberJS.ROUND_DOWN)}
+          {formatTV(row.stalk.base, 2, BigNumberJS.ROUND_HALF_CEIL)}
         </Typography>
       </Row>
       <Row justifyContent="space-between" alignItems="flex-start">
@@ -322,7 +323,7 @@ const SingleTokenDepositDialogContent = ({
           variant="bodySmall"
           fontWeight={FontWeight.normal}
         >
-          {row.stalk.grown.toFormat(2, BigNumberJS.ROUND_DOWN)}
+          {formatTV(row.stalk.grown, 2, BigNumberJS.ROUND_HALF_CEIL)}
         </Typography>
       </Row>
     </Stack>
@@ -330,7 +331,9 @@ const SingleTokenDepositDialogContent = ({
       <Typography>Seed</Typography>
       <Row gap={0.3}>
         <TokenIcon token={SEEDS} css={{ height: '16px' }} />
-        <Typography>{row.seeds.toFormat(2, BigNumberJS.ROUND_DOWN)}</Typography>
+        <Typography>
+          {formatTV(row.seeds, 2, BigNumberJS.ROUND_HALF_CEIL)}
+        </Typography>
       </Row>
     </Row>
     <Row

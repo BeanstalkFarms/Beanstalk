@@ -1,34 +1,27 @@
 import React from 'react';
 import { ERC20Token } from '@beanstalk/sdk';
-import Row from '~/components/Common/Row';
-import { Button, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { Button, Stack, Typography } from '@mui/material';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
-import { ZERO_BN } from '~/constants';
 import Fiat from '~/components/Common/Fiat';
+import Row from '~/components/Common/Row';
+import { FontWeight } from '~/components/App/muiTheme';
+import { formatTV } from '~/util';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
 
-const TokenTransferDeposits = ({
-  token,
-  siloBalance,
-}: {
-  token: ERC20Token;
-  siloBalance: FarmerSiloTokenBalance;
-}) => {
-  const { setSlug, clear, selected } = useTokenDepositsContext();
+const TokenTransferDeposits = ({ token }: { token: ERC20Token }) => {
+  const { setSlug, clear, selected, balances } = useTokenDepositsContext();
 
-  const depositedAmount = siloBalance?.deposited?.amount || ZERO_BN;
+  const depositedAmount = balances?.amount;
 
   return (
     <Stack
-      gap={2}
       alignSelf="center"
       width="100%"
       maxWidth={!selected.size ? '838px' : '100%'}
     >
-      <Row justifyContent="space-between">
+      <Row justifyContent="space-between" pb={1.5}>
         <Typography variant="h4">Select Deposits to Transfer</Typography>
         <Button
           variant="outlined-secondary"
@@ -42,18 +35,14 @@ const TokenTransferDeposits = ({
       </Row>
       <Stack>
         <Typography variant="h1">
-          <TokenIcon token={token} />
-          {depositedAmount.toFormat(2)}
+          <TokenIcon token={token} css={{ marginBottom: '-5px' }} />{' '}
+          {formatTV(depositedAmount, 2)}
         </Typography>
-        <Typography variant="subtitle1">
+        <Typography variant="subtitle1" fontWeight={FontWeight.bold}>
           <Fiat token={token} amount={depositedAmount} />
         </Typography>
       </Stack>
-      <FarmerTokenDepositsTable
-        token={token}
-        siloBalance={siloBalance}
-        selectType="multi"
-      />
+      <FarmerTokenDepositsTable token={token} selectType="multi" />
     </Stack>
   );
 };

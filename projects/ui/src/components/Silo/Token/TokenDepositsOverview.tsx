@@ -2,13 +2,11 @@ import React from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
 
-import { useAppSelector } from '~/state';
 import Fiat from '~/components/Common/Fiat';
 import { FontWeight } from '~/components/App/muiTheme';
 import TokenIcon from '~/components/Common/TokenIcon';
 
-import { Token } from '@beanstalk/sdk';
-import { ZERO_BN } from '~/constants';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
@@ -18,9 +16,11 @@ type ITokenDepositsOverview = {
 };
 
 const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
-  const farmerDeposits = useAppSelector((s) => s._farmer.silo.balances);
-  const deposits = farmerDeposits[token.address];
-  const { setSlug } = useTokenDepositsContext();
+  const { setSlug, balances } = useTokenDepositsContext();
+
+  const depositedAmount = balances?.amount || TokenValue.ZERO;
+
+  const amount = new BigNumber(depositedAmount.toHuman());
 
   return (
     <Stack>
@@ -35,17 +35,10 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
                 token={token}
                 css={{ height: '24px', marginBottom: '-3px' }}
               />{' '}
-              {(deposits?.deposited?.amount || ZERO_BN).toFormat(
-                2,
-                BigNumber.ROUND_HALF_DOWN
-              )}
+              {amount.toFormat(2, BigNumber.ROUND_DOWN)}
             </Typography>
             <Typography variant="h4">
-              <Fiat
-                amount={deposits?.deposited?.amount || ZERO_BN}
-                token={token}
-                defaultDisplay="-"
-              />
+              <Fiat amount={amount} token={token} defaultDisplay="-" />
             </Typography>
           </Stack>
         </Stack>
@@ -97,11 +90,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
           </Button>
         </Stack>
       </Stack>
-      <FarmerTokenDepositsTable
-        token={token}
-        siloBalance={farmerDeposits[token.address]}
-        selectType="single"
-      />
+      <FarmerTokenDepositsTable token={token} selectType="single" />
     </Stack>
   );
 };

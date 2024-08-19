@@ -22,6 +22,7 @@ import {
   updateFarmerSiloLoading,
   updateFarmerSiloError,
   updateFarmerSiloRan,
+  updateFarmerSiloMowStatuses,
 } from './actions';
 
 type SiloV3StaticData = {
@@ -322,7 +323,7 @@ export const useFetchFarmerSilo = () => {
             },
           };
         });
-
+        dispatch(updateFarmerSiloMowStatuses(mowStatuses));
         dispatch(updateFarmerSiloBalanceSdk(balances));
       }
 
