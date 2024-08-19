@@ -42,7 +42,7 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseed3, // reseedbean + deploy wells on l2
+    reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
     reseed2, // reseed pod marketplace
     reseed4, // reseed field
