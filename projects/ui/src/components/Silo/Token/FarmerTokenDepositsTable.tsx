@@ -453,22 +453,3 @@ const baseTableCSS = {
     overflow: 'visible !important',
   },
 } as const;
-
-const baseRowCSS = {
-  background: 'white',
-  borderRadius: '10px',
-  boxSizing: 'border-box',
-  outline: '1px solid',
-  outlineColor: 'white',
-  outlineOffset: '-1px',
-  maxHeight: 'none !important',
-  width: '100%',
-  '&:hover': {
-    outlineColor: BeanstalkPalette.blue,
-    backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,
-  },
-  '& >.MuiDataGrid-cell': {
-    minHeight: '65px !important',
-    maxHeight: '65px !important',
-  },
-} as const;
