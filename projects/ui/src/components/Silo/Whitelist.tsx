@@ -402,24 +402,6 @@ const Whitelist: FC<{
                                     />
                                   </Box>
                                   <Row>×</Row>
-                                  <Box sx={{ px: 1, py: 0.5, maxWidth: 245 }}>
-                                    <Stat
-                                      title="% Deposited"
-                                      gap={0.25}
-                                      variant="h4"
-                                      amount={`${pctUnderlyingDeposited
-                                        .times(100)
-                                        .toFixed(2)}%`}
-                                      subtitle={
-                                        <>
-                                          The percentage of all {token.symbol}{' '}
-                                          that is currently Deposited in the
-                                          Silo.
-                                        </>
-                                      }
-                                    />
-                                  </Box>
-                                  <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
                                     {isUnripeLP ? (
                                       <Stat
@@ -468,35 +450,21 @@ const Whitelist: FC<{
                                   <Row>×</Row>
                                   <Box sx={{ px: 1, py: 0.5, maxWidth: 215 }}>
                                     <Stat
-                                      title={`${
-                                        unripeUnderlyingTokens[token.address]
-                                      } Price`}
+                                      title="% Deposited"
                                       gap={0.25}
                                       variant="h4"
-                                      amount={
-                                        <Fiat
-                                          token={
-                                            unripeUnderlyingTokens[
-                                              token.address
-                                            ]
-                                          }
-                                          amount={ONE_BN}
-                                          chop={false}
-                                        />
+                                      amount={`${pctUnderlyingDeposited
+                                        .times(100)
+                                        .toFixed(2)}%`}
+                                      subtitle={
+                                        <>
+                                          The percentage of all {token.symbol}{' '}
+                                          that is currently Deposited in the
+                                          Silo.
+                                        </>
                                       }
-                                      subtitle={`The current price of ${
-                                        unripeUnderlyingTokens[token.address]
-                                          .symbol
-                                      }.`}
                                     />
                                   </Box>
-                                  <Stack
-                                    display={{ xs: 'none', md: 'flex' }}
-                                    alignItems="center"
-                                    justifyContent="center"
-                                  >
-                                    =
-                                  </Stack>
                                 </Stack>
                                 <Divider sx={{ borderColor: 'divider' }} />
                                 <Box sx={{ pl: { xs: 0, md: 2.7 } }}>

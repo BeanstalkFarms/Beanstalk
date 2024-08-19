@@ -1,7 +1,32 @@
-specVersion: 0.0.4
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
+  ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: mainnet
+    source:
+      address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
+      abi: Aquifer
+      startBlock: 17977922
+      endBlock: 17977922
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: Aquifer
+          file: ../../subgraph-core/abis/Aquifer.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts
   - kind: ethereum/contract
     name: Aquifer
     network: mainnet

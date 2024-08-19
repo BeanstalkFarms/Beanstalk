@@ -1,7 +1,32 @@
-specVersion: 0.0.4
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
+  ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Beanstalk
+      startBlock: 12974075
+      endBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: Beanstalk
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts
   - kind: ethereum/contract
     name: BeanV1
     network: mainnet

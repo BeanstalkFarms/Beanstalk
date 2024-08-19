@@ -11,7 +11,12 @@ import { MAX_UINT256 } from "src/constants";
 import { DepositBuilder } from "./silo/DepositBuilder";
 import { DepositOperation } from "./silo/DepositOperation";
 import { Withdraw } from "./silo/Withdraw";
-import { Deposit, TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "./silo/types";
+import {
+  Deposit,
+  TokenSiloBalance,
+  DepositTokenPermitMessage,
+  DepositTokensPermitMessage
+} from "./silo/types";
 import { Transfer } from "./silo/Transfer";
 import { Convert, ConvertDetails } from "./silo/Convert";
 
@@ -62,7 +67,9 @@ export class Silo {
         console.warn("Optimization: use `mow()` instead of `mowMultiple()` for a single token");
       }
 
-      const notWhitelisted = _tokens.find((token) => Silo.sdk.tokens.isWhitelisted(token) === false);
+      const notWhitelisted = _tokens.find(
+        (token) => Silo.sdk.tokens.isWhitelisted(token) === false
+      );
       if (notWhitelisted) throw new Error(`${notWhitelisted.symbol} is not whitelisted`);
 
       addrs = _tokens.map((t) => t.address);
@@ -137,7 +144,11 @@ export class Silo {
    * @param destinationAddress The destination address for the transfer
    * @returns Promise of Transaction
    */
-  async transfer(token: Token, amount: TokenValue, destinationAddress: string): Promise<ContractTransaction> {
+  async transfer(
+    token: Token,
+    amount: TokenValue,
+    destinationAddress: string
+  ): Promise<ContractTransaction> {
     return this.siloTransfer.transfer(token, amount, destinationAddress);
   }
 
@@ -157,7 +168,13 @@ export class Silo {
    * @param fromAmount Amount to convert
    * @returns Promise of Transaction
    */
-  async convert(fromToken: Token, toToken: Token, fromAmount: TokenValue, slippage: number = 0.1, overrides: PayableOverrides = {}) {
+  async convert(
+    fromToken: Token,
+    toToken: Token,
+    fromAmount: TokenValue,
+    slippage: number = 0.1,
+    overrides: PayableOverrides = {}
+  ) {
     return this.siloConvert.convert(fromToken, toToken, fromAmount, slippage, overrides);
   }
 
@@ -194,7 +211,8 @@ export class Silo {
       Silo.sdk.contracts.beanstalk.getGerminatingStem(_token.address)
     ]);
 
-    if (!Silo.sdk.tokens.siloWhitelist.has(_token)) throw new Error(`${_token.address} is not whitelisted in the Silo`);
+    if (!Silo.sdk.tokens.siloWhitelist.has(_token))
+      throw new Error(`${_token.address} is not whitelisted in the Silo`);
 
     /// SETUP
     const balance: TokenSiloBalance = utils.makeTokenSiloBalance();
@@ -237,9 +255,9 @@ export class Silo {
 
       deposited.forEach((deposit) =>
         utils.applyDeposit(balance, _token, stemTip, {
-          stem: deposit.season, // FIXME
-          amount: deposit.amount,
-          bdv: deposit.bdv,
+          stem: deposit.stem, // FIXME
+          amount: deposit.depositedAmount,
+          bdv: deposit.depositedBDV,
           germinatingStem
         })
       );
@@ -315,7 +333,7 @@ export class Silo {
               bdv: deposits[stem].bdv,
               germinatingStem
             });
-          };
+          }
         }
 
         utils.sortCrates(balance);
@@ -353,14 +371,14 @@ export class Silo {
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         // Filter dust crates - should help with crate balance too low errors
-        if (BigNumber.from(deposit.amount).toString() !== "1") {
+        if (BigNumber.from(deposit.depositedAmount).toString() !== "1") {
           utils.applyDeposit(balance, token, stemTip, {
             stem: deposit.stem || deposit.season,
-            amount: deposit.amount,
-            bdv: deposit.bdv,
+            amount: deposit.depositedAmount,
+            bdv: deposit.depositedBDV,
             germinatingStem
           });
-        };
+        }
       });
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);
@@ -395,7 +413,9 @@ export class Silo {
    */
   async getStalk(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk
+      .balanceOfStalk(account)
+      .then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
   }
 
   /**
@@ -405,7 +425,9 @@ export class Silo {
    */
   async getSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk
+      .balanceOfLegacySeeds(account)
+      .then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
   }
 
   /**
@@ -416,7 +438,9 @@ export class Silo {
    */
   async getEarnedBeans(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfEarnedBeans(account).then((v) => Silo.sdk.tokens.BEAN.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk
+      .balanceOfEarnedBeans(account)
+      .then((v) => Silo.sdk.tokens.BEAN.fromBlockchain(v));
   }
 
   /**
@@ -424,7 +448,9 @@ export class Silo {
    */
   async getEarnedStalk(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk.balanceOfEarnedStalk(account).then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
+    return Silo.sdk.contracts.beanstalk
+      .balanceOfEarnedStalk(account)
+      .then((v) => Silo.sdk.tokens.STALK.fromBlockchain(v));
   }
 
   /**
@@ -470,9 +496,9 @@ export class Silo {
    * TODO: Check if whitelisted?
    */
   async getStemTips(tokens: Token[]) {
-    return Promise.all(tokens.map((token) => this.getStemTip(token).then((tip) => [token.address, tip] as const))).then(
-      (tips) => new Map<String, BigNumber>(tips)
-    );
+    return Promise.all(
+      tokens.map((token) => this.getStemTip(token).then((tip) => [token.address, tip] as const))
+    ).then((tips) => new Map<String, BigNumber>(tips));
   }
 
   /**
@@ -502,7 +528,8 @@ export class Silo {
     const deadline = _deadline || MAX_UINT256;
     const [domain, nonce] = await Promise.all([
       permitUtils.getEIP712Domain(),
-      _nonce || Silo.sdk.contracts.beanstalk.depositPermitNonces(owner).then((nonce) => nonce.toString())
+      _nonce ||
+        Silo.sdk.contracts.beanstalk.depositPermitNonces(owner).then((nonce) => nonce.toString())
     ]);
 
     return permitUtils.createTypedDepositTokenPermitData(domain, {
@@ -540,13 +567,16 @@ export class Silo {
     _nonce?: string,
     _deadline?: string
   ): Promise<EIP712TypedData<DepositTokensPermitMessage>> {
-    if (tokens.length !== values.length) throw new Error("Input mismatch: number of tokens does not equal number of values");
-    if (tokens.length === 1) console.warn("Optimization: use permitDepositToken when permitting one Silo Token.");
+    if (tokens.length !== values.length)
+      throw new Error("Input mismatch: number of tokens does not equal number of values");
+    if (tokens.length === 1)
+      console.warn("Optimization: use permitDepositToken when permitting one Silo Token.");
 
     const deadline = _deadline || MAX_UINT256;
     const [domain, nonce] = await Promise.all([
       permitUtils.getEIP712Domain(),
-      _nonce || Silo.sdk.contracts.beanstalk.depositPermitNonces(owner).then((nonce) => nonce.toString())
+      _nonce ||
+        Silo.sdk.contracts.beanstalk.depositPermitNonces(owner).then((nonce) => nonce.toString())
     ]);
 
     return permitUtils.createTypedDepositTokensPermitData(domain, {
