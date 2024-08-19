@@ -65,14 +65,6 @@ contract TransmitToForkTest is TestHelper {
     }
 
     /**
-     * @notice Performs migrations that should revert.
-     * @dev Can revert at source if assets do not exist or destination if assets not compatible.
-     */
-    // function test_transmitRevert() public {}
-
-    // fuzz?  if deposit amount == 0 ?
-
-    /**
      * @notice Performs a migration of all asset types from a Source to Destination fork.
      */
     function test_transmitDeposits(uint256 beanDepositAmount, uint256 lpDepositAmount) public {
@@ -427,7 +419,167 @@ contract TransmitToForkTest is TestHelper {
     }
 
     /**
+     * @notice Performs migrations that should revert.
+     * @dev Can revert at source if assets do not exist or destination if assets not compatible.
+     */
+    function test_transmitRevert() public {
+        address user = farmers[2];
+
+        // Deposit reverts.
+        {
+            IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](
+                1
+            );
+            IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](0);
+            IMockFBeanstalk.SourceFertilizer[]
+                memory fertilizer = new IMockFBeanstalk.SourceFertilizer[](1);
+
+            // Revert Deposit does not exist.
+            deposits[0] = IMockFBeanstalk.SourceDeposit(
+                C.BEAN,
+                100e6,
+                1,
+                new uint256[](2),
+                0,
+                0,
+                0,
+                0,
+                address(0),
+                0
+            );
+            vm.expectRevert();
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+
+            // Revert LP amount out too high.
+            uint256 lpDepositAmount = 100e18;
+            depositForUser(user, C.BEAN_ETH_WELL, lpDepositAmount);
+            int96 lpStem = bs.stemTipForToken(C.BEAN_ETH_WELL);
+            passGermination();
+            uint256[] memory minTokensOut = new uint256[](2);
+            minTokensOut[0] = 1;
+            minTokensOut[1] = 1;
+            uint256 lpAmountOut = 1_000_000e18;
+            deposits[0] = IMockFBeanstalk.SourceDeposit(
+                C.BEAN_ETH_WELL,
+                lpDepositAmount,
+                lpStem,
+                minTokensOut,
+                lpAmountOut,
+                type(uint256).max,
+                0, // populated by source
+                0, // populated by source
+                address(0), // populated by source
+                0 // populated by source
+            );
+            vm.expectRevert(); // 0xd58ad03f // error SlippageOut
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+        }
+
+        // Plot reverts.
+        {
+            IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](
+                0
+            );
+            IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](1);
+            IMockFBeanstalk.SourceFertilizer[]
+                memory fertilizer = new IMockFBeanstalk.SourceFertilizer[](1);
+
+            // Revert Plot does not exist.
+            plots[0] = IMockFBeanstalk.SourcePlot(
+                SRC_FIELD, // fieldId
+                420, // plotId
+                69, // amount
+                0 // existingIndex
+            );
+            vm.expectRevert();
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+
+            // Revert bad existing index.
+            uint256 podsPerSow = sowForUser(user, 1000e6);
+            plots[0] = IMockFBeanstalk.SourcePlot(
+                SRC_FIELD, // fieldId
+                0, // plotId
+                podsPerSow, // amount
+                1 // existingIndex
+            );
+            vm.expectRevert("existingIndex non null");
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+        }
+
+        // Fertilizer Reverts.
+        // Plot reverts.
+        {
+            IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](
+                0
+            );
+            IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](0);
+            IMockFBeanstalk.SourceFertilizer[]
+                memory fertilizer = new IMockFBeanstalk.SourceFertilizer[](1);
+
+            // Revert Fert does not exist.
+            fertilizer[0] = IMockFBeanstalk.SourceFertilizer(
+                60, // id
+                100, // amount
+                0 // _remainingBpf
+            );
+            vm.expectRevert();
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+        }
+    }
+
+    /**
      * @notice Performs a migration of all asset types from a Source to Destination Beanstalk.
      */
-    // function test_transmitAll() public {}
+    function test_transmitAll() public {
+        address user = farmers[2];
+        IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](1);
+        IMockFBeanstalk.SourcePlot[] memory plots = new IMockFBeanstalk.SourcePlot[](1);
+        IMockFBeanstalk.SourceFertilizer[]
+            memory fertilizer = new IMockFBeanstalk.SourceFertilizer[](1);
+
+        uint256 beanDepositAmount = 10_000e6;
+        depositForUser(user, C.BEAN, beanDepositAmount);
+        int96 beanStem = bs.stemTipForToken(C.BEAN);
+        passGermination();
+        deposits[0] = IMockFBeanstalk.SourceDeposit(
+            C.BEAN,
+            beanDepositAmount,
+            beanStem,
+            new uint256[](2), // Not used for Bean deposits.
+            0, // Not used for Bean deposits.
+            0, // Not used for Bean deposits.
+            0, // populated by source
+            0, // populated by source
+            address(0), // populated by source
+            0 // populated by source
+        );
+
+        uint256 sowAmount = 1000e6;
+        uint256 plotIndex =  bs.podIndex(SRC_FIELD);
+        uint256 podsAmount = sowForUser(user, sowAmount);
+        // Initial Migration of a Plot. With index != 0.
+        plots[0] = IMockFBeanstalk.SourcePlot(
+            SRC_FIELD, // fieldId
+            plotIndex, // plotId
+            podsAmount, // amount
+            0 // prevDestIndex
+        );
+
+        uint256 ethAmountFert = 1.5e18;
+        uint128 fertId = bs.getEndBpf();
+        uint256 fertAmount0 = buyFertForUser(user, ethAmountFert);
+        fertilizer[0] = IMockFBeanstalk.SourceFertilizer(
+            fertId, // id
+            fertAmount0, // amount
+            0 // _remainingBpf
+        );
+
+        vm.prank(user);
+        bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+    }
 }
