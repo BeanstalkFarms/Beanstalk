@@ -216,14 +216,7 @@ const FarmerTokenDepositsTable = ({
           seeds: true,
         }}
         {...(rows.length < 10 ? { hideFooter: true } : {})}
-        tableCss={{
-          ...baseTableCSS,
-          px: 0,
-          '& .MuiDataGrid-row': {
-            ...baseRowCSS,
-            cursor: 'pointer',
-          },
-        }}
+        tableCss={baseTableCSS}
         classes={{
           cell: 'data-grid-cell-overflow',
         }}
@@ -402,6 +395,7 @@ const CircleSelect = ({ isSelected }: { isSelected: boolean }) => {
 // ---------- CSS ----------
 
 const baseTableCSS = {
+  px: 0,
   '& .MuiDataGrid-root': {
     '& .MuiDataGrid-cell': {
       outline: 'none',
@@ -411,7 +405,7 @@ const baseTableCSS = {
       },
     },
     '& .MuiDataGrid-virtualScrollerRenderZone': {
-      '& .MuiDataGrid-row': {
+      '& .MuiDataGrid-row:not(:last-child)': {
         marginBottom: '10px',
       },
     },
@@ -431,6 +425,26 @@ const baseTableCSS = {
     '&:active': {
       outline: 'none',
     },
+  },
+
+  '& .MuiDataGrid-row': {
+    background: 'white',
+    borderRadius: '10px',
+    boxSizing: 'border-box',
+    outline: '1px solid',
+    outlineColor: 'white',
+    outlineOffset: '-1px',
+    maxHeight: 'none !important',
+    width: '100%',
+    '&:hover': {
+      outlineColor: BeanstalkPalette.blue,
+      backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,
+    },
+    '& >.MuiDataGrid-cell': {
+      minHeight: '65px !important',
+      maxHeight: '65px !important',
+    },
+    cursor: 'pointer',
   },
 
   // enable overflow of text in cells

@@ -104,10 +104,7 @@ const TableCard: FC<TableCardProps> = ({
     const _rowHeight = (rowHeight || 36) + rowSpacing * 10;
 
     return (
-      60.5 +
-      (hideFooter ? 0 : 36) +
-      Math.min(rows.length, maxRows) * _rowHeight +
-      rowSpacing * 10
+      60.5 + (hideFooter ? 0 : 36) + Math.min(rows.length, maxRows) * _rowHeight
     );
   }, [rows, rowSpacing, rowHeight, hideFooter, maxRows]);
 

@@ -32,6 +32,7 @@ const TokenAbout = ({ token }: { token: Token }) => {
   const underlying = isPool ? pools[token.address]?.underlying : undefined;
 
   const amounts = balances[token.address];
+  const deposited = amounts?.deposited.amount;
 
   const isWell = sdk.tokens.siloWhitelistedWellLPAddresses.find(
     (a) => a === token.address
@@ -62,18 +63,16 @@ const TokenAbout = ({ token }: { token: Token }) => {
         <Typography variant="subtitle1">Total value Deposited</Typography>
         <Stack textAlign="right">
           <Row gap={0.25}>
-            <TokenIcon token={token} />
             <Typography>
-              {(amounts?.deposited?.amount || ZERO_BN).toFormat(
-                2,
-                BigNumber.ROUND_HALF_CEIL
-              )}
+              <TokenIcon token={token} css={{ marginBottom: '-2px' }} />{' '}
+              {deposited?.toFormat(2, BigNumber.ROUND_DOWN) ?? '-'}
             </Typography>
           </Row>
           <Typography variant="bodySmall" color="text.secondary">
             <Fiat
               token={token}
-              amount={amounts?.deposited?.amount || ZERO_BN}
+              amount={amounts?.deposited?.amount}
+              defaultDisplay="-"
             />
           </Typography>
         </Stack>
