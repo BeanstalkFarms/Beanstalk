@@ -1,13 +1,8 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import React, { useCallback, useMemo } from 'react';
+import { Box, Divider, Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
-import {
-  ERC20Token,
-  Token,
-  TokenSiloBalance,
-  TokenValue,
-} from '@beanstalk/sdk';
+import { Deposit, ERC20Token, Token, TokenValue } from '@beanstalk/sdk';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import {
@@ -50,8 +45,8 @@ import {
   TransferFarmStep,
   WithdrawFarmStep,
 } from '~/lib/Txn';
-import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import { useTokenDepositsContext } from '../Token/TokenDepositsContext';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -65,9 +60,9 @@ export type TransferFormValues = FormStateNew &
 const TransferForm: FC<
   FormikProps<TransferFormValues> & {
     token: Token;
-    siloBalance: TokenSiloBalance | undefined;
     season: BigNumber;
     plantAndDoX: PlantAndDoX | undefined;
+    selectedDeposits: Deposit<TokenValue>[];
   }
 > = ({
   // Formik
@@ -75,39 +70,14 @@ const TransferForm: FC<
   isSubmitting,
   // Custom
   token: whitelistedToken,
-  siloBalance,
+  selectedDeposits,
   season,
   plantAndDoX,
 }) => {
   const sdk = useSdk();
-  const [migrationNeeded, setMigrationNeeded] = React.useState(false);
   const { BEAN, STALK, SEEDS } = sdk.tokens;
 
   // Check address on change
-
-  useEffect(() => {
-    const check = async (address: string) => {
-      try {
-        const needed = await sdk.contracts.beanstalk.migrationNeeded(
-          address.toLocaleLowerCase()
-        );
-        setMigrationNeeded(needed);
-      } catch (err) {
-        console.error(
-          'Error while checking if address needs migration: ',
-          address,
-          err
-        );
-      }
-    };
-
-    if (values.to.length === 42) {
-      check(values.to);
-    } else {
-      setMigrationNeeded(false);
-    }
-  }, [sdk.contracts.beanstalk, values.to]);
-
   /// Claim and Plant
   const txnActions = useFarmerFormTxnsActions({ mode: 'plantToggle' });
   const isUsingPlant = Boolean(
@@ -123,7 +93,7 @@ const TransferForm: FC<
   // Results
   const withdrawResult = useMemo(() => {
     const amount = BEAN.amount(values.tokens[0].amount?.toString() || '0');
-    const deposits = siloBalance?.deposits || [];
+    const deposits = selectedDeposits || [];
 
     if (!isUsingPlant && (amount.lte(0) || !deposits.length)) return null;
     if (isUsingPlant && plantAndDoX?.getAmount().lte(0)) return null;
@@ -142,7 +112,7 @@ const TransferForm: FC<
     plantAndDoX,
     sdk.silo.siloWithdraw,
     season,
-    siloBalance?.deposits,
+    selectedDeposits,
     values.tokens,
     whitelistedToken,
   ]);
@@ -153,7 +123,16 @@ const TransferForm: FC<
   );
 
   // derived
-  const depositedBalance = siloBalance?.amount;
+  const depositedBalance = useMemo(() => {
+    const amt = selectedDeposits.reduce((acc, deposit) => {
+      if (deposit?.amount) {
+        return acc.add(deposit.amount);
+      }
+      return acc;
+    }, TokenValue.ZERO);
+    return amt;
+  }, [selectedDeposits]);
+
   const isReady = withdrawResult && !withdrawResult.amount.lt(0);
 
   // Input props
@@ -243,11 +222,12 @@ const TransferForm: FC<
                 <>
                   <TxnSeparator />
                   <TokenOutputs />
-                  {withdrawResult?.amount.abs().gt(0) && (
-                    <WarningAlert>
-                      More recent Deposits are Transferred first.
-                    </WarningAlert>
-                  )}
+                  {withdrawResult?.amount.abs().gt(0) &&
+                    selectedDeposits.length > 1 && (
+                      <WarningAlert>
+                        More recent Deposits are Transferred first.
+                      </WarningAlert>
+                    )}
                   <AdditionalTxnsAccordion filter={disabledActions} />
                   <Box>
                     <TxnAccordion>
@@ -336,38 +316,6 @@ const TransferForm: FC<
               )}
           </>
         )}
-        {migrationNeeded && (
-          // <Box>
-          //   <Typography variant="body1" color="error.main">
-          //     Migration Needed
-          //   </Typography>
-          //   <Typography variant="body1" color="text.primary">
-          //     Transfers can only be made to accounts that have migrated to Silo
-          //     v3. The account you are trying to transfer to has not migrated
-          //     yet.
-          //   </Typography>
-          // </Box>
-          <Grid
-            container
-            spacing={0}
-            direction="column"
-            alignItems="center"
-            sx={{ background: '#fdf4e7' }}
-          >
-            <Box component="section" sx={{ p: 2, minWidth: '400px' }}>
-              <Typography variant="h3" align="center">
-                Migration Required
-              </Typography>
-              <br />
-              <Typography variant="body1" align="center">
-                Transfers can only be made to accounts that have migrated to
-                Silo v3. The account you are trying to transfer to has not
-                migrated yet.
-              </Typography>
-              <br />
-            </Box>
-          </Grid>
-        )}
         <SmartSubmitButton
           loading={isSubmitting}
           disabled={
@@ -375,8 +323,7 @@ const TransferForm: FC<
             !depositedBalance ||
             depositedBalance.eq(0) ||
             isSubmitting ||
-            values.to === '' ||
-            migrationNeeded === true
+            values.to === ''
           }
           type="submit"
           variant="contained"
@@ -399,17 +346,22 @@ const TransferPropProvider: FC<{
 }> = ({ token }) => {
   const sdk = useSdk();
   const account = useAccount();
+  const { selected, depositsById, clear } = useTokenDepositsContext();
 
   /// Beanstalk
   const season = useSeason();
 
   /// Farmer
   const [refetchSilo] = useFetchBeanstalkSilo();
-  const siloBalance = useFarmerSiloBalanceSdk(token);
 
   /// Form
   const middleware = useFormMiddleware();
   const { txnBundler, plantAndDoX, refetch } = useFormTxnContext();
+
+  const selectedDeposits = useMemo(
+    () => Array.from(selected).map((id) => depositsById[id]),
+    [depositsById, selected]
+  );
 
   const initialValues: TransferFormValues = useMemo(
     () => ({
@@ -435,7 +387,9 @@ const TransferPropProvider: FC<{
       values: TransferFormValues,
       formActions: FormikHelpers<TransferFormValues>
     ) => {
-      let txToast;
+      const txToast = new TransactionToast({
+        success: 'Transfer successful.',
+      });
       try {
         middleware.before();
         if (!account) throw new Error('Missing signer');
@@ -443,7 +397,7 @@ const TransferPropProvider: FC<{
           throw new Error('Please enter a valid recipient address.');
         }
 
-        if (!siloBalance?.deposits) {
+        if (!selectedDeposits.length) {
           throw new Error('No balances found');
         }
 
@@ -467,7 +421,7 @@ const TransferPropProvider: FC<{
         if (totalAmount.lte(0)) throw new Error('Invalid amount.');
 
         const transferTxn = new TransferFarmStep(sdk, token, account, [
-          ...siloBalance.deposits,
+          ...selectedDeposits,
         ]);
 
         transferTxn.build(
@@ -487,11 +441,10 @@ const TransferPropProvider: FC<{
           token.displayDecimals
         );
 
-        txToast = new TransactionToast({
+        txToast.setToastMessages({
           loading: `Transferring ${withdrawAmtStr} ${
             token.name
           } to ${trimAddress(values.to, true)}.`,
-          success: 'Transfer successful.',
         });
 
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
@@ -506,29 +459,25 @@ const TransferPropProvider: FC<{
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
+        clear();
         await refetch(actionsPerformed, { farmerSilo: true }, [refetchSilo]);
 
         txToast.success(receipt);
 
         formActions.resetForm();
       } catch (err) {
-        if (txToast) {
-          if (err instanceof Error) {
-            if (err.message.includes('SafeMath: subtraction overflow')) {
-              txToast.error({
-                code: 'CALL_EXCEPTION',
-                message:
-                  'Germinating Bean Deposits currently cannot be Transferred. A fix is being implemented. In the meantime, you can Transfer in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
-              });
-            } else {
-              txToast.error(err);
-            }
+        if (err instanceof Error) {
+          if (err.message.includes('SafeMath: subtraction overflow')) {
+            txToast.error({
+              code: 'CALL_EXCEPTION',
+              message:
+                'Germinating Bean Deposits currently cannot be Transferred. A fix is being implemented. In the meantime, you can Transfer in 2 Seasons once your Bean Deposits are no longer Germinating. See Discord for details.',
+            });
           } else {
             txToast.error(err);
           }
         } else {
-          const toast = new TransactionToast({});
-          toast.error(err);
+          txToast.error(err);
         }
         formActions.setSubmitting(false);
       }
@@ -536,14 +485,15 @@ const TransferPropProvider: FC<{
     [
       middleware,
       account,
-      siloBalance?.deposits,
-      token,
-      sdk,
-      season,
+      selectedDeposits,
       plantAndDoX,
+      sdk,
+      token,
+      season,
       txnBundler,
       refetch,
       refetchSilo,
+      clear,
     ]
   );
 
@@ -552,9 +502,9 @@ const TransferPropProvider: FC<{
       {(formikProps: FormikProps<TransferFormValues>) => (
         <TransferForm
           token={token}
-          siloBalance={siloBalance}
           season={season}
           plantAndDoX={plantAndDoX.plantAction}
+          selectedDeposits={selectedDeposits}
           {...formikProps}
         />
       )}

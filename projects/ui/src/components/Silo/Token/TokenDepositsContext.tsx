@@ -61,7 +61,7 @@ export const TokenDepositsProvider = (props: {
 
   const depositMap = useMemo(() => {
     const map: Record<string, Deposit<TokenValue>> = {};
-    siloBalances?.deposits.forEach((deposit) => {
+    (siloBalances?.deposits || []).forEach((deposit) => {
       map[deposit.stem.toString()] = deposit; // fix me later to use depositId
     });
 
