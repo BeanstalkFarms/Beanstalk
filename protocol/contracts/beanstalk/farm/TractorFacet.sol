@@ -18,7 +18,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title TractorFacet handles tractor and blueprint operations.
- * @author funderberker, 0xm00neth
+ * @author funderberker
  */
 contract TractorFacet is Invariable, ReentrancyGuard {
     using LibBytes for bytes32;
