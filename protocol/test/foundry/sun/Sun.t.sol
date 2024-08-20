@@ -54,7 +54,11 @@ contract SunTest is TestHelper {
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) no pods should be paid off.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(address(bs)), uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(
+                C.bean().balanceOf(address(bs)),
+                uint256(deltaB),
+                "invalid bean minted +deltaB"
+            );
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.

@@ -88,7 +88,12 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         __doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
     }
 
-    function _safeBurn(address from, uint256 id, uint256 amount, bytes memory data) internal virtual {
+    function _safeBurn(
+        address from,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual {
         require(from != address(0), "ERC1155: burn from the zero address");
 
         address operator = _msgSender();
