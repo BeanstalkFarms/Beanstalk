@@ -15,6 +15,9 @@ import {C} from "contracts/C.sol";
  * @dev Fertilizer is re-issued to each holder. Barn raise is set to L1 state.
  */
 contract ReseedBarn {
+
+    event FertilizerMigrated(address account, uint128 fid, uint128 amount, uint128 lastBpf);
+
     /**
      * @notice contains data per account for Fertilizer.
      */
@@ -66,6 +69,12 @@ contract ReseedBarn {
                 // but is a contract on L2, the contract will skip the issuance of their fertilizer.
                 if (!hasCode(f.accountData[j].account)) {
                     fertilizerProxy.beanstalkMint(
+                        f.accountData[j].account,
+                        fid,
+                        f.accountData[j].amount,
+                        f.accountData[j].lastBpf
+                    );
+                    emit FertilizerMigrated(
                         f.accountData[j].account,
                         fid,
                         f.accountData[j].amount,
