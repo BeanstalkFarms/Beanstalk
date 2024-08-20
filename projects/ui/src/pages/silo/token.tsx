@@ -36,6 +36,7 @@ import TokenLambdaConvert from '~/components/Silo/Token/TokenLambdaConvert';
 import ToggleTabGroup from '~/components/Common/ToggleTabGroup';
 import Row from '~/components/Common/Row';
 import CloseIcon from '@mui/icons-material/Close';
+import LambdaConvert from '~/components/Silo/Actions/LambdaConvert';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -132,30 +133,58 @@ const LambdaConvertContent = ({
   handleClose,
 }: Props & {
   handleClose: () => void;
-}) => (
-  <Stack width="100%" alignItems="center">
-    <Module sx={{ width: '100%', maxWidth: '903px' }}>
-      <ModuleHeader pb={1}>
-        <Row justifyContent="space-between">
-          <Typography variant="h4">Update Deposits</Typography>
-          <Button
-            variant="outlined-secondary"
-            color="secondary"
-            size="small"
-            endIcon={<CloseIcon fontSize="inherit" />}
-            onClick={handleClose}
-          >
-            Close
-          </Button>
-        </Row>
-      </ModuleHeader>
-      <ModuleContent px={2}>
-        <TokenLambdaConvert token={token} />
-      </ModuleContent>
-    </Module>
-  </Stack>
-);
+}) => {
+  const { selected } = useTokenDepositsContext();
+  const hasSelected = Boolean(selected.size);
 
+  return (
+    <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
+      <Stack width="100%" alignItems="center">
+        <Module sx={{ width: '100%', maxWidth: '903px' }}>
+          <ModuleHeader pb={1}>
+            <Row justifyContent="space-between">
+              <Typography variant="h4" fontWeight={FontWeight.bold}>
+                Update Deposits
+              </Typography>
+              <Button
+                variant="outlined-secondary"
+                color="secondary"
+                size="small"
+                endIcon={<CloseIcon fontSize="inherit" />}
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            </Row>
+          </ModuleHeader>
+          <ModuleContent px={2}>
+            <TokenLambdaConvert token={token} />
+          </ModuleContent>
+        </Module>
+      </Stack>
+      {hasSelected && (
+        <Module
+          sx={{
+            maxWidth: {
+              lg: SILO_ACTIONS_MAX_WIDTH,
+              width: '100%',
+              height: '100%',
+            },
+          }}
+        >
+          <ModuleHeader>
+            <Typography variant="h4" fontWeight={FontWeight.bold}>
+              Update Deposits
+            </Typography>
+          </ModuleHeader>
+          <ModuleContent px={2}>
+            <LambdaConvert />
+          </ModuleContent>
+        </Module>
+      )}
+    </Stack>
+  );
+};
 const TokenLambdasView = () => {
   const { token, slug, setSlug, clear } = useTokenDepositsContext();
 

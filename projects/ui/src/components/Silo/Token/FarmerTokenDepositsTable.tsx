@@ -104,20 +104,29 @@ const FarmerTokenDepositsTable = ({
         align: isMobile ? 'left' : 'right',
         headerAlign: isMobile ? 'left' : 'right',
         valueGetter: (params) => params.row.amount.toNumber(),
-        renderCell: (params) => (
-          <Stack width="100%">
-            <Typography textAlign={{ xs: 'left', md: 'right' }}>
-              <TokenIcon token={token} css={{ marginBottom: '-2px' }} />{' '}
-              {formatTV(params.row.amount, 2)}
-            </Typography>
-            <Typography
-              color="text.secondary"
-              textAlign={{ xs: 'left', md: 'right' }}
-            >
-              <Fiat token={token} amount={params.row.amount} />
-            </Typography>
-          </Stack>
-        ),
+        renderCell: (params) => {
+          const isMultiSelect = selectType === 'multi';
+          const isSelected = selected.has(params.row.id);
+          return (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              {isMultiSelect && isMobile ? (
+                <CircleSelect isSelected={isSelected} />
+              ) : null}
+              <Stack width="100%">
+                <Typography textAlign={{ xs: 'left', md: 'right' }}>
+                  <TokenIcon token={token} css={{ marginBottom: '-3px' }} />{' '}
+                  {formatTV(params.row.amount, 2)}
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  textAlign={{ xs: 'left', md: 'right' }}
+                >
+                  <Fiat token={token} amount={params.row.amount} />
+                </Typography>
+              </Stack>
+            </Stack>
+          );
+        },
         sortable: true,
       },
       {
