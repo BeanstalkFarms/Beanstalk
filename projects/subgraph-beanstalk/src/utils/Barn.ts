@@ -52,10 +52,10 @@ export function unripeChopped(params: ChopParams): void {
   chop.farmer = params.account.toHexString();
   chop.unripeToken = unripe.id;
   chop.unripeAmount = params.unripeAmount;
-  chop.unripeBdv = params.unripeAmount.times(unripeBdvOne);
+  chop.unripeBdv = params.unripeAmount.times(unripeBdvOne).div(BI_10.pow(<u8>unripeWhitelist.decimals));
   chop.underlyingToken = unripe.underlyingToken;
   chop.underlyingAmount = params.underlyingAmount;
-  chop.underlyingBdv = params.underlyingAmount.times(underlyingBdvOne);
+  chop.underlyingBdv = params.underlyingAmount.times(underlyingBdvOne).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
   chop.chopRate = unripe.chopRate;
   chop.hash = params.event.transaction.hash.toHexString();
   chop.blockNumber = params.event.block.number;
@@ -63,8 +63,8 @@ export function unripeChopped(params: ChopParams): void {
   chop.save();
 
   unripe.totalChoppedAmount = unripe.totalChoppedAmount.plus(chop.unripeAmount);
-  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(chop.unripeBdv).div(BI_10.pow(<u8>unripeWhitelist.decimals));
-  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(chop.underlyingBdv).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
+  unripe.totalChoppedBdv = unripe.totalChoppedBdv.plus(chop.unripeBdv);
+  unripe.totalChoppedBdvReceived = unripe.totalChoppedBdvReceived.plus(chop.underlyingBdv);
   unripe.save();
 
   updateUnripeStats(Address.fromBytes(unripe.id), params.event.address, params.event.block);
