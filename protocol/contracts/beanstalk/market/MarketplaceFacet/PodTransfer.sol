@@ -17,6 +17,7 @@ contract PodTransfer is ReentrancyGuard {
     event PlotTransfer(
         address indexed from,
         address indexed to,
+        uint256 fieldId,
         uint256 indexed index,
         uint256 amount
     );
@@ -53,9 +54,10 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
+        require(amount > 0, "Marketplace: amount must be > 0.");
         LibField.createPlot(to, fieldId, index + start, amount);
         removePlot(from, fieldId, index, start, amount + start);
-        emit PlotTransfer(from, to, index + start, amount);
+        emit PlotTransfer(from, to, fieldId, index + start, amount);
     }
 
     function removePlot(
@@ -75,8 +77,7 @@ contract PodTransfer is ReentrancyGuard {
 
         if (amountAfterEnd > 0) {
             uint256 newIndex = index + end;
-            s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
-            s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+            LibField.createPlot(account, fieldId, newIndex, amountAfterEnd);
         }
     }
 

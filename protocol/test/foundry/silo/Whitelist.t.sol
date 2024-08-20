@@ -9,6 +9,7 @@ import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {WhitelistFacet} from "contracts/beanstalk/silo/WhitelistFacet/WhitelistFacet.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {OracleFacet} from "contracts/beanstalk/sun/OracleFacet.sol";
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @notice Tests the functionality of whitelisting.
@@ -53,7 +54,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         vm.expectRevert("LibDiamond: Must be contract or owner");
@@ -67,39 +68,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-    }
-
-    // reverts with invalid BDV selector.
-    function test_whitelistRevertInvalidBDVSelector(uint i) public prank(address(bs)) {
-        bytes4 bdvSelector = bytes4(keccak256(abi.encode(i)));
-
-        vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistToken(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes4(0),
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
-        );
-
-        vm.expectRevert("Whitelist: Invalid BDV selector");
-        bs.whitelistTokenWithEncodeType(
-            address(0),
-            bdvSelector,
-            0,
-            0,
-            bytes1(0x01),
-            bytes4(0),
-            bytes4(0),
-            0,
-            0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
     }
 
@@ -117,7 +86,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         vm.expectRevert("Whitelist: Invalid GaugePoint selector");
@@ -131,7 +100,7 @@ contract WhitelistTest is TestHelper {
             bytes4(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
     }
 
@@ -150,7 +119,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         vm.expectRevert("Whitelist: Invalid LiquidityWeight selector");
@@ -164,7 +133,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
     }
 
@@ -184,7 +153,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         vm.expectRevert("Whitelist: Token already whitelisted");
@@ -198,7 +167,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
     }
 
@@ -212,7 +181,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenBasic(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(address(bs)) {
@@ -243,7 +212,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             gaugePoints,
             optimalPercentDepositedBdv,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         verifyWhitelistState(
@@ -266,7 +235,7 @@ contract WhitelistTest is TestHelper {
      */
     function test_whitelistTokenWithEncodeType(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint8 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
@@ -297,7 +266,7 @@ contract WhitelistTest is TestHelper {
             liquidityWeightSelector,
             gaugePoints,
             optimalPercentDepositedBdv,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0))
+            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0), new bytes(0))
         );
 
         verifyWhitelistState(
@@ -331,7 +300,7 @@ contract WhitelistTest is TestHelper {
         emit DewhitelistToken(token);
         bs.dewhitelistToken(token);
 
-        verifyWhitelistState(token, 0, 1, 10000, 0, 0, 0, 0, false, false, false);
+        verifyWhitelistState(token, 0, 1, 1e10, 0, 0, 0, 0, false, false, false);
         // verify that the milestone stem and season are updated and are kept, as
         // existing deposits are still valid.
         IMockFBeanstalk.AssetSettings memory newSS = bs.tokenSettings(token);
@@ -341,7 +310,7 @@ contract WhitelistTest is TestHelper {
 
     function test_whitelistTokenWithExternalImplementation(
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
     ) public prank(address(bs)) {
@@ -352,18 +321,20 @@ contract WhitelistTest is TestHelper {
         IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
             address(0),
             bytes4(0),
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
 
         IMockFBeanstalk.Implementation memory gaugePointImplementation = IMockFBeanstalk
             .Implementation(
                 address(0),
                 IMockFBeanstalk.defaultGaugePointFunction.selector,
-                bytes1(0)
+                bytes1(0),
+                new bytes(0)
             );
 
         IMockFBeanstalk.Implementation memory liquidityWeightImplementation = IMockFBeanstalk
-            .Implementation(address(0), liquidityWeightSelector, bytes1(0));
+            .Implementation(address(0), liquidityWeightSelector, bytes1(0), new bytes(0));
 
         verifyWhitelistEvents(
             token,
@@ -394,7 +365,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,
@@ -420,7 +391,7 @@ contract WhitelistTest is TestHelper {
         address token,
         bytes4 bdvSelector,
         uint32 stalkEarnedPerSeason,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
         uint128 gaugePoints,

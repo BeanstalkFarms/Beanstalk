@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {C} from "contracts/C.sol";
 

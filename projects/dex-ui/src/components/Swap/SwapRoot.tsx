@@ -1,5 +1,5 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTokens } from "src/tokens/TokenProvider";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
@@ -48,7 +48,7 @@ export const SwapRoot = () => {
   const [hasEnoughBalance, setHasEnoughBalance] = useState<boolean>(false);
 
   const [quote, setQuote] = useState<QuoteResult | undefined>();
-  const builder = useSwapBuilder();
+  const [builder, swappableTokens] = useSwapBuilder();
 
   useEffect(() => {
     setRecipient(account || NULL_ADDRESS);
@@ -91,6 +91,12 @@ export const SwapRoot = () => {
     setOutToken(prevInToken);
     setOutAmount(prevInAmount);
   };
+
+  const routeExists = useMemo(() => {
+    if (!inToken || !outToken) return false;
+    const route = builder?.router.getRoute(inToken, outToken);
+    return route ? !!route.length : false;
+  }, [builder, inToken, outToken]);
 
   const checkBalance = useCallback(
     async (token: Token, amount: TokenValue): Promise<boolean> => {
@@ -320,7 +326,9 @@ export const SwapRoot = () => {
     }
   };
 
+
   const getLabel = useCallback(() => {
+    if (!routeExists) return "No route available";
     if (!inAmount && !outAmount) return "Enter Amount";
     if (inToken.address === outToken.address) return "Select different output token";
     if (inAmount?.eq(TokenValue.ZERO) && outAmount?.eq(TokenValue.ZERO)) return "Enter Amount";
@@ -328,7 +336,7 @@ export const SwapRoot = () => {
     if (needsApproval) return "Approve";
 
     return "Swap";
-  }, [hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken]);
+  }, [hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken, routeExists]);
 
   if (Object.keys(tokens).length === 0)
     return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
@@ -346,6 +354,7 @@ export const SwapRoot = () => {
           canChangeToken={true}
           loading={isLoadingAllBalances}
           excludeToken={outToken}
+          tokenOptions={swappableTokens}
         />
       </SwapInputContainer>
       <ArrowContainer>
@@ -363,6 +372,7 @@ export const SwapRoot = () => {
           showBalance={true}
           loading={isLoadingAllBalances}
           excludeToken={inToken}
+          tokenOptions={swappableTokens}
         />
       </SwapInputContainer>
       <QuoteDetails
@@ -376,7 +386,7 @@ export const SwapRoot = () => {
       />
       <SwapButtonContainer data-trace="true">
         <ActionWalletButtonWrapper>
-          <Button label={getLabel()} disabled={!buttonEnabled} onClick={handleButtonClick} loading={txLoading} />
+          <Button label={getLabel()} disabled={!buttonEnabled || !routeExists} onClick={handleButtonClick} loading={txLoading} />
         </ActionWalletButtonWrapper>
       </SwapButtonContainer>
     </Container>

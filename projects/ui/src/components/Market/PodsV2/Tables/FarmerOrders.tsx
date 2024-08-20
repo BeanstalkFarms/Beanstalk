@@ -10,10 +10,10 @@ const columns = [
   MarketColumns.HistoryItem.amountPods(1, 'left'),
   MarketColumns.Shared.placeInLine(undefined, 1, 'left'),
   MarketColumns.Shared.pricePerPod(0.8),
-  MarketColumns.HistoryItem.amountBeans(1.3),
+  MarketColumns.HistoryItem.amountBeans(1),
   MarketColumns.HistoryItem.fillPct(0.6),
-  MarketColumns.Shared.expiry(0.5),
-  MarketColumns.HistoryItem.status(0.6, 'right'),
+  MarketColumns.Shared.expiry(0.7),
+  MarketColumns.HistoryItem.status(0.9, 'right'),
 ];
 /**
  * Displays a table of a Farmer's outstanding Listings and Orders.

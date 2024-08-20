@@ -64,6 +64,7 @@ contract SiloTest is TestHelper {
         IMockFBeanstalk.TokenDepositId[] memory allDeposits = bs.getDepositsForAccount(farmers[0]);
 
         verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[0], C.BEAN, depositIds[0]), 0);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         assertEq(token, deposit.token);
         assertEq(stem, bs.stemTipForToken(token));
@@ -98,12 +99,14 @@ contract SiloTest is TestHelper {
         depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
         deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
         verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[0], C.BEAN, depositIds[0]), 0);
         assertEq(deposit.tokenDeposits[0].amount, amount - portion);
 
         // verify depositList for recipient.
         depositIds = bs.getTokenDepositIdsForAccount(farmers[1], C.BEAN);
         deposit = bs.getTokenDepositsForAccount(farmers[1], C.BEAN);
         verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[1], C.BEAN, depositIds[0]), 0);
         assertEq(deposit.tokenDeposits[0].amount, portion);
 
         vm.revertTo(snapshot);

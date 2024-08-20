@@ -21,6 +21,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibSiloPermit} from "contracts/libraries/Silo/LibSiloPermit.sol";
 
 /**
  * @title TokenSilo
@@ -190,6 +191,13 @@ contract TokenSilo is ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) internal returns (uint256) {
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
+        }
+        LibSilo._mow(sender, token);
+        // Need to update the recipient's Silo as well.
+        LibSilo._mow(recipient, token);
+
         (uint256 initialStalk, uint256 activeStalk, uint256 bdv, GerminationSide side) = LibSilo
             ._removeDepositFromAccount(
                 sender,

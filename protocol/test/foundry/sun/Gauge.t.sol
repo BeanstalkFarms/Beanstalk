@@ -3,10 +3,10 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
+import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
@@ -14,16 +14,22 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
  * @notice Tests the functionality of the gauge.
  */
 contract GaugeTest is TestHelper {
-    event UpdatedSeedGaugeSettings(IMockFBeanstalk.SeedGaugeSettings);
+    event UpdatedSeedGaugeSettings(IMockFBeanstalk.EvaluationParameters);
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
-    MockLiquidityWeight lw;
+    // Interfaces.
+    MockLiquidityWeight mlw = MockLiquidityWeight(address(bs));
+    GaugePointPrice gpP;
 
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
 
         // deploy mockLiquidityWeight contract for testing.
-        lw = new MockLiquidityWeight(0.5e18);
+        mlw = new MockLiquidityWeight(0.5e18);
+
+        // deploy gaugePointPrice contract for WETH, with a price threshold of 500 USD,
+        // and a gaugePoint of 10.
+        gpP = new GaugePointPrice(address(bs), C.WETH, 500e6, 10e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -94,19 +100,17 @@ contract GaugeTest is TestHelper {
     ) public {
         initBeanToMaxLPRatio = bound(initBeanToMaxLPRatio, 0, 100e18);
         bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
-        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 scaledRatio = bs.getBeanToMaxLpGpPerBdvRatioScaled();
+        uint256 minBeanMaxLpGpPerBdvRatio = bs.getMinBeanMaxLpGpPerBdvRatio();
+        uint256 maxBeanMaxLpGpPerBdvRatio = bs.getMaxBeanMaxLpGpPerBdvRatio();
         // scaled ratio should never fall below 50%.
-        assertGe(scaledRatio, s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio);
+        assertGe(scaledRatio, minBeanMaxLpGpPerBdvRatio);
 
         // scaled ratio should never exceed 100%.
-        assertLe(scaledRatio, s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio);
+        assertLe(scaledRatio, maxBeanMaxLpGpPerBdvRatio);
 
         // the scaledRatio should increase half as fast as the initBeanToMaxLPRatio.
-        assertEq(
-            scaledRatio - s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio,
-            initBeanToMaxLPRatio / 2
-        );
+        assertEq(scaledRatio - minBeanMaxLpGpPerBdvRatio, initBeanToMaxLPRatio / 2);
     }
 
     ////////////////////// L2SR //////////////////////
@@ -187,9 +191,10 @@ contract GaugeTest is TestHelper {
         // update liquidtyWeight.
         bs.mockUpdateLiquidityWeight(
             whitelistedWellTokens[rand],
-            address(lw),
+            address(mlw),
             0x00,
-            lw.getLiquidityWeight.selector
+            mlw.getLiquidityWeight.selector,
+            new bytes(0)
         );
 
         // 1 out of 2 whitelisted lp tokens should have updated weight.
@@ -226,13 +231,8 @@ contract GaugeTest is TestHelper {
      * @notice verifies that the average grown stalk per season changes after the catchup bs.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         // season is capped to uint32 max - 1.
-        season = bound(
-            season,
-            s.sys.seedGaugeSettings.targetSeasonsToCatchUp,
-            type(uint32).max - 1
-        );
+        season = bound(season, bs.getTargetSeasonsToCatchUp(), type(uint32).max - 1);
         depositForUser(users[1], C.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
@@ -517,6 +517,106 @@ contract GaugeTest is TestHelper {
         }
     }
 
+    function testPriceGaugePointFunction(
+        uint256 gaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv,
+        uint256 price
+    ) public {
+        gaugePoints = bound(gaugePoints, 1e18, 1000e18);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
+        price = bound(price, 0, 1000e6);
+
+        // update weth price:
+        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, int256(price), 900);
+
+        uint256 newGaugePoints = gpP.priceGaugePointFunction(
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+
+        if (gpP.getPriceThreshold() >= price) {
+            uint256 gaugePointPrice = gpP.getGaugePointsPrice();
+            gaugePointPrice = gaugePointPrice > gaugePoints ? gaugePoints : gaugePointPrice;
+            assertEq(newGaugePoints, gaugePointPrice);
+        } else {
+            // verify standard gauge point implmnetation:
+            assertEq(
+                newGaugePoints,
+                gpP.defaultGaugePointFunction(
+                    gaugePoints,
+                    optimalPercentDepositedBdv,
+                    percentOfDepositedBdv
+                )
+            );
+        }
+    }
+
+    function testDefaultGaugePointFunction(
+        uint256 gaugePoints,
+        uint256 optimalPercentDepositedBdv,
+        uint256 percentOfDepositedBdv
+    ) public {
+        gaugePoints = bound(gaugePoints, 1e18, 1000e18);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+
+        uint256 newGaugePoints = gpP.defaultGaugePointFunction(
+            gaugePoints,
+            optimalPercentDepositedBdv,
+            percentOfDepositedBdv
+        );
+
+        uint256 extFarAbove = gpP.getExtremelyFarAbove(optimalPercentDepositedBdv);
+        uint256 relFarAbove = gpP.getRelativelyFarAbove(optimalPercentDepositedBdv);
+        uint256 extFarBelow = gpP.getExtremelyFarBelow(optimalPercentDepositedBdv);
+        uint256 relFarBelow = gpP.getRelativelyFarBelow(optimalPercentDepositedBdv);
+
+        assertLe(extFarAbove, 100e6);
+        assertGe(extFarAbove, optimalPercentDepositedBdv);
+        assertLe(relFarAbove, 100e6);
+        assertGe(relFarAbove, optimalPercentDepositedBdv);
+
+        assertGe(extFarBelow, 0);
+        assertLe(extFarBelow, optimalPercentDepositedBdv);
+        assertGe(relFarBelow, 0);
+        assertLe(relFarBelow, optimalPercentDepositedBdv);
+
+        assertGe(newGaugePoints, 0);
+        assertLe(newGaugePoints, 1000e18);
+
+        uint256 deltaGaugePoints;
+        if (newGaugePoints > gaugePoints) {
+            deltaGaugePoints = newGaugePoints - gaugePoints;
+        } else {
+            deltaGaugePoints = gaugePoints - newGaugePoints;
+        }
+
+        uint256 percentDifference;
+        if (percentOfDepositedBdv > optimalPercentDepositedBdv) {
+            percentDifference = getPercentDifference(
+                100e6 - optimalPercentDepositedBdv,
+                100e6 - percentOfDepositedBdv
+            );
+        } else {
+            percentDifference = getPercentDifference(
+                optimalPercentDepositedBdv,
+                percentOfDepositedBdv
+            );
+        }
+
+        if (deltaGaugePoints == 5e18) {
+            assertLe(percentDifference, 100e6);
+        } else if (deltaGaugePoints == 3e18) {
+            assertLe(percentDifference, 66.666666e6);
+            assertGe(percentDifference, 33.333333e6);
+        } else if (deltaGaugePoints == 1e18 && gaugePoints != 1e18) {
+            assertLe(percentDifference, 33.333333e6);
+        }
+    }
+
     ////////////////////// GAUGE HELPERS //////////////////////
 
     function addLiquidityAndReturnNonBeanValue(
@@ -524,7 +624,7 @@ contract GaugeTest is TestHelper {
         uint256 nonBeanAmount
     ) internal returns (uint256 newTotalNonBeanValue) {
         (, address nonBeanToken) = addLiquidityToWellAtCurrentPrice(well, nonBeanAmount);
-        uint256 usdTokenPrice = usdOracle.getUsdTokenPrice(nonBeanToken);
+        uint256 usdTokenPrice = bs.getUsdTokenPrice(nonBeanToken);
         uint256 precision = 10 ** MockToken(nonBeanToken).decimals();
         newTotalNonBeanValue = (nonBeanAmount * precision) / usdTokenPrice;
     }
@@ -648,15 +748,15 @@ contract GaugeTest is TestHelper {
      */
     function testSeedGaugeSettings() external {
         // validate current settings
-        IMockFBeanstalk.SeedGaugeSettings memory seedGauge = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
 
         // change settings
         vm.prank(address(bs));
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.SeedGaugeSettings(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );
 
-        IMockFBeanstalk.SeedGaugeSettings memory ssg = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
         assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.targetSeasonsToCatchUp, 0);
@@ -669,5 +769,20 @@ contract GaugeTest is TestHelper {
         assertEq(ssg.lpToSupplyRatioOptimal, 0);
         assertEq(ssg.lpToSupplyRatioLowerBound, 0);
         assertEq(ssg.excessivePriceThreshold, 0);
+    }
+
+    function getPercentDifference(
+        uint optimal,
+        uint current
+    ) internal pure returns (uint256 percentDifference) {
+        if (optimal == 0) {
+            return type(uint256).max;
+        }
+        if (optimal < current) {
+            percentDifference = ((current - optimal) * 100e6) / optimal;
+        } else {
+            percentDifference = ((optimal - current) * 100e6) / optimal;
+        }
+        return percentDifference;
     }
 }

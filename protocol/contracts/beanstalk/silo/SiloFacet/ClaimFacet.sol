@@ -94,7 +94,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
      */
     function _claimPlenty(address account, address well, LibTransfer.To toMode) internal {
         uint256 plenty = s.accts[account].sop.perWellPlenty[well].plenty;
-        if (plenty > 0 && LibWell.isWell(well)) {
+        if (plenty > 0 && LibWhitelistedTokens.wellIsOrWasSoppable(well)) {
             IERC20[] memory tokens = IWell(well).tokens();
             IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
             LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
@@ -116,7 +116,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
     function mow(
         address account,
         address token
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibSilo._mow(account, token);
     }
 
@@ -124,7 +124,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
     function mowMultiple(
         address account,
         address[] calldata tokens
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         for (uint256 i; i < tokens.length; ++i) {
             LibSilo._mow(account, tokens[i]);
         }
@@ -151,6 +151,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
         fundsSafu
         noNetFlow
         noSupplyChange
+        nonReentrant
         returns (uint256 beans, int96 stem)
     {
         return _plant(LibTractor._user());

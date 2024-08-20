@@ -21,7 +21,12 @@ library LibField {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (amount == 0) return;
         s.accts[account].fields[fieldId].plots[index] = amount;
-        if (account != address(0)) s.accts[account].fields[fieldId].plotIndexes.push(index);
+        if (account != address(0)) {
+            s.accts[account].fields[fieldId].plotIndexes.push(index);
+            s.accts[account].fields[fieldId].piIndex[index] =
+                s.accts[account].fields[fieldId].plotIndexes.length -
+                1;
+        }
     }
 
     /**

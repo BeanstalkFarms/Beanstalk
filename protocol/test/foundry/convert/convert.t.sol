@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IMockFBeanstalk, C} from "test/foundry/utils/TestHelper.sol";
 import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
@@ -234,7 +233,7 @@ contract ConvertTest is TestHelper {
         vm.prank(farmers[0]);
         bs.convert(convertData, new int96[](1), amounts);
 
-        int256 newDeltaB = LibDeltaB.currentDeltaB(well);
+        int256 newDeltaB = bs.poolCurrentDeltaB(well);
 
         // verify deltaB.
         // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');

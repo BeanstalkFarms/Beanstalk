@@ -114,18 +114,25 @@ contract MockInitDiamond is InitializeDiamond {
         view
         returns (AssetSettings[] memory assetSettings)
     {
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
-        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory oracleImpl = Implementation(
+            address(0),
+            bytes4(0),
+            bytes1(0),
+            new bytes(0)
+        );
 
         assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -139,8 +146,7 @@ contract MockInitDiamond is InitializeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
         assetSettings[1] = AssetSettings({
             selector: BDVFacet.unripeLPToBDV.selector,
@@ -153,8 +159,7 @@ contract MockInitDiamond is InitializeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
     }
 
@@ -178,7 +183,7 @@ contract MockInitDiamond is InitializeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         // note: no error checking:
         s.sys.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -193,14 +198,15 @@ contract MockInitDiamond is InitializeDiamond {
             gaugePointImplementation: Implementation(
                 address(0),
                 IGaugePointFacet.defaultGaugePointFunction.selector,
-                bytes1(0)
+                bytes1(0),
+                new bytes(0)
             ),
             liquidityWeightImplementation: Implementation(
                 address(0),
                 ILiquidityWeightFacet.maxWeight.selector,
-                bytes1(0)
-            ),
-            oracleImplementation: impl
+                bytes1(0),
+                new bytes(0)
+            )
         });
 
         // updates the optimal percent deposited for bean:eth.

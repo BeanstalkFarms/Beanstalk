@@ -13,7 +13,7 @@ interface IMockFBeanstalk {
         DECREASE
     }
 
-    struct SeedGaugeSettings {
+    struct EvaluationParameters {
         uint256 maxBeanMaxLpGpPerBdvRatio;
         uint256 minBeanMaxLpGpPerBdvRatio;
         uint256 targetSeasonsToCatchUp;
@@ -90,7 +90,7 @@ interface IMockFBeanstalk {
     struct AssetSettings {
         bytes4 selector; // ────────────────────┐ 4
         uint32 stalkEarnedPerSeason; //         │ 4  (8)
-        uint32 stalkIssuedPerBdv; //            │ 4  (12)
+        uint48 stalkIssuedPerBdv; //            │ 4  (12)
         uint32 milestoneSeason; //              │ 4  (16)
         int96 milestoneStem; //                 │ 12 (28)
         bytes1 encodeType; //                   │ 1  (29)
@@ -144,6 +144,7 @@ interface IMockFBeanstalk {
         address target;
         bytes4 selector;
         bytes1 encodeType;
+        bytes data;
     }
 
     struct MowStatus {
@@ -348,6 +349,7 @@ interface IMockFBeanstalk {
     event PlotTransfer(
         address indexed from,
         address indexed to,
+        uint256 fieldId,
         uint256 indexed index,
         uint256 amount
     );
@@ -427,7 +429,12 @@ interface IMockFBeanstalk {
     event StalkBalanceChanged(address indexed account, int256 delta, int256 deltaRoots);
     event Sunrise(uint256 indexed season);
     event SwitchUnderlyingToken(address indexed token, address indexed underlyingToken);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event TokenApproval(
         address indexed owner,
         address indexed spender,
@@ -503,7 +510,7 @@ interface IMockFBeanstalk {
 
     function abovePeg() external view returns (bool);
 
-    function updateSeedGaugeSettings(SeedGaugeSettings memory updatedSeedGaugeSettings) external;
+    function updateSeedGaugeSettings(EvaluationParameters memory updatedSeedGaugeSettings) external;
 
     function activeField() external view returns (uint256);
 
@@ -612,7 +619,7 @@ interface IMockFBeanstalk {
 
     function balanceOfPlenty(address account, address well) external view returns (uint256 plenty);
 
-    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory);
+    function getSeedGaugeSetting() external view returns (EvaluationParameters memory);
 
     function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256);
 
@@ -955,8 +962,6 @@ interface IMockFBeanstalk {
         uint256 caseId
     ) external view returns (uint32, int8, uint80, int80);
 
-    function getCounter(bytes32 counterId) external view returns (uint256 count);
-
     function getCurrentHumidity() external view returns (uint128 humidity);
 
     function getDeltaPodDemand() external view returns (uint256);
@@ -975,7 +980,7 @@ interface IMockFBeanstalk {
 
     function getEndBpf() external view returns (uint128 endBpf);
 
-    function getEthUsdPrice() external view returns (uint256);
+    function getUsdEthPrice() external view returns (uint256);
 
     function getEthUsdTwap(uint256 lookback) external view returns (uint256);
 
@@ -1067,6 +1072,10 @@ interface IMockFBeanstalk {
     function getNextSeasonStart() external view returns (uint256);
 
     function getOddGerminating(address token) external view returns (uint256, uint256);
+
+    function getOracleImplementationForToken(
+        address token
+    ) external view returns (Implementation memory);
 
     function getOverallConvertCapacity() external view returns (uint256);
 
@@ -1344,7 +1353,8 @@ interface IMockFBeanstalk {
         address token,
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
-        bytes4 selector
+        bytes4 selector,
+        bytes memory data
     ) external;
 
     function mockWhitelistToken(
@@ -1723,6 +1733,8 @@ interface IMockFBeanstalk {
 
     function totalPods(uint256 fieldId) external view returns (uint256);
 
+    function totalRainRoots() external view returns (uint256);
+
     function totalRealSoil() external view returns (uint256);
 
     function totalRoots() external view returns (uint256);
@@ -1850,7 +1862,7 @@ interface IMockFBeanstalk {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -1862,7 +1874,7 @@ interface IMockFBeanstalk {
     function whitelistTokenWithEncodeType(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         bytes4 gaugePointSelector,
@@ -1875,7 +1887,7 @@ interface IMockFBeanstalk {
     function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason,
         bytes1 encodeType,
         uint128 gaugePoints,
@@ -1919,4 +1931,39 @@ interface IMockFBeanstalk {
     function revert_supplyChange() external;
 
     function revert_supplyIncrease() external;
+
+    function getUsdTokenPrice(address token) external view returns (uint256);
+
+    function getUsdTokenTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenUsdPrice(address token) external view returns (uint256);
+
+    function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256);
+
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
+
+    function getIndexForDepositId(
+        address account,
+        address token,
+        uint256 depositId
+    ) external view returns (uint256);
+
+    function getTokenUsdPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
+
+    function getUsdTokenPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenPrice);
+
+    function approveReciever(address owner, address reciever) external;
+
+    function getReciever(address owner) external view returns (address);
+
+    function setRecieverForL1Migration(address owner, address reciever) external;
 }

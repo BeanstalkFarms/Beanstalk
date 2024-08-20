@@ -211,8 +211,8 @@ library LibTransmitIn {
         uint256 endIndex = existingIndex + existingAmount;
         require(existingAmount > 0, "existingIndex non null");
         require(existingIndex <= index, "existingIndex too large");
-        require(endIndex >= index + amount, "endIndex too small");
         uint256 followingIndex = index + amount;
+        require(endIndex >= followingIndex, "endIndex too small");
         uint256 followingAmount = endIndex - followingIndex;
 
         // Delete existing null plot.
@@ -256,17 +256,17 @@ library LibTransmitIn {
         _plotPush(address(0), srcInitPods);
     }
 
-    function _alterDeposit(SourceDeposit memory deposit) private {
+    function _alterDeposit(SourceDeposit memory) private {
         // NOTE this is a placeholder for future child-specific logic.
         return;
     }
 
-    function _alterFertilizer(SourceFertilizer memory fertilizer) private {
+    function _alterFertilizer(SourceFertilizer memory) private {
         // NOTE this is a placeholder for future child-specific logic.
         return;
     }
 
-    function _alterPlot(SourcePlot memory plot) private {
+    function _alterPlot(SourcePlot memory) private {
         // NOTE this is a placeholder for future child-specific logic.
         return;
     }

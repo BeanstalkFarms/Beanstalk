@@ -10,13 +10,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param farmingStatus Stores whether the function call originated in a Farm-like transaction - Farm, Tractor, PipelineConvert, etc.
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
  * @param activeField ID of the active Field.
  * @param fieldCount Number of Fields that have ever been initialized.
+ * @param orderLockedBeans The number of Beans locked in Pod Orders.
  * @param _buffer_0 Reserved storage for future additions.
  * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
@@ -27,6 +28,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param sops A mapping from Season to Plenty Per Root (PPR) in that Season. Plenty Per Root is 0 if a Season of Plenty did not occur.
  * @param fields mapping of Field ID to Storage.Field.
  * @param convertCapacity A mapping from block number to the amount of Beans that can be converted towards peg in this block before stalk penalty becomes applied.
+ * @param oracleImplementation A mapping from token to its oracle implementation.
  * @param shipmentRoutes Define the distribution of newly minted Beans.
  * @param _buffer_1 Reserved storage for future additions.
  * @param casesV2 Stores the 144 Weather and seedGauge cases.
@@ -36,21 +38,23 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param weather See {Weather}.
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
- * @param _buffer_2 Reserved storage for future additions.
- * @param oracleImplementation A mapping from token to its oracle implementation.
+ * @param l2Migration See {L2Migration}.
+ * @param evaluationParameters See {EvaluationParameters}.
+ * @param sop See {SeasonOfPlenty}.
  * @param supportedSourceForks a mapping of addresses that can transmit into this Beanstalk instance.
  */
 struct System {
     bool paused;
     uint128 pausedAt;
     uint256 reentrantStatus;
-    uint256 isFarm;
+    uint256 farmingStatus;
     address ownerCandidate;
     uint256 plenty;
     uint128 soil;
     uint128 beanSown;
     uint256 activeField;
     uint256 fieldCount;
+    uint256 orderLockedBeans;
     bytes32[16] _buffer_0;
     mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
@@ -61,6 +65,7 @@ struct System {
     mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
+    mapping(address => Implementation) oracleImplementation;
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
@@ -70,10 +75,8 @@ struct System {
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
-    Migration migration;
-    bytes32[128] _buffer_2;
-    mapping(address => Implementation) oracleImplementation;
-    SeedGaugeSettings seedGaugeSettings;
+    L2Migration l2Migration;
+    EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     mapping(address => bool) supportedSourceForks;
 }
@@ -273,8 +276,7 @@ struct WhitelistStatus {
  * It is called by `LibTokenSilo` through the use of `delegatecall`
  * to calculate a token's BDV at the time of Deposit.
  * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
- * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
- * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
+ * grows each season. In the past, this was represented by seeds. 6 decimal precision.
  * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
  * previously called stalk.
  * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
@@ -296,7 +298,6 @@ struct WhitelistStatus {
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
- * @param oracleImplementation The implementation for the oracle.
  * @param gaugePointImplementation The implementation for the gauge points. Supports encodeType 0 and 1.
  * @param liquidityWeightImplementation The implementation for the liquidity weight.
  * @dev A Token is considered Whitelisted if there exists a non-zero {AssetSettings} selector.
@@ -304,16 +305,17 @@ struct WhitelistStatus {
 struct AssetSettings {
     bytes4 selector; // ────────────────────┐ 4
     uint32 stalkEarnedPerSeason; //         │ 4  (8)
-    uint32 stalkIssuedPerBdv; //            │ 4  (12)
-    uint32 milestoneSeason; //              │ 4  (16)
-    int96 milestoneStem; //                 │ 12 (28)
-    bytes1 encodeType; //                   │ 1  (29)
-    int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-    uint128 gaugePoints; // ─────────-───────┐ 16
-    uint64 optimalPercentDepositedBdv; //  ──┘ 8
+    uint48 stalkIssuedPerBdv; //            │ 6  (14)
+    uint32 milestoneSeason; //              │ 4  (18)
+    int96 milestoneStem; //                 │ 12 (30)
+    bytes1 encodeType; //                   │ 1  (31)
+    // one byte is left here.             ──┘ 1  (32)
+    int24 deltaStalkEarnedPerSeason; // ────┐ 3
+    uint128 gaugePoints; //                 │ 16 (19)
+    uint64 optimalPercentDepositedBdv; //   │ 8  (27)
+    // 5 bytes are left here.             ──┘ 5  (32)
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
-    Implementation oracleImplementation;
 }
 
 /**
@@ -362,8 +364,8 @@ struct ConvertCapacity {
  * @notice Stores the system level germination Silo data.
  */
 struct GerminatingSilo {
-    uint128 stalk;
-    uint128 roots;
+    uint256 stalk;
+    uint256 roots;
 }
 
 /**
@@ -379,9 +381,27 @@ struct ShipmentRoute {
     bytes data;
 }
 
-struct Migration {
+/**
+ * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
+ * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
+ * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param _buffer_ Reserved storage for future additions.
+ */
+struct L2Migration {
     uint256 migratedL1Beans;
+    mapping(address => MigrationData) account;
     bytes32[4] _buffer_;
+}
+
+/**
+ * @notice contains data relating to migration.
+ */
+struct MigrationData {
+    address reciever;
+    bool migratedDeposits;
+    bool migratedPlots;
+    bool migratedFert;
+    bool migratedInternalBalances;
 }
 
 /**
@@ -390,16 +410,18 @@ struct Migration {
  * @param selector The function selector that is used to call on the implementation.
  * @param encodeType The encode type that should be used to encode the function call.
  * The encodeType value depends on the context of each implementation.
+ * @param data Any additional data, for example timeout
  * @dev assumes all future implementations will use the same parameters as the beanstalk
  * gaugePoint and liquidityWeight implementations.
  */
 struct Implementation {
-    address target;
+    address target; // 20 bytes
     bytes4 selector;
     bytes1 encodeType;
+    bytes data;
 }
 
-struct SeedGaugeSettings {
+struct EvaluationParameters {
     uint256 maxBeanMaxLpGpPerBdvRatio;
     uint256 minBeanMaxLpGpPerBdvRatio;
     uint256 targetSeasonsToCatchUp;

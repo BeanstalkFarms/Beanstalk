@@ -13712,7 +13712,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": " All historical trade volume occurred in this well, in USD ",
             "args": [],
             "type": {
@@ -15272,7 +15272,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15284,7 +15284,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_gt",
+            "name": "deltaTradeVolumeUSD_gt",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15296,7 +15296,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_gte",
+            "name": "deltaTradeVolumeUSD_gte",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15308,7 +15308,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_in",
+            "name": "deltaTradeVolumeUSD_in",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -15328,7 +15328,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_lt",
+            "name": "deltaTradeVolumeUSD_lt",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15340,7 +15340,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_lte",
+            "name": "deltaTradeVolumeUSD_lte",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15352,7 +15352,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_not",
+            "name": "deltaTradeVolumeUSD_not",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -15364,7 +15364,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_not_in",
+            "name": "deltaTradeVolumeUSD_not_in",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -16561,7 +16561,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -17840,7 +17840,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": " All historical trade volume occurred in this well, in USD ",
             "args": [],
             "type": {
@@ -19304,7 +19304,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19316,7 +19316,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_gt",
+            "name": "deltaTradeVolumeUSD_gt",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19328,7 +19328,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_gte",
+            "name": "deltaTradeVolumeUSD_gte",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19340,7 +19340,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_in",
+            "name": "deltaTradeVolumeUSD_in",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -19360,7 +19360,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_lt",
+            "name": "deltaTradeVolumeUSD_lt",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19372,7 +19372,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_lte",
+            "name": "deltaTradeVolumeUSD_lte",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19384,7 +19384,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_not",
+            "name": "deltaTradeVolumeUSD_not",
             "description": null,
             "type": {
               "kind": "SCALAR",
@@ -19396,7 +19396,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD_not_in",
+            "name": "deltaTradeVolumeUSD_not_in",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -20699,7 +20699,7 @@
             "deprecationReason": null
           },
           {
-            "name": "deltaVolumeUSD",
+            "name": "deltaTradeVolumeUSD",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null

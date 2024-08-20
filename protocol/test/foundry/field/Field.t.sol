@@ -22,7 +22,6 @@ contract FieldTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
         field = MockFieldFacet(address(bs));
-        season = MockSeasonFacet(address(bs));
 
         // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
@@ -59,7 +58,7 @@ contract FieldTest is TestHelper {
 
         // issue `beans` to farmers
         C.bean().mint(farmers[0], beans);
-        season.setSoilE(soil - 1);
+        bs.setSoilE(soil - 1);
         vm.prank(farmers[0]);
         vm.expectRevert("Field: Soil Slippage");
         field.sowWithMin(
@@ -119,7 +118,7 @@ contract FieldTest is TestHelper {
      */
     function test_SowSoil(uint256 beansToSow, uint256 soil, bool from) public {
         soil = bound(soil, 100, type(uint128).max); // soil casted to uint128.
-        beansToSow = bound(beansToSow, 0, soil); // bounded by soil.
+        beansToSow = bound(beansToSow, 1, soil); // bounded by soil.
         C.bean().mint(farmers[0], beansToSow);
 
         if (from) {
@@ -221,9 +220,9 @@ contract FieldTest is TestHelper {
         uint256 farmer1Sow,
         uint256 farmer2Sow
     ) public {
-        soilAvailable = bound(soilAvailable, 0, type(uint128).max);
-        farmer1Sow = bound(farmer1Sow, 0, soilAvailable / 2);
-        farmer2Sow = bound(farmer2Sow, 0, soilAvailable / 2);
+        soilAvailable = bound(soilAvailable, 2, type(uint128).max);
+        farmer1Sow = bound(farmer1Sow, 1, soilAvailable / 2);
+        farmer2Sow = bound(farmer2Sow, 1, soilAvailable / 2);
         uint256 farmer1BeansBeforeSow;
         uint256 farmer2BeansBeforeSow;
 
@@ -274,7 +273,7 @@ contract FieldTest is TestHelper {
     function testComplexDPDMoreThan1Soil(uint256 initalSoil, uint256 farmerSown) public {
         initalSoil = bound(initalSoil, 2e6, type(uint128).max);
         // sow such that at minimum, there is 1e6 + 1 soil left
-        farmerSown = bound(farmerSown, 0, initalSoil - (1e6 + 1));
+        farmerSown = bound(farmerSown, 1, initalSoil - (1e6 + 1));
         bs.setSoilE(initalSoil);
         C.bean().mint(farmers[0], farmerSown);
         uint256 beans = C.bean().balanceOf(farmers[0]);
@@ -287,7 +286,7 @@ contract FieldTest is TestHelper {
 
     function _beforeEachSow(uint256 soilAmount, uint256 sowAmount, uint8 from) public {
         vm.roll(30);
-        season.setSoilE(soilAmount);
+        bs.setSoilE(soilAmount);
         vm.expectEmit();
         emit Sow(farmers[0], 0, 0, sowAmount, (sowAmount * 101) / 100);
         vm.prank(farmers[0]);
@@ -313,7 +312,7 @@ contract FieldTest is TestHelper {
         uint256 internalBalance
     ) public {
         vm.roll(30);
-        season.setSoilE(soilAmount);
+        bs.setSoilE(soilAmount);
         vm.expectEmit();
         if (internalBalance > sowAmount) internalBalance = sowAmount;
         emit Sow(farmers[0], 0, 0, internalBalance, (internalBalance * 101) / 100);
@@ -328,7 +327,7 @@ contract FieldTest is TestHelper {
         address farmer1,
         uint256 amount1
     ) public returns (uint256, uint256, uint256, uint256) {
-        season.setSoilE(soil);
+        bs.setSoilE(soil);
         C.bean().mint(farmer0, amount0);
         uint256 initalBeanBalance0 = C.bean().balanceOf(farmer0);
         if (amount0 > soil) amount0 = soil;

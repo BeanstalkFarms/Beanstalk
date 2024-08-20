@@ -8,7 +8,6 @@ import {C} from "contracts/C.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
@@ -17,7 +16,6 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
 import {LibField} from "contracts/libraries/LibField.sol";
-
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -94,8 +92,16 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 beans,
         uint256 minTemperature,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) returns (uint256 pods) {
-        pods = sowWithMin(beans, minTemperature, beans, mode);
+    )
+        external
+        payable
+        fundsSafu
+        noSupplyIncrease
+        oneOutFlow(C.BEAN)
+        nonReentrant
+        returns (uint256 pods)
+    {
+        return LibDibbler.sowWithMin(beans, minTemperature, beans, mode);
     }
 
     /**
@@ -112,35 +118,16 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 minTemperature,
         uint256 minSoil,
         LibTransfer.From mode
-    ) public payable fundsSafu noSupplyIncrease oneOutFlow(C.BEAN) returns (uint256 pods) {
-        // `soil` is the remaining Soil
-        (uint256 soil, uint256 _morningTemperature, bool abovePeg) = _totalSoilAndTemperature();
-
-        require(soil >= minSoil && beans >= minSoil, "Field: Soil Slippage");
-        require(_morningTemperature >= minTemperature, "Field: Temperature Slippage");
-
-        // If beans >= soil, Sow all of the remaining Soil
-        if (beans < soil) {
-            soil = beans;
-        }
-
-        // 1 Bean is Sown in 1 Soil, i.e. soil = beans
-        pods = _sow(soil, _morningTemperature, abovePeg, mode);
-    }
-
-    /**
-     * @dev Burn Beans, Sows at the provided `_morningTemperature`, increments the total
-     * number of `beanSown`.
-     */
-    function _sow(
-        uint256 beans,
-        uint256 _morningTemperature,
-        bool peg,
-        LibTransfer.From mode
-    ) internal returns (uint256 pods) {
-        beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
-        pods = LibDibbler.sow(beans, _morningTemperature, LibTractor._user(), peg);
-        s.sys.beanSown += SafeCast.toUint128(beans);
+    )
+        external
+        payable
+        fundsSafu
+        noSupplyIncrease
+        oneOutFlow(C.BEAN)
+        nonReentrant
+        returns (uint256 pods)
+    {
+        return LibDibbler.sowWithMin(beans, minTemperature, minSoil, mode);
     }
 
     //////////////////// HARVEST ////////////////////
@@ -164,7 +151,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 fieldId,
         uint256[] calldata plots,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
         uint256 beansHarvested = _harvest(fieldId, plots);
         LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
     }
@@ -227,8 +214,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         // Create a new Plot with remaining Pods.
         uint256 newIndex = index.add(harvestablePods);
-        s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
-        s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+        LibField.createPlot(account, fieldId, newIndex, pods.sub(harvestablePods));
     }
 
     //////////////////// CONFIG /////////////////////
@@ -237,7 +223,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * @notice Add a new Field to the system.
      * @dev It is not possible to remove a Field, but a Field's Plan can be nullified.
      */
-    function addField() public fundsSafu noSupplyChange noNetFlow {
+    function addField() public fundsSafu noSupplyChange noNetFlow nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         uint256 fieldId = s.sys.fieldCount;
         s.sys.fieldCount++;
@@ -251,7 +237,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     function setActiveField(
         uint256 fieldId,
         uint32 _temperature
-    ) public fundsSafu noSupplyChange noNetFlow {
+    ) public fundsSafu noSupplyChange noNetFlow nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         require(fieldId < s.sys.fieldCount, "Field: Field does not exist");
         s.sys.activeField = fieldId;
@@ -354,38 +340,6 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         return s.sys.fieldCount;
     }
 
-    /**
-     * @dev Gets the current `soil`, `_morningTemperature` and `abovePeg`. Provided as a gas
-     * optimization to prevent recalculation of {LibDibbler.morningTemperature} for
-     * upstream functions.
-     * Note: the `soil` return value is symmetric with `totalSoil`.
-     */
-    function _totalSoilAndTemperature()
-        private
-        view
-        returns (uint256 soil, uint256 _morningTemperature, bool abovePeg)
-    {
-        _morningTemperature = LibDibbler.morningTemperature();
-        abovePeg = s.sys.season.abovePeg;
-
-        // Below peg: Soil is fixed to the amount set during {calcCaseId}.
-        // Morning Temperature is dynamic, starting small and logarithmically
-        // increasing to `s.weather.t` across the first 25 blocks of the Season.
-        if (!abovePeg) {
-            soil = uint256(s.sys.soil);
-        }
-        // Above peg: the maximum amount of Pods that Beanstalk is willing to mint
-        // stays fixed; since {morningTemperature} is scaled down when `delta < 25`, we
-        // need to scale up the amount of Soil to hold Pods constant.
-        else {
-            soil = LibDibbler.scaleSoilUp(
-                uint256(s.sys.soil), // max soil offered this Season, reached when `t >= 25`
-                uint256(s.sys.weather.temp).mul(LibDibbler.TEMPERATURE_PRECISION), // max temperature
-                _morningTemperature // temperature adjusted by number of blocks since Sunrise
-            );
-        }
-    }
-
     //////////////////// GETTERS: SOIL ////////////////////
 
     /**
@@ -461,6 +415,16 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         for (uint256 i = 0; i < plotIndexes.length; i++) {
             uint256 index = plotIndexes[i];
             plots[i] = Plot(index, s.accts[account].fields[fieldId].plots[index]);
+        }
+    }
+
+    /**
+     * @notice returns the number of pods owned by `account` in a field.
+     */
+    function balanceOfPods(address account, uint256 fieldId) external view returns (uint256 pods) {
+        uint256[] memory plotIndexes = s.accts[account].fields[fieldId].plotIndexes;
+        for (uint256 i = 0; i < plotIndexes.length; i++) {
+            pods += s.accts[account].fields[fieldId].plots[plotIndexes[i]];
         }
     }
 }

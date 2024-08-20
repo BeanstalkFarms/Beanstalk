@@ -34,17 +34,6 @@ async function weth() {
   await weth.setDecimals(18);
 }
 
-/// WstETH ///
-async function wsteth() {
-  await impersonateContractOnPath(
-    "./artifacts/contracts/mocks/MockWsteth.sol/MockWsteth.json",
-    WSTETH
-  );
-  const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
-  await wsteth.setSymbol("wstETH");
-  await wsteth.setStEthPerToken(to18("1"));
-}
-
 /// Uniswap V2 Router ///
 async function router() {
   await impersonateContractOnPath(
@@ -188,5 +177,4 @@ exports.impersonateBeanstalk = impersonateBeanstalk;
 exports.impersonateChainlinkAggregator = chainlinkAggregator;
 exports.impersonateContract = impersonateContract;
 exports.impersonateUniswapV3 = uniswapV3;
-exports.impersonateWsteth = wsteth;
 exports.impersonatePipeline = impersonatePipeline;

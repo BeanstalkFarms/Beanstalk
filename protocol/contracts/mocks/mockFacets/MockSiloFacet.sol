@@ -8,7 +8,6 @@ import "contracts/libraries/LibRedundantMath256.sol";
 import "../../beanstalk/silo/SiloFacet/SiloFacet.sol";
 import "../../libraries/Silo/LibWhitelist.sol";
 import "../../libraries/Silo/LibWhitelistedTokens.sol";
-import "../../libraries/Well/LibWell.sol";
 import "../../libraries/LibTractor.sol";
 
 /**
@@ -164,7 +163,7 @@ contract MockSiloFacet is SiloFacet {
             // If rain started after update, set account variables to track rain.
             if (s.sys.season.rainStart > _lastUpdate) {
                 s.accts[account].lastRain = s.sys.season.rainStart;
-                s.accts[account].sop.roots = s.accts[account].roots;
+                s.accts[account].sop.rainRoots = s.accts[account].roots;
             }
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
@@ -205,8 +204,8 @@ contract MockSiloFacet is SiloFacet {
     function mockWhitelistToken(
         address token,
         bytes4 selector,
-        uint16 stalkIssuedPerBdv,
-        uint24 stalkEarnedPerSeason
+        uint48 stalkIssuedPerBdv,
+        uint32 stalkEarnedPerSeason
     ) external {
         s.sys.silo.assetSettings[token].selector = selector;
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv; //previously just called "stalk"
@@ -280,12 +279,14 @@ contract MockSiloFacet is SiloFacet {
         address token,
         address newLiquidityWeightImplementation,
         bytes1 encodeType,
-        bytes4 selector
+        bytes4 selector,
+        bytes memory data
     ) external {
         s.sys.silo.assetSettings[token].liquidityWeightImplementation = Implementation(
             newLiquidityWeightImplementation,
             selector,
-            encodeType
+            encodeType,
+            data
         );
     }
 

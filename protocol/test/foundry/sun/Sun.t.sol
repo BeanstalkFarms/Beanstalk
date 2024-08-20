@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 /**
@@ -13,6 +12,7 @@ contract SunTest is TestHelper {
     // Events
     event Soil(uint32 indexed season, uint256 soil);
     event Shipped(uint32 indexed season, uint256 shipmentAmount);
+
     // event Receipt(IBS.ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
 
     function setUp() public {

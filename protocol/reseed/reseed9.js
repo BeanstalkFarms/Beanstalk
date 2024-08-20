@@ -1,10 +1,10 @@
-const { deployFacets, upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
 /**
  * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
  */
-async function reseed9(account) {
+async function reseed9(account, L2Beanstalk, verbose = false) {
   // get list of facets to deploy:
   let facets = [
     "SeasonFacet", // SUN
@@ -40,7 +40,11 @@ async function reseed9(account) {
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
-    "LibGerminate"
+    "LibGerminate",
+    "LibShipping",
+    "LibFlood",
+    "LibSilo",
+    "LibPipelineConvert"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -51,30 +55,30 @@ async function reseed9(account) {
       "LibIncentive",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate"
+      "LibGerminate",
+      "LibShipping",
+      "LibFlood"
     ],
-    ConvertFacet: ["LibConvert"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
+    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+    SiloFacet: ["LibSilo"],
+    EnrootFacet: ["LibSilo"]
   };
 
-  // Deploy all facets and external libraries.
-  let facetsAndNames = await deployFacets(
-    verbose,
-    mock,
-    facets,
-    libraryNames,
-    facetLibraries,
-    totalGasUsed
-  );
+  // Season to reseed
+  const season = 12345;
 
   // upgrade beanstalk with all facets. calls `reseedRestart`
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
-    facetNames: facetsAndNames,
-    initFacetName: "reseedRestart",
+    facetNames: facets,
+    facetLibraries: facetLibraries,
+    libraryNames: libraryNames,
+    initFacetName: "InitReseed",
+    initArgs: [season],
     bip: false,
-    verbose: true,
+    verbose: verbose,
     account: account
   });
 }

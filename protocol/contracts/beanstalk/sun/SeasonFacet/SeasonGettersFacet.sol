@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {AppStorage} from "../../storage/AppStorage.sol";
-import {Season, SeedGauge, Weather, Rain, SeedGaugeSettings, Deposited, GerminationSide, AssetSettings} from "../../storage/System.sol";
+import {Season, SeedGauge, Weather, Rain, EvaluationParameters, Deposited, GerminationSide, AssetSettings} from "../../storage/System.sol";
 import {C} from "../../../C.sol";
 import {Decimal} from "contracts/libraries/Decimal.sol";
 import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
@@ -94,7 +94,10 @@ contract SeasonGettersFacet {
      * @notice Returns the total Delta B across all whitelisted minting liquidity Wells.
      */
     function totalDeltaB() external view returns (int256 deltaB) {
-        deltaB = LibWellMinting.check(C.BEAN_ETH_WELL);
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            deltaB = deltaB.add(LibWellMinting.check(tokens[i]));
+        }
     }
 
     /**
@@ -105,12 +108,20 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
-    function poolCurrentDeltaB(address pool) external view returns (int256 deltaB) {
+    function poolCurrentDeltaB(address pool) public view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
             (deltaB) = LibDeltaB.currentDeltaB(pool);
             return deltaB;
         } else {
             revert("Oracle: Pool not supported");
+        }
+    }
+
+    function cumulativeCurrentDeltaB(
+        address[] calldata pools
+    ) external view returns (int256 deltaB) {
+        for (uint256 i; i < pools.length; i++) {
+            deltaB += poolCurrentDeltaB(pools[i]);
         }
     }
 
@@ -422,56 +433,56 @@ contract SeasonGettersFacet {
         return s.sys.season.timestamp;
     }
 
-    function getSeedGaugeSetting() external view returns (SeedGaugeSettings memory) {
-        return s.sys.seedGaugeSettings;
+    function getSeedGaugeSetting() external view returns (EvaluationParameters memory) {
+        return s.sys.evaluationParameters;
     }
 
     function getMaxBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio;
+        return s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio;
     }
 
     function getMinBeanMaxLpGpPerBdvRatio() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio;
+        return s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio;
     }
 
     function getTargetSeasonsToCatchUp() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.targetSeasonsToCatchUp;
+        return s.sys.evaluationParameters.targetSeasonsToCatchUp;
     }
 
     function getPodRateLowerBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.podRateLowerBound;
+        return s.sys.evaluationParameters.podRateLowerBound;
     }
 
     function getPodRateOptimal() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.podRateOptimal;
+        return s.sys.evaluationParameters.podRateOptimal;
     }
 
     function getPodRateUpperBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.podRateUpperBound;
+        return s.sys.evaluationParameters.podRateUpperBound;
     }
 
     function getDeltaPodDemandLowerBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.deltaPodDemandLowerBound;
+        return s.sys.evaluationParameters.deltaPodDemandLowerBound;
     }
 
     function getDeltaPodDemandUpperBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.deltaPodDemandUpperBound;
+        return s.sys.evaluationParameters.deltaPodDemandUpperBound;
     }
 
     function getLpToSupplyRatioUpperBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound;
+        return s.sys.evaluationParameters.lpToSupplyRatioUpperBound;
     }
 
     function getLpToSupplyRatioOptimal() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.lpToSupplyRatioOptimal;
+        return s.sys.evaluationParameters.lpToSupplyRatioOptimal;
     }
 
     function getLpToSupplyRatioLowerBound() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound;
+        return s.sys.evaluationParameters.lpToSupplyRatioLowerBound;
     }
 
     function getExcessivePriceThreshold() external view returns (uint256) {
-        return s.sys.seedGaugeSettings.excessivePriceThreshold;
+        return s.sys.evaluationParameters.excessivePriceThreshold;
     }
 
     function getWellsByDeltaB()

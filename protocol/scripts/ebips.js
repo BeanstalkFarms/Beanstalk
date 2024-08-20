@@ -166,6 +166,71 @@ async function ebip15(mock = true, account = undefined) {
   });
 }
 
+async function ebip15(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["SiloFacet", "SiloGettersFacet"],
+    libraryNames: ['LibSilo'],
+    facetLibraries: {
+      'SiloFacet': ['LibSilo']
+    },
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+async function ebip16(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["SiloFacet", "SiloGettersFacet", "ConvertFacet", "EnrootFacet"],
+    libraryNames: ['LibSilo', 'LibConvert'],
+    facetLibraries: {
+      'SiloFacet': ['LibSilo'],
+      'ConvertFacet': ['LibConvert']
+    },
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+async function ebip17(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    facetNames: ["MigrationFacet", "MarketplaceFacet", "ConvertFacet", "EnrootFacet", "SiloGettersFacet", "SiloFacet"],
+    initFacetName: "InitHotFix6",
+    libraryNames: ['LibSilo', 'LibConvert'],
+    facetLibraries: {
+      'SiloFacet': ['LibSilo'],
+      'ConvertFacet': ['LibConvert'],
+      'EnrootFacet': ['LibSilo']
+    },
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
+
+
 async function bipDiamondCut(name, dc, account, mock = true) {
   beanstalk = await getBeanstalk();
   if (mock) {
@@ -198,3 +263,5 @@ exports.ebip11 = ebip11;
 exports.ebip13 = ebip13;
 exports.ebip14 = ebip14;
 exports.ebip15 = ebip15;
+exports.ebip16 = ebip16;
+exports.ebip17 = ebip17;
