@@ -231,6 +231,8 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
+
+        console.log("Well Proxy for token pair %s deployed at: %s", name, wellProxy);
     }
 
     function deployUpgradableWells(address bean) internal {

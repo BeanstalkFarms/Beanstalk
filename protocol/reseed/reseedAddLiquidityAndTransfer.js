@@ -3,9 +3,9 @@ const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
 // TODO: Replace with L2 well addresses.
 const WellAddresses = [
-  "0x2871ac50d1FEa78421f1126619042aCBc5f3798A", // BEAN/WETH
-  "0x2DDC71c375852aeDe6371Af7a708C99690339418", // BEAN/WstETH
-  "0x98b20D27D21C72c5f88CdF90E808A95121f6168F" // BEAN/USDC
+  "0x8cDa74f4e430e3AD0Da6Ab2721E74164DcE981fd", // BEAN/WETH
+  "0xF95f4cEe40313dBF19F6Cc53203940A17598B3a9", // BEAN/WstETH
+  "0x2FBa48E34376536fC1c14AacD49e4683Bd2055a1" // BEAN/USDC
 ];
 
 const NonBeanToken = [
