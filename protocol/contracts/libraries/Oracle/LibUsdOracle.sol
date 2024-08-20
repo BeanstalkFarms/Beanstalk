@@ -123,7 +123,16 @@ library LibUsdOracle {
                 0,
                 lookback
             );
-            return tokenPrice.mul(chainlinkTokenPrice).div(CHAINLINK_DENOMINATOR);
+
+            // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
+            // thus the price needs to be inverted.
+            if (tokenDecimals != 0) {
+                tokenPrice = (10 ** (6 + tokenDecimals)) / tokenPrice;
+                return (tokenPrice * chainlinkTokenPrice) / (10 ** tokenDecimals);
+            } else {
+                // return the TOKEN/USD price.
+                return (tokenPrice * chainlinkTokenPrice) / CHAINLINK_DENOMINATOR;
+            }
         }
 
         // If the oracle implementation address is not set, use the current contract.

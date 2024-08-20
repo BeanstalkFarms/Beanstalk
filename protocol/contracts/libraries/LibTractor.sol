@@ -8,7 +8,7 @@ import {C} from "contracts/C.sol";
 
 /**
  * @title Lib Tractor
- * @author funderbrker, 0xm00neth
+ * @author funderbrker
  **/
 library LibTractor {
     enum CounterUpdateType {
