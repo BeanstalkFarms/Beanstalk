@@ -251,6 +251,13 @@ library LibDibbler {
                             // delta == 1
                             return _scaleTemperature(279415312704);
                         }
+                    } else {
+                        if (delta == 2) {
+                            return _scaleTemperature(145535557307);
+                        } else {
+                            // delta == 3
+                            return _scaleTemperature(209428496104);
+                        }
                     }
                 } else {
                     if (delta < 6) {
