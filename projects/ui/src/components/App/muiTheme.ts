@@ -127,6 +127,7 @@ export const BeanstalkPalette = {
 
   // Reds
   // #FBE6E0
+  red: '#DA2C38',
   washedRed: '#c35f42',
   mediumRed: lighten('#c35f42', 0.55),
   hoverRed: '#fef9f8',
