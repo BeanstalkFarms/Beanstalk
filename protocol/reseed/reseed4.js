@@ -1,25 +1,42 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 
-// Files
-const BARN_RAISE = "./reseed/data/r4-barn-raise.json";
-
-async function reseed4(account, L2Beanstalk) {
+async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
-  console.log("reseed4: reissue fertilizer, reinitialize fertilizer holder state.\n");
-  const [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF] = JSON.parse(
-    await fs.readFileSync(BARN_RAISE)
-  );
+  console.log("reseed4: re-initialize the field and plots.\n");
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedBarn",
-    initArgs: [fertilizerIds, ACTIVE_FERTILIZER, FERTILIZED_INDEX, UNFERTILIZED_INDEX, BPF],
-    bip: false,
-    verbose: false,
-    account: account
-  });
-  console.log("-----------------------------------");
+  // Files
+  let farmerPlotsPath;
+  if (mock) {
+    farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
+  } else {
+    farmerPlotsPath = "./reseed/data/r4-field.json";
+  }
+  // Read and parse the JSON file
+  const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
+
+  targetEntriesPerChunk = 800;
+  plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
+  const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
+  await InitFacet.deployed();
+  console.log(`Starting to process ${plotChunks.length} chunks...`);
+  for (let i = 0; i < plotChunks.length; i++) {
+    await updateProgress(i + 1, plotChunks.length);
+    console.log("-----------------------------------");
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedField",
+      initFacetAddress: InitFacet.address,
+      initArgs: [plotChunks[i]],
+      bip: false,
+      verbose: verbose,
+      account: account,
+      checkGas: true,
+      initFacetNameInfo: "ReseedField"
+    });
+  }
 }
+
 exports.reseed4 = reseed4;

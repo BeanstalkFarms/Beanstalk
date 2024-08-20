@@ -43,13 +43,13 @@ library C {
 
     //////////////////// Contracts ////////////////////
 
-    address internal constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address internal constant BEAN = 0xe64718A6d44406dE942d3d0f591E370B22263382;
     address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
 
-    address internal constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
-    address internal constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
+    address internal constant UNRIPE_BEAN = 0x9dBA4d8D19a35c5cf191C3F93a0C112e75a627E4;
+    address internal constant UNRIPE_LP = 0xECA13f8A535876C8293B0E140B56fFe5768c5816;
 
-    address private constant FERTILIZER = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
+    address private constant FERTILIZER = 0xC59f881074Bf039352C227E21980317e6b969c8A;
     address private constant FERTILIZER_ADMIN = 0xfECB01359263C12Aa9eD838F878A596F0064aa6e;
 
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -62,7 +62,7 @@ library C {
 
     uint256 internal constant WELL_MINIMUM_BEAN_BALANCE = 1000_000_000; // 1,000 Beans
     address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
-    address internal constant BEAN_WSTETH_WELL = 0xa61Ef2313C1eC9c8cf2E1cAC986539d136b1393E; // TODO: Set
+    address internal constant BEAN_WSTETH_WELL = 0xBeA0000113B0d182f4064C86B71c315389E4715D;
 
     //////////////////// Chainlink Oracles ////////////////////
     address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
