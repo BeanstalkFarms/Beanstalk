@@ -32,29 +32,7 @@ contract OracleTest is TestHelper {
         uint256 price = OracleFacet(address(bs)).getUsdTokenPrice(WBTC);
         assertEq(price, 0.00002e8, "price using encode type 0x01");
 
-        // change encode type to 0x02:
-        vm.prank(address(bs));
-        bs.updateOracleImplementationForToken(
-            WBTC,
-            IMockFBeanstalk.Implementation(
-                WBTC_USDC_03_POOL,
-                bytes4(0),
-                bytes1(0x02),
-                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
-            )
-        );
-
-        // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
-        vm.prank(address(bs));
-        bs.updateOracleImplementationForToken(
-            C.USDC,
-            IMockFBeanstalk.Implementation(
-                USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
-                bytes4(0),
-                bytes1(0x01),
-                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
-            )
-        );
+        setupUniswapWBTCOracleImplementation();
 
         price = OracleFacet(address(bs)).getTokenUsdPrice(WBTC);
         // 1 USDC will get ~500 satoshis of BTC at $50k
@@ -64,6 +42,28 @@ contract OracleTest is TestHelper {
         // function returns uint256(1e24).div(tokenPrice);
         // expected delta is 0.2004008016032064%
         assertApproxEqRel(price, 50000e6, 0.001e18, "price using encode type 0x02");
+    }
+
+    function test_uniswap_external() public {
+        setupUniswapWBTCOracleImplementation();
+
+        // exercise TokenUsd price and UsdToken price
+        uint256 tokenUsdPriceFromExternal = OracleFacet(BEANSTALK).getTokenUsdPriceFromExternal(
+            WBTC,
+            0
+        );
+        assertApproxEqRel(
+            tokenUsdPriceFromExternal,
+            50000e6,
+            0.001e18,
+            "tokenUsdPriceFromExternal"
+        );
+
+        uint256 usdTokenPriceFromExternal = OracleFacet(BEANSTALK).getUsdTokenPriceFromExternal(
+            WBTC,
+            0
+        );
+        assertEq(usdTokenPriceFromExternal, 0.00002e6, "usdTokenPriceFromExternal");
     }
 
     /**
@@ -281,5 +281,30 @@ contract OracleTest is TestHelper {
         // WBTC price is 50000
         uint256 priceWBTC = OracleFacet(address(bs)).getUsdTokenPrice(WBTC);
         assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
+    }
+
+    function setupUniswapWBTCOracleImplementation() public {
+        vm.prank(address(bs));
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                WBTC_USDC_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+
+        // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
+        vm.prank(address(bs));
+        bs.updateOracleImplementationForToken(
+            C.USDC,
+            IMockFBeanstalk.Implementation(
+                USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
     }
 }
