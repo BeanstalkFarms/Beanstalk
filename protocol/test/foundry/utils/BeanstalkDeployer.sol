@@ -10,7 +10,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Diamond} from "contracts/beanstalk/Diamond.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
 import {MockInitDiamond} from "contracts/mocks/newMockInitDiamond.sol";
-import {InitDiamond} from "contracts/beanstalk/init/newInitDiamond.sol";
+import {InitDiamond} from "contracts/beanstalk/init/InitDiamond.sol";
 import {DiamondLoupeFacet} from "contracts/beanstalk/diamond/DiamondLoupeFacet.sol";
 
 /// Beanstalk Contracts w/external libraries.
@@ -46,6 +46,9 @@ contract BeanstalkDeployer is Utils {
         "MarketplaceFacet",
         "ClaimFacet",
         "OracleFacet",
+        "L2MigrationFacet",
+        "TransmitOutFacet",
+        "TransmitInFacet",
         "L1RecieverFacet"
     ];
 
@@ -68,11 +71,14 @@ contract BeanstalkDeployer is Utils {
      * @notice deploys the beanstalk diamond contract.
      * @param mock if true, deploys all mocks and sets the diamond address to the canonical beanstalk address.
      */
-    function setupDiamond(bool mock, bool verbose) internal returns (Diamond d) {
+    function setupDiamond(
+        address payable diamondAddr,
+        bool mock,
+        bool verbose
+    ) public returns (Diamond d) {
         users = createUsers(6);
         deployer = users[0];
         vm.label(deployer, "Deployer");
-        vm.label(BEANSTALK, "Beanstalk");
 
         // Create cuts.
 
@@ -150,7 +156,7 @@ contract BeanstalkDeployer is Utils {
             cutActions.push(IDiamondCut.FacetCutAction.Add);
         }
         IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses, cutActions);
-        d = deployDiamondAtAddress(deployer, BEANSTALK);
+        d = deployDiamondAtAddress(deployer, diamondAddr);
 
         // if mocking, set the diamond address to
         // the canonical beanstalk address.

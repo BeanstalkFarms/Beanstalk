@@ -15,6 +15,7 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -144,6 +145,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      *
      * Pods are "burned" when the corresponding Plot is deleted from
      * `s.accts[account].fields[fieldId].plots`.
+     * @dev If Plot has been Slashed, burn the Plot. Anyone can burn Slashed Plots.
      */
     function harvest(
         uint256 fieldId,
@@ -157,6 +159,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     /**
      * @dev Ensure that each Plot is at least partially harvestable, burn the Plot,
      * update the total harvested, and emit a {Harvest} event.
+     * @dev If Plot has been Slashed, burn the Plot.
      */
     function _harvest(
         uint256 fieldId,
@@ -169,20 +172,24 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             uint256 harvested = _harvestPlot(LibTractor._user(), fieldId, plots[i]);
             beansHarvested += harvested;
         }
-        s.sys.fields[fieldId].harvested += beansHarvested;
+        s.sys.fields[fieldId].processed += beansHarvested;
         emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
     }
 
     /**
      * @dev Check if a Plot is at least partially Harvestable; calculate how many
      * Pods are Harvestable, create a new Plot if necessary.
+     * @dev If Plot has been Slashed, burn the Plot.
      */
     function _harvestPlot(
         address account,
         uint256 fieldId,
         uint256 index
     ) private returns (uint256 harvestablePods) {
-        // Check that `account` holds this Plot.
+        // If Plot held by null address, it has been Slashed. Burn Plot.
+        if (s.accts[address(0)].fields[fieldId].plots[index] > 0) {
+            account = address(0);
+        }
         uint256 pods = s.accts[account].fields[fieldId].plots[index];
         require(pods > 0, "Field: no plot");
 
@@ -191,10 +198,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         // are harvestable.
         harvestablePods = s.sys.fields[fieldId].harvestable.sub(index);
 
-        LibMarket._cancelPodListing(LibTractor._user(), fieldId, index);
+        LibMarket._cancelPodListing(account, fieldId, index);
 
-        delete s.accts[account].fields[fieldId].plots[index];
-        LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+        LibField.deletePlot(account, fieldId, index);
+
+        // If burning a Slashed Plot, amount harvestable does not decrease.
+        if (account == address(0)) {
+            s.sys.fields[fieldId].harvestable += harvestablePods;
+        }
 
         // If the entire Plot was harvested, exit.
         if (harvestablePods >= pods) {
@@ -203,11 +214,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
         // Create a new Plot with remaining Pods.
         uint256 newIndex = index.add(harvestablePods);
-        s.accts[account].fields[fieldId].plots[newIndex] = pods.sub(harvestablePods);
-        s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
-        s.accts[account].fields[fieldId].piIndex[newIndex] =
-            s.accts[account].fields[fieldId].plotIndexes.length -
-            1;
+        LibField.createPlot(account, fieldId, newIndex, pods.sub(harvestablePods));
     }
 
     //////////////////// CONFIG /////////////////////
@@ -264,19 +271,19 @@ contract FieldFacet is Invariable, ReentrancyGuard {
 
     /**
      * @notice Returns the number of outstanding Pods. Includes Pods that are
-     * currently Harvestable but have not yet been Harvested.
+     * currently Harvestable or Burnable but have not yet been Harvested.
      * @param fieldId The index of the Field to query.
      */
     function totalPods(uint256 fieldId) public view returns (uint256) {
-        return s.sys.fields[fieldId].pods - s.sys.fields[fieldId].harvested;
+        return s.sys.fields[fieldId].pods - s.sys.fields[fieldId].processed;
     }
 
     /**
-     * @notice Returns the number of Pods that have ever been Harvested.
+     * @notice Returns the number of Pods that have ever been Harvested or Burned.
      * @param fieldId The index of the Field to query.
      */
-    function totalHarvested(uint256 fieldId) public view returns (uint256) {
-        return s.sys.fields[fieldId].harvested;
+    function totalProcessed(uint256 fieldId) public view returns (uint256) {
+        return s.sys.fields[fieldId].processed;
     }
 
     /**
@@ -284,22 +291,24 @@ contract FieldFacet is Invariable, ReentrancyGuard {
      * have not yet been Harvested.
      * @dev This is the number of Pods that Beanstalk is prepared to pay back,
      * but that haven’t yet been claimed via the `harvest()` function.
+     * @dev Cannot use this number as an index, as there is no accounting for Slashed plots.
      * @param fieldId The index of the Field to query.
      */
     function totalHarvestable(uint256 fieldId) public view returns (uint256) {
-        return s.sys.fields[fieldId].harvestable - s.sys.fields[fieldId].harvested;
+        return s.sys.fields[fieldId].harvestable - s.sys.fields[fieldId].processed;
     }
 
     /**
      * @notice Returns the number of Pods that are currently Harvestable for the active Field.
+     * @dev Cannot use this number as an index, as there is no accounting for Slashed plots.
      */
     function totalHarvestableForActiveField() public view returns (uint256) {
-        return
-            s.sys.fields[s.sys.activeField].harvestable - s.sys.fields[s.sys.activeField].harvested;
+        return totalHarvestable(s.sys.activeField);
     }
 
     /**
      * @notice Returns the number of Pods that are not yet Harvestable. Also known as the Pod Line.
+     * @dev Includes Slashed Pods.
      * @param fieldId The index of the Field to query.
      */
     function totalUnharvestable(uint256 fieldId) public view returns (uint256) {

@@ -63,7 +63,7 @@ contract ReseedField {
 
         s.sys.fields[fieldId].pods = totalPods;
         s.sys.fields[fieldId].harvestable = harvestable;
-        s.sys.fields[fieldId].harvested = harvested;
+        s.sys.fields[fieldId].processed = harvested;
 
         // soil demand initialization.
         s.sys.weather.thisSowTime = type(uint32).max;

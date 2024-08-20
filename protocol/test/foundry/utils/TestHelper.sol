@@ -18,6 +18,8 @@ import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
+import {LibAltC} from "test/foundry/utils/LibAltC.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
@@ -34,6 +36,9 @@ import {Pipeline} from "contracts/pipeline/Pipeline.sol";
  * @title TestHelper
  * @author Brean
  * @notice Test helper contract for Beanstalk tests.
+ *
+ * This contract represents the initialization of a fresh Beanstalk system for testing.
+ * All deployment addresses for Beanstalk ecosystem contracts are set in this contract.
  */
 contract TestHelper is
     Test,
@@ -46,8 +51,7 @@ contract TestHelper is
 {
     Pipeline pipeline;
 
-    MockToken bean = MockToken(C.BEAN);
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
+    MockToken bean;
 
     // ideally, timestamp should be set to 1_000_000.
     // however, beanstalk rounds down to the nearest hour.
@@ -71,9 +75,21 @@ contract TestHelper is
     /**
      * @notice initializes the state of the beanstalk contracts for testing.
      */
-    function initializeBeanstalkTestState(bool mock, bool verbose) public {
+    function initializeBeanstalkTestState(bool mock, bool alt, bool verbose) public {
+        bean = MockToken(C.BEAN);
+        FERTILIZER = C.fertilizerAddress();
+        address payable bsAddr;
+        // Set the deployment addresses of various Beanstalk components.
+        if (!alt) {
+            bsAddr = payable(LibConstant.BEANSTALK);
+            vm.label(bsAddr, "Beanstalk_");
+        } else {
+            bsAddr = payable(LibAltC.BEANSTALK);
+            vm.label(bsAddr, "Alt_Beanstalk");
+        }
+
         // general mock interface for beanstalk.
-        bs = IMockFBeanstalk(BEANSTALK);
+        bs = IMockFBeanstalk(bsAddr);
 
         // initialize misc contracts.
         initMisc();
@@ -82,7 +98,7 @@ contract TestHelper is
         // as starting from an timestamp of 0 can cause issues.
         vm.warp(INITIAL_TIMESTAMP);
 
-        // initalize mock tokens.
+        // initialize mock tokens.
         initMockTokens(verbose);
 
         // initialize Depot:
@@ -100,10 +116,10 @@ contract TestHelper is
         // deploy fertilizer contract, and transfer ownership to beanstalk.
         // note: does not initailize barn raise.
         initFertilizer(verbose);
-        transferFertilizerOwnership(BEANSTALK);
+        transferFertilizerOwnership(bsAddr);
 
-        // initialize Diamond, initalize users:
-        setupDiamond(mock, verbose);
+        // initialize Diamond, initialize users:
+        setupDiamond(bsAddr, mock, verbose);
 
         // Initialize Shipment Routes and Plans.
         initShipping(verbose);
@@ -120,7 +136,7 @@ contract TestHelper is
         address user,
         uint256 unripeBeanAmount,
         uint256 unripeLpAmount
-    ) internal {
+    ) public {
         // mint tokens to users.
         mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
         mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
@@ -167,7 +183,7 @@ contract TestHelper is
     function maxApproveBeanstalk(address[] memory users) public {
         for (uint i; i < users.length; i++) {
             vm.prank(users[i]);
-            C.bean().approve(BEANSTALK, type(uint256).max);
+            C.bean().approve(address(bs), type(uint256).max);
         }
     }
 
@@ -188,14 +204,14 @@ contract TestHelper is
     function mintTokensToUser(address user, address token, uint256 amount) internal {
         MockToken(token).mint(user, amount);
         vm.prank(user);
-        MockToken(token).approve(BEANSTALK, type(uint256).max);
+        MockToken(token).approve(address(bs), type(uint256).max);
     }
 
     function addLiquidityToWell(
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal returns (uint256) {
+    ) public returns (uint256) {
         return addLiquidityToWell(users[0], well, beanAmount, nonBeanTokenAmount);
     }
 
@@ -207,7 +223,7 @@ contract TestHelper is
         address well,
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
-    ) internal returns (uint256 lpOut) {
+    ) public returns (uint256 lpOut) {
         (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
 
         // mint and sync.
@@ -296,7 +312,7 @@ contract TestHelper is
             MockToken(token).mint(user, amount);
         }
         outputAmount = amount;
-        MockToken(token).approve(BEANSTALK, amount);
+        MockToken(token).approve(address(bs), amount);
         bs.deposit(token, amount, 0);
     }
 
@@ -505,17 +521,17 @@ contract TestHelper is
     /**
      * @notice Set up the silo deposit test by depositing beans to the silo from multiple users.
      * @param amount The amount of beans to deposit.
-     * @return _amount The actual amount of beans deposited.
+     * @return amount The actual amount of beans deposited.
      * @return stem The stem tip for the deposited beans.
      */
-    function setUpSiloDepositTest(
+    function setUpSiloDeposits(
         uint256 amount,
-        address[] memory _farmers
-    ) public returns (uint256 _amount, int96 stem) {
-        _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
-
-        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
-        stem = bs.stemTipForToken(C.BEAN);
+        address[] memory users
+    ) public returns (uint256, int96) {
+        amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
+        depositForUsers(users, C.BEAN, amount, LibTransfer.From.EXTERNAL);
+        int96 stem = bs.stemTipForToken(C.BEAN);
+        return (amount, stem);
     }
 
     /**
@@ -532,21 +548,30 @@ contract TestHelper is
         LibTransfer.From mode
     ) public {
         for (uint256 i = 0; i < users.length; i++) {
+            mintTokensToUser(users[i], C.BEAN, amount);
             vm.prank(users[i]);
-            bs.deposit(token, amount, uint8(mode)); // switching from silo.deposit to bs.deposit, but bs does not have a From enum, so casting to uint8.
+            bs.deposit(token, amount, uint8(mode));
         }
     }
 
     /**
-     * @notice mints `sowAmount` beans for farmer,
-     * issues `sowAmount` of beans to farmer.
-     * sows `sowAmount` of beans.
+     * @notice Sows beans for a user.
      */
-    function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
-        bs.setSoilE(sowAmount);
-        mintTokensToUser(farmer, C.BEAN, sowAmount);
-        vm.prank(farmer);
-        bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
+    function sowForUser(address user, uint256 beans) internal returns (uint256 pods) {
+        bs.setSoilE(beans);
+        mintTokensToUser(user, C.BEAN, beans);
+        vm.prank(user);
+        return bs.sow(beans, 0, uint8(LibTransfer.From.EXTERNAL));
+    }
+
+    function buyFertForUser(
+        address user,
+        uint256 ethAmount
+    ) internal returns (uint256 fertilizerAmountOut) {
+        ethAmount = bound(ethAmount, 1e18, 100e18);
+        mintTokensToUser(user, bs.getBarnRaiseToken(), ethAmount);
+        vm.prank(user);
+        return bs.mintFertilizer(ethAmount, 0, 0);
     }
 
     /**
@@ -554,7 +579,7 @@ contract TestHelper is
      * and warps the time to that timestamp.
      */
     function warpToNextSeasonTimestamp() internal noGasMetering {
-        uint256 nextTimestamp = season.getNextSeasonStart();
+        uint256 nextTimestamp = bs.getNextSeasonStart();
         vm.warp(nextTimestamp);
     }
 

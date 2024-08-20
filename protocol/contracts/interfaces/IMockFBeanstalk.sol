@@ -252,6 +252,32 @@ interface IMockFBeanstalk {
         bool isSoppable;
     }
 
+    struct SourceDeposit {
+        address token;
+        uint256 amount;
+        int96 stem;
+        uint256[] sourceMinTokenAmountsOut; // LP only
+        uint256 destMinLpOut; // LP only
+        uint256 lpDeadline;
+        uint256 _grownStalk; // not stalk // need to change logic
+        uint256 _burnedBeans;
+        address _transferredToken; // NOTE what if LP type is not supported at destination?
+        uint256 _transferredTokenAmount;
+    }
+
+    struct SourcePlot {
+        uint256 fieldId;
+        uint256 index;
+        uint256 amount;
+        uint256 existingIndex;
+    }
+
+    struct SourceFertilizer {
+        uint128 id;
+        uint256 amount;
+        uint128 _remainingBpf;
+    }
+
     error AddressEmptyCode(address target);
     error AddressInsufficientBalance(address account);
     error ECDSAInvalidSignature();
@@ -291,6 +317,7 @@ interface IMockFBeanstalk {
     event CancelBlueprint(bytes32 blueprintHash);
     event ChangeUnderlying(address indexed token, int256 underlying);
     event Chop(address indexed account, address indexed token, uint256 amount, uint256 underlying);
+    event ClaimFertilizer(uint256[] ids, uint256 beans);
     event ClaimPlenty(address indexed account, address token, uint256 plenty);
     event Convert(
         address indexed account,
@@ -1247,6 +1274,22 @@ interface IMockFBeanstalk {
 
     function migrationNeeded(address account) external view returns (bool hasMigrated);
 
+    function transmitOut(
+        address destination,
+        SourceDeposit[] calldata sourceDeposits,
+        SourcePlot[] calldata sourcePlots,
+        SourceFertilizer[] calldata sourceFertilizer,
+        bytes calldata data
+    ) external;
+
+    function transmitIn(
+        address user,
+        bytes[] calldata deposits,
+        bytes[] calldata plots,
+        bytes[] calldata fertilizer,
+        bytes calldata data
+    ) external;
+
     function mintBeans(address to, uint256 amount) external;
 
     function mintFertilizer(
@@ -1275,7 +1318,7 @@ interface IMockFBeanstalk {
         GerminationSide side
     ) external;
 
-    function mockInitalizeGaugeForToken(
+    function mockInitializeGaugeForToken(
         address token,
         bytes4 gaugePointSelector,
         bytes4 liquidityWeightSelector,
@@ -1590,6 +1633,8 @@ interface IMockFBeanstalk {
 
     function setMaxTempE(uint32 number) external;
 
+    function initDestinationField(uint256 srcInitPods) external;
+
     function setMerkleRootE(address unripeToken, bytes32 root) external;
 
     function setNextSowTimeE(uint32 _time) external;
@@ -1626,6 +1671,8 @@ interface IMockFBeanstalk {
         uint256 minSoil,
         uint8 mode
     ) external payable returns (uint256 pods);
+
+    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 
     function stemStartSeason() external view returns (uint16);
 
@@ -1919,6 +1966,4 @@ interface IMockFBeanstalk {
     function getReciever(address owner) external view returns (address);
 
     function setRecieverForL1Migration(address owner, address reciever) external;
-
-    function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
 }

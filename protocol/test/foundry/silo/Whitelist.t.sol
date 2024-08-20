@@ -38,7 +38,7 @@ contract WhitelistTest is TestHelper {
     event DewhitelistToken(address indexed token);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
     }
 
     // reverts if not owner.
@@ -72,7 +72,7 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(BEANSTALK) {
+    function test_whitelistRevertInvalidGaugePointSelector(uint i) public prank(address(bs)) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = bytes4(keccak256(abi.encode(i)));
 
@@ -104,7 +104,7 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(BEANSTALK) {
+    function test_whitelistRevertInvalidLiquidityWeightSelector(uint i) public prank(address(bs)) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = bytes4(keccak256(abi.encode(i)));
@@ -137,7 +137,7 @@ contract WhitelistTest is TestHelper {
         );
     }
 
-    function test_whitelistRevertExistingWhitelistedToken() public prank(BEANSTALK) {
+    function test_whitelistRevertExistingWhitelistedToken() public prank(address(bs)) {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
@@ -184,7 +184,7 @@ contract WhitelistTest is TestHelper {
         uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) public prank(BEANSTALK) {
+    ) public prank(address(bs)) {
         address token = address(new MockToken("Mock Token", "MTK"));
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
@@ -239,7 +239,7 @@ contract WhitelistTest is TestHelper {
         uint8 encodeType,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) public prank(BEANSTALK) {
+    ) public prank(address(bs)) {
         address token = address(new MockToken("Mock Token", "MTK"));
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
@@ -287,7 +287,7 @@ contract WhitelistTest is TestHelper {
     /**
      * @notice validates general dewhitelist functionality.
      */
-    function test_dewhitelist(uint256 i, uint256 season) public prank(BEANSTALK) {
+    function test_dewhitelist(uint256 i, uint256 season) public prank(address(bs)) {
         season = bound(season, 1, type(uint32).max);
         bs.teleportSunrise(uint32(season));
         address[] memory tokens = bs.getWhitelistedTokens();
@@ -313,7 +313,7 @@ contract WhitelistTest is TestHelper {
         uint48 stalkIssuedPerBdv,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    ) public prank(BEANSTALK) {
+    ) public prank(address(bs)) {
         address token = address(new MockToken("Mock Token", "MTK"));
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
         bytes1 encodeType = 0x01;

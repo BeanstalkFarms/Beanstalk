@@ -11,6 +11,7 @@ import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
 import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.sol";
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
 import {C} from "contracts/C.sol";
@@ -45,11 +46,10 @@ contract PipelineConvertTest is TestHelper {
     using LibRedundantMath256 for uint256;
 
     // Interfaces.
-    // IMockFBeanstalk bs = IMockFBeanstalk(BEANSTALK);
-    MockSiloFacet silo = MockSiloFacet(BEANSTALK);
-    MockPipelineConvertFacet pipelineConvert = MockPipelineConvertFacet(BEANSTALK);
-    PipelineConvertFacet convert = PipelineConvertFacet(BEANSTALK);
-    DepotFacet depot = DepotFacet(BEANSTALK);
+    MockSiloFacet silo;
+    PipelineConvertFacet convert;
+    MockPipelineConvertFacet pipelineConvert;
+    DepotFacet depot;
     address beanEthWell = C.BEAN_ETH_WELL;
     address beanwstethWell = C.BEAN_WSTETH_WELL;
     MiscHelperContract miscHelper = new MiscHelperContract();
@@ -127,11 +127,16 @@ contract PipelineConvertTest is TestHelper {
     );
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
-        // initalize farmers.
+        // initialize farmers.
         farmers.push(users[1]);
         farmers.push(users[2]);
+
+        silo = MockSiloFacet(address(bs));
+        convert = PipelineConvertFacet(address(bs));
+        pipelineConvert = MockPipelineConvertFacet(address(bs));
+        depot = DepotFacet(address(bs));
 
         // add initial liquidity to bean eth well:
         // prank beanstalk deployer (can be anyone)
@@ -231,7 +236,7 @@ contract PipelineConvertTest is TestHelper {
     function testBasicConvertLPToBean(uint256 amount) public {
         vm.pauseGasMetering();
 
-        // well is initalized with 10000 beans. cap add liquidity
+        // well is initialized with 10000 beans. cap add liquidity
         // to reasonable amounts.
         amount = bound(amount, 1e6, 10000e6);
 
@@ -262,7 +267,7 @@ contract PipelineConvertTest is TestHelper {
     function testConvertLPToLP(uint256 amount, uint256 inputIndex, uint256 outputIndex) public {
         vm.pauseGasMetering();
 
-        // well is initalized with 10000 beans. cap add liquidity
+        // well is initialized with 10000 beans. cap add liquidity
         // to reasonable amounts.
         amount = bound(amount, 10e6, 5000e6);
 
@@ -933,7 +938,7 @@ contract PipelineConvertTest is TestHelper {
         updateMockPumpUsingWellReserves(beanEthWell);
 
         // move foward 10 seasons so we have grown stalk
-        season.siloSunrise(10);
+        bs.siloSunrise(10);
 
         BeanToBeanTestData memory td;
         td.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
@@ -1652,13 +1657,12 @@ contract PipelineConvertTest is TestHelper {
     ) public returns (int96 stem) {
         vm.pauseGasMetering();
         // amount = bound(amount, 1e6, 5000e6);
-        bean.mint(user, amount);
 
         // setup array of addresses with user
         address[] memory users = new address[](1);
         users[0] = user;
 
-        (amount, stem) = setUpSiloDepositTest(amount, users);
+        (amount, stem) = setUpSiloDeposits(amount, users);
 
         passGermination();
     }
@@ -1686,7 +1690,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(users[1]);
-        MockToken(well).approve(BEANSTALK, type(uint256).max);
+        MockToken(well).approve(address(bs), type(uint256).max);
 
         vm.prank(users[1]);
         (uint256 depositedAmount, uint256 _bdv, int96 theStem) = silo.deposit(
@@ -1807,7 +1811,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(user);
-        MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
+        MockToken(beanEthWell).approve(address(bs), type(uint256).max);
     }
 
     function removeEthFromWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
@@ -1831,7 +1835,7 @@ contract PipelineConvertTest is TestHelper {
 
         // approve spending well token to beanstalk
         vm.prank(user);
-        MockToken(beanEthWell).approve(BEANSTALK, type(uint256).max);
+        MockToken(beanEthWell).approve(address(bs), type(uint256).max);
     }
 
     /**

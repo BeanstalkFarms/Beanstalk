@@ -20,8 +20,8 @@ contract FarmTest is TestHelper {
     address[] farmers;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 100_000);
+        initializeBeanstalkTestState(true, false, true);
+        MockToken(C.WETH).mint(address(bs), 100_000);
 
         farmers = createUsers(2);
         mintTokensToUsers(farmers, C.BEAN, 100_000e6);

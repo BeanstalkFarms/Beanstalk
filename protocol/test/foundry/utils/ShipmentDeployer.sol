@@ -26,18 +26,18 @@ contract ShipmentDeployer is Utils {
     address shipmentPlanner;
     address shipmentPlannerFour;
 
-    function initShipping(bool verbose) internal {
-        bs = IBS(BEANSTALK);
-
-        // Create Field, set active, and initialize Temperature.
+    function initShipping(bool verbose) public {
+        // Create two Fields, set active, and initialize Temperature.
+        // vm.prank(deployer);
+        // bs.addField();
         vm.prank(deployer);
         bs.addField();
         vm.prank(deployer);
         bs.setActiveField(0, 1);
 
         // Deploy the planner, which will determine points and caps of each route.
-        shipmentPlanner = address(new ShipmentPlanner(BEANSTALK));
-        shipmentPlannerFour = address(new ShipmentPlannerFour(BEANSTALK));
+        shipmentPlanner = address(new ShipmentPlanner(address(bs)));
+        shipmentPlannerFour = address(new ShipmentPlannerFour(address(bs)));
 
         // Set up three routes: the Silo, Barn, and a Field.
         setRoutes_siloAndBarnAndField();
@@ -48,7 +48,7 @@ contract ShipmentDeployer is Utils {
     /**
      * @notice Set the shipment routes to only the Silo. It will receive 100% of Mints.
      */
-    function setRoutes_silo() internal {
+    function setRoutes_silo() public {
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](1);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -63,7 +63,7 @@ contract ShipmentDeployer is Utils {
     /**
      * @notice Set the shipment routes to the Silo and Barn. Each wil receive 50% of Mints.
      */
-    function setRoutes_siloAndBarn() internal {
+    function setRoutes_siloAndBarn() public {
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](2);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -81,8 +81,8 @@ contract ShipmentDeployer is Utils {
         bs.setShipmentRoutes(shipmentRoutes);
     }
 
-    function setRoutes_siloAndFields() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+    function setRoutes_siloAndFields() public {
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](1 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -106,8 +106,8 @@ contract ShipmentDeployer is Utils {
      * @notice Set the shipment routes to the Silo, Barn, and 1 Field. Each will receive 1/3 of Mints.
      * @dev Need to add Fields before calling.
      */
-    function setRoutes_siloAndBarnAndField() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+    function setRoutes_siloAndBarnAndField() public {
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](2 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({
             planContract: shipmentPlanner,
@@ -136,8 +136,8 @@ contract ShipmentDeployer is Utils {
      *         Mints are split 3/3/3/1, respectively.
      * @dev Need to add Fields before calling.
      */
-    function setRoutes_siloAndBarnAndTwoFields() internal {
-        uint256 fieldCount = IBS(BEANSTALK).fieldCount();
+    function setRoutes_siloAndBarnAndTwoFields() public {
+        uint256 fieldCount = IBS(address(bs)).fieldCount();
         require(fieldCount == 2, "Must have 2 Fields to set routes");
         IBS.ShipmentRoute[] memory shipmentRoutes = new IBS.ShipmentRoute[](2 + fieldCount);
         shipmentRoutes[0] = IBS.ShipmentRoute({

@@ -6,10 +6,12 @@ pragma solidity ^0.8.20;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
-import "contracts/beanstalk/init/InitalizeDiamond.sol";
+import "contracts/beanstalk/init/InitializeDiamond.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
+import {LibTransmitIn} from "contracts/libraries/ForkSystem/LibTransmitIn.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {C} from "contracts/C.sol";
 
@@ -22,7 +24,7 @@ import {C} from "contracts/C.sol";
  * - Whitelists the bean:wsteth well.
  * - Whitelists unripe assets.
  **/
-contract MockInitDiamond is InitalizeDiamond {
+contract MockInitDiamond is InitializeDiamond {
     // min 1micro stalk earned per season due to germination.
     uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
     uint32 constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
@@ -30,18 +32,24 @@ contract MockInitDiamond is InitalizeDiamond {
     uint32 constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
 
     function init() external {
-        // initalize the default state of the diamond.
-        // {see. InitalizeDiamond.initalizeDiamond()}
-        initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
+        // initialize the default state of the diamond.
+        // {see. InitializeDiamond.initializeDiamond()}
+        initializeDiamond(C.BEAN, C.BEAN_ETH_WELL);
 
-        // initalizes unripe assets.
+        // initializes unripe assets.
         // sets the underlying LP token of unripeLP to the Bean:wstETH well.
         address underlyingUrLPWell = C.BEAN_WSTETH_WELL;
         whitelistUnderlyingUrLPWell(underlyingUrLPWell);
-        initalizeUnripeAssets(underlyingUrLPWell);
+        initializeUnripeAssets(underlyingUrLPWell);
+
+        // Set accepted source (ie parent) to be original Beanstalk.
+        s.sys.supportedSourceForks[0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5] = true;
+        // TODO: Set this based on configured source.
+        uint256 srcInitPods = 0;
+        LibTransmitIn._initDestinationField(srcInitPods);
     }
 
-    function initalizeUnripeAssets(address well) internal {
+    function initializeUnripeAssets(address well) internal {
         (
             address[] memory unripeTokens,
             address[] memory underlyingTokens
@@ -97,7 +105,7 @@ contract MockInitDiamond is InitalizeDiamond {
     }
 
     /**
-     * @notice initalizes the unripe silo settings.
+     * @notice initializes the unripe silo settings.
      * @dev unripe bean and unrpe lp has the same settings,
      * other than the BDV calculation.
      */

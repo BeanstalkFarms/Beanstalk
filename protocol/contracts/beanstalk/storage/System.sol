@@ -38,9 +38,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param weather See {Weather}.
  * @param seedGauge Stores the seedGauge.
  * @param rain See {Rain}.
- * @param migration See {Migration}.
+ * @param l2Migration See {L2Migration}.
  * @param evaluationParameters See {EvaluationParameters}.
  * @param sop See {SeasonOfPlenty}.
+ * @param supportedSourceForks a mapping of addresses that can transmit into this Beanstalk instance.
  */
 struct System {
     bool paused;
@@ -77,7 +78,7 @@ struct System {
     L2Migration l2Migration;
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
-    // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
+    mapping(address => bool) supportedSourceForks;
 }
 
 /**
@@ -109,15 +110,21 @@ struct Silo {
 /**
  * @notice System-level Field state variables.
  * @param pods The pod index; the total number of Pods ever minted.
- * @param harvested The harvested index; the total number of Pods that have ever been Harvested.
- * @param harvestable The harvestable index; the total number of Pods that have ever been Harvestable. Included previously Harvested Beans.
+ * @param processed Amount of Pods that have ever been Harvested or Slashed.
+ * @param harvestable Index of Pods that have ever been Harvestable. Included Processed Pods.
+ * @param latestTransmittedPlotIndex The index of the latest Plot that has been transmitted in.
+ * @param latestTransmittedPlotOwner The owner of the latest Plot that has been transmitted in.
+ * @param srcInitPods The amount of pods in source beanstalk field at destination deployment.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
     uint256 pods;
-    uint256 harvested;
+    uint256 processed;
     uint256 harvestable;
-    bytes32[8] _buffer;
+    uint256 latestTransmittedPlotIndex;
+    address latestTransmittedPlotOwner;
+    uint256 srcInitPods;
+    bytes32[5] _buffer;
 }
 
 /**

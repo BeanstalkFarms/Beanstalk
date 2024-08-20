@@ -49,7 +49,7 @@ contract SunriseTest is TestHelper {
     uint256 constant SEASON_DURATION = 3600;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
         farmers.push(users[1]);
 
         // add liquidity for the bean weth well, and bean wsteth well.
@@ -79,7 +79,7 @@ contract SunriseTest is TestHelper {
         // upon the first sunrise call of a well, the well cumulative reserves are initialized,
         // and will not return a deltaB. We initialize the well cumulative reserves here.
         // See: {LibWellMinting.capture}
-        season.initOracleForAllWhitelistedWells();
+        bs.initOracleForAllWhitelistedWells();
 
         // chainlink oracles need to be initialized for the wells.
         initializeChainlinkOraclesForWhitelistedWells();
@@ -94,9 +94,9 @@ contract SunriseTest is TestHelper {
         s = bound(s, 1, type(uint32).max);
         timestamp = bound(timestamp, 0, (s * SEASON_DURATION) - 1);
         skip(timestamp);
-        season.setCurrentSeasonE(uint32(s));
+        bs.setCurrentSeasonE(uint32(s));
         vm.expectRevert("Season: Still current Season.");
-        season.sunrise();
+        bs.sunrise();
     }
 
     /////////// VERIFY SUNRISE EXECUTION ///////////
@@ -139,7 +139,7 @@ contract SunriseTest is TestHelper {
     function test_lateSunrise(uint256 s, uint256 secondsLate) public {
         // max season is type(uint32).max - 2.
         s = bound(s, 1, type(uint32).max - 2);
-        season.setCurrentSeasonE(uint32(s));
+        bs.setCurrentSeasonE(uint32(s));
         warpToNextSeasonTimestamp();
 
         uint256 maxTimestamp = (type(uint32).max * SEASON_DURATION + INITIAL_TIMESTAMP);
@@ -155,7 +155,7 @@ contract SunriseTest is TestHelper {
     function test_multiple_sunrises(uint256 s, uint256 secondsLate) public {
         // max season is type(uint32).max - 2.
         s = bound(s, 1, type(uint32).max - 3);
-        season.setCurrentSeasonE(uint32(s));
+        bs.setCurrentSeasonE(uint32(s));
         warpToNextSeasonTimestamp();
 
         uint256 maxTimestamp = (type(uint32).max * SEASON_DURATION + INITIAL_TIMESTAMP - 7200);
@@ -178,11 +178,11 @@ contract SunriseTest is TestHelper {
      */
     function test_stepSeason(uint256 s) public {
         s = bound(s, 1, type(uint32).max - 1);
-        season.setCurrentSeasonE(uint32(s));
+        bs.setCurrentSeasonE(uint32(s));
 
         vm.expectEmit();
         emit Sunrise(s + 1);
-        season.mockStepSeason();
+        bs.mockStepSeason();
 
         assertEq(bs.season(), s + 1);
         assertEq(bs.sunriseBlock(), block.number);
@@ -251,7 +251,7 @@ contract SunriseTest is TestHelper {
 
         vm.resumeGasMetering();
 
-        season.sunrise();
+        bs.sunrise();
     }
 
     /**

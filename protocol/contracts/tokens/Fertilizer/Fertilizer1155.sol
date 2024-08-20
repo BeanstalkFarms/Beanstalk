@@ -88,6 +88,23 @@ contract Fertilizer1155 is ERC1155Upgradeable {
         __doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
     }
 
+    function _safeBurn(
+        address from,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual {
+        require(from != address(0), "ERC1155: burn from the zero address");
+
+        address operator = _msgSender();
+
+        _transfer(from, address(0), id, amount);
+
+        emit TransferSingle(operator, from, address(0), id, amount);
+
+        __doSafeTransferAcceptanceCheck(operator, from, address(0), id, amount, data);
+    }
+
     // The 3 functions below are copied from:
     // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC1155/ERC1155.sol)
     // as they are private functions.

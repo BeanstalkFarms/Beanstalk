@@ -18,18 +18,18 @@ contract GaugeTest is TestHelper {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     // Interfaces.
-    MockLiquidityWeight mlw = MockLiquidityWeight(BEANSTALK);
+    MockLiquidityWeight mlw = MockLiquidityWeight(address(bs));
     GaugePointPrice gpP;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
         // deploy mockLiquidityWeight contract for testing.
         mlw = new MockLiquidityWeight(0.5e18);
 
         // deploy gaugePointPrice contract for WETH, with a price threshold of 500 USD,
         // and a gaugePoint of 10.
-        gpP = new GaugePointPrice(BEANSTALK, C.WETH, 500e6, 10e18);
+        gpP = new GaugePointPrice(address(bs), C.WETH, 500e6, 10e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////
@@ -46,7 +46,7 @@ contract GaugeTest is TestHelper {
         if (foo < 3) caseId = caseId + (3 - foo);
 
         // set the bean to max lp to < 1 point.
-        season.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
+        bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
 
         // iterate through the sunrise with the case.
         vm.expectEmit();
@@ -55,7 +55,7 @@ contract GaugeTest is TestHelper {
             caseId,
             -int80(uint80(initBeanToMaxLPRatio))
         );
-        season.seedGaugeSunSunrise(0, caseId);
+        bs.seedGaugeSunSunrise(0, caseId);
 
         assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
     }
@@ -72,7 +72,7 @@ contract GaugeTest is TestHelper {
         if (foo > 2) caseId = caseId - foo;
 
         // set the bean to max lp to < 1 point.
-        season.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
+        bs.setBeanToMaxLpGpPerBdvRatio(uint128(initBeanToMaxLPRatio));
 
         // iterate through the sunrise with the case.
         vm.expectEmit();
@@ -81,7 +81,7 @@ contract GaugeTest is TestHelper {
             caseId,
             100e18 - int80(uint80(initBeanToMaxLPRatio))
         );
-        season.seedGaugeSunSunrise(0, caseId);
+        bs.seedGaugeSunSunrise(0, caseId);
 
         assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 100e18);
     }
@@ -206,7 +206,7 @@ contract GaugeTest is TestHelper {
     ////////////////////// AVERAGE GROWN STALK PER BDV PER SEASON //////////////////////
 
     /**
-     * @notice verifies that the average grown stalk per season does not change if the season is less than the catchup season.
+     * @notice verifies that the average grown stalk per season does not change if the season is less than the catchup bs.
      */
     function test_avgGrownStalkPerBdv_noChange(uint256 season) public {
         season = bound(season, 0, bs.getTargetSeasonsToCatchUp() - 1);
@@ -228,7 +228,7 @@ contract GaugeTest is TestHelper {
     }
 
     /**
-     * @notice verifies that the average grown stalk per season changes after the catchup season.
+     * @notice verifies that the average grown stalk per season changes after the catchup bs.
      */
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
         // season is capped to uint32 max - 1.
@@ -376,7 +376,7 @@ contract GaugeTest is TestHelper {
     /**
      * When beanstalk has 1 LP token whitelisted, the gauge system adjusts
      * the bean and lp seeds based on:
-     * 1: the average grown stalk per bdv per season.
+     * 1: the average grown stalk per bdv per bs.
      * 2: the beanToMaxLpRatio.
      * @dev Given season < catchup season, the averageGrownStalkPerBdvPerSeason is static. See {test_avgGrownStalkPerBdv_changes}
      */
@@ -427,7 +427,7 @@ contract GaugeTest is TestHelper {
         assertApproxEqRel(calcBeanToLpRatio, targetRatio, 1e12);
 
         // verify that the seeds were properly calculated.
-        // bean bdv * bean seeds + LP bdv * LP seeds = total stalk Issued this season.
+        // bean bdv * bean seeds + LP bdv * LP seeds = total stalk Issued this bs.
         // total Stalk issued = averageGrownStalkPerBdvPerSeason * total bdv.
         uint256 beanBDV = bs.getTotalDepositedBdv(C.BEAN);
         uint256 lpBDV = bs.getTotalDepositedBdv(wellToken);
@@ -652,7 +652,7 @@ contract GaugeTest is TestHelper {
     ) internal prank(users[0]) {
         MockToken(C.UNRIPE_BEAN).mint(users[0], unripeAmount);
         C.bean().mint(users[0], beanAmount);
-        C.bean().approve(BEANSTALK, beanAmount);
+        C.bean().approve(address(bs), beanAmount);
         bs.addUnderlying(C.UNRIPE_BEAN, beanAmount);
     }
 
@@ -664,7 +664,7 @@ contract GaugeTest is TestHelper {
         address underlyingToken = bs.getUnderlyingToken(C.UNRIPE_LP);
         uint256 lpOut = addLiquidityToWell(underlyingToken, beanAmount, 20000 ether);
 
-        MockToken(underlyingToken).approve(BEANSTALK, type(uint256).max);
+        MockToken(underlyingToken).approve(address(bs), type(uint256).max);
         bs.addUnderlying(C.UNRIPE_LP, lpOut);
     }
 
@@ -692,7 +692,7 @@ contract GaugeTest is TestHelper {
                 wellToken = whitelistedWells[i];
                 continue;
             }
-            vm.prank(BEANSTALK);
+            vm.prank(address(bs));
             bs.dewhitelistToken(whitelistedWells[i]);
         }
 
@@ -719,7 +719,7 @@ contract GaugeTest is TestHelper {
         address[] memory whitelistedWells = bs.getWhitelistedWellLpTokens();
 
         for (uint i; i < whitelistedWells.length; i++) {
-            vm.prank(BEANSTALK);
+            vm.prank(address(bs));
             bytes4 gpSelector = bs.gaugePointsNoChange.selector;
             bytes4 lwSelector = bs.maxWeight.selector;
             bs.updateGaugeForToken(
@@ -751,7 +751,7 @@ contract GaugeTest is TestHelper {
         IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
 
         // change settings
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.updateSeedGaugeSettings(
             IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );

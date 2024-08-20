@@ -64,7 +64,7 @@ contract OracleDeployer is Utils {
         [WBTC_USDC_03_POOL, WBTC, C.USDC] // WBTC/USDC
     ];
 
-    // oracles must be initalized at some price. Assumes index matching with pools.
+    // oracles must be initialized at some price. Assumes index matching with pools.
     uint256[][] public priceData = [[uint256(1e18), 18], [uint256(500e6), 8]];
 
     /**
@@ -181,7 +181,7 @@ contract OracleDeployer is Utils {
             abi.encode(FOUR_HOUR_TIMEOUT)
         );
 
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.updateOracleImplementationForToken(token, oracleImplementation);
 
         console.log("Updated oracle implementation for token: ", token, " to: ", oracleAddress);
@@ -197,7 +197,7 @@ contract OracleDeployer is Utils {
         uint256 _xEthTimeout = 3600 * 4;
         address _token = C.WSTETH;
 
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.updateOracleImplementationForToken(
             _token,
             IMockFBeanstalk.Implementation(

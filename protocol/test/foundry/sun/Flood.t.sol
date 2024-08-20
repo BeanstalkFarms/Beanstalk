@@ -20,9 +20,8 @@ import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
  */
 contract FloodTest is TestHelper {
     // Interfaces.
-    SeasonGettersFacet seasonGetters = SeasonGettersFacet(BEANSTALK);
-    MockFieldFacet field = MockFieldFacet(BEANSTALK);
-    SiloGettersFacet siloGetters = SiloGettersFacet(BEANSTALK);
+    SeasonGettersFacet seasonGetters;
+    SiloGettersFacet siloGetters;
 
     // test accounts
     address[] farmers;
@@ -32,11 +31,14 @@ contract FloodTest is TestHelper {
     event SeasonOfPlentyField(uint256 toField);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
+        seasonGetters = SeasonGettersFacet(address(bs));
+        siloGetters = SiloGettersFacet(address(bs));
+
         // init user.
         farmers.push(users[1]);
         vm.prank(farmers[0]);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        C.bean().approve(address(bs), type(uint256).max);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
@@ -51,8 +53,8 @@ contract FloodTest is TestHelper {
             10 ether // 10 ether.
         );
 
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
 
         depositStemBean = bs.stemTipForToken(C.BEAN);
 
@@ -67,29 +69,29 @@ contract FloodTest is TestHelper {
     }
 
     function testBugReportLostPlenty2() public {
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         // set reserves so next season plenty is accrued
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise(); // 1st actual sop
+        bs.rainSunrise(); // 1st actual sop
         bs.mow(users[1], C.BEAN);
 
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
 
-        season.droughtSunrise();
-        season.droughtSunrise();
+        bs.droughtSunrise();
+        bs.droughtSunrise();
 
         // withdraw deposit
         vm.prank(users[1]);
         bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
@@ -100,8 +102,8 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
 
         bs.mow(users[1], C.BEAN);
 
@@ -128,13 +130,13 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[3], C.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[3]);
         assertEq(rainRoots, 500000000000000000000000000000000);
 
-        season.droughtSunrise();
+        bs.droughtSunrise();
 
         // withdraw
         vm.prank(users[3]);
@@ -143,8 +145,8 @@ contract FloodTest is TestHelper {
         assertEq(rainRoots, 0);
 
         // start raining again
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[3], C.BEAN);
         rainRoots = bs.balanceOfRainRoots(users[3]);
         assertEq(rainRoots, 0);
@@ -158,8 +160,8 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise(); // start raining
-        season.rainSunrise(); // sop
+        bs.rainSunrise(); // start raining
+        bs.rainSunrise(); // sop
 
         bs.mow(users[1], C.BEAN);
 
@@ -181,8 +183,8 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise(); // start raining
-        season.rainSunrise(); // sop
+        bs.rainSunrise(); // start raining
+        bs.rainSunrise(); // sop
 
         bs.mow(users[1], C.BEAN);
 
@@ -202,8 +204,8 @@ contract FloodTest is TestHelper {
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise(); // start raining
-        season.rainSunrise(); // sop
+        bs.rainSunrise(); // start raining
+        bs.rainSunrise(); // sop
 
         bs.mow(users[1], C.BEAN);
 
@@ -216,8 +218,8 @@ contract FloodTest is TestHelper {
         bs.deposit(C.BEAN, 1_000e6, 0);
 
         // pass germination
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
 
         // verify roots went up
         assertEq(bs.balanceOfRoots(users[1]), 20008000000000000000000000000000);
@@ -236,16 +238,16 @@ contract FloodTest is TestHelper {
     function testGerminationRainRoots() public {
         C.bean().mint(users[3], 50_000e6);
         vm.prank(users[3]);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        C.bean().approve(address(bs), type(uint256).max);
         vm.prank(users[3]);
         bs.deposit(C.BEAN, 50_000e6, 0);
 
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise();
+        bs.rainSunrise();
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[3], C.BEAN);
 
         uint256 totalRainRoots = bs.totalRainRoots();
@@ -260,20 +262,20 @@ contract FloodTest is TestHelper {
     function testSecondGerminationRainRoots() public {
         // not raining
 
-        season.rainSunrise(); // start raining
+        bs.rainSunrise(); // start raining
 
         uint256 totalRainRootsBefore = bs.totalRainRoots();
 
         C.bean().mint(users[3], 50_000e6);
         vm.prank(users[3]);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        C.bean().approve(address(bs), type(uint256).max);
         vm.prank(users[3]);
         bs.deposit(C.BEAN, 50_000e6, 0);
         // set reserves so we'll sop
         setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
         setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
-        season.rainSunrise(); // sop
+        bs.rainSunrise(); // sop
         bs.mow(users[3], C.BEAN);
 
         uint256 totalRainRootsAfter = bs.totalRainRoots();
@@ -304,8 +306,8 @@ contract FloodTest is TestHelper {
     }
 
     function testRaining() public {
-        field.incrementTotalPodsE(1000e18, bs.activeField());
-        season.rainSunrise();
+        bs.incrementTotalPodsE(1000e18, bs.activeField());
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         Rain memory rain = seasonGetters.rain();
@@ -323,11 +325,11 @@ contract FloodTest is TestHelper {
     }
 
     function testStopsRaining() public {
-        field.incrementTotalPodsE(1000e18, bs.activeField());
-        season.rainSunrise();
+        bs.incrementTotalPodsE(1000e18, bs.activeField());
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
-        season.droughtSunrise();
+        bs.droughtSunrise();
         bs.mow(users[1], C.BEAN);
 
         Season memory s = seasonGetters.time();
@@ -338,7 +340,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsWhenAtPeg() public {
-        season.siloSunrise(25);
+        bs.siloSunrise(25);
         Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, 0);
@@ -347,7 +349,7 @@ contract FloodTest is TestHelper {
 
     function testSopsBelowPeg() public {
         setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
-        season.siloSunrise(25);
+        bs.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
         assertEq(s.lastSop, 0);
@@ -375,7 +377,7 @@ contract FloodTest is TestHelper {
         uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
             C.SOP_PRECISION; // 25595575914848452999
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
@@ -389,14 +391,14 @@ contract FloodTest is TestHelper {
             51191151829696906017
         );
 
-        season.rainSunrise();
+        bs.rainSunrise();
 
         Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -445,10 +447,10 @@ contract FloodTest is TestHelper {
         address sopWell = C.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[2], C.BEAN);
-        season.rainSunrise();
-        season.droughtSunrise();
+        bs.rainSunrise();
+        bs.droughtSunrise();
 
         setReserves(sopWell, 1048808848170, 1100e18);
 
@@ -463,7 +465,7 @@ contract FloodTest is TestHelper {
             25900501355272002583
         );
 
-        season.rainSunrises(2);
+        bs.rainSunrises(2);
 
         // sops p > 1
         Season memory s = seasonGetters.time();
@@ -471,7 +473,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 77091653184968908600);
+        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 77091653184968908600);
 
         assertEq(reserves[0], 1074099498643);
         assertEq(reserves[1], 1074099498644727997417);
@@ -512,7 +514,7 @@ contract FloodTest is TestHelper {
         // set instantaneous reserves differently
         setInstantaneousReserves(sopWell, 900_000e6, 1_100e18);
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[2], sopWell);
 
         vm.expectEmit();
@@ -526,7 +528,7 @@ contract FloodTest is TestHelper {
             51191151829696906017
         );
 
-        season.rainSunrise();
+        bs.rainSunrise();
         // end before each from hardhat test
 
         // sops p > 1
@@ -535,7 +537,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
 
         assertEq(reserves[0], 1048808848170);
         assertEq(reserves[1], 1048808848170303093983);
@@ -715,7 +717,7 @@ contract FloodTest is TestHelper {
         uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
             C.SOP_PRECISION; // 25595575914848452999
 
-        season.rainSunrise(); // start raining
+        bs.rainSunrise(); // start raining
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
@@ -726,10 +728,10 @@ contract FloodTest is TestHelper {
             51191151829696906017
         );
 
-        season.rainSunrise(); // first sop
+        bs.rainSunrise(); // first sop
 
         // de-whitelist bean eth well
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.dewhitelistToken(C.BEAN_ETH_WELL);
 
         Season memory s = seasonGetters.time();
@@ -737,7 +739,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -815,7 +817,7 @@ contract FloodTest is TestHelper {
         uint256 userCalcPlenty = (userCalcPlentyPerRoot * bs.balanceOfRoots(users[1])) /
             C.SOP_PRECISION; // 25595575914848452999
 
-        season.rainSunrise(); // start raining
+        bs.rainSunrise(); // start raining
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
@@ -826,15 +828,15 @@ contract FloodTest is TestHelper {
             51191151829696906017
         );
 
-        season.rainSunrise(); // first sop
+        bs.rainSunrise(); // first sop
 
         // de-whitelist bean eth well
-        vm.prank(BEANSTALK);
+        vm.prank(address(bs));
         bs.dewhitelistToken(C.BEAN_ETH_WELL);
 
         // mow after dewhitelist
         bs.mow(users[1], C.BEAN);
-        season.rainSunrise(); // sop one more after dewhitelist
+        bs.rainSunrise(); // sop one more after dewhitelist
 
         // get balance of plenty
         bs.balanceOfPlenty(users[1], sopWell);
@@ -842,14 +844,14 @@ contract FloodTest is TestHelper {
         setReserves(sopWell, 1_000_000e6, 900e18);
 
         // stop sopping
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
         bs.mow(users[1], C.BEAN);
 
         setReserves(sopWell, 1_000_000e6, 1_100e18);
         // start sopping again
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
 
         // neither of these should revert
         bs.mow(users[1], C.BEAN);
@@ -869,14 +871,14 @@ contract FloodTest is TestHelper {
         uint256 initialPodLine = bs.podIndex(bs.activeField());
         uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
 
         emit SeasonOfPlentyField(amount);
 
-        season.rainSunrise();
+        bs.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestableForActiveField();
         uint256 newBeanSupply = C.bean().totalSupply();
@@ -899,13 +901,13 @@ contract FloodTest is TestHelper {
         uint256 initialPodLine = bs.podIndex(bs.activeField());
         uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
-        season.rainSunrise();
+        bs.rainSunrise();
         bs.mow(users[1], C.BEAN);
 
         vm.expectEmit();
         emit SeasonOfPlentyField(initialBeanSupply / 1000);
 
-        season.rainSunrise();
+        bs.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestableForActiveField();
         uint256 newBeanSupply = C.bean().totalSupply();
@@ -1024,19 +1026,19 @@ contract FloodTest is TestHelper {
 
         C.bean().mint(customUser, 10_000e6);
         vm.prank(customUser);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        C.bean().approve(address(bs), type(uint256).max);
         vm.prank(customUser);
         bs.deposit(C.BEAN, 1000e6, 0);
 
-        season.siloSunrise(0);
-        season.siloSunrise(0);
-        season.siloSunrise(0); // should be germinated by now, not mown though
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0); // should be germinated by now, not mown though
 
         address sopWell = C.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
 
         bs.mow(customUser, C.BEAN);
 
@@ -1050,20 +1052,20 @@ contract FloodTest is TestHelper {
 
         C.bean().mint(customUser, 10_000e6);
         vm.prank(customUser);
-        C.bean().approve(BEANSTALK, type(uint256).max);
+        C.bean().approve(address(bs), type(uint256).max);
         vm.prank(customUser);
         bs.deposit(C.BEAN, 1000e6, 0);
 
-        season.siloSunrise(0);
-        season.siloSunrise(0);
-        season.siloSunrise(0); // should be germinated by now, not mown though
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0); // should be germinated by now, not mown though
 
         address sopWell = C.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         bs.mow(customUser, C.BEAN);
-        season.rainSunrise();
-        season.rainSunrise();
+        bs.rainSunrise();
+        bs.rainSunrise();
 
         bs.mow(customUser, C.BEAN);
 
@@ -1113,14 +1115,14 @@ contract FloodTest is TestHelper {
         for (uint i = 0; i < users.length; i++) {
             C.bean().mint(users[i], beansMint);
             vm.prank(users[i]);
-            C.bean().approve(BEANSTALK, type(uint256).max);
+            C.bean().approve(address(bs), type(uint256).max);
             vm.prank(users[i]);
             bs.deposit(C.BEAN, beansDeposit, 0);
         }
 
         // pass germination process
-        season.siloSunrise(0);
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
+        bs.siloSunrise(0);
 
         if (mow) {
             for (uint i = 0; i < users.length; i++) {

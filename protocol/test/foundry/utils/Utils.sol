@@ -10,10 +10,7 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
  * @dev common utilities for forge tests
  */
 contract Utils is Test {
-    // beanstalk
-    address payable constant BEANSTALK =
-        payable(address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
-    IMockFBeanstalk bs;
+    IMockFBeanstalk public bs;
     address internal deployer;
 
     using Strings for uint256;

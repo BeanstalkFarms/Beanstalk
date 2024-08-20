@@ -51,9 +51,13 @@ _Note: The Beanstalk repo is a monorepo with induvidual projects inside it. See 
 
 1. Clone the repository and install dependencies
 
+*If using Mac on Apple Silicon*
+`/usr/sbin/softwareupdate --install-rosetta --agree-to-license`
+
 ```bash
 git clone https://github.com/BeanstalkFarms/Beanstalk
 cd Beanstalk/protocol
+export YARN_IGNORE_NODE=1
 yarn
 ```
 

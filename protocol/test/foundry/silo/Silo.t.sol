@@ -11,16 +11,13 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
  * @notice Tests the functionality of the Silo.
  */
 contract SiloTest is TestHelper {
-    // Interfaces.
-    MockSiloFacet silo = MockSiloFacet(BEANSTALK);
-
     // test accounts
     address[] farmers;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
-        // initalize farmers from farmers (farmer0 == diamond deployer)
+        // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
         farmers.push(users[2]);
 

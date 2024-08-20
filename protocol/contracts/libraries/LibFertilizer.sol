@@ -18,6 +18,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 
 /**
  * @author Publius
@@ -46,25 +47,52 @@ library LibFertilizer {
         uint256 fertilizerAmount,
         uint256 minLP
     ) internal returns (uint128 id) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
-
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
-        // Get id
-        id = s.sys.fert.bpf.add(bpf);
-        // Update Total and Season supply
-        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(fertilizerAmount128);
-        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(fertilizerAmount);
+        id = IncrementFertState(fertilizerAmount, bpf);
         // Add underlying to Unripe Beans and Unripe LP
         addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
+    }
+
+    function IncrementFertState(
+        uint256 fertilizerAmount,
+        uint128 remainingBpf
+    ) internal returns (uint128 id) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
+        s.sys.fert.unfertilizedIndex += fertilizerAmount * remainingBpf;
+        id = s.sys.fert.bpf + remainingBpf;
+        s.sys.fert.fertilizer[id] += fertilizerAmount128;
+        s.sys.fert.activeFertilizer += fertilizerAmount;
+
         // If not first time adding Fertilizer with this id, return
         if (s.sys.fert.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
         push(id);
-        emit SetFertilizer(id, bpf);
+        emit SetFertilizer(id, remainingBpf);
+        return id;
+    }
+
+    function decrementFertState(
+        uint256 fertilizerAmount,
+        uint128 remainingBpf
+    ) internal returns (uint128 id) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint128 fertilizerAmount128 = fertilizerAmount.toUint128();
+
+        s.sys.fert.unfertilizedIndex -= fertilizerAmount * remainingBpf;
+        id = s.sys.fert.bpf + remainingBpf;
+        s.sys.fert.fertilizer[id] -= fertilizerAmount128;
+        s.sys.fert.activeFertilizer -= fertilizerAmount;
+
+        return id;
+    }
+
+    function claimFertilized(uint256[] memory ids, LibTransfer.To mode) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
+        s.sys.fert.fertilizedPaidIndex += amount;
+        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
     }
 
     function getBpf(uint128 id) internal pure returns (uint128 bpf) {

@@ -17,23 +17,23 @@ contract InvariableTest is TestHelper {
     address[] siloUsers = new address[](3);
 
     function setUp() public {
-        initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 100_000);
+        initializeBeanstalkTestState(true, false, true);
+        MockToken(C.WETH).mint(address(bs), 100_000);
 
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
         mintTokensToUsers(siloUsers, C.BEAN, 100_000e6);
 
-        setUpSiloDepositTest(10_000e6, siloUsers);
+        setUpSiloDeposits(10_000e6, siloUsers);
         addFertilizerBasedOnSprouts(0, 100e6);
-        sowAmountForFarmer(siloUsers[0], 1_000e6);
+        sowForUser(siloUsers[0], 1_000e6);
     }
 
     /**
      * @notice Violates fundsSafu invariant through manipulation of internal and external assets.
      */
     function test_fundsSafu(uint256 theftAmount) public {
-        theftAmount = bound(theftAmount, 1, bean.balanceOf(BEANSTALK));
+        theftAmount = bound(theftAmount, 1, bean.balanceOf(address(bs)));
 
         // Advanced farm call containing one exploit call. Will be checked against  fundsSafu.
         IMockFBeanstalk.AdvancedFarmCall[]

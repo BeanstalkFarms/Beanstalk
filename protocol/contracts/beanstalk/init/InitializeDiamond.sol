@@ -20,11 +20,11 @@ import {C} from "contracts/C.sol";
 
 /**
  * @author Publius, Brean
- * @title InitalizeDiamond
- * @notice InitalizeDiamond provides helper functions to initalize beanstalk.
+ * @title InitializeDiamond
+ * @notice InitializeDiamond provides helper functions to initialize beanstalk.
  **/
 
-contract InitalizeDiamond {
+contract InitializeDiamond {
     AppStorage internal s;
 
     // INITIAL CONSTANTS //
@@ -62,17 +62,17 @@ contract InitalizeDiamond {
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
     /**
-     * @notice Initalizes the diamond with base conditions.
-     * @dev the base initalization initalizes various parameters,
+     * @notice Initializes the diamond with base conditions.
+     * @dev the base initalization initializes various parameters,
      * as well as whitelists the bean and bean:TKN pools.
      */
-    function initalizeDiamond(address bean, address beanTokenWell) internal {
+    function initializeDiamond(address bean, address beanTokenWell) internal {
         addInterfaces();
-        initalizeSeason();
-        initalizeField();
-        initalizeFarmAndTractor();
-        initalizeSilo(uint16(s.sys.season.current));
-        initalizeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
+        initializeSeason();
+        initializeField();
+        initializeFarmAndTractor();
+        initializeSilo(uint16(s.sys.season.current));
+        initializeSeedGauge(INIT_BEAN_TO_MAX_LP_GP_RATIO, INIT_AVG_GSPBDV);
 
         address[] memory tokens = new address[](2);
         tokens[0] = bean;
@@ -127,12 +127,16 @@ contract InitalizeDiamond {
 
         // init usdTokenPrice. C.Bean_eth_well should be
         // a bean well w/ the native token of the network.
-        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.usdTokenPrice[beanTokenWell] = 1;
         s.sys.twaReserves[beanTokenWell].reserve0 = 1;
         s.sys.twaReserves[beanTokenWell].reserve1 = 1;
 
         // init tractor.
         LibTractor._tractorStorage().activePublisher = payable(address(1));
+
+        // Set the sources that can migrate into this Beanstalk.
+        // TODO: Change this based on each fork instance.
+        // s.sys.supportedSourceForks[address()] = true;
     }
 
     /**
@@ -146,38 +150,38 @@ contract InitalizeDiamond {
     }
 
     /**
-     * @notice Initalizes field parameters.
+     * @notice Initializes field parameters.
      */
-    function initalizeField() internal {
+    function initializeField() internal {
         s.sys.weather.temp = 1;
         s.sys.weather.thisSowTime = type(uint32).max;
         s.sys.weather.lastSowTime = type(uint32).max;
     }
 
     /**
-     * @notice Initalizes season parameters.
+     * @notice Initializes season parameters.
      */
-    function initalizeSeason() internal {
+    function initializeSeason() internal {
         // set current season to 1.
         s.sys.season.current = 1;
 
         // set withdraw seasons to 0. Kept here for verbosity.
         s.sys.season.withdrawSeasons = 0;
 
-        // initalize the duration of 1 season in seconds.
+        // initialize the duration of 1 season in seconds.
         s.sys.season.period = C.getSeasonPeriod();
 
-        // initalize current timestamp.
+        // initialize current timestamp.
         s.sys.season.timestamp = block.timestamp;
 
-        // initalize the start timestamp.
+        // initialize the start timestamp.
         // Rounds down to the nearest hour
         // if needed.
         s.sys.season.start = s.sys.season.period > 0
             ? (block.timestamp / s.sys.season.period) * s.sys.season.period
             : block.timestamp;
 
-        // initalizes the cases that beanstalk uses
+        // initializes the cases that beanstalk uses
         // to change certain parameters of itself.
         setCases();
 
@@ -185,29 +189,29 @@ contract InitalizeDiamond {
     }
 
     /**
-     * @notice Initalize the cases for the diamond.
+     * @notice Initialize the cases for the diamond.
      */
     function setCases() internal {
         LibCases.setCasesV2();
     }
 
     /**
-     * Initalizes silo parameters.
+     * Initializes silo parameters.
      */
-    function initalizeSilo(uint16 season) internal {
-        // initalize when the silo started silo V3.
+    function initializeSilo(uint16 season) internal {
+        // initialize when the silo started silo V3.
         s.sys.season.stemStartSeason = season;
         s.sys.season.stemScaleSeason = season;
     }
 
-    function initalizeSeedGauge(
+    function initializeSeedGauge(
         uint128 beanToMaxLpGpRatio,
         uint128 averageGrownStalkPerBdvPerSeason
     ) internal {
-        // initalize the ratio of bean to max lp gp per bdv.
+        // initialize the ratio of bean to max lp gp per bdv.
         s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = beanToMaxLpGpRatio;
 
-        // initalize the average grown stalk per bdv per season.
+        // initialize the average grown stalk per bdv per season.
         s.sys.seedGauge.averageGrownStalkPerBdvPerSeason = averageGrownStalkPerBdvPerSeason;
 
         // emit events.
@@ -267,7 +271,7 @@ contract InitalizeDiamond {
         s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
     }
 
-    function initalizeFarmAndTractor() internal {
+    function initializeFarmAndTractor() internal {
         LibTractor._resetPublisher();
         LibTractor._setVersion("1.0.0");
     }

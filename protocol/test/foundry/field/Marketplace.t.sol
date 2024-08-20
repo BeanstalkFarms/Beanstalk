@@ -10,12 +10,10 @@ contract ListingTest is TestHelper {
     // test accounts
     address[] farmers;
 
-    MockFieldFacet field = MockFieldFacet(BEANSTALK);
-
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
+        initializeBeanstalkTestState(true, false, false);
 
-        season.siloSunrise(0);
+        bs.siloSunrise(0);
 
         // initalize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
@@ -26,7 +24,7 @@ contract ListingTest is TestHelper {
 
         mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
 
-        field.incrementTotalSoilE(1000e18);
+        bs.incrementTotalSoilE(1000e18);
 
         // mine 300 blocks
         vm.roll(300);

@@ -187,7 +187,7 @@ abstract contract Invariable {
                     s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying + // unchopped underlying beans
                     s.sys.orderLockedBeans;
                 for (uint256 j; j < s.sys.fieldCount; j++) {
-                    entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].harvested); // unharvested harvestable beans
+                    entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].processed); // unharvested harvestable beans
                 }
             } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
                 entitlements[i] += s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;

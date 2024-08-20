@@ -18,6 +18,7 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {LibField} from "contracts/libraries/LibField.sol";
 
 /**
  * @author Brean
@@ -397,12 +398,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
-        uint256 activeField = s.sys.activeField;
-        Field storage field = s.accts[reciever].fields[activeField];
         for (uint i; i < index.length; i++) {
-            field.plots[index[i]] = pods[i];
-            field.plotIndexes.push(index[i]);
-            field.piIndex[index[i]] = field.plotIndexes.length - 1;
+            LibField.createPlot(reciever, s.sys.activeField, index[i], pods[i]);
         }
     }
 

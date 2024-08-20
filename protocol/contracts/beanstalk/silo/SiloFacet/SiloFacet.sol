@@ -86,7 +86,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256 amount,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
-        _withdrawDeposit(LibTractor._user(), token, stem, amount);
+        LibSilo._withdrawDeposit(LibTractor._user(), token, stem, amount);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 
@@ -110,7 +110,7 @@ contract SiloFacet is Invariable, TokenSilo {
         uint256[] calldata amounts,
         LibTransfer.To mode
     ) external payable fundsSafu noSupplyChange oneOutFlow(token) mowSender(token) nonReentrant {
-        uint256 amount = _withdrawDeposits(LibTractor._user(), token, stems, amounts);
+        uint256 amount = LibSilo._withdrawDeposits(LibTractor._user(), token, stems, amounts);
         LibTransfer.sendToken(IERC20(token), amount, LibTractor._user(), mode);
     }
 

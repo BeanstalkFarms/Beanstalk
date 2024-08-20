@@ -3,6 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {C} from "contracts/C.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 import {MockUpgradeFacet} from "contracts/mocks/mockFacets/MockUpgradeFacet.sol";
 import {InitMint} from "contracts/beanstalk/init/InitMint.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
@@ -39,8 +40,8 @@ contract UpgradeDiamond is TestHelper {
 
         // upgrade beanstalk with a new mock facet and init Mint.
         upgradeWithNewFacets(
-            BEANSTALK, // upgrading beanstalk.
-            IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
+            LibConstant.BEANSTALK, // upgrading beanstalk.
+            IMockFBeanstalk(LibConstant.BEANSTALK).owner(), // fetch beanstalk owner.
             facetNames,
             newFacetAddresses,
             facetCutActions,
@@ -50,9 +51,9 @@ contract UpgradeDiamond is TestHelper {
         );
     }
 
-    function testWoohoo() public pure {
+    function testWoohoo() public view {
         // verify facet is added (call woohoo()).
-        assertEq(MockUpgradeFacet(BEANSTALK).woohoo(), 1);
+        assertEq(MockUpgradeFacet(LibConstant.BEANSTALK).woohoo(), 1);
     }
 
     function testInitMint() public view {
@@ -62,14 +63,14 @@ contract UpgradeDiamond is TestHelper {
 
     function test_SelectorRemoval() public {
         // check woohoo.
-        assertEq(MockUpgradeFacet(BEANSTALK).woohoo(), 1);
+        assertEq(MockUpgradeFacet(LibConstant.BEANSTALK).woohoo(), 1);
 
         bytes4[] memory removeSelectors = new bytes4[](1);
         removeSelectors[0] = MockUpgradeFacet.woohoo.selector;
         // remove woohoo:
         upgradeWithNewFacets(
-            BEANSTALK, // upgrading beanstalk.
-            IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
+            LibConstant.BEANSTALK, // upgrading beanstalk.
+            IMockFBeanstalk(LibConstant.BEANSTALK).owner(), // fetch beanstalk owner.
             new string[](0),
             new address[](0),
             new IDiamondCut.FacetCutAction[](0),
@@ -80,6 +81,6 @@ contract UpgradeDiamond is TestHelper {
 
         // verify woohoo() is removed.
         vm.expectRevert(bytes("Diamond: Function does not exist"));
-        MockUpgradeFacet(BEANSTALK).woohoo();
+        MockUpgradeFacet(LibConstant.BEANSTALK).woohoo();
     }
 }
