@@ -15,7 +15,6 @@ import {C} from "contracts/C.sol";
  * @dev Fertilizer is re-issued to each holder. Barn raise is set to L1 state.
  */
 contract ReseedBarn {
-
     event FertilizerMigrated(address account, uint128 fid, uint128 amount, uint128 lastBpf);
 
     /**
