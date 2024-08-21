@@ -53,7 +53,7 @@ const ConvertTable = ({
       {
         field: 'id',
         // flex: 1.5,
-        width: 150,
+        width: 170,
         headerName: 'Deposits',
         align: 'left',
         headerAlign: 'left',
@@ -97,7 +97,7 @@ const ConvertTable = ({
       {
         field: 'recordedBDV',
         // flex: 1,
-        width: 150,
+        width: 130,
         align: 'left',
         headerAlign: 'left',
         headerName: 'Recorded BDV',
@@ -142,7 +142,7 @@ const ConvertTable = ({
       {
         field: 'currentBDV',
         // flex: 1,
-        width: 150,
+        width: 140,
         align: 'right',
         headerAlign: 'right',
         headerName: 'Current BDV',
@@ -161,7 +161,7 @@ const ConvertTable = ({
       {
         field: 'deltaStalk',
         // flex: 1,
-        width: 160,
+        width: 140,
         align: 'right',
         headerAlign: 'right',
         headerName: isLambdaView ? 'Gain in Stalk' : 'Loss in Stalk',
@@ -189,7 +189,7 @@ const ConvertTable = ({
         align: 'right',
         headerAlign: 'right',
         // flex: 0.75,
-        width: 175,
+        width: 140,
         headerName: isLambdaView ? 'Gain in Seed' : 'Loss in Seed',
         sortable: true,
         valueGetter: (params) => params.row.deltaStalk.toNumber(),
