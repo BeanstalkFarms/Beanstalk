@@ -64,16 +64,19 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
           </Typography>
         </Stack>
         <Divider sx={{ borderWidth: '0.5px' }} />
-        <Row justifyContent="space-between">
+        <Row justifyContent="space-between" gap={2}>
           <Typography variant="subtitle1" color="text.secondary">
             Any deposits with a lower current BDV than BDV at deposit will not
             appear.
           </Typography>
-          <Box sx={{ cursor: 'pointer' }} onClick={handleSelectAll}>
+          <Box
+            onClick={handleSelectAll}
+            sx={{ cursor: 'pointer', alignSelf: 'flex-start' }}
+          >
             <Typography
               variant="subtitle1"
               color="primary"
-              sx={{ textDecoration: 'underline' }}
+              sx={{ textDecoration: 'underline', whiteSpace: 'nowrap' }}
             >
               Select All
             </Typography>

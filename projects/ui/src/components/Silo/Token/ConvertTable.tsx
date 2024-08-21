@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useMemo } from 'react';
 import { Deposit, ERC20Token, TokenValue } from '@beanstalk/sdk';
-import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
 import useSdk from '~/hooks/sdk';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
@@ -13,9 +13,9 @@ import {
 } from '~/components/App/muiTheme';
 import { formatTV, trimAddress } from '~/util';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { longArrowRightIcon } from '~/img/icon';
 import useAccount from '~/hooks/ledger/useAccount';
 import TableCard from '~/components/Common/TableCard';
+import { LongArrowRight } from '~/components/Common/SystemIcons';
 import {
   TokenDepositsSelectType,
   useTokenDepositsContext,
@@ -125,16 +125,9 @@ const ConvertTable = ({
         renderCell: (params) => {
           const isGain = params.row.bdv.lt(params.row.currentBDV);
           return (
-            <Box
-              component="img"
-              src={longArrowRightIcon}
-              sx={{
-                height: 'auto',
-                width: '16px',
-                fill: isGain
-                  ? BeanstalkPalette.logoGreen
-                  : BeanstalkPalette.red,
-              }}
+            <LongArrowRight
+              width={16}
+              color={isGain ? BeanstalkPalette.logoGreen : BeanstalkPalette.red}
             />
           );
         },

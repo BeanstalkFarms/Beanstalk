@@ -17,8 +17,8 @@ import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import { formatTV } from '~/util';
 import { TokenValue } from '@beanstalk/sdk';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-import { longArrowRightBlackIcon } from '~/img/icon';
 
+import { LongArrowRight } from '~/components/Common/SystemIcons';
 import { useTokenDepositsContext } from '../Token/TokenDepositsContext';
 
 const LambdaConvert = () => {
@@ -42,9 +42,11 @@ const LambdaConvert = () => {
 
   return (
     <Stack gap={1}>
-      <Typography variant="subtitle1">
-        {selected.size} Deposit{selected.size === 1 ? '' : 's'} selected
-      </Typography>
+      <Box px={1}>
+        <Typography variant="subtitle1">
+          {selected.size} Deposit{selected.size === 1 ? '' : 's'} selected
+        </Typography>
+      </Box>
       <Card sx={{ background: 'white', borderColor: 'white', p: 2 }}>
         <Stack gap={1.5}>
           <Stack direction="row" justifyContent="space-between" gap={1}>
@@ -148,7 +150,7 @@ const LambdaConvert = () => {
               <Typography color="text.secondary">
                 {selected.size} {token.symbol} Deposits
               </Typography>
-              <Box component="img" src={longArrowRightBlackIcon} />
+              <LongArrowRight color="black" />
               <Typography color="text.secondary">
                 1 {token.symbol} Deposit
               </Typography>
@@ -178,7 +180,7 @@ const LambdaConvert = () => {
           </Card>
         )}
       </Stack>
-      <Button size="large">
+      <Button size="large" disabled={!selected.size}>
         {selected.size ? 'Update Deposits' : 'Select Deposits'}
       </Button>
     </Stack>
