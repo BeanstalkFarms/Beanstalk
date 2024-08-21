@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import { Dimensions } from '~/hooks/display/useElementDimensions';
 import { useSpring, animated } from 'react-spring';
+import useIsMounted from '~/hooks/display/useIsMounted';
 import { BeanstalkPalette, FontWeight } from '../App/muiTheme';
 
 export type ToggleTabGroupProps<T extends string | number> = {
@@ -26,21 +27,46 @@ const ToggleTabGroup = <T extends string | number>({
   gap = 1,
   tabPadding = { px: 3, py: 0.75 },
 }: ToggleTabGroupProps<T>) => {
+  const mounted = useIsMounted();
   const boxRefs = useRef<HTMLDivElement[]>([]);
   const [dimensions, setDimensions] = useState<Dimensions[]>([]);
 
   const selectedIdx = options.findIndex((option) => option.value === selected);
 
+  const numOptions = options.length;
+
   useEffect(() => {
-    const refDimensions: Dimensions[] = boxRefs.current.map((ref) => {
-      const _dimensions = ref.getBoundingClientRect();
-      return {
-        width: _dimensions.width,
-        height: _dimensions.height,
-      };
-    });
-    setDimensions(refDimensions);
-  }, []);
+    const observe = () => {
+      const observers: ResizeObserver[] = [];
+
+      boxRefs.current.forEach((div, index) => {
+        if (div) {
+          const observer = new ResizeObserver((entries) => {
+            entries.forEach((_) => {
+              const { width, height } = div.getBoundingClientRect();
+              setDimensions((prevSizes) => {
+                const newSizes = [...prevSizes];
+                newSizes[index] = { width, height };
+                return newSizes;
+              });
+            });
+          });
+
+          observer.observe(div);
+          observers.push(observer);
+        }
+      });
+
+      return observers;
+    };
+
+    const observers = observe();
+
+    // Cleanup function to disconnect observers
+    return () => {
+      observers.forEach((observer) => observer.disconnect());
+    };
+  }, [numOptions]);
 
   const width = dimensions[selectedIdx]?.width || 0;
   const height = dimensions[selectedIdx]?.height || 0;
@@ -61,6 +87,7 @@ const ToggleTabGroup = <T extends string | number>({
       mass: 1,
       clamp: true,
     },
+    immediate: !mounted.current.valueOf(),
   });
 
   return (
@@ -86,6 +113,7 @@ const ToggleTabGroup = <T extends string | number>({
                 variant="subtitle1"
                 fontWeight={FontWeight.medium}
                 color={isSelected ? 'text.primary' : 'text.secondary'}
+                sx={{ textAlign: 'center' }}
               >
                 {label}
               </Typography>

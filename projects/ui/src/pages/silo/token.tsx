@@ -47,6 +47,8 @@ const guides = [
 
 const SILO_ACTIONS_MAX_WIDTH = '480px';
 
+const UPDATE_DEPOSITS_MAX_WIDTH = '470px';
+
 type Props = {
   token: ERC20Token;
 };
@@ -140,7 +142,7 @@ const LambdaConvertContent = ({
   return (
     <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
       <Stack width="100%" alignItems="center">
-        <Module sx={{ width: '100%', maxWidth: '903px' }}>
+        <Module sx={{ width: '100%' }}>
           <ModuleHeader pb={1}>
             <Row justifyContent="space-between">
               <Typography variant="h4" fontWeight={FontWeight.bold}>
@@ -166,7 +168,7 @@ const LambdaConvertContent = ({
         <Module
           sx={{
             maxWidth: {
-              lg: SILO_ACTIONS_MAX_WIDTH,
+              lg: UPDATE_DEPOSITS_MAX_WIDTH,
               width: '100%',
               height: '100%',
             },
@@ -177,7 +179,7 @@ const LambdaConvertContent = ({
               Update Deposits
             </Typography>
           </ModuleHeader>
-          <ModuleContent px={2}>
+          <ModuleContent px={1}>
             <LambdaConvert />
           </ModuleContent>
         </Module>

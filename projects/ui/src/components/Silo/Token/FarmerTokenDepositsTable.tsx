@@ -83,6 +83,8 @@ const FarmerTokenDepositsTable = ({
         flex: 0.75,
         headerName: 'Deposit',
         align: 'left',
+        headerAlign: 'left',
+        sortable: true,
         valueGetter: (params) => parseFloat(params.row.id),
         renderCell: (params) => {
           const isMultiSelect = selectType === 'multi';
@@ -95,7 +97,6 @@ const FarmerTokenDepositsTable = ({
             </Stack>
           );
         },
-        sortable: true,
       },
       {
         field: 'amount',
@@ -103,6 +104,7 @@ const FarmerTokenDepositsTable = ({
         headerName: 'Amount',
         align: isMobile ? 'left' : 'right',
         headerAlign: isMobile ? 'left' : 'right',
+        sortable: true,
         valueGetter: (params) => params.row.amount.toNumber(),
         renderCell: (params) => {
           const isMultiSelect = selectType === 'multi';
@@ -127,7 +129,6 @@ const FarmerTokenDepositsTable = ({
             </Stack>
           );
         },
-        sortable: true,
       },
       {
         field: 'stalk',
@@ -135,6 +136,7 @@ const FarmerTokenDepositsTable = ({
         headerName: 'Stalk',
         align: 'right',
         headerAlign: 'right',
+        sortable: true,
         valueGetter: (params) => params.row.stalk.total.toNumber(),
         renderCell: (params) => (
           <Stack alignItems="flex-end">
@@ -159,7 +161,6 @@ const FarmerTokenDepositsTable = ({
             </Typography>
           </Stack>
         ),
-        sortable: true,
       },
       {
         field: 'seeds',
@@ -167,6 +168,7 @@ const FarmerTokenDepositsTable = ({
         headerName: 'Seeds',
         align: 'right',
         headerAlign: 'right',
+        sortable: true,
         valueGetter: (params) => params.row.seeds.toNumber(),
         renderCell: (params) => (
           <Stack
@@ -181,7 +183,6 @@ const FarmerTokenDepositsTable = ({
             </Typography>
           </Stack>
         ),
-        sortable: true,
       },
     ];
 
