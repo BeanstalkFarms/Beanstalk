@@ -88,6 +88,7 @@ contract ReseedGlobal {
         s.sys.fieldCount = 1;
 
         LibCases.setCasesV2();
+        setInternalBalancetTotals(system.sysBalances);
         setShipmentRoutes(system.shipmentRoutes);
         setSilo(system.sysSilo);
         setFertilizer(system.sysFert);
@@ -100,6 +101,12 @@ contract ReseedGlobal {
 
         // initalize tractor:
         setTractor();
+    }
+
+    function setInternalBalancetTotals(SystemInternalBalances calldata balances) internal {
+        for (uint i; i < balances.tokens.length; i++) {
+            s.sys.internalTokenBalanceTotal[balances.tokens[i]] = balances.internalTokenBalanceTotal[i];
+        }
     }
 
     /**
