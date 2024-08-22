@@ -46,18 +46,18 @@ contract ReseedBean {
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
     bytes32 internal constant BEAN_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000000;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70546985ec75f817106d8f4f88;
     // UNRIPE_BEAN parameters.
     string internal constant UNRIPE_BEAN_NAME = "Unripe Bean";
     string internal constant UNRIPE_BEAN_SYMBOL = "urBEAN";
     bytes32 internal constant UNRIPE_BEAN_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000001;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb705681376833356743b5b87351;
 
     // UNRIPE_LP parameters.
     string internal constant UNRIPE_LP_NAME = "Unripe LP";
     string internal constant UNRIPE_LP_SYMBOL = "urBEANLP";
     bytes32 internal constant UNRIPE_LP_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000002;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb707788b5b26d4b8534e89ca031;
 
     // Basin
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
@@ -72,42 +72,42 @@ contract ReseedBean {
 
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000003;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb700bd7353935c4faf9cfb046a1;
     string internal constant BEAN_ETH_NAME = "BEAN:WETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_ETH_SYMBOL = "U-BEANWETHCP2w";
     address internal constant WETH = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
     // BEAN_WSTETH parameters.
     bytes32 internal constant BEAN_WSTETH_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000004;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb704de03771733a16307944bf0f;
     string internal constant BEAN_WSTETH_NAME = "BEAN:WSTETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WSTETH_SYMBOL = "U-BEANWSTETHCP2w";
     address internal constant WSTETH = address(0x5979D7b546E38E414F7E9822514be443A4800529);
 
     // BEAN_WEETH parameters.
     bytes32 internal constant BEAN_WEETH_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000005;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7095c91c9caa41f58b5d913fbc;
     string internal constant BEAN_WEETH_NAME = "BEAN:WEETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WEETH_SYMBOL = "U-BEANWEETHCCP2w";
     address internal constant WEETH = address(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe);
 
     // BEAN_WBTC parameters.
     bytes32 internal constant BEAN_WBTC_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000004;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb708aca12dd7cfb9ee3ea7cb9dc;
     string internal constant BEAN_WBTC_NAME = "BEAN:WBTC Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WBTC_SYMBOL = "U-BEANWBTCCP2w";
     address internal constant WBTC = address(0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f);
 
     // BEAN_USDC parameters.
     bytes32 internal constant BEAN_USDC_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000005;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70ff401fe816a1c1ae08fccdbe;
     string internal constant BEAN_USDC_NAME = "BEAN:USDC Stable 2 Upgradeable Well";
     string internal constant BEAN_USDC_SYMBOL = "U-BEANUSDCS2w";
     address internal constant USDC = address(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
 
     // BEAN_USDT parameters.
     bytes32 internal constant BEAN_USDT_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000003;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb705ca1658ea67939675002667f;
     string internal constant BEAN_USDT_NAME = "BEAN:USDT Stable 2 Upgradeable Well";
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
@@ -151,6 +151,7 @@ contract ReseedBean {
             abi.encode(IFertilizer.init.selector) // init data
         );
         console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
+        console.log("Fertilizer Proxy implementation: ", fertImplementation);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -216,12 +217,13 @@ contract ReseedBean {
             pumps
         );
 
-        // Bore upgradeable well
+        // Bore upgradeable well with the same salt for reproducibility.
+        // The address of this is irrelevant, we just need it to be constant, this is why no salt is used.
         address _well = IAquifer(AQUIFER).boreWell(
             UPGRADEABLE_WELL_IMPLEMENTATION,
             immutableData,
             initData,
-            salt
+            bytes32(0)
         );
 
         // Deploy proxy
