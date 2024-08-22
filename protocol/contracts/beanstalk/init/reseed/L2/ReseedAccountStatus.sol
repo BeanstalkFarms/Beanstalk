@@ -21,6 +21,7 @@ contract ReseedAccountStatus {
         uint256 stalk;
         address[] tokens;
         MowStatus[] mowStatuses;
+        uint32 lastUpdate;
     }
 
     // emitted when a status is migrated.
@@ -51,6 +52,8 @@ contract ReseedAccountStatus {
             // set stalk and roots for account.
             s.accts[accountStatuses[i].account].stalk = accountStatuses[i].stalk;
             s.accts[accountStatuses[i].account].roots = accountStatuses[i].stalk * 1e12;
+            // set lastUpdate for account.
+            s.accts[accountStatuses[i].account].lastUpdate = accountStatuses[i].lastUpdate;
         }
     }
 }
