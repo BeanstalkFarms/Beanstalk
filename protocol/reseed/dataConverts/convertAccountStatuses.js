@@ -11,6 +11,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
       if (accounts.hasOwnProperty(account)) {
         const accountData = accounts[account];
         const stalk = accountData.stalk ? convertToBigNum(accountData.stalk) : "0";
+        const lastUpdate = accountData.lastUpdate ? convertToBigNum(accountData.lastUpdate) : "0";
         const mowStatuses = accountData.mowStatuses;
         const tokenAddresses = [];
         const mowStatusArray = [];
@@ -26,7 +27,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
 
         // do not include contract accounts
         if (!contractAccounts.includes(account)) {
-          result.push([account, stalk, tokenAddresses, mowStatusArray]);
+          result.push([account, stalk, tokenAddresses, mowStatusArray, lastUpdate]);
         }
       }
     }
