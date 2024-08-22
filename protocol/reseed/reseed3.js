@@ -81,16 +81,17 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
   });
 
   // current mock addresses. This can change upon reordering the reseed/changing the salt:
-  // Fertilizer deployed at:  0x7B50EbC3E5128F315dc097F7cbd1600399e3E796
+  // Beanstalk Diamond: 0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70
+  // Fertilizer deployed at:  0xC59f881074Bf039352C227E21980317e6b969c8A
   // Bean deployed at:  0xe64718A6d44406dE942d3d0f591E370B22263382
   // Unripe Bean deployed at:  0x9dBA4d8D19a35c5cf191C3F93a0C112e75a627E4
   // Unripe LP deployed at:  0xECA13f8A535876C8293B0E140B56fFe5768c5816
-  // bean weth well proxy: 0x441657D23F030E9F8Ce68b518AC6952Abc4e8c5E
-  // bean wsteth well proxy: 0x96B57c91eDe37fc09CD8016526F99015271a7c02
-  // bean weeth well proxy: 0x4A26f88C9a9508f10253649da94Eb4633bC130Aa
-  // bean wbtc well proxy: 0xc0F171447Ecb93C7D38Fe0bB8Bc5020339f637d1
-  // bean usdc well proxy: 0xA6D38498fb88bB79DA89de007aF86E051f7DA8ea
-  // bean usdt well proxy: 0x10a1B1d06dD1b3A671D285c91DDA4A5e6a001ea1
+  // BEAN/WETH: 0x8cDa74f4e430e3AD0Da6Ab2721E74164DcE981fd
+  // BEAN/WstETH: 0xF95f4cEe40313dBF19F6Cc53203940A17598B3a9
+  // BEAN/WEETH: 0x9b0909E4Eff268570e767405CA4F89fA1f42385c
+  // BEAN/WBTC: 0xf9Aaa4eE845B2dC4A02692b757e7038bB8220AAF
+  // BEAN/USDC: 0x2FBa48E34376536fC1c14AacD49e4683Bd2055a1
+  // BEAN/USDT: 0xEd7dDFD1a400AAdC2C4b2629026D886B40B4b87A
 
   console.log("-----------------------------------");
 }
