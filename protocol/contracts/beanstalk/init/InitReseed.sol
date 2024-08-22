@@ -16,23 +16,20 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 contract InitReseed {
     AppStorage internal s;
 
-    function init(uint32 season) external {
+    event Reseed(uint256 timestamp);
+
+    function init() external {
         s.sys.paused = false;
-        s.sys.silo.earnedBeans = 0;
-        LibTractor._tractorStorage().activePublisher = payable(address(1));
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 
-        // season
-        s.sys.season.current = season;
-        s.sys.season.period = C.getSeasonPeriod();
-        s.sys.season.timestamp = block.timestamp;
         // set the start of the Season based on the number of seasons,
         // rounding down to the nearest hour.
         s.sys.season.start =
             ((s.sys.season.timestamp / s.sys.season.period) * s.sys.season.period) -
             (s.sys.season.period * s.sys.season.current);
+        emit Reseed(block.timestamp);
     }
 }

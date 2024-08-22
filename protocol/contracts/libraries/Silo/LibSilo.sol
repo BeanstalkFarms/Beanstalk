@@ -306,7 +306,7 @@ library LibSilo {
         uint256 roots;
         roots = stalk == s.accts[sender].stalk
             ? s.accts[sender].roots
-            : s.sys.silo.roots.sub(1).mul(stalk).div(s.sys.silo.stalk).add(1);
+            : s.sys.silo.roots.mul(stalk).sub(1).div(s.sys.silo.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.
         s.accts[sender].stalk = s.accts[sender].stalk.sub(stalk);

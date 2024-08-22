@@ -4,21 +4,19 @@ const { impersonateSigner, mintEth } = require("../utils");
 /**
  * @notice Deploys a new beanstalk diamond contract without any facets. Should be on an L2.
  * @dev account: the account to deploy the beanstalk with.
- * Todo: facets should be added post-migration to prevent users from interacting.
  */
-async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
-  // impersonate `account`:
-  let signer;
+async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
+  // Initialize deployer account for vanity address.
   if (mock) {
     await mintEth(account.address);
-    signer = await ethers.provider.getSigner(account.address);
-  } else {
-    signer = await impersonateSigner(account.address);
   }
 
+  // owner is initially the deployer. Upon the verification of the diamond,
+  // the deployer will transfer ownership to the beanstalk owner.
   const beanstalkDiamond = await deployDiamond({
     diamondName: "L2BeanstalkDiamond",
-    owner: account,
+    ownerAddress: account.address,
+    deployer: account,
     args: [],
     verbose: verbose
   });

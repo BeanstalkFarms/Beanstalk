@@ -2071,7 +2071,7 @@ __metadata:
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
     "@beanstalk/wells": "npm:0.4.1"
-    "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease1"
+    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0-prerelease1"
     "@ethereum-waffle/chai": "npm:4.0.10"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@nomiclabs/hardhat-ethers": "npm:^2.2.1"
@@ -2234,10 +2234,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease1":
-  version: 1.1.0-prerelease1
-  resolution: "@beanstalk/wells@npm:1.1.0-prerelease1"
-  checksum: 10/8a8af753ad7024ccca9549932ef0bfbeb245f52c1d98664059cbd58921937b3fef94b47f4317a4b61b750ca6e48424e836d9a92206f6146d9a95e6ed5cf897de
+"@beanstalk/wells1.2@npm:@beanstalk/wells@1.2.0-prerelease1":
+  version: 1.2.0-prerelease1
+  resolution: "@beanstalk/wells@npm:1.2.0-prerelease1"
+  checksum: 10/aaad18e414e8737eb81a1f8db21fe9e58fede2c04139a18a4e4912916d49f1321ea9ff5ba89e5b1d80eb753628f33887e97f4a81845014814264f6c186928747
   languageName: node
   linkType: hard
 
@@ -13211,11 +13211,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=13.7.0":
-  version: 22.4.0
-  resolution: "@types/node@npm:22.4.0"
+  version: 22.4.1
+  resolution: "@types/node@npm:22.4.1"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/0b6ccc86856b8473f4d536491edc2ba21386d194219ee84024ef2b2ab054296f0b37a4f52719af797227132853cff065977992e353754a195cd86aea2e128cc7
+  checksum: 10/cce9221aea24688bccc3d7c25afd26d95c1bdab73a32ee5c43bb456e070116abf6ba537a9ff19c728bc06fe054e69a2c7ec8e5d818e34a3bf9567eae2cb20059
   languageName: node
   linkType: hard
 
@@ -13257,11 +13257,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^18.16.3":
-  version: 18.19.44
-  resolution: "@types/node@npm:18.19.44"
+  version: 18.19.45
+  resolution: "@types/node@npm:18.19.45"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10/d64649e6d2fe68600c99fa3a9ca02099c2ce83680acb5303fdff4fab5fd86ecdd366658facdd447ccd6418af600785089336b5a38caa8b8ee3997926ed3c58a1
+  checksum: 10/978fdd68af65c8f8659037ef09456d41ef46a5f688c3b9550cd59266db2c4ac94e65ed7f08d1871ba909e5b7bdf4e8066c5269715a7dd83333aca34dfa6366db
   languageName: node
   linkType: hard
 
@@ -29547,9 +29547,9 @@ __metadata:
   linkType: hard
 
 "jose@npm:^5.0.0":
-  version: 5.6.3
-  resolution: "jose@npm:5.6.3"
-  checksum: 10/829f07b8857221ada1cd112a5ebd084e34748f6e3247f5cb03aca0a1f25dd6a07283c9a4f5b854935bda505e3243405640550f8e9eb46c45b172dc4cb336ac89
+  version: 5.7.0
+  resolution: "jose@npm:5.7.0"
+  checksum: 10/8eeca706ef50e2fd2e5b97563b6cbc0a8a91038c3bb34186c1761a4737b942e314d453cff8bf28aab790e53433d33ffa296a748908f9c095bcf73b1b17c21544
   languageName: node
   linkType: hard
 
@@ -31392,11 +31392,11 @@ __metadata:
   linkType: hard
 
 "markdown-to-jsx@npm:^7.4.1":
-  version: 7.4.7
-  resolution: "markdown-to-jsx@npm:7.4.7"
+  version: 7.5.0
+  resolution: "markdown-to-jsx@npm:7.5.0"
   peerDependencies:
     react: ">= 0.14.0"
-  checksum: 10/d421f561a57256164564f4b4ac1c3439493f7b88d46ca8d1ed429e481a199a8756591e180d401654c0826ccabe9e76ce4fb97286a0b3c43a7a6346c735778b2b
+  checksum: 10/b1fbe4429b968aefe02d4549eebb8d7456ccd7a8417805bb7f4bde1b466bdd0c81df3b14c5a1d9dcc49c6451ae50cf23cd04228fb6a0e1f8579ad0b76adae044
   languageName: node
   linkType: hard
 
