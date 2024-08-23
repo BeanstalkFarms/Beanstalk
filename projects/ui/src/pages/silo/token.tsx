@@ -45,13 +45,13 @@ const guides = [
   HOW_TO_WITHDRAW_FROM_THE_SILO,
 ];
 
-const SILO_ACTIONS_MAX_WIDTH = '480px';
-
-const UPDATE_DEPOSITS_MAX_WIDTH = '470px';
+const ACTIONS_MAX_WIDTH = '480px';
 
 type Props = {
   token: ERC20Token;
 };
+
+// ---------- Content ----------
 
 const DefaultContent = (props: Props) => (
   <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
@@ -75,11 +75,7 @@ const DefaultContent = (props: Props) => (
         <TokenAbout {...props} />
       </Card>
     </Stack>
-    <Stack
-      gap={2}
-      width="100%"
-      sx={{ maxWidth: { lg: SILO_ACTIONS_MAX_WIDTH } }}
-    >
+    <Stack gap={2} width="100%" sx={{ maxWidth: { lg: ACTIONS_MAX_WIDTH } }}>
       <SiloActions {...props} />
     </Stack>
   </Stack>
@@ -114,7 +110,7 @@ const TransferContent = ({
     <Module
       sx={{
         maxWidth: {
-          lg: SILO_ACTIONS_MAX_WIDTH,
+          lg: ACTIONS_MAX_WIDTH,
           width: '100%',
           height: '100%',
         },
@@ -142,7 +138,7 @@ const LambdaConvertContent = ({
   return (
     <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
       <Stack width="100%" alignItems="center">
-        <Module sx={{ width: '100%' }}>
+        <Module sx={{ width: '100%', maxWidth: '900px' }}>
           <ModuleHeader pb={1}>
             <Row justifyContent="space-between">
               <Typography variant="h4" fontWeight={FontWeight.bold}>
@@ -168,7 +164,7 @@ const LambdaConvertContent = ({
         <Module
           sx={{
             maxWidth: {
-              lg: UPDATE_DEPOSITS_MAX_WIDTH,
+              lg: ACTIONS_MAX_WIDTH,
               width: '100%',
               height: '100%',
             },
@@ -187,8 +183,11 @@ const LambdaConvertContent = ({
     </Stack>
   );
 };
-const TokenLambdasView = () => {
-  const { token, slug, setSlug, clear } = useTokenDepositsContext();
+
+// ---------- Containers ----------
+
+const TokenLambdasView = ({ token }: Props) => {
+  const { slug, setSlug, clear } = useTokenDepositsContext();
 
   return (
     <>
@@ -221,8 +220,8 @@ const TokenLambdasView = () => {
   );
 };
 
-const TokenOrTransferView = () => {
-  const { token, slug, setSlug, clear } = useTokenDepositsContext();
+const TokenOrTransferView = ({ token }: Props) => {
+  const { slug, setSlug, clear } = useTokenDepositsContext();
 
   return (
     <>
@@ -259,14 +258,18 @@ const TokenOrTransferView = () => {
   );
 };
 
-const SlugSwitchContent = () => {
+const SlugSwitchContent = (props: Props) => {
   const { slug } = useTokenDepositsContext();
 
   return (
     <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
       <Stack gap={2} width="100%">
-        {(slug === 'token' || slug === 'transfer') && <TokenOrTransferView />}
-        {(slug === 'lambda' || slug === 'anti-lambda') && <TokenLambdasView />}
+        {(slug === 'token' || slug === 'transfer') && (
+          <TokenOrTransferView {...props} />
+        )}
+        {(slug === 'lambda' || slug === 'anti-lambda') && (
+          <TokenLambdasView {...props} />
+        )}
       </Stack>
     </Container>
   );
@@ -285,7 +288,7 @@ const TokenPage: FC<{}> = () => {
 
   return (
     <TokenDepositsProvider token={whitelistedToken}>
-      <SlugSwitchContent />
+      <SlugSwitchContent token={whitelistedToken} />
     </TokenDepositsProvider>
   );
 };

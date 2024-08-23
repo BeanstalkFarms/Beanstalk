@@ -106,7 +106,8 @@ const TableCard: FC<TableCardProps> = ({
     const _footerHeight = hideFooter ? 0 : 36;
     const _allRowsHeight = Math.min(rows.length, maxRows) * _rowHeight;
 
-    return 60.5 + _footerHeight + _allRowsHeight + _spacingHeight;
+    const height = 60.5 + _footerHeight + _allRowsHeight + _spacingHeight;
+    return height;
   }, [rows, rowSpacing, rowHeight, hideFooter, maxRows]);
 
   // When we need custom, per row, styling, this is where we can defined the rules.

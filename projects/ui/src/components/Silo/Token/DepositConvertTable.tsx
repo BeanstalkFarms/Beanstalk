@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Deposit, ERC20Token, TokenValue } from '@beanstalk/sdk';
-import { Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
-import { GridColumns } from '@mui/x-data-grid';
+import { Stack, Theme, Typography, useMediaQuery } from '@mui/material';
+import { GridColumns, GridEventListener } from '@mui/x-data-grid';
 import useSdk from '~/hooks/sdk';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CircleOutlined from '@mui/icons-material/CircleOutlined';
@@ -25,43 +25,85 @@ export type FarmerTokenConvertRow = Deposit<TokenValue> & {
   id: string;
   owner?: string;
   currentBDV: TokenValue;
+  deltaBDV: TokenValue;
   deltaStalk: TokenValue;
   deltaSeed: TokenValue;
 };
 
-const ConvertTable = ({
+export type ConvertTableColumn =
+  | 'deposits'
+  | 'owner'
+  | 'recordedBDV'
+  | 'arrow'
+  | 'currentBDV'
+  | 'deltaStalk'
+  | 'deltaSeed';
+
+type BaseProps = {
+  token: ERC20Token;
+  selectType: TokenDepositsSelectType;
+};
+
+const SLUG_COL_CONFIG: Record<
+  string,
+  {
+    desktop: readonly ConvertTableColumn[];
+    mobile: readonly ConvertTableColumn[];
+  }
+> = {
+  lambda: {
+    desktop: [
+      'deposits',
+      'recordedBDV',
+      'arrow',
+      'currentBDV',
+      'deltaStalk',
+      'deltaSeed',
+    ],
+    mobile: ['deposits', 'recordedBDV', 'arrow', 'currentBDV'],
+  },
+  'anti-lambda': {
+    desktop: [
+      'deposits',
+      'owner',
+      'recordedBDV',
+      'arrow',
+      'currentBDV',
+      'deltaStalk',
+      'deltaSeed',
+    ],
+    mobile: ['deposits', 'owner', 'recordedBDV', 'arrow', 'currentBDV'],
+  },
+} as const;
+
+const DepositConvertTable = ({
   token,
   rows,
   selectType = 'single',
-}: {
-  token: ERC20Token;
+}: BaseProps & {
   rows: FarmerTokenConvertRow[];
-  selectType: TokenDepositsSelectType;
 }) => {
-  const sdk = useSdk();
-  const theme = useTheme();
   const account = useAccount();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
   const { slug, selected, setSelected } = useTokenDepositsContext();
+  const sdk = useSdk();
+
+  const isMobile = useMediaQuery((t: Theme) => t.breakpoints.down('md'));
 
   const isMultiSelect = selectType === 'multi';
   const isLambdaView = slug === 'lambda';
 
-  const columns = useMemo(() => {
-    const baseColumns: GridColumns<FarmerTokenConvertRow> = [
+  const allColumns = useMemo<GridColumns<FarmerTokenConvertRow>>(
+    () => [
       {
-        field: 'id',
-        // flex: 1.5,
-        width: 170,
+        field: 'deposits',
+        flex: 1,
+        minWidth: 150,
         headerName: 'Deposits',
         align: 'left',
         headerAlign: 'left',
-        cellClassName: 'sticky-col',
-        headerClassName: 'sticky-col',
         valueGetter: (params) => params.row.id.toString(),
         renderCell: (params) => (
-          <Stack direction="row" gap={0.5} alignItems="center">
+          <Stack direction="row" gap={1} alignItems="center">
             {isMultiSelect && (
               <CircleSelect isSelected={selected.has(params.row.id)} />
             )}
@@ -75,29 +117,23 @@ const ConvertTable = ({
         ),
         sortable: true,
       },
-    ];
-
-    if (!isLambdaView) {
-      const ownerColumn: GridColumns<FarmerTokenConvertRow>[number] = {
+      {
         field: 'owner',
-        // flex: 1,
-        width: 250,
+        flex: 1,
+        minWidth: 130,
         headerName: 'Owner',
-        align: 'left',
+        align: 'right',
+        headerAlign: 'right',
         valueGetter: (params) => params.row.owner || '',
         renderCell: (params) => (
           <Typography>{trimAddress(params.row.owner || '')}</Typography>
         ),
         sortable: true,
-      };
-      baseColumns.push(ownerColumn);
-    }
-
-    const restColumns: GridColumns<FarmerTokenConvertRow> = [
+      },
       {
         field: 'recordedBDV',
-        // flex: 1,
-        width: 130,
+        flex: 0.75,
+        minWidth: 130,
         align: 'left',
         headerAlign: 'left',
         headerName: 'Recorded BDV',
@@ -115,13 +151,11 @@ const ConvertTable = ({
       },
       {
         field: 'arrow',
-        flex: 0,
         width: 20,
-        align: 'right',
-        headerAlign: 'right',
+        maxWidth: 20,
+        minWidth: 20,
         headerName: '',
         sortable: true,
-        // valueGetter: (params) => params.row.bdv.toNumber(),
         renderCell: (params) => {
           const isGain = params.row.bdv.lt(params.row.currentBDV);
           return (
@@ -134,8 +168,8 @@ const ConvertTable = ({
       },
       {
         field: 'currentBDV',
-        // flex: 1,
-        width: 140,
+        flex: 0.75,
+        minWidth: 120,
         align: 'right',
         headerAlign: 'right',
         headerName: 'Current BDV',
@@ -153,8 +187,9 @@ const ConvertTable = ({
       },
       {
         field: 'deltaStalk',
-        // flex: 1,
+        flex: 1,
         width: 140,
+        minWidth: 140,
         align: 'right',
         headerAlign: 'right',
         headerName: isLambdaView ? 'Gain in Stalk' : 'Loss in Stalk',
@@ -181,8 +216,8 @@ const ConvertTable = ({
         field: 'deltaSeed',
         align: 'right',
         headerAlign: 'right',
-        // flex: 0.75,
-        width: 140,
+        flex: 1,
+        minWidth: 140,
         headerName: isLambdaView ? 'Gain in Seed' : 'Loss in Seed',
         sortable: true,
         valueGetter: (params) => params.row.deltaStalk.toNumber(),
@@ -203,27 +238,41 @@ const ConvertTable = ({
           );
         },
       },
-    ];
+    ],
+    [isLambdaView, isMultiSelect, selected, token.symbol, sdk.tokens.SEEDS]
+  );
 
-    return baseColumns.concat(restColumns);
-  }, [isLambdaView, isMultiSelect, selected, token.symbol, sdk.tokens.SEEDS]);
+  const getRowClassName = useCallback(
+    (params: { row: FarmerTokenConvertRow }) =>
+      selected.has(params.row.id) ? 'selected-row' : '',
+    [selected]
+  );
 
-  const getSelectedRowClassName = (params: { row: FarmerTokenConvertRow }) => {
-    if (selected.has(params.row.id)) {
-      return 'selected-row';
-    }
-    return 'row';
-  };
+  const handleRowClick: GridEventListener<'rowClick'> = useCallback(
+    (params) => {
+      setSelected(params.row.id, selectType);
+    },
+    [setSelected, selectType]
+  );
 
   const state = !account ? 'disconnected' : 'ready';
+
+  const columns = allColumns.filter((col) =>
+    SLUG_COL_CONFIG[slug]?.[isMobile ? 'mobile' : 'desktop']?.includes(
+      col.field as ConvertTableColumn
+    )
+  );
 
   return (
     <>
       <TableCard
         title=""
-        onRowClick={(e) => setSelected(e.row.id, selectType)}
+        onRowClick={handleRowClick}
         rows={rows}
         columns={columns}
+        getRowSpacing={(params) => ({
+          bottom: params.isLastVisible ? 0 : 10,
+        })}
         state={state}
         density="standard"
         onlyTable
@@ -231,16 +280,22 @@ const ConvertTable = ({
         rowHeight={65}
         maxRows={isMobile ? 5 : 10}
         tableCss={baseTableCSS}
-        getRowClassName={getSelectedRowClassName}
-        classes={{
-          cell: 'data-grid-cell-overflow',
-        }}
+        getRowClassName={getRowClassName}
+        getCellClassName={getCellClassName}
       />
     </>
   );
 };
 
-export default ConvertTable;
+const getCellClassName = (params: { field: string }) => {
+  if (params.field === 'arrow') {
+    return 'arrow-cell';
+  }
+
+  return 'data-grid-cell-overflow';
+};
+
+export default DepositConvertTable;
 
 function CircleSelect({ isSelected }: { isSelected: boolean }) {
   const Component = isSelected ? CheckCircleRounded : CircleOutlined;
@@ -262,6 +317,7 @@ function CircleSelect({ isSelected }: { isSelected: boolean }) {
 const baseTableCSS = {
   px: 0,
   '& .MuiDataGrid-root': {
+    overflowY: 'hidden',
     '& .MuiDataGrid-cell': {
       outline: 'none',
       overflow: 'visible',
@@ -269,12 +325,8 @@ const baseTableCSS = {
         outline: 'none',
       },
     },
-    '& .MuiDataGrid-virtualScrollerRenderZone': {
-      '& .MuiDataGrid-row:not(:last-child)': {
-        marginBottom: '10px',
-      },
-    },
     '& .MuiDataGrid-renderingZone': {
+      overflowY: 'hidden',
       maxHeight: 'none !important',
       maxWidth: '100% !important',
     },
@@ -291,6 +343,10 @@ const baseTableCSS = {
       outline: 'none',
     },
   },
+
+  // '& .MuiDataGrid-virtualScroller': {
+  //   overflowY: 'hidden',
+  // },
 
   '& .MuiDataGrid-row': {
     background: 'white',
@@ -312,6 +368,12 @@ const baseTableCSS = {
       lineHeight: 'normal',
     },
     cursor: 'pointer',
+  },
+
+  '.arrow-cell': {
+    padding: '0 !important',
+    minWidth: '20px',
+    maxWidth: '20px',
   },
 
   // enable overflow of text in cells

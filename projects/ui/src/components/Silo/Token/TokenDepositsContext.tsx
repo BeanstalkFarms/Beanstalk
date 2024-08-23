@@ -20,8 +20,6 @@ export type TokenDepositsSelectType = 'single' | 'multi';
 
 export type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
 
-const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
-
 export type TokenDepositsContextType = {
   selected: Set<string>;
   token: ERC20Token;
@@ -40,6 +38,8 @@ export type TokenDepositsContextType = {
   ) => void;
   clear: () => void;
 };
+
+const SLUGS: SiloTokenSlug[] = ['token', 'transfer', 'lambda', 'anti-lambda'];
 
 const slugIndexMap: Record<number, SiloTokenSlug> = {
   0: 'token',
@@ -75,26 +75,28 @@ export const TokenDepositsProvider = (props: {
     selectType: TokenDepositsSelectType,
     callback?: () => void
   ) => {
-    const copy = new Set(selected);
-    if (selectType === 'single') {
-      const inSelected = copy.has(depositId);
-      copy.clear();
-      if (!inSelected) {
+    setSelected((prevSelected) => {
+      const copy = new Set(prevSelected);
+      if (selectType === 'single') {
+        const inSelected = copy.has(depositId);
+        copy.clear();
+        if (!inSelected) {
+          copy.add(depositId);
+        }
+      } else if (!copy.delete(depositId)) {
         copy.add(depositId);
       }
-    } else if (!copy.delete(depositId)) {
-      copy.add(depositId);
-    }
 
-    setSelected(copy);
+      return copy;
+    });
     callback?.();
   };
 
-  const handleSetMulti = (depositIds: string[]) => {
+  const handleSetMulti = useCallback((depositIds: string[]) => {
     setSelected(new Set(depositIds));
-  };
+  }, []);
 
-  const clear = () => setSelected(new Set());
+  const clear = useCallback(() => setSelected(new Set()), []);
 
   const setSlug = useCallback(
     (action: SiloTokenSlug | undefined | null, callback?: () => void) => {
@@ -112,20 +114,32 @@ export const TokenDepositsProvider = (props: {
     [setSlugIndex]
   );
 
+  const contextValue = useMemo(
+    () => ({
+      selected,
+      token: props.token,
+      balances: siloBalances,
+      depositsById: depositMap,
+      slug: slugIndexMap[slugIndex] || 'token',
+      setSlug,
+      setSelected: handleSetSelected,
+      setWithIds: handleSetMulti,
+      clear,
+    }),
+    [
+      clear,
+      depositMap,
+      handleSetMulti,
+      props.token,
+      selected,
+      setSlug,
+      siloBalances,
+      slugIndex,
+    ]
+  );
+
   return (
-    <TokenDepositsContext.Provider
-      value={{
-        selected,
-        token: props.token,
-        balances: siloBalances,
-        depositsById: depositMap,
-        slug: slugIndexMap[slugIndex] || 'token',
-        setSlug,
-        setSelected: handleSetSelected,
-        setWithIds: handleSetMulti,
-        clear,
-      }}
-    >
+    <TokenDepositsContext.Provider value={contextValue}>
       {props.children}
     </TokenDepositsContext.Provider>
   );

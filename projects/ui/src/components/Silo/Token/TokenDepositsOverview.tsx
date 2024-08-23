@@ -11,11 +11,11 @@ import BigNumber from 'bignumber.js';
 import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 
-type ITokenDepositsOverview = {
+type Props = {
   token: Token;
 };
 
-const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
+const TokenDepositsOverview = ({ token }: Props) => {
   const { balances, setSlug } = useTokenDepositsContext();
 
   const depositedAmount = balances?.amount || TokenValue.ZERO;
@@ -94,7 +94,7 @@ const TokenDepositsOverview = ({ token }: ITokenDepositsOverview) => {
           </Stack>
         )}
       </Stack>
-      <FarmerTokenDepositsTable token={token} selectType="single" />
+      <FarmerTokenDepositsTable selectType="single" />
     </Stack>
   );
 };

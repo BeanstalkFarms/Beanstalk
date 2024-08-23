@@ -7,7 +7,21 @@ import { formatTV } from '~/util';
 import Row from '~/components/Common/Row';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { useTokenDepositsContext } from './TokenDepositsContext';
-import ConvertTable, { FarmerTokenConvertRow } from './ConvertTable';
+import DepositConvertTable, {
+  FarmerTokenConvertRow,
+} from './DepositConvertTable';
+
+const colConfig = {
+  desktop: [
+    'deposits',
+    'recordedBDV',
+    'arrow',
+    'currentBDV',
+    'deltaStalk',
+    'deltaSeed',
+  ],
+  mobile: ['deposits', 'recordedBDV', 'currentBDV'],
+} as const;
 
 const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   const sdk = useSdk();
@@ -15,15 +29,29 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   const getBDV = useBDV();
 
   const updatableDeposits: FarmerTokenConvertRow[] = useMemo(() => {
-    const rowData = Object.entries(depositsById).map(([key, deposit]) => ({
-      id: key,
-      currentBDV: token.fromHuman(getBDV(token).toString()).mul(deposit.amount),
-      deltaStalk: sdk.tokens.STALK.fromHuman('50'),
-      deltaSeed: sdk.tokens.SEEDS.fromHuman('100'),
-      ...deposit,
-    }));
+    const rowData = Object.entries(depositsById).map(([key, deposit]) => {
+      const currentBDV = token
+        .fromHuman(getBDV(token).toString())
+        .mul(deposit.amount);
+      const deltaBDV = currentBDV.sub(deposit.bdv);
 
-    return rowData.filter((r) => r.bdv.lt(r.currentBDV));
+      return {
+        id: key,
+        currentBDV: currentBDV,
+        deltaBDV: deltaBDV,
+        deltaStalk: sdk.tokens.STALK.fromHuman('50'),
+        deltaSeed: sdk.tokens.SEEDS.fromHuman('100'),
+        ...deposit,
+      };
+    });
+
+    const filtered = rowData.filter((r) => r.bdv.lt(r.currentBDV));
+    filtered.sort(
+      (a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1)
+      // return a.deltaBDV.cmp(b.deltaBDV);
+    );
+
+    return filtered;
   }, [depositsById, getBDV, token, sdk.tokens]);
 
   const handleSelectAll = () => {
@@ -83,7 +111,11 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
           </Box>
         </Row>
       </Stack>
-      <ConvertTable token={token} rows={updatableDeposits} selectType="multi" />
+      <DepositConvertTable
+        token={token}
+        rows={updatableDeposits}
+        selectType="multi"
+      />
     </Stack>
   );
 };

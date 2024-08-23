@@ -46,15 +46,15 @@ export type FarmerTokenDepositRow = Deposit<TokenValue> & {
 };
 
 const FarmerTokenDepositsTable = ({
-  token,
+  // token,
   selectType = 'single',
 }: {
-  token: Token;
+  // token: Token;
   selectType?: TokenDepositsSelectType;
 }) => {
   const { address: account } = useAccount();
   const mowStatus = useAppSelector((s) => s._farmer.silo.mowStatuses);
-  const { selected, depositsById, setSelected, clear, setSlug } =
+  const { token, selected, depositsById, setSelected, clear, setSlug } =
     useTokenDepositsContext();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
