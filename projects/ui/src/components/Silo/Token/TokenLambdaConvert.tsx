@@ -11,47 +11,33 @@ import DepositConvertTable, {
   FarmerTokenConvertRow,
 } from './DepositConvertTable';
 
-const colConfig = {
-  desktop: [
-    'deposits',
-    'recordedBDV',
-    'arrow',
-    'currentBDV',
-    'deltaStalk',
-    'deltaSeed',
-  ],
-  mobile: ['deposits', 'recordedBDV', 'currentBDV'],
-} as const;
-
 const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   const sdk = useSdk();
   const { setWithIds, depositsById } = useTokenDepositsContext();
   const getBDV = useBDV();
 
   const updatableDeposits: FarmerTokenConvertRow[] = useMemo(() => {
-    const rowData = Object.entries(depositsById).map(([key, deposit]) => {
-      const currentBDV = token
-        .fromHuman(getBDV(token).toString())
-        .mul(deposit.amount);
+    const oneTokenBDV = token.fromHuman(getBDV(token).toString());
+    const updateable: FarmerTokenConvertRow[] = [];
+
+    Object.entries(depositsById).forEach(([key, deposit]) => {
+      const currentBDV = oneTokenBDV.mul(deposit.amount);
       const deltaBDV = currentBDV.sub(deposit.bdv);
 
-      return {
+      if (deposit.bdv.gte(currentBDV)) return;
+      updateable.push({
         id: key,
         currentBDV: currentBDV,
         deltaBDV: deltaBDV,
-        deltaStalk: sdk.tokens.STALK.fromHuman('50'),
-        deltaSeed: sdk.tokens.SEEDS.fromHuman('100'),
+        deltaStalk: sdk.tokens.STALK.fromHuman('50'), // FIX ME
+        deltaSeed: sdk.tokens.SEEDS.fromHuman('100'), // FIX ME
         ...deposit,
-      };
+      });
     });
 
-    const filtered = rowData.filter((r) => r.bdv.lt(r.currentBDV));
-    filtered.sort(
-      (a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1)
-      // return a.deltaBDV.cmp(b.deltaBDV);
-    );
+    updateable.sort((a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1));
 
-    return filtered;
+    return updateable;
   }, [depositsById, getBDV, token, sdk.tokens]);
 
   const handleSelectAll = () => {

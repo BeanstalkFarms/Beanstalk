@@ -8,7 +8,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 
 import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
+import DepositsTable from './DepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 
 type Props = {
@@ -94,7 +94,7 @@ const TokenDepositsOverview = ({ token }: Props) => {
           </Stack>
         )}
       </Stack>
-      <FarmerTokenDepositsTable selectType="single" />
+      <DepositsTable token={token} selectType="single" />
     </Stack>
   );
 };

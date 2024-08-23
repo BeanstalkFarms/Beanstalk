@@ -6,7 +6,7 @@ import { FontWeight } from '~/components/App/muiTheme';
 import { formatTV } from '~/util';
 import { Token } from '@beanstalk/sdk';
 import { useTokenDepositsContext } from './TokenDepositsContext';
-import FarmerTokenDepositsTable from './FarmerTokenDepositsTable';
+import DepositsTable from './DepositsTable';
 
 const TokenTransferDepositsHeader = () => {
   const { token, balances } = useTokenDepositsContext();
@@ -32,7 +32,7 @@ type Props = {
 const TokenTransferDeposits = ({ token }: Props) => (
   <Stack alignSelf="center" width="100%">
     <TokenTransferDepositsHeader />
-    <FarmerTokenDepositsTable selectType="multi" />
+    <DepositsTable token={token} selectType="multi" />
   </Stack>
 );
 

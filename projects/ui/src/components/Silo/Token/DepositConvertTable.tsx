@@ -333,20 +333,18 @@ const baseTableCSS = {
     '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
       { outline: 'none' },
   },
+
   '& .MuiDataGrid-columnHeaderTitle': {
     fontWeight: FontWeight.medium,
     fontSize: FontSize.base,
   },
+
   '& .MuiDataGrid-cell': {
     outline: 'none',
     '&:active': {
       outline: 'none',
     },
   },
-
-  // '& .MuiDataGrid-virtualScroller': {
-  //   overflowY: 'hidden',
-  // },
 
   '& .MuiDataGrid-row': {
     background: 'white',

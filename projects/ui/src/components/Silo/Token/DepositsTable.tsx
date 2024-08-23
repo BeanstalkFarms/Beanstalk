@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useMemo, useState } from 'react';
-import { Token, TokenValue } from '@beanstalk/sdk-core';
+import { Token, TokenValue, Deposit } from '@beanstalk/sdk';
 import BigNumberJS from 'bignumber.js';
 import { BigNumber } from 'ethers';
 import useStemTipForToken from '~/hooks/beanstalk/useStemTipForToken';
@@ -32,7 +32,6 @@ import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
 import { minimizeWindowIcon } from '~/img/icon';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
-import { Deposit } from '@beanstalk/sdk';
 import { useAppSelector } from '~/state';
 import {
   TokenDepositsContextType,
@@ -45,16 +44,16 @@ export type FarmerTokenDepositRow = Deposit<TokenValue> & {
   mowableStalk: TokenValue;
 };
 
-const FarmerTokenDepositsTable = ({
-  // token,
+const DepositsTable = ({
+  token,
   selectType = 'single',
 }: {
-  // token: Token;
+  token: Token;
   selectType?: TokenDepositsSelectType;
 }) => {
   const { address: account } = useAccount();
   const mowStatus = useAppSelector((s) => s._farmer.silo.mowStatuses);
-  const { token, selected, depositsById, setSelected, clear, setSlug } =
+  const { selected, depositsById, setSelected, clear, setSlug } =
     useTokenDepositsContext();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -240,7 +239,7 @@ const FarmerTokenDepositsTable = ({
   );
 };
 
-export default FarmerTokenDepositsTable;
+export default DepositsTable;
 
 const SingleTokenDepositDialogContent = ({
   row,
