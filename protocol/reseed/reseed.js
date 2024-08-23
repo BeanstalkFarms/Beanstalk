@@ -137,9 +137,10 @@ async function printStage(i, end, mock, log) {
 
 function parseBeanstalkData() {
   const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
-  const storageAccountsPath = "./reseed/data/exports/storage-accounts20330000.json";
-  const storageFertPath = "./reseed/data/exports/storage-fertilizer20330000.json";
-  const storageSystemPath = "./reseed/data/exports/storage-system20330000.json";
+  const BLOCK_NUMBER = 20577510;
+  const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
+  const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
+  const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
   const marketPath = "./reseed/data/exports/market-info20330000.json";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
