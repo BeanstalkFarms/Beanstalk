@@ -30,7 +30,6 @@ export class Tokens {
   
   public readonly UNRIPE_BEAN: ERC20Token;
   public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
-  
   public readonly BEAN_ETH_WELL_LP: ERC20Token;
   public readonly BEAN_WSTETH_WELL_LP: ERC20Token;
   public readonly BEAN_WEETH_WELL_LP: ERC20Token;
@@ -52,8 +51,14 @@ export class Tokens {
   public unripeUnderlyingTokens: Set<Token>;
   public erc20Tokens: Set<Token>;
   public balanceTokens: Set<Token>;
+
+  /**
+   * @deprecated
+   */
   public crv3Underlying: Set<Token>;
 
+  public wellLP: Set<Token>;
+  public wellLPAddresses: string[];
   public siloWhitelist: Set<Token>;
   public siloWhitelistAddresses: string[];
 
@@ -324,7 +329,7 @@ export class Tokens {
     this.UNRIPE_BEAN_WSTETH.isUnripe = true;
 
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
-    this.map.set(addresses.UNRIPE_BEAN_WSTETH.get(chainId), this.UNRIPE_BEAN_WETH);
+    this.map.set(addresses.UNRIPE_BEAN_WSTETH.get(chainId), this.UNRIPE_BEAN_WSTETH);
 
     ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
@@ -535,33 +540,38 @@ export class Tokens {
 
     this.map.set(addresses.ROOT.get(chainId) ?? "ROOT", this.ROOT);
     this.map.set(addresses.BEAN_CRV3.get(chainId) ?? "BEAN3CRV", this.BEAN_CRV3_LP);
-    this.map.set(addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "BEANETH_UNIV2", this.BEAN_ETH_UNIV2_LP);
+    this.map.set(
+      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "BEANETH_UNIV2",
+      this.BEAN_ETH_UNIV2_LP
+    );
 
     ////////// Groups //////////
 
-    const whitelistedWellLP = [this.BEAN_ETH_WELL_LP, this.BEAN_WSTETH_WELL_LP];
-
-    const siloWhitelist = [
+    const wellLP = [
       this.BEAN_ETH_WELL_LP,
       this.BEAN_WSTETH_WELL_LP,
-      this.BEAN,
-      this.BEAN_CRV3_LP,
-      this.UNRIPE_BEAN,
-      this.UNRIPE_BEAN_WSTETH
+      this.BEAN_WEETH_WELL_LP,
+      this.BEAN_WBTC_WELL_LP,
+      this.BEAN_USDC_WELL_LP,
+      this.BEAN_USDT_WELL_LP
     ];
 
-    this.siloWhitelistedWellLP = new Set(whitelistedWellLP);
-    this.siloWhitelistedWellLPAddresses = whitelistedWellLP.map((t) => t.address);
+    const siloWhitelist = [this.BEAN, ...wellLP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH];
 
+    this.wellLP = new Set(wellLP);
+    this.wellLPAddresses = wellLP.map((t) => t.address);
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
     this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH]);
-    this.unripeUnderlyingTokens = new Set([this.BEAN, this.BEAN_CRV3_LP]);
+    this.unripeUnderlyingTokens = new Set([this.BEAN, this.WSTETH]);
     this.erc20Tokens = new Set([
       ...this.siloWhitelist,
       this.WETH,
-      // this.CRV3,
+      this.WSTETH,
+      this.WEETH,
+      this.WBTC,
+      this.CRV3,
       this.DAI,
       this.USDC,
       this.USDT
@@ -572,6 +582,10 @@ export class Tokens {
 
   isWhitelisted(token: Token) {
     return this.siloWhitelist.has(token);
+  }
+
+  isWellLP(token: Token) {
+    return this.wellLP.has(token);
   }
 
   // TODO: why do we need this?
