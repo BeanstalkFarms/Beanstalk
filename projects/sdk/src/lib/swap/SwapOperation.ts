@@ -76,7 +76,11 @@ export class SwapOperation {
    * @param slippage A human readable percent value. Ex: 0.1 would mean 0.1% slippage
    * @returns Promise of a Transaction
    */
-  async execute(amountIn: BigNumber | TokenValue, slippage: number, overrides: CallOverrides = {}): Promise<ContractTransaction> {
+  async execute(
+    amountIn: BigNumber | TokenValue,
+    slippage: number,
+    overrides: CallOverrides = {}
+  ): Promise<ContractTransaction> {
     if (!this.isValid()) throw new Error("Invalid swap configuration");
 
     return this.workflow.execute(amountIn, { slippage }, overrides);

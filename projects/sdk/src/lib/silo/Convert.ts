@@ -168,28 +168,40 @@ export class Convert {
 
     const whitelistedWellLPs = new Set([
       Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase()
     ]);
     const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
     const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
 
-    if (fromToken.address === tks.UNRIPE_BEAN.address && toToken.address === tks.UNRIPE_BEAN_WSTETH.address) {
+    if (
+      fromToken.address === tks.UNRIPE_BEAN.address &&
+      toToken.address === tks.UNRIPE_BEAN_WSTETH.address
+    ) {
       encoding = ConvertEncoder.unripeBeansToLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain() // minLP
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN_WSTETH.address && toToken.address === tks.UNRIPE_BEAN.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN_WSTETH.address &&
+      toToken.address === tks.UNRIPE_BEAN.address
+    ) {
       encoding = ConvertEncoder.unripeLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain() // minBeans
       );
-    } else if (fromToken.address === tks.BEAN.address && toToken.address === tks.BEAN_CRV3_LP.address) {
+    } else if (
+      fromToken.address === tks.BEAN.address &&
+      toToken.address === tks.BEAN_CRV3_LP.address
+    ) {
       encoding = ConvertEncoder.beansToCurveLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain(), // minLP
         toToken.address // output token address = pool address
       );
-    } else if (fromToken.address === tks.BEAN_CRV3_LP.address && toToken.address === tks.BEAN.address) {
+    } else if (
+      fromToken.address === tks.BEAN_CRV3_LP.address &&
+      toToken.address === tks.BEAN.address
+    ) {
       encoding = ConvertEncoder.curveLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain(), // minBeans
@@ -207,12 +219,18 @@ export class Convert {
         minAmountOut.toBlockchain(), // minBeans
         fromToken.address // output token address = pool address
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN.address && toToken.address === tks.BEAN.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN.address &&
+      toToken.address === tks.BEAN.address
+    ) {
       encoding = ConvertEncoder.unripeToRipe(
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN_WSTETH.address && toToken.address === tks.BEAN_WSTETH_WELL_LP.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN_WSTETH.address &&
+      toToken.address === tks.BEAN_WSTETH_WELL_LP.address
+    ) {
       encoding = ConvertEncoder.unripeToRipe(
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
@@ -249,4 +267,5 @@ export class Convert {
     const token = Convert.sdk.tokens.findByAddress(fromToken.address);
     return token ? this.paths.get(token) || [] : [];
   }
+
 }
