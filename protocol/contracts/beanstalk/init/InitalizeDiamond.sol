@@ -16,7 +16,6 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {console} from "forge-std/console.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -148,9 +147,7 @@ contract InitalizeDiamond {
     }
 
     function initializeTokens(address bean) internal {
-        console.log("iniializing bean", s.sys.tokens.bean);
         s.sys.tokens.bean = bean;
-        console.log("iniializing bean", s.sys.tokens.bean);
     }
 
     /**

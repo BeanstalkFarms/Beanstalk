@@ -20,7 +20,7 @@ interface IOwner {
  * @notice Test helper contract to deploy Fertilizer.
  */
 contract FertilizerDeployer is Utils {
-    address internal constant fertilizerAddress = 0xC59f881074Bf039352C227E21980317e6b969c8A;
+    address internal constant fertilizerAddress = 0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6;
 
     function initFertilizer(bool verbose) internal {
         deployCodeTo("Fertilizer", fertilizerAddress);

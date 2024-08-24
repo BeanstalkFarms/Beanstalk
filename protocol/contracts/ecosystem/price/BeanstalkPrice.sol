@@ -4,18 +4,10 @@ pragma solidity ^0.8.20;
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {WellPrice, P, C} from "./WellPrice.sol";
 
-interface IWhitelistFacet {
-    function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
-}
-
 contract BeanstalkPrice is WellPrice {
     using LibRedundantMath256 for uint256;
 
-    address immutable _beanstalk;
-
-    constructor(address beanstalk) {
-        _beanstalk = beanstalk;
-    }
+    constructor(address beanstalk) WellPrice(beanstalk) {}
 
     struct Prices {
         uint256 price;
@@ -33,7 +25,7 @@ contract BeanstalkPrice is WellPrice {
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
      **/
     function price() external view returns (Prices memory p) {
-        address[] memory wells = IWhitelistFacet(_beanstalk).getWhitelistedWellLpTokens();
+        address[] memory wells = beanstalk.getWhitelistedWellLpTokens();
         p.ps = new P.Pool[](wells.length);
         for (uint256 i = 0; i < wells.length; i++) {
             // Assume all Wells are CP2 wells.

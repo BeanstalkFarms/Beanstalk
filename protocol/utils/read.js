@@ -1,11 +1,10 @@
-const fs = require("fs");
 const { BigNumber } = require("ethers");
 
 async function readPrune() {
-  const contents = await fs.readFileSync("contracts/C.sol", "utf-8");
-  let num = contents.split("INITIAL_HAIRCUT = ")[1].split(";")[0];
-  num = parseFloat(num).toString();
-  return num;
+  // function initially read from C.sol to find INITIAL_HAIRCUT.
+  // This function is not used in the protocol anymore, and is hard coded here
+  // instead of reading from the contract.
+  return BigNumber.from("185564685220298701");
 }
 
 function convertToBigNum(value) {

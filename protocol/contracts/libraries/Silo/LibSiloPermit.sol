@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../../C.sol";
 import "../LibAppStorage.sol";
 
 /**

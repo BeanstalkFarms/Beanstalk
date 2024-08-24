@@ -33,7 +33,7 @@ contract MockInitDiamond is InitalizeDiamond {
     address internal constant BEAN_ETH_WELL = address(0xBEA0e11282e2bB5893bEcE110cF199501e872bAd);
     address internal constant BEAN_WSTETH_WELL =
         address(0xBeA0000113B0d182f4064C86B71c315389E4715D);
-    address internal constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address internal constant FERTILIZER = address(0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6);
     address internal constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
     address internal constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
 
