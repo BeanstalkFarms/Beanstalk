@@ -10,6 +10,7 @@ export class Address {
   public ARBITRUM: string;
   public LOCALHOST: string;
   public LOCALHOST_ARBITRUM: string;
+  public ANVIL1: string;
   public TESTNET: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
@@ -38,6 +39,7 @@ export class Address {
       this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.addresses[ChainId.ARBITRUM];
     this.TESTNET = this.addresses[ChainId.TESTNET];
     this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.addresses[ChainId.MAINNET];
+    this.ANVIL1 = this.addresses[ChainId.ANVIL1] || this.addresses[ChainId.MAINNET];
   }
 
   get(chainId?: number) {
