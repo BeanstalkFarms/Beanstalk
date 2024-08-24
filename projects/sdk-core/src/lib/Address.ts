@@ -7,13 +7,15 @@ export type AddressDefinition = {
 export class Address {
   private addresses: AddressDefinition;
   public MAINNET: string;
+  public ARBITRUM: string;
   public LOCALHOST: string;
-  public ANVIL1: string;
+  public LOCALHOST_ARBITRUM: string;
+  public TESTNET: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
     if (typeof input == "string") {
-      addresses[ChainId.MAINNET] = input;
+      addresses[ChainId.ARBITRUM] = input.toLowerCase();
     } else {
       Object.assign(addresses, input);
     }
@@ -29,22 +31,21 @@ export class Address {
 
   constructor(addresses: AddressDefinition) {
     this.addresses = addresses;
+
+    this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
     this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
-    this.ANVIL1 = this.addresses[ChainId.ANVIL1];
+    this.LOCALHOST_ARBITRUM =
+      this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.addresses[ChainId.ARBITRUM];
+    this.TESTNET = this.addresses[ChainId.TESTNET];
+    this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.addresses[ChainId.MAINNET];
   }
 
   get(chainId?: number) {
-    let address: string = this.addresses[ChainId.ARBITRUM];
+    let address = this.addresses[ChainId.ARBITRUM];
 
     // Default to ARBITRUM if no chain is specified
     if (!chainId) {
-      if (!address) {
-        throw new Error(
-         `Chain ID ${ChainId.ARBITRUM} not supported in address definition: ${this.addresses}`
-        );
-      }
-      return address;
+      return address || "";
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -60,13 +61,7 @@ export class Address {
       address = this.addresses[chainId];
     }
 
-    if (!address) {
-      throw new Error(
-        `Chain ID not supported in address definition: ${this.addresses}`
-      );
-    }
-
-    return this.addresses[chainId];
+    return address || "";
   }
 
   set<T extends string | AddressDefinition>(input: T) {
