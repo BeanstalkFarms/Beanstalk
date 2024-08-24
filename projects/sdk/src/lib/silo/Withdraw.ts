@@ -14,7 +14,11 @@ export class Withdraw {
     Withdraw.sdk = sdk;
   }
 
-  async withdraw(token: Token, amount: TokenValue, toMode: FarmToMode = FarmToMode.INTERNAL): Promise<ContractTransaction> {
+  async withdraw(
+    token: Token,
+    amount: TokenValue,
+    toMode: FarmToMode = FarmToMode.INTERNAL
+  ): Promise<ContractTransaction> {
     Withdraw.sdk.debug("silo.withdraw()", { token, amount });
     if (!Withdraw.sdk.tokens.siloWhitelist.has(token)) {
       throw new Error(`Withdraw error; token ${token.symbol} is not a whitelisted asset`);
@@ -42,11 +46,29 @@ export class Withdraw {
     }
 
     if (seasons.length === 1) {
-      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposit()", { address: token.address, season: seasons[0], amount: amounts[0] });
-      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposit(token.address, seasons[0], amounts[0], toMode);
+      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposit()", {
+        address: token.address,
+        season: seasons[0],
+        amount: amounts[0]
+      });
+      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposit(
+        token.address,
+        seasons[0],
+        amounts[0],
+        toMode
+      );
     } else {
-      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposits()", { address: token.address, seasons: seasons, amounts: amounts });
-      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposits(token.address, seasons, amounts, toMode);
+      Withdraw.sdk.debug("silo.withdraw(): withdrawDeposits()", {
+        address: token.address,
+        seasons: seasons,
+        amounts: amounts
+      });
+      contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposits(
+        token.address,
+        seasons,
+        amounts,
+        toMode
+      );
     }
 
     return contractCall;
