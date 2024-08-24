@@ -27,7 +27,7 @@ export class Tokens {
   public readonly LUSD: ERC20Token;
   public readonly CRV3: ERC20Token;
   public readonly ROOT: ERC20Token;
-  
+
   public readonly UNRIPE_BEAN: ERC20Token;
   public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
   public readonly BEAN_ETH_WELL_LP: ERC20Token;
