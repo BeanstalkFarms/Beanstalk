@@ -178,7 +178,18 @@ export class Silo {
     return this.siloConvert.convertEstimate(fromToken, toToken, fromAmount);
   }
 
+  public async getDeposits(_account: string) {
+    const deposits = await Silo.sdk.contracts.beanstalk.getDepositsForAccount(_account);
+
+    
+  }
+
+  public async getTokenDeposits(_account: string, token: Token) {
+    return Silo.sdk.contracts.beanstalk.getTokenDepositsForAccount(_account, token.address);
+  }
+
   /**
+   * @deprecated
    * Return the Farmer's balance of a single whitelisted token.
    */
   public async getBalance(
@@ -237,9 +248,9 @@ export class Silo {
 
       deposited.forEach((deposit) =>
         utils.applyDeposit(balance, _token, stemTip, {
-          stem: deposit.season, // FIXME
-          amount: deposit.amount,
-          bdv: deposit.bdv,
+          stem: deposit.stem, // FIXME
+          amount: deposit.depositedAmount,
+          bdv: deposit.depositedBDV,
           germinatingStem
         })
       );
@@ -353,14 +364,14 @@ export class Silo {
         if (!stemTip) throw new Error(`No stem tip found for ${token.address}`);
 
         // Filter dust crates - should help with crate balance too low errors
-        if (BigNumber.from(deposit.amount).toString() !== "1") {
+        if (BigNumber.from(deposit.depositedAmount).toString() !== "1") {
           utils.applyDeposit(balance, token, stemTip, {
             stem: deposit.stem || deposit.season,
-            amount: deposit.amount,
-            bdv: deposit.bdv,
+            amount: deposit.depositedAmount,
+            bdv: deposit.depositedBDV,
             germinatingStem
           });
-        };
+        }
       });
 
       return utils.sortTokenMapByWhitelist(Silo.sdk.tokens.siloWhitelist, balances);

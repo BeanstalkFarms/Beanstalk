@@ -1,5 +1,4 @@
-import { ChainId } from "@beanstalk/sdk-core";
-import { Address } from "src/classes/Address";
+import { ChainId, Address } from "@beanstalk/sdk-core";
 
 export const addresses = {
   // ----------------------------------------
