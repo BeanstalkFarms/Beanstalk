@@ -45,7 +45,7 @@ contract UpgradeDiamond is TestHelper {
             newFacetAddresses,
             facetCutActions,
             address(new InitMint()), // deploy the InitMint.
-            abi.encodeWithSignature("init(address,uint256)", user, 100e6), // issue 100 beans to owner.
+            abi.encodeWithSignature("init(address,address,uint256)", BEAN, user, 100e6), // issue 100 beans to owner.
             new bytes4[](0) // remove no selectors.
         );
     }
@@ -57,7 +57,7 @@ contract UpgradeDiamond is TestHelper {
 
     function testInitMint() public view {
         // verify beans are minted.
-        assertEq(C.bean().balanceOf(users[0]), 100e6);
+        assertEq(bean.balanceOf(users[0]), 100e6);
     }
 
     function test_SelectorRemoval() public {

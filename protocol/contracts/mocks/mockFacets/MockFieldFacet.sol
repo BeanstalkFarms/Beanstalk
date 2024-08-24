@@ -23,7 +23,7 @@ contract MockFieldFacet is FieldFacet {
     }
 
     function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external {
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         s.sys.fields[fieldId].harvestable += amount;
     }
 

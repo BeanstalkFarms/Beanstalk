@@ -68,6 +68,7 @@ struct System {
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
+    Tokens tokens;
     Silo silo;
     Fertilizer fert;
     Season season;
@@ -78,6 +79,20 @@ struct System {
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
+}
+
+/**
+ * @notice Tokens used in the Beanstalk system.
+ * @param bean Beanstalk ERC-20 fiat stablecoin
+ * @param fertilizer Fertilizer ERC-1555 token
+ * @param urBean Unripe Bean issud to Bean holders at the time of the exploit.
+ * @param urLp Unripe LP issued to LP holders at the time of the exploit.
+ */
+struct Tokens {
+    address bean;
+    address fertilizer;
+    address urBean;
+    address urLp;
 }
 
 /**

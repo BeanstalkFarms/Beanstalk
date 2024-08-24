@@ -7,17 +7,11 @@ import {LibEvaluate} from "contracts/libraries/LibEvaluate.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
 import {Sun, C} from "./Sun.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
-import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Weather
@@ -90,7 +84,7 @@ contract Weather is Sun {
      * An explanation of state variables can be found in {AppStorage}.
      */
     function calcCaseIdandUpdate(int256 deltaB) internal returns (uint256) {
-        uint256 beanSupply = C.bean().totalSupply();
+        uint256 beanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         // prevents infinite L2SR and podrate
         if (beanSupply == 0) {
             s.sys.weather.temp = 1;

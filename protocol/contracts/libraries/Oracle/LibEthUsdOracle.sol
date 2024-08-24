@@ -20,18 +20,10 @@ import {LibOracleHelpers} from "contracts/libraries/Oracle/LibOracleHelpers.sol"
 library LibEthUsdOracle {
     using LibRedundantMath256 for uint256;
 
+    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+
     uint256 constant ETH_DECIMALS = 18;
-
-    function getEthUsdPriceFromStorageIfSaved() internal view returns (uint256) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        uint256 priceInStorage = s.sys.usdTokenPrice[C.BEAN_ETH_WELL];
-
-        if (priceInStorage == 1) {
-            return getEthUsdPrice();
-        }
-        return priceInStorage;
-    }
 
     /**
      * @dev Returns the instantaneous USD/ETH price
@@ -51,7 +43,7 @@ library LibEthUsdOracle {
     function getUsdEthPrice(uint256 lookback) internal view returns (uint256) {
         return
             LibChainlinkOracle.getTokenPrice(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 ETH_DECIMALS,
                 lookback
@@ -76,7 +68,7 @@ library LibEthUsdOracle {
     function getEthUsdPrice(uint256 lookback) internal view returns (uint256) {
         return
             LibChainlinkOracle.getTokenPrice(
-                C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
                 LibChainlinkOracle.FOUR_HOUR_TIMEOUT,
                 0,
                 lookback

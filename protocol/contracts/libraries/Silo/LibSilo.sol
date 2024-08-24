@@ -370,7 +370,7 @@ library LibSilo {
 
         if (ar.odd.bdv > 0) {
             uint256 initialStalk = ar.odd.bdv.mul(stalkPerBDV);
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned
                 // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
@@ -391,7 +391,7 @@ library LibSilo {
 
         if (ar.even.bdv > 0) {
             uint256 initialStalk = ar.even.bdv.mul(stalkPerBDV);
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned
                 // Beans. Deduct the even BDV and increment the active BDV by the difference.
@@ -714,7 +714,6 @@ library LibSilo {
         if (s.sys.silo.roots == 0) return 0;
 
         uint256 stalk = s.sys.silo.stalk.mul(accountRoots).div(s.sys.silo.roots);
-
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.accts[account].stalk.
         // As `account` Earned Balance balance should never be negative,

@@ -16,6 +16,7 @@ import {LibGauge} from "contracts/libraries/LibGauge.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {console} from "forge-std/console.sol";
 import {C} from "contracts/C.sol";
 
 /**
@@ -68,6 +69,7 @@ contract InitalizeDiamond {
      */
     function initalizeDiamond(address bean, address beanTokenWell) internal {
         addInterfaces();
+        initializeTokens(bean);
         initalizeSeason();
         initalizeField();
         initalizeFarmAndTractor();
@@ -125,9 +127,9 @@ contract InitalizeDiamond {
 
         whitelistPools(tokens, assetSettings);
 
-        // init usdTokenPrice. C.Bean_eth_well should be
+        // init usdTokenPrice. beanTokenWell should be
         // a bean well w/ the native token of the network.
-        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.usdTokenPrice[beanTokenWell] = 1;
         s.sys.twaReserves[beanTokenWell].reserve0 = 1;
         s.sys.twaReserves[beanTokenWell].reserve1 = 1;
 
@@ -143,6 +145,12 @@ contract InitalizeDiamond {
 
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
+    }
+
+    function initializeTokens(address bean) internal {
+        console.log("iniializing bean", s.sys.tokens.bean);
+        s.sys.tokens.bean = bean;
+        console.log("iniializing bean", s.sys.tokens.bean);
     }
 
     /**
@@ -165,7 +173,7 @@ contract InitalizeDiamond {
         s.sys.season.withdrawSeasons = 0;
 
         // initalize the duration of 1 season in seconds.
-        s.sys.season.period = C.getSeasonPeriod();
+        s.sys.season.period = C.CURRENT_SEASON_PERIOD;
 
         // initalize current timestamp.
         s.sys.season.timestamp = block.timestamp;
@@ -234,7 +242,7 @@ contract InitalizeDiamond {
             s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
 
             bool isLPandWell = true;
-            if (tokens[i] == C.BEAN) {
+            if (tokens[i] == s.sys.tokens.bean) {
                 isLPandWell = false;
             }
             bool isUnripe = LibUnripe.isUnripe(tokens[i]);

@@ -11,7 +11,6 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibWhitelist} from "contracts/libraries/Silo/LibWhitelist.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
 import {BDVFacet} from "contracts/beanstalk/silo/BDVFacet.sol";
-import {C} from "contracts/C.sol";
 
 /**
  * @author Publius, Brean
@@ -24,21 +23,29 @@ import {C} from "contracts/C.sol";
  **/
 contract MockInitDiamond is InitalizeDiamond {
     // min 1micro stalk earned per season due to germination.
-    uint32 constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
-    uint32 constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint128 constant INIT_TOKEN_WURLP_POINTS = 100e18;
-    uint32 constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
+    uint32 internal constant INIT_UR_BEAN_STALK_EARNED_PER_SEASON = 1;
+    uint32 internal constant INIT_BEAN_WSTETH_WELL_STALK_EARNED_PER_SEASON = 4e6;
+    uint128 internal constant INIT_TOKEN_WURLP_POINTS = 100e18;
+    uint32 internal constant INIT_BEAN_WURLP_PERCENT_TARGET = 50e6;
+
+    // Tokens
+    address internal constant BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+    address internal constant BEAN_ETH_WELL = address(0xBEA0e11282e2bB5893bEcE110cF199501e872bAd);
+    address internal constant BEAN_WSTETH_WELL =
+        address(0xBeA0000113B0d182f4064C86B71c315389E4715D);
+    address internal constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address internal constant UNRIPE_BEAN = 0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449;
+    address internal constant UNRIPE_LP = 0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D;
 
     function init() external {
         // initalize the default state of the diamond.
         // {see. InitalizeDiamond.initalizeDiamond()}
-        initalizeDiamond(C.BEAN, C.BEAN_ETH_WELL);
+        initalizeDiamond(BEAN, BEAN_ETH_WELL);
 
         // initalizes unripe assets.
         // sets the underlying LP token of unripeLP to the Bean:wstETH well.
-        address underlyingUrLPWell = C.BEAN_WSTETH_WELL;
-        whitelistUnderlyingUrLPWell(underlyingUrLPWell);
-        initalizeUnripeAssets(underlyingUrLPWell);
+        whitelistUnderlyingUrLPWell(BEAN_WSTETH_WELL);
+        initalizeUnripeAssets(BEAN_WSTETH_WELL);
     }
 
     function initalizeUnripeAssets(address well) internal {
@@ -47,8 +54,14 @@ contract MockInitDiamond is InitalizeDiamond {
             address[] memory underlyingTokens
         ) = getInitalUnripeAndUnderlyingTokens(well);
 
+        // initialize tokens:
+        s.sys.tokens.urBean = unripeTokens[0];
+        s.sys.tokens.urLp = unripeTokens[1];
+        s.sys.tokens.fertilizer = FERTILIZER;
+
         // set the underlying unripe tokens.
         setUnderlyingUnripe(unripeTokens, underlyingTokens, underlyingTokens[1]);
+
         // whitelist the unripe assets into the silo.
         whitelistUnripeAssets(unripeTokens, initalUnripeAssetSettings());
     }
@@ -106,7 +119,6 @@ contract MockInitDiamond is InitalizeDiamond {
         view
         returns (AssetSettings[] memory assetSettings)
     {
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
@@ -116,12 +128,6 @@ contract MockInitDiamond is InitalizeDiamond {
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0),
-            new bytes(0)
-        );
-        Implementation memory oracleImpl = Implementation(
-            address(0),
-            bytes4(0),
             bytes1(0),
             new bytes(0)
         );
@@ -160,12 +166,12 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function getInitalUnripeAndUnderlyingTokens(
         address underlyingUrLPWell
-    ) internal pure returns (address[] memory unripeTokens, address[] memory underlyingTokens) {
+    ) internal view returns (address[] memory unripeTokens, address[] memory underlyingTokens) {
         unripeTokens = new address[](2);
         underlyingTokens = new address[](2);
-        unripeTokens[0] = C.UNRIPE_BEAN;
-        unripeTokens[1] = C.UNRIPE_LP;
-        underlyingTokens[0] = C.BEAN;
+        unripeTokens[0] = UNRIPE_BEAN;
+        unripeTokens[1] = UNRIPE_LP;
+        underlyingTokens[0] = s.sys.tokens.bean;
         underlyingTokens[1] = underlyingUrLPWell;
     }
 
@@ -175,7 +181,6 @@ contract MockInitDiamond is InitalizeDiamond {
      */
     function whitelistUnderlyingUrLPWell(address well) internal {
         // whitelist bean:stETH well
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         // note: no error checking:
         s.sys.silo.assetSettings[well] = AssetSettings({
             selector: BDVFacet.wellBdv.selector,
@@ -203,7 +208,7 @@ contract MockInitDiamond is InitalizeDiamond {
 
         // updates the optimal percent deposited for bean:eth.
         LibWhitelist.updateOptimalPercentDepositedBdvForToken(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             INIT_BEAN_TOKEN_WELL_PERCENT_TARGET - INIT_BEAN_WURLP_PERCENT_TARGET
         );
 

@@ -10,6 +10,7 @@ import {C} from "contracts/C.sol";
 
 interface IOwner {
     function transferOwnership(address newOwner) external;
+
     function owner() external returns (address);
 }
 
@@ -19,16 +20,16 @@ interface IOwner {
  * @notice Test helper contract to deploy Fertilizer.
  */
 contract FertilizerDeployer is Utils {
+    address internal constant fertilizerAddress = 0xC59f881074Bf039352C227E21980317e6b969c8A;
+
     function initFertilizer(bool verbose) internal {
-        address fertilizerAddress = C.fertilizerAddress();
         deployCodeTo("Fertilizer", fertilizerAddress);
         if (verbose) console.log("Fertilizer deployed at: ", fertilizerAddress);
     }
 
     function transferFertilizerOwnership(address newOwner) internal {
-        address fertilizer = C.fertilizerAddress();
-        vm.prank(IOwner(fertilizer).owner());
-        IOwner(fertilizer).transferOwnership(newOwner);
+        vm.prank(IOwner(fertilizerAddress).owner());
+        IOwner(fertilizerAddress).transferOwnership(newOwner);
     }
 
     function mintFertilizer() internal {} // TODO

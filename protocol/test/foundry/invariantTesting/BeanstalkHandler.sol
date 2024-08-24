@@ -15,7 +15,7 @@ contract BeanstalkHandler is Test {
     address constant BEANSTALK = LibConstant.BEANSTALK;
 
     address[] public depositors;
-    IERC20 public bean = IERC20(C.BEAN);
+    IERC20 public bean = IERC20(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
     IMockFBeanstalk public bs = IMockFBeanstalk(BEANSTALK);
 
     address internal user;
@@ -38,9 +38,9 @@ contract BeanstalkHandler is Test {
         }
 
         // Set up whitelisted tokens.
-        tokens.push(C.BEAN);
-        // tokens.push(C.BEAN_ETH_WELL); // is not mock erc20
-        // tokens.push(C.BEAN_WSTETH_WELL); // is not mock erc20
+        tokens.push(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
+        // tokens.push(BEAN_ETH_WELL); // is not mock erc20
+        // tokens.push(BEAN_WSTETH_WELL); // is not mock erc20
     }
 
     function deposit(

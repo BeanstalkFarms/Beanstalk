@@ -24,11 +24,9 @@ contract reeseedMigrateL2 is TestHelper {
     // L2Beanstalk: note this is a mock/random address.
     address internal constant L2_BEANSTALK = address(0x4021489084021481024812904812481242141241);
 
-    address internal constant BEAN = address(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab);
     address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
     address internal constant BEAN_ETH = address(0xBEA0e11282e2bB5893bEcE110cF199501e872bAd);
     address internal constant BEAN_WSTETH = address(0xBeA0000113B0d182f4064C86B71c315389E4715D);
-    address internal constant USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
     // mainnet fork id.
     uint256 mainnetForkId;
@@ -77,7 +75,7 @@ contract reeseedMigrateL2 is TestHelper {
     /**
      * @notice verfies that all assets have been transferred to the BCM.
      */
-    function test_bcm_transfer() public {
+    function test_bcm_transfer() public view {
         uint256 beanEthBalance = IERC20(BEAN_ETH).balanceOf(BEANSTALK);
         uint256 bean3crvBalance = IERC20(CURVE_BEAN_METAPOOL).balanceOf(BEANSTALK);
         uint256 wstethBalance = IERC20(BEAN_WSTETH).balanceOf(BEANSTALK);

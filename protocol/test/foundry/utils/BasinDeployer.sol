@@ -5,7 +5,6 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {Utils, console} from "test/foundry/utils/Utils.sol";
-import {C} from "contracts/C.sol";
 
 ////// INTERFACES //////
 import {Call, IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
@@ -174,14 +173,14 @@ contract BasinDeployer is Utils {
         }
 
         // deploy bean eth well:
-        wells.push(deployBeanCp2Well([C.BEAN_ETH_WELL, C.WETH], _pump));
+        wells.push(deployBeanCp2Well([BEAN_ETH_WELL, WETH], _pump));
         if (verbose) console.log("Bean Eth well deployed at:", wells[0]);
-        vm.label(C.BEAN_ETH_WELL, "BEAN/ETH Well");
+        vm.label(BEAN_ETH_WELL, "BEAN/ETH Well");
 
         // deploy bean wsteth well:
-        wells.push(deployBeanCp2Well([C.BEAN_WSTETH_WELL, C.WSTETH], _pump));
+        wells.push(deployBeanCp2Well([BEAN_WSTETH_WELL, WSTETH], _pump));
         if (verbose) console.log("Bean wstEth well deployed at:", wells[1]);
-        vm.label(C.BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
+        vm.label(BEAN_WSTETH_WELL, "BEAN/WSTETH Well");
     }
 
     function deployExtraWells(bool mock, bool verbose) internal {
@@ -196,12 +195,12 @@ contract BasinDeployer is Utils {
         }
 
         // deploy Bean USDC well:
-        wells.push(deployBeanCp2Well([BEAN_USDC_WELL, C.USDC], _pump));
+        wells.push(deployBeanCp2Well([BEAN_USDC_WELL, USDC], _pump));
         if (verbose) console.log("Bean USDC well deployed at:", wells[0]);
         vm.label(BEAN_USDC_WELL, "BEAN/USDC Well");
 
         // deploy Bean USDT well:
-        wells.push(deployBeanCp2Well([BEAN_USDT_WELL, C.USDT], _pump));
+        wells.push(deployBeanCp2Well([BEAN_USDT_WELL, USDT], _pump));
         if (verbose) console.log("Bean USDT well deployed at:", wells[1]);
         vm.label(BEAN_USDT_WELL, "BEAN/USDT Well");
     }
@@ -219,7 +218,7 @@ contract BasinDeployer is Utils {
         return
             deployWellAtAddressNoData(
                 wellAddressAndNonBeanToken[0],
-                C.BEAN,
+                BEAN,
                 wellAddressAndNonBeanToken[1],
                 wellFunctions[0],
                 pump,

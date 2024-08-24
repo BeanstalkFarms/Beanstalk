@@ -161,7 +161,7 @@ library LibSiloPermit {
         bytes32 name,
         bytes32 version
     ) internal view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, version, C.getChainId(), address(this)));
+        return keccak256(abi.encode(typeHash, name, version, block.chainid, address(this)));
     }
 
     /**

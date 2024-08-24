@@ -320,7 +320,7 @@ contract TokenSilo is ReentrancyGuard {
         // If a Farmer's Germinating Stalk for a given Season is less than the number of
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
-        if (token == C.BEAN) {
+        if (token == s.sys.tokens.bean) {
             (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo.checkForEarnedBeans(
                 account,
                 stalk,
@@ -338,7 +338,7 @@ contract TokenSilo is ReentrancyGuard {
             // burn the earned bean stalk (which is active).
             LibSilo.burnActiveStalk(account, earnedBeansStalk);
             // calculate earnedBeans and decrement totalDeposited.
-            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+            LibTokenSilo.decrementTotalDeposited(s.sys.tokens.bean, earnedBeans, earnedBeans);
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
@@ -388,7 +388,7 @@ contract TokenSilo is ReentrancyGuard {
         if (side == GerminationSide.NOT_GERMINATING) {
             LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo
                     .checkForEarnedBeans(sender, initialStalk, side);
                 // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an

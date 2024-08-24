@@ -11,8 +11,8 @@ import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedToken
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {IPipeline, PipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
-import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title LibPipelineConvert
@@ -163,6 +163,7 @@ library LibPipelineConvert {
     function getConvertState(
         bytes calldata convertData
     ) public view returns (PipelineConvertData memory pipeData) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         LibConvertData.ConvertKind kind = convertData.convertKind();
         address toToken;
         address fromToken;
@@ -172,11 +173,11 @@ library LibPipelineConvert {
         ) {
             if (kind == LibConvertData.ConvertKind.BEANS_TO_WELL_LP) {
                 (, , toToken) = convertData.convertWithAddress();
-                fromToken = C.BEAN;
+                fromToken = s.sys.tokens.bean;
                 require(LibWell.isWell(toToken), "Convert: Invalid Well");
             } else {
                 (, , fromToken) = convertData.convertWithAddress();
-                toToken = C.BEAN;
+                toToken = s.sys.tokens.bean;
                 require(LibWell.isWell(fromToken), "Convert: Invalid Well");
             }
 

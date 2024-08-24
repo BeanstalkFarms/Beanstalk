@@ -192,7 +192,7 @@ library LibTractor {
                     EIP712_TYPE_HASH,
                     TRACTOR_HASHED_NAME,
                     keccak256(bytes(_tractorStorage().version)),
-                    C.getChainId(),
+                    block.chainid,
                     address(this)
                 )
             );

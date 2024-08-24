@@ -8,6 +8,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {Oracle, C} from "./Oracle.sol";
 import {Distribution} from "./Distribution.sol";
 import {LibShipping} from "contracts/libraries/LibShipping.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Sun
@@ -43,7 +44,7 @@ contract Sun is Oracle, Distribution {
         if (deltaB > 0) {
             uint256 priorHarvestable = s.sys.fields[s.sys.activeField].harvestable;
 
-            C.bean().mint(address(this), uint256(deltaB));
+            BeanstalkERC20(s.sys.tokens.bean).mint(address(this), uint256(deltaB));
             LibShipping.ship(uint256(deltaB));
 
             setSoilAbovePeg(s.sys.fields[s.sys.activeField].harvestable - priorHarvestable, caseId);
