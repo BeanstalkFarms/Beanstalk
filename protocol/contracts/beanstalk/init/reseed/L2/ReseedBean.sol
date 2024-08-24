@@ -162,6 +162,7 @@ contract ReseedBean {
             BEAN_NAME,
             BEAN_SYMBOL
         );
+        s.sys.tokens.bean = address(bean);
         bean.mint(address(this), supply);
         console.log("Bean deployed at: ", address(bean));
         return bean;
@@ -176,6 +177,7 @@ contract ReseedBean {
             UNRIPE_BEAN_NAME,
             UNRIPE_BEAN_SYMBOL
         );
+        s.sys.tokens.urBean = address(unripeBean);
         unripeBean.mint(address(this), supply);
         console.log("Unripe Bean deployed at: ", address(unripeBean));
 
@@ -194,6 +196,7 @@ contract ReseedBean {
             UNRIPE_LP_NAME,
             UNRIPE_LP_SYMBOL
         );
+        s.sys.tokens.urLp = address(unripeLP);
         unripeLP.mint(address(this), supply);
         console.log("Unripe LP deployed at: ", address(unripeLP));
 
