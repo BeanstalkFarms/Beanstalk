@@ -23,7 +23,7 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
   ).deploy();
   await InitFacet.deployed();
   for (let i = 0; i < balanceChunks.length; i++) {
-    await updateProgress(i + 1, plotChunks.length);
+    await updateProgress(i + 1, balanceChunks.length);
     if (verbose) {
       console.log("Data chunk:", balanceChunks[i]);
       console.log("-----------------------------------");
