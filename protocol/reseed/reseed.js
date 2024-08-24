@@ -27,7 +27,7 @@ async function reseed({
   owner,
   beanstalkDeployer,
   l2owner,
-  mock = false,
+  mock = true,
   convertData = true,
   log = false,
   start = 0,
