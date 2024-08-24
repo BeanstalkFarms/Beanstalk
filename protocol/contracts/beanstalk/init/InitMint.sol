@@ -14,5 +14,4 @@ contract InitMint {
     function init(address bean, address payee, uint256 amount) external {
         IBean(bean).mint(payee, amount);
     }
-    
 }
