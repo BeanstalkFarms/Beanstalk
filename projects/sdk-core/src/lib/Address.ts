@@ -35,9 +35,16 @@ export class Address {
   }
 
   get(chainId?: number) {
-    // Default to MAINNET if no chain is specified
+    let address: string = this.addresses[ChainId.ARBITRUM];
+
+    // Default to ARBITRUM if no chain is specified
     if (!chainId) {
-      return this.addresses[ChainId.MAINNET];
+      if (!address) {
+        throw new Error(
+         `Chain ID ${ChainId.ARBITRUM} not supported in address definition: ${this.addresses}`
+        );
+      }
+      return address;
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -46,9 +53,17 @@ export class Address {
     }
 
     // If user wants an address on a TESTNET chain
-    // return mainnet one if it's not found
+    // return ARBITRUM one if it's not found
     if (TESTNET_CHAINS.has(chainId)) {
-      return this.addresses[chainId] || this.addresses[ChainId.MAINNET];
+      address = this.addresses[chainId] || this.addresses[ChainId.ARBITRUM];
+    } else {
+      address = this.addresses[chainId];
+    }
+
+    if (!address) {
+      throw new Error(
+        `Chain ID not supported in address definition: ${this.addresses}`
+      );
     }
 
     return this.addresses[chainId];
