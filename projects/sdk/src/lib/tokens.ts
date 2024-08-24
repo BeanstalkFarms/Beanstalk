@@ -36,10 +36,11 @@ export class Tokens {
   public readonly BEAN_WBTC_WELL_LP: ERC20Token;
   public readonly BEAN_USDC_WELL_LP: ERC20Token;
   public readonly BEAN_USDT_WELL_LP: ERC20Token;
-  
+
+  /** @deprecated */
   public readonly BEAN_ETH_UNIV2_LP: ERC20Token;
+  /** @deprecated */
   public readonly BEAN_CRV3_LP: ERC20Token;
-  
 
   public readonly STALK: BeanstalkToken;
   public readonly SEEDS: BeanstalkToken;
@@ -538,10 +539,10 @@ export class Tokens {
       providerOrSigner
     );
 
-    this.map.set(addresses.ROOT.get(chainId) ?? "ROOT", this.ROOT);
-    this.map.set(addresses.BEAN_CRV3.get(chainId) ?? "BEAN3CRV", this.BEAN_CRV3_LP);
+    this.map.set(addresses.ROOT.get(chainId) ?? "root", this.ROOT);
+    this.map.set(addresses.BEAN_CRV3.get(chainId) ?? "bean3crv", this.BEAN_CRV3_LP);
     this.map.set(
-      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "BEANETH_UNIV2",
+      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "beaneth_univ2",
       this.BEAN_ETH_UNIV2_LP
     );
 
