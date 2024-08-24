@@ -78,15 +78,22 @@ describe("Facet: Pipeline", () => {
       // @ts-ignore
       const encoded1 = farm._steps[1].prepare();
       expect(farm.length).toBe(2);
-      expect(encoded0.callData.slice(0, 10)).toBe(sdk.contracts.beanstalk.interface.getSighash("permitERC20"));
-      expect(encoded1.callData.slice(0, 10)).toBe(sdk.contracts.beanstalk.interface.getSighash("transferToken"));
+      expect(encoded0.callData.slice(0, 10)).toBe(
+        sdk.contracts.beanstalk.interface.getSighash("permitERC20")
+      );
+      expect(encoded1.callData.slice(0, 10)).toBe(
+        sdk.contracts.beanstalk.interface.getSighash("transferToken")
+      );
 
       console.log("Permit", permit, permit.typedData.types);
 
       // Execute
       await farm.execute(amount.toBigNumber(), { slippage: 0.1 }).then((r) => r.wait());
 
-      const pipelineBalance = await sdk.tokens.getBalance(sdk.tokens.BEAN, sdk.contracts.pipeline.address);
+      const pipelineBalance = await sdk.tokens.getBalance(
+        sdk.tokens.BEAN,
+        sdk.contracts.pipeline.address
+      );
       expect(pipelineBalance.total.eq(amount)).toBe(true);
       expect(pipelineBalance.total.toHuman()).toBe("100");
     });
