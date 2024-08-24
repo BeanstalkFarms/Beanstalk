@@ -4,18 +4,14 @@ query getSiloBalance($token: String, $account: ID!, $season: Int!) {
     deposited: deposits(
       orderBy: season
       orderDirection: asc
-      where: {
-        token: $token
-        #amount_gt: 0
-        amount_gt: 0
-      }
+      where: { token: $token, depositedAmount_gt: 0 }
     ) {
       season
       stem
       token
       #amount
-      amount
-      bdv
+      depositedAmount
+      depositedBDV
     }
     # Withdrawn
     withdrawn: withdraws(
