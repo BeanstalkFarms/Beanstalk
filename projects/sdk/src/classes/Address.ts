@@ -7,13 +7,15 @@ export type AddressDefinition = {
 export class Address {
   private addresses: AddressDefinition;
   public MAINNET: string;
+  public ARBITRUM: string;
   public TESTNET: string;
   public LOCALHOST: string;
+  public LOCALHOST_ARBITRUM: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
     if (typeof input == "string") {
-      addresses[ChainId.MAINNET] = input;
+      addresses[ChainId.ARBITRUM] = input;
     } else {
       Object.assign(addresses, input);
     }
@@ -31,13 +33,14 @@ export class Address {
     this.addresses = addresses;
     this.MAINNET = this.addresses[ChainId.MAINNET];
     this.TESTNET = this.addresses[ChainId.TESTNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
+    this.LOCALHOST = this.addresses[ChainId.LOCALHOST || ChainId.MAINNET];
+    this.ARBITRUM = this.addresses[ChainId.LOCALHOST_ARBITRUM || ChainId.ARBITRUM];
   }
 
   get(chainId?: number) {
-    // Default to MAINNET if no chain is specified
+    // Default to ARBITRUM if no chain is specified
     if (!chainId) {
-      return this.addresses[ChainId.MAINNET];
+      return this.addresses[ChainId.ARBITRUM];
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -46,9 +49,9 @@ export class Address {
     }
 
     // If user wants an address on a TESTNET chain
-    // return mainnet one if it's not found
+    // return ARBITRUM one if it's not found
     if (TESTNET_CHAINS.has(chainId)) {
-      return this.addresses[chainId] || this.addresses[ChainId.MAINNET];
+      return this.addresses[chainId] || this.addresses[ChainId.ARBITRUM];
     }
 
     return this.addresses[chainId];
