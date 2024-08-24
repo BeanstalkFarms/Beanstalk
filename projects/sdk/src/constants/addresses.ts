@@ -5,8 +5,8 @@ export const addresses = {
   // Beanstalk Core Contracts
   // ----------------------------------------
   BEANSTALK: Address.make({
-    [ChainId.MAINNET]: '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5',
-    [ChainId.ARBITRUM]: '0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70',
+    [ChainId.MAINNET]: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5",
+    [ChainId.ARBITRUM]: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
   }),
   BEANSTALK_FERTILIZER: Address.make({
     [ChainId.MAINNET]: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6",
@@ -31,21 +31,24 @@ export const addresses = {
   }),
   PIPELINE: Address.make({
     [ChainId.MAINNET]: "0xb1bE0000C6B3C62749b5F0c92480146452D15423",
-    [ChainId.ARBITRUM]: "0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0",
+    [ChainId.ARBITRUM]: "0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0"
+  }),
+  USD_ORACLE: Address.make({
+    [ChainId.MAINNET]: "0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"
   }),
 
+  /**
+   * @deprecated
+   */
   ROOT: Address.make({
-    [ChainId.MAINNET]: "0x77700005BEA4DE0A78b956517f099260C2CA9a26",
-  }),
-  USD_ORACLE: Address.make({ 
-    [ChainId.MAINNET]: "0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"
+    [ChainId.MAINNET]: "0x77700005BEA4DE0A78b956517f099260C2CA9a26"
   }),
 
   // ----------------------------------------
   // BeaNFT Contracts
   // ----------------------------------------
   BEANFT_GENESIS: Address.make({
-    [ChainId.MAINNET]: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79",
+    [ChainId.MAINNET]: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79"
   }),
   BEANFT_WINTER_ADDRESSES: Address.make({
     [ChainId.MAINNET]: "0x459895483556daD32526eFa461F75E33E458d9E9"
@@ -56,18 +59,27 @@ export const addresses = {
   // ----------------------------------------
   BEAN: Address.make({
     [ChainId.MAINNET]: "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab",
-    [ChainId.ARBITRUM]: "0xBEA0005B8599265D41256905A9B3073D397812E4",
+    [ChainId.ARBITRUM]: "0xBEA0005B8599265D41256905A9B3073D397812E4"
   }),
   UNRIPE_BEAN:
     // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
     Address.make({
       [ChainId.MAINNET]: "0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449",
-      [ChainId.ARBITRUM]: "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
+      [ChainId.ARBITRUM]: "0x1BEA054dddBca12889e07B3E076f511Bf1d27543"
+    }),
+  UNRIPE_BEAN_WSTETH:
+    // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
+    Address.make({
+      [ChainId.MAINNET]: "0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D",
+      [ChainId.ARBITRUM]: "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788"
     }),
 
   // ----------------------------------------
   // Bean Pool LP Tokens
   // ----------------------------------------
+  /**
+   * @deprecated
+   */
   BEAN_CRV3:
     // "BEAN:3CRV Curve LP Token (BEAN3CRV-f)"
     // [Implements: ERC20 & Metapool]
@@ -91,18 +103,22 @@ export const addresses = {
     [ChainId.MAINNET]: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd",
     [ChainId.ARBITRUM]: "0xBEA02d411690A8Aa418E6606fFf5C964933645E0"
   }),
-  BEANweETH_WELL: Address.make({
-    [ChainId.ARBITRUM]: "0xBEA0Ee8f9c5bDd6f9aBd9dC687a2D51956508eC9",
+  BEANWSTETH_WELL: Address.make({
+    [ChainId.MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    [ChainId.ARBITRUM]: "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa"
+  }),
+  BEANWEETH_WELL: Address.make({
+    [ChainId.ARBITRUM]: "0xBEA0Ee8f9c5bDd6f9aBd9dC687a2D51956508eC9"
   }),
   BEANWBTC_WELL: Address.make({
     [ChainId.ARBITRUM]: "0xBEA0d57e05C78E11817f6B2024805b68f97c0e2b"
   }),
-  BEANUSDC_WELL: {
-    [ChainId.ARBITRUM]: "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741",
-  },
-  BEANUSDT_WELL: {
-    [ChainId.ARBITRUM]: "0xBEA09220d69Eec94140531877DdB4922E75a75aC",
-  },
+  BEANUSDC_WELL: Address.make({
+    [ChainId.ARBITRUM]: "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741"
+  }),
+  BEANUSDT_WELL: Address.make({
+    [ChainId.ARBITRUM]: "0xBEA09220d69Eec94140531877DdB4922E75a75aC"
+  }),
 
   // ----------------------------------------
   // Common ERC-20 Tokens
@@ -110,9 +126,17 @@ export const addresses = {
   WETH: Address.make({
     [ChainId.MAINNET]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   }),
-  wstETH: Address.make({
-    // [ChainId.MAINNET]: 
+  WSTETH: Address.make({
+    [ChainId.MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
     [ChainId.ARBITRUM]: "0x5979D7b546E38E414F7E9822514be443A4800529"
+  }),
+  WEETH: Address.make({
+    [ChainId.MAINNET]: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
+    [ChainId.ARBITRUM]: "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe"
+  }),
+  WBTC: Address.make({
+    [ChainId.MAINNET]: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    [ChainId.ARBITRUM]: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"
   }),
   DAI: Address.make({
     [ChainId.MAINNET]: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
@@ -132,18 +156,6 @@ export const addresses = {
   LUSD: Address.make({
     [ChainId.MAINNET]: "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"
   }),
-  rETH: Address.make({
-    [ChainId.ARBITRUM]: "0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8"
-  }),
-  PENDLE: Address.make({
-    [ChainId.ARBITRUM]: "0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a"
-  }),
-  GMX: Address.make({
-    [ChainId.ARBITRUM]: "0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a"
-  }),
-  ZRO: Address.make({
-    [ChainId.ARBITRUM]: "0x6985884C4392D348587B19cb9eAAf157F13271cd"
-  }),
 
   // ----------------------------------------
   // Lido
@@ -155,6 +167,10 @@ export const addresses = {
   // Curve Pools: Other
   // ----------------------------------------
   // --------------------------------------------------
+  /**
+   * @deprecated
+   * Curve.fi: DAI/USDC/USDT Pool
+   */
   POOL3:
     // "Curve.fi: DAI/USDC/USDT Pool" (aka 3pool)
     // --------------------------------------------------
@@ -164,6 +180,13 @@ export const addresses = {
     Address.make({
       [ChainId.MAINNET]: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
     }),
+  /**
+   * @deprecated
+   * tricrypto2
+   */
+  /**
+   * @deprecated
+   */
   TRICRYPTO2:
     // tricrypto2
     // --------------------------------------------------
@@ -181,47 +204,71 @@ export const addresses = {
   // - "registries" (they track a list of pools)
   // - "factories"  (they allow creation of new pools)
 
-  // 3pool, etc.
+  /**
+   * @deprecated
+   * 3pool, etc.
+   */
   POOL_REGISTRY: Address.make({
-    [ChainId.MAINNET]: "0x90e00ace148ca3b23ac1bc8c240c2a7dd9c2d7f5",
+    [ChainId.MAINNET]: "0x90e00ace148ca3b23ac1bc8c240c2a7dd9c2d7f5"
   }),
 
-  // X:3CRV, etc. aka StableFactory
+  /**
+   * @deprecated
+   * X:3CRV, etc. aka StableFactory
+   */
   META_FACTORY: Address.make({
-    [ChainId.MAINNET]: "0xB9fC157394Af804a3578134A6585C0dc9cc990d4",
+    [ChainId.MAINNET]: "0xB9fC157394Af804a3578134A6585C0dc9cc990d4"
   }),
 
-  // tricrypto2, etc.
+  /**
+   * @deprecated
+   * tricrypto2, etc.
+   */
   CRYPTO_FACTORY: Address.make({
-    [ChainId.MAINNET]: "0x8F942C20D02bEfc377D41445793068908E2250D0",
+    [ChainId.MAINNET]: "0x8F942C20D02bEfc377D41445793068908E2250D0"
   }),
 
-  // zap
+  /**
+   * @deprecated
+   * zap
+   */
   CURVE_ZAP: Address.make({
-    [ChainId.MAINNET]: "0xA79828DF1850E8a3A3064576f380D90aECDD3359",
+    [ChainId.MAINNET]: "0xA79828DF1850E8a3A3064576f380D90aECDD3359"
   }),
 
-  // Uniswap V3 Router
+  /**
+   * @deprecated
+   * Uniswap V3 Router
+   */
   UNISWAP_V3_ROUTER: Address.make({
-    [ChainId.MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+    [ChainId.MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564"
   }),
 
-  // Uniswap V3 Quoter V2
+  /**
+   * @deprecated
+   * Uniswap V3 Quoter V2
+   */
   UNISWAP_V3_QUOTER_V2: Address.make({
-    [ChainId.MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+    [ChainId.MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
   }),
 
-  // BEAN_ETH_UNIV2_LP !! Deprecated
+  /**
+   * @deprecated
+   */
   BEAN_ETH_UNIV2_LP: Address.make({
-    [ChainId.MAINNET]: "0x87898263B6C5BABe34b4ec53F22d98430b91e371",
+    [ChainId.MAINNET]: "0x87898263B6C5BABe34b4ec53F22d98430b91e371"
   }),
 
-  // BEAN_LUSD_LP !! Deprecated
+  /**
+   * @deprecated
+   */
   BEAN_LUSD_LP: Address.make({
-    [ChainId.MAINNET]: "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D",
+    [ChainId.MAINNET]: "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D"
   }),
 
-  // BEAN_CRV3_V1_LP !! Deprecated
+  /**
+   * @deprecated
+   */
   BEAN_CRV3_V1_LP: Address.make({
     [ChainId.MAINNET]: "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD"
   })
