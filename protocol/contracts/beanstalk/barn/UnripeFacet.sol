@@ -196,7 +196,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return
                 LibUnripe.getPenalizedUnderlying(
                     unripeToken,
@@ -205,7 +205,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
                 );
         }
 
-        if (unripeToken == C.UNRIPE_LP) {
+        if (unripeToken == s.sys.tokens.urLp) {
             return
                 LibUnripe
                     .getTotalRecapitalizedPercent()
@@ -335,7 +335,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         return
             LibLockedUnderlying.getLockedUnderlying(
                 s.sys.tokens.urBean,
-                LibUnripe.getRecapPaidPercentAmount(1e6)
+                LibUnripe.getTotalRecapitalizedPercent()
             );
     }
 

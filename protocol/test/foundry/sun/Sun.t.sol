@@ -421,8 +421,8 @@ contract SunTest is TestHelper {
 
     function test_soilBelowPeg() public {
         // set inst reserves (instDeltaB: -1999936754446796632414)
-        setInstantaneousReserves(C.BEAN_WSTETH_WELL, 1000e18, 1000e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000e18, 1000e18);
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 1000e18, 1000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 1000e18, 1000e18);
         int256 twaDeltaB = -1000;
         uint32 currentSeason = bs.season();
         vm.expectEmit();
@@ -434,8 +434,8 @@ contract SunTest is TestHelper {
 
     function test_soilBelowPegInstGtZero() public {
         // set inst reserves (instDeltaB: +415127766016)
-        setInstantaneousReserves(C.BEAN_WSTETH_WELL, 10000e6, 10000000e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 100000e6, 10000000e18);
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 10000e6, 10000000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 100000e6, 10000000e18);
         int256 twaDeltaB = -1000;
         uint32 currentSeason = bs.season();
         vm.expectEmit();

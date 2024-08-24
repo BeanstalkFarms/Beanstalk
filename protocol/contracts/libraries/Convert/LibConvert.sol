@@ -136,34 +136,34 @@ library LibConvert {
         }
     }
 
-    function getMaxAmountIn(address tokenIn, address tokenOut) internal view returns (uint256) {
+    function getMaxAmountIn(address fromToken, address toToken) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
         if (fromToken == toToken) return type(uint256).max;
 
         // Bean -> Well LP Token
-        if (tokenIn == s.sys.tokens.bean && tokenOut.isWell())
-            return LibWellConvert.beansToPeg(tokenOut);
+        if (fromToken == s.sys.tokens.bean && toToken.isWell())
+            return LibWellConvert.beansToPeg(toToken);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == s.sys.tokens.bean)
-            return LibWellConvert.lpToPeg(tokenIn);
+        if (fromToken.isWell() && toToken == s.sys.tokens.bean)
+            return LibWellConvert.lpToPeg(fromToken);
 
         // urLP Convert
-        if (tokenIn == s.sys.tokens.urLp) {
+        if (fromToken == s.sys.tokens.urLp) {
             // UrBEANETH -> urBEAN
-            if (tokenOut == s.sys.tokens.urBean) return LibUnripeConvert.lpToPeg();
+            if (toToken == s.sys.tokens.urBean) return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
             if (toToken == LibBarnRaise.getBarnRaiseWell()) return type(uint256).max;
         }
 
         // urBEAN Convert
-        if (tokenIn == s.sys.tokens.urBean) {
+        if (fromToken == s.sys.tokens.urBean) {
             // urBEAN -> urLP
-            if (tokenOut == s.sys.tokens.urLp) return LibUnripeConvert.beansToPeg();
+            if (toToken == s.sys.tokens.urLp) return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
-            if (tokenOut == s.sys.tokens.bean) return type(uint256).max;
+            if (toToken == s.sys.tokens.bean) return type(uint256).max;
         }
 
         revert("Convert: Tokens not supported");
@@ -176,32 +176,32 @@ library LibConvert {
     ) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         /// urLP -> urBEAN
-        if (tokenIn == s.sys.tokens.urLp && tokenOut == s.sys.tokens.urBean)
-            return LibUnripeConvert.getBeanAmountOut(amountIn);
+        if (fromToken == s.sys.tokens.urLp && toToken == s.sys.tokens.urBean)
+            return LibUnripeConvert.getBeanAmountOut(fromAmount);
 
         /// urBEAN -> urLP
-        if (tokenIn == s.sys.tokens.urBean && tokenOut == s.sys.tokens.urLp)
-            return LibUnripeConvert.getLPAmountOut(amountIn);
+        if (fromToken == s.sys.tokens.urBean && toToken == s.sys.tokens.urLp)
+            return LibUnripeConvert.getLPAmountOut(fromAmount);
 
         // Lambda -> Lambda &
         // Anti-Lambda -> Lambda
         if (fromToken == toToken) return fromAmount;
 
         // Bean -> Well LP Token
-        if (tokenIn == s.sys.tokens.bean && tokenOut.isWell())
-            return LibWellConvert.getLPAmountOut(tokenOut, amountIn);
+        if (fromToken == s.sys.tokens.bean && toToken.isWell())
+            return LibWellConvert.getLPAmountOut(toToken, fromAmount);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == s.sys.tokens.bean)
-            return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
+        if (fromToken.isWell() && toToken == s.sys.tokens.bean)
+            return LibWellConvert.getBeanAmountOut(fromToken, fromAmount);
 
         // UrBEAN -> Bean
-        if (tokenIn == s.sys.tokens.urBean && tokenOut == s.sys.tokens.bean)
-            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
+        if (fromToken == s.sys.tokens.urBean && toToken == s.sys.tokens.bean)
+            return LibChopConvert.getConvertedUnderlyingOut(fromToken, fromAmount);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == s.sys.tokens.urLp && tokenOut == LibBarnRaise.getBarnRaiseWell())
-            return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
+        if (fromToken == s.sys.tokens.urLp && toToken == LibBarnRaise.getBarnRaiseWell())
+            return LibChopConvert.getConvertedUnderlyingOut(fromToken, fromAmount);
 
         revert("Convert: Tokens not supported");
     }

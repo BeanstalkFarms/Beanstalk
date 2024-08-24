@@ -218,6 +218,7 @@ library LibFertilizer {
      * @return totalDollars The total dollar amount.
      */
     function getTotalRecapDollarsNeeded() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         return getTotalRecapDollarsNeeded(IERC20(s.sys.tokens.urLp).totalSupply());
     }
 

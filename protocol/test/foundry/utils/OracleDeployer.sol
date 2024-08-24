@@ -186,8 +186,8 @@ contract OracleDeployer is Utils {
 
         // init wsteth oracle.
         setupLSDChainlinkOracleForToken(
-            C.WSTETH,
-            C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+            WSTETH,
+            WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
             FOUR_HOUR_TIMEOUT
         );
     }

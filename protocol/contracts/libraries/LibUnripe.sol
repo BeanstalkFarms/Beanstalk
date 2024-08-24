@@ -173,7 +173,7 @@ library LibUnripe {
         // If the token being chopped is unripeLP, getting the current supply here is inaccurate due to the burn
         // Instead, we use the supply passed in as an argument to getTotalRecapDollarsNeeded since the supply variable
         // here is the total urToken supply queried before burnning the unripe token
-        uint256 totalUsdNeeded = unripeToken == C.UNRIPE_LP
+        uint256 totalUsdNeeded = unripeToken == s.sys.tokens.urLp
             ? LibFertilizer.getTotalRecapDollarsNeeded(supply)
             : LibFertilizer.getTotalRecapDollarsNeeded();
         // chop rate = total redeemable * (%DollarRecapitalized)^2 * share of unripe tokens
