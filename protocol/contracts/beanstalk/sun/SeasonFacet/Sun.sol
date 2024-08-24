@@ -12,6 +12,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Sun
@@ -48,7 +49,7 @@ contract Sun is Oracle, Distribution {
         if (deltaB > 0) {
             uint256 priorHarvestable = s.sys.fields[s.sys.activeField].harvestable;
 
-            C.bean().mint(address(this), uint256(deltaB));
+            BeanstalkERC20(s.sys.tokens.bean).mint(address(this), uint256(deltaB));
             LibShipping.ship(uint256(deltaB));
 
             setSoilAbovePeg(s.sys.fields[s.sys.activeField].harvestable - priorHarvestable, caseId);

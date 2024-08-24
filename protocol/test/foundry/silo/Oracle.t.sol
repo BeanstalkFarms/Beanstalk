@@ -93,12 +93,12 @@ contract OracleTest is TestHelper {
 
     function test_oracle_twap_equal() public {
         // add 6 rounds to the chainlink oracle, 10 minutes apart:
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 3600);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 3000);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1100e6, 2400);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 1800);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 900e6, 1200);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 600);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 3600);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 3000);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1100e6, 2400);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 1800);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 900e6, 1200);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 600);
 
         // query price
         uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(C.WETH, 3600);
@@ -113,12 +113,12 @@ contract OracleTest is TestHelper {
 
     function test_oracle_twap_diff() public {
         // add 6 rounds to the chainlink oracle such that 60 mins have elapsed
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 3600);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 3000);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1100e6, 2000);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 1500);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 900e6, 1200);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 50);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 3600);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 3000);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1100e6, 2000);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 1500);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 900e6, 1200);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 50);
 
         // query price
         uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(C.WETH, 3600);
@@ -145,8 +145,8 @@ contract OracleTest is TestHelper {
             mockAddRound(address(oracle), int256(price), lookback);
             price -= 0.1e18;
         }
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 5000);
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 900);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 5000);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1000e6, 900);
 
         // deploy new staking eth derivative.
         address token = address(new MockToken("StakingETH2", "stETH2"));
@@ -165,7 +165,7 @@ contract OracleTest is TestHelper {
         LSDChainlinkOracle deployedOracle = new LSDChainlinkOracle();
         address someToken = address(new MockToken("StakingETH2", "stETH2"));
 
-        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+        address _ethChainlinkOracle = ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
         uint256 _ethTimeout = 3600 * 4;
         address _xEthChainlinkOracle = address(oracle);
         uint256 _xEthTimeout = 3600 * 4;
@@ -275,7 +275,7 @@ contract OracleTest is TestHelper {
         // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            C.USDC,
+            USDC,
             IMockFBeanstalk.Implementation(
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),

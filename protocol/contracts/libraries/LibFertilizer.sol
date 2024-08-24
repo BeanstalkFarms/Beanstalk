@@ -18,6 +18,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Publius
@@ -115,11 +116,11 @@ library LibFertilizer {
 
         uint256 newDepositedBeans;
         if (
-            C.unripeBean().totalSupply() >
-            s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
+            IERC20(s.sys.tokens.urBean).totalSupply() >
+            s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying
         ) {
-            newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying
+            newDepositedBeans = (IERC20(s.sys.tokens.urBean).totalSupply()).sub(
+                s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying
             );
             newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
@@ -127,13 +128,13 @@ library LibFertilizer {
         uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 
         // Mint the Deposited Beans to Beanstalk.
-        C.bean().mint(address(this), newDepositedBeans);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), newDepositedBeans);
 
         // Mint the LP Beans and add liquidity to the well.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
-        C.bean().mint(address(this), newDepositedLPBeans);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), newDepositedLPBeans);
 
         IERC20(barnRaiseToken).transferFrom(
             LibTractor._user(),
@@ -142,11 +143,11 @@ library LibFertilizer {
         );
 
         IERC20(barnRaiseToken).approve(barnRaiseWell, uint256(tokenAmountIn));
-        C.bean().approve(barnRaiseWell, newDepositedLPBeans);
+        BeanstalkERC20(s.sys.tokens.bean).approve(barnRaiseWell, newDepositedLPBeans);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
-        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean()
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == BeanstalkERC20(s.sys.tokens.bean)
             ? (newDepositedLPBeans, tokenAmountIn)
             : (tokenAmountIn, newDepositedLPBeans);
 
@@ -158,8 +159,8 @@ library LibFertilizer {
         );
 
         // Increment underlying balances of Unripe Tokens
-        LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
-        LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
+        LibUnripe.incrementUnderlying(s.sys.tokens.urBean, newDepositedBeans);
+        LibUnripe.incrementUnderlying(s.sys.tokens.urLp, newLP);
 
         s.sys.fert.recapitalized = s.sys.fert.recapitalized.add(usdAmount);
     }
@@ -217,7 +218,7 @@ library LibFertilizer {
      * @return totalDollars The total dollar amount.
      */
     function getTotalRecapDollarsNeeded() internal view returns (uint256) {
-        return getTotalRecapDollarsNeeded(C.unripeLP().totalSupply());
+        return getTotalRecapDollarsNeeded(IERC20(s.sys.tokens.urLp).totalSupply());
     }
 
     /**
@@ -293,17 +294,29 @@ library LibFertilizer {
         // other is supported by the Lib Usd Oracle.
         IERC20[] memory tokens = IWell(well).tokens();
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
-        require(tokens[0] == C.bean() || tokens[1] == C.bean(), "Fertilizer: Well must have BEAN.");
+        require(
+            tokens[0] == BeanstalkERC20(s.sys.tokens.bean) ||
+                tokens[1] == BeanstalkERC20(s.sys.tokens.bean),
+            "Fertilizer: Well must have BEAN."
+        );
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
-        require(LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0])) != 0);
+        require(
+            LibUsdOracle.getTokenPrice(
+                address(tokens[tokens[0] == BeanstalkERC20(s.sys.tokens.bean) ? 1 : 0])
+            ) != 0
+        );
 
-        uint256 balanceOfUnderlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
-        IERC20(s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken).safeTransfer(
+        uint256 balanceOfUnderlying = s
+            .sys
+            .silo
+            .unripeSettings[s.sys.tokens.urLp]
+            .balanceOfUnderlying;
+        IERC20(s.sys.silo.unripeSettings[s.sys.tokens.urLp].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
             balanceOfUnderlying
         );
-        LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
-        LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
+        LibUnripe.decrementUnderlying(s.sys.tokens.urLp, balanceOfUnderlying);
+        LibUnripe.switchUnderlyingToken(s.sys.tokens.urLp, well);
     }
 
     /**

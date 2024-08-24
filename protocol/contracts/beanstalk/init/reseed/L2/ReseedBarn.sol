@@ -35,9 +35,6 @@ contract ReseedBarn {
         AccountFertilizerData[] accountData;
     }
 
-    // TODO: Replace with address mined from salt (this is the address with the default salt)
-    address internal constant FERTILIZER_PROXY = 0xC59f881074Bf039352C227E21980317e6b969c8A;
-
     AppStorage internal s;
 
     /**
@@ -45,7 +42,7 @@ contract ReseedBarn {
      * reissues Fertilizer to each holder.
      */
     function init(Fertilizers[] calldata fertilizerIds) external {
-        mintFertilizers(Fertilizer(FERTILIZER_PROXY), fertilizerIds);
+        mintFertilizers(Fertilizer(s.sys.tokens.fertilizer), fertilizerIds);
     }
 
     function mintFertilizers(

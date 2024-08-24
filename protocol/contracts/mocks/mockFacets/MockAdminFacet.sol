@@ -12,6 +12,7 @@ import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 import {ShipmentRecipient} from "contracts/beanstalk/storage/System.sol";
 import {LibShipping} from "contracts/libraries/LibShipping.sol";
 import {LibReceiving} from "contracts/libraries/LibReceiving.sol";
+
 /**
  * @author Publius
  * @title MockAdminFacet provides various mock functionality
@@ -19,21 +20,21 @@ import {LibReceiving} from "contracts/libraries/LibReceiving.sol";
 
 contract MockAdminFacet is Sun {
     function mintBeans(address to, uint256 amount) external {
-        C.bean().mint(to, amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(to, amount);
     }
 
     function ripen(uint256 amount) external {
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         LibReceiving.receiveShipment(ShipmentRecipient.FIELD, amount, abi.encode(uint256(0)));
     }
 
     function fertilize(uint256 amount) external {
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         LibReceiving.receiveShipment(ShipmentRecipient.BARN, amount, bytes(""));
     }
 
     function rewardSilo(uint256 amount) external {
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         LibReceiving.receiveShipment(ShipmentRecipient.SILO, amount, bytes(""));
     }
 
@@ -46,14 +47,14 @@ contract MockAdminFacet is Sun {
     function rewardSunrise(uint256 amount) public {
         updateStart();
         s.sys.season.current += 1;
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         LibShipping.ship(amount);
     }
 
     function fertilizerSunrise(uint256 amount) public {
         updateStart();
         s.sys.season.current += 1;
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         LibReceiving.receiveShipment(ShipmentRecipient.BARN, amount * 3, bytes(""));
     }
 

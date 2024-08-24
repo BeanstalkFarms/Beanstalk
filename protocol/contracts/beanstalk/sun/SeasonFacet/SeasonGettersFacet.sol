@@ -18,6 +18,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -189,7 +190,7 @@ contract SeasonGettersFacet {
      * @param token The token to get the Gauge Points per BDV for.
      */
     function getGaugePointsPerBdvForToken(address token) public view returns (uint256) {
-        if (token == C.BEAN) {
+        if (token == s.sys.tokens.bean) {
             return getBeanGaugePointsPerBdv();
         } else {
             return getGaugePointsPerBdvForWell(token);
@@ -210,11 +211,14 @@ contract SeasonGettersFacet {
         }
     }
 
-    /**
-     * @notice calculates the BEANETH Gauge Points (GP) per BDV.
-     */
-    function getBeanEthGaugePointsPerBdv() public view returns (uint256) {
-        return getGaugePointsPerBdvForWell(C.BEAN_ETH_WELL);
+    function getLargestGpPerBdv() public view returns (uint256) {
+        uint256 largestGpPerBdv;
+        address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();
+        for (uint256 i; i < whitelistedLpTokens.length; i++) {
+            uint256 gpPerBdv = getGaugePointsPerBdvForWell(whitelistedLpTokens[i]);
+            if (gpPerBdv > largestGpPerBdv) largestGpPerBdv = gpPerBdv;
+        }
+        return largestGpPerBdv;
     }
 
     /**
@@ -222,7 +226,7 @@ contract SeasonGettersFacet {
      */
     function getBeanGaugePointsPerBdv() public view returns (uint256) {
         uint256 beanToMaxLpGpPerBdvRatio = getBeanToMaxLpGpPerBdvRatioScaled();
-        return getBeanEthGaugePointsPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(100e18);
+        return getLargestGpPerBdv().mul(beanToMaxLpGpPerBdvRatio).div(100e18);
     }
 
     /**
@@ -236,7 +240,7 @@ contract SeasonGettersFacet {
         }
         return
             uint256(s.sys.seedGauge.averageGrownStalkPerBdvPerSeason)
-                .mul(totalLpBdv.add(s.sys.silo.balances[C.BEAN].depositedBdv))
+                .mul(totalLpBdv.add(s.sys.silo.balances[s.sys.tokens.bean].depositedBdv))
                 .div(LibGauge.BDV_PRECISION);
     }
 
@@ -253,7 +257,7 @@ contract SeasonGettersFacet {
         }
         uint256 newGrownStalk = getGrownStalkIssuedPerSeason();
         totalGaugePoints = totalGaugePoints.add(
-            getBeanGaugePointsPerBdv().mul(s.sys.silo.balances[C.BEAN].depositedBdv).div(
+            getBeanGaugePointsPerBdv().mul(s.sys.silo.balances[s.sys.tokens.bean].depositedBdv).div(
                 LibGauge.BDV_PRECISION
             )
         );
@@ -264,7 +268,7 @@ contract SeasonGettersFacet {
      * @notice Returns the pod rate (unharvestable pods / total bean supply).
      */
     function getPodRate(uint256 fieldId) external view returns (uint256) {
-        uint256 beanSupply = C.bean().totalSupply();
+        uint256 beanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         return
             Decimal
                 .ratio(s.sys.fields[fieldId].pods - s.sys.fields[fieldId].harvestable, beanSupply)
@@ -275,7 +279,7 @@ contract SeasonGettersFacet {
      * @notice Returns the L2SR rate (total non-bean liquidity / total bean supply).
      */
     function getLiquidityToSupplyRatio() external view returns (uint256) {
-        uint256 beanSupply = C.bean().totalSupply();
+        uint256 beanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         (Decimal.D256 memory l2sr, , ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return l2sr.value;
     }
@@ -382,7 +386,7 @@ contract SeasonGettersFacet {
     }
 
     function getLargestLiqWell() external view returns (address) {
-        uint256 beanSupply = C.bean().totalSupply();
+        uint256 beanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         (, address well, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
         return well;
     }

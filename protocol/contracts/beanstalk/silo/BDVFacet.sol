@@ -28,10 +28,11 @@ contract BDVFacet {
      * @dev Returns the BDV of a given `amount` of Unripe LP Tokens.
      */
     function unripeLPToBDV(uint256 amount) public view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         amount = LibUnripe.unripeToUnderlying(
-            C.UNRIPE_LP,
+            s.sys.tokens.urLp,
             amount,
-            IBean(C.UNRIPE_LP).totalSupply()
+            IBean(s.sys.tokens.urLp).totalSupply()
         );
         amount = LibWellBdv.bdv(LibBarnRaise.getBarnRaiseWell(), amount);
         return amount;
@@ -41,8 +42,9 @@ contract BDVFacet {
      * @dev Returns the BDV of a given `amount` of Unripe Beans.
      */
     function unripeBeanToBDV(uint256 amount) public view returns (uint256) {
-        return
-            LibUnripe.unripeToUnderlying(C.UNRIPE_BEAN, amount, IBean(C.UNRIPE_BEAN).totalSupply());
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address urBean = s.sys.tokens.urBean;
+        return LibUnripe.unripeToUnderlying(urBean, amount, IBean(urBean).totalSupply());
     }
 
     /**

@@ -181,9 +181,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return percent The recap % of the token.
      */
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return LibUnripe.percentBeansRecapped();
-        } else if (unripeToken == C.UNRIPE_LP) {
+        } else if (unripeToken == s.sys.tokens.urLp) {
             return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");
@@ -334,8 +334,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
         return
             LibLockedUnderlying.getLockedUnderlying(
-                C.UNRIPE_BEAN,
-                LibUnripe.getTotalRecapitalizedPercent()
+                s.sys.tokens.urBean,
+                LibUnripe.getRecapPaidPercentAmount(1e6)
             );
     }
 

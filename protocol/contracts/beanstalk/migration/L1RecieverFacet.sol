@@ -18,6 +18,8 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 
 /**
  * @author Brean
@@ -125,7 +127,7 @@ contract L1RecieverFacet is ReentrancyGuard {
             EXTERNAL_L1_BEANS >= s.sys.l2Migration.migratedL1Beans,
             "L2Migration: exceeds maximum migrated"
         );
-        LibTransfer.mintToken(C.bean(), amount, reciever, toMode);
+        LibTransfer.mintToken(IBean(s.sys.tokens.bean), amount, reciever, toMode);
 
         emit L1BeansMigrated(reciever, amount, toMode);
     }
@@ -429,7 +431,12 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint128 lastBpf
     ) internal {
         for (uint i; i < fertIds.length; i++) {
-            C.fertilizer().beanstalkMint(reciever, fertIds[i], amounts[i], lastBpf);
+            IFertilizer(s.sys.tokens.fertilizer).beanstalkMint(
+                reciever,
+                fertIds[i],
+                amounts[i],
+                lastBpf
+            );
         }
     }
 

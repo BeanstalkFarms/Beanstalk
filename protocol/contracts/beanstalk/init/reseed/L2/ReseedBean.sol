@@ -11,7 +11,6 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {C} from "contracts/C.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "forge-std/console.sol";
@@ -25,6 +24,7 @@ import "forge-std/console.sol";
  */
 interface IWellUpgradeable {
     function init(string memory name, string memory symbol) external;
+
     function initNoWellToken() external;
 }
 
@@ -41,6 +41,7 @@ contract ReseedBean {
     using SafeERC20 for IERC20;
 
     address internal constant OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+    AppStorage internal s;
 
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
@@ -150,6 +151,8 @@ contract ReseedBean {
             address(this), // admin (diamond)
             abi.encode(IFertilizer.init.selector) // init data
         );
+        // init token:
+        s.sys.tokens.fertilizer = address(fertilizerProxy);
         console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
     }
 
@@ -159,6 +162,7 @@ contract ReseedBean {
             BEAN_NAME,
             BEAN_SYMBOL
         );
+        s.sys.tokens.bean = address(bean);
         bean.mint(address(this), supply);
         console.log("Bean deployed at: ", address(bean));
         return bean;
@@ -173,6 +177,7 @@ contract ReseedBean {
             UNRIPE_BEAN_NAME,
             UNRIPE_BEAN_SYMBOL
         );
+        s.sys.tokens.urBean = address(unripeBean);
         unripeBean.mint(address(this), supply);
         console.log("Unripe Bean deployed at: ", address(unripeBean));
 
@@ -191,6 +196,7 @@ contract ReseedBean {
             UNRIPE_LP_NAME,
             UNRIPE_LP_SYMBOL
         );
+        s.sys.tokens.urLp = address(unripeLP);
         unripeLP.mint(address(this), supply);
         console.log("Unripe LP deployed at: ", address(unripeLP));
 

@@ -32,8 +32,8 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying.mul(DECIMALS).div(
-                C.unripeBean().totalSupply()
+            s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying.mul(DECIMALS).div(
+                IERC20(s.sys.tokens.urBean).totalSupply()
             );
     }
 
@@ -42,7 +42,10 @@ library LibUnripe {
      */
     function percentLPRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return C.unripeLPPerDollar().mul(s.sys.fert.recapitalized).div(C.unripeLP().totalSupply());
+        return
+            C.unripeLPPerDollar().mul(s.sys.fert.recapitalized).div(
+                IERC20(s.sys.tokens.urLp).totalSupply()
+            );
     }
 
     /**
@@ -118,9 +121,9 @@ library LibUnripe {
      */
     function addUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.UNRIPE_LP) {
+        if (token == s.sys.tokens.urLp) {
             uint256 recapped = underlying.mul(s.sys.fert.recapitalized).div(
-                s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
+                s.sys.silo.unripeSettings[s.sys.tokens.urLp].balanceOfUnderlying
             );
             s.sys.fert.recapitalized = s.sys.fert.recapitalized.add(recapped);
         }
@@ -135,9 +138,9 @@ library LibUnripe {
      */
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (token == C.UNRIPE_LP) {
+        if (token == s.sys.tokens.urLp) {
             uint256 recapped = underlying.mul(s.sys.fert.recapitalized).div(
-                s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying
+                s.sys.silo.unripeSettings[s.sys.tokens.urLp].balanceOfUnderlying
             );
             s.sys.fert.recapitalized = s.sys.fert.recapitalized.sub(recapped);
         }
@@ -217,8 +220,9 @@ library LibUnripe {
     function getLockedBeans(
         uint256[] memory reserves
     ) internal view returns (uint256 lockedAmount) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         lockedAmount = LibLockedUnderlying
-            .getLockedUnderlying(C.UNRIPE_BEAN, getTotalRecapitalizedPercent())
+            .getLockedUnderlying(s.sys.tokens.urBean, getTotalRecapitalizedPercent())
             .add(getLockedBeansFromLP(reserves));
     }
 
@@ -234,10 +238,10 @@ library LibUnripe {
         // if reserves return 0, then skip calculations.
         if (reserves[0] == 0) return 0;
         uint256 lockedLpAmount = LibLockedUnderlying.getLockedUnderlying(
-            C.UNRIPE_LP,
+            s.sys.tokens.urLp,
             getTotalRecapitalizedPercent()
         );
-        address underlying = s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken;
+        address underlying = s.sys.silo.unripeSettings[s.sys.tokens.urLp].underlyingToken;
         uint256 beanIndex = LibWell.getBeanIndexFromWell(underlying);
 
         // lpTokenSupply is calculated rather than calling totalSupply(),

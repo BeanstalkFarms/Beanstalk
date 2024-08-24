@@ -5771,6 +5771,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -5807,6 +5812,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -5843,6 +5853,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -6028,6 +6043,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -6051,6 +6071,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -6074,6 +6099,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "indexed": false,
@@ -6096,6 +6126,47 @@
     "name": "dewhitelistToken",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getOracleImplementationForToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -6287,6 +6358,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6322,6 +6398,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6357,6 +6438,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6520,6 +6606,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6595,6 +6686,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6660,6 +6756,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6682,6 +6783,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -6704,6 +6810,11 @@
             "internalType": "bytes1",
             "name": "encodeType",
             "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
           }
         ],
         "internalType": "struct Implementation",
@@ -7196,6 +7307,60 @@
   {
     "inputs": [
       {
+        "internalType": "contract IERC20[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "getBeanIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeanstalkTokens",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "bean",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "fertilizer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "urBean",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "urLp",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct Tokens",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -7545,6 +7710,30 @@
         "internalType": "struct MowStatus[]",
         "name": "mowStatuses",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      }
+    ],
+    "name": "getNonBeanTokenAndIndexFromWell",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -7982,6 +8171,11 @@
                 "internalType": "bytes1",
                 "name": "encodeType",
                 "type": "bytes1"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
               }
             ],
             "internalType": "struct Implementation",
@@ -8004,6 +8198,11 @@
                 "internalType": "bytes1",
                 "name": "encodeType",
                 "type": "bytes1"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
               }
             ],
             "internalType": "struct Implementation",
@@ -8816,19 +9015,6 @@
   },
   {
     "inputs": [],
-    "name": "getBeanEthGaugePointsPerBdv",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getBeanGaugePointsPerBdv",
     "outputs": [
       {
@@ -9076,6 +9262,19 @@
   {
     "inputs": [],
     "name": "getGrownStalkIssuedPerSeason",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLargestGpPerBdv",
     "outputs": [
       {
         "internalType": "uint256",
@@ -10224,6 +10423,82 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "optimalPercentBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "getExtremelyFarAbove",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "getExtremelyFarBelow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRelativelyFarAbove",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "optimalPercentBdv",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRelativelyFarBelow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "value",
         "type": "uint256"
       },
@@ -10957,6 +11232,101 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "overallCappedDeltaB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "overallAmountInDirectionOfPeg",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "inputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inputTokenAmountInDirectionOfPeg",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "outputToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputTokenAmountInDirectionOfPeg",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateConvertCapacityPenaltyE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cumulativePenalty",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "inputToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outputToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "overall",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LibConvert.PenaltyData",
+        "name": "pdCapacity",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "well",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "reserves",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lookback",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateDeltaBFromReservesE",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -11226,57 +11596,6 @@
   },
   {
     "inputs": [],
-    "name": "getChainlinkEthUsdPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
-    "name": "getChainlinkTwapEthUsdPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
-    "name": "getEthUsdTwap",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getNextSeasonStart",
     "outputs": [
       {
@@ -11323,83 +11642,6 @@
   {
     "inputs": [],
     "name": "getT",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getUsdEthPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getWstethEthPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
-    "name": "getWstethEthTwap",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getWstethUsdPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "lookback",
-        "type": "uint256"
-      }
-    ],
-    "name": "getWstethUsdTwap",
     "outputs": [
       {
         "internalType": "uint256",
@@ -12232,6 +12474,11 @@
         "internalType": "bytes4",
         "name": "selector",
         "type": "bytes4"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
       }
     ],
     "name": "mockUpdateLiquidityWeight",

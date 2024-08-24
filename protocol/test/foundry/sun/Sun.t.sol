@@ -29,7 +29,7 @@ contract SunTest is TestHelper {
      */
     function test_sunOnlySilo(int256 deltaB, uint256 caseId) public {
         uint32 currentSeason = bs.season();
-        uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
+        uint256 initialBeanBalance = bean.balanceOf(BEANSTALK);
         uint256 initalPods = bs.totalUnharvestable(0);
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
@@ -58,13 +58,13 @@ contract SunTest is TestHelper {
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) no pods should be paid off.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(bean.balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                initialBeanBalance - bean.balanceOf(BEANSTALK),
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -87,7 +87,7 @@ contract SunTest is TestHelper {
         setRoutes_siloAndFields();
 
         uint32 currentSeason = bs.season();
-        uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
+        uint256 initialBeanBalance = bean.balanceOf(BEANSTALK);
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
@@ -120,7 +120,7 @@ contract SunTest is TestHelper {
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) totalunharvestable() should decrease by the amount issued to the field.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(bean.balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
             assertEq(
                 bs.totalUnharvestable(0),
@@ -132,7 +132,7 @@ contract SunTest is TestHelper {
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                initialBeanBalance - bean.balanceOf(BEANSTALK),
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -178,7 +178,7 @@ contract SunTest is TestHelper {
         assertEq(sproutsInBarn, bs.totalUnfertilizedBeans(), "invalid sprouts in barn");
 
         // bean supply may change due to fert issuance, and initial supply is placed here.
-        uint256 beansInBeanstalk = C.bean().balanceOf(BEANSTALK);
+        uint256 beansInBeanstalk = bean.balanceOf(BEANSTALK);
 
         int256 initialLeftoverBeans = int256(bs.leftoverBeans());
 
@@ -195,7 +195,7 @@ contract SunTest is TestHelper {
         // 4) totalUnfertilizedBeans() should decrease by the amount issued to the barn.
         if (deltaB >= 0) {
             assertEq(
-                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                bean.balanceOf(BEANSTALK) - beansInBeanstalk,
                 uint256(deltaB),
                 "invalid bean minted +deltaB"
             );
@@ -233,7 +233,7 @@ contract SunTest is TestHelper {
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                bean.balanceOf(BEANSTALK) - beansInBeanstalk,
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -305,7 +305,7 @@ contract SunTest is TestHelper {
 
             // May change at each sunrise.
             uint256 priorEarnedBeans = bs.totalEarnedBeans();
-            uint256 priorBeansInBeanstalk = C.bean().balanceOf(BEANSTALK);
+            uint256 priorBeansInBeanstalk = bean.balanceOf(BEANSTALK);
             uint256 priorUnfertilizedBeans = bs.totalUnfertilizedBeans();
             uint256 priorLeftoverBeans = bs.leftoverBeans();
 
@@ -324,7 +324,7 @@ contract SunTest is TestHelper {
             // 4) totalUnfertilizedBeans() should decrease by the amount issued to the barn.
             if (deltaB >= 0) {
                 assertEq(
-                    C.bean().balanceOf(BEANSTALK) - priorBeansInBeanstalk,
+                    bean.balanceOf(BEANSTALK) - priorBeansInBeanstalk,
                     uint256(deltaB),
                     "invalid bean minted +deltaB"
                 );
@@ -401,7 +401,7 @@ contract SunTest is TestHelper {
             // no beans should be minted.
             if (deltaB <= 0) {
                 assertEq(
-                    C.bean().balanceOf(BEANSTALK) - priorBeansInBeanstalk,
+                    bean.balanceOf(BEANSTALK) - priorBeansInBeanstalk,
                     0,
                     "invalid bean minted -deltaB"
                 );

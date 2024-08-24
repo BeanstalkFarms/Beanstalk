@@ -109,7 +109,7 @@ contract L1RecieverFacetTest is TestHelper {
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
 
-        assertEq(IERC1555(address(C.fertilizer())).balanceOf(RECIEVER, ids[0]), amounts[0]);
+        assertEq(IERC1555(fertilizerAddress).balanceOf(RECIEVER, ids[0]), amounts[0]);
 
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Fertilizer have been migrated");

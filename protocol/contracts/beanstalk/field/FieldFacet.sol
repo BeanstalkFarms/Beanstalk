@@ -15,6 +15,7 @@ import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 interface IBeanstalk {
     function cancelPodListing(uint256 fieldId, uint256 index) external;
@@ -96,7 +97,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         payable
         fundsSafu
         noSupplyIncrease
-        oneOutFlow(C.BEAN)
+        oneOutFlow(s.sys.tokens.bean)
         nonReentrant
         returns (uint256 pods)
     {
@@ -122,7 +123,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         payable
         fundsSafu
         noSupplyIncrease
-        oneOutFlow(C.BEAN)
+        oneOutFlow(s.sys.tokens.bean)
         nonReentrant
         returns (uint256 pods)
     {
@@ -149,9 +150,14 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         uint256 fieldId,
         uint256[] calldata plots,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) nonReentrant {
         uint256 beansHarvested = _harvest(fieldId, plots);
-        LibTransfer.sendToken(C.bean(), beansHarvested, LibTractor._user(), mode);
+        LibTransfer.sendToken(
+            BeanstalkERC20(s.sys.tokens.bean),
+            beansHarvested,
+            LibTractor._user(),
+            mode
+        );
     }
 
     /**

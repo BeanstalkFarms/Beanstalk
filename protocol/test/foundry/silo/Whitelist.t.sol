@@ -141,7 +141,7 @@ contract WhitelistTest is TestHelper {
         bytes4 bdvSelector = IMockFBeanstalk.beanToBDV.selector;
         bytes4 gaugePointSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
         bytes4 liquidityWeightSelector = IMockFBeanstalk.maxWeight.selector;
-        address token = address(C.bean());
+        address token = BEAN;
 
         vm.expectRevert("Whitelist: Token already whitelisted");
         bs.whitelistToken(
