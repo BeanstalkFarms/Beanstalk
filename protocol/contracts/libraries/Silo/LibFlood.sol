@@ -13,6 +13,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Brean
@@ -211,7 +212,7 @@ library LibFlood {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Make 0.1% of the total bean supply worth of pods harvestable.
 
-        uint256 totalBeanSupply = C.bean().totalSupply();
+        uint256 totalBeanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
 
         // Note there may be cases where zero harvestable pods are available. For clarity, the code will still emit an event
@@ -227,7 +228,7 @@ library LibFlood {
             .fields[s.sys.activeField]
             .harvestable
             .add(sopFieldBeans);
-        C.bean().mint(address(this), sopFieldBeans);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), sopFieldBeans);
 
         emit SeasonOfPlentyField(sopFieldBeans);
     }
@@ -330,12 +331,12 @@ library LibFlood {
             IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
             uint256 sopBeans = uint256(wellDeltaB.deltaB);
-            C.bean().mint(address(this), sopBeans);
+            BeanstalkERC20(s.sys.tokens.bean).mint(address(this), sopBeans);
 
             // Approve and Swap Beans for the non-bean token of the SOP well.
-            C.bean().approve(wellDeltaB.well, sopBeans);
+            BeanstalkERC20(s.sys.tokens.bean).approve(wellDeltaB.well, sopBeans);
             uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
-                C.bean(),
+                BeanstalkERC20(s.sys.tokens.bean),
                 sopToken,
                 sopBeans,
                 0,

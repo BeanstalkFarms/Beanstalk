@@ -4,8 +4,6 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
-
 /**
  * @title Lib Tractor
  * @author funderbrker
@@ -192,7 +190,7 @@ library LibTractor {
                     EIP712_TYPE_HASH,
                     TRACTOR_HASHED_NAME,
                     keccak256(bytes(_tractorStorage().version)),
-                    C.getChainId(),
+                    block.chainid,
                     address(this)
                 )
             );

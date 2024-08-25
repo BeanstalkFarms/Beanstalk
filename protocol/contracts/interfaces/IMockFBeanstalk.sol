@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.4;
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IMockFBeanstalk {
     enum FacetCutAction {
@@ -1921,4 +1922,8 @@ interface IMockFBeanstalk {
     function setRecieverForL1Migration(address owner, address reciever) external;
 
     function plot(address account, uint256 fieldId, uint256 index) external view returns (uint256);
+
+    function getBeanIndex(IERC20[] calldata tokens) external view returns (uint256);
+
+    function getNonBeanTokenAndIndexFromWell(address well) external view returns (address, uint256);
 }

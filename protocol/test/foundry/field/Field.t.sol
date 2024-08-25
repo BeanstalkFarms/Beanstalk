@@ -36,7 +36,7 @@ contract FieldTest is TestHelper {
     function test_sowNoSoil(uint256 beans) public {
         beans = bound(beans, 1, type(uint256).max);
         // issue `beans` to farmers
-        C.bean().mint(farmers[0], beans);
+        bean.mint(farmers[0], beans);
         vm.prank(farmers[0]);
         vm.expectRevert("Field: Soil Slippage");
         field.sow(
@@ -54,7 +54,7 @@ contract FieldTest is TestHelper {
         soil = bound(soil, 1, beans - 1); // beans less than soil.
 
         // issue `beans` to farmers
-        C.bean().mint(farmers[0], beans);
+        bean.mint(farmers[0], beans);
         season.setSoilE(soil - 1);
         vm.prank(farmers[0]);
         vm.expectRevert("Field: Soil Slippage");
@@ -74,7 +74,7 @@ contract FieldTest is TestHelper {
         beans = bound(beans, 0, soil - 1); // beans less than soil.
 
         // issue `beans` to farmers
-        C.bean().mint(farmers[0], beans);
+        bean.mint(farmers[0], beans);
         vm.prank(farmers[0]);
         vm.expectRevert("Field: Soil Slippage");
         field.sowWithMin(
@@ -93,15 +93,15 @@ contract FieldTest is TestHelper {
     function testSowAllSoil(uint256 soil, bool from) public {
         soil = bound(soil, 100, type(uint128).max);
 
-        C.bean().mint(farmers[0], soil);
+        bean.mint(farmers[0], soil);
 
-        uint256 beanBalanceBefore = bs.getBalance(farmers[0], C.BEAN);
-        uint256 totalBeanSupplyBefore = C.bean().totalSupply();
+        uint256 beanBalanceBefore = bs.getBalance(farmers[0], BEAN);
+        uint256 totalBeanSupplyBefore = bean.totalSupply();
 
         if (from) {
             // if internal, transferToken to internal balances.
             vm.prank(farmers[0]);
-            bs.transferToken(C.BEAN, farmers[0], soil, 0, 1);
+            bs.transferToken(BEAN, farmers[0], soil, 0, 1);
         }
 
         _beforeEachSow(soil, soil, from == true ? 1 : 0);
@@ -116,16 +116,16 @@ contract FieldTest is TestHelper {
     function test_SowSoil(uint256 beansToSow, uint256 soil, bool from) public {
         soil = bound(soil, 100, type(uint128).max); // soil casted to uint128.
         beansToSow = bound(beansToSow, 1, soil); // bounded by soil.
-        C.bean().mint(farmers[0], beansToSow);
+        bean.mint(farmers[0], beansToSow);
 
         if (from) {
             // if internal, transferToken to internal balances.
             vm.prank(farmers[0]);
-            bs.transferToken(C.BEAN, farmers[0], beansToSow, 0, 1);
+            bs.transferToken(BEAN, farmers[0], beansToSow, 0, 1);
         }
 
-        uint256 beanBalanceBefore = bs.getBalance(farmers[0], C.BEAN);
-        uint256 totalBeanSupplyBefore = C.bean().totalSupply();
+        uint256 beanBalanceBefore = bs.getBalance(farmers[0], BEAN);
+        uint256 totalBeanSupplyBefore = bean.totalSupply();
 
         _beforeEachSow(soil, beansToSow, from == true ? 1 : 0);
         sowAssertEq(
@@ -152,14 +152,14 @@ contract FieldTest is TestHelper {
         soil = bound(soil, 100, type(uint128).max); // soil casted to uint128.
         beansToSow = bound(beansToSow, 1, soil); // bounded by soil.
         beansToInternal = bound(beansToInternal, 1, beansToSow); // internal beans < beansToSow
-        C.bean().mint(farmers[0], beansToInternal);
+        bean.mint(farmers[0], beansToInternal);
 
         vm.prank(farmers[0]);
 
         // transfer to their internal balance.
-        bs.transferToken(C.BEAN, farmers[0], beansToInternal, 0, 1);
-        uint256 beanBalanceBefore = bs.getBalance(farmers[0], C.BEAN);
-        uint256 totalBeanSupplyBefore = C.bean().totalSupply();
+        bs.transferToken(BEAN, farmers[0], beansToInternal, 0, 1);
+        uint256 beanBalanceBefore = bs.getBalance(farmers[0], BEAN);
+        uint256 totalBeanSupplyBefore = bean.totalSupply();
 
         _beforeEachSowInternalTolerant(soil, beansToSow, beansToInternal);
         if (beansToSow > beansToInternal) beansToSow = beansToInternal;
@@ -182,10 +182,10 @@ contract FieldTest is TestHelper {
         // bound variables s.sys.t beans >= amount
         minSoil = bound(minSoil, 100, type(uint128).max);
         beans = bound(beans, minSoil, type(uint128).max);
-        C.bean().mint(farmers[0], beans);
+        bean.mint(farmers[0], beans);
 
-        uint256 beanBalanceBefore = C.bean().balanceOf(farmers[0]);
-        uint256 totalBeanSupplyBefore = C.bean().totalSupply();
+        uint256 beanBalanceBefore = bean.balanceOf(farmers[0]);
+        uint256 totalBeanSupplyBefore = bean.totalSupply();
 
         bs.setSoilE(minSoil);
         field.sowWithMin(
@@ -236,24 +236,24 @@ contract FieldTest is TestHelper {
         uint256 totalPodsIssued = farmer1Pods + farmer2Pods;
 
         assertEq(
-            C.bean().balanceOf(farmers[0]),
+            bean.balanceOf(farmers[0]),
             farmer1BeansBeforeSow - farmer1Sow,
             "farmer 1 invalid balance"
         );
         assertEq(field.plot(farmers[0], 0, 0), farmer1Pods, "farmer 1 invalid pods");
 
         assertEq(
-            C.bean().balanceOf(farmers[1]),
+            bean.balanceOf(farmers[1]),
             farmer2BeansBeforeSow - farmer2Sow,
             "farmer 2 invalid balance"
         );
         assertEq(field.plot(farmers[1], 0, farmer1Pods), farmer2Pods, "farmer 2 invalid pods");
         assertEq(
-            C.bean().totalSupply(),
+            bean.totalSupply(),
             farmer1BeansBeforeSow + farmer2BeansBeforeSow - totalAmountSown,
             "invalid bean supply"
         );
-        assertEq(C.bean().balanceOf(BEANSTALK), 0, "beans remaining in beanstalk");
+        assertEq(bean.balanceOf(BEANSTALK), 0, "beans remaining in beanstalk");
 
         assertEq(field.totalPods(0), totalPodsIssued, "invalid total pods");
         assertEq(field.totalUnharvestable(0), totalPodsIssued, "invalid unharvestable");
@@ -272,8 +272,8 @@ contract FieldTest is TestHelper {
         // sow such that at minimum, there is 1e6 + 1 soil left
         farmerSown = bound(farmerSown, 1, initalSoil - (1e6 + 1));
         bs.setSoilE(initalSoil);
-        C.bean().mint(farmers[0], farmerSown);
-        uint256 beans = C.bean().balanceOf(farmers[0]);
+        bean.mint(farmers[0], farmerSown);
+        uint256 beans = bean.balanceOf(farmers[0]);
 
         vm.prank(farmers[0]);
         field.sow(beans, 0, LibTransfer.From.EXTERNAL);
@@ -325,8 +325,8 @@ contract FieldTest is TestHelper {
         uint256 amount1
     ) public returns (uint256, uint256, uint256, uint256) {
         season.setSoilE(soil);
-        C.bean().mint(farmer0, amount0);
-        uint256 initalBeanBalance0 = C.bean().balanceOf(farmer0);
+        bean.mint(farmer0, amount0);
+        uint256 initalBeanBalance0 = bean.balanceOf(farmer0);
         if (amount0 > soil) amount0 = soil;
         soil -= amount0;
 
@@ -336,8 +336,8 @@ contract FieldTest is TestHelper {
         field.sowWithMin(amount0, 0, 0, LibTransfer.From.EXTERNAL);
         vm.stopPrank();
 
-        C.bean().mint(farmer1, amount1);
-        uint256 initalBeanBalance1 = C.bean().balanceOf(farmer1);
+        bean.mint(farmer1, amount1);
+        uint256 initalBeanBalance1 = bean.balanceOf(farmer1);
         if (amount1 > soil) amount1 = soil;
         soil -= amount1;
 
@@ -358,9 +358,9 @@ contract FieldTest is TestHelper {
         uint256 sowedAmount,
         uint256 expectedPods
     ) public view {
-        assertEq(bs.getBalance(account, C.BEAN), preBeanBalance - sowedAmount, "balanceOf");
-        assertEq(C.bean().balanceOf(BEANSTALK), 0, "field balanceOf");
-        assertEq(C.bean().totalSupply(), preTotalBalance - sowedAmount, "total supply");
+        assertEq(bs.getBalance(account, BEAN), preBeanBalance - sowedAmount, "balanceOf");
+        assertEq(bean.balanceOf(BEANSTALK), 0, "field balanceOf");
+        assertEq(bean.totalSupply(), preTotalBalance - sowedAmount, "total supply");
 
         //// FIELD STATE ////
         assertEq(field.plot(account, 0, 0), expectedPods, "plot");

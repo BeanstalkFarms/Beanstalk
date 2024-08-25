@@ -116,29 +116,32 @@ library LibConvert {
     }
 
     function getMaxAmountIn(address tokenIn, address tokenOut) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // Lambda -> Lambda
         if (tokenIn == tokenOut) return type(uint256).max;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.BEAN && tokenOut.isWell()) return LibWellConvert.beansToPeg(tokenOut);
+        if (tokenIn == s.sys.tokens.bean && tokenOut.isWell())
+            return LibWellConvert.beansToPeg(tokenOut);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.BEAN) return LibWellConvert.lpToPeg(tokenIn);
+        if (tokenIn.isWell() && tokenOut == s.sys.tokens.bean)
+            return LibWellConvert.lpToPeg(tokenIn);
 
         // urLP Convert
-        if (tokenIn == C.UNRIPE_LP) {
+        if (tokenIn == s.sys.tokens.urLp) {
             // UrBEANETH -> urBEAN
-            if (tokenOut == C.UNRIPE_BEAN) return LibUnripeConvert.lpToPeg();
+            if (tokenOut == s.sys.tokens.urBean) return LibUnripeConvert.lpToPeg();
             // UrBEANETH -> BEANETH
             if (tokenOut == LibBarnRaise.getBarnRaiseWell()) return type(uint256).max;
         }
 
         // urBEAN Convert
-        if (tokenIn == C.UNRIPE_BEAN) {
+        if (tokenIn == s.sys.tokens.urBean) {
             // urBEAN -> urLP
-            if (tokenOut == C.UNRIPE_LP) return LibUnripeConvert.beansToPeg();
+            if (tokenOut == s.sys.tokens.urLp) return LibUnripeConvert.beansToPeg();
             // UrBEAN -> BEAN
-            if (tokenOut == C.BEAN) return type(uint256).max;
+            if (tokenOut == s.sys.tokens.bean) return type(uint256).max;
         }
 
         revert("Convert: Tokens not supported");
@@ -149,31 +152,32 @@ library LibConvert {
         address tokenOut,
         uint256 amountIn
     ) internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         /// urLP -> urBEAN
-        if (tokenIn == C.UNRIPE_LP && tokenOut == C.UNRIPE_BEAN)
+        if (tokenIn == s.sys.tokens.urLp && tokenOut == s.sys.tokens.urBean)
             return LibUnripeConvert.getBeanAmountOut(amountIn);
 
         /// urBEAN -> urLP
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.UNRIPE_LP)
+        if (tokenIn == s.sys.tokens.urBean && tokenOut == s.sys.tokens.urLp)
             return LibUnripeConvert.getLPAmountOut(amountIn);
 
         // Lambda -> Lambda
         if (tokenIn == tokenOut) return amountIn;
 
         // Bean -> Well LP Token
-        if (tokenIn == C.BEAN && tokenOut.isWell())
+        if (tokenIn == s.sys.tokens.bean && tokenOut.isWell())
             return LibWellConvert.getLPAmountOut(tokenOut, amountIn);
 
         // Well LP Token -> Bean
-        if (tokenIn.isWell() && tokenOut == C.BEAN)
+        if (tokenIn.isWell() && tokenOut == s.sys.tokens.bean)
             return LibWellConvert.getBeanAmountOut(tokenIn, amountIn);
 
         // UrBEAN -> Bean
-        if (tokenIn == C.UNRIPE_BEAN && tokenOut == C.BEAN)
+        if (tokenIn == s.sys.tokens.urBean && tokenOut == s.sys.tokens.bean)
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         // UrBEANETH -> BEANETH
-        if (tokenIn == C.UNRIPE_LP && tokenOut == LibBarnRaise.getBarnRaiseWell())
+        if (tokenIn == s.sys.tokens.urLp && tokenOut == LibBarnRaise.getBarnRaiseWell())
             return LibChopConvert.getConvertedUnderlyingOut(tokenIn, amountIn);
 
         revert("Convert: Tokens not supported");
@@ -312,7 +316,7 @@ library LibConvert {
 
         // update per-well convert capacity
 
-        if (inputToken != C.BEAN && inputTokenAmountInDirectionOfPeg > 0) {
+        if (inputToken != s.sys.tokens.bean && inputTokenAmountInDirectionOfPeg > 0) {
             (cumulativePenalty, pdCapacity.inputToken) = calculatePerWellCapacity(
                 inputToken,
                 inputTokenAmountInDirectionOfPeg,
@@ -322,7 +326,7 @@ library LibConvert {
             );
         }
 
-        if (outputToken != C.BEAN && outputTokenAmountInDirectionOfPeg > 0) {
+        if (outputToken != s.sys.tokens.bean && outputTokenAmountInDirectionOfPeg > 0) {
             (cumulativePenalty, pdCapacity.outputToken) = calculatePerWellCapacity(
                 outputToken,
                 outputTokenAmountInDirectionOfPeg,

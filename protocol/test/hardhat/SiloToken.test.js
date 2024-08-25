@@ -4,11 +4,11 @@ const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const {
   readPrune,
   toBN,
-  signSiloDepositTokenPermit,
-  signSiloDepositTokensPermit
+  signSiloDepositTokenPermitWithChainId,
+  signSiloDepositTokensPermitWithChainId
 } = require("../../utils");
-const { EXTERNAL, INTERNAL } = require("./utils/balances.js");
-const { BEAN, UNRIPE_LP, UNRIPE_BEAN, ZERO_BYTES, MAX_UINT256 } = require("./utils/constants");
+const { EXTERNAL } = require("./utils/balances.js");
+const { BEAN, UNRIPE_LP, UNRIPE_BEAN, MAX_UINT256 } = require("./utils/constants");
 const { to18, to6, toStalk } = require("./utils/helpers.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const {
@@ -38,7 +38,7 @@ describe("New Silo Token", function () {
 
     owner.address = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -1144,7 +1144,7 @@ describe("New Silo Token", function () {
       describe("reverts", function () {
         it("reverts if depositPermitDomainSeparator is invalid", async function () {
           expect(await beanstalk.connect(user).depositPermitDomainSeparator()).to.be.equal(
-            "0xf47372c4b0d604ded919ee3604a1b1e88c7cd7d7d2fcfffc36f016e19bede4ef"
+            "0x496b905c55c8160b7bbd1fce4789e39e862e1cc4fc088e60afcd168c504edbe9"
           );
         });
       });
@@ -1153,14 +1153,15 @@ describe("New Silo Token", function () {
         describe("reverts", function () {
           it("reverts if permit expired", async function () {
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokenPermit(
+            const signature = await signSiloDepositTokenPermitWithChainId(
               user,
               user.address,
               user2.address,
               siloToken.address,
               "1000",
               nonce,
-              1000
+              1000,
+              1337
             );
             await expect(
               beanstalk
@@ -1180,13 +1181,15 @@ describe("New Silo Token", function () {
 
           it("reverts if permit invalid signature", async function () {
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokenPermit(
+            const signature = await signSiloDepositTokenPermitWithChainId(
               user,
               user.address,
               user2.address,
               siloToken.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await expect(
               beanstalk
@@ -1209,13 +1212,17 @@ describe("New Silo Token", function () {
             mockBeanstalk.deployStemsUpgrade();
             await beanstalk.connect(user).deposit(siloToken.address, "1000", EXTERNAL);
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokenPermit(
+            console.log("user.address", user.address);
+            console.log("user2.address", user2.address);
+            const signature = await signSiloDepositTokenPermitWithChainId(
               user,
               user.address,
               user2.address,
               siloToken.address,
               "500",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await beanstalk
               .connect(user2)
@@ -1261,13 +1268,15 @@ describe("New Silo Token", function () {
           beforeEach(async function () {
             // Create permit
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokenPermit(
+            const signature = await signSiloDepositTokenPermitWithChainId(
               user,
               user.address,
               user2.address,
               siloToken.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             this.result = await beanstalk
               .connect(user)
@@ -1383,14 +1392,15 @@ describe("New Silo Token", function () {
         describe("reverts", function () {
           it("reverts if permit expired", async function () {
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokensPermit(
+            const signature = await signSiloDepositTokensPermitWithChainId(
               user,
               user.address,
               user2.address,
               [siloToken.address],
               ["1000"],
               nonce,
-              1000
+              1000,
+              1337
             );
             await expect(
               beanstalk
@@ -1410,13 +1420,15 @@ describe("New Silo Token", function () {
 
           it("reverts if permit invalid signature", async function () {
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokensPermit(
+            const signature = await signSiloDepositTokensPermitWithChainId(
               user,
               user.address,
               user2.address,
               [siloToken.address],
               ["1000"],
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await expect(
               beanstalk
@@ -1437,13 +1449,15 @@ describe("New Silo Token", function () {
           it("reverts when transfer too much", async function () {
             await beanstalk.connect(user).deposit(siloToken.address, "1000", EXTERNAL);
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokensPermit(
+            const signature = await signSiloDepositTokensPermitWithChainId(
               user,
               user.address,
               user2.address,
               [siloToken.address],
               ["500"],
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await beanstalk
               .connect(user2)
@@ -1493,13 +1507,15 @@ describe("New Silo Token", function () {
 
             // Create permit
             const nonce = await beanstalk.connect(user).depositPermitNonces(user.address);
-            const signature = await signSiloDepositTokensPermit(
+            const signature = await signSiloDepositTokensPermitWithChainId(
               user,
               user.address,
               user2.address,
               [siloToken.address],
               ["1000"],
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             this.result = await beanstalk
               .connect(user)

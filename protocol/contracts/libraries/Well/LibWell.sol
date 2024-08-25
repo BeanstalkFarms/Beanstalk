@@ -47,11 +47,12 @@ library LibWell {
         IERC20[] memory tokens,
         uint256 lookback
     ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
         for (uint i; i < tokens.length; ++i) {
-            if (C.BEAN == address(tokens[i])) {
+            if (s.sys.tokens.bean == address(tokens[i])) {
                 beanIndex = i;
                 ratios[i] = 1e6;
             } else {
@@ -67,9 +68,10 @@ library LibWell {
     /**
      * @dev Returns the index of Bean in a list of tokens.
      */
-    function getBeanIndex(IERC20[] memory tokens) internal pure returns (uint beanIndex) {
+    function getBeanIndex(IERC20[] memory tokens) internal view returns (uint beanIndex) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (beanIndex; beanIndex < tokens.length; ++beanIndex) {
-            if (C.BEAN == address(tokens[beanIndex])) {
+            if (s.sys.tokens.bean == address(tokens[beanIndex])) {
                 return beanIndex;
             }
         }
@@ -79,9 +81,10 @@ library LibWell {
     /**
      * @dev Returns the first ERC20 well token that is not Bean.
      */
-    function getNonBeanIndex(IERC20[] memory tokens) internal pure returns (uint nonBeanIndex) {
+    function getNonBeanIndex(IERC20[] memory tokens) internal view returns (uint nonBeanIndex) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (nonBeanIndex; nonBeanIndex < tokens.length; ++nonBeanIndex) {
-            if (C.BEAN != address(tokens[nonBeanIndex])) {
+            if (s.sys.tokens.bean != address(tokens[nonBeanIndex])) {
                 return nonBeanIndex;
             }
         }
@@ -109,9 +112,10 @@ library LibWell {
     function getNonBeanTokenAndIndexFromWell(
         address well
     ) internal view returns (address, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(well).tokens();
         for (uint256 i; i < tokens.length; i++) {
-            if (address(tokens[i]) != C.BEAN) {
+            if (address(tokens[i]) != s.sys.tokens.bean) {
                 return (address(tokens[i]), i);
             }
         }
@@ -150,7 +154,7 @@ library LibWell {
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
-        // and should return 0. if s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 is 0, the previous if block will return 0.
+        // and should return 0. if s.sys.twaReserves[well].reserve1 is 0, the previous if block will return 0.
         if (tokenUsd == 0) {
             return 0;
         }

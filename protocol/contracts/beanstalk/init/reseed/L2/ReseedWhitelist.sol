@@ -30,7 +30,7 @@ contract ReseedWhitelist {
         for (uint i; i < tokens.length; i++) {
             address token = tokens[i];
             // If an LP token, initialize oracle storage variables.
-            if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+            if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
                 s.sys.usdTokenPrice[token] = 1;
                 s.sys.twaReserves[token].reserve0 = 1;
                 s.sys.twaReserves[token].reserve1 = 1;

@@ -52,21 +52,21 @@ contract MockSiloFacet is SiloFacet {
 
     //     uint256 unripeLP = getUnripeForAmount(t, amount);
     //     bdv = bdv.mul(C.initialRecap()).div(1e18);
-    //     incrementTotalDepositedAmount(C.UNRIPE_LP, unripeLP);
+    //     incrementTotalDepositedAmount(s.sys.tokens.urLp, unripeLP);
 
     //     // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
     //     // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
-    //     incrementTotalDepositedBDV(C.UNRIPE_LP, bdv);
+    //     incrementTotalDepositedBDV(s.sys.tokens.urLp, bdv);
 
-    //     uint256 seeds = bdv.mul(LibTokenSilo.getLegacySeedsPerToken(C.UNRIPE_LP));
-    //     uint256 stalk = bdv.mul(s.sys.silo.assetSettings[C.UNRIPE_LP].stalkIssuedPerBdv).add(
+    //     uint256 seeds = bdv.mul(LibTokenSilo.getLegacySeedsPerToken(s.sys.tokens.urLp));
+    //     uint256 stalk = bdv.mul(s.sys.silo.assetSettings[s.sys.tokens.urLp].stalkIssuedPerBdv).add(
     //         stalkRewardLegacy(seeds, s.sys.season.current - _s)
     //     );
     //     // not germinating because this is a old deposit.
     //     LibSilo.mintActiveStalk(LibTractor._user(), stalk);
     //     mintSeeds(LibTractor._user(), seeds);
     //     LibTransfer.receiveToken(
-    //         IERC20(C.UNRIPE_LP),
+    //         IERC20(s.sys.tokens.urLp),
     //         unripeLP,
     //         LibTractor._user(),
     //         LibTransfer.From.EXTERNAL
@@ -76,21 +76,21 @@ contract MockSiloFacet is SiloFacet {
     // function mockUnripeBeanDeposit(uint32 _s, uint256 amount) external {
     //     _mowLegacy(LibTractor._user());
     //     uint256 partialAmount = amount.mul(C.initialRecap()).div(1e18);
-    //     incrementTotalDepositedAmount(C.UNRIPE_BEAN, amount);
+    //     incrementTotalDepositedAmount(s.sys.tokens.urBean, amount);
 
     //     // from the seed gauge on, mowAndMigrate does not increment BDV. instead, the init script has a one-time
     //     // bdv increment of all unripe assets. Thus, we increment total deposited here for testing purposes.
-    //     incrementTotalDepositedBDV(C.UNRIPE_BEAN, partialAmount);
+    //     incrementTotalDepositedBDV(s.sys.tokens.urBean, partialAmount);
 
-    //     uint256 seeds = partialAmount.mul(LibTokenSilo.getLegacySeedsPerToken(C.UNRIPE_BEAN));
+    //     uint256 seeds = partialAmount.mul(LibTokenSilo.getLegacySeedsPerToken(s.sys.tokens.urBean));
     //     uint256 stalk = partialAmount
-    //         .mul(s.sys.silo.assetSettings[C.UNRIPE_BEAN].stalkIssuedPerBdv)
+    //         .mul(s.sys.silo.assetSettings[s.sys.tokens.urBean].stalkIssuedPerBdv)
     //         .add(stalkRewardLegacy(seeds, s.sys.season.current - _s));
 
     //     LibSilo.mintActiveStalk(LibTractor._user(), stalk);
     //     mintSeeds(LibTractor._user(), seeds);
     //     LibTransfer.receiveToken(
-    //         IERC20(C.UNRIPE_BEAN),
+    //         IERC20(s.sys.tokens.urBean),
     //         amount,
     //         LibTractor._user(),
     //         LibTransfer.From.EXTERNAL

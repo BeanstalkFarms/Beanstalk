@@ -24,7 +24,7 @@ contract ListingTest is TestHelper {
         // max approve.
         maxApproveBeanstalk(farmers);
 
-        mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmers, BEAN, MAX_DEPOSIT_BOUND);
 
         field.incrementTotalSoilE(1000e18);
 

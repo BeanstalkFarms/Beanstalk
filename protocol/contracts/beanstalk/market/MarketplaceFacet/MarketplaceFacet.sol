@@ -6,10 +6,10 @@ pragma solidity ^0.8.20;
 
 import {Order} from "./Order.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Beanjoyer, Malteasy
@@ -32,9 +32,9 @@ contract MarketplaceFacet is Invariable, Order {
         PodListing calldata podListing,
         uint256 beanAmount,
         LibTransfer.From mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) nonReentrant {
         beanAmount = LibTransfer.transferToken(
-            C.bean(),
+            BeanstalkERC20(s.sys.tokens.bean),
             LibTractor._user(),
             podListing.lister,
             beanAmount,
@@ -67,7 +67,12 @@ contract MarketplaceFacet is Invariable, Order {
         LibTransfer.From mode
     ) external payable fundsSafu noSupplyChange noOutFlow nonReentrant returns (bytes32 id) {
         require(podOrder.orderer == LibTractor._user(), "Marketplace: Non-user create order.");
-        beanAmount = LibTransfer.receiveToken(C.bean(), beanAmount, LibTractor._user(), mode);
+        beanAmount = LibTransfer.receiveToken(
+            BeanstalkERC20(s.sys.tokens.bean),
+            beanAmount,
+            LibTractor._user(),
+            mode
+        );
         return _createPodOrder(podOrder, beanAmount);
     }
 
@@ -78,7 +83,7 @@ contract MarketplaceFacet is Invariable, Order {
         uint256 start,
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) nonReentrant {
         _fillPodOrder(podOrder, LibTractor._user(), index, start, amount, mode);
     }
 
@@ -86,7 +91,7 @@ contract MarketplaceFacet is Invariable, Order {
     function cancelPodOrder(
         PodOrder calldata podOrder,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) nonReentrant {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) nonReentrant {
         require(podOrder.orderer == LibTractor._user(), "Marketplace: Non-user cancel order.");
         _cancelPodOrder(podOrder, mode);
     }

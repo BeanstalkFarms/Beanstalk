@@ -3,8 +3,6 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {LibWellMinting} from "../Minting/LibWellMinting.sol";
-import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWell} from "../Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -13,6 +11,7 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title LibPipelineConvert
@@ -30,7 +29,8 @@ library LibDeltaB {
      * @return The deltaB of the token, for Bean it returns 0.
      */
     function getCurrentDeltaB(address token) internal view returns (int256) {
-        if (token == C.BEAN) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (token == s.sys.tokens.bean) {
             return 0;
         }
 
@@ -63,7 +63,8 @@ library LibDeltaB {
      * @notice returns the overall cappedReserves deltaB for all whitelisted well tokens.
      */
     function cappedReservesDeltaB(address well) internal view returns (int256) {
-        if (well == C.BEAN) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (well == s.sys.tokens.bean) {
             return 0;
         }
 
@@ -109,9 +110,10 @@ library LibDeltaB {
     function scaledOverallCurrentDeltaB(
         uint256[] memory lpSupply
     ) internal view returns (int256 deltaB) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == C.BEAN) continue;
+            if (tokens[i] == s.sys.tokens.bean) continue;
             int256 wellDeltaB = scaledCurrentDeltaB(tokens[i], lpSupply[i]);
             deltaB = deltaB.add(wellDeltaB);
         }

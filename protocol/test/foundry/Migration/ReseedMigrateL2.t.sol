@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
+import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {L2MigrationFacet} from "contracts/beanstalk/migration/L2MigrationFacet.sol";
 import {ReseedL2Migration} from "contracts/beanstalk/init/reseed/L1/ReseedL2Migration.sol";
 import {L1TokenFacet} from "contracts/beanstalk/migration/L1TokenFacet.sol";
@@ -24,6 +24,10 @@ contract reeseedMigrateL2 is TestHelper {
     // L2Beanstalk: note this is a mock/random address.
     address internal constant L2_BEANSTALK = address(0x4021489084021481024812904812481242141241);
 
+    address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
+    address internal constant BEAN_ETH = address(0xBEA0e11282e2bB5893bEcE110cF199501e872bAd);
+    address internal constant BEAN_WSTETH = address(0xBeA0000113B0d182f4064C86B71c315389E4715D);
+
     // mainnet fork id.
     uint256 mainnetForkId;
 
@@ -33,28 +37,16 @@ contract reeseedMigrateL2 is TestHelper {
     function setUp() public {
         bs = IMockFBeanstalk(BEANSTALK);
         // fork mainnet.
-        mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 19976370);
+        mainnetForkId = vm.createFork(vm.envString("FORKING_RPC"), 20584419);
 
         // fork base.
-        l2ForkId = vm.createFork(vm.envString("ARBITRUM_FORKING_RPC"), 15104866);
+        l2ForkId = vm.createFork(vm.envString("ARBITRUM_FORKING_RPC"), 245539862);
         vm.selectFork(mainnetForkId);
         vm.label(address(0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f), "Arbitrum L1 Bridge");
         vm.label(BEANSTALK, "Beanstalk");
 
         // perform step 1 of the migration process. (transferring assets to the BCM).
         // this is done on L1.
-
-        // this test was written prior to the deployment of the bean-wsteth well.
-        // thus, a mock deployment is used. This should be removed upon the bean-wsteth migration.
-        aquifer = AQUIFER;
-        deployWellAtAddressNoData(
-            C.BEAN_WSTETH_WELL,
-            C.BEAN,
-            C.WSTETH,
-            CP2,
-            MFP,
-            WELL_IMPLMENTATION
-        );
 
         string[] memory facetNames = new string[](2);
         facetNames[0] = "L2MigrationFacet";
@@ -83,18 +75,18 @@ contract reeseedMigrateL2 is TestHelper {
     /**
      * @notice verfies that all assets have been transferred to the BCM.
      */
-    function test_bcm_transfer() public {
-        uint256 beanEthBalance = IERC20(C.BEAN_ETH_WELL).balanceOf(BEANSTALK);
-        uint256 bean3crvBalance = IERC20(C.CURVE_BEAN_METAPOOL).balanceOf(BEANSTALK);
-        uint256 wstethBalance = IERC20(C.BEAN_WSTETH_WELL).balanceOf(BEANSTALK);
+    function test_bcm_transfer() public view {
+        uint256 beanEthBalance = IERC20(BEAN_ETH).balanceOf(BEANSTALK);
+        uint256 bean3crvBalance = IERC20(CURVE_BEAN_METAPOOL).balanceOf(BEANSTALK);
+        uint256 wstethBalance = IERC20(BEAN_WSTETH).balanceOf(BEANSTALK);
 
         assertEq(beanEthBalance, 0);
         assertEq(bean3crvBalance, 0);
         assertEq(wstethBalance, 0);
 
-        beanEthBalance = IERC20(C.BEAN_ETH_WELL).balanceOf(BCM);
-        bean3crvBalance = IERC20(C.CURVE_BEAN_METAPOOL).balanceOf(BCM);
-        wstethBalance = IERC20(C.BEAN_WSTETH_WELL).balanceOf(BCM);
+        beanEthBalance = IERC20(BEAN_ETH).balanceOf(BCM);
+        bean3crvBalance = IERC20(CURVE_BEAN_METAPOOL).balanceOf(BCM);
+        wstethBalance = IERC20(BEAN_WSTETH).balanceOf(BCM);
 
         assertGe(beanEthBalance, 1e18);
         assertGe(bean3crvBalance, 1e18);
@@ -110,50 +102,58 @@ contract reeseedMigrateL2 is TestHelper {
         assertEq(facets[3].facetAddress, address(0xeab4398f62194948cB25F45fEE4C46Fae2e91229)); // PauseFacet
     }
 
-    // user is able to transfer farm balances out.
-    // user is unable to transfer assets into the farm balance.
+    // user is able to transfer farm balances in/out.
     // user is able transfer internally between farm balances.
     // user is unable to transfer bean assets.
     function test_transferTokens() public {
         // active address on beanstalk.
         address user = address(0x1c42949f6f326Fc53E6fAaDE1A4cCB9b5b209A80);
         // transfer out.
-        address token = address(C.USDC);
+        address token = address(USDC);
 
-        uint256 initialTokenBalance = IERC20(C.USDC).balanceOf(BEANSTALK);
+        uint256 initialTokenBalance = IERC20(USDC).balanceOf(BEANSTALK);
+        uint256 initialUserBalance = IERC20(USDC).balanceOf(user);
         uint256 initialInternalTokenBalance = bs.getInternalBalance(user, token);
+
+        vm.prank(user);
+        IERC20(USDC).approve(BEANSTALK, type(uint256).max);
+
+        vm.prank(user);
+        // verify the user is able to deposit into internal balances.
+        bs.transferToken(token, user, 1e6, 0, 1);
+        assertEq(initialUserBalance - IERC20(token).balanceOf(user), 1e6);
+        assertEq(IERC20(token).balanceOf(BEANSTALK) - initialTokenBalance, 1e6);
+        assertEq(bs.getInternalBalance(user, token) - initialInternalTokenBalance, 1e6);
 
         // initial snapshot.
         uint256 snapshot = vm.snapshot();
 
-        vm.prank(user);
-        // verify the user is able to remove internal balances into their external balances.
-        bs.transferToken(token, user, 1e6, 1, 0);
-        assertEq(IERC20(token).balanceOf(user), 1e6);
-        assertEq(initialTokenBalance - IERC20(token).balanceOf(BEANSTALK), 1e6);
-        assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
-
-        // verify the user is Unable to transfer into internal balances.
-        vm.prank(user);
-        vm.expectRevert("TokenFacet: EXTERNAL->INTERNAL transfers are disabled.");
-        bs.transferToken(token, user, 1e6, 0, 1);
-
-        // revert to snapshot.
-        vm.revertTo(snapshot);
+        initialUserBalance = IERC20(USDC).balanceOf(user);
+        initialInternalTokenBalance = bs.getInternalBalance(user, token);
+        initialTokenBalance = IERC20(USDC).balanceOf(BEANSTALK);
         vm.prank(user);
         // verify the user is able to transfer internal balances to other users).
         bs.transferToken(token, address(100010), 1e6, 1, 1);
-        assertEq(IERC20(token).balanceOf(user), 0);
+        assertEq(initialUserBalance - IERC20(token).balanceOf(user), 0);
         assertEq(IERC20(token).balanceOf(address(100010)), 0);
         assertEq(initialTokenBalance - IERC20(token).balanceOf(BEANSTALK), 0);
         assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
         assertEq(bs.getInternalBalance(address(100010), token), 1e6);
+
+        vm.revertTo(snapshot);
+
+        vm.prank(user);
+        // verify the user is able to remove internal balances into their external balances.
+        bs.transferToken(token, user, 1e6, 1, 0);
+        assertEq(IERC20(token).balanceOf(user) - initialUserBalance, 1e6);
+        assertEq(initialTokenBalance - IERC20(token).balanceOf(BEANSTALK), 1e6);
+        assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
     }
 
     // verifies that the user is able to migrate external beans to L2 and approve a reciever on L2.
     function test_bean_l2_migration_external() public {
         vm.startPrank(BS_FARMS);
-        IERC20(C.BEAN).approve(BEANSTALK, 1e6);
+        IERC20(BEAN).approve(BEANSTALK, 1e6);
         L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
             BS_FARMS,
             L2_BEANSTALK,
@@ -176,7 +176,7 @@ contract reeseedMigrateL2 is TestHelper {
 
     function test_bean_l2_migration_internal() public {
         vm.startPrank(BS_FARMS);
-        IERC20(C.BEAN).approve(BEANSTALK, 1e6);
+        IERC20(BEAN).approve(BEANSTALK, 1e6);
         L2MigrationFacet(BEANSTALK).migrateL2Beans{value: 0.005 ether}(
             BS_FARMS,
             L2_BEANSTALK,

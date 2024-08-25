@@ -222,7 +222,7 @@ library LibGauge {
         uint256 totalLpBdv
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 beanDepositedBdv = s.sys.silo.balances[C.BEAN].depositedBdv;
+        uint256 beanDepositedBdv = s.sys.silo.balances[s.sys.tokens.bean].depositedBdv;
         uint256 totalGaugeBdv = totalLpBdv.add(beanDepositedBdv);
 
         // If nothing has been deposited, skip grown stalk update.
@@ -257,7 +257,7 @@ library LibGauge {
         uint256 newGrownStalkPerGp = newGrownStalk.mul(GP_PRECISION).div(totalGaugePoints);
 
         // Update stalkPerBdvPerSeason for bean.
-        issueGrownStalkPerBdv(C.BEAN, newGrownStalkPerGp, beanGpPerBdv);
+        issueGrownStalkPerBdv(s.sys.tokens.bean, newGrownStalkPerGp, beanGpPerBdv);
 
         // Update stalkPerBdvPerSeason for LP
         // If there is only one pool, then no need to read gauge points.

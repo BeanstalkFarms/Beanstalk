@@ -74,11 +74,11 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
     {
         // require that input and output tokens be wells (Unripe not supported)
         require(
-            LibWell.isWell(inputToken) || inputToken == C.BEAN,
+            LibWell.isWell(inputToken) || inputToken == s.sys.tokens.bean,
             "Convert: Input token must be Bean or a well"
         );
         require(
-            LibWell.isWell(outputToken) || outputToken == C.BEAN,
+            LibWell.isWell(outputToken) || outputToken == s.sys.tokens.bean,
             "Convert: Output token must be Bean or a well"
         );
 
