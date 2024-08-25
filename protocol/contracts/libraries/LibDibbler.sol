@@ -13,7 +13,7 @@ import {LibRedundantMath32} from "./LibRedundantMath32.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
-import {C} from "contracts/C.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title LibDibbler
@@ -80,7 +80,7 @@ library LibDibbler {
         LibTransfer.From mode
     ) internal returns (uint256 pods) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        beans = LibTransfer.burnToken(C.bean(), beans, LibTractor._user(), mode);
+        beans = LibTransfer.burnToken(IBean(s.sys.tokens.bean), beans, LibTractor._user(), mode);
         pods = sow(beans, _morningTemperature, LibTractor._user(), peg);
         s.sys.beanSown += SafeCast.toUint128(beans);
     }
@@ -249,7 +249,7 @@ library LibDibbler {
                             return TEMPERATURE_PRECISION;
                         } else {
                             // delta == 1
-                            return _scaleTemperature(76079978576);
+                            return _scaleTemperature(279415312704);
                         }
                     } else {
                         if (delta == 2) {

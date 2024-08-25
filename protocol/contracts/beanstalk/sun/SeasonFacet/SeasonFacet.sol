@@ -12,6 +12,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title SeasonFacet
@@ -125,7 +126,7 @@ contract SeasonFacet is Invariable, Weather {
 
         uint256 incentiveAmount = LibIncentive.determineReward(secondsLate);
 
-        LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
+        LibTransfer.mintToken(IBean(s.sys.tokens.bean), incentiveAmount, account, mode);
 
         emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;

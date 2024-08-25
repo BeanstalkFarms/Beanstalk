@@ -1,11 +1,11 @@
 const { to18, to6 } = require("./utils/helpers.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { WETH, BEANSTALK } = require("./utils/constants");
+const { WETH, BEANSTALK, MAX_UINT256 } = require("./utils/constants");
 const { getWeth } = require("../../utils/contracts.js");
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { signTokenPermit } = require("../../utils");
+const { signTokenPermitWithChainId } = require("../../utils");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 
 describe("Token", function () {
@@ -22,7 +22,7 @@ describe("Token", function () {
     this.recipient = r;
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
 
@@ -783,7 +783,7 @@ describe("Token", function () {
       describe("reverts", function () {
         it("reverts if tokenPermitDomainSeparator is invalid", async function () {
           expect(await beanstalk.connect(this.user).tokenPermitDomainSeparator()).to.be.equal(
-            "0xd74031d32a83121ee5d7c0c14f2aac23c5603bf832f855c2e075ba6d0b20612e"
+            "0x365aa549a79416ab768b3ed4d27191ad9d69b7ab2ea17646d1b3340db35768f6"
           );
         });
       });
@@ -792,14 +792,15 @@ describe("Token", function () {
         describe("reverts", function () {
           it("reverts if permit expired", async function () {
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
               nonce,
-              1000
+              1000,
+              1337
             );
             await expect(
               beanstalk
@@ -819,13 +820,15 @@ describe("Token", function () {
 
           it("reverts if permit invalid signature", async function () {
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await expect(
               beanstalk
@@ -848,13 +851,15 @@ describe("Token", function () {
           beforeEach(async function () {
             // Create permit
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             this.result = await beanstalk
               .connect(this.user)

@@ -87,9 +87,9 @@ export const TokenInput: FC<TokenInput> = ({
   }, []);
 
   const handleClickMax = useCallback(() => {
-    const val = balance?.[token.symbol].toHuman() ?? "";
+    const val = balance?.[token.address]?.toHuman() ?? "";
     handleAmountChange(val);
-  }, [balance, handleAmountChange, token.symbol]);
+  }, [balance, handleAmountChange, token.address]);
 
   if (loading) return <LoadingContainer width={width} data-trace="true" />;
 
@@ -110,7 +110,7 @@ export const TokenInput: FC<TokenInput> = ({
           inputRef={inputRef}
           allowNegative={allowNegative}
           canChangeValue={!!canChangeValue}
-          max={clamp ? balance?.[token.symbol] : undefined}
+          max={clamp ? balance?.[token.address] : undefined}
         />
         <TokenPicker
           token={token}
@@ -126,7 +126,7 @@ export const TokenInput: FC<TokenInput> = ({
         <BalanceRow>
           <Balance onClick={handleClickMax}>
             {balanceLabel}:{" "}
-            {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.symbol].toHuman("short")}
+            {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.address]?.toHuman("short")}
           </Balance>
         </BalanceRow>
       )}

@@ -13,13 +13,15 @@ import SelectDialog from './SelectDialog';
 import { useChartSetupData } from './useChartSetupData';
 import CalendarButton from './CalendarButton';
 
-type QueryData = {
-  time: Time,
-  value: number,
+export type ChartQueryData = {
+  time: Time;
+  value: number;
   customValues: {
-    season: number
+    season: number;
   };
 };
+
+type QueryData = ChartQueryData;
 
 const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
@@ -92,17 +94,20 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                           && timestamps.get(seasonData.season - 1) !== timestamps.get(seasonData.season)
                         ) {
                           const formattedTime = timestamps.get(seasonData.season);
+                          const dataFormatter = chartSetupData[chartId].dataFormatter;
+                          const _seasonData = dataFormatter ? dataFormatter(seasonData) : seasonData;
+
                           const formattedValue = chartSetupData[
                             chartId
                           ].valueFormatter(
-                            seasonData[chartSetupData[chartId].priceScaleKey]
+                            _seasonData[chartSetupData[chartId].priceScaleKey]
                           );
                           if (formattedTime > 0) {
-                            output[chartId][seasonData.season] = {
-                              time: formattedTime,
+                            output[chartId][_seasonData.season] = {
+                              time: formattedTime, 
                               value: formattedValue,
                               customValues: {
-                                season: seasonData.season
+                                season: _seasonData.season
                               }
                             };
                           };

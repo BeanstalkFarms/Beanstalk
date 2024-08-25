@@ -19,7 +19,6 @@ import {
   FormStateNew,
   FormTxnsFormState,
   SettingInput,
-  SettingSwitch,
   SmartSubmitButton,
   TxnSettings,
 } from '~/components/Common/Form';
@@ -66,7 +65,6 @@ import { AppState } from '~/state';
 type ConvertFormValues = FormStateNew & {
   settings: {
     slippage: number;
-    allowUnripeConvert: boolean;
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
@@ -78,15 +76,6 @@ type ConvertQuoteHandlerParams = {
 };
 
 // -----------------------------------------------------------------------
-
-const filterTokenList = (
-  fromToken: Token,
-  allowUnripeConvert: boolean,
-  list: Token[]
-): Token[] => {
-  if (allowUnripeConvert || !fromToken.isUnripe) return list;
-  return list.filter((token) => token.isUnripe);
-};
 
 const ConvertForm: FC<
   FormikProps<ConvertFormValues> & {
@@ -102,7 +91,7 @@ const ConvertForm: FC<
     plantAndDoX: ReturnType<typeof usePlantAndDoX>;
   }
 > = ({
-  tokenList: tokenListFull,
+  tokenList,
   siloBalances,
   handleQuote,
   plantAndDoX,
@@ -122,23 +111,6 @@ const ConvertForm: FC<
   const unripeTokens = useSelector<AppState, AppState['_bean']['unripe']>(
     (_state) => _state._bean.unripe
   );
-  const [tokenList, setTokenList] = useState(
-    filterTokenList(
-      values.tokens[0].token,
-      values.settings.allowUnripeConvert,
-      tokenListFull
-    )
-  );
-
-  useEffect(() => {
-    setTokenList(
-      filterTokenList(
-        values.tokens[0].token,
-        values.settings.allowUnripeConvert,
-        tokenListFull
-      )
-    );
-  }, [tokenListFull, values.settings.allowUnripeConvert, values.tokens]);
 
   const plantCrate = plantAndDoX?.crate?.bn;
 
@@ -222,12 +194,16 @@ const ConvertForm: FC<
   }
 
   useEffect(() => {
-    if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
-      setChoppingConfirmed(true);
+    if (isChopping) {
+      if (confirmText.toUpperCase() === 'CHOP MY ASSETS') {
+        setChoppingConfirmed(true);
+      } else {
+        setChoppingConfirmed(false);
+      }
     } else {
-      setChoppingConfirmed(false);
+      setChoppingConfirmed(true);
     }
-  }, [confirmText, setChoppingConfirmed]);
+  }, [isChopping, confirmText, setChoppingConfirmed]);
 
   function getBDVTooltip(instantBDV: BigNumber, depositBDV: BigNumber) {
     return (
@@ -243,6 +219,7 @@ const ConvertForm: FC<
   }
 
   function showOutputBDV() {
+    if (isChopping) return bdvOut || ZERO_BN;
     return MaxBN(depositsBDV || ZERO_BN, bdvOut || ZERO_BN);
   }
 
@@ -287,11 +264,10 @@ const ConvertForm: FC<
         const chopping =
           (tokenIn.address === sdk.tokens.UNRIPE_BEAN.address &&
             tokenOut?.address === sdk.tokens.BEAN.address) ||
-          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WETH.address &&
-            tokenOut?.address === sdk.tokens.BEAN_ETH_WELL_LP.address);
+          (tokenIn.address === sdk.tokens.UNRIPE_BEAN_WSTETH.address &&
+            tokenOut?.address === sdk.tokens.BEAN_WSTETH_WELL_LP.address);
 
         setIsChopping(chopping);
-        if (!chopping) setChoppingConfirmed(true);
       }
     })();
   }, [sdk, setFieldValue, tokenIn, tokenOut]);
@@ -497,9 +473,9 @@ const ConvertForm: FC<
             ) : null}
 
             {/* Add-on transactions */}
-            {!isUsingPlanted && 
+            {!isUsingPlanted && (
               <AdditionalTxnsAccordion filter={disabledFormActions} />
-            }
+            )}
 
             {/* Transation preview */}
             <Box>
@@ -588,11 +564,13 @@ const ConvertPropProvider: FC<{
 
   /// Token List
   const [tokenList, initialTokenOut] = useMemo(() => {
-    const { path } = ConvertFarmStep.getConversionPath(sdk, fromToken);
-    const _tokenList = [...path].filter((_token) => !_token.equals(fromToken));
+    // We don't support native token converts
+    if (fromToken instanceof NativeToken) return [[], undefined];
+    const paths = sdk.silo.siloConvert.getConversionPaths(fromToken);
+    const _tokenList = paths.filter((_token) => !_token.equals(fromToken));
     return [
       _tokenList, // all available tokens to convert to
-      _tokenList[0], // tokenOut is the first available token that isn't the fromToken
+      _tokenList?.[0], // tokenOut is the first available token that isn't the fromToken
     ];
   }, [sdk, fromToken]);
 
@@ -633,7 +611,6 @@ const ConvertPropProvider: FC<{
       // Settings
       settings: {
         slippage: 0.05,
-        allowUnripeConvert: false,
       },
       // Token Inputs
       tokens: [
@@ -766,7 +743,7 @@ const ConvertPropProvider: FC<{
 
           // Plant
           farm.add(new sdk.farm.actions.Plant());
-          
+
           // Withdraw Planted deposit crate
           farm.add(
             new sdk.farm.actions.WithdrawDeposit(
@@ -868,23 +845,18 @@ const ConvertPropProvider: FC<{
                 convertData.crates
               )
             );
-          };
+          }
 
           // Mow Grown Stalk
-          const tokensWithStalk: Map<Token, TokenValue> = new Map()
-          farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+          const tokensWithStalk: Map<Token, TokenValue> = new Map();
+          farmerSilo.stalk.grownByToken.forEach((value, token) => {
             if (value.gt(0)) {
               tokensWithStalk.set(token, value);
-            };
+            }
           });
           if (tokensWithStalk.size > 0) {
-            farm.add(
-              new sdk.farm.actions.Mow(
-                account,
-                tokensWithStalk
-              )
-            );
-          };
+            farm.add(new sdk.farm.actions.Mow(account, tokensWithStalk));
+          }
 
           const gasEstimate = await farm.estimateGas(earnedBeans, {
             slippage: slippage,
@@ -897,7 +869,6 @@ const ConvertPropProvider: FC<{
             { slippage: slippage },
             { gasLimit: adjustedGas }
           );
-
         }
 
         txToast.confirming(txn);
@@ -961,14 +932,6 @@ const ConvertPropProvider: FC<{
               label="Slippage Tolerance"
               endAdornment="%"
             />
-
-            {/* Only show the switch if we are on an an unripe silo's page */}
-            {fromToken.isUnripe && (
-              <SettingSwitch
-                name="settings.allowUnripeConvert"
-                label="Allow Converts to Ripe (Chop)"
-              />
-            )}
           </TxnSettings>
           <ConvertForm
             handleQuote={handleQuote}

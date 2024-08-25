@@ -43,7 +43,7 @@ describe("Workflow", () => {
         // Setup
         const farm = sdk.farm.create();
         farm.add([
-          sdk.farm.presets.bean2usdt(), // instanceof StepClass
+          sdk.farm.presets.usdt2weth(), // instanceof StepClass
           async () => "0xCALLDATA1", // instanceof StepFunction (returns EncodedData)
           async () => ({
             // instanceof StepFunction (returns Step<EncodedData>)
@@ -67,15 +67,19 @@ describe("Workflow", () => {
         // @ts-ignore testing private value
         expect(farm._steps.length).toBe(3); // haven't yet estimated, so no steps
         // @ts-ignore testing private value
-        expect(farm._steps[1].prepare(ethers.BigNumber.from(0))).toMatchObject({ callData: "0xCALLDATA1" });
+        expect(farm._steps[1].prepare(ethers.BigNumber.from(0))).toMatchObject({
+          callData: "0xCALLDATA1"
+        });
         // @ts-ignore testing private value
-        expect(farm._steps[2].prepare(ethers.BigNumber.from(0))).toMatchObject({ callData: "0xCALLDATA2" });
+        expect(farm._steps[2].prepare(ethers.BigNumber.from(0))).toMatchObject({
+          callData: "0xCALLDATA2"
+        });
       });
       it("recurses through nested arrays of StepGenerators", async () => {
         // Setup
         const farm = sdk.farm.create();
         farm.add([
-          sdk.farm.presets.bean2usdt(),
+          sdk.farm.presets.usdt2weth(),
           async () => "0xCALLDATA100000000000000000000000000000000000000",
           [
             async () => "0xCALLDATA200000000000000000000000000000000000000",
@@ -172,7 +176,9 @@ describe("Workflow", () => {
           const pipe = sdk.farm.createAdvancedPipe();
           farm.add(() => "0xTEST1", { tag: "test1" });
           farm.add(
-            pipe.add(() => ({ target: "", callData: "0xPIPE", clipboard: "" }), { tag: "insidePipe" }),
+            pipe.add(() => ({ target: "", callData: "0xPIPE", clipboard: "" }), {
+              tag: "insidePipe"
+            }),
             { tag: "pipe" }
           );
           farm.add(() => "0xBUFFER");

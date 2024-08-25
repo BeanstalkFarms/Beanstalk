@@ -94,7 +94,7 @@ const signRequisition = async (requisition, signer) => {
   domain = {
     name: "Tractor", // Hashed under the hood by ethers
     version: "1.0.0", // Hashed under the hood by ethers
-    chainId: 1,
+    chainId: 1337, // Hardhat chainId
     verifyingContract: BEANSTALK
   };
   types = {

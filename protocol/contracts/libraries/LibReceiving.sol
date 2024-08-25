@@ -70,8 +70,8 @@ library LibReceiving {
         s.sys.silo.stalk += (shipmentAmount * C.STALK_PER_BEAN);
 
         // SafeCast unnecessary here because of prior safe cast.
-        s.sys.silo.balances[C.BEAN].deposited += uint128(shipmentAmount);
-        s.sys.silo.balances[C.BEAN].depositedBdv += uint128(shipmentAmount);
+        s.sys.silo.balances[s.sys.tokens.bean].deposited += uint128(shipmentAmount);
+        s.sys.silo.balances[s.sys.tokens.bean].depositedBdv += uint128(shipmentAmount);
 
         // Confirm successful receipt.
         emit Receipt(ShipmentRecipient.SILO, shipmentAmount, abi.encode(""));

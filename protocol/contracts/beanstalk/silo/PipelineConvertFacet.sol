@@ -74,11 +74,11 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
     {
         // require that input and output tokens be wells (Unripe not supported)
         require(
-            LibWell.isWell(inputToken) || inputToken == C.BEAN,
+            LibWell.isWell(inputToken) || inputToken == s.sys.tokens.bean,
             "Convert: Input token must be Bean or a well"
         );
         require(
-            LibWell.isWell(outputToken) || outputToken == C.BEAN,
+            LibWell.isWell(outputToken) || outputToken == s.sys.tokens.bean,
             "Convert: Output token must be Bean or a well"
         );
 
@@ -93,7 +93,13 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
 
         // withdraw tokens from deposits and calculate the total grown stalk and bdv.
         uint256 grownStalk;
-        (grownStalk, fromBdv) = LibConvert._withdrawTokens(inputToken, stems, amounts, fromAmount);
+        (grownStalk, fromBdv) = LibConvert._withdrawTokens(
+            inputToken,
+            stems,
+            amounts,
+            fromAmount,
+            LibTractor._user()
+        );
 
         (toAmount, grownStalk, toBdv) = LibPipelineConvert.executePipelineConvert(
             inputToken,
@@ -104,7 +110,13 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
             advancedFarmCalls
         );
 
-        toStem = LibConvert._depositTokensForConvert(outputToken, toAmount, toBdv, grownStalk);
+        toStem = LibConvert._depositTokensForConvert(
+            outputToken,
+            toAmount,
+            toBdv,
+            grownStalk,
+            LibTractor._user()
+        );
 
         emit Convert(LibTractor._user(), inputToken, outputToken, fromAmount, toAmount);
     }

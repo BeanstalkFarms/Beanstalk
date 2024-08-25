@@ -18,7 +18,7 @@ import {DepotDeployer} from "test/foundry/utils/DepotDeployer.sol";
 import {OracleDeployer} from "test/foundry/utils/OracleDeployer.sol";
 import {FertilizerDeployer} from "test/foundry/utils/FertilizerDeployer.sol";
 import {ShipmentDeployer} from "test/foundry/utils/ShipmentDeployer.sol";
-import {LibWell, IWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
+import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
@@ -46,7 +46,7 @@ contract TestHelper is
 {
     Pipeline pipeline;
 
-    MockToken bean = MockToken(C.BEAN);
+    MockToken bean = MockToken(BEAN);
     MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // ideally, timestamp should be set to 1_000_000.
@@ -122,8 +122,8 @@ contract TestHelper is
         uint256 unripeLpAmount
     ) internal {
         // mint tokens to users.
-        mintTokensToUser(user, C.UNRIPE_BEAN, unripeBeanAmount);
-        mintTokensToUser(user, C.UNRIPE_LP, unripeLpAmount);
+        mintTokensToUser(user, UNRIPE_BEAN, unripeBeanAmount);
+        mintTokensToUser(user, UNRIPE_LP, unripeLpAmount);
     }
 
     /**
@@ -133,13 +133,13 @@ contract TestHelper is
      */
     function initMockTokens(bool verbose) internal {
         initERC20params[8] memory tokens = [
-            initERC20params(C.BEAN, "Bean", "BEAN", 6),
-            initERC20params(C.UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
-            initERC20params(C.UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
-            initERC20params(C.WETH, "Weth", "WETH", 18),
-            initERC20params(C.WSTETH, "wstETH", "WSTETH", 18),
-            initERC20params(C.USDC, "USDC", "USDC", 6),
-            initERC20params(C.USDT, "USDT", "USDT", 6),
+            initERC20params(BEAN, "Bean", "BEAN", 6),
+            initERC20params(UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
+            initERC20params(UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
+            initERC20params(WETH, "Weth", "WETH", 18),
+            initERC20params(WSTETH, "wstETH", "WSTETH", 18),
+            initERC20params(USDC, "USDC", "USDC", 6),
+            initERC20params(USDT, "USDT", "USDT", 6),
             initERC20params(WBTC, "WBTC", "WBTC", 8)
         ];
 
@@ -151,7 +151,7 @@ contract TestHelper is
 
             string memory mock = "MockToken.sol";
             // unique ERC20s should be appended here.
-            if (token == C.WETH) {
+            if (token == WETH) {
                 mock = "MockWETH.sol";
             }
             deployCodeTo(mock, abi.encode(name, symbol), token);
@@ -167,7 +167,7 @@ contract TestHelper is
     function maxApproveBeanstalk(address[] memory users) public {
         for (uint i; i < users.length; i++) {
             vm.prank(users[i]);
-            C.bean().approve(BEANSTALK, type(uint256).max);
+            bean.approve(BEANSTALK, type(uint256).max);
         }
     }
 
@@ -208,10 +208,10 @@ contract TestHelper is
         uint256 beanAmount,
         uint256 nonBeanTokenAmount
     ) internal returns (uint256 lpOut) {
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        (address nonBeanToken, ) = bs.getNonBeanTokenAndIndexFromWell(well);
 
         // mint and sync.
-        MockToken(C.BEAN).mint(well, beanAmount);
+        MockToken(BEAN).mint(well, beanAmount);
         MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
 
         lpOut = IWell(well).sync(user, 0);
@@ -234,7 +234,7 @@ contract TestHelper is
         IERC20[] memory tokens = new IERC20[](2);
         tokens = IWell(well).tokens();
         reserves = IWell(well).getReserves();
-        uint256 beanIndex = LibWell.getBeanIndex(tokens);
+        uint256 beanIndex = bs.getBeanIndex(tokens);
         uint256 tknIndex = beanIndex == 1 ? 0 : 1;
 
         uint256[] memory removedTokens = new uint256[](2);
@@ -260,7 +260,7 @@ contract TestHelper is
 
         // mint amount to add to well, call sync.
         if (reserves[beanIndex] < beanAmount) {
-            C.bean().mint(well, beanAmount - reserves[beanIndex]);
+            bean.mint(well, beanAmount - reserves[beanIndex]);
         }
         if (reserves[tknIndex] < nonBeanTokenAmount) {
             MockToken(address(tokens[tknIndex])).mint(
@@ -320,7 +320,7 @@ contract TestHelper is
         address well,
         uint256 amount
     ) internal returns (uint256 lpAmountOut, address tokenInWell) {
-        (tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        (tokenInWell, ) = bs.getNonBeanTokenAndIndexFromWell(well);
         uint256 beanAmount = (amount * 1e6) / bs.getUsdTokenPrice(tokenInWell);
         lpAmountOut = addLiquidityToWell(user, well, beanAmount, amount);
     }
@@ -339,9 +339,9 @@ contract TestHelper is
         for (uint i; i < lp.length; i++) {
             // oracles will need to be added here,
             // as obtaining the chainlink oracle to well is not feasible on chain.
-            if (lp[i] == C.BEAN_ETH_WELL) {
+            if (lp[i] == BEAN_ETH_WELL) {
                 chainlinkOracle = chainlinkOracles[0];
-            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
+            } else if (lp[i] == BEAN_WSTETH_WELL) {
                 chainlinkOracle = chainlinkOracles[1];
             }
             updateChainlinkOracleWithPreviousData(chainlinkOracle);
@@ -354,9 +354,9 @@ contract TestHelper is
         for (uint i; i < lp.length; i++) {
             // oracles will need to be added here,
             // as obtaining the chainlink oracle to well is not feasible on chain.
-            if (lp[i] == C.BEAN_ETH_WELL) {
+            if (lp[i] == BEAN_ETH_WELL) {
                 chainlinkOracle = chainlinkOracles[0];
-            } else if (lp[i] == C.BEAN_WSTETH_WELL) {
+            } else if (lp[i] == BEAN_WSTETH_WELL) {
                 chainlinkOracle = chainlinkOracles[1];
             }
             updateChainlinkOracleWithPreviousData(chainlinkOracle);
@@ -372,7 +372,7 @@ contract TestHelper is
             // unix time is used to generate an unique deltaB upon every test.
             int256 deltaB = int256(uint256(keccak256(abi.encode(entropy, i, vm.unixTime()))));
             deltaB = bound(deltaB, -1000e6, 1000e6);
-            (address tokenInWell, ) = LibWell.getNonBeanTokenAndIndexFromWell(lps[i]);
+            (address tokenInWell, ) = bs.getNonBeanTokenAndIndexFromWell(lps[i]);
             setDeltaBforWell(deltaB, lps[i], tokenInWell);
             deltaBPerWell[i] = deltaB;
         }
@@ -392,18 +392,14 @@ contract TestHelper is
         int256 deltaBdiff = deltaB - initialDeltaB;
 
         if (deltaBdiff > 0) {
-            uint256 tokenAmountIn = well.getSwapIn(
-                IERC20(tokenInWell),
-                C.bean(),
-                uint256(deltaBdiff)
-            );
+            uint256 tokenAmountIn = well.getSwapIn(IERC20(tokenInWell), bean, uint256(deltaBdiff));
             MockToken(tokenInWell).mint(wellAddress, tokenAmountIn);
-            tokenOut = C.bean();
+            tokenOut = bean;
         } else {
-            C.bean().mint(wellAddress, uint256(-deltaBdiff));
+            bean.mint(wellAddress, uint256(-deltaBdiff));
             tokenOut = IERC20(tokenInWell);
         }
-        uint256 amountOut = well.shift(tokenOut, 0, users[1]);
+        well.shift(tokenOut, 0, users[1]);
         well.shift(tokenOut, 0, users[1]);
     }
 
@@ -415,21 +411,21 @@ contract TestHelper is
      * is unitless per dollar. ERC1155 is NOT issued here.
      */
     function addFertilizerBasedOnSprouts(
-        uint128 season,
+        uint128 _season,
         uint256 sprouts
     ) public returns (uint256, uint256) {
         // calculate the amount of fertilizer needed to be issued.
         // note: fertilizer rounds down.
-        uint256 humidity = bs.getHumidity(season);
+        uint256 humidity = bs.getHumidity(_season);
         uint256 fertOut = sprouts / ((1000 + humidity) / 1000);
         // calculate the amount of the barnRaiseToken needed to equal usdAmount.
         uint256 tokenAmount = fertOut * bs.getUsdTokenPrice(bs.getBarnRaiseToken());
 
         // add fertilizer.
-        mockAddFertilizer(season, uint128(tokenAmount));
+        mockAddFertilizer(_season, uint128(tokenAmount));
 
         // return the amount of sprouts minted.
-        return (fertOut * (1000 + bs.getHumidity(season)) * 1000, fertOut);
+        return (fertOut * (1000 + bs.getHumidity(_season)) * 1000, fertOut);
     }
 
     /**
@@ -437,13 +433,13 @@ contract TestHelper is
      * @dev 'season' determine the interest rate and id of the fertilizer.
      * {see. LibFertilizer.addFertilizer}
      */
-    function mockAddFertilizer(uint128 season, uint128 tokenAmountIn) internal {
+    function mockAddFertilizer(uint128 _season, uint128 tokenAmountIn) internal {
         // mint tokens to user.
         address barnRaiseToken = bs.getBarnRaiseToken();
         mintTokensToUser(address(this), barnRaiseToken, tokenAmountIn);
         // add fertilizer.
         if (tokenAmountIn > 0) {
-            bs.addFertilizer(season, tokenAmountIn, 0);
+            bs.addFertilizer(_season, tokenAmountIn, 0);
         }
     }
 
@@ -477,7 +473,7 @@ contract TestHelper is
             );
     }
 
-    function rand(uint256 lowerBound, uint256 upperBound) internal returns (uint256 rand) {
+    function rand(uint256 lowerBound, uint256 upperBound) internal returns (uint256) {
         return bound(uint256(keccak256(abi.encode(vm.unixTime()))), lowerBound, upperBound);
     }
 
@@ -489,7 +485,7 @@ contract TestHelper is
         uint256 lowerBound,
         uint256 upperBound,
         bytes memory salt
-    ) internal returns (uint256 rand) {
+    ) internal returns (uint256) {
         return bound(uint256(keccak256(abi.encode(vm.unixTime(), salt))), lowerBound, upperBound);
     }
 
@@ -514,8 +510,8 @@ contract TestHelper is
     ) public returns (uint256 _amount, int96 stem) {
         _amount = bound(amount, 1, MAX_DEPOSIT_BOUND);
 
-        depositForUsers(_farmers, C.BEAN, _amount, LibTransfer.From.EXTERNAL);
-        stem = bs.stemTipForToken(C.BEAN);
+        depositForUsers(_farmers, BEAN, _amount, LibTransfer.From.EXTERNAL);
+        stem = bs.stemTipForToken(BEAN);
     }
 
     /**
@@ -544,7 +540,7 @@ contract TestHelper is
      */
     function sowAmountForFarmer(address farmer, uint256 sowAmount) internal {
         bs.setSoilE(sowAmount);
-        mintTokensToUser(farmer, C.BEAN, sowAmount);
+        mintTokensToUser(farmer, BEAN, sowAmount);
         vm.prank(farmer);
         bs.sow(sowAmount, 0, uint8(LibTransfer.From.EXTERNAL));
     }

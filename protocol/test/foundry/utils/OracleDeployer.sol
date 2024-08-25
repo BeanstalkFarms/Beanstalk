@@ -5,7 +5,6 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import {Utils, console} from "test/foundry/utils/Utils.sol";
-import {C} from "contracts/C.sol";
 
 ///////// MOCKS ////////
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
@@ -31,6 +30,14 @@ contract OracleDeployer is Utils {
     address constant WBTC_USD_CHAINLINK_PRICE_AGGREGATOR =
         address(0xd0C7101eACbB49F3deCcCc166d238410D6D46d57);
 
+    address constant ETH_USD_CHAINLINK_PRICE_AGGREGATOR =
+        0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address constant WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR =
+        0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
+
+    //////// UNISWAP ORACLES ////////
+    address internal constant WSTETH_ETH_UNIV3_01_POOL = 0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa; // 0.01% pool
+
     // timeout for Oracles with a 1 hour heartbeat.
     uint256 constant FOUR_HOUR_TIMEOUT = 14400;
     // timeout for Oracles with a 1 day heartbeat.
@@ -38,8 +45,8 @@ contract OracleDeployer is Utils {
 
     // new chainlink oracles should be added here.
     address[] public chainlinkOracles = [
-        C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
-        C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+        ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+        WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
         USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
         WBTC_USD_CHAINLINK_PRICE_AGGREGATOR
     ];
@@ -60,12 +67,15 @@ contract OracleDeployer is Utils {
 
     // new uniswap pools should be appended here.
     address[][] public pools = [
-        [C.WSTETH_ETH_UNIV3_01_POOL, C.WSTETH, C.WETH], // wstETH/ETH
-        [WBTC_USDC_03_POOL, WBTC, C.USDC] // WBTC/USDC
+        [WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH], // wstETH/ETH
+        [WBTC_USDC_03_POOL, WBTC, USDC] // WBTC/USDC
     ];
 
     // oracles must be initalized at some price. Assumes index matching with pools.
     uint256[][] public priceData = [[uint256(1e18), 18], [uint256(500e6), 8]];
+
+    // new custom oracle implmenetations should be added here.
+    address lsdChainlinkOracle; // LSD Chainlink Oracle
 
     /**
      * @notice initializes chainlink oracles.
@@ -73,8 +83,8 @@ contract OracleDeployer is Utils {
      */
     function initChainlink(bool verbose) internal {
         // optional labels to assist in testing.
-        vm.label(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
-        vm.label(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
+        vm.label(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, "CL ETH/USD");
+        vm.label(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR, "CL WstETH/ETH");
         vm.label(0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6, "CL USDC/USD");
         vm.label(0x3E7d1eAB13ad0104d2750B8863b489D65364e32D, "CL USDT/USD");
         vm.label(WBTC_USD_CHAINLINK_PRICE_AGGREGATOR, "CL WBTC/USD");
@@ -127,7 +137,7 @@ contract OracleDeployer is Utils {
      * @notice initializes uniswap pools for testing.
      */
     function initUniswapPools(bool verbose) internal {
-        vm.label(C.WSTETH_ETH_UNIV3_01_POOL, "UNI WSTETH_ETH_UNIV3_01");
+        vm.label(WSTETH_ETH_UNIV3_01_POOL, "UNI WSTETH_ETH_UNIV3_01");
         vm.label(WBTC_USDC_03_POOL, "UNI WBTC_USDC_03_POOL");
 
         MockUniswapV3Factory uniFactory = MockUniswapV3Factory(new MockUniswapV3Factory());
@@ -162,17 +172,30 @@ contract OracleDeployer is Utils {
     }
 
     function initWhitelistOracles(bool verbose) internal {
+        // deploy LSD Chainlink Oracle
+        lsdChainlinkOracle = address(new LSDChainlinkOracle());
+        vm.label(lsdChainlinkOracle, "LSD Chainlink Oracle");
+        // new custom oracles should be added here.
+
         // init ETH:USD oracle
         updateOracleImplementationForTokenUsingChainlinkAggregator(
-            C.WETH,
-            C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR
+            WETH,
+            ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
+            verbose
         );
-        setupWstethOracleImplementation();
+
+        // init wsteth oracle.
+        setupLSDChainlinkOracleForToken(
+            WSTETH,
+            WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+            FOUR_HOUR_TIMEOUT
+        );
     }
 
     function updateOracleImplementationForTokenUsingChainlinkAggregator(
         address token,
-        address oracleAddress
+        address oracleAddress,
+        bool verbose
     ) internal {
         IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
             oracleAddress,
@@ -184,32 +207,30 @@ contract OracleDeployer is Utils {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(token, oracleImplementation);
 
-        console.log("Updated oracle implementation for token: ", token, " to: ", oracleAddress);
+        if (verbose)
+            console.log("Updated oracle implementation for token: ", token, " to: ", oracleAddress);
     }
 
-    function setupWstethOracleImplementation() internal {
-        // deploy new staking eth oracle contract
-        address oracleAddress = address(new LSDChainlinkOracle());
-
-        address _ethChainlinkOracle = C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
+    function setupLSDChainlinkOracleForToken(
+        address token,
+        address tokenChainlinkOracle,
+        uint256 tokenTimeout
+    ) internal {
+        address _ethChainlinkOracle = ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
         uint256 _ethTimeout = 3600 * 4;
-        address _xEthChainlinkOracle = C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR;
-        uint256 _xEthTimeout = 3600 * 4;
-        address _token = C.WSTETH;
-
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            _token,
+            token,
             IMockFBeanstalk.Implementation(
-                oracleAddress,
+                lsdChainlinkOracle,
                 LSDChainlinkOracle.getPrice.selector,
                 bytes1(0x00),
                 abi.encode(
                     _ethChainlinkOracle,
                     _ethTimeout,
-                    _xEthChainlinkOracle,
-                    _xEthTimeout,
-                    _token
+                    tokenChainlinkOracle,
+                    tokenTimeout,
+                    token
                 )
             )
         );

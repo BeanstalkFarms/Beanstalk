@@ -4,6 +4,10 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {MockPump} from "contracts/mocks/well/MockPump.sol";
+import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
@@ -25,7 +29,7 @@ contract SunTest is TestHelper {
      */
     function test_sunOnlySilo(int256 deltaB, uint256 caseId) public {
         uint32 currentSeason = bs.season();
-        uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
+        uint256 initialBeanBalance = bean.balanceOf(BEANSTALK);
         uint256 initalPods = bs.totalUnharvestable(0);
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
@@ -54,13 +58,13 @@ contract SunTest is TestHelper {
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) no pods should be paid off.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(bean.balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
         }
         // if deltaB is negative, soil is issued equal to deltaB.
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                initialBeanBalance - bean.balanceOf(BEANSTALK),
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -83,7 +87,7 @@ contract SunTest is TestHelper {
         setRoutes_siloAndFields();
 
         uint32 currentSeason = bs.season();
-        uint256 initialBeanBalance = C.bean().balanceOf(BEANSTALK);
+        uint256 initialBeanBalance = bean.balanceOf(BEANSTALK);
         // cases can only range between 0 and 143.
         caseId = bound(caseId, 0, 143);
         // deltaB cannot exceed uint128 max.
@@ -116,7 +120,7 @@ contract SunTest is TestHelper {
         // needed to equal the newly paid off pods (scaled up or down).
         // 3) totalunharvestable() should decrease by the amount issued to the field.
         if (deltaB >= 0) {
-            assertEq(C.bean().balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
+            assertEq(bean.balanceOf(BEANSTALK), uint256(deltaB), "invalid bean minted +deltaB");
             assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
             assertEq(
                 bs.totalUnharvestable(0),
@@ -128,7 +132,7 @@ contract SunTest is TestHelper {
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                initialBeanBalance - C.bean().balanceOf(BEANSTALK),
+                initialBeanBalance - bean.balanceOf(BEANSTALK),
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -174,7 +178,7 @@ contract SunTest is TestHelper {
         assertEq(sproutsInBarn, bs.totalUnfertilizedBeans(), "invalid sprouts in barn");
 
         // bean supply may change due to fert issuance, and initial supply is placed here.
-        uint256 beansInBeanstalk = C.bean().balanceOf(BEANSTALK);
+        uint256 beansInBeanstalk = bean.balanceOf(BEANSTALK);
 
         int256 initialLeftoverBeans = int256(bs.leftoverBeans());
 
@@ -191,7 +195,7 @@ contract SunTest is TestHelper {
         // 4) totalUnfertilizedBeans() should decrease by the amount issued to the barn.
         if (deltaB >= 0) {
             assertEq(
-                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                bean.balanceOf(BEANSTALK) - beansInBeanstalk,
                 uint256(deltaB),
                 "invalid bean minted +deltaB"
             );
@@ -229,7 +233,7 @@ contract SunTest is TestHelper {
         // no beans should be minted.
         if (deltaB <= 0) {
             assertEq(
-                C.bean().balanceOf(BEANSTALK) - beansInBeanstalk,
+                bean.balanceOf(BEANSTALK) - beansInBeanstalk,
                 0,
                 "invalid bean minted -deltaB"
             );
@@ -301,7 +305,7 @@ contract SunTest is TestHelper {
 
             // May change at each sunrise.
             uint256 priorEarnedBeans = bs.totalEarnedBeans();
-            uint256 priorBeansInBeanstalk = C.bean().balanceOf(BEANSTALK);
+            uint256 priorBeansInBeanstalk = bean.balanceOf(BEANSTALK);
             uint256 priorUnfertilizedBeans = bs.totalUnfertilizedBeans();
             uint256 priorLeftoverBeans = bs.leftoverBeans();
 
@@ -320,7 +324,7 @@ contract SunTest is TestHelper {
             // 4) totalUnfertilizedBeans() should decrease by the amount issued to the barn.
             if (deltaB >= 0) {
                 assertEq(
-                    C.bean().balanceOf(BEANSTALK) - priorBeansInBeanstalk,
+                    bean.balanceOf(BEANSTALK) - priorBeansInBeanstalk,
                     uint256(deltaB),
                     "invalid bean minted +deltaB"
                 );
@@ -397,7 +401,7 @@ contract SunTest is TestHelper {
             // no beans should be minted.
             if (deltaB <= 0) {
                 assertEq(
-                    C.bean().balanceOf(BEANSTALK) - priorBeansInBeanstalk,
+                    bean.balanceOf(BEANSTALK) - priorBeansInBeanstalk,
                     0,
                     "invalid bean minted -deltaB"
                 );
@@ -413,6 +417,32 @@ contract SunTest is TestHelper {
                 assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
             }
         }
+    }
+
+    function test_soilBelowPeg() public {
+        // set inst reserves (instDeltaB: -1999936754446796632414)
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 1000e18, 1000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 1000e18, 1000e18);
+        int256 twaDeltaB = -1000;
+        uint32 currentSeason = bs.season();
+        vm.expectEmit();
+        // expect the minimum of the -twaDeltaB and -instDeltaB to be used.
+        emit Soil(currentSeason + 1, 1000);
+        season.sunSunrise(twaDeltaB, 1);
+        assertEq(bs.totalSoil(), 1000);
+    }
+
+    function test_soilBelowPegInstGtZero() public {
+        // set inst reserves (instDeltaB: +415127766016)
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 10000e6, 10000000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 100000e6, 10000000e18);
+        int256 twaDeltaB = -1000;
+        uint32 currentSeason = bs.season();
+        vm.expectEmit();
+        // expect the twaDeltaB to be used.
+        emit Soil(currentSeason + 1, 1000);
+        season.sunSunrise(twaDeltaB, 1);
+        assertEq(bs.totalSoil(), 1000);
     }
 
     ////// HELPER FUNCTIONS //////
@@ -442,6 +472,18 @@ contract SunTest is TestHelper {
             soilIssued = (soilIssued * 0.5e18) / 1e18; // high podrate
         } else if (caseId % 36 < 8) {
             soilIssued = (soilIssued * 1.5e18) / 1e18; // low podrate
+        }
+    }
+
+    function setInstantaneousReserves(address well, uint256 reserve0, uint256 reserve1) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint256 i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            // pass to the pump the reserves that we actually have in the well
+            uint256[] memory reserves = new uint256[](2);
+            reserves[0] = reserve0;
+            reserves[1] = reserve1;
+            MockPump(pump).setInstantaneousReserves(well, reserves);
         }
     }
 }

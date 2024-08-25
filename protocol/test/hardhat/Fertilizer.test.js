@@ -18,6 +18,7 @@ const { deployBasinV1_1 } = require("../../scripts/basinV1_1.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 const { impersonateBeanWstethWell } = require("../../utils/well.js");
 const { upgradeWithNewFacets } = require("../../scripts/diamond.js");
+const axios = require('axios')
 
 let user, user2, owner, fert;
 
@@ -44,7 +45,7 @@ describe("Fertilize", function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -980,5 +981,128 @@ describe("Fertilize", function () {
         expect(b[3]).to.be.equal("150");
       });
     });
-  });
-});
+
+    describe("1 mint with uri", async function () {
+
+      let mintReceipt;
+
+      beforeEach(async function () {
+
+        // Humidity 25000  
+        await mockBeanstalk.teleportSunrise("6074");
+
+        // getFertilizers returns array with [fertid, supply] values
+        // before mint 2500000,100 so only 1 fert has been minted before this test
+
+        // Maths:
+        // uint128 current season bpf = Humidity + 1000 * 1,000 // so 2500 + 1000 * 1,000 = 3500000 correct
+        // uint128 endBpf = totalbpf (s.bpf) + current season bpf; // so 0 + 3500000 = 3500000 correct
+        // uint128 bpfRemaining = id - s.bpf; // so 3500000 - 0 = 3500000
+        // uint128 fertilizer id = current season bpf + totalbpf  // so 3500000 + 0 = 3500000 correct
+        // uint128 s.bpf // 0
+        // Humidity // 2500
+
+        // Svg choice:
+        // If Fertilizer is not sold yet (fertilizer[id] == getFertilizer(id) == default == 0), it’s Available.
+        // If Fertilizer still has Sprouts (is owed Bean mints), it’s Active. bpfRemaining > 0
+        // If Fertilizer has no more Sprouts (is done earning Bean mints), it’s Used. bpfRemaining = 0
+
+        // mint fert with id 3500000 and supply 50
+        mintTx = await mockBeanstalk.connect(user).mintFertilizer(to18('0.05'), '0', '0')
+        mintReceipt = await mintTx.wait();
+      });
+
+      // Available fert test
+      it("returns an available fertilizer svg and stats when supply (fertilizer[id]) is 0", async function () {
+
+        // Manipulate bpf to 2000000
+        // new bpfremaining for id 350001 = 3500001 - 2000000 = 1500001
+        await mockBeanstalk.setBpf(2000000);
+
+        // This returns an available image of fert
+        const availableDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MSAyOC42MjUgNDA1Ljc2OGwtLjg3OC0yMjEuNTUxIDEzNS44NDktNzguNTU5Ljg3NCAyMjEuNTgzWiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Im0xMTguMDU5IDM1NC4wNzctNDEuMTAyIDIzLjc0Ni0uODc0LTIyMS41NTEgNDEuMTAxLTIzLjc3OC44NzUgMjIxLjU4M1oiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJtMjYuODI1IDE4NC4yNDIuODcgMjIxLjU2NyA5My4zNjcgNTQuMzM5LS44NzEtMjIxLjU2NC05My4zNjYtNTQuMzQyWm0xMzYuNDMyLTc4LjI2Mi44NzEgMjIxLjU2OCA5My4zNjcgNTQuMzM4LS44NzEtMjIxLjU2NC05My4zNjctNTQuMzQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Ik03Ni42MzQgMTYyLjkxNSAyMTIgODQuMTMzbDQ0LjAzNCA3NS45MDktMTM1Ljg0MiA3OC41NDQtNDMuNTU3LTc1LjY3MVoiIGZpbGw9IiM4MUQ2NzIiLz48cGF0aCBkPSJtMTI0Ljk2NiAxMzQuOTcgNDAuNjI0LTI0LjAwMSA0NC4wMzEgNzUuOTA2LTQxLjA5OCAyMy43NjUtNDMuNTU3LTc1LjY3WiIgZmlsbD0iIzQ2Qjk1NSIvPjxwYXRoIGQ9Im0yMTIuMTI1IDQ3LjkxOC0uMTE2IDM2LjIyOC0xMzUuMzk0IDc4Ljc2Ni4xMTYtMzYuMTdjMC0yLjAzMi0xLjM5LTQuNDEzLTMuMTMtNS40NTctLjg3LS41MjMtMS42OC0uNTIzLTIuMjYxLS4yMzNsMTM1LjM5NC03OC43NjZjLjU4LS4zNDkgMS4zMzItLjI5IDIuMjAzLjIzMyAxLjczNi45ODkgMy4xODggMy40MjUgMy4xODggNS40WiIgZmlsbD0iIzZEQ0I2MCIvPjxwYXRoIGQ9Im0xNjUuNzEzIDc0Ljc1Mi0uMTE2IDM2LjIyOC00MC42NSAyMy45ODguMTE2LTM2LjE3YzAtMi4wMzItMS4zOS00LjQxMy0zLjEyOS01LjQ1Ny0uODcyLS41MjMtMS42ODEtLjUyMy0yLjI2Mi0uMjMybDQwLjY1LTIzLjk4OWMuNTgtLjM0OSAxLjMzMi0uMjkgMi4yMDMuMjMzIDEuNzM5Ljk4NiAzLjE4OCAzLjQyNSAzLjE4OCA1LjRaIiBmaWxsPSIjNDJBODRDIi8+PHBhdGggZD0iTTczLjU3OSAxMjEuMjk4YzEuNzM5IDEuMDA1IDMuMTYyIDMuNDIyIDMuMTU5IDUuNDI1bC0uMTA0IDM2LjE5MyA0My41NTcgNzUuNjY3LTkzLjM2Ni01NC4zMzkgNDMuNTIxLTI1LjAxOC4xMDMtMzYuMTQxYy4wMDQtMiAxLjM5LTIuNzk1IDMuMTMtMS43ODdaIiBmaWxsPSIjMkM5QTJDIi8+PHBhdGggZD0iTTEwNy44NzkgMjI2Ljc2NiAzNi42MiAxODUuNTY1bDM1Ljc0Mi0yMC4zOTUgMTEuNDI4IDE5Ljc5NCAyNC4wODkgNDEuODAyWiIgZmlsbD0iIzZEQ0I2MCIvPjxwYXRoIGQ9Im04MS4zNDggMTgwLjczMS00NC43MjggNC44MzQgMzUuNzQyLTIwLjM5NSA4Ljk4NiAxNS41NjFaIiBmaWxsPSIjODFENjcyIi8+ICA8cGF0aCBkPSJNOTUuNDkzIDIwOS4yMzdjLTkuNDQ3IDIuOTY2LTE3Ljg0NSAxMC42MzctMjEuNjIgMjEuNTUyLS40OTcgMS41ODktMi42NzggMS41ODktMy4yNzIgMC0zLjI3Mi0xMC4yMy0xMS40MDUtMTguMjc2LTIxLjUyLTIxLjU1Mi0xLjc4NC0uNTk4LTEuNzg0LTIuNzgyIDAtMy4zNzcgMTAuMTE1LTMuMzEyIDE4LjE3NC0xMS41MDYgMjEuNTItMjEuNTUyLjU5NC0xLjY4OSAyLjc3OC0xLjY4OSAzLjI3MiAwIDMuNzY4IDEwLjY4OSAxMS41NjMgMTguMTk1IDIxLjYyIDIxLjU1MiAxLjY4Ny41OTUgMS42ODcgMi43NzkgMCAzLjM3N1oiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJtMjU2Ljg5OCAzODEuNjA5LTEzNS44NDYgNzguNTI3LS44NzctMjIxLjU1MSAxMzUuODQ5LTc4LjU2Ljg3NCAyMjEuNTg0WiIgZmlsbD0iIzZEQ0I2MCIvPjxwYXRoIGQ9Im0yMTAuNDg2IDQwOC40NDUtNDEuMTAxIDIzLjc0NS0uODc1LTIyMS41NTEgNDEuMTAyLTIzLjc3OC44NzQgMjIxLjU4NFoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJtMjQwLjkwMSAzNjQuOTQ5LTEwNC40MDcgNjAuMzg3LS4zMjMtMTU3LjQ3NyAxMDQuNDA4LTYwLjM1MS4zMjIgMTU3LjQ0MVoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTk1Ljc4OSAyNjguMDI1YzIzLjEzNy02LjcxNCAzNi44NzUgMTAuNjMxIDMyLjMwNiAzNS4yMzMtNC4wMiAyMS42NTItMjEuMzUyIDQyLjg0NS0zOS43NjkgNDkuODIxLTE5LjE3MSA3LjI2LTM1LjcxNy0yLjI2OC0zNi4yOTctMjMuOTY2LS42NjUtMjQuOTIyIDE5LjQxMy01NC4wMjEgNDMuNzYtNjEuMDg4WiIgZmlsbD0iIzQ2Qjk1NSIvPjxwYXRoIGQ9Im0yMDYuNDE3IDI3NS42MTUtMjguMDggNzMuNTc3cy0yNC41NjktMzUuMzk3IDI4LjA4LTczLjU3N1ptLTIzLjAyNyA2OC4zNjIgMTkuNTYxLTUwLjkxNnMyMy44MzEgMTcuMTg5LTE5LjU2MSA1MC45MTZaIiBmaWxsPSIjZmZmIi8+PHRleHQgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIHg9IjIwIiB5PSI0OTAiIGZpbGw9ImJsYWNrIiA+PHRzcGFuIGR5PSIwIiB4PSIyMCI+MS41MCBCUEYgUmVtYWluaW5nIDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg=="
+
+        const availabletokenId = 3500001; // non minted fert id
+        const uri = await this.fert.uri(availabletokenId);
+
+        const response = await axios.get(uri);
+        jsonResponse = JSON.parse(response.data.toString());
+
+        // id and image check
+        expect(jsonResponse.name).to.be.equal(`Fertilizer - ${availabletokenId}`);
+        expect(jsonResponse.image).to.be.equal(availableDataImage);
+
+        // BPF Remaining json attribute check
+        expect(jsonResponse.attributes[0].trait_type).to.be.equal(`BPF Remaining`);
+        expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`1.5`);
+      });
+
+      // Active fert test
+      it("returns an active fertilizer svg and stats when bpfRemaining > 0 and fert supply > 0", async function () {
+
+        // Manipulate bpf to 5000000
+        await mockBeanstalk.setBpf(2000000);
+
+        // uint128 endBpf = totalbpf (s.bpf) + current season bpf;
+        // So endbpf = 5000000 + 3500000 = 8500000
+        // bpfRemaining = id - s.bpf; // so 3500000 - 2000000 = 1500000
+        // so bpfRemaining > 0 --> and fertsupply = 50 --> Active
+        // s.bpf = bpfremaining + id
+
+        // This returns a active image of fert
+        const activeDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MSAyOC42MjUgNDA1Ljc2OGwtLjg3OC0yMjEuNTUxIDEzNS44NDktNzguNTU5Ljg3NCAyMjEuNTgzWiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Im0xMTguMDU5IDM1NC4wNzctNDEuMTAyIDIzLjc0Ni0uODc0LTIyMS41NTEgNDEuMTAxLTIzLjc3OC44NzUgMjIxLjU4M1oiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJtMjYuODI1IDE4NC4yNDIuODcgMjIxLjU2NyA5My4zNjcgNTQuMzM5LS44NzEtMjIxLjU2NC05My4zNjYtNTQuMzQyWm0xMzYuNDMyLTc4LjI2Mi44NzEgMjIxLjU2OCA5My4zNjcgNTQuMzM4LS44NzEtMjIxLjU2NC05My4zNjctNTQuMzQyWiIgZmlsbD0iIzNEQjU0MiIvPjxlbGxpcHNlIGN4PSIxMTMuMjQ3IiBjeT0iMjIwLjY4OCIgcng9IjM4LjcxNyIgcnk9IjM4Ljc3NCIgZmlsbD0iIzdGNTUzMyIvPjxlbGxpcHNlIGN4PSIxMTMuMjQ3IiBjeT0iMjIwLjY4OCIgcng9IjM4LjcxNyIgcnk9IjM4Ljc3NCIgZmlsbD0iIzdGNTUzMyIvPjxlbGxpcHNlIGN4PSI3MC4wMTMiIGN5PSIyMzYuODQ0IiByeD0iMzguNzE3IiByeT0iMzguNzc0IiBmaWxsPSIjN0Y1NTMzIi8+PHBhdGggZD0ibTI2LjgyNSAxODQuMjQyLjg3IDIyMS41NjcgOTMuMzY3IDU0LjMzOS0uODcxLTIyMS41NjQtOTMuMzY2LTU0LjM0MlptMTM2LjQzMi03OC4yNjIuODcxIDIyMS41NjggOTMuMzY3IDU0LjMzOC0uODcxLTIyMS41NjQtOTMuMzY3LTU0LjM0MloiIGZpbGw9IiMzREI1NDIiLz48ZWxsaXBzZSBjeD0iMTU2LjgwNSIgY3k9IjE5OC43MTUiIHJ4PSIzOC43MTciIHJ5PSIzOC43NzQiIGZpbGw9IiM3RjU1MzMiLz48ZWxsaXBzZSBjeD0iMTk4LjEwMyIgY3k9IjE4OS42NjgiIHJ4PSIzOC43MTciIHJ5PSIzOC43NzQiIGZpbGw9IiM3RjU1MzMiLz48cGF0aCBkPSJtMjU2Ljg5OCAzODEuNjA5LTEzNS44NDYgNzguNTI3LS44NzctMjIxLjU1MSAxMzUuODQ5LTc4LjU2Ljg3NCAyMjEuNTg0WiIgZmlsbD0iIzZEQ0I2MCIvPjxwYXRoIGQ9Im0yMTAuNDg2IDQwOC40NDUtNDEuMTAxIDIzLjc0NS0uODc1LTIyMS41NTEgNDEuMTAyLTIzLjc3OC44NzQgMjIxLjU4NFoiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJtMjQwLjkwMSAzNjQuOTQ5LTEwNC40MDcgNjAuMzg3LS4zMjMtMTU3LjQ3NyAxMDQuNDA4LTYwLjM1MS4zMjIgMTU3LjQ0MVoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMTk1Ljc4OSAyNjguMDI1YzIzLjEzNy02LjcxNCAzNi44NzUgMTAuNjMxIDMyLjMwNiAzNS4yMzMtNC4wMiAyMS42NTItMjEuMzUyIDQyLjg0NS0zOS43NjkgNDkuODIxLTE5LjE3MSA3LjI2LTM1LjcxNy0yLjI2OC0zNi4yOTctMjMuOTY2LS42NjUtMjQuOTIyIDE5LjQxMy01NC4wMjEgNDMuNzYtNjEuMDg4WiIgZmlsbD0iIzQ2Qjk1NSIvPjxwYXRoIGQ9Im0yMDYuNDE3IDI3NS42MTUtMjguMDggNzMuNTc3cy0yNC41NjktMzUuMzk3IDI4LjA4LTczLjU3N1ptLTIzLjAyNyA2OC4zNjIgMTkuNTYxLTUwLjkxNnMyMy44MzEgMTcuMTg5LTE5LjU2MSA1MC45MTZaIiBmaWxsPSIjZmZmIi8+PHRleHQgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIHg9IjIwIiB5PSI0OTAiIGZpbGw9ImJsYWNrIiA+PHRzcGFuIGR5PSIwIiB4PSIyMCI+MS41MCBCUEYgUmVtYWluaW5nIDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg=="
+
+        // FertilizerFacet.mintFertilizer: id: 3500000
+        const activeTokenId = 3500000
+
+        const uri = await this.fert.uri(activeTokenId);
+
+        const response = await axios.get(uri);
+        jsonResponse = JSON.parse(response.data.toString());
+
+        // id and image check
+        expect(jsonResponse.name).to.be.equal(`Fertilizer - ${activeTokenId}`);
+        expect(jsonResponse.image).to.be.equal(activeDataImage);
+
+        // BPF Remaining json attribute check
+        expect(jsonResponse.attributes[0].trait_type).to.be.equal(`BPF Remaining`);
+        expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`1.5`);
+      });
+
+      // Used fert test
+      it("returns a used fertilizer svg and stats when bpfRemaining = 0", async function () {
+
+        // Manipulate bpf to 3500000
+        await mockBeanstalk.setBpf(3500000);
+
+        // bpf is 0
+        // uint128 endBpf = totalbpf (s.bpf) + current season bpf;
+        // endbpf = 0 + 3500000 = 3500000
+        // bpfRemaining = id - s.bpf ---> 3500000 - 3500000 = 0
+        // so bpfRemaining = 0 --> Used
+
+        // This returns a used image of fert
+        const usedDataImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI5NCA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0xNjQuNDcgMzI3LjI0MSAyOC42MjUgNDA1Ljc2OGwtLjg3OC0yMjEuNTUxIDEzNS44NDktNzguNTU5Ljg3NCAyMjEuNTgzWiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Im0xMTguMDU5IDM1NC4wNzctNDEuMTAyIDIzLjc0Ni0uODc0LTIyMS41NTEgNDEuMTAxLTIzLjc3OC44NzUgMjIxLjU4M1oiIGZpbGw9IiMzREFBNDciLz48cGF0aCBkPSJtMjYuODI1IDE4NC4yNDIuODcgMjIxLjU2NyA5My4zNjcgNTQuMzM5LS44NzEtMjIxLjU2NC05My4zNjYtNTQuMzQyWm0xMzYuNDMyLTc4LjI2Mi44NzEgMjIxLjU2OCA5My4zNjcgNTQuMzM4LS44NzEtMjIxLjU2NC05My4zNjctNTQuMzQyWiIgZmlsbD0iIzNEQjU0MiIvPjxwYXRoIGQ9Im0yNTYuODk4IDM4MS42MDktMTM1Ljg0NiA3OC41MjctLjg3Ny0yMjEuNTUxIDEzNS44NDktNzguNTYuODc0IDIyMS41ODRaIiBmaWxsPSIjNkRDQjYwIi8+PHBhdGggZD0ibTIxMC40ODYgNDA4LjQ0NS00MS4xMDEgMjMuNzQ1LS44NzUtMjIxLjU1MSA0MS4xMDItMjMuNzc4Ljg3NCAyMjEuNTg0WiIgZmlsbD0iIzNEQUE0NyIvPjxwYXRoIGQ9Im0yNDAuOTAxIDM2NC45NDktMTA0LjQwNyA2MC4zODctLjMyMy0xNTcuNDc3IDEwNC40MDgtNjAuMzUxLjMyMiAxNTcuNDQxWiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0xOTUuNzg5IDI2OC4wMjVjMjMuMTM3LTYuNzE0IDM2Ljg3NSAxMC42MzEgMzIuMzA2IDM1LjIzMy00LjAyIDIxLjY1Mi0yMS4zNTIgNDIuODQ1LTM5Ljc2OSA0OS44MjEtMTkuMTcxIDcuMjYtMzUuNzE3LTIuMjY4LTM2LjI5Ny0yMy45NjYtLjY2NS0yNC45MjIgMTkuNDEzLTU0LjAyMSA0My43Ni02MS4wODhaIiBmaWxsPSIjNDZCOTU1Ii8+PHBhdGggZD0ibTIwNi40MTcgMjc1LjYxNS0yOC4wOCA3My41NzdzLTI0LjU2OS0zNS4zOTcgMjguMDgtNzMuNTc3Wm0tMjMuMDI3IDY4LjM2MiAxOS41NjEtNTAuOTE2czIzLjgzMSAxNy4xODktMTkuNTYxIDUwLjkxNloiIGZpbGw9IiNmZmYiLz48dGV4dCBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgeD0iMjAiIHk9IjQ5MCIgZmlsbD0iYmxhY2siID48dHNwYW4gZHk9IjAiIHg9IjIwIj4wLjAwIEJQRiBSZW1haW5pbmcgPC90c3Bhbj48L3RleHQ+PC9zdmc+"
+
+        // FertilizerFacet.mintFertilizer: id: 3500000
+        const usedTokenId = 3500000
+
+        const uri = await this.fert.uri(usedTokenId);
+
+        const response = await axios.get(uri);
+
+        jsonResponse = JSON.parse(response.data.toString());
+
+        // id and image check
+        expect(jsonResponse.name).to.be.equal(`Fertilizer - ${usedTokenId}`);
+        expect(jsonResponse.image).to.be.equal(usedDataImage);
+
+        // BPF Remaining json attribute check
+        expect(jsonResponse.attributes[0].trait_type).to.be.equal(`BPF Remaining`);
+        expect(jsonResponse.attributes[0].value.toString()).to.be.equal(`0`);
+      });
+
+    });
+
+  })
+})

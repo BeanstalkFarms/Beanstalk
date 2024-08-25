@@ -1,8 +1,8 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken } from "../../generated/schema";
-import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK, INITIAL_HUMIDITY } from "../../../subgraph-core/utils/Constants";
-import { Beanstalk } from "../../generated/Fertilizer/Beanstalk";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { MarketV2 } from "../../generated/Beanstalk-ABIs/MarketV2";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
   let fertilizer = Fertilizer.load(fertilizerAddress.toHexString());
@@ -17,7 +17,7 @@ export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
 export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNumber: BigInt): FertilizerToken {
   let fertilizerToken = FertilizerToken.load(id.toString());
   if (fertilizerToken == null) {
-    let beanstalk = Beanstalk.bind(BEANSTALK);
+    let beanstalk = MarketV2.bind(BEANSTALK);
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
     if (blockNumber.gt(BigInt.fromString("15278963"))) {

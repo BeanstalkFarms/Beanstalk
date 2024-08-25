@@ -7,14 +7,11 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import {C} from "contracts/C.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
-import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
-import {Weather} from "contracts/beanstalk/sun/SeasonFacet/Weather.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author funderbrker
@@ -117,9 +114,15 @@ abstract contract Invariable {
      * @dev Applies to all but a very few functions tht explicitly change supply.
      */
     modifier noSupplyChange() {
-        uint256 initialSupply = C.bean().totalSupply();
+        // Storage is not defined due to stack too deep errors.
+        uint256 initialSupply = BeanstalkERC20(LibAppStorage.diamondStorage().sys.tokens.bean)
+            .totalSupply();
         _;
-        require(C.bean().totalSupply() == initialSupply, "INV: Supply changed");
+        require(
+            BeanstalkERC20(LibAppStorage.diamondStorage().sys.tokens.bean).totalSupply() ==
+                initialSupply,
+            "INV: Supply changed"
+        );
     }
 
     /**
@@ -127,9 +130,14 @@ abstract contract Invariable {
      * @dev Prefer noSupplyChange where applicable.
      */
     modifier noSupplyIncrease() {
-        uint256 initialSupply = C.bean().totalSupply();
+        uint256 initialSupply = BeanstalkERC20(LibAppStorage.diamondStorage().sys.tokens.bean)
+            .totalSupply();
         _;
-        require(C.bean().totalSupply() <= initialSupply, "INV: Supply increased");
+        require(
+            BeanstalkERC20(LibAppStorage.diamondStorage().sys.tokens.bean).totalSupply() <=
+                initialSupply,
+            "INV: Supply increased"
+        );
     }
 
     /**
@@ -179,18 +187,18 @@ abstract contract Invariable {
                 s.sys.silo.germinating[GerminationSide.ODD][tokens[i]].amount +
                 s.sys.silo.germinating[GerminationSide.EVEN][tokens[i]].amount +
                 s.sys.internalTokenBalanceTotal[IERC20(tokens[i])];
-            if (tokens[i] == C.BEAN) {
+            if (tokens[i] == s.sys.tokens.bean) {
                 entitlements[i] +=
                     (s.sys.fert.fertilizedIndex -
                         s.sys.fert.fertilizedPaidIndex +
                         s.sys.fert.leftoverBeans) + // unrinsed rinsable beans
-                    s.sys.silo.unripeSettings[C.UNRIPE_BEAN].balanceOfUnderlying + // unchopped underlying beans
+                    s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying + // unchopped underlying beans
                     s.sys.orderLockedBeans;
                 for (uint256 j; j < s.sys.fieldCount; j++) {
                     entitlements[i] += (s.sys.fields[j].harvestable - s.sys.fields[j].harvested); // unharvested harvestable beans
                 }
-            } else if (tokens[i] == LibUnripe._getUnderlyingToken(C.UNRIPE_LP)) {
-                entitlements[i] += s.sys.silo.unripeSettings[C.UNRIPE_LP].balanceOfUnderlying;
+            } else if (tokens[i] == LibUnripe._getUnderlyingToken(s.sys.tokens.urLp)) {
+                entitlements[i] += s.sys.silo.unripeSettings[s.sys.tokens.urLp].balanceOfUnderlying;
             }
             entitlements[i] += s.sys.sop.plentyPerSopToken[tokens[i]];
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));

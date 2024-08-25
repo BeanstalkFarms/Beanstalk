@@ -149,7 +149,7 @@ library LibWhitelist {
         verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
 
         // If an LP token, initialize oracle storage variables.
-        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+        if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
             s.sys.usdTokenPrice[token] = 1;
             s.sys.twaReserves[token].reserve0 = 1;
             s.sys.twaReserves[token].reserve1 = 1;
@@ -220,13 +220,13 @@ library LibWhitelist {
         LibWhitelistedTokens.addWhitelistStatus(
             token,
             true, // Whitelisted by default.
-            token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+            token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
             selector == LibWell.WELL_BDV_SELECTOR,
             selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
         );
 
         // If an LP token, initialize oracle storage variables.
-        if (token != address(C.bean()) && !LibUnripe.isUnripe(token)) {
+        if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
             s.sys.usdTokenPrice[token] = 1;
             s.sys.twaReserves[token].reserve0 = 1;
             s.sys.twaReserves[token].reserve1 = 1;
@@ -543,7 +543,7 @@ library LibWhitelist {
             LibWhitelistedTokens.updateWhitelistStatus(
                 token,
                 true, // Whitelisted by default.
-                token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
                 selector == LibWell.WELL_BDV_SELECTOR,
                 selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
             );
@@ -552,7 +552,7 @@ library LibWhitelist {
             LibWhitelistedTokens.addWhitelistStatus(
                 token,
                 true, // Whitelisted by default.
-                token != address(C.bean()) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
+                token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
                 selector == LibWell.WELL_BDV_SELECTOR,
                 selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
             );

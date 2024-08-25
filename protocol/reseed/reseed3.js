@@ -59,9 +59,6 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
     console.log("stable2:", stable2.address);
   }
 
-  // TODO: Replace with actual fert address on the L2
-  // const fertilizerImplementation = "0x7B50EbC3E5128F315dc097F7cbd1600399e3E796";
-
   // call init:
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,
