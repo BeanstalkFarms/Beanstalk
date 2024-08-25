@@ -39,6 +39,17 @@ describe("Convert", function () {
     await beanstalk.connect(user).deposit(this.siloToken.address, "100", EXTERNAL);
     await mockBeanstalk.siloSunrise(0);
     await beanstalk.connect(user).deposit(this.siloToken.address, "100", EXTERNAL);
+    
+     // To isolate the anti lamda functionality, we will create and whitelist a new silo token
+     this.newSiloToken = await ethers.getContractFactory("MockToken");
+     this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2")
+     await this.newSiloToken.deployed()
+     await mockBeanstalk.mockWhitelistToken(
+       this.newSiloToken.address, // token                        
+       mockBeanstalk.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
+       '1', // stalkIssuedPerBdv
+       1e6 //aka "1 seed" // stalkEarnedPerSeason
+     );
 
     // To isolate the anti lamda functionality, we will create and whitelist a new silo token
     this.newSiloToken = await ethers.getContractFactory("MockToken");
@@ -97,7 +108,7 @@ describe("Convert", function () {
       beforeEach(async function () {
         this.result = await mockBeanstalk
           .connect(user)
-          .withdrawForConvertE(this.siloToken.address, [to6("2")], ["100"], "100");
+          .withdrawForConvertE(this.siloToken.address, [to6("2")], ["100"], "100", );
       });
 
       it("Emits event", async function () {
