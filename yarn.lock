@@ -19,16 +19,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ampproject/remapping@npm:^2.1.0":
-  version: 2.2.0
-  resolution: "@ampproject/remapping@npm:2.2.0"
-  dependencies:
-    "@jridgewell/gen-mapping": "npm:^0.1.0"
-    "@jridgewell/trace-mapping": "npm:^0.3.9"
-  checksum: 10/503a58d6e9d645a20debd34fa8df79fb435a79a34b1d487b9ff0be9f20712b1594ce21da16b63af7db8a6b34472212572e53a55613a5a6b3134b23fc74843d04
-  languageName: node
-  linkType: hard
-
 "@ampproject/remapping@npm:^2.2.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -2092,7 +2082,7 @@ __metadata:
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
     "@beanstalk/wells": "npm:0.4.1"
-    "@beanstalk/wells1.1": "npm:@beanstalk/wells@1.1.0-prerelease1"
+    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0-prerelease1"
     "@ethereum-waffle/chai": "npm:4.0.10"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@nomiclabs/hardhat-ethers": "npm:^2.2.1"
@@ -2255,10 +2245,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@beanstalk/wells1.1@npm:@beanstalk/wells@1.1.0-prerelease1":
-  version: 1.1.0-prerelease1
-  resolution: "@beanstalk/wells@npm:1.1.0-prerelease1"
-  checksum: 10/8a8af753ad7024ccca9549932ef0bfbeb245f52c1d98664059cbd58921937b3fef94b47f4317a4b61b750ca6e48424e836d9a92206f6146d9a95e6ed5cf897de
+"@beanstalk/wells1.2@npm:@beanstalk/wells@1.2.0-prerelease1":
+  version: 1.2.0-prerelease1
+  resolution: "@beanstalk/wells@npm:1.2.0-prerelease1"
+  checksum: 10/aaad18e414e8737eb81a1f8db21fe9e58fede2c04139a18a4e4912916d49f1321ea9ff5ba89e5b1d80eb753628f33887e97f4a81845014814264f6c186928747
   languageName: node
   linkType: hard
 
@@ -16441,6 +16431,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"array-includes@npm:^3.1.6, array-includes@npm:^3.1.7":
+  version: 3.1.8
+  resolution: "array-includes@npm:3.1.8"
+  dependencies:
+    call-bind: "npm:^1.0.7"
+    define-properties: "npm:^1.2.1"
+    es-abstract: "npm:^1.23.2"
+    es-object-atoms: "npm:^1.0.0"
+    get-intrinsic: "npm:^1.2.4"
+    is-string: "npm:^1.0.7"
+  checksum: 10/290b206c9451f181fb2b1f79a3bf1c0b66bb259791290ffbada760c79b284eef6f5ae2aeb4bcff450ebc9690edd25732c4c73a3c2b340fcc0f4563aed83bf488
+  languageName: node
+  linkType: hard
+
 "array-timsort@npm:^1.0.3":
   version: 1.0.3
   resolution: "array-timsort@npm:1.0.3"
@@ -16865,7 +16869,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"available-typed-arrays@npm:^1.0.7":
+"available-typed-arrays@npm:^1.0.5, available-typed-arrays@npm:^1.0.7":
   version: 1.0.7
   resolution: "available-typed-arrays@npm:1.0.7"
   dependencies:
@@ -25242,7 +25246,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"function.prototype.name@npm:^1.1.0, function.prototype.name@npm:^1.1.6":
+"function.prototype.name@npm:^1.1.0, function.prototype.name@npm:^1.1.5, function.prototype.name@npm:^1.1.6":
   version: 1.1.6
   resolution: "function.prototype.name@npm:1.1.6"
   dependencies:
@@ -26566,6 +26570,13 @@ __metadata:
   version: 3.0.0
   resolution: "has-yarn@npm:3.0.0"
   checksum: 10/b9e14e78e0a37bc070550c862b201534287bc10e62a86ec9c1f455ffb082db42817ce9aed914bd73f1d589bbf268520e194629ff2f62ff6b98a482c4bd2dcbfb
+  languageName: node
+  linkType: hard
+
+"has@npm:^1.0.3":
+  version: 1.0.4
+  resolution: "has@npm:1.0.4"
+  checksum: 10/c245f332fe78c7b6b8753857240ac12b3286f995f656a33c77e0f5baab7d0157e6ddb1c34940ffd2bffc51f75ede50cd8b29ff65c13e336376aca8cf3df58043
   languageName: node
   linkType: hard
 
@@ -35067,15 +35078,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-solidity@npm:1.4.0":
-  version: 1.4.0
-  resolution: "prettier-plugin-solidity@npm:1.4.0"
+"prettier-plugin-solidity@npm:1.4.1":
+  version: 1.4.1
+  resolution: "prettier-plugin-solidity@npm:1.4.1"
   dependencies:
     "@solidity-parser/parser": "npm:^0.18.0"
     semver: "npm:^7.5.4"
   peerDependencies:
     prettier: ">=2.3.0"
-  checksum: 10/96f6dd0cda6a5c069f6b48281c4df27e1fa28396ab7bdfe59d84e60ca3303d7675365d2a2db3006680cb6ea4d4f1a87d292df7b3fb32deaa9403f653e86f5b46
+  checksum: 10/8bd0b20cd1a0973bfdbb4e035d5dae9ff229a7f6475c4e31e99b85d74f77625c0a874835df23e51d36750139aa2e5c5d900a366d1cdff16edfe52b3550b7e2da
   languageName: node
   linkType: hard
 
@@ -36626,7 +36637,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"regexp.prototype.flags@npm:^1.5.0, regexp.prototype.flags@npm:^1.5.1, regexp.prototype.flags@npm:^1.5.2":
+"regexp.prototype.flags@npm:^1.5.1, regexp.prototype.flags@npm:^1.5.2":
   version: 1.5.2
   resolution: "regexp.prototype.flags@npm:1.5.2"
   dependencies:
@@ -37465,7 +37476,7 @@ __metadata:
     jest-serial-runner: "npm:1.2.1"
     lint-staged: "npm:13.3.0"
     prettier: "npm:3.3.3"
-    prettier-plugin-solidity: "npm:1.4.0"
+    prettier-plugin-solidity: "npm:1.4.1"
     ts-jest: "npm:29.1.2"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.3.3"
@@ -40574,6 +40585,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tslib@npm:^2.3.1, tslib@npm:^2.5.0, tslib@npm:^2.6.3":
+  version: 2.7.0
+  resolution: "tslib@npm:2.7.0"
+  checksum: 10/9a5b47ddac65874fa011c20ff76db69f97cf90c78cff5934799ab8894a5342db2d17b4e7613a087046bc1d133d21547ddff87ac558abeec31ffa929c88b7fce6
+  languageName: node
+  linkType: hard
+
 "tslib@npm:~2.5.0":
   version: 2.5.3
   resolution: "tslib@npm:2.5.3"
@@ -42839,7 +42857,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"which-typed-array@npm:^1.1.13, which-typed-array@npm:^1.1.14, which-typed-array@npm:^1.1.15, which-typed-array@npm:^1.1.2":
+"which-typed-array@npm:^1.1.13, which-typed-array@npm:^1.1.14, which-typed-array@npm:^1.1.15, which-typed-array@npm:^1.1.2, which-typed-array@npm:^1.1.9":
   version: 1.1.15
   resolution: "which-typed-array@npm:1.1.15"
   dependencies:
@@ -43159,6 +43177,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10/1769532b6fdab9ff659f0b17810e7501831d34ecca23fd179ee64091dd93a51f42c59f6c7bb4c7a384b6c229aca8076fb312aa35626257c18081511ef62a161d
+  languageName: node
+  linkType: hard
+
+"ws@npm:8.17.1, ws@npm:~8.17.1":
+  version: 8.17.1
+  resolution: "ws@npm:8.17.1"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10/4264ae92c0b3e59c7e309001e93079b26937aab181835fb7af79f906b22cd33b6196d96556dafb4e985742dd401e99139572242e9847661fdbc96556b9e6902d
   languageName: node
   linkType: hard
 
