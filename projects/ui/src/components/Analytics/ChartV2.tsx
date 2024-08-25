@@ -27,7 +27,7 @@ import { VertLine } from '~/util/lightweight-charts-plugins/vertical-line/vertic
 import { useChartSetupData } from './useChartSetupData';
 import { chartColors } from './chartColors';
 
-type ChartV2DataProps = {
+export type ChartV2DataProps = {
   /** 
    * Series of timestampped values to be charted.
    * Must be in ascending order.

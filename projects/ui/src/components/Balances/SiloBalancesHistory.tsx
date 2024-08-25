@@ -11,10 +11,10 @@ import {
   SEASON_RANGE_TO_COUNT,
   SeasonRange,
 } from '~/hooks/beanstalk/useSeasonsQuery';
+import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
 import MockPlot from '../Silo/MockPlot';
 import BlurComponent from '../Common/ZeroState/BlurComponent';
 import WalletButton from '../Common/Connection/WalletButton';
-import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
 
 const SiloBalancesHistory: React.FC<{}> = () => {
   //
@@ -60,14 +60,16 @@ const SiloBalancesHistory: React.FC<{}> = () => {
           height={300}
           StatProps={{
             title: 'Value Deposited',
-            titleTooltip:
+            titleTooltip: (
               <>
-                  The historical USD value of your Silo Deposits at the beginning of every Season. <br />
+                The historical USD value of your Silo Deposits at the beginning
+                of every Season. <br />
                 <Typography variant="bodySmall">
-                  Note: Unripe assets are valued based on the current Chop Rate. Earned Beans are shown upon Plant.
+                  Note: Unripe assets are valued based on the current Chop Rate.
+                  Earned Beans are shown upon Plant.
                 </Typography>
               </>
-            ,
+            ),
             gap: 0.25,
           }}
           timeTabParams={timeTabParams}

@@ -739,6 +739,12 @@ contract MockSeasonFacet is SeasonFacet {
         }
     }
 
+    function captureWellEInstantaneous(address well) external returns (int256 instDeltaB) {
+        instDeltaB = LibWellMinting.instantaneousDeltaB(well);
+        s.sys.season.timestamp = block.timestamp;
+        emit DeltaB(instDeltaB);
+    }
+
     function setRecieverForL1Migration(address owner, address reciever) external {
         s.sys.l2Migration.account[owner].reciever = reciever;
     }

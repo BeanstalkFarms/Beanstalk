@@ -4,6 +4,10 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk as IBS} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {MockPump} from "contracts/mocks/well/MockPump.sol";
+import {IWell, IERC20, Call} from "contracts/interfaces/basin/IWell.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 
 /**
  * @notice Tests the functionality of the sun, the distrubution of beans and soil.
@@ -415,6 +419,32 @@ contract SunTest is TestHelper {
         }
     }
 
+    function test_soilBelowPeg() public {
+        // set inst reserves (instDeltaB: -1999936754446796632414)
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 1000e18, 1000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 1000e18, 1000e18);
+        int256 twaDeltaB = -1000;
+        uint32 currentSeason = bs.season();
+        vm.expectEmit();
+        // expect the minimum of the -twaDeltaB and -instDeltaB to be used.
+        emit Soil(currentSeason + 1, 1000);
+        season.sunSunrise(twaDeltaB, 1);
+        assertEq(bs.totalSoil(), 1000);
+    }
+
+    function test_soilBelowPegInstGtZero() public {
+        // set inst reserves (instDeltaB: +415127766016)
+        setInstantaneousReserves(BEAN_WSTETH_WELL, 10000e6, 10000000e18);
+        setInstantaneousReserves(BEAN_ETH_WELL, 100000e6, 10000000e18);
+        int256 twaDeltaB = -1000;
+        uint32 currentSeason = bs.season();
+        vm.expectEmit();
+        // expect the twaDeltaB to be used.
+        emit Soil(currentSeason + 1, 1000);
+        season.sunSunrise(twaDeltaB, 1);
+        assertEq(bs.totalSoil(), 1000);
+    }
+
     ////// HELPER FUNCTIONS //////
 
     /**
@@ -442,6 +472,18 @@ contract SunTest is TestHelper {
             soilIssued = (soilIssued * 0.5e18) / 1e18; // high podrate
         } else if (caseId % 36 < 8) {
             soilIssued = (soilIssued * 1.5e18) / 1e18; // low podrate
+        }
+    }
+
+    function setInstantaneousReserves(address well, uint256 reserve0, uint256 reserve1) public {
+        Call[] memory pumps = IWell(well).pumps();
+        for (uint256 i = 0; i < pumps.length; i++) {
+            address pump = pumps[i].target;
+            // pass to the pump the reserves that we actually have in the well
+            uint256[] memory reserves = new uint256[](2);
+            reserves[0] = reserve0;
+            reserves[1] = reserve1;
+            MockPump(pump).setInstantaneousReserves(well, reserves);
         }
     }
 }

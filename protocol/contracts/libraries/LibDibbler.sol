@@ -249,7 +249,7 @@ library LibDibbler {
                             return TEMPERATURE_PRECISION;
                         } else {
                             // delta == 1
-                            return _scaleTemperature(76079978576);
+                            return _scaleTemperature(279415312704);
                         }
                     } else {
                         if (delta == 2) {

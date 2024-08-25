@@ -74,6 +74,9 @@ contract OracleDeployer is Utils {
     // oracles must be initalized at some price. Assumes index matching with pools.
     uint256[][] public priceData = [[uint256(1e18), 18], [uint256(500e6), 8]];
 
+    // new custom oracle implmenetations should be added here.
+    address lsdChainlinkOracle; // LSD Chainlink Oracle
+
     /**
      * @notice initializes chainlink oracles.
      * @dev oracles are mocked, and thus require initalization/updates.
@@ -169,13 +172,24 @@ contract OracleDeployer is Utils {
     }
 
     function initWhitelistOracles(bool verbose) internal {
+        // deploy LSD Chainlink Oracle
+        lsdChainlinkOracle = address(new LSDChainlinkOracle());
+        vm.label(lsdChainlinkOracle, "LSD Chainlink Oracle");
+        // new custom oracles should be added here.
+
         // init ETH:USD oracle
         updateOracleImplementationForTokenUsingChainlinkAggregator(
             WETH,
             ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
             verbose
         );
-        setupWstethOracleImplementation();
+
+        // init wsteth oracle.
+        setupLSDChainlinkOracleForToken(
+            WSTETH,
+            WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR,
+            FOUR_HOUR_TIMEOUT
+        );
     }
 
     function updateOracleImplementationForTokenUsingChainlinkAggregator(
@@ -197,29 +211,26 @@ contract OracleDeployer is Utils {
             console.log("Updated oracle implementation for token: ", token, " to: ", oracleAddress);
     }
 
-    function setupWstethOracleImplementation() internal {
-        // deploy new staking eth oracle contract
-        address oracleAddress = address(new LSDChainlinkOracle());
-
+    function setupLSDChainlinkOracleForToken(
+        address token,
+        address tokenChainlinkOracle,
+        uint256 tokenTimeout
+    ) internal {
         address _ethChainlinkOracle = ETH_USD_CHAINLINK_PRICE_AGGREGATOR;
         uint256 _ethTimeout = 3600 * 4;
-        address _xEthChainlinkOracle = WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR;
-        uint256 _xEthTimeout = 3600 * 4;
-        address _token = WSTETH;
-
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            _token,
+            token,
             IMockFBeanstalk.Implementation(
-                oracleAddress,
+                lsdChainlinkOracle,
                 LSDChainlinkOracle.getPrice.selector,
                 bytes1(0x00),
                 abi.encode(
                     _ethChainlinkOracle,
                     _ethTimeout,
-                    _xEthChainlinkOracle,
-                    _xEthTimeout,
-                    _token
+                    tokenChainlinkOracle,
+                    tokenTimeout,
+                    token
                 )
             )
         );

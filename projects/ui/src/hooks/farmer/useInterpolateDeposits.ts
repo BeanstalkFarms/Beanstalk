@@ -1,24 +1,30 @@
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import {
   useFarmerSiloAssetSnapshotsQuery,
   useSeasonalInstantPriceQuery,
 } from '~/generated/graphql';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import {
   interpolateFarmerDepositedValue,
   SnapshotBeanstalk,
 } from '~/util/Interpolate';
+import { ZERO_BN } from '~/constants';
+import useSdk from '../sdk';
+import useUnripeUnderlyingMap from '../beanstalk/useUnripeUnderlying';
 
 const useInterpolateDeposits = (
   siloAssetsQuery: ReturnType<typeof useFarmerSiloAssetSnapshotsQuery>,
   priceQuery: ReturnType<typeof useSeasonalInstantPriceQuery>,
   itemizeByToken: boolean = false
 ) => {
-  const unripe = useSelector<AppState, AppState['_bean']['unripe']>(
-    (state) => state._bean.unripe
-  );
+  const unripe = useAppSelector((state) => state._bean.unripe);
+  const beanPools = useAppSelector((state) => state._bean.pools);
+  const underlyingMap = useUnripeUnderlyingMap();
+
+  const sdk = useSdk();
+  const urBeanLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
+
   return useMemo(() => {
     if (
       priceQuery.loading ||
@@ -35,21 +41,45 @@ const useInterpolateDeposits = (
       .reduce((prev, asset) => {
         const tokenAddress = asset.token.toLowerCase();
         prev.push(
-          ...asset.hourlySnapshots.map((snapshot) => ({
-            ...snapshot,
-            // For Unripe tokens, derive the "effective BDV" using the Chop Rate.
-            // Instead of using the BDV that Beanstalk honors for Stalk/Seeds, we calculate the BDV
-            // that would (approximately) match the value of the assets if they were chopped.
-            hourlyDepositedBDV:
+          ...asset.hourlySnapshots.map((snapshot) => {
+            let hourlyDepositedBDV;
+
+            if (tokenAddress in unripe) {
+              if (
+                tokenAddress.toLowerCase() === urBeanLP.address.toLowerCase()
+              ) {
+                // formula: penalty = amount of BEANwstETH per 1 urBEANwstETH.
+                // bdv of urBEANwstETH = amount * penalty * BDV of 1 BEANwstETH
+                const underlying = underlyingMap[tokenAddress];
+                const underlyingBDV =
+                  beanPools[underlying.address]?.lpBdv || ZERO_BN;
+
+                const lpAmount = new BigNumber(snapshot.deltaDepositedAmount);
+                const choppedLP = lpAmount.times(
+                  unripe[tokenAddress]?.penalty || 0
+                );
+
+                hourlyDepositedBDV = underlyingBDV.times(choppedLP);
+              } else {
+                hourlyDepositedBDV = new BigNumber(
+                  snapshot.deltaDepositedAmount
+                ).times(unripe[tokenAddress].chopRate);
+              }
+            } else {
+              hourlyDepositedBDV = new BigNumber(snapshot.deltaDepositedBDV);
+            }
+
+            return {
+              ...snapshot,
+              // For Unripe tokens, derive the "effective BDV" using the Chop Rate.
+              // Instead of using the BDV that Beanstalk honors for Stalk/Seeds, we calculate the BDV
+              // that would (approximately) match the value of the assets if they were chopped.
+              hourlyDepositedBDV: hourlyDepositedBDV.toString(),
               // NOTE: this isn't really true since it uses the *instantaneous* chop rate,
               // and the BDV of an unripe token isn't necessarily equal to this. but this matches
               // up with what the silo table below the overview shows.
-              unripe[tokenAddress]
-                ? new BigNumber(snapshot.deltaDepositedAmount).times(
-                    unripe[tokenAddress].chopRate
-                  )
-                : snapshot.deltaDepositedBDV,
-          }))
+            };
+          })
         );
         return prev;
       }, [] as SnapshotBeanstalk[])
@@ -62,10 +92,13 @@ const useInterpolateDeposits = (
     );
   }, [
     priceQuery.loading,
-    priceQuery?.data?.seasons,
-    siloAssetsQuery?.data?.farmer?.silo?.assets,
+    priceQuery.data?.seasons,
+    siloAssetsQuery.data?.farmer?.silo?.assets,
     unripe,
     itemizeByToken,
+    urBeanLP.address,
+    underlyingMap,
+    beanPools,
   ]);
 };
 

@@ -130,6 +130,8 @@ contract FertilizerFacet is Invariable, ReentrancyGuard {
         fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
     }
 
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
+
     function totalFertilizedBeans() external view returns (uint256 beans) {
         return s.sys.fert.fertilizedIndex;
     }
@@ -266,5 +268,12 @@ contract FertilizerFacet is Invariable, ReentrancyGuard {
     function beginBarnRaiseMigration(address well) external {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
+    }
+
+    /**
+     * @notice returns the total recapitalization dollars needed to recapitalize the Barn Raise.
+     */
+    function getTotalRecapDollarsNeeded() external view returns (uint256) {
+        return LibFertilizer.getTotalRecapDollarsNeeded();
     }
 }

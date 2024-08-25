@@ -7,15 +7,14 @@ const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const { getBean } = require("../../utils/contracts.js");
 const { initializeUsersForToken, endGermination } = require("./utils/testHelpers.js");
-
 let user, user2, owner;
 
 describe("Convert", function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
-
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
+    userAddress = user.address;
     this.diamond = contracts.beanstalkDiamond;
     // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
@@ -40,6 +39,17 @@ describe("Convert", function () {
     await beanstalk.connect(user).deposit(this.siloToken.address, "100", EXTERNAL);
     await mockBeanstalk.siloSunrise(0);
     await beanstalk.connect(user).deposit(this.siloToken.address, "100", EXTERNAL);
+
+    // To isolate the anti lamda functionality, we will create and whitelist a new silo token
+    this.newSiloToken = await ethers.getContractFactory("MockToken");
+    this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2");
+    await this.newSiloToken.deployed();
+    await mockBeanstalk.mockWhitelistToken(
+      this.newSiloToken.address, // token
+      mockBeanstalk.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
+      "1000000", // stalkIssuedPerBdv
+      1e6 //aka "1 seed" // stalkEarnedPerSeason
+    );
 
     // call sunrise twice, and end germination for the silo token.
     await endGermination();
@@ -418,6 +428,174 @@ describe("Convert", function () {
       await expect(this.result)
         .to.emit(beanstalk, "AddDeposit")
         .withArgs(user.address, this.siloToken.address, to6("1.5"), "200", "200");
+    });
+  });
+
+  //  ------------------------------ ANTI LAMBDA CONVERT ----------------------------------
+
+  describe("anti lambda convert bdv decrease", async function () {
+    beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
+      this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
+      await endGermination();
+
+      // simulate deposit bdv decrease for user by changing bdv selector to newMockBDVDecrease ie 0.9e6
+      await mockBeanstalk.mockChangeBDVSelector(
+        this.newSiloToken.address,
+        mockBeanstalk.interface.getSighash("newMockBDVDecrease()")
+      );
+      const currentBdv = await mockBeanstalk.newMockBDVDecrease();
+      let depositResult = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.stem
+      );
+      const depositBdv = depositResult[1];
+
+      console.log("stem tip for new silo token: ", this.stem);
+      console.log("current bdv: ", currentBdv);
+      console.log("deposit bdv: ", depositBdv);
+
+      // ----------------------- CONVERT ------------------------
+      this.result = await mockBeanstalk.connect(user2).convert(
+        // CALLDATA                              // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
+        // STEMS []
+        [this.stem],
+        // AMOUNTS []
+        ["100"]
+      );
+      this.newStem = 1777778;
+    });
+
+    it("Correctly updates deposit stats", async function () {
+      let deposit = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.newStem
+      );
+      expect(deposit[0]).to.eq("100"); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq("900000"); // deposit[1] = bdv
+    });
+
+    it("Correctly updates totals", async function () {
+      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal("100");
+      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq("900000");
+      // 100000 stalk removed = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
+      expect(await mockBeanstalk.totalStalk()).to.equal(to6("4900100"));
+    });
+
+    it("Emits events", async function () {
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "RemoveDeposits")
+        .withArgs(userAddress, this.newSiloToken.address, [this.stem], ["100"], "100", ["1000000"]);
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "AddDeposit")
+        .withArgs(userAddress, this.newSiloToken.address, this.newStem, "100", "900000"); // last param = updated bdv
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "Convert")
+        .withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, "100", "100");
+    });
+  });
+
+  describe("anti lambda convert bdv increase", async function () {
+    beforeEach(async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
+      this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
+
+      // end germination:
+      await mockBeanstalk.siloSunrise(0);
+      await mockBeanstalk.siloSunrise(0);
+
+      // simulate deposit bdv increase for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
+      await mockBeanstalk.mockChangeBDVSelector(
+        this.newSiloToken.address,
+        mockBeanstalk.interface.getSighash("newMockBDVIncrease()")
+      );
+      currentBdv = await mockBeanstalk.newMockBDVIncrease();
+      let depositResult = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.stem
+      );
+      const depositBdv = depositResult[1];
+
+      // ----------------------- CONVERT ------------------------
+      this.result = await mockBeanstalk.connect(user2).convert(
+        // CALLDATA
+        // amount, token ,account
+        ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
+        // STEMS []
+        [this.stem],
+        // AMOUNTS []
+        ["100"]
+      );
+      this.newStem = 2181819;
+    });
+
+    it("Correctly updates deposit stats", async function () {
+      let deposit = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.newStem
+      );
+      expect(deposit[0]).to.eq("100"); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq("1100000"); // deposit[1] = bdv
+    });
+
+    it("Correctly updates totals", async function () {
+      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal("100");
+      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq("1100000");
+      // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv added from convert
+      expect(await mockBeanstalk.totalStalk()).to.equal(to6("5100100"));
+    });
+
+    it("Emits events", async function () {
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "RemoveDeposits")
+        .withArgs(userAddress, this.newSiloToken.address, [this.stem], ["100"], "100", ["1000000"]);
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "AddDeposit")
+        .withArgs(userAddress, this.newSiloToken.address, this.newStem, "100", "1100000"); // last param = updated bdv
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "Convert")
+        .withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, "100", "100");
+    });
+  });
+
+  describe("anti lambda convert revert on multiple deposit update", async function () {
+    it("Reverts on multiple deposit input", async function () {
+      // ----------------------- SETUP ------------------------
+      // user deposits 100 new silo token at stem 0 so 1000000 bdv
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
+      this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
+
+      // end germination:
+      await mockBeanstalk.siloSunrise(0);
+      await mockBeanstalk.siloSunrise(0);
+
+      // ----------------------- CONVERT ------------------------
+      await expect(
+        mockBeanstalk.connect(user2).convert(
+          // CALLDATA
+          // amount, token ,account
+          ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
+          // STEMS []
+          [this.stem, this.stem],
+          // AMOUNTS []
+          ["100", "100"]
+        )
+      ).to.be.revertedWith("Convert: DecreaseBDV only supports updating one deposit.");
     });
   });
 });

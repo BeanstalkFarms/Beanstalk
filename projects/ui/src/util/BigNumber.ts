@@ -2,6 +2,7 @@ import { Token, TokenValue } from '@beanstalk/sdk';
 import BignumberJS from 'bignumber.js';
 import { ethers } from 'ethers';
 import { ZERO_BN } from '~/constants';
+import { toTokenUnitsBN } from './Tokens';
 
 export const BN = (v: BignumberJS.Value) => new BignumberJS(v);
 
@@ -121,3 +122,8 @@ export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
 export function translate(out: OutputOptions, token?: Token) {
   return (value: NumberInputInstance) => transform(value, out, token);
 }
+
+export const ethersBNResult = (decimals: number) => (value: ethers.BigNumber) =>
+  toTokenUnitsBN(value.toString(), decimals);
+
+export const toBNWithDecimals = toTokenUnitsBN;

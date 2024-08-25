@@ -10,12 +10,15 @@ import useSeasonsQuery, {
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useInterpolateDeposits from '~/hooks/farmer/useInterpolateDeposits';
 import useInterpolateStalk from '~/hooks/farmer/useInterpolateStalk';
+import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
 
 const useFarmerSiloHistory = (
   account: string | undefined,
   itemizeByToken: boolean = false,
   includeStalk: boolean = false
 ) => {
+  const breakdown = useFarmerBalancesBreakdown();
+
   /// Data
   const siloRewardsQuery = useFarmerSiloRewardsQuery({
     variables: { account: account || '' },
@@ -28,7 +31,7 @@ const useFarmerSiloHistory = (
     fetchPolicy: 'cache-and-network',
   });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'cache-and-network',
   });
 
   const queryConfig = useMemo(
@@ -57,9 +60,35 @@ const useFarmerSiloHistory = (
     !includeStalk
   );
 
+  const withCurrSeasonDepositsData = useMemo(() => {
+    if (!depositData.length) return depositData;
+    const copy = [...depositData];
+
+    const baseDataPoint = { ...copy[copy.length - 1] };
+    baseDataPoint.value = breakdown.states.deposited.value.toNumber();
+    if (itemizeByToken) {
+      Object.entries(breakdown.states.deposited.byToken).forEach(
+        ([tk, { value }]) => {
+          if (tk in baseDataPoint) {
+            baseDataPoint[tk] = value.toNumber();
+          }
+        }
+      );
+    }
+
+    copy[copy.length - 1] = baseDataPoint;
+    return copy;
+  }, [
+    breakdown.states.deposited.byToken,
+    breakdown.states.deposited.value,
+    itemizeByToken,
+    depositData,
+  ]);
+
   return {
+    // remove the current season's data
     data: {
-      deposits: depositData,
+      deposits: withCurrSeasonDepositsData,
       stalk: stalkData,
       seeds: seedsData,
       grownStalk: grownStalkData,

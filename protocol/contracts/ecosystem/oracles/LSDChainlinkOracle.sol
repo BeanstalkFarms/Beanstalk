@@ -27,13 +27,12 @@ contract LSDChainlinkOracle {
             address ethChainlinkOracle,
             uint256 ethTimeout,
             address xEthChainlinkOracle,
-            uint256 xEthTimeout,
-            address token
+            uint256 xEthTimeout
         )
     {
-        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout, token) = abi.decode(
+        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout) = abi.decode(
             data,
-            (address, uint256, address, uint256, address)
+            (address, uint256, address, uint256)
         );
     }
 
