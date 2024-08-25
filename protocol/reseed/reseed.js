@@ -78,12 +78,11 @@ async function reseed({
 
     if (i == 2) {
       // deploy fertilizer (TODO: Remove when fert is deployed on L2)
-      const Fert = await ethers.getContractFactory("Fertilizer");
-      const fertilizerImplementation = await Fert.deploy();
-      await fertilizerImplementation.deployed();
+      const fertilizerImplementation = await deployContract("Fertilizer", beanstalkDeployer, true, []);
       console.log("Fertilizer Implementation:", fertilizerImplementation.address);
       // deploy BeanstalkPrice contract (TODO: Remove when this is deployed on L2)
-      await deployContract("BeanstalkPrice", beanstalkDeployer, true, [l2BeanstalkAddress]);
+      const beanstalkPrice = await deployContract("BeanstalkPrice", beanstalkDeployer, true, [l2BeanstalkAddress]);
+      console.log("BeanstalkPrice:", beanstalkPrice.address);
       // deploy beans addresses.
       await reseed3(beanstalkDeployer, l2BeanstalkAddress, deployBasin, fertilizerImplementation.address, mock);
       continue;
