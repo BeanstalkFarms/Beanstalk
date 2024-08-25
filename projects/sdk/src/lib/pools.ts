@@ -24,7 +24,8 @@ export class Pools {
 
   constructor(sdk: BeanstalkSDK) {
     Pools.sdk = sdk;
-    this.pools = new Set();
+    this.pools = new Set<Pool>();
+    this.wells = new Set<BasinWell>();
     this.lpAddressMap = new Map();
 
     ////// Curve Meta Pool
