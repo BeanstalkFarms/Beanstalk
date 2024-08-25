@@ -19,8 +19,6 @@ import "forge-std/console.sol";
 contract ReseedSilo {
     using LibBytes for uint256;
 
-    mapping (address l1Token => address l2Token) public tokenMap;
-
     /**
      * @notice AccountSiloDeposits is a struct that contains the silo deposit entries
      * for a given account.
@@ -68,19 +66,6 @@ contract ReseedSilo {
      * note: token addresses will differ from L1.
      */
     function init(AccountSiloDeposits[] calldata accountDeposits) external {
-        // initialize mapping of L1 token to L2 token.
-        // BEAN
-        tokenMap[address(0x1111111111111111111111111111111111111111)] = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
-        // URBEAN
-        tokenMap[address(0x4444444444444444444444444444444444444444)] = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
-        // URLP
-        tokenMap[address(0x5555555555555555555555555555555555555555)] = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
-        // BEAN/WETH
-        tokenMap[address(0x2222222222222222222222222222222222222222)] = address(0xBEA02d411690A8Aa418E6606fFf5C964933645E0);
-        // BEAN/WstETH
-        tokenMap[address(0x3333333333333333333333333333333333333333)] = address(0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa);
-        // BEAN/STABLE (Mapped to BEAN/USDC)
-        tokenMap[address(0x6666666666666666666666666666666666666666)] = address(0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741);
         // initialize deposits.
         reseedSiloDeposit(accountDeposits);
     }
@@ -104,30 +89,30 @@ contract ReseedSilo {
                 // add deposit to account.
                 s
                     .accts[accountDeposits[i].account]
-                    .deposits[l2DepositId]
+                    .deposits[ accountDeposits[i].dd[j].depositId]
                     .amount = accountDeposits[i].dd[j].amount;
                 s
                     .accts[accountDeposits[i].account]
-                    .deposits[l2DepositId]
+                    .deposits[ accountDeposits[i].dd[j].depositId]
                     .bdv = accountDeposits[i].dd[j].bdv;
                 console.log("pushing deposit id to depositIdList");
                 console.log("Account: %s", accountDeposits[i].account);
                 console.log("Token: %s", token);
-                console.log("Deposit ID: %s", l2DepositId);
+                console.log("Deposit ID: %s",  accountDeposits[i].dd[j].depositId);
                 console.log("Amount: %s", accountDeposits[i].dd[j].amount);
                 console.log("BDV: %s", accountDeposits[i].dd[j].bdv);
                 // add deposit to depositIdList.
                 s.accts[accountDeposits[i].account].depositIdList[token].depositIds.push(
-                    l2DepositId
+                     accountDeposits[i].dd[j].depositId
                 );
                 console.log("Deposit ID List Length After push: %s", s.accts[accountDeposits[i].account].depositIdList[token].depositIds.length);
                 console.log("Deposit ID List element: %s", s.accts[accountDeposits[i].account].depositIdList[token].depositIds[j]);
                 // set deposit id to index mapping, after adding deposit to deposit list
                 // this way the length of the depositIds array is always >0.
                 s.accts[accountDeposits[i].account].depositIdList[token].idIndex[
-                    l2DepositId
+                     accountDeposits[i].dd[j].depositId
                 ] = s.accts[accountDeposits[i].account].depositIdList[token].depositIds.length - 1;
-                console.log("Deposit ID Index: %s", s.accts[accountDeposits[i].account].depositIdList[token].idIndex[l2DepositId]);
+                console.log("Deposit ID Index: %s", s.accts[accountDeposits[i].account].depositIdList[token].idIndex[ accountDeposits[i].dd[j].depositId]);
                 // emit events.
                 emit AddMigratedDeposit(
                     accountDeposits[i].account,
@@ -140,7 +125,7 @@ contract ReseedSilo {
                     accountDeposits[i].account, // operator
                     address(0), // from
                     accountDeposits[i].account, // to
-                    l2DepositId, // depositID
+                     accountDeposits[i].dd[j].depositId, // depositID
                     accountDeposits[i].dd[j].amount // token amount
                 );
             }

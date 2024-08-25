@@ -17,6 +17,10 @@ import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 contract ReseedAccountStatus {
     AppStorage internal s;
 
+    // Given that every account will be credited as if they've performed a Mow, lastStem will be constant.
+    // TODO: Update this to the last value from snapshot.
+    int96 internal constant LAST_STEM = 10;
+
     struct AccountStatus {
         address account;
         uint256 stalk;
@@ -50,7 +54,7 @@ contract ReseedAccountStatus {
                 s
                     .accts[accountStatuses[i].account]
                     .mowStatuses[accountStatuses[i].tokens[j]]
-                    .lastStem = accountStatuses[i].mowStatuses[j].lastStem;
+                    .lastStem = LAST_STEM;
             }
             // set stalk and roots for account.
             s.accts[accountStatuses[i].account].stalk = accountStatuses[i].stalk;
@@ -58,8 +62,12 @@ contract ReseedAccountStatus {
             // set lastUpdate for account.
             s.accts[accountStatuses[i].account].lastUpdate = accountStatuses[i].lastUpdate;
             // set germinatingStalk for account.
-            s.accts[accountStatuses[i].account].germinatingStalk[GerminationSide.ODD] = accountStatuses[i].germinatingStalkOdd;
-            s.accts[accountStatuses[i].account].germinatingStalk[GerminationSide.EVEN] = accountStatuses[i].germinatingStalkEven;
+            s.accts[accountStatuses[i].account].germinatingStalk[
+                GerminationSide.ODD
+            ] = accountStatuses[i].germinatingStalkOdd;
+            s.accts[accountStatuses[i].account].germinatingStalk[
+                GerminationSide.EVEN
+            ] = accountStatuses[i].germinatingStalkEven;
         }
     }
 }
