@@ -105,7 +105,8 @@ contract ReseedGlobal {
 
     function setInternalBalanceTotals(SystemInternalBalances calldata balances) internal {
         for (uint i; i < balances.tokens.length; i++) {
-            s.sys.internalTokenBalanceTotal[balances.tokens[i]] = balances.internalTokenBalanceTotal[i];
+            s.sys.internalTokenBalanceTotal[balances.tokens[i]] = balances
+                .internalTokenBalanceTotal[i];
         }
     }
 
