@@ -43,6 +43,9 @@ contract ReseedBean {
     address internal constant OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
     AppStorage internal s;
 
+    bytes32 internal constant DEFAULT_WELL_SALT =
+        0x0000000000000000000000000000000000000000000000000000000000000001;
+
     // BEAN parameters.
     string internal constant BEAN_NAME = "Bean";
     string internal constant BEAN_SYMBOL = "BEAN";
@@ -73,42 +76,42 @@ contract ReseedBean {
 
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb700bd7353935c4faf9cfb046a1;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70a730b1101631795f48768830;
     string internal constant BEAN_ETH_NAME = "BEAN:WETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_ETH_SYMBOL = "U-BEANWETHCP2w";
     address internal constant WETH = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
     // BEAN_WSTETH parameters.
     bytes32 internal constant BEAN_WSTETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb704de03771733a16307944bf0f;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70d1f6ffabd835875bcb0f750d;
     string internal constant BEAN_WSTETH_NAME = "BEAN:WSTETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WSTETH_SYMBOL = "U-BEANWSTETHCP2w";
     address internal constant WSTETH = address(0x5979D7b546E38E414F7E9822514be443A4800529);
 
     // BEAN_WEETH parameters.
     bytes32 internal constant BEAN_WEETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7095c91c9caa41f58b5d913fbc;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70282162c4d51072ae5848bcab;
     string internal constant BEAN_WEETH_NAME = "BEAN:WEETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WEETH_SYMBOL = "U-BEANWEETHCCP2w";
     address internal constant WEETH = address(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe);
 
     // BEAN_WBTC parameters.
     bytes32 internal constant BEAN_WBTC_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb708aca12dd7cfb9ee3ea7cb9dc;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70680eb1a5a9088f3a5adde7cf;
     string internal constant BEAN_WBTC_NAME = "BEAN:WBTC Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WBTC_SYMBOL = "U-BEANWBTCCP2w";
     address internal constant WBTC = address(0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f);
 
     // BEAN_USDC parameters.
     bytes32 internal constant BEAN_USDC_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70ff401fe816a1c1ae08fccdbe;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70e8dd58a81854e1c93f594f45;
     string internal constant BEAN_USDC_NAME = "BEAN:USDC Stable 2 Upgradeable Well";
     string internal constant BEAN_USDC_SYMBOL = "U-BEANUSDCS2w";
     address internal constant USDC = address(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
 
     // BEAN_USDT parameters.
     bytes32 internal constant BEAN_USDT_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb705ca1658ea67939675002667f;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb703042ef0b0e0e77d3a3e484ae;
     string internal constant BEAN_USDT_NAME = "BEAN:USDT Stable 2 Upgradeable Well";
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
@@ -229,7 +232,7 @@ contract ReseedBean {
             UPGRADEABLE_WELL_IMPLEMENTATION,
             immutableData,
             initData,
-            bytes32(0)
+            DEFAULT_WELL_SALT
         );
 
         // Deploy proxy
