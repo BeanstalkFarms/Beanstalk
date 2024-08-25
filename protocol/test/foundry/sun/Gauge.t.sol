@@ -289,10 +289,9 @@ contract GaugeTest is TestHelper {
         // verify the locked beans increased.
         assertGe(bs.getLockedBeansUnderlyingUnripeBean(), lockedBeans);
         uint256 totalUnderlying = bs.getTotalUnderlying(UNRIPE_BEAN);
-        assertApproxEqAbs(
+        assertEq(
             bs.getLockedBeansUnderlyingUnripeBean(),
-            (totalUnderlying * 0.458765896798e18) / 1e18,
-            1
+            (totalUnderlying * 0.4587658967980477e18) / 1e18
         );
     }
 
