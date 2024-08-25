@@ -300,29 +300,29 @@
     "0xb9e3b05ce3d3e03737b3df08cb4e2507266409fcb65c4b26fcd17a2008c051b3": "0x166037"
   },
   "internalTokenBalanceTotal": {
-    "0x1111111111111111111111111111111111111111": "0xe9b38900c8",
-    "0x2222222222222222222222222222222222222222": "0x0",
-    "0x3333333333333333333333333333333333333333": "0x0",
-    "0x6666666666666666666666666666666666666666": "0x76f2234d2",
-    "0x4444444444444444444444444444444444444444": "0x23bfb0382fc",
-    "0x5555555555555555555555555555555555555555": "0x3120d987ec7"
+    "0xBEA0005B8599265D41256905A9B3073D397812E4": "0xe9b38900c8",
+    "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": "0x0",
+    "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": "0x0",
+    "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741": "0x76f2234d2",
+    "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": "0x23bfb0382fc",
+    "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": "0x3120d987ec7"
   },
   "wellOracleSnapshots": {
-    "0x2222222222222222222222222222222222222222": "0x401d3b23ea1bc05738e4dcc7e169dbb400000000000000000000000000000000401e083a6cb20086a94bb3a84e834df900000000000000000000000000000000",
-    "0x3333333333333333333333333333333333333333": "0x4019f9c7680e0b64a4a1647a657c304c00000000000000000000000000000000401aaf40da666523ad9aeae70f0cbd8300000000000000000000000000000000"
+    "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": "0x401d3b23ea1bc05738e4dcc7e169dbb400000000000000000000000000000000401e083a6cb20086a94bb3a84e834df900000000000000000000000000000000",
+    "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": "0x4019f9c7680e0b64a4a1647a657c304c00000000000000000000000000000000401aaf40da666523ad9aeae70f0cbd8300000000000000000000000000000000"
   },
   "twaReserves": {
-    "0x2222222222222222222222222222222222222222": {
+    "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": {
       "reserve0": "0x1",
       "reserve1": "0x1"
     },
-    "0x3333333333333333333333333333333333333333": {
+    "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": {
       "reserve0": "0x1",
       "reserve1": "0x1"
     }
   },
   "usdTokenPrice": {
-    "0x2222222222222222222222222222222222222222": 1
+    "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": 1
   },
   "sops": {},
   "fields": {
@@ -486,33 +486,33 @@
     "roots": "0x1404bb6e9b8ceb1adffa4d713c87000",
     "earnedBeans": "0x0",
     "balances": {
-      "0x1111111111111111111111111111111111111111": {
+      "0xBEA0005B8599265D41256905A9B3073D397812E4": {
         "deposited": "0x3fe1ca62260",
         "depositedBdv": "0x40113df7b30"
       },
-      "0x2222222222222222222222222222222222222222": {
+      "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": {
         "deposited": "0xd0a51c903c",
         "depositedBdv": "0x1e3f64cd50"
       },
-      "0x3333333333333333333333333333333333333333": {
+      "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": {
         "deposited": "0x1dc298d4",
         "depositedBdv": "0x321cde6fa"
       },
-      "0x6666666666666666666666666666666666666666": {
+      "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741": {
         "deposited": "0xe1218492b2",
         "depositedBdv": "0x15134cc4b6"
       },
-      "0x4444444444444444444444444444444444444444": {
+      "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
         "deposited": "0x56e378b7ea64",
         "depositedBdv": "0x139a0d23d0e7"
       },
-      "0x5555555555555555555555555555555555555555": {
+      "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
         "deposited": "0x3c0e599feeed",
         "depositedBdv": "0x101268264d5d"
       }
     },
     "assetSettings": {
-      "0x1111111111111111111111111111111111111111": {
+      "0xBEA0005B8599265D41256905A9B3073D397812E4": {
         "selector": "0x5a049a47",
         "stalkEarnedPerSeason": "0x51c2819c280",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -526,7 +526,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0x2222222222222222222222222222222222222222": {
+      "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": {
         "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0xf4240",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -540,7 +540,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0x3333333333333333333333333333333333333333": {
+      "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": {
         "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0x51c2819c280",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -554,7 +554,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0x6666666666666666666666666666666666666666": {
+      "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741": {
         "selector": "0x00000000",
         "stalkEarnedPerSeason": "0xf4240",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -568,7 +568,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0x4444444444444444444444444444444444444444": {
+      "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
         "selector": "0xc8cda2a0",
         "stalkEarnedPerSeason": "0xf4240",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -582,7 +582,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0x5555555555555555555555555555555555555555": {
+      "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
         "selector": "0xb0c22bb1",
         "stalkEarnedPerSeason": "0xf4240",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -598,53 +598,53 @@
       }
     },
     "unripeSettings": {
-      "0x4444444444444444444444444444444444444444": {
-        "underlyingToken": "0x1111111111111111111111111111111111111111",
+      "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
+        "underlyingToken": "0xBEA0005B8599265D41256905A9B3073D397812E4",
         "balanceOfUnderlying": "0x19ca007134db"
       },
-      "0x5555555555555555555555555555555555555555": {
-        "underlyingToken": "0x3333333333333333333333333333333333333333",
+      "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
+        "underlyingToken": "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa",
         "balanceOfUnderlying": "0x27e9022aa01c49f8b12e"
       }
     },
     "whitelistStatuses": [
       {
-        "token": "0x1111111111111111111111111111111111111111",
+        "token": "0xBEA0005B8599265D41256905A9B3073D397812E4",
         "isWhitelisted": true,
         "isWhitelistedLp": false,
         "isWhitelistedWell": false,
         "isSoppable": false
       },
       {
-        "token": "0x2222222222222222222222222222222222222222",
+        "token": "0xBEA02d411690A8Aa418E6606fFf5C964933645E0",
         "isWhitelisted": true,
         "isWhitelistedLp": true,
         "isWhitelistedWell": true,
         "isSoppable": true
       },
       {
-        "token": "0x6666666666666666666666666666666666666666",
+        "token": "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741",
         "isWhitelisted": false,
         "isWhitelistedLp": false,
         "isWhitelistedWell": false,
         "isSoppable": false
       },
       {
-        "token": "0x4444444444444444444444444444444444444444",
+        "token": "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
         "isWhitelisted": true,
         "isWhitelistedLp": false,
         "isWhitelistedWell": false,
         "isSoppable": false
       },
       {
-        "token": "0x5555555555555555555555555555555555555555",
+        "token": "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
         "isWhitelisted": true,
         "isWhitelistedLp": false,
         "isWhitelistedWell": false,
         "isSoppable": false
       },
       {
-        "token": "0x3333333333333333333333333333333333333333",
+        "token": "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa",
         "isWhitelisted": true,
         "isWhitelistedLp": true,
         "isWhitelistedWell": true,
@@ -653,53 +653,53 @@
     ],
     "germinating": {
       "0": {
-        "0x1111111111111111111111111111111111111111": {
+        "0xBEA0005B8599265D41256905A9B3073D397812E4": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x2222222222222222222222222222222222222222": {
+        "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x3333333333333333333333333333333333333333": {
+        "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x6666666666666666666666666666666666666666": {
+        "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x4444444444444444444444444444444444444444": {
+        "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x5555555555555555555555555555555555555555": {
+        "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
           "amount": "0x0",
           "bdv": "0x0"
         }
       },
       "1": {
-        "0x1111111111111111111111111111111111111111": {
+        "0xBEA0005B8599265D41256905A9B3073D397812E4": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x2222222222222222222222222222222222222222": {
+        "0xBEA02d411690A8Aa418E6606fFf5C964933645E0": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x3333333333333333333333333333333333333333": {
+        "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa": {
           "amount": "0x1692fd40",
           "bdv": "0x26ec2793c"
         },
-        "0x6666666666666666666666666666666666666666": {
+        "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x4444444444444444444444444444444444444444": {
+        "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0x5555555555555555555555555555555555555555": {
+        "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
           "amount": "0x0",
           "bdv": "0x0"
         }
