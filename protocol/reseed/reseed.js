@@ -21,6 +21,7 @@ const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransf
 const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { getBeanstalk } = require("../utils/contracts.js");
+const { deployContract } = require("../scripts/contracts.js");
 
 let reseeds;
 async function reseed({
@@ -81,6 +82,8 @@ async function reseed({
       const fertilizerImplementation = await Fert.deploy();
       await fertilizerImplementation.deployed();
       console.log("Fertilizer Implementation:", fertilizerImplementation.address);
+      // deploy BeanstalkPrice contract (TODO: Remove when this is deployed on L2)
+      await deployContract("BeanstalkPrice", beanstalkDeployer, true, [l2BeanstalkAddress]);
       // deploy beans addresses.
       await reseed3(beanstalkDeployer, l2BeanstalkAddress, deployBasin, fertilizerImplementation.address, mock);
       continue;

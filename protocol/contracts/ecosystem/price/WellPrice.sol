@@ -25,7 +25,7 @@ contract WellPrice {
     using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
-    IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+    IBeanstalk private constant BEANSTALK = IBeanstalk(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     uint256 private constant WELL_DECIMALS = 1e18;
     uint256 private constant PRICE_PRECISION = 1e6;
 

@@ -100,11 +100,6 @@ contract ReseedSilo {
                 (address token, int96 stem) = LibBytes.unpackAddressAndStem(
                     accountDeposits[i].dd[j].depositId
                 );
-                // Since we do not unpack the token address and stem prior to running the init script,
-                // the token here refers to the L1 token address. We need to map this to the L2 token address.
-                token = tokenMap[token];
-                // since the token address is changed, we need to update the depositId.
-                uint256 l2DepositId = LibBytes.packAddressAndStem(token, stem);
 
                 // add deposit to account.
                 s
