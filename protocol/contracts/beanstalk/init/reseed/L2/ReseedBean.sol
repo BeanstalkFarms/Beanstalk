@@ -43,6 +43,8 @@ contract ReseedBean {
     address internal constant OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
     AppStorage internal s;
 
+    // A default well salt is used to prevent front-running attacks
+    // as the aquifer also uses msg.sender when boring with non-zero salt.
     bytes32 internal constant DEFAULT_WELL_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000001;
 
