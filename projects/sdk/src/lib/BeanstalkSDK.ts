@@ -17,6 +17,7 @@ import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/sdk-wells";
 import { ChainId } from "@beanstalk/sdk-core";
+import { Field } from "./field";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -58,10 +59,10 @@ export class BeanstalkSDK {
 
   public readonly farm: Farm;
   public readonly silo: Silo;
+  public readonly field: Field;
   public readonly events: EventManager;
   public readonly sun: Sun;
   public readonly permit: Permit;
-  public readonly root: Root;
   public readonly swap: Swap;
   public readonly bean: Bean;
   public readonly wells: WellsSDK;
@@ -69,7 +70,7 @@ export class BeanstalkSDK {
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
 
-    this.chainId = enumFromValue(this.provider?.network?.chainId ?? 1, ChainId);
+    this.chainId = enumFromValue(this.provider?.network?.chainId ?? 42161, ChainId);
     this.source = config?.source || DataSource.SUBGRAPH;
 
     // Beanstalk
@@ -83,20 +84,20 @@ export class BeanstalkSDK {
     this.graphql = new GraphQLClient(this.subgraphUrl);
     this.queries = getQueries(this.graphql);
 
-    // Internal
+    // // Internal
     this.events = new EventManager(this);
     this.permit = new Permit(this);
 
-    // Facets
+    // // Facets
     this.silo = new Silo(this);
     this.sun = new Sun(this);
     this.farm = new Farm(this);
+    this.field = new Field(this);
 
-    // Ecosystem
-    this.root = new Root(this);
+    // // Ecosystem
     this.swap = new Swap(this);
 
-    // Wells
+    // // Wells
     this.wells = new WellsSDK(config);
   }
 
@@ -146,7 +147,10 @@ export class BeanstalkSDK {
     return config?.source || this.source;
   }
 
-  deriveConfig<T extends BeanstalkConfig>(key: keyof Reconfigurable, _config?: T): BeanstalkConfig[typeof key] {
+  deriveConfig<T extends BeanstalkConfig>(
+    key: keyof Reconfigurable,
+    _config?: T
+  ): BeanstalkConfig[typeof key] {
     return _config?.[key] || this[key];
   }
 
