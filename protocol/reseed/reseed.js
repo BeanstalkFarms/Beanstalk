@@ -68,7 +68,7 @@ async function reseed({
         return;
       }
       continue;
-    }
+    } 
 
     if (i == 1) {
       // deploy L2 beanstalk with predetermined address.
