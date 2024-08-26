@@ -124,7 +124,7 @@ export const addresses = {
   // Common ERC-20 Tokens
   // ----------------------------------------
   WETH: Address.make({
-    [ChainId.MAINNET]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    [ChainId.MAINNET]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
   }),
   WSTETH: Address.make({
     [ChainId.MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
@@ -156,12 +156,9 @@ export const addresses = {
   LUSD: Address.make({
     [ChainId.MAINNET]: "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"
   }),
-
-  // ----------------------------------------
-  // Lido
-  // ----------------------------------------
-  STETH: Address.make("0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"),
-  WSTETH: Address.make("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"),
+  STETH: Address.make({
+    [ChainId.MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+  }),
 
   // ----------------------------------------
   // Curve Pools: Other

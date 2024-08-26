@@ -414,6 +414,7 @@ export class BlockchainUtils {
     const currentSeason = _currentSeason || _season + 100;
 
     return makeDepositObject(token, ethers.BigNumber.from(_stemTipForToken || _season), {
+      id: ethers.constants.Zero,
       stem: _stem || currentSeason, // FIXME
       amount: amount.toBlockchain(),
       bdv: bdv.toBlockchain(),

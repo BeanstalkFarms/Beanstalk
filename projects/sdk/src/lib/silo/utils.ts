@@ -1,9 +1,13 @@
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { ethers } from "ethers";
 import { ERC20Token, Token } from "src/classes/Token";
 import { Silo } from "../silo";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { TokenSiloBalance, Deposit } from "./types";
 import { assert } from "src/utils";
+import { SiloGettersFacet } from "src/constants/generated/protocol/abi/Beanstalk";
+import { MayArray } from "src/types";
+import { isArray } from "src/utils/common";
 
 export function sortCrates(state: TokenSiloBalance) {
   state.deposits = state.deposits.sort(
@@ -35,7 +39,12 @@ export function sortCratesByBDVRatio(crates: Deposit[], direction: "asc" | "desc
 /**
  * Selects the number of crates needed to add up to the desired `amount`.
  */
-export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token, currentSeason: number) {
+export function pickCrates(
+  deposits: Deposit[],
+  amount: TokenValue,
+  token: Token,
+  currentSeason: number
+) {
   let totalAmount = TokenValue.ZERO;
   let totalBDV = TokenValue.ZERO;
   let totalStalk = TokenValue.ZERO;
@@ -43,7 +52,9 @@ export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token
   const cratesToWithdrawFrom: Deposit[] = [];
 
   deposits.some((deposit) => {
-    const amountToRemoveFromCrate = totalAmount.add(deposit.amount).lte(amount) ? deposit.amount : amount.sub(totalAmount);
+    const amountToRemoveFromCrate = totalAmount.add(deposit.amount).lte(amount)
+      ? deposit.amount
+      : amount.sub(totalAmount);
     const cratePct = amountToRemoveFromCrate.div(deposit.amount);
     const crateBDV = cratePct.mul(deposit.bdv);
     const crateSeeds = cratePct.mul(deposit.seeds);
@@ -57,6 +68,7 @@ export function pickCrates(deposits: Deposit[], amount: TokenValue, token: Token
     totalStalk = totalStalk.add(crateStalk);
 
     cratesToWithdrawFrom.push({
+      id: deposit.id,
       stem: deposit.stem,
       amount: amountToRemoveFromCrate,
       bdv: crateBDV,
@@ -112,6 +124,7 @@ export function sortTokenMapByWhitelist<T extends any>(whitelist: Set<Token>, ma
 
 export function makeTokenSiloBalance(): TokenSiloBalance {
   return {
+    id: "",
     amount: TokenValue.ZERO,
     convertibleAmount: TokenValue.ZERO,
     bdv: TokenValue.ZERO,
@@ -120,7 +133,62 @@ export function makeTokenSiloBalance(): TokenSiloBalance {
   };
 }
 
+export function packAddressAndStem(address: string, stem: ethers.BigNumber): ethers.BigNumber {
+  const addressBN = ethers.BigNumber.from(address);
+  const shiftedAddress = addressBN.shl(96);
+  const stemUint = stem.toTwos(96);
+  return shiftedAddress.or(stemUint);
+}
+
+export function unpackAddressAndStem(data: ethers.BigNumber): {
+  tokenAddress: string;
+  stem: ethers.BigNumber;
+} {
+  const tokenAddressBN = data.shr(96);
+  const tokenAddress = ethers.utils.getAddress(tokenAddressBN.toHexString());
+  const stem = data.mask(96).fromTwos(96);
+  return { tokenAddress, stem };
+}
+
+type TokenDepositsByStem = {
+  [stem: string]: {
+    id: ethers.BigNumber;
+    amount: ethers.BigNumber;
+    bdv: ethers.BigNumber;
+  };
+};
+
+export function parseDepositsByToken(
+  sdk: BeanstalkSDK,
+  data: MayArray<SiloGettersFacet.TokenDepositIdStructOutput>
+) {
+  const depositsByToken: Map<Token, TokenDepositsByStem> = new Map();
+  const datas = isArray(data) ? data : [data];
+  datas.forEach(({ token: tokenAddr, depositIds, tokenDeposits }) => {
+    const token = sdk.tokens.findByAddress(tokenAddr);
+    if (!token) return;
+
+    const depositsByStem = depositIds.reduce<TokenDepositsByStem>((memo, depositId, index) => {
+      const { stem } = unpackAddressAndStem(depositId);
+      const deposit = tokenDeposits[index];
+
+      memo[stem.toString()] = {
+        id: depositId,
+        amount: deposit.amount,
+        bdv: deposit.bdv
+      };
+
+      return memo;
+    }, {});
+
+    depositsByToken.set(token, depositsByStem);
+  });
+
+  return depositsByToken;
+}
+
 export type RawDepositData = {
+  id: ethers.BigNumber;
   stem: ethers.BigNumberish;
   amount: ethers.BigNumberish;
   bdv: ethers.BigNumberish;
@@ -137,9 +205,13 @@ export type RawDepositData = {
  * @param data.bdv The bdv of deposit
  * @returns DepositCrate<TokenValue>
  */
-export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData): Deposit {
+export function makeDepositObject(
+  token: Token,
+  stemTipForToken: ethers.BigNumber,
+  data: RawDepositData
+): Deposit {
   // On-chain
-  let stem
+  let stem;
   const amount = token.fromBlockchain(data.amount.toString());
   const bdv = Silo.sdk.tokens.BEAN.fromBlockchain(data.bdv.toString()); // Hack
   // Hack - Remove additional digits added to stem of redeposited unripe tokens in migrateStem
@@ -147,7 +219,7 @@ export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumbe
     stem = ethers.BigNumber.from(data.stem).div(1000000);
   } else {
     stem = ethers.BigNumber.from(data.stem);
-  };
+  }
   const isGerminating = stem.gte(data.germinatingStem);
 
   // Stalk
@@ -157,6 +229,7 @@ export function makeDepositObject(token: Token, stemTipForToken: ethers.BigNumbe
   const total = base.add(grown);
 
   return {
+    id: data.id,
     stem,
     amount,
     bdv,
@@ -181,7 +254,10 @@ export function calculateGrownStalkSeeds(
   depositSeeds: TokenValue
 ): TokenValue {
   const deltaSeasons = ethers.BigNumber.from(currentSeason).sub(depositSeason);
-  assert(deltaSeasons.gte(0), "Silo: Cannot calculate grown stalk when `currentSeason < depositSeason`.");
+  assert(
+    deltaSeasons.gte(0),
+    "Silo: Cannot calculate grown stalk when `currentSeason < depositSeason`."
+  );
   return Silo.STALK_PER_SEED_PER_SEASON.mul(depositSeeds).mul(deltaSeasons.toNumber());
 }
 
@@ -197,7 +273,11 @@ export function calculateGrownStalkSeeds(
  * @param stem The stem of the deposit
  * @param bdv The bdv of the deposit
  */
-export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers.BigNumber, bdv: TokenValue) {
+export function calculateGrownStalkStems(
+  stemTip: ethers.BigNumber,
+  stem: ethers.BigNumber,
+  bdv: TokenValue
+) {
   const deltaStem = stemTip.sub(stem).div(10 ** 6);
 
   if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
@@ -207,11 +287,18 @@ export function calculateGrownStalkStems(stemTip: ethers.BigNumber, stem: ethers
 /**
  * Apply a Deposit to a TokenSiloBalance.
  */
-export function applyDeposit(balance: TokenSiloBalance, token: Token, stemTipForToken: ethers.BigNumber, data: RawDepositData) {
+export function applyDeposit(
+  balance: TokenSiloBalance,
+  token: Token,
+  stemTipForToken: ethers.BigNumber,
+  data: RawDepositData
+) {
   const deposit = makeDepositObject(token, stemTipForToken, data);
 
   balance.amount = balance.amount.add(deposit.amount);
-  balance.convertibleAmount = balance.convertibleAmount.add(deposit.isGerminating ? TokenValue.ZERO : deposit.amount);
+  balance.convertibleAmount = balance.convertibleAmount.add(
+    deposit.isGerminating ? TokenValue.ZERO : deposit.amount
+  );
   balance.bdv = balance.bdv.add(deposit.bdv);
   balance.deposits.push(deposit);
   if (!deposit.isGerminating) {
