@@ -13,6 +13,12 @@ export class Address {
   public ANVIL1: string;
   public TESTNET: string;
 
+  static defaultChainId = ChainId.ARBITRUM;
+
+  static setDefaultChainId = (chainId: ChainId) => {
+    Address.defaultChainId = chainId;
+  };
+
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
     if (typeof input == "string") {
@@ -34,20 +40,23 @@ export class Address {
     this.addresses = addresses;
 
     this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
+    this.LOCALHOST_ARBITRUM = this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.ARBITRUM;
+
     this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST_ARBITRUM =
-      this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.addresses[ChainId.ARBITRUM];
-    this.TESTNET = this.addresses[ChainId.TESTNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.addresses[ChainId.MAINNET];
-    this.ANVIL1 = this.addresses[ChainId.ANVIL1] || this.addresses[ChainId.MAINNET];
+    this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.MAINNET;
+
+    this.TESTNET = this.addresses[ChainId.TESTNET] || this.addresses[Address.defaultChainId];
+    this.ANVIL1 = this.addresses[ChainId.ANVIL1] || this.addresses[Address.defaultChainId];
   }
 
   get(chainId?: number) {
-    let address = this.addresses[ChainId.ARBITRUM];
+    const defaultAddress = this.addresses[Address.defaultChainId] || "";
 
-    // Default to ARBITRUM if no chain is specified
+    let address = defaultAddress;
+
+    // Default to Address.defaultChainId if no chain is specified
     if (!chainId) {
-      return address || "";
+      return address;
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -58,12 +67,12 @@ export class Address {
     // If user wants an address on a TESTNET chain
     // return ARBITRUM one if it's not found
     if (TESTNET_CHAINS.has(chainId)) {
-      address = this.addresses[chainId] || this.addresses[ChainId.ARBITRUM];
+      address = this.addresses[chainId] || defaultAddress;
     } else {
-      address = this.addresses[chainId];
+      address = this.addresses[chainId] || defaultAddress;
     }
 
-    return address || "";
+    return address;
   }
 
   set<T extends string | AddressDefinition>(input: T) {
