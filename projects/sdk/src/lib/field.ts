@@ -4,36 +4,39 @@ import { TokenValue } from "@beanstalk/sdk-core";
 import { ZERO_BN } from "src/constants";
 
 export class Field {
+  private static DEFAULT_FIELD_ID = "0";
+
   static sdk: BeanstalkSDK;
 
   constructor(sdk: BeanstalkSDK) {
     Field.sdk = sdk;
   }
 
-  public async getPlots({
-    harvestableIndex: _harvestableIndex,
-    account,
-    fieldId = "0"
-  }: {
-    harvestableIndex: BigNumber | TokenValue;
-    account: string;
-    fieldId: BigNumberish;
-  }) {
-    const harvestableIndex =
-      _harvestableIndex instanceof TokenValue ? _harvestableIndex.toBigNumber() : _harvestableIndex;
+  public async getHarvestableIndex(fieldId: BigNumberish = Field.DEFAULT_FIELD_ID) {
+    return Field.sdk.contracts.beanstalk.harvestableIndex(fieldId);
+  }
 
-    const plots = await Field.sdk.contracts.beanstalk
-      .getPlotsFromAccount(account, fieldId)
-      .then(
-        (p) =>
-          new Map<string, BigNumber>(p.map(({ pods, index }) => [index.toString(), pods] as const))
-      );
+  public async getAllPlots(account: string, fieldId: BigNumberish = Field.DEFAULT_FIELD_ID) {
+    const plots = await Field.sdk.contracts.beanstalk.getPlotsFromAccount(account, fieldId);
 
-    let pods = ZERO_BN;
-    let harvestablePods = ZERO_BN;
+    return new Map<string, BigNumber>(
+      plots.map(({ pods, index }) => [index.toString(), pods] as const)
+    );
+  }
 
-    const unharvestablePlots: Map<string, ethers.BigNumber> = new Map();
-    const harvestablePlots: Map<string, ethers.BigNumber> = new Map();
+  public async getPlots({ account, fieldId }: { account: string; fieldId?: BigNumberish }) {
+    const [plots, harvestableIndex] = await Promise.all([
+      this.getAllPlots(account, fieldId),
+      this.getHarvestableIndex(fieldId)
+    ]);
+
+    const PODS = Field.sdk.tokens.PODS;
+
+    let pods = PODS.fromHuman("0");
+    let harvestablePods = PODS.fromHuman("0");
+
+    const unharvestablePlots: Map<string, TokenValue> = new Map();
+    const harvestablePlots: Map<string, TokenValue> = new Map();
 
     plots.forEach((plot, startIndexStr) => {
       const startIndex = ethers.BigNumber.from(startIndexStr);
@@ -41,7 +44,7 @@ export class Field {
       // Fully harvestable
       if (startIndex.add(plot).lte(harvestableIndex)) {
         harvestablePods = harvestablePods.add(plot);
-        harvestablePlots.set(startIndexStr, plot);
+        harvestablePlots.set(startIndexStr, PODS.fromBlockchain(plot));
       }
 
       // Partially harvestable
@@ -51,14 +54,17 @@ export class Field {
         harvestablePods = harvestablePods.add(partialAmount);
         pods = pods.add(plot.sub(partialAmount));
 
-        harvestablePlots.set(startIndexStr, partialAmount);
-        unharvestablePlots.set(harvestableIndex.toString(), plot.sub(partialAmount));
+        harvestablePlots.set(startIndexStr, PODS.fromBlockchain(partialAmount));
+        unharvestablePlots.set(
+          harvestableIndex.toString(),
+          PODS.fromBlockchain(plot.sub(partialAmount))
+        );
       }
 
       // Unharvestable
       else {
         pods = pods.add(plot);
-        unharvestablePlots.set(startIndexStr, plot);
+        unharvestablePlots.set(startIndexStr, PODS.fromBlockchain(plot));
       }
     });
 
