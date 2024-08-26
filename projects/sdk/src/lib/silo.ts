@@ -524,7 +524,7 @@ export class Silo {
     ]);
 
     return new Map<string, BigNumber>(
-      wlTokens.map((tokenAddress, i) => [tokenAddress, stemTips[i]] as const)
+      wlTokens.map((tokenAddress, i) => [tokenAddress.toLowerCase(), stemTips[i]] as const)
     );
   }
 
