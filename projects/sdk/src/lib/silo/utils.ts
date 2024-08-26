@@ -124,7 +124,6 @@ export function sortTokenMapByWhitelist<T extends any>(whitelist: Set<Token>, ma
 
 export function makeTokenSiloBalance(): TokenSiloBalance {
   return {
-    id: "",
     amount: TokenValue.ZERO,
     convertibleAmount: TokenValue.ZERO,
     bdv: TokenValue.ZERO,

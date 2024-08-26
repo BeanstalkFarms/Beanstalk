@@ -40,8 +40,6 @@ export type Deposit<T extends any = TokenValue> = {
  * Whitelisted Silo Token.
  */
 export type TokenSiloBalance<T extends any = TokenValue> = {
-  /** deposit ID */
-  id: string;
   /** The total amount of this Token currently in the Deposited state. */
   amount: T;
   /** The total amount of this Token that is available to Convert. Excludes germinating deposits */
