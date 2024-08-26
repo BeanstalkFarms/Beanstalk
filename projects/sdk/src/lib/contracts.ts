@@ -97,27 +97,24 @@ export class Contracts {
     // Addressses
     const beanstalkAddress = sdk.addresses.BEANSTALK.get(sdk.chainId);
     const beanstalkFertilizerAddress = sdk.addresses.BEANSTALK_FERTILIZER.get(sdk.chainId);
-    const beanstalkPriceAddress = sdk.addresses.BEANSTALK_PRICE.get(sdk.chainId);
+    // const beanstalkPriceAddress = sdk.addresses.BEANSTALK_PRICE.get(sdk.chainId);
 
     const pipelineAddress = sdk.addresses.PIPELINE.get(sdk.chainId);
     const depotAddress = sdk.addresses.DEPOT.get(sdk.chainId);
-    const mathAddress = sdk.addresses.MATH.get(sdk.chainId);
-    const rootAddress = sdk.addresses.ROOT.get(sdk.chainId);
-    const usdOracleAddress = sdk.addresses.USD_ORACLE.get(sdk.chainId);
-    const unwrapAndSendEthJunctionAddress = sdk.addresses.UNWRAP_AND_SEND_ETH_JUNCTION.get(
-      sdk.chainId
-    );
+    // const mathAddress = sdk.addresses.MATH.get(sdk.chainId);
+    // const rootAddress = sdk.addresses.ROOT.get(sdk.chainId);
+    // const usdOracleAddress = sdk.addresses.USD_ORACLE.get(sdk.chainId);
 
-    const beancrv3Address = sdk.addresses.BEAN_CRV3.get(sdk.chainId);
-    const pool3Address = sdk.addresses.POOL3.get(sdk.chainId);
-    const tricrypto2Address = sdk.addresses.TRICRYPTO2.get(sdk.chainId);
-    const poolRegistryAddress = sdk.addresses.POOL_REGISTRY.get(sdk.chainId);
-    const metaFactoryAddress = sdk.addresses.META_FACTORY.get(sdk.chainId);
-    const cryptoFactoryAddress = sdk.addresses.CRYPTO_FACTORY.get(sdk.chainId);
-    const zapAddress = sdk.addresses.CURVE_ZAP.get(sdk.chainId);
+    // const beancrv3Address = sdk.addresses.BEAN_CRV3.get(sdk.chainId);
+    // const pool3Address = sdk.addresses.POOL3.get(sdk.chainId);
+    // const tricrypto2Address = sdk.addresses.TRICRYPTO2.get(sdk.chainId);
+    // const poolRegistryAddress = sdk.addresses.POOL_REGISTRY.get(sdk.chainId);
+    // const metaFactoryAddress = sdk.addresses.META_FACTORY.get(sdk.chainId);
+    // const cryptoFactoryAddress = sdk.addresses.CRYPTO_FACTORY.get(sdk.chainId);
+    // const zapAddress = sdk.addresses.CURVE_ZAP.get(sdk.chainId);
 
-    const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
-    const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
+    // const uniswapV3RouterAddress = sdk.addresses.UNISWAP_V3_ROUTER.get(sdk.chainId);
+    // const uniswapV3QuoterV2Address = sdk.addresses.UNISWAP_V3_QUOTER_V2.get(sdk.chainId);
 
     const stethAddress = sdk.addresses.STETH.get(sdk.chainId);
     const wstEthAddress = sdk.addresses.WSTETH.get(sdk.chainId);
@@ -128,10 +125,7 @@ export class Contracts {
       beanstalkAddress,
       sdk.readProvider ?? sdk.providerOrSigner
     );
-    this.beanstalkPrice = BeanstalkPrice__factory.connect(
-      beanstalkPriceAddress,
-      sdk.providerOrSigner
-    );
+    // this.beanstalkPrice = BeanstalkPrice__factory.connect(beanstalkPriceAddress, sdk.providerOrSigner);
     this.fertilizer = BeanstalkFertilizer__factory.connect(
       beanstalkFertilizerAddress,
       sdk.providerOrSigner
@@ -139,62 +133,45 @@ export class Contracts {
 
     this.pipeline = Pipeline__factory.connect(pipelineAddress, sdk.providerOrSigner);
     this.depot = Depot__factory.connect(depotAddress, sdk.providerOrSigner);
-    this.math = Math__factory.connect(mathAddress, sdk.providerOrSigner);
-    this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
-    this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
-    this.pipelineJunctions = {
-      unwrapAndSendEth: UnwrapAndSendEthJunction__factory.connect(
-        unwrapAndSendEthJunctionAddress,
-        sdk.providerOrSigner
-      )
-    };
+    // this.math = Math__factory.connect(mathAddress, sdk.providerOrSigner);
+    // this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
+    // this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
 
-    const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
-    const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
-    const tricrypto2 = CurveTriCrypto2Pool__factory.connect(
-      tricrypto2Address,
-      sdk.providerOrSigner
-    );
-    const poolRegistry = CurveRegistry__factory.connect(poolRegistryAddress, sdk.providerOrSigner);
-    const metaFactory = CurveMetaFactory__factory.connect(metaFactoryAddress, sdk.providerOrSigner);
-    const cryptoFactory = CurveCryptoFactory__factory.connect(
-      cryptoFactoryAddress,
-      sdk.providerOrSigner
-    );
-    const zap = CurveZap__factory.connect(zapAddress, sdk.providerOrSigner);
+    // const beanCrv3 = CurveMetaPool__factory.connect(beancrv3Address, sdk.providerOrSigner);
+    // const pool3 = Curve3Pool__factory.connect(pool3Address, sdk.providerOrSigner);
+    // const tricrypto2 = CurveTriCrypto2Pool__factory.connect(
+    //   tricrypto2Address,
+    //   sdk.providerOrSigner
+    // );
+    // const poolRegistry = CurveRegistry__factory.connect(poolRegistryAddress, sdk.providerOrSigner);
+    // const metaFactory = CurveMetaFactory__factory.connect(metaFactoryAddress, sdk.providerOrSigner);
+    // const cryptoFactory = CurveCryptoFactory__factory.connect(
+    //   cryptoFactoryAddress,
+    //   sdk.providerOrSigner
+    // );
+    // const zap = CurveZap__factory.connect(zapAddress, sdk.providerOrSigner);
 
-    this.uniswapV3Router = UniswapV3Router__factory.connect(
-      uniswapV3RouterAddress,
-      sdk.providerOrSigner
-    );
-    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
-      uniswapV3QuoterV2Address,
-      sdk.providerOrSigner
-    );
+    // this.uniswapV3Router = UniswapV3Router__factory.connect(uniswapV3RouterAddress, sdk.providerOrSigner);
+    // this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(uniswapV3QuoterV2Address, sdk.providerOrSigner);
 
-    const steth = Steth__factory.connect(stethAddress, sdk.providerOrSigner);
-    const wsteth = Wsteth__factory.connect(wstEthAddress, sdk.providerOrSigner);
-
-    this.curve = {
-      pools: {
-        beanCrv3,
-        [beancrv3Address]: beanCrv3,
-        pool3,
-        [pool3Address]: pool3,
-        tricrypto2,
-        [tricrypto2Address]: tricrypto2
-      },
-      registries: {
-        poolRegistry,
-        [poolRegistryAddress]: poolRegistry,
-        metaFactory,
-        [metaFactoryAddress]: metaFactory,
-        cryptoFactory,
-        [cryptoFactoryAddress]: cryptoFactory
-      },
-      zap
-    };
-
-    this.lido = { steth, wsteth };
+    // this.curve = {
+    //   pools: {
+    //     beanCrv3,
+    //     [beancrv3Address]: beanCrv3,
+    //     pool3,
+    //     [pool3Address]: pool3,
+    //     tricrypto2,
+    //     [tricrypto2Address]: tricrypto2
+    //   },
+    //   registries: {
+    //     poolRegistry,
+    //     [poolRegistryAddress]: poolRegistry,
+    //     metaFactory,
+    //     [metaFactoryAddress]: metaFactory,
+    //     cryptoFactory,
+    //     [cryptoFactoryAddress]: cryptoFactory
+    //   },
+    //   zap
+    // };
   }
 }
