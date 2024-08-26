@@ -7,6 +7,8 @@ import { EIP712PermitMessage } from "src/lib/permit";
  * that has been added to the Silo.
  */
 export type Deposit<T extends any = TokenValue> = {
+  /** Deposit ID */
+  id: ethers.BigNumber;
   /** The Stem is the ID of the deposit. */
   stem: ethers.BigNumber;
   /** */
@@ -38,6 +40,8 @@ export type Deposit<T extends any = TokenValue> = {
  * Whitelisted Silo Token.
  */
 export type TokenSiloBalance<T extends any = TokenValue> = {
+  /** deposit ID */
+  id: string;
   /** The total amount of this Token currently in the Deposited state. */
   amount: T;
   /** The total amount of this Token that is available to Convert. Excludes germinating deposits */
