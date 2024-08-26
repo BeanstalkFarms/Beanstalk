@@ -1,7 +1,6 @@
 import { BigNumber, BigNumberish, ethers } from "ethers";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { TokenValue } from "@beanstalk/sdk-core";
-import { ZERO_BN } from "src/constants";
 
 export class Field {
   private static DEFAULT_FIELD_ID = "0";
