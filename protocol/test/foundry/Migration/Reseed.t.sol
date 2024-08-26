@@ -17,9 +17,11 @@ contract ReseedTest is TestHelper {
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
 
-    address constant BEAN2 = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
-    address constant URBEAN2 = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
-    address constant URLP2 = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
+    uint256 constant FIELD_ID = 0;
+
+    address constant L2BEAN = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
+    address constant L2URBEAN = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
+    address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
 
     address[] whiteListedWellTokens = [
         address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
@@ -31,9 +33,9 @@ contract ReseedTest is TestHelper {
     ];
 
     address[] whitelistedTokens = [
-        BEAN2,
-        URBEAN2,
-        URLP2,
+        L2BEAN,
+        L2URBEAN,
+        L2URLP,
         address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
         address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
         address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
@@ -43,6 +45,10 @@ contract ReseedTest is TestHelper {
     ];
 
     IMockFBeanstalk l2Beanstalk;
+
+    string constant HEX_PREFIX = "0x";
+
+    address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
     function setUp() public {
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -69,33 +75,68 @@ contract ReseedTest is TestHelper {
         }
     }
 
-    //////////////////// Globals ////////////////////
+    //////////////////// Global State Silo ////////////////////
 
-    // function totalDeltaB() external view returns (int256 deltaB);
+    function test_totalStalk() public {
+        uint256 totalStalk = l2Beanstalk.totalStalk();
+        bytes memory totalStalkJson = searchGlobalPropertyData("silo.stalk");
+        assertEq(vm.toString(totalStalk), string(totalStalkJson));
+    }
 
-    // function totalEarnedBeans() external view returns (uint256);
+    function test_totalEarnedBeans() public {
+        bytes memory earnedBeansJson = searchGlobalPropertyData("silo.earnedBeans");
+        uint256 earnedBeans = l2Beanstalk.totalEarnedBeans();
+        assertEq(vm.toString(earnedBeans), string(earnedBeansJson));
+    }
 
-    // function totalFertilizedBeans() external view returns (uint256 beans);
+    function test_totalRoots() public {
+        uint256 roots = l2Beanstalk.totalRoots();
+        bytes memory rootsJson = searchGlobalPropertyData("silo.roots");
+        assertEq(vm.toString(roots), string(rootsJson));
+    }
 
-    // function totalFertilizerBeans() external view returns (uint256 beans);
+    //////////////////// Global State Season ////////////////////
+    
+    function test_seasonNumber() public {
+        uint32 season = l2Beanstalk.season();
+        bytes memory seasonJson = searchGlobalPropertyData("season.current");
+        assertEq(vm.toString(season), string(seasonJson));
+    }
 
-    // function totalHarvestable(uint256 fieldId) external view returns (uint256);
+    //////////////////// Global State Field ////////////////////
 
-    // function totalHarvestableForActiveField() external view returns (uint256);
+    function test_maxTemperature() public {
+        uint256 maxTemperature = l2Beanstalk.maxTemperature();
+        bytes memory maxTemperatureJson = searchGlobalPropertyData("weather.temp");
+        // add precision to the temperaturejson to match the maxTemperature
+        string memory tempPrecision = "000000";
+        assertEq(vm.toString(maxTemperature), string.concat(string(maxTemperatureJson), tempPrecision));
+    }
 
-    // function totalHarvested(uint256 fieldId) external view returns (uint256);
+    // // pods
+    // function test_totalPods() public {
+    //     uint256 pods = l2Beanstalk.totalPods(FIELD_ID);
+    //     bytes memory podsJson = searchGlobalPropertyData("fields.0.pods");
+    //     assertEq(vm.toString(pods), string(podsJson));
+    // }
 
-    // function totalPods(uint256 fieldId) external view returns (uint256);
+    function test_totalHarvested() public {
+        uint256 harvested = l2Beanstalk.totalHarvested(FIELD_ID);
+        string memory finalHarvested = string.concat(HEX_PREFIX, vm.toString(harvested));
+        bytes memory harvestedJson = searchGlobalPropertyData("fields.0.harvested");
+        assertEq(finalHarvested, vm.toString(harvestedJson));
+    }
 
-    // function totalRainRoots() external view returns (uint256);
+    function test_totalSoil() public {
+        uint256 soil = l2Beanstalk.totalSoil();
+        bytes memory soilJson = searchGlobalPropertyData("soil");
+        // soil will be 0 before the oracle is initialized
+        assertEq(soil, 0);
+    }
 
-    // function totalRealSoil() external view returns (uint256);
+    //////////////////// Account State ////////////////////
 
-    // function totalRoots() external view returns (uint256);
-
-    // function totalSoil() external view returns (uint256);
-
-    function test_Stalk() public {
+    function test_AccountStalk() public {
         // test the L2 Beanstalk
         uint256 beanBalance = l2Beanstalk.balanceOfStalk(
             address(0x0000002e4F99CB1e699042699b91623B1334D2F7)
@@ -103,10 +144,15 @@ contract ReseedTest is TestHelper {
         console.log("balanceOfStalk: ", beanBalance);
     }
 
+    //////////////////// Account Plots ////////////////////
+
     function test_AccountPlots() public {
         // test the L2 Beanstalk
-        console.log("Checking account: ", address(0xC5581F1aE61E34391824779D505Ca127a4566737));
-        IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(address(0xC5581F1aE61E34391824779D505Ca127a4566737), 0);
+        console.log("Checking account: ", address(DEFAULT_ACCOUNT));
+        IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
+            address(DEFAULT_ACCOUNT),
+            0
+        );
         console.log("plots count: ", plots.length);
         for (uint256 i = 0; i < plots.length; i++) {
             console.log("index: ", plots[i].index);
@@ -114,12 +160,14 @@ contract ReseedTest is TestHelper {
         }
     }
 
+    //////////////////// Account Deposits ////////////////////
+
     function test_getDepositsForAccount() public {
         // test the L2 Beanstalk
         IMockFBeanstalk.TokenDepositId[] memory tokenDeposits = l2Beanstalk.getDepositsForAccount(
-            address(0xC5581F1aE61E34391824779D505Ca127a4566737)
+            address(DEFAULT_ACCOUNT)
         );
-        console.log("Checking account: ", address(0xC5581F1aE61E34391824779D505Ca127a4566737));
+        console.log("Checking account: ", address(DEFAULT_ACCOUNT));
         console.log("token deposits count: ", tokenDeposits.length);
         for (uint256 i = 0; i < tokenDeposits.length; i++) {
             console.log("token: ", tokenDeposits[i].token);
@@ -130,49 +178,15 @@ contract ReseedTest is TestHelper {
         }
     }
 
-    struct TokenDepositId {
-        address token;
-        uint256[] depositIds;
-        Deposit[] tokenDeposits;
-    }
+    //////////////////// Helpers ////////////////////
 
-    function test_getDepositsForAccountToken() public {
-        // test the L2 Beanstalk
-        IMockFBeanstalk.TokenDepositId memory tokenDeposits = l2Beanstalk
-            .getTokenDepositsForAccount(address(0x0000002e4F99CB1e699042699b91623B1334D2F7), BEAN);
-
-        console.log("token: ", tokenDeposits.token);
-        console.log("depositIds count: ", tokenDeposits.depositIds.length);
-        for (uint256 j = 0; j < tokenDeposits.depositIds.length; j++) {
-            console.log("depositId: ", tokenDeposits.depositIds[j]);
-        }
-    }
-
-    function test_getDepositsId() public {
-        // test the L2 Beanstalk
-        uint256[] memory depositIds = l2Beanstalk
-            .getTokenDepositIdsForAccount(0x0000002e4F99CB1e699042699b91623B1334D2F7, BEAN);
-        console.log("depositIds count: ", depositIds.length);
-        for (uint256 j = 0; j < depositIds.length; j++) {
-            console.log("depositId: ", depositIds[j]);
-        }
-    }
-
-    function test_getindexFromDeposit() public {
-        // test the L2 Beanstalk
-        uint256 index1 = l2Beanstalk.getIndexForDepositId(
-            0x0000002e4F99CB1e699042699b91623B1334D2F7, // ACCOUNT
-            BEAN, // TOKEN
-            86222139228609838984622303097359211701898488658280287174231757124351089827200 // ID
-        );
-        console.log("index1: ", index1);
-
-        // test the L2 Beanstalk
-        uint256 index2 = l2Beanstalk.getIndexForDepositId(
-            0x0000002e4F99CB1e699042699b91623B1334D2F7, // ACCOUNT
-            BEAN, // TOKEN
-            86222139228609838984622303097359211701898488658201059011717492786803481771076 // ID
-        );
-        console.log("index2: ", index2);
+    function searchGlobalPropertyData(string memory property) public returns (bytes memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./test/foundry/Migration/finderScripts/findGlobal.js";
+        inputs[2] = "./reseed/data/exports/storage-system20577510.json";
+        inputs[3] = property;
+        bytes memory propertyValue = vm.ffi(inputs);
+        return propertyValue;
     }
 }
