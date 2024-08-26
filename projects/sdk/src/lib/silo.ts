@@ -180,7 +180,7 @@ export class Silo {
 
   public async getDeposits(_account: string) {
     const deposits = await Silo.sdk.contracts.beanstalk.getDepositsForAccount(_account);
-
+    
     
   }
 
