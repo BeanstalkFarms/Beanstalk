@@ -1,4 +1,5 @@
 import { Graph } from "graphlib";
+import { BasinWell } from "src/classes/Pool/BasinWell";
 import { ERC20Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
@@ -75,6 +76,17 @@ export const setBidirectionalExchangeEdges = (
   });
 };
 
+const setBiDirectionalWellSwapEdges = (sdk: BeanstalkSDK, g: Graph, well: BasinWell) => {
+  const [token0, token1] = well.tokens;
+
+  g.setEdge(token0.symbol, token1.symbol, {
+    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+      sdk.farm.presets.wellSwap(well, token0, token1, account, from, to),
+    from: token0.symbol,
+    to: token1.symbol
+  });
+};
+
 export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   const graph: Graph = new Graph({
     multigraph: true,
@@ -84,13 +96,33 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
 
   ////// Add Nodes
 
-  graph.setNode("ETH", { token: sdk.tokens.ETH });
-  graph.setNode("WETH", { token: sdk.tokens.WETH });
-  graph.setNode("BEAN", { token: sdk.tokens.BEAN });
-  graph.setNode("3CRV", { token: sdk.tokens.CRV3 });
-  graph.setNode("USDT", { token: sdk.tokens.USDT });
-  graph.setNode("USDC", { token: sdk.tokens.USDC });
-  graph.setNode("DAI", { token: sdk.tokens.DAI });
+  graph.setNode(sdk.tokens.ETH.symbol, {
+    token: sdk.tokens.ETH
+  });
+  graph.setNode(sdk.tokens.WETH.symbol, {
+    token: sdk.tokens.WETH
+  });
+  graph.setNode(sdk.tokens.WSTETH.symbol, {
+    token: sdk.tokens.WSTETH
+  });
+  graph.setNode(sdk.tokens.WEETH.symbol, {
+    token: sdk.tokens.WEETH
+  });
+  graph.setNode(sdk.tokens.WBTC.symbol, {
+    token: sdk.tokens.WBTC
+  });
+  graph.setNode(sdk.tokens.BEAN.symbol, {
+    token: sdk.tokens.BEAN
+  });
+  graph.setNode(sdk.tokens.USDT.symbol, {
+    token: sdk.tokens.USDT
+  });
+  graph.setNode(sdk.tokens.USDC.symbol, {
+    token: sdk.tokens.USDC
+  });
+  graph.setNode(sdk.tokens.DAI.symbol, {
+    token: sdk.tokens.DAI
+  });
 
   ////// Add Edges
 
@@ -136,177 +168,182 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   //   to: "BEAN"
   // });
 
-  // BEAN<>wstETH via Basin Well
-  graph.setEdge("BEAN", "wstETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(
-        sdk.pools.BEAN_WSTETH_WELL,
-        sdk.tokens.BEAN,
-        sdk.tokens.WSTETH,
-        account,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "wstETH"
+  // set BasinWell.tokens[0] <> BasinWell.tokens[1] for Basin Well swaps
+  sdk.pools.wells.forEach((well) => {
+    setBiDirectionalWellSwapEdges(sdk, graph, well);
   });
 
-  graph.setEdge("wstETH", "BEAN", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwap(
-        sdk.pools.BEAN_WSTETH_WELL,
-        sdk.tokens.WSTETH,
-        sdk.tokens.BEAN,
-        account,
-        from,
-        to
-      ),
-    from: "wstETH",
-    to: "BEAN"
-  });
+  // BEAN<>wstETH via Basin Well
+  // graph.setEdge("BEAN", "wstETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.wellSwap(
+  //       sdk.pools.BEAN_WSTETH_WELL,
+  //       sdk.tokens.BEAN,
+  //       sdk.tokens.WSTETH,
+  //       account,
+  //       from,
+  //       to
+  //     ),
+  //   from: "BEAN",
+  //   to: "wstETH"
+  // });
+
+  // graph.setEdge("wstETH", "BEAN", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.wellSwap(
+  //       sdk.pools.BEAN_WSTETH_WELL,
+  //       sdk.tokens.WSTETH,
+  //       sdk.tokens.BEAN,
+  //       account,
+  //       from,
+  //       to
+  //     ),
+  //   from: "wstETH",
+  //   to: "BEAN"
+  // });
 
   // USDC<>WETH via Uniswap V3
-  graph.setEdge("USDC", "WETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, 500, from, to),
-    from: "USDC",
-    to: "WETH"
-  });
+  // graph.setEdge("USDC", "WETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.USDC, sdk.tokens.WETH, account, 500, from, to),
+  //   from: "USDC",
+  //   to: "WETH"
+  // });
 
-  graph.setEdge("WETH", "USDC", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.USDC, account, 500, from, to),
-    from: "WETH",
-    to: "USDC"
-  });
+  // graph.setEdge("WETH", "USDC", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.USDC, account, 500, from, to),
+  //   from: "WETH",
+  //   to: "USDC"
+  // });
 
   // DAI<>WETH via Uniswap V3
-  graph.setEdge("DAI", "WETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.DAI, sdk.tokens.WETH, account, 500, from, to),
-    from: "DAI",
-    to: "WETH"
-  });
+  // graph.setEdge("DAI", "WETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.DAI, sdk.tokens.WETH, account, 500, from, to),
+  //   from: "DAI",
+  //   to: "WETH"
+  // });
 
-  graph.setEdge("WETH", "DAI", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.DAI, account, 500, from, to),
-    from: "WETH",
-    to: "DAI"
-  });
+  // graph.setEdge("WETH", "DAI", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.DAI, account, 500, from, to),
+  //   from: "WETH",
+  //   to: "DAI"
+  // });
 
   // WETH<>WSTETH
-  graph.setEdge("WETH", "wstETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.WSTETH, account, 100, from, to),
-    from: "WETH",
-    to: "wstETH"
-  });
-  graph.setEdge("wstETH", "WETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniswapV3Swap(sdk.tokens.WSTETH, sdk.tokens.WETH, account, 100, from, to),
-    from: "wstETH",
-    to: "WETH"
-  });
+  // graph.setEdge("WETH", "wstETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.WETH, sdk.tokens.WSTETH, account, 100, from, to),
+  //   from: "WETH",
+  //   to: "wstETH"
+  // });
+  // graph.setEdge("wstETH", "WETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniswapV3Swap(sdk.tokens.WSTETH, sdk.tokens.WETH, account, 100, from, to),
+  //   from: "wstETH",
+  //   to: "WETH"
+  // });
 
   // BEAN<>Stables
-  [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token) => {
-    graph.setEdge("BEAN", token.symbol, {
-      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.bean2Stable(token, account, from, to),
-      from: "BEAN",
-      to: token.symbol
-    });
-    graph.setEdge(token.symbol, "BEAN", {
-      build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-        sdk.farm.presets.stable2Bean(token, account, from, to),
-      from: token.symbol,
-      to: "BEAN"
-    });
-  });
+  // [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token) => {
+  //   graph.setEdge("BEAN", token.symbol, {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.bean2Stable(token, account, from, to),
+  //     from: "BEAN",
+  //     to: token.symbol
+  //   });
+  //   graph.setEdge(token.symbol, "BEAN", {
+  //     build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //       sdk.farm.presets.stable2Bean(token, account, from, to),
+  //     from: token.symbol,
+  //     to: "BEAN"
+  //   });
+  // });
 
-  graph.setEdge("BEAN", "WETH", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.wellSwapUniV3(
-        sdk.pools.BEAN_WSTETH_WELL,
-        account,
-        sdk.tokens.BEAN,
-        sdk.tokens.WSTETH,
-        sdk.tokens.WETH,
-        100,
-        from,
-        to
-      ),
-    from: "BEAN",
-    to: "WETH"
-  });
+  // graph.setEdge("BEAN", "WETH", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.wellSwapUniV3(
+  //       sdk.pools.BEAN_WSTETH_WELL,
+  //       account,
+  //       sdk.tokens.BEAN,
+  //       sdk.tokens.WSTETH,
+  //       sdk.tokens.WETH,
+  //       100,
+  //       from,
+  //       to
+  //     ),
+  //   from: "BEAN",
+  //   to: "WETH"
+  // });
 
-  graph.setEdge("WETH", "BEAN", {
-    build: (account: string, from: FarmFromMode, to: FarmToMode) =>
-      sdk.farm.presets.uniV3WellSwap(
-        sdk.pools.BEAN_WSTETH_WELL,
-        account,
-        sdk.tokens.WETH,
-        sdk.tokens.WSTETH,
-        sdk.tokens.BEAN,
-        100,
-        from,
-        to
-      ),
-    from: "WETH",
-    to: "BEAN"
-  });
+  // graph.setEdge("WETH", "BEAN", {
+  //   build: (account: string, from: FarmFromMode, to: FarmToMode) =>
+  //     sdk.farm.presets.uniV3WellSwap(
+  //       sdk.pools.BEAN_WSTETH_WELL,
+  //       account,
+  //       sdk.tokens.WETH,
+  //       sdk.tokens.WSTETH,
+  //       sdk.tokens.BEAN,
+  //       100,
+  //       from,
+  //       to
+  //     ),
+  //   from: "WETH",
+  //   to: "BEAN"
+  // });
 
   /// 3CRV<>Stables via 3Pool Add/Remove Liquidity
 
   // HEADS UP: the ordering of these tokens needs to match their indexing in the 3CRV LP token.
   // Should be: 0 = DAI, 1 = USDC, 2 = USDT.
-  [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token, index) => {
-    setBidirectionalAddRemoveLiquidityEdges(
-      sdk,
-      graph,
-      sdk.contracts.curve.pools.pool3.address,
-      sdk.contracts.curve.registries.poolRegistry.address,
-      sdk.tokens.CRV3, // LP token
-      token, // underlying token
-      index
-    );
-  });
+  // [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT].forEach((token, index) => {
+  //   setBidirectionalAddRemoveLiquidityEdges(
+  //     sdk,
+  //     graph,
+  //     sdk.contracts.curve.pools.pool3.address,
+  //     sdk.contracts.curve.registries.poolRegistry.address,
+  //     sdk.tokens.CRV3, // LP token
+  //     token, // underlying token
+  //     index
+  //   );
+  // });
 
   ////// 3Pool Exchanges
 
   /// USDC<>USDT via 3Pool Exchange
 
-  setBidirectionalExchangeEdges(
-    sdk,
-    graph,
-    sdk.contracts.curve.pools.pool3.address,
-    sdk.contracts.curve.registries.poolRegistry.address,
-    sdk.tokens.USDC,
-    sdk.tokens.USDT
-  );
+  // setBidirectionalExchangeEdges(
+  //   sdk,
+  //   graph,
+  //   sdk.contracts.curve.pools.pool3.address,
+  //   sdk.contracts.curve.registries.poolRegistry.address,
+  //   sdk.tokens.USDC,
+  //   sdk.tokens.USDT
+  // );
 
   /// USDC<>DAI via 3Pool Exchange
 
-  setBidirectionalExchangeEdges(
-    sdk,
-    graph,
-    sdk.contracts.curve.pools.pool3.address,
-    sdk.contracts.curve.registries.poolRegistry.address,
-    sdk.tokens.USDC,
-    sdk.tokens.DAI
-  );
+  // setBidirectionalExchangeEdges(
+  //   sdk,
+  //   graph,
+  //   sdk.contracts.curve.pools.pool3.address,
+  //   sdk.contracts.curve.registries.poolRegistry.address,
+  //   sdk.tokens.USDC,
+  //   sdk.tokens.DAI
+  // );
 
   /// USDT<>DAI via 3Pool Exchange
 
-  setBidirectionalExchangeEdges(
-    sdk,
-    graph,
-    sdk.contracts.curve.pools.pool3.address,
-    sdk.contracts.curve.registries.poolRegistry.address,
-    sdk.tokens.USDT,
-    sdk.tokens.DAI
-  );
+  // setBidirectionalExchangeEdges(
+  //   sdk,
+  //   graph,
+  //   sdk.contracts.curve.pools.pool3.address,
+  //   sdk.contracts.curve.registries.poolRegistry.address,
+  //   sdk.tokens.USDT,
+  //   sdk.tokens.DAI
+  // );
 
   return graph;
 };
