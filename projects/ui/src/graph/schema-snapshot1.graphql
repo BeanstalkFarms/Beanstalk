@@ -364,6 +364,7 @@ input SpaceWhere {
   id_in: [String]
   plugin: String
   strategy: String
+  verified: Boolean
 }
 
 type Statement {
