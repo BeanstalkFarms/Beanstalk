@@ -16,7 +16,11 @@
   "scripts": {
     "cli:publish": "yarn cli:build && yarn npm publish --access public",
     "cli:build": "rimraf build && tsc && chmod u+x build/cli.js",
-    "g:bean": "yarn ts-node-esm src/cli.ts"
+    "g:bean": "yarn ts-node-esm src/cli.ts",
+    "cli:anvil-mainnet": "bash anvil.sh dev mainnet-local",
+    "cli:anvil-arbitrum": "bash anvil.sh dev arbitrum-local",
+    "cli:anvil4tests-mainnet": "bash anvil.sh test mainnet-local --fork-block-number 18629000",
+    "cli:anvil4tests-arbitrum": "bash anvil.sh test arbitrum-local --fork-block-number 18629000"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.2.3",
