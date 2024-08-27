@@ -48,9 +48,13 @@ contract ReseedTest is TestHelper {
 
     string constant HEX_PREFIX = "0x";
 
+    string constant ACCOUNTS_PATH = "./test/foundry/Migration/data/accounts.txt";
+
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
     function setUp() public {
+        // parse accounts and populate the accounts.txt file
+        parseAccounts();
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // l2Beanstalk.gm(address(this), 1);
     }
@@ -80,27 +84,35 @@ contract ReseedTest is TestHelper {
     function test_totalStalk() public {
         uint256 totalStalk = l2Beanstalk.totalStalk();
         bytes memory totalStalkJson = searchGlobalPropertyData("silo.stalk");
-        assertEq(vm.toString(totalStalk), string(totalStalkJson));
+        // decode the stalk from json
+        uint256 totalStalkJsonDecoded = vm.parseUint(vm.toString(totalStalkJson));
+        assertEq(totalStalk, totalStalkJsonDecoded);
     }
 
     function test_totalEarnedBeans() public {
         bytes memory earnedBeansJson = searchGlobalPropertyData("silo.earnedBeans");
         uint256 earnedBeans = l2Beanstalk.totalEarnedBeans();
-        assertEq(vm.toString(earnedBeans), string(earnedBeansJson));
+        // decode the earnedBeans from json
+        uint256 earnedBeansJsonDecoded = vm.parseUint(vm.toString(earnedBeansJson));
+        assertEq(earnedBeans, earnedBeansJsonDecoded);
     }
 
     function test_totalRoots() public {
         uint256 roots = l2Beanstalk.totalRoots();
         bytes memory rootsJson = searchGlobalPropertyData("silo.roots");
-        assertEq(vm.toString(roots), string(rootsJson));
+        // decode the roots from json
+        uint256 rootsJsonDecoded = vm.parseUint(vm.toString(rootsJson));
+        assertEq(roots, rootsJsonDecoded);
     }
 
     //////////////////// Global State Season ////////////////////
-    
+
     function test_seasonNumber() public {
         uint32 season = l2Beanstalk.season();
         bytes memory seasonJson = searchGlobalPropertyData("season.current");
-        assertEq(vm.toString(season), string(seasonJson));
+        // decode the season from json
+        uint32 seasonJsonDecoded = uint32(vm.parseUint(vm.toString(seasonJson)));
+        assertEq(season, seasonJsonDecoded);
     }
 
     //////////////////// Global State Field ////////////////////
@@ -108,23 +120,11 @@ contract ReseedTest is TestHelper {
     function test_maxTemperature() public {
         uint256 maxTemperature = l2Beanstalk.maxTemperature();
         bytes memory maxTemperatureJson = searchGlobalPropertyData("weather.temp");
+        // decode the maxTemperature from json
+        uint256 maxTemperatureJsonDecoded = vm.parseUint(vm.toString(maxTemperatureJson));
         // add precision to the temperaturejson to match the maxTemperature
-        string memory tempPrecision = "000000";
-        assertEq(vm.toString(maxTemperature), string.concat(string(maxTemperatureJson), tempPrecision));
-    }
-
-    // // pods
-    // function test_totalPods() public {
-    //     uint256 pods = l2Beanstalk.totalPods(FIELD_ID);
-    //     bytes memory podsJson = searchGlobalPropertyData("fields.0.pods");
-    //     assertEq(vm.toString(pods), string(podsJson));
-    // }
-
-    function test_totalHarvested() public {
-        uint256 harvested = l2Beanstalk.totalHarvested(FIELD_ID);
-        string memory finalHarvested = string.concat(HEX_PREFIX, vm.toString(harvested));
-        bytes memory harvestedJson = searchGlobalPropertyData("fields.0.harvested");
-        assertEq(finalHarvested, vm.toString(harvestedJson));
+        maxTemperatureJsonDecoded = maxTemperatureJsonDecoded * 1e6;
+        assertEq(maxTemperature, maxTemperatureJsonDecoded);
     }
 
     function test_totalSoil() public {
@@ -134,14 +134,40 @@ contract ReseedTest is TestHelper {
         assertEq(soil, 0);
     }
 
-    //////////////////// Account State ////////////////////
+    // pods
+    function test_totalPods() public {
+        uint256 pods = l2Beanstalk.totalPods(FIELD_ID);
+        bytes memory podsJson = searchGlobalPropertyData("fields.0.pods");
+        // decode the pods from json
+        uint256 podsJsonDecoded = vm.parseUint(vm.toString(podsJson));
+        assertEq(pods, podsJsonDecoded);
+    }
+
+    function test_totalHarvested() public {
+        uint256 harvested = l2Beanstalk.totalHarvested(FIELD_ID);
+        bytes memory harvestedJson = searchGlobalPropertyData("fields.0.harvested");
+        // decode the harvested from json
+        uint256 harvestedJsonDecoded = vm.parseUint(vm.toString(harvestedJson));
+        assertEq(harvested, harvestedJsonDecoded);
+    }
+
+    //////////////////// Account State //////////////////////
 
     function test_AccountStalk() public {
-        // test the L2 Beanstalk
-        uint256 beanBalance = l2Beanstalk.balanceOfStalk(
-            address(0x0000002e4F99CB1e699042699b91623B1334D2F7)
-        );
-        console.log("balanceOfStalk: ", beanBalance);
+        string memory account;
+        uint256 accountStalk;
+        for (uint256 i = 0; i < 1000; i++) {
+            account = vm.readLine(ACCOUNTS_PATH);
+            console.log("Checking stalk for: ", account);
+            accountStalk = l2Beanstalk.balanceOfStalk(vm.parseAddress(account));
+            console.log("accountStalk: ", accountStalk);
+            // get stalk from json
+            string memory accountStalkPath = string.concat(account, ".stalk");
+            bytes memory accountStalkJson = searchAccountPropertyData(accountStalkPath);
+            // decode the stalk from json
+            uint256 accountStalkJsonDecoded = vm.parseUint(vm.toString(accountStalkJson));
+            assertEq(accountStalk, accountStalkJsonDecoded);
+        }
     }
 
     //////////////////// Account Plots ////////////////////
@@ -180,11 +206,29 @@ contract ReseedTest is TestHelper {
 
     //////////////////// Helpers ////////////////////
 
+    function parseAccounts() public {
+        string[] memory inputs = new string[](2);
+        inputs[0] = "node";
+        inputs[1] = "./test/foundry/Migration/data/getAccounts.js"; // script
+        bytes memory res = vm.ffi(inputs);
+        console.log(string(res));
+    }
+
     function searchGlobalPropertyData(string memory property) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/findGlobal.js";
-        inputs[2] = "./reseed/data/exports/storage-system20577510.json";
+        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-system20577510.json"; // json file
+        inputs[3] = property;
+        bytes memory propertyValue = vm.ffi(inputs);
+        return propertyValue;
+    }
+
+    function searchAccountPropertyData(string memory property) public returns (bytes memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
