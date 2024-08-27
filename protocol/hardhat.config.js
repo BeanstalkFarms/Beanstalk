@@ -413,6 +413,12 @@ module.exports = {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
       timeout: 100000
+    },
+    localhostAribtrum: {
+      chainId: 42161,
+      url: "http://127.0.0.1:8545/",
+      timeout: 100000,
+      account: "remote"
     }
   },
   etherscan: {
