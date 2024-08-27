@@ -11,10 +11,18 @@ function getValueFromJSON(jsonObj, searchPath) {
         if (result && typeof result === 'object' && result.hasOwnProperty(key)) {
             result = result[key];
         } else {
-            return ethers.utils.hexlify(BigNumber.from(0)); // If any part of the path is not found, return 0
+            // If any part of the path is not found, return 0x0
+            return ethers.utils.hexlify(ethers.BigNumber.from(0));
         }
     }
-    return ethers.utils.hexlify(BigNumber.from(result));
+
+    if (Array.isArray(result)) {
+        // If the result is an array, encode it using ethers' ABI coder
+        return ethers.utils.defaultAbiCoder.encode(['uint256[]'], [result]);
+    } else {
+        // Otherwise, convert it to a BigNumber and hexlify it
+        return ethers.utils.hexlify(ethers.BigNumber.from(result));
+    }
 }
 
 // Get the command line arguments for JSON file path and the key to search

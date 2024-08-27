@@ -161,6 +161,7 @@ contract ReseedTest is TestHelper {
         uint256 accountStalk;
         for (uint256 i = 0; i < 1000; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
+            // get stalk from storage
             accountStalk = l2Beanstalk.balanceOfStalk(vm.parseAddress(account));
             // get stalk from json
             string memory accountStalkPath = string.concat(account, ".stalk");
@@ -176,6 +177,7 @@ contract ReseedTest is TestHelper {
         uint256 accountRoots;
         for (uint256 i = 0; i < accountNumber; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
+            // get roots from storage
             accountRoots = l2Beanstalk.balanceOfRoots(vm.parseAddress(account));
             // get roots from json
             string memory accountRootsPath = string.concat(account, ".roots");
@@ -193,7 +195,7 @@ contract ReseedTest is TestHelper {
         for (uint256 i = 0; i < accountNumber; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             for (uint256 j = 0; j < whitelistedTokens.length; j++) {
-                // get the internal balance for the account
+                // get the internal balance from storage
                 uint256 tokenInternalBalance = l2Beanstalk.getInternalBalance(
                     vm.parseAddress(account),
                     whitelistedTokens[j]
@@ -224,17 +226,35 @@ contract ReseedTest is TestHelper {
     function test_AccountPlots() public {
         // test the L2 Beanstalk
         string memory account;
+        // for every account
         for (uint256 i = 0; i < accountNumber; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
-            console.log("Checking account: ", account);
             IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
                 vm.parseAddress(account),
                 FIELD_ID
             );
-            console.log("plots count: ", plots.length);
-            for (uint256 i = 0; i < plots.length; i++) {
-                console.log("index: ", plots[i].index);
-                console.log("pods: ", plots[i].pods);
+            // get plot indexes list
+            string memory accountPlotIndexesPath = string.concat(account, ".fields.0.plotIndexes");
+            bytes memory plotindexes = searchAccountPropertyData(accountPlotIndexesPath);
+            uint256[] memory plotindexesJsonDecoded = abi.decode(plotindexes, (uint256[]));
+            // for every plot index --> get the amount
+            for (uint256 j = 0; j < plotindexesJsonDecoded.length; j++) {
+                // build the search path
+                string memory accountPlotAmountPath = string.concat(account, ".fields.0.plots.");
+                accountPlotAmountPath = string.concat(
+                    accountPlotAmountPath,
+                    vm.toString(plotindexesJsonDecoded[j])
+                );
+                bytes memory accountPlotAmountJson = searchAccountPropertyData(
+                    accountPlotAmountPath
+                );
+                // decode the plot amount from json
+                uint256 accountPlotAmountJsonDecoded = vm.parseUint(
+                    vm.toString(accountPlotAmountJson)
+                );
+                // compare the plot amount and index
+                assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
+                assertEq(plotindexesJsonDecoded[j], plots[j].index);
             }
         }
     }
