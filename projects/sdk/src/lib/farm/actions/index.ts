@@ -22,7 +22,6 @@ import { WellShift } from "./WellShift";
 import { WellSync } from "./WellSync";
 import { UniswapV3Swap } from "./UniswapV3Swap";
 import { DevDebug } from "./_DevDebug";
-import { LidoEthToSteth } from "./LidoEthToSteth";
 import { LidoWrapSteth } from "./LidoWrapSteth";
 
 export {
@@ -50,7 +49,6 @@ export {
   TransferDeposit,
 
   // Lido
-  LidoEthToSteth,
   LidoWrapSteth,
 
   // DEX: Curve
