@@ -18,6 +18,8 @@ export class Tokens {
   USDT: ERC20Token;
   STETH: ERC20Token;
   WSTETH: ERC20Token;
+  WEETH: ERC20Token;
+  WBTC: ERC20Token;
 
   constructor(sdk: WellsSDK) {
     Tokens.sdk = sdk;
@@ -120,6 +122,7 @@ export class Tokens {
       },
       provider
     );
+
     this.tokens.add(this.STETH);
 
     this.WSTETH = new ERC20Token(
@@ -135,6 +138,34 @@ export class Tokens {
     );
 
     this.tokens.add(this.WSTETH);
+
+    this.WEETH = new ERC20Token(
+      cid,
+      sdk.addresses.WEETH.get(cid),
+      18,
+      "weETH",
+      {
+        name: "Wrapped eETH",
+        displayDecimals: 4
+      },
+      provider
+    );
+
+    this.tokens.add(this.WEETH);
+
+    this.WBTC = new ERC20Token(
+      cid,
+      sdk.addresses.WBTC.get(cid),
+      8,
+      "WBTC",
+      {
+        name: "Wrapped BTC",
+        displayDecimals: 6
+      },
+      provider
+    );
+
+    this.tokens.add(this.WBTC);
   }
 
   /**
