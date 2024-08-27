@@ -2,6 +2,7 @@ const fs = require("fs");
 const { ethers } = require("ethers");
 const { BigNumber } = require("ethers");
 
+
 function getValueFromJSON(jsonObj, searchPath) {
     let result = jsonObj;
     const keys = searchPath.split('.');
@@ -10,7 +11,7 @@ function getValueFromJSON(jsonObj, searchPath) {
         if (result && typeof result === 'object' && result.hasOwnProperty(key)) {
             result = result[key];
         } else {
-            return null; // If any part of the path is not found, return null
+            return ethers.utils.hexlify(BigNumber.from(0)); // If any part of the path is not found, return 0
         }
     }
     return ethers.utils.hexlify(BigNumber.from(result));

@@ -8,6 +8,7 @@ import {LibBytes} from "contracts/Libraries/LibBytes.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import "forge-std/console.sol";
 import {Deposit} from "contracts/beanstalk/storage/Account.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
@@ -52,9 +53,11 @@ contract ReseedTest is TestHelper {
 
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
+    uint256 accountNumber;
+
     function setUp() public {
         // parse accounts and populate the accounts.txt file
-        parseAccounts();
+        accountNumber = parseAccounts();
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // l2Beanstalk.gm(address(this), 1);
     }
@@ -158,9 +161,7 @@ contract ReseedTest is TestHelper {
         uint256 accountStalk;
         for (uint256 i = 0; i < 1000; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
-            console.log("Checking stalk for: ", account);
             accountStalk = l2Beanstalk.balanceOfStalk(vm.parseAddress(account));
-            console.log("accountStalk: ", accountStalk);
             // get stalk from json
             string memory accountStalkPath = string.concat(account, ".stalk");
             bytes memory accountStalkJson = searchAccountPropertyData(accountStalkPath);
@@ -170,19 +171,71 @@ contract ReseedTest is TestHelper {
         }
     }
 
+    function test_AccountRoots() public {
+        string memory account;
+        uint256 accountRoots;
+        for (uint256 i = 0; i < accountNumber; i++) {
+            account = vm.readLine(ACCOUNTS_PATH);
+            accountRoots = l2Beanstalk.balanceOfRoots(vm.parseAddress(account));
+            // get roots from json
+            string memory accountRootsPath = string.concat(account, ".roots");
+            bytes memory accountRootsJson = searchAccountPropertyData(accountRootsPath);
+            // decode the roots from json
+            uint256 accountRootsJsonDecoded = vm.parseUint(vm.toString(accountRootsJson));
+            assertEq(accountRoots, accountRootsJsonDecoded);
+        }
+    }
+
+    ///////////////// Account Internal Balance ////////////////////
+
+    function test_AccountInternalBalance() public {
+        string memory account;
+        for (uint256 i = 0; i < accountNumber; i++) {
+            account = vm.readLine(ACCOUNTS_PATH);
+            for (uint256 j = 0; j < whitelistedTokens.length; j++) {
+                // get the internal balance for the account
+                uint256 tokenInternalBalance = l2Beanstalk.getInternalBalance(
+                    vm.parseAddress(account),
+                    whitelistedTokens[j]
+                );
+                // get the internal balance from json
+                string memory accountInternalBalancePath = string.concat(
+                    account,
+                    ".internalTokenBalance."
+                );
+                accountInternalBalancePath = string.concat(
+                    accountInternalBalancePath,
+                    vm.toString(whitelistedTokens[j])
+                );
+                bytes memory accountInternalBalanceJson = searchAccountPropertyData(
+                    accountInternalBalancePath
+                );
+                // decode the internal balance from json
+                uint256 accountInternalBalanceJsonDecoded = vm.parseUint(
+                    vm.toString(accountInternalBalanceJson)
+                );
+                assertEq(tokenInternalBalance, accountInternalBalanceJsonDecoded);
+            }
+        }
+    }
+
     //////////////////// Account Plots ////////////////////
 
     function test_AccountPlots() public {
         // test the L2 Beanstalk
-        console.log("Checking account: ", address(DEFAULT_ACCOUNT));
-        IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
-            address(DEFAULT_ACCOUNT),
-            0
-        );
-        console.log("plots count: ", plots.length);
-        for (uint256 i = 0; i < plots.length; i++) {
-            console.log("index: ", plots[i].index);
-            console.log("pods: ", plots[i].pods);
+        string memory account;
+        for (uint256 i = 0; i < accountNumber; i++) {
+            account = vm.readLine(ACCOUNTS_PATH);
+            console.log("Checking account: ", account);
+            IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
+                vm.parseAddress(account),
+                FIELD_ID
+            );
+            console.log("plots count: ", plots.length);
+            for (uint256 i = 0; i < plots.length; i++) {
+                console.log("index: ", plots[i].index);
+                console.log("pods: ", plots[i].pods);
+            }
         }
     }
 
@@ -206,12 +259,14 @@ contract ReseedTest is TestHelper {
 
     //////////////////// Helpers ////////////////////
 
-    function parseAccounts() public {
+    function parseAccounts() public returns (uint256) {
         string[] memory inputs = new string[](2);
         inputs[0] = "node";
         inputs[1] = "./test/foundry/Migration/data/getAccounts.js"; // script
         bytes memory res = vm.ffi(inputs);
-        console.log(string(res));
+        // decode the number of accounts
+        uint256 accountNumber = vm.parseUint(vm.toString(res));
+        return accountNumber;
     }
 
     function searchGlobalPropertyData(string memory property) public returns (bytes memory) {
@@ -232,5 +287,15 @@ contract ReseedTest is TestHelper {
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
+    }
+
+    function searchAccountPlots(string memory account) public returns (bytes memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
+        inputs[3] = account;
+        bytes memory accountPlots = vm.ffi(inputs);
+        return accountPlots;
     }
 }
