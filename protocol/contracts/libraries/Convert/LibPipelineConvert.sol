@@ -122,11 +122,6 @@ library LibPipelineConvert {
     }
 
     /**
-     * @param calls The advanced farm calls to execute.
-     */
-    function executeAdvancedPipeCalls(AdvancedPipeCall[] memory calls) internal {}
-
-    /**
      * @notice Determines input token amount left in pipeline and returns to Beanstalk
      * @param tokenOut The token to pull out of pipeline
      */
