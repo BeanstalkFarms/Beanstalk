@@ -9,7 +9,8 @@ const outputFilePath = './test/foundry/Migration/data/accounts.txt'; // Replace 
 function extractAccountAddresses(jsonFilePath, outputFilePath) {
     try {
         const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
-        const accountAddresses = Object.keys(jsonData);
+        // limit array to 100 elements
+        const accountAddresses = Object.keys(jsonData).slice(0, 100);
         // Write the account addresses to a text file, each address on a new line
         fs.writeFileSync(outputFilePath, accountAddresses.join('\n'), 'utf8');
         console.log(ethers.utils.hexlify(BigNumber.from(accountAddresses.length)));

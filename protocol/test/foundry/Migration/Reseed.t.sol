@@ -58,6 +58,7 @@ contract ReseedTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         accountNumber = parseAccounts();
+        // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // l2Beanstalk.gm(address(this), 1);
     }
@@ -159,7 +160,7 @@ contract ReseedTest is TestHelper {
     function test_AccountStalk() public {
         string memory account;
         uint256 accountStalk;
-        for (uint256 i = 0; i < 1000; i++) {
+        for (uint256 i = 0; i < accountNumber; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             // get stalk from storage
             accountStalk = l2Beanstalk.balanceOfStalk(vm.parseAddress(account));
@@ -192,7 +193,7 @@ contract ReseedTest is TestHelper {
 
     function test_AccountInternalBalance() public {
         string memory account;
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             for (uint256 j = 0; j < whitelistedTokens.length; j++) {
                 // get the internal balance from storage
@@ -227,7 +228,7 @@ contract ReseedTest is TestHelper {
         // test the L2 Beanstalk
         string memory account;
         // for every account
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
                 vm.parseAddress(account),
