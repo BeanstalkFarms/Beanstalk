@@ -22,7 +22,7 @@ export class Address {
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
     if (typeof input == "string") {
-      addresses[ChainId.ARBITRUM] = input.toLowerCase();
+      addresses[Address.defaultChainId] = input.toLowerCase();
     } else {
       Object.assign(addresses, input);
     }
