@@ -14,6 +14,9 @@ const PRECISION = TokenValue.fromBlockchain(ethers.utils.parseEther("1"), 18);
 
 const logtv = (tokv: TokenValue) => [tokv.toBlockchain(), tokv.toHuman(), tokv.decimals];
 
+/**
+ * @deprecated
+ */
 export class Root {
   static sdk: BeanstalkSDK;
 

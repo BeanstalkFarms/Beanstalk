@@ -29,7 +29,7 @@ const happyPaths: Record<string, string> = {
 
   "3CRV:BEAN": "3CRV -> USDC -> BEAN -> BEAN:SILO",
   "3CRV:BEANETH": "3CRV -> USDC -> BEANETH -> BEANETH:SILO",
-  "3CRV:BEANwstETH": "3CRV -> USDC -> BEANwstETH -> BEANwstETH:SILO",
+  "3CRV:BEANwstETH": "3CgRV -> USDC -> BEANwstETH -> BEANwstETH:SILO",
 
   "DAI:BEAN": "DAI -> BEAN -> BEAN:SILO",
   "DAI:BEANETH": "DAI -> BEANETH -> BEANETH:SILO",

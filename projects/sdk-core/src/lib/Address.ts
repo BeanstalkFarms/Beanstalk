@@ -7,13 +7,22 @@ export type AddressDefinition = {
 export class Address {
   private addresses: AddressDefinition;
   public MAINNET: string;
+  public ARBITRUM: string;
   public LOCALHOST: string;
+  public LOCALHOST_ARBITRUM: string;
   public ANVIL1: string;
+  public TESTNET: string;
+
+  static defaultChainId = ChainId.ARBITRUM;
+
+  static setDefaultChainId = (chainId: ChainId) => {
+    Address.defaultChainId = chainId;
+  };
 
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
     if (typeof input == "string") {
-      addresses[ChainId.MAINNET] = input;
+      addresses[Address.defaultChainId] = input.toLowerCase();
     } else {
       Object.assign(addresses, input);
     }
@@ -29,15 +38,25 @@ export class Address {
 
   constructor(addresses: AddressDefinition) {
     this.addresses = addresses;
+
+    this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
+    this.LOCALHOST_ARBITRUM = this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.ARBITRUM;
+
     this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
-    this.ANVIL1 = this.addresses[ChainId.ANVIL1];
+    this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.MAINNET;
+
+    this.TESTNET = this.addresses[ChainId.TESTNET] || this.addresses[Address.defaultChainId];
+    this.ANVIL1 = this.addresses[ChainId.ANVIL1] || this.addresses[Address.defaultChainId];
   }
 
   get(chainId?: number) {
-    // Default to MAINNET if no chain is specified
+    const defaultAddress = this.addresses[Address.defaultChainId] || "";
+
+    let address = defaultAddress;
+
+    // Default to Address.defaultChainId if no chain is specified
     if (!chainId) {
-      return this.addresses[ChainId.MAINNET];
+      return address;
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -46,12 +65,14 @@ export class Address {
     }
 
     // If user wants an address on a TESTNET chain
-    // return mainnet one if it's not found
+    // return ARBITRUM one if it's not found
     if (TESTNET_CHAINS.has(chainId)) {
-      return this.addresses[chainId] || this.addresses[ChainId.MAINNET];
+      address = this.addresses[chainId] || defaultAddress;
+    } else {
+      address = this.addresses[chainId] || defaultAddress;
     }
 
-    return this.addresses[chainId];
+    return address;
   }
 
   set<T extends string | AddressDefinition>(input: T) {

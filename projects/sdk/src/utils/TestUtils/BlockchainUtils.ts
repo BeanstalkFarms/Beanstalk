@@ -132,15 +132,14 @@ export class BlockchainUtils {
       this.setCRV3Balance(account, this.sdk.tokens.CRV3.amount(amount)),
       this.setWETHBalance(account, this.sdk.tokens.WETH.amount(amount)),
       this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
+      this.setWSTETHBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
       this.setROOTBalance(account, this.sdk.tokens.ROOT.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
       // this.seturBEAN3CRVBalance(account, this.sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount)),
       this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
       this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
-      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
-      this.setWstethBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
-      this.setStethBalance(account, this.sdk.tokens.STETH.amount(amount))
+      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
@@ -182,11 +181,8 @@ export class BlockchainUtils {
   async setBEANWSTETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
   }
-  async setWstethBalance(account: string, balance: TokenValue) {
+  async setWSTETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WSTETH, account, balance);
-  }
-  async setStethBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.STETH, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
@@ -204,7 +200,6 @@ export class BlockchainUtils {
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
     slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]);
     slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.STETH.address, [0, false]);
     return slotConfig.get(tokenAddress);
   }
 
@@ -419,6 +414,7 @@ export class BlockchainUtils {
     const currentSeason = _currentSeason || _season + 100;
 
     return makeDepositObject(token, ethers.BigNumber.from(_stemTipForToken || _season), {
+      id: ethers.constants.Zero,
       stem: _stem || currentSeason, // FIXME
       amount: amount.toBlockchain(),
       bdv: bdv.toBlockchain(),
