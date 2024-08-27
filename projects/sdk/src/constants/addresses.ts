@@ -10,7 +10,7 @@ export const addresses = {
   }),
   BEANSTALK_FERTILIZER: Address.make({
     [ChainId.MAINNET]: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6",
-    [ChainId.ARBITRUM]: "0xFD02c2291fb4F832831666Df5960A590d5e231cF" // FIX ME
+    [ChainId.ARBITRUM]: "0x82a17bdeC3368f549A7BfE6734D6E2Aba82be455" // FIX ME
   }),
   BARNRAISE_CUSTODIAN: Address.make({
     [ChainId.MAINNET]: "0xa9bA2C40b263843C04d344727b954A545c81D043"
@@ -20,10 +20,12 @@ export const addresses = {
   // Ecosystem Contracts
   // ----------------------------------------
   BEANSTALK_PRICE: Address.make({
-    [ChainId.MAINNET]: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"
+    [ChainId.MAINNET]: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A",
+    [ChainId.ARBITRUM]: "0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56"
   }),
-  MATH: Address.make({
-    [ChainId.MAINNET]: "0x16a903b66403d3de69db50e6d1ad0b07490b740a"
+  JUNCTION: Address.make({
+    [ChainId.MAINNET]: "0x16a903b66403d3de69db50e6d1ad0b07490b740a",
+    [ChainId.ARBITRUM]: "0x5A5A5ADe4C9713172a5228703213d4D39608E2cD"
   }),
   DEPOT: Address.make({
     [ChainId.MAINNET]: "0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2",
@@ -33,13 +35,16 @@ export const addresses = {
     [ChainId.MAINNET]: "0xb1bE0000C6B3C62749b5F0c92480146452D15423",
     [ChainId.ARBITRUM]: "0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0"
   }),
+  UNWRAP_AND_SEND_ETH: Address.make({
+    [ChainId.MAINNET]: "0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"
+    // [ChainId.ARBITRUM]: "" // TODO
+  }),
+
+  /** @deprecated */
   USD_ORACLE: Address.make({
     [ChainId.MAINNET]: "0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"
   }),
-
-  /**
-   * @deprecated
-   */
+  /** @deprecated */
   ROOT: Address.make({
     [ChainId.MAINNET]: "0x77700005BEA4DE0A78b956517f099260C2CA9a26"
   }),
@@ -101,23 +106,23 @@ export const addresses = {
   // ----------------------------------------
   BEANWETH_WELL: Address.make({
     [ChainId.MAINNET]: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd",
-    [ChainId.ARBITRUM]: "0xBEA02d411690A8Aa418E6606fFf5C964933645E0"
+    [ChainId.ARBITRUM]: "0xBEA00ebA46820994d24E45dffc5c006bBE35FD89"
   }),
   BEANWSTETH_WELL: Address.make({
     [ChainId.MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
-    [ChainId.ARBITRUM]: "0xBEA046038302b14e2Bab2636d1E8FaacE602e0aa"
+    [ChainId.ARBITRUM]: "0xBEA0039bC614D95B65AB843C4482a1A5D2214396"
   }),
   BEANWEETH_WELL: Address.make({
-    [ChainId.ARBITRUM]: "0xBEA0Ee8f9c5bDd6f9aBd9dC687a2D51956508eC9"
+    [ChainId.ARBITRUM]: "0xBEA000B7fde483F4660041158D3CA53442aD393c"
   }),
   BEANWBTC_WELL: Address.make({
-    [ChainId.ARBITRUM]: "0xBEA0d57e05C78E11817f6B2024805b68f97c0e2b"
+    [ChainId.ARBITRUM]: "0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A"
   }),
   BEANUSDC_WELL: Address.make({
-    [ChainId.ARBITRUM]: "0xBEA0F599087480c49eC21a9aAa66CBE0A53B6741"
+    [ChainId.ARBITRUM]: "0xBEA00C30023E873D881da4363C00F600f5e14c12"
   }),
   BEANUSDT_WELL: Address.make({
-    [ChainId.ARBITRUM]: "0xBEA09220d69Eec94140531877DdB4922E75a75aC"
+    [ChainId.ARBITRUM]: "0xBEA00699562C71C2d3fFc589a848353151a71A61"
   }),
 
   // ----------------------------------------
@@ -159,6 +164,21 @@ export const addresses = {
   }),
   STETH: Address.make({
     [ChainId.MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+  }),
+  ARB: Address.make({
+    [ChainId.ARBITRUM]: "0x912CE59144191C1204E64559FE8253a0e49E6548"
+  }),
+  RETH: Address.make({
+    [ChainId.ARBITRUM]: "0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8"
+  }),
+  GMX: Address.make({
+    [ChainId.ARBITRUM]: "0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a"
+  }),
+  PENDLE: Address.make({
+    [ChainId.ARBITRUM]: "0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8"
+  }),
+  ZRO: Address.make({
+    [ChainId.ARBITRUM]: "0x6985884C4392D348587B19cb9eAAf157F13271cd"
   }),
 
   // ----------------------------------------
