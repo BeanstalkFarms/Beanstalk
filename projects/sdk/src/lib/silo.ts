@@ -504,8 +504,6 @@ export class Silo {
 
   /**
    * TODO: Cache stemStartSeason and calculate tip using Season?
-   * TODO: TokenValue?
-   * TODO: Check if whitelisted?
    */
   async getStemTip(token: Token): Promise<BigNumber> {
     return Silo.sdk.contracts.beanstalk.stemTipForToken(token.address);
@@ -513,8 +511,6 @@ export class Silo {
 
   /**
    * TODO: Cache stemStartSeason and calculate tip using Season?
-   * TODO: multicall?
-   * TODO: Check if whitelisted?
    */
   async getStemTips() {
     const [wlTokens, stemTips] = await Promise.all([
