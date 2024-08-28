@@ -1,3 +1,4 @@
+import { Address } from '@beanstalk/sdk-core';
 import { SupportedChainId } from './chains';
 
 // ----------------------------------------
@@ -144,77 +145,20 @@ export const BEAN_WSTETH_ADDRESSS = {
     '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
 };
 
-// ----------------------------------------
-// Curve Pools: Other
-// ----------------------------------------
+export const DAI_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.MAINNET]: '0xaed0c38402a5d19df6e4c03f4e2dced6e29c1ee9',
+  [SupportedChainId.ARBITRUM]: '0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB',
+});
 
-export const POOL3_ADDRESSES = {
-  // --------------------------------------------------
-  // "Curve.fi: DAI/USDC/USDT Pool" (aka 3pool)
-  // --------------------------------------------------
-  // coins[0] = 0x6B175474E89094C44Da98b954EedeAC495271d0F (DAI)
-  // coins[1] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 (USDC)
-  // coins[2] = 0xdAC17F958D2ee523a2206206994597C13D831ec7 (USDT)
-  [SupportedChainId.MAINNET]:
-    '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7'.toLowerCase(),
-};
+export const USDT_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.MAINNET]: '0x3e7d1eab13ad0104d2750b8863b489d65364e32d',
+  [SupportedChainId.ARBITRUM]: '0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7',
+});
 
-export const TRICRYPTO2_ADDRESSES = {
-  // --------------------------------------------------
-  // tricrypto2
-  // --------------------------------------------------
-  // coins[0] = 0xdAC17F958D2ee523a2206206994597C13D831ec7 (USDT)
-  // coins[1] = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 (WBTC)
-  // coins[2] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 (WETH)
-  [SupportedChainId.MAINNET]:
-    '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46'.toLowerCase(),
-};
-
-// ----------------------------------------
-// Curve: Registries / Factories / Utils
-// ----------------------------------------
-// "metapool" and "cryptoswap" are simultaneously
-// - "registries" (they track a list of pools)
-// - "factories"  (they allow creation of new pools)
-
-// 3pool, etc.
-export const POOL_REGISTRY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x90e00ace148ca3b23ac1bc8c240c2a7dd9c2d7f5'.toLowerCase(),
-};
-
-// X:3CRV, etc. aka StableFactory
-export const META_FACTORY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xB9fC157394Af804a3578134A6585C0dc9cc990d4'.toLowerCase(),
-};
-
-// tricrypto2, etc.
-export const CRYPTO_FACTORY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x8F942C20D02bEfc377D41445793068908E2250D0'.toLowerCase(),
-};
-
-// zap
-export const CURVE_ZAP_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xA79828DF1850E8a3A3064576f380D90aECDD3359'.toLowerCase(),
-};
-
-export const DAI_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xaed0c38402a5d19df6e4c03f4e2dced6e29c1ee9'.toLowerCase(),
-};
-
-export const USDT_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x3e7d1eab13ad0104d2750b8863b489d65364e32d'.toLowerCase(),
-};
-
-export const USDC_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x8fffffd4afb6115b954bd326cbe7b4ba576818f6'.toLowerCase(),
-};
+export const USDC_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.MAINNET]: '0x8fffffd4afb6115b954bd326cbe7b4ba576818f6',
+  [SupportedChainId.ARBITRUM]: '0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3',
+});
 
 export const ETH_CHAINLINK_ADDRESS = {
   [SupportedChainId.MAINNET]:
