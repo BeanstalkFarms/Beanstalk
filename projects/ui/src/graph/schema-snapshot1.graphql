@@ -364,6 +364,7 @@ input SpaceWhere {
   id_in: [String]
   plugin: String
   strategy: String
+  verified: Boolean
 }
 
 type Statement {
@@ -393,6 +394,7 @@ input StatementsWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  network: String
   space: String
   space_in: [String]
 }
