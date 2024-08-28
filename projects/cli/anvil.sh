@@ -8,7 +8,7 @@ chainIdType="$2"
 
 # Set chain IDs
 mainnet_local_chain_id=1337
-arbitrum_local_chain_id=42161
+arbitrum_local_chain_id=41337
 
 # Determine which API key to use
 if [ "$keyType" = "test" ]; then
