@@ -24,7 +24,21 @@ import {
   UnwrapAndSendEthJunction,
   UnwrapAndSendEthJunction__factory,
   Junction,
-  Junction__factory
+  Junction__factory,
+  Curve3Pool,
+  CurveCryptoFactory,
+  CurveMetaFactory,
+  CurveMetaPool,
+  CurveRegistry,
+  CurveTriCrypto2Pool,
+  CurveZap,
+  Curve3Pool__factory,
+  CurveCryptoFactory__factory,
+  CurveMetaFactory__factory,
+  CurveMetaPool__factory,
+  CurveRegistry__factory,
+  CurveTriCrypto2Pool__factory,
+  CurveZap__factory
 } from "src/constants/generated";
 
 type LidoContracts = {
@@ -136,13 +150,18 @@ export class Contracts {
     };
 
     // Uniswap
-    this.uniswapV3Router = UniswapV3Router__factory.connect(
-      uniswapV3RouterAddress,
-      sdk.providerOrSigner
-    );
-    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
-      uniswapV3QuoterV2Address,
-      sdk.providerOrSigner
-    );
+    if (uniswapV3RouterAddress) {
+      this.uniswapV3Router = UniswapV3Router__factory.connect(
+        uniswapV3RouterAddress,
+        sdk.providerOrSigner
+      );
+    }
+
+    if (uniswapV3QuoterV2Address) {
+      this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
+        uniswapV3QuoterV2Address,
+        sdk.providerOrSigner
+      );
+    }
   }
 }
