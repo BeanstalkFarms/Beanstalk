@@ -13,16 +13,13 @@ import { ClaimWithdrawals } from "./ClaimWithdrawals";
 import { ClaimWithdrawal } from "./ClaimWithdrawal";
 import { TransferDeposits } from "./TransferDeposits";
 import { TransferDeposit } from "./TransferDeposit";
-import { AddLiquidity } from "./AddLiquidity";
-import { Exchange } from "./Exchange";
-import { ExchangeUnderlying } from "./ExchangeUnderlying";
-import { RemoveLiquidityOneToken } from "./RemoveLiquidityOneToken";
 import { WellSwap } from "./WellSwap";
 import { WellShift } from "./WellShift";
 import { WellSync } from "./WellSync";
 import { UniswapV3Swap } from "./UniswapV3Swap";
 import { DevDebug } from "./_DevDebug";
 import { LidoWrapSteth } from "./LidoWrapSteth";
+import { LidoUnwrapWstETH } from "./LidoUnwrapWstETH";
 
 export {
   // Approvals
@@ -50,12 +47,7 @@ export {
 
   // Lido
   LidoWrapSteth,
-
-  // DEX: Curve
-  AddLiquidity,
-  Exchange,
-  ExchangeUnderlying,
-  RemoveLiquidityOneToken,
+  LidoUnwrapWstETH,
 
   // DEX: Wells
   WellSwap,
