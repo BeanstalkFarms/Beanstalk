@@ -442,7 +442,6 @@ export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN_WSTETH_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WSTETH,
-  BEAN_CRV3_LP,
 ];
 
 // Tokens that are no longer whitelisted.

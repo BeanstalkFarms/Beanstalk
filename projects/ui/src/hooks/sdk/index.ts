@@ -21,9 +21,9 @@ import {
   BEAN_ETH_UNIV2_LP,
   RINSABLE_SPROUTS,
   BEAN_ETH_WELL_LP,
-  SILO_WHITELIST,
   WSTETH,
   BEAN_WSTETH_WELL_LP,
+  SILO_WHITELIST,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
 import useGetChainToken from '../chain/useGetChainToken';
@@ -70,6 +70,7 @@ export function getNewToOldToken(_token: Token) {
 
 export const useRefreshSeeds = () => {
   const getChainToken = useGetChainToken();
+
   return useCallback(
     async (sdk: BeanstalkSDK) => {
       await sdk.refresh();
@@ -82,24 +83,31 @@ export const useRefreshSeeds = () => {
           console.log(`SDK token ${token.symbol} did not have any seeds set`);
           throw new Error(`No seeds set for ${token.symbol}`);
         }
-        token!.rewards!.seeds = parseFloat(seeds.toHuman());
+        if (token && token?.rewards) {
+          token.rewards.seeds = parseFloat(seeds.toHuman());
+        }
       }
     },
     [getChainToken]
   );
 };
 
-export const useDynamicSeeds = (sdk: BeanstalkSDK) => {
+export const useDynamicSeeds = (
+  sdk: BeanstalkSDK,
+  allowRun: boolean = true
+) => {
   const [ready, setReady] = useState(false);
   const refreshSeeds = useRefreshSeeds();
+
   useEffect(() => {
+    if (!allowRun) return;
     const load = async () => {
       await refreshSeeds(sdk);
       setReady(true);
     };
 
     load();
-  }, [refreshSeeds, sdk]);
+  }, [refreshSeeds, sdk, allowRun]);
 
   return ready;
 };

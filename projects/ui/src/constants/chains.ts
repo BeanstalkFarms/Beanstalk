@@ -37,10 +37,13 @@ export const L1_CHAIN_IDS = [
   SupportedChainId.ANVIL1,
 ] as const;
 
-export const L2_CHAIN_IDS = [] as const;
+export const L2_CHAIN_IDS = [
+  SupportedChainId.ARBITRUM,
+  SupportedChainId.LOCALHOST_ARBITRUM,
+] as const;
 
-export type SupportedL1ChainId = typeof L1_CHAIN_IDS[number];
-export type SupportedL2ChainId = typeof L2_CHAIN_IDS[number];
+export type SupportedL1ChainId = (typeof L1_CHAIN_IDS)[number];
+export type SupportedL2ChainId = (typeof L2_CHAIN_IDS)[number];
 
 interface BaseChainInfo {
   readonly networkType: NetworkType;
@@ -67,5 +70,5 @@ export interface L2ChainInfo extends BaseChainInfo {
   readonly networkType: NetworkType.L2;
   readonly bridge: string;
   readonly statusPage?: string;
-  readonly defaultListUrl: string;
+  readonly defaultListUrl?: string;
 }

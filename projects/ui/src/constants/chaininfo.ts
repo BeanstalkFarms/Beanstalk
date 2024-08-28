@@ -46,4 +46,22 @@ export const CHAIN_INFO: ChainInfoMap = {
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Basin Test Ether', symbol: 'btETH', decimals: 18 },
   },
+  [SupportedChainId.ARBITRUM]: {
+    networkType: NetworkType.L2,
+    explorer: 'https://arbiscan.io',
+    label: 'Arbitrum',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    statusPage: 'https://status.arbitrum.io/',
+    bridge: 'https://bridge.arbitrum.io',
+  },
+  [SupportedChainId.LOCALHOST_ARBITRUM]: {
+    networkType: NetworkType.L2,
+    explorer: 'https://arbiscan.io',
+    label: 'Localhost Arbitrum',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    statusPage: 'https://status.arbitrum.io/',
+    bridge: 'https://bridge.arbitrum.io',
+  },
 };
