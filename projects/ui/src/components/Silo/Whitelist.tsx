@@ -19,15 +19,13 @@ import { useAccount } from 'wagmi';
 import { Pool, Token } from '~/classes';
 import { AppState } from '~/state';
 import TokenIcon from '~/components/Common/TokenIcon';
-import {
-  BEAN,
-  SEEDS,
-  STALK,
-  UNRIPE_BEAN,
-  UNRIPE_BEAN_WSTETH,
-} from '~/constants/tokens';
+import { BEAN, SEEDS, STALK, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
 import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
-import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
+import {
+  displayFullBN,
+  displayTokenAmount,
+  tokenIshEqual,
+} from '~/util/Tokens';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import {
   BeanstalkPalette,
@@ -35,7 +33,6 @@ import {
   IconSize,
 } from '~/components/App/muiTheme';
 import Fiat from '~/components/Common/Fiat';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useSetting from '~/hooks/app/useSetting';
 import Row from '~/components/Common/Row';
 import Stat from '~/components/Common/Stat';
@@ -45,6 +42,7 @@ import logo from '~/img/tokens/bean-logo.svg';
 import { FC } from '~/types';
 import { useIsTokenDeprecated } from '~/hooks/beanstalk/useWhitelist';
 import { roundWithDecimals } from '~/util/UI';
+import { useBalanceTokens } from '~/hooks/beanstalk/useTokens';
 import SiloAssetApyChip from './SiloAssetApyChip';
 import StatHorizontal from '../Common/StatHorizontal';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -77,10 +75,11 @@ const Whitelist: FC<{
   const checkIfDeprecated = useIsTokenDeprecated();
 
   /// Chain
-  const getChainToken = useGetChainToken();
-  const Bean = getChainToken(BEAN);
-  const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
+  const {
+    BEAN: Bean,
+    UNRIPE_BEAN: urBean,
+    UNRIPE_BEAN_WSTETH: urBeanWstETH,
+  } = useBalanceTokens();
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
 
   /// State
@@ -197,7 +196,9 @@ const Whitelist: FC<{
           <Stack gap={1} p={1}>
             {config.whitelist.map((token) => {
               const deposited = farmerSilo.balances[token.address]?.deposited;
-              const isUnripe = token === urBean || token === urBeanWstETH;
+              const isUnripe =
+                tokenIshEqual(token, urBean) ||
+                tokenIshEqual(token, urBeanWstETH);
               const isUnripeLP =
                 isUnripe && token.address === UNRIPE_BEAN_WSTETH[1].address;
               const isDeprecated = checkIfDeprecated(token.address);
@@ -600,7 +601,7 @@ const Whitelist: FC<{
                               <Tooltip
                                 placement="right"
                                 title={
-                                  token.equals(Bean) &&
+                                  tokenIshEqual(token, Bean) &&
                                   farmerSilo.beans.earned.gt(0) ? (
                                     <>
                                       {displayFullBN(
@@ -640,7 +641,7 @@ const Whitelist: FC<{
                                       <br />
                                     </>
                                   ) : (
-                                    !token.equals(Bean) &&
+                                    !tokenIshEqual(token, Bean) &&
                                     deposited?.amount.gt(0) && (
                                       <Stack gap={0.5}>
                                         <StatHorizontal label="Current BDV:">
@@ -682,7 +683,7 @@ const Whitelist: FC<{
                                       deposited?.amount || ZERO_BN,
                                       token.displayDecimals
                                     )}
-                                    {token.equals(Bean) &&
+                                    {tokenIshEqual(token, Bean) &&
                                     farmerSilo.beans.earned.gt(0) ? (
                                       <Typography
                                         component="span"

@@ -141,14 +141,15 @@ function Arbitrum() {
       {/* -----------------------
        * Appplication Setup
        * ----------------------- */}
-      <AppUpdater />
-      <PoolsUpdater />
+      <UnripeUpdater />
       {false && (
         <>
+          <AppUpdater />
+          {/* price contract not working */}
+          <PoolsUpdater />
           {/* -----------------------
            * Bean Updaters
            * ----------------------- */}
-          <UnripeUpdater />
           {/* -----------------------
            * Beanstalk Updaters
            * ----------------------- */}
