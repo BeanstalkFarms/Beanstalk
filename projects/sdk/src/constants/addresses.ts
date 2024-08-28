@@ -166,6 +166,7 @@ export const addresses = {
     [ChainId.MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
   }),
   ARB: Address.make({
+    [ChainId.MAINNET]: "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
     [ChainId.ARBITRUM]: "0x912CE59144191C1204E64559FE8253a0e49E6548"
   }),
   RETH: Address.make({

@@ -12,7 +12,7 @@ export const ACCOUNTS = [
 export const getProvider = () =>
   new ethers.providers.StaticJsonRpcProvider(`http://127.0.0.1:8545`, {
     name: "foundry",
-    chainId: 1337
+    chainId: 41337 // default to arbitrum-local
   });
 
 export const setupConnection = (provider: ethers.providers.JsonRpcProvider = getProvider()) => {
