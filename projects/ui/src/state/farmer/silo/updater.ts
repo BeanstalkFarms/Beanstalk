@@ -1,16 +1,17 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
-import axios from 'axios';
 import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
-import { TokenMap, ZERO_BN } from '~/constants';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
 import { bigNumberResult, transform } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import useSdk from '~/hooks/sdk';
-import { LegacyDepositCrate } from '~/state/farmer/silo';
+import { MowStatus } from '~/state/farmer/silo';
 import useSeason from '~/hooks/beanstalk/useSeason';
+import { ContractFunctionParameters } from 'viem';
+import { ABISnippets } from '~/constants';
+import { multicall } from '@wagmi/core';
+import { config } from '~/util/wagmi/config';
 import {
   resetFarmerSilo,
   updateLegacyFarmerSiloBalances,
@@ -20,21 +21,8 @@ import {
   updateFarmerSiloLoading,
   updateFarmerSiloError,
   updateFarmerSiloRan,
+  updateFarmerSiloMowStatuses,
 } from './actions';
-
-type SiloV3StaticData = {
-  deposits: {
-    [tokenAddress: string]: {
-      [season: string]: { amount: string; bdv: string };
-    };
-  };
-  merkle: {
-    stalk: string;
-    seeds: string;
-    leaf: string;
-    proof: string[];
-  };
-};
 
 type BaseToGrownStalk = {
   base: BigNumber;
@@ -43,41 +31,110 @@ type BaseToGrownStalk = {
   unclaimed: BigNumber;
 };
 
-export const fetchMigrationData = async (account: string) =>
-  axios
-    .get(
-      `${
-        process.env.NODE_ENV === 'development' ? 'http://localhost:8888' : ''
-      }${'/.netlify/functions/silov3'}`,
-      { params: { account } }
-    )
-    .then((r) => r.data as SiloV3StaticData);
+type SiloGettersParams = ContractFunctionParameters<
+  typeof ABISnippets.siloGetters
+>;
+
+const buildMultiCall = (
+  beanstalkAddress: string,
+  account: string,
+  whitelist: Token[]
+) => {
+  const whitelistAddresses = whitelist.map((t) => t.address as `0x{string}`);
+  const shared = {
+    address: beanstalkAddress as `0x{string}`,
+    abi: ABISnippets.siloGetters,
+  };
+  const balanceOfStalk: SiloGettersParams = {
+    ...shared,
+    functionName: 'balanceOfStalk',
+    args: [account as `0x{string}`],
+  };
+  const balOfGrownStalkMultiple: ContractFunctionParameters<
+    typeof ABISnippets.siloGetters,
+    'view',
+    'balanceOfGrownStalkMultiple'
+  > = {
+    ...shared,
+    functionName: 'balanceOfGrownStalkMultiple',
+    args: [account as `0x{string}`, whitelistAddresses],
+  };
+  const rootBalance: SiloGettersParams = {
+    ...shared,
+    functionName: 'balanceOfRoots',
+    args: [account as `0x{string}`],
+  };
+  const mowStatuses: SiloGettersParams = {
+    ...shared,
+    functionName: 'getMowStatus',
+    args: [account as `0x{string}`, whitelistAddresses],
+  };
+  const balanceOfEarnedBeans: SiloGettersParams = {
+    ...shared,
+    functionName: 'balanceOfEarnedBeans',
+    args: [account as `0x{string}`],
+  };
+
+  return [
+    balanceOfStalk,
+    balOfGrownStalkMultiple,
+    rootBalance,
+    balanceOfEarnedBeans,
+    mowStatuses,
+  ];
+};
+
+type MultiCallResult = Awaited<
+  ReturnType<typeof multicall<typeof config, ReturnType<typeof buildMultiCall>>>
+>;
+
+const parseMultiCallResult = (
+  sdk: ReturnType<typeof useSdk>,
+  result: MultiCallResult
+) => {
+  const [
+    _activeStalkBalance,
+    _grownStalkBalance,
+    _rootBalance,
+    _earnedBeanBalance,
+    _mowStatuses,
+  ] = result;
+
+  const activeStalkBalance = transform(
+    _activeStalkBalance.result || 0n,
+    'bnjs',
+    sdk.tokens.STALK
+  );
+};
 
 export const useFetchFarmerSilo = () => {
   /// Helpers
   const dispatch = useDispatch();
 
   /// Contracts
-  const beanstalk = useBeanstalkContract();
   const sdk = useSdk();
+  const beanstalk = sdk.contracts.beanstalk;
 
   /// Data
   const account = useAccount();
   const season = useSeason();
 
   ///
-  const initialized = !!(
-    beanstalk &&
-    account &&
-    sdk.contracts.beanstalk &&
-    season?.gt(0)
-  );
+  const initialized = !!(beanstalk && account && season?.gt(0));
 
   /// Handlers
   const fetch = useCallback(async () => {
     if (initialized) {
       dispatch(updateFarmerSiloLoading(true));
       console.debug('[farmer/silo/useFarmerSilo] FETCH');
+
+      const whitelist = [...sdk.tokens.siloWhitelist];
+
+      const calls = buildMultiCall(beanstalk.address, account, whitelist);
+
+      const multiCallResult = await multicall(config, { contracts: calls });
+      console.log('multiCallResult', multiCallResult);
+      // const activeStalkBal = _activeStalkBalance.result;
 
       // FIXME: multicall this section
       // FIXME: translate?
@@ -86,10 +143,7 @@ export const useFetchFarmerSilo = () => {
         { grownStalkBalance, grownStalkByToken },
         rootBalance,
         earnedBeanBalance,
-        // migrationNeeded,
         mowStatuses,
-        lastUpdate,
-        stemTips,
       ] = await Promise.all([
         // `getStalk()` returns `stalk + earnedStalk` but NOT grown stalk
         sdk.silo.getStalk(account),
@@ -115,28 +169,25 @@ export const useFetchFarmerSilo = () => {
         sdk.contracts.beanstalk.balanceOfRoots(account).then(bigNumberResult),
         sdk.silo.getEarnedBeans(account),
 
-        // FIXME: this only needs to get fetched once and then can probably be cached
-        // in LocalStorage or at least moved to a separate updater to prevent it from
-        // getting called every time the farmer refreshes their Silo
-        // sdk.contracts.beanstalk.migrationNeeded(account),
-
-        // Get the mowStatus struct for each whitelisted token
-        Promise.all(
-          [...sdk.tokens.siloWhitelist].map((token) =>
-            sdk.contracts.beanstalk
-              .getMowStatus(account, token.address)
-              .then((status) => [token, status] as const)
+        sdk.contracts.beanstalk
+          .getMowStatus(
+            account,
+            whitelist.map((t) => t.address)
           )
-        ).then(
-          (statuses) =>
-            new Map<
-              Token,
-              // eslint-disable-next-line
-              Awaited<ReturnType<typeof sdk.contracts.beanstalk.getMowStatus>>
-            >(statuses)
-        ),
-        beanstalk.lastUpdate(account),
-        sdk.silo.getStemTips([...sdk.tokens.siloWhitelist]),
+          .then((statuses) => {
+            const entries = whitelist.map(
+              (tk, i) => [tk, statuses[i]] as const
+            );
+            return new Map<Token, MowStatus>(entries);
+          }),
+        // Get the mowStatus struct for each whitelisted token
+        // Promise.all(
+        //   [...sdk.tokens.siloWhitelist].map((token) =>
+        //     sdk.contracts.beanstalk
+        //       .getMowStatus(account, [token.address])
+        //       .then((status) => [token, status[0]] as const)
+        //   )
+        // ).then((statuses) => new Map<Token, MowStatus>(statuses)),
       ] as const);
 
       // dispatch(updateFarmerMigrationStatus(migrationNeeded));
@@ -151,7 +202,8 @@ export const useFetchFarmerSilo = () => {
         activeSeedBalance = activeSeedBalance.add(token.getSeeds(balance.bdv));
         const handleCrate = (
           crate: Deposit<TokenValue>
-        ): LegacyDepositCrate => ({
+        ): Deposit<BigNumber> => ({
+          id: crate.id,
           // stem: transform(crate.stem, 'bnjs'), // FIXME
           // ALECKS: I changed above line to below line. Typescript was expecting stem to be ethers.BigNumber
           // Leaving this comment here in case there's unexpected issues somewhere downstream.
@@ -182,62 +234,8 @@ export const useFetchFarmerSilo = () => {
           },
         };
       });
-
+      dispatch(updateFarmerSiloMowStatuses(mowStatuses));
       dispatch(updateFarmerSiloBalanceSdk(balances));
-
-      /**
-       * We need to calculate the stalk for un-migrated accounts differently than migrated ones
-       */
-
-      // First aggregate all crates per token
-      const stalkPerTokenForUnMigrated = Object.entries(payload).reduce<
-        TokenMap<BaseToGrownStalk>
-      >((prev, [tokenAddress, tokenBalances]) => {
-        if (!season) return prev;
-        prev[tokenAddress] =
-          tokenBalances.deposited!.crates.reduce<BaseToGrownStalk>(
-            (acc, crate) => {
-              acc.base = acc.base.plus(crate.stalk.base);
-              acc.grown = acc.grown.plus(crate.stalk.grown);
-              acc.seeds = acc.seeds.plus(crate.seeds);
-              acc.unclaimed = ZERO_BN;
-              return acc;
-            },
-            {
-              base: ZERO_BN,
-              grown: ZERO_BN,
-              unclaimed: ZERO_BN,
-              seeds: ZERO_BN,
-            }
-          );
-        return prev;
-      }, {});
-
-      // Then aggregate all tokens
-      const stalkForUnMigrated = Object.entries(
-        stalkPerTokenForUnMigrated
-      ).reduce(
-        (prev, [_, data]) => {
-          prev.base = prev.base.plus(data.base);
-          prev.grown = prev.grown.plus(data.grown);
-
-          return prev;
-        },
-        {
-          base: ZERO_BN,
-          grown: ZERO_BN,
-          earned: transform(
-            sdk.tokens.BEAN.getStalk(earnedBeanBalance),
-            'bnjs'
-          ),
-          total: ZERO_BN,
-        }
-      );
-      stalkForUnMigrated.total = stalkForUnMigrated.base.plus(
-        stalkForUnMigrated.grown
-      );
-      // .plus(stalkForUnMigrated.earned);
-      // End of un-migrated stalk calculation
 
       const earnedStalkBalance = sdk.tokens.BEAN.getStalk(earnedBeanBalance);
       const earnedSeedBalance = sdk.tokens.BEAN.getSeeds(earnedBeanBalance);
@@ -276,7 +274,7 @@ export const useFetchFarmerSilo = () => {
       dispatch(updateLegacyFarmerSiloBalances(payload));
       dispatch(updateFarmerSiloLoading(false));
     }
-  }, [initialized, sdk, account, dispatch, beanstalk, season]);
+  }, [initialized, sdk, account, dispatch]);
 
   const clear = useCallback(
     (_account?: string) => {

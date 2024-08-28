@@ -10,8 +10,6 @@ import {
 } from '~/constants';
 import { bigNumberResult } from '~/util/Ledger';
 import { tokenResult, transform } from '~/util';
-import { BEAN, STALK } from '~/constants/tokens';
-import { useGetChainConstant } from '~/hooks/chain/useChainConstant';
 import useSdk from '~/hooks/sdk';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from './index';
@@ -20,12 +18,56 @@ export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
   const sdk = useSdk();
 
-  ///
-  const getChainConstant = useGetChainConstant();
-  const Bean = getChainConstant(BEAN);
-
   /// Handlers
   const fetch = useCallback(async () => {
+    const beanstalk = sdk.contracts.beanstalk;
+    const BEAN = sdk.tokens.BEAN;
+    const STALK = sdk.tokens.STALK;
+
+    const whitelist = [...sdk.tokens.siloWhitelist];
+
+    const [
+      _stalkTotal,
+      _rootsTotal,
+      _bdvsTotal,
+      _bdvs,
+      _stemTips,
+      _earnedBeansTotal,
+      _whitelistedAssetTotals,
+    ] = await Promise.all([
+      beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
+      beanstalk.totalRoots().then(bigNumberResult),
+      Promise.resolve(BigNumberJS(0)),
+      beanstalk.bdvs(
+        whitelist.map((t) => t.address),
+        whitelist.map((t) => t.amount(1).toBlockchain())
+      ),
+      sdk.silo.getStemTips(),
+      beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
+      Promise.all(
+        whitelist.map((token) =>
+          Promise.all([
+            beanstalk.getTotalDeposited(token.address).then(tokenResult(token)),
+            beanstalk
+              .getTotalDepositedBdv(token.address)
+              .then(tokenResult(BEAN)),
+            beanstalk
+              .getGerminatingTotalDeposited(token.address)
+              .then(tokenResult(token)),
+            beanstalk
+              .bdv(token.address, token.amount(1).toBlockchain())
+              .then(tokenResult(BEAN)),
+          ]).then((data) => ({
+            address: token.address,
+            deposited: data[0],
+            depositedBdv: data[1],
+            totalGerminating: data[2],
+            bdvPerToken: data[3],
+          }))
+        )
+      ),
+    ]);
+
     const [
       // 0
       stalkTotal,
@@ -36,13 +78,12 @@ export const useFetchBeanstalkSilo = () => {
       whitelistedAssetTotals,
       // 5
       stemTips,
-      // 6
     ] = await Promise.all([
       // 0
-      sdk.contracts.beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
+      beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
       new BigNumberJS(0), //
-      sdk.contracts.beanstalk.totalRoots().then(bigNumberResult), //
-      sdk.contracts.beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
+      beanstalk.totalRoots().then(bigNumberResult), //
+      beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
 
       // 4
       // FIXME: Could save a lot of network requests by moving this to the Subgraph
@@ -50,17 +91,13 @@ export const useFetchBeanstalkSilo = () => {
         [...sdk.tokens.siloWhitelist].map((token) =>
           Promise.all([
             // FIXME: duplicate tokenResult optimization
-            sdk.contracts.beanstalk
+            beanstalk
               .getTotalDeposited(token.address)
               .then((v) => transform(v, 'bnjs', token)),
-            // sdk.contracts.beanstalk
-            //   .getTotalWithdrawn(token.address)
-            //   .then((v) => transform(v, 'bnjs', token)),
-
             // BEAN will always have a fixed BDV of 1, skip to save a network request
-            token === sdk.tokens.BEAN
+            token === BEAN
               ? ONE_BN
-              : sdk.contracts.beanstalk
+              : beanstalk
                   .bdv(token.address, token.amount(1).toBlockchain())
                   .then(tokenResult(BEAN))
                   .catch((err) => {
@@ -68,29 +105,26 @@ export const useFetchBeanstalkSilo = () => {
                     console.error(err);
                     throw err;
                   }),
-
-            sdk.silo.getStemTip(token).then((v) => transform(v, 'ethers')),
-
-            sdk.contracts.beanstalk
+            sdk.silo.getStemTip(token),
+            beanstalk
               .getTotalDepositedBdv(token.address)
               .then(tokenResult(BEAN)),
-            sdk.contracts.beanstalk
+            beanstalk
               .getGerminatingTotalDeposited(token.address)
               .then((v) => transform(v, 'bnjs', token)),
           ]).then((data) => ({
             address: token.address.toLowerCase(),
             deposited: data[0],
-            withdrawn: data[1],
-            bdvPerToken: data[2],
-            stemTip: data[3],
-            depositedBdv: data[4],
-            totalGerminating: data[5],
+            bdvPerToken: data[1],
+            stemTip: data[2],
+            depositedBdv: data[3],
+            totalGerminating: data[4],
           }))
         )
       ),
 
       // 5
-      sdk.silo.getStemTips([...sdk.tokens.siloWhitelist]),
+      sdk.silo.getStemTips(),
     ] as const);
 
     console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
@@ -123,7 +157,6 @@ export const useFetchBeanstalkSilo = () => {
         },
         withdrawn: {
           amount: ZERO_BN,
-          // amount: curr.withdrawn,
         },
         germinating: {
           amount: curr.totalGerminating,
@@ -145,7 +178,7 @@ export const useFetchBeanstalkSilo = () => {
         // Rewards
         beans: {
           earned: earnedBeansTotal,
-          total: balances[Bean.address].deposited.amount,
+          total: balances[BEAN.address].deposited.amount,
         },
         stalk: {
           active: activeStalkTotal,
@@ -165,7 +198,7 @@ export const useFetchBeanstalkSilo = () => {
         withdrawSeasons: ZERO_BN,
       })
     );
-  }, [sdk, dispatch, Bean.address]);
+  }, [sdk.contracts.beanstalk, sdk.tokens, sdk.silo, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[beanstalk/silo/useBeanstalkSilo] CLEAR');

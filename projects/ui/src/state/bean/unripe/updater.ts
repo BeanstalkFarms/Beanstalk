@@ -8,13 +8,14 @@ import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import BigNumber from 'bignumber.js';
 import useSdk from '~/hooks/sdk';
+import { ERC20Token } from '@beanstalk/sdk';
 import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {
   const dispatch = useDispatch();
   const sdk = useSdk();
   const beanstalk = sdk.contracts.beanstalk;
-  const unripeTokens = useTokenMap(sdk.tokens.unripeTokens);
+  const unripeTokens = useTokenMap(sdk.tokens.unripeTokens as Set<ERC20Token>);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap(); // [unripe token address] => Ripe Token
   const unripeLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
 
@@ -58,8 +59,6 @@ export const useUnripe = () => {
             ])
           )
         );
-
-        console.log('results: ', results);
 
         const data = tokenAddresses.reduce<AddressMap<UnripeToken>>(
           (prev, key, index) => {
