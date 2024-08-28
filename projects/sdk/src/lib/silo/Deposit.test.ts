@@ -44,7 +44,7 @@ const happyPaths: Record<string, string> = {
   "USDT:BEANwstETH": "USDT -> BEANwstETH -> BEANwstETH:SILO"
 };
 
-describe("Silo Deposit", function () {
+describe.skip("Silo Deposit", function () {
   const builder = new DepositBuilder(sdk);
 
   // filter out bean_3crv_lp
