@@ -1,7 +1,11 @@
 import { ethers, Overrides } from "ethers";
 import { ERC20Token } from "src/classes/Token";
 import { DepositTransferStruct } from "src/constants/generated/projects/sdk/src/constants/abi/Ecosystem/Root";
-import { TokenSiloBalance, DepositTokenPermitMessage, DepositTokensPermitMessage } from "src/lib/silo/types";
+import {
+  TokenSiloBalance,
+  DepositTokenPermitMessage,
+  DepositTokensPermitMessage
+} from "src/lib/silo/types";
 import { TokenValue } from "src/TokenValue";
 
 import { BeanstalkSDK } from "./BeanstalkSDK";
@@ -25,7 +29,7 @@ export class Root {
 
   constructor(sdk: BeanstalkSDK) {
     Root.sdk = sdk;
-    Root.address = sdk.contracts.root.address;
+    Root.address = sdk.contracts.root?.address || "";
   }
 
   /**
@@ -45,6 +49,10 @@ export class Root {
     _permit?: SignedPermit<DepositTokenPermitMessage | DepositTokensPermitMessage>,
     _overrides?: Overrides
   ) {
+    if (!Root.sdk.contracts.root) {
+      throw new Error("Root contract not found");
+    }
+
     if (_permit) {
       if ((_permit as SignedPermit<DepositTokenPermitMessage>).typedData.message.token) {
         let permit = _permit as SignedPermit<DepositTokenPermitMessage>;
@@ -79,11 +87,19 @@ export class Root {
       }
     }
 
-    return Root.sdk.contracts.root.mint(_depositTransfers, _destination, _minAmountOut, { ..._overrides });
+    return Root.sdk.contracts.root.mint(_depositTransfers, _destination, _minAmountOut, {
+      ..._overrides
+    });
   }
 
   async underlyingBdv() {
-    return Root.sdk.contracts.root.underlyingBdv().then((v) => Root.sdk.tokens.BEAN.fromBlockchain(v));
+    if (!Root.sdk.contracts.root) {
+      throw new Error("Root contract not found");
+    }
+
+    return Root.sdk.contracts.root
+      .underlyingBdv()
+      .then((v) => Root.sdk.tokens.BEAN.fromBlockchain(v));
   }
 
   /**
@@ -93,14 +109,22 @@ export class Root {
    * @param deposits
    * @param isDeposit
    */
-  async estimateRoots(token: ERC20Token, deposits: TokenSiloBalance["deposits"], isDeposit: boolean) {
+  async estimateRoots(
+    token: ERC20Token,
+    deposits: TokenSiloBalance["deposits"],
+    isDeposit: boolean
+  ) {
+    if (!Root.sdk.contracts.root) {
+      throw new Error("Root contract not found");
+    }
     // @dev note that sdk.tokens.ROOT.getContract() == sdk.contracts.root.
-    const [rootTotalSupply, rootUnderlyingBdvBefore, rootAllStalk, rootSeedsBefore] = await Promise.all([
-      Root.sdk.tokens.ROOT.getTotalSupply(), // automaticaly pulls as TokenValue
-      this.underlyingBdv(),
-      Root.sdk.silo.getAllStalk(Root.sdk.contracts.root.address), // include grown
-      Root.sdk.silo.getSeeds(Root.sdk.contracts.root.address)
-    ]);
+    const [rootTotalSupply, rootUnderlyingBdvBefore, rootAllStalk, rootSeedsBefore] =
+      await Promise.all([
+        Root.sdk.tokens.ROOT.getTotalSupply(), // automaticaly pulls as TokenValue
+        this.underlyingBdv(),
+        Root.sdk.silo.getAllStalk(Root.sdk.contracts.root.address), // include grown
+        Root.sdk.silo.getSeeds(Root.sdk.contracts.root.address)
+      ]);
 
     const rootStalkBefore = rootAllStalk.active.add(rootAllStalk.grown);
 
@@ -110,7 +134,11 @@ export class Root {
     console.log("root stalk before", rootStalkBefore.toHuman());
     console.log("root seeds before", rootSeedsBefore.toHuman());
 
-    const { bdv: totalBdvFromDeposits, stalk: totalStalkFromDeposits, seeds: totalSeedsFromDeposits } = sumDeposits(token, deposits);
+    const {
+      bdv: totalBdvFromDeposits,
+      stalk: totalStalkFromDeposits,
+      seeds: totalSeedsFromDeposits
+    } = sumDeposits(token, deposits);
 
     console.log("bdv from deposits", totalBdvFromDeposits.toHuman());
     console.log("stalk from deposits", totalStalkFromDeposits.toHuman());

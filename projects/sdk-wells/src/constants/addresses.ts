@@ -54,5 +54,32 @@ export const addresses = {
   UNWRAP_AND_SEND_JUNCTION: Address.make({
     [ChainId.MAINNET]: "0x737cad465b75cdc4c11b3e312eb3fe5bef793d96"
     // [ChainId.ARBITRUM]: ""
+  }),
+
+  // Well Components
+  MULTI_FLOW_PUMP_V1_1: Address.make({
+    [ChainId.MAINNET]: "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17",
+    [ChainId.ARBITRUM]: "0xBA510482E3e6B96C88A1fe34Ce58385fB554C9a9"
+  }),
+  CONSTANT_PRODUCT_2_V2: Address.make({
+    [ChainId.MAINNET]: "0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26",
+    [ChainId.ARBITRUM]: "0xBA5104f2df98974A83CD10d16E24282ce6Bb647f"
+  }),
+  WELL_DOT_SOL: Address.make({
+    [ChainId.MAINNET]: "0xba510e11eeb387fad877812108a3406ca3f43a4b",
+    [ChainId.ARBITRUM]: "0xBA5106bd62b342afAcB93f1078fe60177A62d1a9"
+  }),
+
+  /**
+   * @note Use `MULTI_FLOW_PUMP_V1_1` for new wells instead
+   */
+  MULTI_FLOW_PUMP_V1: Address.make({
+    [ChainId.MAINNET]: "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C"
+  }),
+  /**
+   * @note Use `CONSTANT_PRODUCT_2_V2` for new wells instead
+   */
+  CONSTANT_PRODUCT_2_V1: Address.make({
+    [ChainId.MAINNET]: "0xba510c20fd2c52e4cb0d23cfc3ccd092f9165a6e"
   })
 };

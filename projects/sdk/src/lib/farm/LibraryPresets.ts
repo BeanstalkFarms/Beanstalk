@@ -4,7 +4,6 @@ import { BasicPreparedResult, RunContext, StepGenerator } from "src/classes/Work
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { FarmFromMode, FarmToMode } from "../farm/types";
 import { EIP2612PermitMessage, SignedPermit } from "../permit";
-import { Exchange, ExchangeUnderlying } from "./actions/index";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 
 export type ActionBuilder = (
@@ -14,20 +13,6 @@ export type ActionBuilder = (
 
 export class LibraryPresets {
   static sdk: BeanstalkSDK;
-  public readonly weth2usdt: ActionBuilder;
-  public readonly usdt2weth: ActionBuilder;
-  public readonly weth2bean3crv: ActionBuilder;
-
-  public readonly dai2usdt: ActionBuilder;
-  public readonly usdc2usdt: ActionBuilder;
-
-  public readonly dai2weth: ActionBuilder;
-  public readonly usdc2weth: ActionBuilder;
-
-  public readonly usdt23crv: ActionBuilder;
-  public readonly usdc2beaneth;
-  public readonly usdt2beaneth;
-  public readonly dai2beaneth;
 
   public readonly wellSwap;
   public readonly wellAddLiquidity;
@@ -139,88 +124,6 @@ export class LibraryPresets {
     LibraryPresets.sdk = sdk;
 
     const stables = [sdk.tokens.DAI, sdk.tokens.USDC, sdk.tokens.USDT];
-
-    ///////// WETH <> USDT ///////////
-    this.weth2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new Exchange(
-        sdk.contracts.curve.pools.tricrypto2.address,
-        sdk.contracts.curve.registries.cryptoFactory.address,
-        sdk.tokens.WETH,
-        sdk.tokens.USDT,
-        fromMode,
-        toMode
-      );
-
-    this.usdt2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new Exchange(
-        sdk.contracts.curve.pools.tricrypto2.address,
-        sdk.contracts.curve.registries.cryptoFactory.address,
-        sdk.tokens.USDT,
-        sdk.tokens.WETH,
-        fromMode,
-        toMode
-      );
-
-    ///////// WETH  -> 3CRV ///////////
-    this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
-      this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.usdt23crv(fromMode, FarmToMode.INTERNAL) as StepGenerator
-    ];
-
-    //////// USDT -> 3CRV  ////////
-    this.usdt23crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => {
-      const pool = sdk.contracts.curve.pools.pool3.address;
-      const registry = sdk.contracts.curve.registries.poolRegistry.address;
-      // [0 ,0 , 1] is for USDT; [DAI, USDC, USDT]
-      return new sdk.farm.actions.AddLiquidity(pool, registry, [0, 0, 1], fromMode, toMode);
-    };
-
-    ///////// DAI -> USDT ///////////
-    this.dai2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.DAI,
-        sdk.tokens.USDT,
-        fromMode,
-        toMode
-      );
-
-    ///////// USDC -> USDT ///////////
-    this.usdc2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
-      new Exchange(
-        sdk.contracts.curve.pools.pool3.address,
-        sdk.contracts.curve.registries.poolRegistry.address,
-        sdk.tokens.USDC,
-        sdk.tokens.USDT,
-        fromMode,
-        toMode
-      );
-
-    ///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
-    this.usdc2beaneth = (
-      well: BasinWell,
-      account: string,
-      fromMode?: FarmFromMode,
-      toMode?: FarmToMode
-    ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.USDC, sdk.tokens.WETH, 500, fromMode)];
-
-    this.usdt2beaneth = (
-      well: BasinWell,
-      account: string,
-      fromMode?: FarmFromMode,
-      toMode?: FarmToMode
-    ) => [
-      this.usdt2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
-      this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
-    ];
-
-    this.dai2beaneth = (
-      well: BasinWell,
-      account: string,
-      fromMode?: FarmFromMode,
-      toMode?: FarmToMode
-    ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)];
 
     ///////// BEAN:wstETH Well ///////////
     // STABLE -> BEAN:wstETH LP
@@ -813,3 +716,100 @@ export class LibraryPresets {
     };
   }
 }
+
+// public readonly weth2usdt: ActionBuilder;
+// public readonly usdt2weth: ActionBuilder;
+// public readonly weth2bean3crv: ActionBuilder;
+
+// public readonly dai2usdt;
+// public readonly usdc2usdt;
+
+// public readonly dai2weth;
+// public readonly usdc2weth;
+
+// public readonly usdt23crv;
+// public readonly usdc2beaneth;
+// public readonly usdt2beaneth;
+// public readonly dai2beaneth;
+
+///////// WETH <> USDT ///////////
+// this.weth2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+//   new Exchange(
+//     sdk.contracts.curve.pools.tricrypto2.address,
+//     sdk.contracts.curve.registries.cryptoFactory.address,
+//     sdk.tokens.WETH,
+//     sdk.tokens.USDT,
+//     fromMode,
+//     toMode
+//   );
+
+// this.usdt2weth = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+//   new Exchange(
+//     sdk.contracts.curve.pools.tricrypto2.address,
+//     sdk.contracts.curve.registries.cryptoFactory.address,
+//     sdk.tokens.USDT,
+//     sdk.tokens.WETH,
+//     fromMode,
+//     toMode
+//   );
+
+///////// WETH  -> 3CRV ///////////
+// this.weth2bean3crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => [
+//   this.weth2usdt(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+//   this.usdt23crv(fromMode, FarmToMode.INTERNAL) as StepGenerator
+// ];
+
+//////// USDT -> 3CRV  ////////
+// this.usdt23crv = (fromMode?: FarmFromMode, toMode?: FarmToMode) => {
+//   const pool = sdk.contracts.curve.pools.pool3.address;
+//   const registry = sdk.contracts.curve.registries.poolRegistry.address;
+//   // [0 ,0 , 1] is for USDT; [DAI, USDC, USDT]
+//   return new sdk.farm.actions.AddLiquidity(pool, registry, [0, 0, 1], fromMode, toMode);
+// };
+
+///////// DAI -> USDT ///////////
+// this.dai2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+//   new Exchange(
+//     sdk.contracts.curve.pools.pool3.address,
+//     sdk.contracts.curve.registries.poolRegistry.address,
+//     sdk.tokens.DAI,
+//     sdk.tokens.USDT,
+//     fromMode,
+//     toMode
+//   );
+
+///////// USDC -> USDT ///////////
+// this.usdc2usdt = (fromMode?: FarmFromMode, toMode?: FarmToMode) =>
+//   new Exchange(
+//     sdk.contracts.curve.pools.pool3.address,
+//     sdk.contracts.curve.registries.poolRegistry.address,
+//     sdk.tokens.USDC,
+//     sdk.tokens.USDT,
+//     fromMode,
+//     toMode
+//   );
+
+///////// [ USDC, USDT, DAI ] -> BEANETH ///////////
+// this.usdc2beaneth = (
+//   well: BasinWell,
+//   account: string,
+//   fromMode?: FarmFromMode,
+//   toMode?: FarmToMode
+// ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.USDC, sdk.tokens.WETH, 500, fromMode)];
+
+// this.usdt2beaneth = (
+//   well: BasinWell,
+//   account: string,
+//   fromMode?: FarmFromMode,
+//   toMode?: FarmToMode
+// ) => [
+//   this.usdt2weth(fromMode, FarmToMode.INTERNAL) as StepGenerator,
+//   this.wellAddLiquidity(well, sdk.tokens.WETH, account, FarmFromMode.INTERNAL, toMode)
+// ];
+
+// this.dai2beaneth = (
+//   well: BasinWell,
+//   account: string,
+//   fromMode?: FarmFromMode,
+//   toMode?: FarmToMode
+// ) => [this.uniV3AddLiquidity(well, account, sdk.tokens.DAI, sdk.tokens.WETH, 500, fromMode)];

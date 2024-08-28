@@ -4,8 +4,8 @@ import { RunContext, Step, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { ClipboardSettings } from "src/types";
 
-export class UnwrapWstETH extends StepClass<AdvancedPipePreparedResult> {
-  public name: string = "unwrapWstETH";
+export class LidoUnwrapWstETH extends StepClass<AdvancedPipePreparedResult> {
+  public name: string = "lidoUnwrapWstETH";
 
   constructor(public clipboard?: ClipboardSettings) {
     super();
@@ -21,28 +21,30 @@ export class UnwrapWstETH extends StepClass<AdvancedPipePreparedResult> {
       name: this.name,
       amountOut: amountOut.toBigNumber(),
       prepare: () => {
-        UnwrapWstETH.sdk.debug(`[${this.name}.encode()]`, {
+        LidoUnwrapWstETH.sdk.debug(`[${this.name}.encode()]`, {
           amountOut: amountOut.toHuman(),
           clipboard: this.clipboard
         });
 
         return {
-          target: UnwrapWstETH.sdk.contracts.lido.wsteth.address,
-          callData: UnwrapWstETH.sdk.contracts.lido.wsteth.interface.encodeFunctionData("unwrap", [
-            _amountInStep
-          ])
+          target: LidoUnwrapWstETH.sdk.contracts.lido.wsteth.address,
+          callData: LidoUnwrapWstETH.sdk.contracts.lido.wsteth.interface.encodeFunctionData(
+            "unwrap",
+            [_amountInStep]
+          )
         };
       },
       decode: (data: string) =>
-        UnwrapWstETH.sdk.contracts.lido.wsteth.interface.decodeFunctionData("unwrap", data),
+        LidoUnwrapWstETH.sdk.contracts.lido.wsteth.interface.decodeFunctionData("unwrap", data),
       decodeResult: (data: string) =>
-        UnwrapWstETH.sdk.contracts.lido.wsteth.interface.decodeFunctionResult("unwrap", data)
+        LidoUnwrapWstETH.sdk.contracts.lido.wsteth.interface.decodeFunctionResult("unwrap", data)
     };
   }
 
   async getStethWithWsteth(amountInStep: ethers.BigNumber): Promise<TokenValue> {
-    const amountOut = await UnwrapWstETH.sdk.contracts.lido.wsteth.getWstETHByStETH(amountInStep);
+    const amountOut =
+      await LidoUnwrapWstETH.sdk.contracts.lido.wsteth.getWstETHByStETH(amountInStep);
 
-    return UnwrapWstETH.sdk.tokens.STETH.fromBlockchain(amountOut);
+    return LidoUnwrapWstETH.sdk.tokens.STETH.fromBlockchain(amountOut);
   }
 }
