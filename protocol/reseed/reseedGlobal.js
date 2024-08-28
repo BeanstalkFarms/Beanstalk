@@ -6,12 +6,7 @@ async function reseedGlobal(account, L2Beanstalk, mock) {
   console.log("reseedGlobal: reseedGlobal.\n");
 
   // Files
-  let globalsPath;
-  if (mock) {
-    globalsPath = "./reseed/data/mocks/global.json";
-  } else {
-    globalsPath = "./reseed/data/global.json";
-  }
+  let globalsPath = "./reseed/data/global.json";
   let settings = JSON.parse(await fs.readFileSync(globalsPath));
 
   await upgradeWithNewFacets({
