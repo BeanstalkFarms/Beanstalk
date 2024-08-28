@@ -1,7 +1,7 @@
 import { CurveMetaPool } from "src/classes/Pool/CurveMetaPool";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 import Pool from "src/classes/Pool/Pool";
-import { Token } from "src/classes/Token";
+import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 
 export class Pools {
@@ -13,14 +13,17 @@ export class Pools {
   public readonly BEAN_USDC_WELL: BasinWell;
   public readonly BEAN_USDT_WELL: BasinWell;
 
-  public readonly pools: Set<BasinWell>;
+  public readonly pools: Set<Pool>;
+  public readonly whitelistedPools: Map<string, Pool>;
 
   private lpAddressMap = new Map<string, Pool>();
+  private wellAddressMap = new Map<string, BasinWell>();
 
   constructor(sdk: BeanstalkSDK) {
     Pools.sdk = sdk;
-    this.pools = new Set<BasinWell>();
+    this.pools = new Set<Pool>();
     this.lpAddressMap = new Map();
+    this.whitelistedPools = new Map();
 
     ////// Basin Well
 
@@ -37,7 +40,7 @@ export class Pools {
       }
     );
     this.pools.add(this.BEAN_ETH_WELL);
-    this.lpAddressMap.set(sdk.addresses.BEANWETH_WELL.get(sdk.chainId), this.BEAN_ETH_WELL);
+    this.lpAddressMap.set(this.BEAN_ETH_WELL.address, this.BEAN_ETH_WELL);
 
     this.BEAN_WSTETH_WELL = new BasinWell(
       sdk,
@@ -113,18 +116,48 @@ export class Pools {
     );
     this.pools.add(this.BEAN_USDT_WELL);
     this.lpAddressMap.set(sdk.tokens.BEAN_USDT_WELL_LP.address, this.BEAN_USDT_WELL);
+
+    this.lpAddressMap.forEach((pool) => {
+      if (Pools.sdk.tokens.siloWhitelist.has(pool.lpToken)) {
+        this.whitelistedPools.set(pool.address, pool);
+      }
+
+      if (pool instanceof BasinWell) {
+        this.wellAddressMap.set(pool.address, pool);
+      }
+    });
   }
 
-  getPoolByLPToken(token: Token): Pool | undefined {
+  isWhitelisted(pool: Pool | string): boolean {
+    const _pool = this.derivePool(pool);
+    return this.whitelistedPools.has(_pool.address);
+  }
+
+  getPoolByLPToken(token: Token | string): Pool | undefined {
+    if (typeof token === "string") {
+      return this.lpAddressMap.get(token.toLowerCase());
+    }
     return this.lpAddressMap.get(token.address);
   }
 
-  getWells(): BasinWell[] {
-    const wells: BasinWell[] = [];
-    for (const pool of this.pools) {
-      if (pool instanceof BasinWell) wells.push(pool);
-    }
+  getWells(): readonly BasinWell[] {
+    return Array.from(this.wellAddressMap.values()) as ReadonlyArray<BasinWell>;
+  }
 
-    return wells;
+  /**
+   * Derives a Pool object from either a Pool object or a pool address.
+   * @param pool - Either a Pool object or a string representing the pool's address.
+   * @returns The corresponding Pool object.
+   * @throws Error if a pool with the given address is not found in the lpAddressMap.
+   */
+  private derivePool(pool: Pool | string): Pool {
+    if (typeof pool === "string") {
+      const _pool = this.lpAddressMap.get(pool.toLowerCase());
+      if (!_pool) {
+        throw new Error(`Pool with address ${pool} not found`);
+      }
+      return _pool;
+    }
+    return pool;
   }
 }

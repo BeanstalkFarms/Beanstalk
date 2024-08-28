@@ -549,10 +549,13 @@ export class Tokens {
       providerOrSigner
     );
 
-    this.map.set(addresses.ROOT.get(chainId) ?? "root", this.ROOT);
-    this.map.set(addresses.BEAN_CRV3.get(chainId) ?? "bean3crv", this.BEAN_CRV3_LP);
+    this.map.set(addresses.ROOT.get(chainId) ?? this.ROOT.symbol.toLowerCase(), this.ROOT);
     this.map.set(
-      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "beaneth_univ2",
+      addresses.BEAN_CRV3.get(chainId) ?? this.BEAN_CRV3_LP.symbol.toLowerCase(),
+      this.BEAN_CRV3_LP
+    );
+    this.map.set(
+      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? this.BEAN_ETH_UNIV2_LP.symbol.toLowerCase(),
       this.BEAN_ETH_UNIV2_LP
     );
 
