@@ -6,7 +6,8 @@ import {
   TotalGerminatingBalanceChanged,
   UpdateGaugeSettings,
   TotalGerminatingStalkChanged,
-  TotalStalkChangedFromGermination
+  TotalStalkChangedFromGermination,
+  SeedGauge
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import {
   deleteGerminating,
@@ -124,15 +125,41 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
     return;
   }
 
-  let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32(), false);
-  tokenGerminating.season = event.params.germinationSeason.toU32();
-  tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
-  tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
-  if (tokenGerminating.tokenAmount == ZERO_BI) {
-    deleteGerminating(tokenGerminating);
+  // SeedGauge: there is a bug where the germinating season number here can be incorrect/incongruent
+  // with the values set at s.(odd|even)Germinating.deposited[token].bdv.
+  // Best solution is to use view functions to determine what the correct amount should be for each.
+  const beanstalk_call = SeedGauge.bind(event.address);
+
+  const evenGerminating = beanstalk_call.getEvenGerminating(event.params.token);
+  let tokenGerminatingEven = loadOrCreateGerminating(event.params.token, 0, false);
+  tokenGerminatingEven.tokenAmount = evenGerminating.getValue0();
+  tokenGerminatingEven.bdv = evenGerminating.getValue1();
+  if (tokenGerminatingEven.tokenAmount == ZERO_BI) {
+    deleteGerminating(tokenGerminatingEven);
   } else {
-    tokenGerminating.save();
+    tokenGerminatingEven.save();
   }
+
+  const oddGerminating = beanstalk_call.getOddGerminating(event.params.token);
+  let tokenGerminatingOdd = loadOrCreateGerminating(event.params.token, 1, false);
+  tokenGerminatingOdd.tokenAmount = oddGerminating.getValue0();
+  tokenGerminatingOdd.bdv = oddGerminating.getValue1();
+  if (tokenGerminatingOdd.tokenAmount == ZERO_BI) {
+    deleteGerminating(tokenGerminatingOdd);
+  } else {
+    tokenGerminatingOdd.save();
+  }
+
+  /** This is the correct implementation, but can't be used due to the bug in contracts described above. **/
+  // let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32(), false);
+  // tokenGerminating.season = event.params.germinationSeason.toU32();
+  // tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
+  // tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
+  // if (tokenGerminating.tokenAmount == ZERO_BI) {
+  //   deleteGerminating(tokenGerminating);
+  // } else {
+  //   tokenGerminating.save();
+  // }
 }
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.

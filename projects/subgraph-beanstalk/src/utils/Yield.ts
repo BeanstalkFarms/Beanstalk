@@ -120,7 +120,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
         currentEMA,
         toDecimal(whitelistSettings[i].stalkEarnedPerSeason),
         toDecimal(beanGrownStalk),
-        silo.stalk.plus(silo.plantableStalk),
+        silo.stalk,
         silo.seeds
       );
       apys.push(tokenAPY);
@@ -136,7 +136,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
     let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 20);
     // Stalk has 10 decimals
-    let siloStalk = toDecimal(silo.stalk.plus(silo.plantableStalk), 10);
+    let siloStalk = toDecimal(silo.stalk, 10);
 
     let germinatingBeanBdv: BigDecimal[] = [];
     let germinatingGaugeLpBdv: BigDecimal[][] = [];
