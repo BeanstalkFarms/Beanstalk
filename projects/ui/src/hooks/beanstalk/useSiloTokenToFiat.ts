@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import Token from '~/classes/Token';
+import LegacyToken from '~/classes/Token';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import {
@@ -13,6 +13,7 @@ import {
 import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
 import { Settings } from '~/state/app';
+import { Token } from '@beanstalk/sdk';
 
 /**
  * FIXME: this function is being called very frequently
@@ -36,7 +37,7 @@ const useSiloTokenToFiat = () => {
 
   return useCallback(
     (
-      _token: Token,
+      _token: LegacyToken | Token,
       _amount: BigNumber,
       _denomination: Settings['denomination'] = 'usd',
       _chop: boolean = true

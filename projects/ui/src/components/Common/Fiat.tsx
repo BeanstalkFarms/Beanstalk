@@ -2,7 +2,8 @@ import React from 'react';
 import BigNumber from 'bignumber.js';
 import { Box } from '@mui/material';
 import logo from '~/img/tokens/bean-logo.svg';
-import { Token } from '~/classes';
+import { Token as LegacyToken } from '~/classes';
+import { Token, TokenValue } from '@beanstalk/sdk';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 import useSetting from '~/hooks/app/useSetting';
 import usePrice from '~/hooks/beanstalk/usePrice';
@@ -14,29 +15,41 @@ import { FC } from '~/types';
 
 const Fiat: FC<{
   /* The USD value of `amount`. If provided, we don't try to derive via `siloTokenToFiat`. */
-  value?: BigNumber;
-  token?: Token;
-  amount: BigNumber | undefined;
+  value?: BigNumber | TokenValue;
+  token?: LegacyToken | Token;
+  amount: BigNumber | TokenValue | undefined;
   allowNegative?: boolean;
   chop?: boolean;
   truncate?: boolean;
+  defaultDisplay?: string;
 }> = ({
-  value: _value,
+  value: __value,
   token,
-  amount,
+  amount: _amount,
   allowNegative = false,
   chop = true,
   truncate = false,
+  defaultDisplay = '?',
 }) => {
   const [denomination] = useSetting('denomination');
   const price = usePrice();
   const siloTokenToFiat = useSiloTokenToFiat();
+  const amount =
+    _amount instanceof TokenValue ? new BigNumber(_amount.toHuman()) : _amount;
+  const _value =
+    __value instanceof TokenValue ? new BigNumber(__value.toHuman()) : __value;
   const value = _value
     ? // value override provided (in USD terms)
-      denomination === 'usd' ? _value : _value.div(price)
+      denomination === 'usd'
+      ? _value
+      : _value.div(price)
     : // derive value from token amount
-      amount && token ? siloTokenToFiat(token, amount, denomination, chop) : ZERO_BN;
-  const displayValue = truncate ? displayBN(value, allowNegative) : displayFullBN(value, 2, 2);
+      amount && token
+      ? siloTokenToFiat(token, amount, denomination, chop)
+      : ZERO_BN;
+  const displayValue = truncate
+    ? displayBN(value, allowNegative)
+    : displayFullBN(value, 2, 2);
 
   return (
     <Row
@@ -67,7 +80,7 @@ const Fiat: FC<{
           <span>{displayValue}</span>
         </>
       ) : (
-        <span>?</span>
+        <span>{defaultDisplay}</span>
       )}
     </Row>
   );

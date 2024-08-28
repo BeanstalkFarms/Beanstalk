@@ -66,3 +66,7 @@ export function exists<T>(
 export function existsNot(value: any): value is undefined | null {
   return !exists(value);
 }
+
+export function stringsEqual(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}

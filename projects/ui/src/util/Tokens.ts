@@ -4,6 +4,7 @@ import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { tokenValueToBN } from './BigNumber';
+import { exists, stringsEqual } from './UI';
 
 // -------------------------
 // BigNumber Comparators
@@ -274,4 +275,19 @@ export function toStringBaseUnitBN(
 export function getTokenIndex(token: { symbol: string; address: string }) {
   if (token.symbol === 'ETH') return 'eth';
   return token.address;
+}
+
+/**
+ * Compares two strings case-insensitively.
+ * if either string is undefined, returns false.
+ */
+export function tokenIshEqual(
+  a: string | Token | TokenOld | undefined,
+  b: string | Token | TokenOld | undefined
+): boolean {
+  if (!exists(a) || !exists(b)) return false;
+  return stringsEqual(
+    typeof a === 'string' ? a : a.address,
+    typeof b === 'string' ? b : b.address
+  );
 }
