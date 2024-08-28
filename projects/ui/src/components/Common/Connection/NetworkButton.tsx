@@ -3,10 +3,19 @@ import { useAccount } from 'wagmi';
 import { Button, ButtonProps, Typography } from '@mui/material';
 import useAnchor from '~/hooks/display/useAnchor';
 import { SupportedChainId } from '~/constants/chains';
-import { ETH } from '~/constants/tokens';
+import useChainState from '~/hooks/chain/useChainState';
+import { useBalanceTokens } from '~/hooks/beanstalk/useTokens';
 import TokenIcon from '../TokenIcon';
 import DropdownIcon from '../DropdownIcon';
 import NetworkDialog from './NetworkDialog';
+
+const NetworkIcon = () => {
+  const { isEthereum } = useChainState();
+  const { ETH, ARB } = useBalanceTokens();
+  const networkToken = isEthereum ? ETH : ARB;
+
+  return <TokenIcon token={networkToken} css={{ height: '1.4em' }} />;
+};
 
 const NetworkButton: React.FC<
   ButtonProps & {
@@ -19,6 +28,7 @@ const NetworkButton: React.FC<
   children,
   ...props
 }) => {
+  const { isDev } = useChainState();
   const { chain } = useAccount();
 
   /// Dialog
@@ -34,14 +44,7 @@ const NetworkButton: React.FC<
         disableFocusRipple
         variant="contained"
         color="light"
-        startIcon={
-          showIcons && (
-            <TokenIcon
-              token={ETH[SupportedChainId.MAINNET]}
-              css={{ height: '1.4em' }}
-            />
-          )
-        }
+        startIcon={showIcons && <NetworkIcon />}
         endIcon={showIcons && <DropdownIcon open={open} />}
         onClick={toggleAnchor}
         {...props}
@@ -69,9 +72,7 @@ const NetworkButton: React.FC<
             borderColor: 'divider',
           },
           // Follow similar pattern as WalletButton & show red bottom border if we are on localhost
-          ...(chain.id === SupportedChainId.LOCALHOST
-            ? { borderBottom: '2px solid red' }
-            : {}),
+          ...(isDev ? { borderBottom: '2px solid red' } : {}),
           ...props.sx,
         }}
       >

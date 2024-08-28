@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -46,7 +46,7 @@ import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
-import "react-day-picker/dist/style.css";
+import 'react-day-picker/dist/style.css';
 
 import { FC } from '~/types';
 
@@ -62,6 +62,8 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+import { ChainId } from '@beanstalk/sdk-core';
+import useChainId from '~/hooks/chain/useChainId';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -97,41 +99,79 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   </Toaster>
 );
 
-export default function App() {
+function Mainnet() {
+  const banner = useBanner();
+  const navHeight = useNavHeight(!!banner);
+  return (
+    <>
+      <NavBar>{null}</NavBar>
+      <Box
+        sx={{
+          bgcolor: 'background.default',
+          backgroundImage: `url(${pageBackground})`,
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'bottom center',
+          backgroundSize: '100%',
+          backgroundRepeat: 'no-repeat',
+          width: '100%',
+          minHeight: `calc(100vh - ${navHeight}px)`,
+        }}
+      >
+        <Stack
+          sx={{
+            width: '100vw',
+            minHeight: `calc(100vh - ${navHeight}px)`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography variant="h1">We&apos;ve moved to Arbitrum!</Typography>
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+function Arbitrum() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
   const account = useAccount();
+
   return (
     <>
       {/* -----------------------
        * Appplication Setup
        * ----------------------- */}
       <AppUpdater />
-      {/* -----------------------
-       * Bean Updaters
-       * ----------------------- */}
-      <PoolsUpdater />
-      <UnripeUpdater />
-      {/* -----------------------
-       * Beanstalk Updaters
-       * ----------------------- */}
-      <SiloUpdater />
-      <FieldUpdater />
-      <BarnUpdater />
-      <SunUpdater />
-      <MorningUpdater />
-      <MorningFieldUpdater />
-      <GovernanceUpdater />
-      <BeanstalkCaseUpdater />
-      {/* -----------------------
-       * Farmer Updaters
-       * ----------------------- */}
-      <FarmerSiloUpdater />
-      <FarmerFieldUpdater />
-      <FarmerBarnUpdater />
-      <FarmerBalancesUpdater />
-      <FarmerMarketUpdater />
-      <FarmerDelegationsUpdater />
+      {false && (
+        <>
+          {/* -----------------------
+           * Bean Updaters
+           * ----------------------- */}
+          <PoolsUpdater />
+          <UnripeUpdater />
+          {/* -----------------------
+           * Beanstalk Updaters
+           * ----------------------- */}
+          <SiloUpdater />
+          <FieldUpdater />
+          <BarnUpdater />
+          <SunUpdater />
+          <MorningUpdater />
+          <MorningFieldUpdater />
+          <GovernanceUpdater />
+          <BeanstalkCaseUpdater />
+          {/* -----------------------
+           * Farmer Updaters
+           * ----------------------- */}
+          <FarmerSiloUpdater />
+          <FarmerFieldUpdater />
+          <FarmerBarnUpdater />
+          <FarmerBalancesUpdater />
+          <FarmerMarketUpdater />
+          <FarmerDelegationsUpdater />
+        </>
+      )}
       {/* -----------------------
        * Routes & Content
        * ----------------------- */}
@@ -229,4 +269,22 @@ export default function App() {
       </Box>
     </>
   );
+}
+
+export default function App() {
+  const chainId = useChainId();
+
+  React.useEffect(() => {
+    console.log('chainId', chainId);
+  }, [chainId]);
+
+  if (
+    !chainId ||
+    chainId === ChainId.MAINNET ||
+    chainId === ChainId.LOCALHOST
+  ) {
+    return <Mainnet />;
+  }
+
+  return <Arbitrum />;
 }
