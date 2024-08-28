@@ -375,6 +375,7 @@ type Statement {
   id: String!
   ipfs: String!
   network: String
+  source: String
   space: String!
   statement: String
   status: String
@@ -395,6 +396,8 @@ input StatementsWhere {
   ipfs: String
   ipfs_in: [String]
   network: String
+  source: String
+  source_in: [String]
   space: String
   space_in: [String]
 }
