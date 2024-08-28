@@ -156,7 +156,6 @@ const useSeasonsSummary = () => {
   const { data: seedGauge } = useSeedGauge();
   const season = useSeason();
   const sdk = useSdk();
-  console.log(sdk);
 
   const maxPrevSeason = season.minus(25).toNumber();
   const currentSeason = season.toNumber();

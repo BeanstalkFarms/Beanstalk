@@ -40,6 +40,8 @@ import {
   ENSReverseRecords,
 } from '~/generated/index';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
+import { Address } from '@beanstalk/sdk-core';
+import useChainId from '~/hooks/chain/useChainId';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
 export type AbiOrAbiMap = ContractInterface | ChainConstant<ContractInterface>;
@@ -213,13 +215,13 @@ export function useBarnRaiseNFTContract(signer?: ethers.Signer | null) {
 
 /** used to access chainlink price data feeds */
 export function useAggregatorV3Contract(
-  chainConstant: ChainConstant<string>,
+  address: Address,
   signer?: ethers.Signer | null
 ) {
-  const address = useChainConstant(chainConstant);
+  const chainId = useChainId();
   const provider = useEthersProvider();
   return useWagmiContract({
-    address,
+    address: address.get(chainId),
     abi: AGGREGATOR_V3_ABI,
     signerOrProvider: signer || provider,
   }) as AggregatorV3;

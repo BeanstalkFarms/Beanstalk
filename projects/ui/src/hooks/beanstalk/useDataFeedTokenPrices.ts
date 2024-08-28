@@ -1,12 +1,11 @@
-import { BigNumber } from 'bignumber.js';
 import { useCallback, useMemo, useEffect } from 'react';
+import { BigNumber } from 'bignumber.js';
 import { useDispatch } from 'react-redux';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
+import { getTokenIndex } from '~/util';
 import { TokenMap } from '../../constants/index';
 import { bigNumberResult } from '../../util/Ledger';
-import { DAI, ETH, USDC, USDT, WETH, WSTETH } from '../../constants/tokens';
 import {
   DAI_CHAINLINK_ADDRESSES,
   USDT_CHAINLINK_ADDRESSES,
@@ -14,6 +13,7 @@ import {
 } from '../../constants/addresses';
 import { useAppSelector } from '../../state/index';
 import useSdk from '../sdk';
+import { useBalanceTokens } from './useTokens';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -33,13 +33,12 @@ export default function useDataFeedTokenPrices() {
   const tokenPriceMap = useAppSelector((state) => state._beanstalk.tokenPrices);
 
   const sdk = useSdk();
-  const beanstalk = sdk.contracts.beanstalk;
+  const tokens = useBalanceTokens();
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
   const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
   const usdOracle = sdk.contracts.usdOracle;
-  const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
 
   const fetch = useCallback(async () => {
@@ -73,41 +72,37 @@ export default function useDataFeedTokenPrices() {
       usdOracle.getWstethUsdTwap(0),
     ]);
 
-    const dai = getChainToken(DAI);
-    const usdc = getChainToken(USDC);
-    const usdt = getChainToken(USDT);
-    const eth = getChainToken(ETH);
-    const weth = getChainToken(WETH);
-    const wstETH = getChainToken(WSTETH);
-
     const priceDataCache: TokenMap<BigNumber> = {};
 
     if (daiPriceData && daiPriceDecimals) {
-      priceDataCache[dai.address] = getBNResult(
+      priceDataCache[getTokenIndex(tokens.DAI)] = getBNResult(
         daiPriceData.answer,
         daiPriceDecimals
       );
     }
     if (usdtPriceData && usdtPriceDecimals) {
-      priceDataCache[usdt.address] = getBNResult(
+      priceDataCache[getTokenIndex(tokens.USDT)] = getBNResult(
         usdtPriceData.answer,
         usdtPriceDecimals
       );
     }
     if (usdcPriceData && usdcPriceDecimals) {
-      priceDataCache[usdc.address] = getBNResult(
+      priceDataCache[getTokenIndex(tokens.USDC)] = getBNResult(
         usdcPriceData.answer,
         usdcPriceDecimals
       );
     }
     if (ethPrice && ethPriceTWA) {
-      priceDataCache[eth.address] = getBNResult(ethPrice, 6);
-      priceDataCache[weth.address] = getBNResult(ethPrice, 6);
+      priceDataCache[getTokenIndex(tokens.ETH)] = getBNResult(ethPrice, 6);
+      priceDataCache[getTokenIndex(tokens.WETH)] = getBNResult(ethPrice, 6);
       priceDataCache['ETH-TWA'] = getBNResult(ethPriceTWA, 6);
     }
 
     if (wstETHPrice && wstETHPriceTWA) {
-      priceDataCache[wstETH.address] = getBNResult(wstETHPrice, 6);
+      priceDataCache[getTokenIndex(tokens.WSTETH)] = getBNResult(
+        wstETHPrice,
+        6
+      );
       priceDataCache['wstETH-TWA'] = getBNResult(wstETHPriceTWA, 6);
     }
 
@@ -122,7 +117,7 @@ export default function useDataFeedTokenPrices() {
     usdtPriceFeed,
     usdcPriceFeed,
     usdOracle,
-    getChainToken,
+    tokens,
   ]);
 
   const handleUpdatePrices = useCallback(async () => {

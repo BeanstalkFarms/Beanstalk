@@ -62,8 +62,7 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
-import { ChainId } from '@beanstalk/sdk-core';
-import useChainId from '~/hooks/chain/useChainId';
+import useChainState from '~/hooks/chain/useChainState';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -143,12 +142,12 @@ function Arbitrum() {
        * Appplication Setup
        * ----------------------- */}
       <AppUpdater />
+      <PoolsUpdater />
       {false && (
         <>
           {/* -----------------------
            * Bean Updaters
            * ----------------------- */}
-          <PoolsUpdater />
           <UnripeUpdater />
           {/* -----------------------
            * Beanstalk Updaters
@@ -247,24 +246,6 @@ function Arbitrum() {
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-          {/*
-          <Box
-            sx={{
-              position: 'fixed',
-              bottom: 0,
-              right: 0,
-              pr: 1,
-              pb: 0.4,
-              opacity: 0.6,
-              display: { xs: 'none', lg: 'block' },
-            }}
-          >
-            <Typography fontSize="small">
-              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0, 6)}{' '}
-              &middot; {sgEnvKey}
-            </Typography>
-          </Box>
-          */}
         </Box>
       </Box>
     </>
@@ -272,17 +253,9 @@ function Arbitrum() {
 }
 
 export default function App() {
-  const chainId = useChainId();
+  const { isEthereum } = useChainState();
 
-  React.useEffect(() => {
-    console.log('chainId', chainId);
-  }, [chainId]);
-
-  if (
-    !chainId ||
-    chainId === ChainId.MAINNET ||
-    chainId === ChainId.LOCALHOST
-  ) {
+  if (isEthereum) {
     return <Mainnet />;
   }
 
