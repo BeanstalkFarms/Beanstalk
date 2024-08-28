@@ -415,7 +415,7 @@ module.exports = {
       timeout: 100000
     },
     localhostAribtrum: {
-      chainId: 42161,
+      chainId: 41337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
       account: "remote"
