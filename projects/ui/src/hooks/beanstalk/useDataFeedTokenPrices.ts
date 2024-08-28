@@ -1,26 +1,18 @@
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useMemo, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
 import { TokenMap } from '../../constants/index';
 import { bigNumberResult } from '../../util/Ledger';
-import {
-  CRV3,
-  DAI,
-  ETH,
-  USDC,
-  USDT,
-  WETH,
-  WSTETH,
-} from '../../constants/tokens';
+import { DAI, ETH, USDC, USDT, WETH, WSTETH } from '../../constants/tokens';
 import {
   DAI_CHAINLINK_ADDRESSES,
   USDT_CHAINLINK_ADDRESSES,
   USDC_CHAINLINK_ADDRESSES,
 } from '../../constants/addresses';
-import { AppState } from '../../state/index';
+import { useAppSelector } from '../../state/index';
 import useSdk from '../sdk';
 
 const getBNResult = (result: any, decimals: number) => {
@@ -38,31 +30,21 @@ const getBNResult = (result: any, decimals: number) => {
  * - ETH/USD
  */
 export default function useDataFeedTokenPrices() {
-  const tokenPriceMap = useSelector<
-    AppState,
-    AppState['_beanstalk']['tokenPrices']
-  >((state) => state._beanstalk.tokenPrices);
+  const tokenPriceMap = useAppSelector((state) => state._beanstalk.tokenPrices);
 
   const sdk = useSdk();
+  const beanstalk = sdk.contracts.beanstalk;
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
   const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
   const usdOracle = sdk.contracts.usdOracle;
-  const crv3Pool = sdk.contracts.curve.pools.pool3;
   const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
 
   const fetch = useCallback(async () => {
     if (Object.values(tokenPriceMap).length) return;
-    if (
-      !daiPriceFeed ||
-      !usdtPriceFeed ||
-      !usdcPriceFeed ||
-      !usdOracle ||
-      !crv3Pool
-    )
-      return;
+    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !usdOracle) return;
 
     console.debug('[beanstalk/tokenPrices/useCrvUnderlylingPrices] FETCH');
 
@@ -77,7 +59,6 @@ export default function useDataFeedTokenPrices() {
       ethPriceTWA,
       wstETHPrice,
       wstETHPriceTWA,
-      crv3Price,
     ] = await Promise.all([
       daiPriceFeed.latestRoundData(),
       daiPriceFeed.decimals(),
@@ -85,11 +66,11 @@ export default function useDataFeedTokenPrices() {
       usdtPriceFeed.decimals(),
       usdcPriceFeed.latestRoundData(),
       usdcPriceFeed.decimals(),
+      // beanstalk.getTokenUsdPrice(sdk.tokens.WETH.address),
       usdOracle.getEthUsdPrice(),
       usdOracle.getEthUsdTwap(0),
       usdOracle.getWstethUsdPrice(),
       usdOracle.getWstethUsdTwap(0),
-      crv3Pool.get_virtual_price(),
     ]);
 
     const dai = getChainToken(DAI);
@@ -97,7 +78,6 @@ export default function useDataFeedTokenPrices() {
     const usdt = getChainToken(USDT);
     const eth = getChainToken(ETH);
     const weth = getChainToken(WETH);
-    const crv3 = getChainToken(CRV3);
     const wstETH = getChainToken(WSTETH);
 
     const priceDataCache: TokenMap<BigNumber> = {};
@@ -125,9 +105,6 @@ export default function useDataFeedTokenPrices() {
       priceDataCache[weth.address] = getBNResult(ethPrice, 6);
       priceDataCache['ETH-TWA'] = getBNResult(ethPriceTWA, 6);
     }
-    if (crv3Price) {
-      priceDataCache[crv3.address] = getBNResult(crv3Price, crv3.decimals);
-    }
 
     if (wstETHPrice && wstETHPriceTWA) {
       priceDataCache[wstETH.address] = getBNResult(wstETHPrice, 6);
@@ -145,7 +122,6 @@ export default function useDataFeedTokenPrices() {
     usdtPriceFeed,
     usdcPriceFeed,
     usdOracle,
-    crv3Pool,
     getChainToken,
   ]);
 

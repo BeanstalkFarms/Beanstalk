@@ -156,6 +156,7 @@ const useSeasonsSummary = () => {
   const { data: seedGauge } = useSeedGauge();
   const season = useSeason();
   const sdk = useSdk();
+  console.log(sdk);
 
   const maxPrevSeason = season.minus(25).toNumber();
   const currentSeason = season.toNumber();
@@ -178,13 +179,13 @@ const useSeasonsSummary = () => {
         first: 1000,
         season_gte: maxPrevSeason,
         season_lte: currentSeason,
-        pools: sdk.tokens.siloWhitelistedWellLPAddresses.map((address) => address.toLowerCase())
+        pools: sdk.tokens.wellLPAddresses.map((address) => address),
       },
       context: { subgraph: 'bean' },
       skip: skipQuery || !Object.keys(pools).length,
     });
 
-  const instantaneousDeltaB = sdk.tokens.siloWhitelistedWellLPAddresses.reduce(
+  const instantaneousDeltaB = sdk.tokens.wellLPAddresses.reduce(
     (prev, address) => {
       const poolDeltaB = pools[address]?.deltaB || ZERO_BN;
       return prev.plus(poolDeltaB);
