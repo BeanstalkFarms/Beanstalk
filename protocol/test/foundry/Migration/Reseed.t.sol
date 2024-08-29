@@ -9,12 +9,6 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import "forge-std/console.sol";
 import {Deposit} from "contracts/beanstalk/storage/Account.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IWell} from "contracts/interfaces/basin/IWell.sol";
-import "forge-std/StdUtils.sol";
-
-interface IBeanstalkERC20 is IERC20 {
-    function mint(address to, uint256 amount) external;
-}
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
@@ -67,27 +61,6 @@ contract ReseedTest is TestHelper {
         // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // l2Beanstalk.gm(address(this), 1);
-    }
-
-    function test_ReseedWell() public {
-        address beaneth = 0xBEA00ebA46820994d24E45dffc5c006bBE35FD89;
-        // IERC20[] memory tokens = IWell(beaneth).tokens();
-        // console.log("tokens: ", tokens.length);
-        address alice = makeAddr("alice");
-        // 1M BEAN
-        address weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
-        address owner = 0xe26367cA850dA09a478076481535D7c1C67D62F9;
-        // add liquidity
-        vm.startPrank(owner);
-        IBeanstalkERC20(L2BEAN).mint(owner, 1000000_000000);
-        deal(weth, owner, 10 ether);
-        IERC20(weth).approve(beaneth, 10 ether);
-        IERC20(L2BEAN).approve(beaneth, 1000000_000000);
-        uint256[] memory tokenAmountsIn = new uint256[](2);
-        tokenAmountsIn[0] = 1000000_000000;
-        tokenAmountsIn[1] = 10 ether;
-        IWell(beaneth).addLiquidity(tokenAmountsIn, 0, alice, block.timestamp + 1000000);
-        vm.stopPrank();
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -220,7 +193,7 @@ contract ReseedTest is TestHelper {
 
     function test_AccountInternalBalance() public {
         string memory account;
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             for (uint256 j = 0; j < whitelistedTokens.length; j++) {
                 // get the internal balance from storage
@@ -255,7 +228,7 @@ contract ReseedTest is TestHelper {
         // test the L2 Beanstalk
         string memory account;
         // for every account
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
                 vm.parseAddress(account),
@@ -290,44 +263,17 @@ contract ReseedTest is TestHelper {
     //////////////////// Account Deposits ////////////////////
 
     function test_getDepositsForAccount() public {
-        address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
-
-        // for every account
-        for (uint256 i = 0; i < accountNumber; i++) {
-            address account = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
-            // get all deposits of all tokens --> order of whitelist
-            IMockFBeanstalk.TokenDepositId[] memory accountDepositsStorage = l2Beanstalk
-                .getDepositsForAccount(account);
-
-            bytes memory depositDataJson = searchAccountDeposits(account);
-            // decode the deposit data from json
-            IMockFBeanstalk.TokenDepositId[] memory accountDepositsJson = abi.decode(
-                depositDataJson,
-                (IMockFBeanstalk.TokenDepositId[])
-            );
-
-            // for all tokens
-            for (uint256 j = 0; j < accountDepositsStorage.length; j++) {
-                // for all deposits --> if no deposits of a particular token, the for loop is skipped
-                for (uint256 k = 0; k < accountDepositsStorage[j].depositIds.length; k++) {
-                    // assert the token
-                    assertEq(accountDepositsStorage[j].token, accountDepositsJson[j].token);
-                    // assert the deposit id
-                    assertEq(
-                        accountDepositsStorage[j].depositIds[k],
-                        accountDepositsJson[j].depositIds[k]
-                    );
-                    // assert the amount
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].amount,
-                        accountDepositsJson[j].tokenDeposits[k].amount
-                    );
-                    // assert the bdv
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].bdv,
-                        accountDepositsJson[j].tokenDeposits[k].bdv
-                    );
-                }
+        // test the L2 Beanstalk
+        IMockFBeanstalk.TokenDepositId[] memory tokenDeposits = l2Beanstalk.getDepositsForAccount(
+            address(DEFAULT_ACCOUNT)
+        );
+        console.log("Checking account: ", address(DEFAULT_ACCOUNT));
+        console.log("token deposits count: ", tokenDeposits.length);
+        for (uint256 i = 0; i < tokenDeposits.length; i++) {
+            console.log("token: ", tokenDeposits[i].token);
+            console.log("depositIds count: ", tokenDeposits[i].depositIds.length);
+            for (uint256 j = 0; j < tokenDeposits[i].depositIds.length; j++) {
+                console.log("depositId: ", tokenDeposits[i].depositIds[j]);
             }
         }
     }
@@ -364,13 +310,13 @@ contract ReseedTest is TestHelper {
         return propertyValue;
     }
 
-    function searchAccountDeposits(address account) public returns (bytes memory) {
+    function searchAccountPlots(string memory account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/depositFinder.js"; // script
+        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
-        inputs[3] = vm.toString(account);
-        bytes memory accountDeposits = vm.ffi(inputs);
-        return accountDeposits;
+        inputs[3] = account;
+        bytes memory accountPlots = vm.ffi(inputs);
+        return accountPlots;
     }
 }

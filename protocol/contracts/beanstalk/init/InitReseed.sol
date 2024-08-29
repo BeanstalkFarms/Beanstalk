@@ -19,6 +19,11 @@ import {IDiamondLoupe} from "contracts/interfaces/IDiamondLoupe.sol";
 contract InitReseed {
     AppStorage internal s;
 
+    address internal constant BEAN = 0xBEA0005B8599265D41256905A9B3073D397812E4;
+    address internal constant UNRIPE_BEAN = 0x1BEA054dddBca12889e07B3E076f511Bf1d27543;
+    address internal constant UNRIPE_LP = 0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788;
+    address internal constant BEAN_WSTETH_LP = 0xBEA0039bC614D95B65AB843C4482a1A5D2214396;
+
     event Reseed(uint256 timestamp);
 
     function init() external {
@@ -37,6 +42,11 @@ contract InitReseed {
             ((s.sys.season.timestamp / s.sys.season.period) * s.sys.season.period) -
             (s.sys.season.period * s.sys.season.current);
 
+        // add unripe tokens
+        // set the underlying token of the unripe bean to bean.
+        s.sys.silo.unripeSettings[UNRIPE_BEAN].underlyingToken = BEAN;
+        // set the underlying token of the unripe lp to BeanWstethLP.
+        s.sys.silo.unripeSettings[UNRIPE_LP].underlyingToken = BEAN_WSTETH_LP;
         emit Reseed(block.timestamp);
     }
 }
