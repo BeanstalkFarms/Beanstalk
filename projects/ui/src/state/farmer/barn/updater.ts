@@ -1,29 +1,29 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-import {
-  useBeanstalkContract,
-  useFertilizerContract,
-} from '~/hooks/ledger/useContract';
+
 import { REPLANT_INITIAL_ID } from '~/hooks/beanstalk/useHumidity';
 import useChainId from '~/hooks/chain/useChainId';
 import { tokenResult } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
-import { resetFarmerBarn, updateFarmerBarn } from './actions';
 import { castFertilizerBalance } from '~/state/farmer/barn';
 import { SPROUTS } from '~/constants/tokens';
 import { useFertilizerBalancesLazyQuery } from '~/generated/graphql';
+import useSdk from '~/hooks/sdk';
+import { resetFarmerBarn, updateFarmerBarn } from './actions';
 
 export const useFetchFarmerBarn = () => {
   /// Helpers
   const dispatch = useDispatch();
   const replantId = useChainConstant(REPLANT_INITIAL_ID);
+  const account = useAccount();
+  const sdk = useSdk();
 
   /// Contracts
   const [fetchFertBalances] = useFertilizerBalancesLazyQuery();
-  const fertContract = useFertilizerContract();
-  const beanstalk = useBeanstalkContract();
-  const account = useAccount();
+
+  const fertContract = sdk.contracts.fertilizer;
+  const beanstalk = sdk.contracts.beanstalk;
 
   const initialized = fertContract && account;
 
