@@ -558,7 +558,6 @@ export class Tokens {
       addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? this.BEAN_ETH_UNIV2_LP.symbol.toLowerCase(),
       this.BEAN_ETH_UNIV2_LP
     );
-
     ////////// Groups //////////
 
     const wellLP = [
