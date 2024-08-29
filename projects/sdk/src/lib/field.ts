@@ -15,7 +15,10 @@ export class Field {
     return Field.sdk.contracts.beanstalk.harvestableIndex(fieldId);
   }
 
-  public async getAllPlots(account: string, fieldId: BigNumberish = Field.DEFAULT_FIELD_ID) {
+  public async getPlotsFromAccount(
+    account: string,
+    fieldId: BigNumberish = Field.DEFAULT_FIELD_ID
+  ) {
     const plots = await Field.sdk.contracts.beanstalk.getPlotsFromAccount(account, fieldId);
 
     return new Map<string, BigNumber>(
@@ -23,9 +26,9 @@ export class Field {
     );
   }
 
-  public async getPlots({ account, fieldId }: { account: string; fieldId?: BigNumberish }) {
+  public async getParsedPlotsFromAccount(account: string, fieldId: BigNumberish) {
     const [plots, harvestableIndex] = await Promise.all([
-      this.getAllPlots(account, fieldId),
+      this.getPlotsFromAccount(account, fieldId),
       this.getHarvestableIndex(fieldId)
     ]);
 
