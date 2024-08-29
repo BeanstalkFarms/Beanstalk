@@ -15,7 +15,7 @@ export const useFetchPools = () => {
   const dispatch = useDispatch();
   const sdk = useSdk();
   const beanstalk = sdk.contracts.beanstalk;
-  const [beanstalkPriceContract, chainId] = useBeanstalkPriceContract();
+  const beanstalkPriceContract = useBeanstalkPriceContract();
   const provider = useEthersProvider();
 
   // Handlers
@@ -24,8 +24,7 @@ export const useFetchPools = () => {
       if (beanstalk && beanstalkPriceContract) {
         console.debug(
           '[bean/pools/useGetPools] FETCH',
-          beanstalkPriceContract.address,
-          chainId
+          beanstalkPriceContract.address
         );
 
         const whitelistedPools = sdk.pools.whitelistedPools;
@@ -157,7 +156,6 @@ export const useFetchPools = () => {
   }, [
     beanstalk,
     beanstalkPriceContract,
-    chainId,
     sdk.pools,
     sdk.tokens.BEAN,
     dispatch,
