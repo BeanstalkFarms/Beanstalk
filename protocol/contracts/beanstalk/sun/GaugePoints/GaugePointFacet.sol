@@ -45,7 +45,8 @@ contract GaugePointFacet {
     function defaultGaugePointFunction(
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
-        uint256 percentOfDepositedBdv
+        uint256 percentOfDepositedBdv,
+        bytes calldata
     ) public pure returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >

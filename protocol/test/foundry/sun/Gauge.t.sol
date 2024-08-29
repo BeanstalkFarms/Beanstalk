@@ -534,7 +534,8 @@ contract GaugeTest is TestHelper {
         uint256 newGaugePoints = gpP.priceGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         if (gpP.getPriceThreshold() >= price) {
@@ -548,7 +549,8 @@ contract GaugeTest is TestHelper {
                 gpP.defaultGaugePointFunction(
                     gaugePoints,
                     optimalPercentDepositedBdv,
-                    percentOfDepositedBdv
+                    percentOfDepositedBdv,
+                    new bytes(0)
                 )
             );
         }
@@ -566,7 +568,8 @@ contract GaugeTest is TestHelper {
         uint256 newGaugePoints = gpP.defaultGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         uint256 extFarAbove = gpP.getExtremelyFarAbove(optimalPercentDepositedBdv);
