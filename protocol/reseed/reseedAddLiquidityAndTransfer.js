@@ -58,11 +58,9 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await impersonateToken(NonBeanToken[i], decimals);
     if (mock) {
       // mint tokens to add liquidity:
-      console.log(`Minting tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
       await token.mint(account.address, nonBeanAmounts[i]);
       await bean.mint(account.address, beanAmounts[i]);
     }
-    console.log(`Approving tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:

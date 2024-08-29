@@ -11,6 +11,7 @@ require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
+require("hardhat-switch-network");
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -388,9 +389,15 @@ module.exports = {
         : undefined,
       allowUnlimitedContractSize: true
     },
-    localhost: {
+    localhostMainnet: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
+      timeout: 1000000000,
+      accounts: "remote"
+    },
+    localhostArbitrum: {
+      chainId: 1337,
+      url: "http://127.0.0.1:8546/",
       timeout: 1000000000,
       accounts: "remote"
     },

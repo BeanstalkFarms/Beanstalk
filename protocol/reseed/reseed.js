@@ -22,6 +22,7 @@ const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { getBeanstalk } = require("../utils/contracts.js");
 const { deployContract } = require("../scripts/contracts.js");
+const { changeNetwork } = require("../utils/helpers.js");
 
 let reseeds;
 async function reseed({
@@ -43,16 +44,16 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
-    reseedGlobal, // reseed global variables
-    reseed2, // reseed pod marketplace
-    reseed4, // reseed field
-    reseed5, // reseed barn (fert)
-    reseed6, // reseed silo
-    reseed7, // reseed account status
-    reseed8, // reseed internal balances
-    reseed9, // reseed whitelist
-    reseed10 // add selectors to l2
+    // reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
+    // reseedGlobal, // reseed global variables
+    // reseed2, // reseed pod marketplace
+    // reseed4, // reseed field
+    // reseed5, // reseed barn (fert)
+    // reseed6, // reseed silo
+    // reseed7, // reseed account status
+    // reseed8, // reseed internal balances
+    // reseed9, // reseed whitelist
+    // reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
 
@@ -62,10 +63,10 @@ async function reseed({
     await printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
     if (i == 0) {
-      if (deployL1 == true) {
+      if (true) {
         // migrate beanstalk L1 assets.
         await reseed1(owner);
-        return;
+        await changeNetwork("localhostArbitrum");
       }
       continue;
     }
@@ -128,8 +129,7 @@ async function reseed({
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
     }
   }
-  console.log("Adding liquidity to wells and transferring to L2 Beanstalk.");
-  await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
+  // await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
   console.log("Reseed successful.");
 }
 
