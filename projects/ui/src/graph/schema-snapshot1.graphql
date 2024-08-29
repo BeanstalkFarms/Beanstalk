@@ -33,6 +33,7 @@ type BoostSettings {
 type DelegationPortal {
   delegationApi: String!
   delegationContract: String!
+  delegationNetwork: String!
   delegationType: String!
 }
 
