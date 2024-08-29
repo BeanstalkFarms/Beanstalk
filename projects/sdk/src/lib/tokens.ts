@@ -131,7 +131,7 @@ export class Tokens {
     this.STALK = new BeanstalkToken(
       chainId,
       null,
-      10,
+      16,
       "STALK",
       {
         name: "Stalk"
