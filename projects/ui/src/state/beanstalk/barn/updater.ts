@@ -7,7 +7,6 @@ import useChainId from '~/hooks/chain/useChainId';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { resetBarn, updateBarn } from './actions';
-import { BEAN, UNRIPE_BEAN } from '../../../constants/tokens';
 
 // const fetchGlobal = fetch;
 // const fetchFertilizerTotalSupply = async (): Promise<BigNumber> =>
@@ -35,6 +34,7 @@ export const useFetchBeanstalkBarn = () => {
 
   // Handlers
   const fetch = useCallback(async () => {
+    const { BEAN, UNRIPE_BEAN } = sdk.tokens;
     if (fertContract && usdcContract) {
       console.debug('[beanstalk/fertilizer/updater] FETCH');
       const [
@@ -53,7 +53,7 @@ export const useFetchBeanstalkBarn = () => {
         beanstalk.totalUnfertilizedBeans().then(tokenResult(BEAN)),
         beanstalk.totalFertilizedBeans().then(tokenResult(BEAN)),
         beanstalk
-          .getRecapFundedPercent(UNRIPE_BEAN[1].address)
+          .getRecapFundedPercent(UNRIPE_BEAN.address)
           .then(tokenResult(UNRIPE_BEAN)),
       ] as const);
       console.debug(
@@ -74,7 +74,7 @@ export const useFetchBeanstalkBarn = () => {
         })
       );
     }
-  }, [dispatch, beanstalk, fertContract, usdcContract]);
+  }, [sdk.tokens, fertContract, usdcContract, beanstalk, dispatch]);
   const clear = useCallback(() => {
     dispatch(resetBarn());
   }, [dispatch]);
