@@ -33,29 +33,24 @@ export const useUnripe = () => {
               /// to the `Chop Rate` and then say `Chop Penalty = (1 - Chop Rate) x 100%`.
               beanstalk
                 .getPercentPenalty(addr)
-                .then(tokenResult(unripeTokens[addr]))
-                .catch(() => new BigNumber(0.95)), // TODO: remove this default value
+                .then(tokenResult(unripeTokens[addr])),
               beanstalk
                 .getTotalUnderlying(addr)
-                .then(tokenResult(unripeUnderlyingTokens[addr]))
-                .catch(() => new BigNumber(1000000)), // TODO: remove this default value
+                .then(tokenResult(unripeUnderlyingTokens[addr])),
               unripeTokens[addr]
                 ?.getTotalSupply()
                 ?.then(tokenResult(unripeTokens[addr])),
               beanstalk
                 .getRecapPaidPercent()
                 .then(tokenResult(unripeTokens[addr])),
-              beanstalk
-                .getPenalty(addr)
-                .then((result) => {
-                  if (tokenIshEqual(addr, unripeLP)) {
-                    // handle this case separately b/c urBEAN:ETH LP liquidity was originally
-                    // bean:3crv, which had 18 decimals
-                    return new BigNumber(result.toString()).div(1e18);
-                  }
-                  return tokenResult(unripeTokens[addr])(result);
-                })
-                .catch(() => new BigNumber(0.95)), // TODO: remove this default value
+              beanstalk.getPenalty(addr).then((result) => {
+                if (tokenIshEqual(addr, unripeLP)) {
+                  // handle this case separately b/c urBEAN:ETH LP liquidity was originally
+                  // bean:3crv, which had 18 decimals
+                  return new BigNumber(result.toString()).div(1e18);
+                }
+                return tokenResult(unripeTokens[addr])(result);
+              }),
             ])
           )
         );

@@ -143,8 +143,6 @@ export const useFetchFarmerSilo = () => {
       dispatch(updateFarmerSiloMowStatuses(mowStatuses));
       dispatch(updateFarmerSiloBalanceSdk(balances));
 
-      console.log('balances: ', balances.entries());
-
       const earnedStalkBalance = sdk.tokens.BEAN.getStalk(earnedBeanBalance);
       const earnedSeedBalance = sdk.tokens.BEAN.getSeeds(earnedBeanBalance);
       const totalStalkBalance = activeStalkBalance.add(grownStalkBalance);
