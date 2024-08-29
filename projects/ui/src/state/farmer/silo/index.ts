@@ -156,9 +156,9 @@ export type FarmerSilo = FarmerSiloBalances &
     ran: boolean;
   };
 
-export type MowStatus = {
-  lastStem: ethers.BigNumber;
-  bdv: ethers.BigNumber;
+export type MowStatus<T = ethers.BigNumber> = {
+  lastStem: T;
+  bdv: T;
 };
 
 export type MowStatusTokenMap = Map<Token, MowStatus>;
