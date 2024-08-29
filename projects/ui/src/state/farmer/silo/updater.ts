@@ -73,10 +73,15 @@ export const useFetchFarmerSilo = () => {
         sdk.tokens.STALK
       );
 
+      console.log('grownStalkBal: ', data.grownStalk);
+
       const grownStalkByToken = new Map<Token, TokenValue>();
       const grownStalkBalance = whitelist.reduce<TokenValue>(
         (memo, token, i) => {
           const balance = sdk.tokens.STALK.fromBlockchain(data.grownStalk[i]);
+          if (balance.gt(0)) {
+            console.log(token.symbol, ' - grownStalkBal: ', balance.toHuman());
+          }
           grownStalkByToken.set(token, balance);
           memo = memo.add(balance);
           return memo;

@@ -29,7 +29,7 @@ export const useFetchFarmerField = () => {
       const transformMap = (map: typeof data.plots) => {
         const entries = [...map.entries()];
         return entries.map(([key, amount]) => [
-          key,
+          sdk.tokens.PODS.fromBlockchain(key).toHuman(),
           transform(amount, 'bnjs', sdk.tokens.PODS),
         ]);
       };
