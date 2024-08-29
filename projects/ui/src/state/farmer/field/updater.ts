@@ -1,18 +1,14 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { EventProcessor } from '@beanstalk/sdk';
 import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
-import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import useSdk from '~/hooks/sdk';
 import { transform } from '~/util/BigNumber';
-import { FarmerField } from '~/state/farmer/field';
 import {
   resetFarmerField,
   updateFarmerField,
   updateFarmerFieldLoading,
 } from './actions';
-import useEvents, { GetEventsFn } from '../events2/updater';
 
 export const useFetchFarmerField = () => {
   /// Helpers
@@ -23,75 +19,44 @@ export const useFetchFarmerField = () => {
 
   /// Data
   const account = useAccount();
-  const harvestableIndex = useHarvestableIndex();
-
-  /// Events
-  const getQueryFilters = useCallback<GetEventsFn>(
-    async (_account, fromBlock, toBlock) =>
-      sdk.events.get('field', [
-        _account,
-        {
-          fromBlock, // let cache system choose where to start
-          toBlock, // let cache system choose where to end
-        },
-      ]),
-    [sdk.events]
-  );
-
-  const [fetchFieldEvents] = useEvents('field', getQueryFilters);
-  const initialized = account && fetchFieldEvents && harvestableIndex.gt(0); // harvestedableIndex is initialized to 0
 
   /// Handlers
   const fetch = useCallback(async () => {
-    if (initialized) {
-      const allEvents = await fetchFieldEvents();
-      if (!allEvents) return;
+    if (account) {
+      const data = await sdk.field.getParsedPlotsFromAccount(account);
+      if (!data) return;
 
-      const processor = new EventProcessor(sdk, account);
-      processor.ingestAll(allEvents);
-      const result = processor.parsePlots({
-        harvestableIndex: sdk.tokens.PODS.fromHuman(
-          harvestableIndex.toString()
-        ).toBigNumber(), // ethers.BigNumber
-      });
-
-      // TEMP: Wrangle `result` into our internal state's existing format
-      // Tested by manual validation.
-      const plots: FarmerField['plots'] = {};
-      const harvestablePlots: FarmerField['harvestablePlots'] = {};
-      result.plots.forEach((plot, indexStr) => {
-        plots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] = transform(
-          plot,
-          'bnjs',
-          sdk.tokens.PODS
-        );
-      });
-      result.harvestablePlots.forEach((plot, indexStr) => {
-        harvestablePlots[sdk.tokens.PODS.fromBlockchain(indexStr).toHuman()] =
-          transform(plot, 'bnjs', sdk.tokens.PODS);
-      });
+      const transformMap = (map: typeof data.plots) => {
+        const entries = [...map.entries()];
+        return entries.map(([key, amount]) => [
+          key,
+          transform(amount, 'bnjs', sdk.tokens.PODS),
+        ]);
+      };
 
       dispatch(
         updateFarmerField({
-          pods: transform(result.pods, 'bnjs', sdk.tokens.PODS),
+          pods: transform(data.pods, 'bnjs', sdk.tokens.PODS),
           harvestablePods: transform(
-            result.harvestablePods,
+            data.harvestablePods,
             'bnjs',
             sdk.tokens.PODS
           ),
-          plots,
-          harvestablePlots,
+          plots: Object.fromEntries(transformMap(data.plots)),
+          harvestablePlots: Object.fromEntries(
+            transformMap(data.harvestablePlots)
+          ),
         })
       );
     }
-  }, [initialized, fetchFieldEvents, sdk, account, dispatch, harvestableIndex]);
+  }, [sdk, account, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerField] CLEAR');
     dispatch(resetFarmerField());
   }, [dispatch]);
 
-  return [fetch, Boolean(initialized), clear] as const;
+  return [fetch, true, clear] as const;
 };
 
 // -- Updater
