@@ -278,7 +278,9 @@ export function getTokenIndex(token: { symbol: string; address: string }) {
 }
 
 export type TokenIsh = string | Token | TokenOld | undefined;
+
 export type TokenClassInstance = Token | TokenOld;
+
 export function isTokenInstance(tk: TokenIsh): tk is TokenClassInstance {
   return tk instanceof Token || tk instanceof TokenOld;
 }

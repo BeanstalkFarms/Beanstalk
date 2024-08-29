@@ -54,9 +54,9 @@ export const useFetchFarmerSilo = () => {
       const data = await multicall(config, {
         contracts: buildMultiCall(beanstalk.address, account, whitelist),
       }).then((result) => ({
-        activeStalkBal: extractResult(result[0], -1n),
+        activeStalk: extractResult(result[0], -1n),
         rootBalance: extractResult(result[2], -1n),
-        earnedBeanBalance: extractResult(result[3], -1n),
+        earnedBeans: extractResult(result[3], -1n),
         grownStalk: extractArrayResult<bigint>(result[1], numTokens, 0n),
         mowStatuses: extractArrayResult<MowStatus<bigint>>(
           result[4],
@@ -68,7 +68,7 @@ export const useFetchFarmerSilo = () => {
       console.debug('[farmer/silo/useFarmerSilo] multicall result: ', data);
 
       const activeStalkBalance = transform(
-        data.activeStalkBal,
+        data.activeStalk,
         'tokenValue',
         sdk.tokens.STALK
       );
@@ -85,7 +85,7 @@ export const useFetchFarmerSilo = () => {
       );
       const rootBalance = transform(data.rootBalance, 'bnjs');
       const earnedBeanBalance = sdk.tokens.BEAN.fromBlockchain(
-        data.earnedBeanBalance
+        data.earnedBeans
       );
 
       const mowStatuses = new Map<Token, MowStatus>(

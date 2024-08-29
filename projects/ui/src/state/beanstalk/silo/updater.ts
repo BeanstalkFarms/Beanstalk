@@ -15,6 +15,7 @@ import {
   ZERO_BN,
 } from '~/constants';
 import { chunkArray } from '~/util/UI';
+import { ethers } from 'ethers';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from '.';
 
@@ -78,9 +79,9 @@ export const useFetchBeanstalkSilo = () => {
           depositedBdv: tokenIshEqual(token, sdk.tokens.BEAN)
             ? ONE_BN
             : transform(data[1], 'bnjs', token),
-          totalGerminating: transform(data[3], 'bnjs', token),
-          bdvPerToken: transform(data[4], 'bnjs', token),
-          stemTip: stemTips.get(token.address) || ZERO_BN,
+          totalGerminating: transform(data[2], 'bnjs', token),
+          bdvPerToken: transform(data[3], 'bnjs', token),
+          stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
         };
       });
 
@@ -194,10 +195,13 @@ type CallResult = Awaited<
 
 // -- Helpers
 
-function parseCallResult(result: CallResult, defaultValue: bigint = -1n): bigint {
+function parseCallResult(
+  result: CallResult,
+  defaultValue: bigint = -1n
+): bigint {
   if (result.error) return defaultValue;
   return result.result;
-};
+}
 
 function buildWhitelistMultiCall(
   beanstalk: ReturnType<typeof useSdk>['contracts']['beanstalk'],
@@ -250,9 +254,7 @@ function buildWhitelistMultiCall(
   return contractCalls;
 }
 
-function buildBeanstalkSiloMultiCall(
-  beanstalkAddress: string
-): CallParams[] {
+function buildBeanstalkSiloMultiCall(beanstalkAddress: string): CallParams[] {
   const shared = {
     address: beanstalkAddress as `0x{string}`,
     abi: ABISnippets.siloGetters,
@@ -275,7 +277,7 @@ function buildBeanstalkSiloMultiCall(
       args: [],
     },
   ];
-};
+}
 
 // const [
 //   // 0
