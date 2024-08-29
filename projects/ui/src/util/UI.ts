@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 /**
  * converts hex string to rgba
  */
@@ -69,4 +70,15 @@ export function existsNot(value: any): value is undefined | null {
 
 export function stringsEqual(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
+}
+
+export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  // use BN here to avoid floating point errors
+  const length = Math.ceil(
+    new BigNumber(array.length).div(chunkSize).toNumber()
+  );
+
+  return Array.from({ length: length }, (_, index) =>
+    array.slice(index * chunkSize, (index + 1) * chunkSize)
+  );
 }

@@ -277,6 +277,12 @@ export function getTokenIndex(token: { symbol: string; address: string }) {
   return token.address;
 }
 
+export type TokenIsh = string | Token | TokenOld | undefined;
+export type TokenClassInstance = Token | TokenOld;
+export function isTokenInstance(tk: TokenIsh): tk is TokenClassInstance {
+  return tk instanceof Token || tk instanceof TokenOld;
+}
+
 /**
  * Compares two strings case-insensitively.
  * if either string is undefined, returns false.
@@ -286,8 +292,14 @@ export function tokenIshEqual(
   b: string | Token | TokenOld | undefined
 ): boolean {
   if (!exists(a) || !exists(b)) return false;
-  return stringsEqual(
+  const addressesEqual = stringsEqual(
     typeof a === 'string' ? a : a.address,
     typeof b === 'string' ? b : b.address
   );
+
+  if (isTokenInstance(a) && isTokenInstance(b)) {
+    return a.chainId === b.chainId && addressesEqual;
+  }
+
+  return addressesEqual;
 }

@@ -2,8 +2,6 @@ import { Contract, ContractInterface, ethers } from 'ethers';
 import { useCallback, useMemo } from 'react';
 import { useContract as useWagmiContract } from '~/util/wagmi/useContract';
 
-import BEANSTALK_ABI from '@beanstalk/protocol/abi/Beanstalk.json';
-import BEANSTALK_PRICE_ABI from '~/constants/abi/Beanstalk/BeanstalkPrice.json';
 import BEANSTALK_FERTILIZER_ABI from '~/constants/abi/Beanstalk/BeanstalkFertilizer.json';
 import ERC20_ABI from '~/constants/abi/ERC20.json';
 import BEANFT_GENESIS_ABI from '~/constants/abi/BeaNFT/BeaNFTGenesis.json';
@@ -18,9 +16,7 @@ import {
   BEANFT_GENESIS_ADDRESSES,
   BEANFT_WINTER_ADDRESSES,
   BEANFT_BARNRAISE_ADDRESSES,
-  BEANSTALK_ADDRESSES,
   BEANSTALK_FERTILIZER_ADDRESSES,
-  BEANSTALK_PRICE_ADDRESSES,
   DELEGATES_REGISTRY_ADDRESSES,
   ENS_REVERSE_RECORDS,
 } from '~/constants/addresses';
@@ -32,8 +28,6 @@ import {
   BeaNFTWinter,
   BeaNFTBarnRaise,
   BeanstalkFertilizer,
-  Beanstalk,
-  BeanstalkPrice,
   ERC20,
   AggregatorV3,
   DelegateRegistry,
@@ -42,6 +36,7 @@ import {
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { Address } from '@beanstalk/sdk-core';
 import useChainId from '~/hooks/chain/useChainId';
+import useSdk from '../sdk';
 
 export type AddressOrAddressMap = string | ChainConstant<string>;
 export type AbiOrAbiMap = ContractInterface | ChainConstant<ContractInterface>;
@@ -133,14 +128,11 @@ export function useContract<T extends Contract = Contract>(
 
 // --------------------------------------------------
 
-const BEANSTALK_PRICE_ABIS = {
-  [SupportedChainId.MAINNET]: BEANSTALK_PRICE_ABI,
-};
-
 export function useBeanstalkPriceContract() {
-  return useContractReadOnly<BeanstalkPrice>(
-    BEANSTALK_PRICE_ADDRESSES,
-    BEANSTALK_PRICE_ABIS
+  const sdk = useSdk();
+  return useMemo(
+    () => sdk.contracts.beanstalkPrice,
+    [sdk.contracts.beanstalkPrice]
   );
 }
 
@@ -173,14 +165,9 @@ export function useFertilizerContract(signer?: ethers.Signer | null) {
   }) as BeanstalkFertilizer;
 }
 
-export function useBeanstalkContract(signer?: ethers.Signer | null) {
-  const address = useChainConstant(BEANSTALK_ADDRESSES);
-  const provider = useEthersProvider();
-  return useWagmiContract({
-    address,
-    abi: BEANSTALK_ABI,
-    signerOrProvider: signer || provider,
-  }) as Beanstalk;
+export function useBeanstalkContract(_signer?: ethers.Signer | null) {
+  const sdk = useSdk();
+  return useMemo(() => sdk.contracts.beanstalk, [sdk.contracts.beanstalk]);
 }
 
 export function useGenesisNFTContract(signer?: ethers.Signer | null) {
