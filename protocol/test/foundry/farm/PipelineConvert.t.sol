@@ -1373,6 +1373,45 @@ contract PipelineConvertTest is TestHelper {
         assertEq(stalkPenaltyBdv, 100);
     }
 
+    function testConvertFromFarmCall() public {
+        uint256 amount = 10e6;
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        bytes memory pipelineConvertEncoded = abi.encodeWithSelector(
+            pipelineConvert.pipelineConvert.selector,
+            BEAN, // input token
+            stems, // stems
+            amounts, // amount
+            beanEthWell, // token out
+            beanToLPPipeCalls // pipeData
+        );
+
+        IMockFBeanstalk.AdvancedFarmCall memory advancedFarmCall = IMockFBeanstalk.AdvancedFarmCall(
+            pipelineConvertEncoded,
+            abi.encode(0)
+        );
+
+        // make array with advancedFarmCall as only item
+        IMockFBeanstalk.AdvancedFarmCall[]
+            memory advancedFarmCalls = new IMockFBeanstalk.AdvancedFarmCall[](1);
+        advancedFarmCalls[0] = advancedFarmCall;
+
+        vm.resumeGasMetering();
+        vm.prank(users[1]);
+        bs.advancedFarm(advancedFarmCalls); // currently fails with: ReentrancyGuard: reentrant farm call
+    }
+
     ////// CONVERT TEST HELPERS //////
 
     function setupStalkTests(
