@@ -56,23 +56,6 @@ export const useHumidityAtSeason = () => {
   );
 };
 
-// Until a sufficient subgraph is built, Humidity will
-// be hard-coded to these values.
-export const useHumidityFromId = () =>
-  useCallback(
-    () => [INITIAL_HUMIDITY, HUMIDITY_DECREASE_AT_REPLANT] as const,
-    []
-  );
-
-export const useHumidityAtId = () =>
-  useCallback((id: BigNumber) => {
-    if (id.eq(REPLANT_INITIAL_ID[1])) {
-      return INITIAL_HUMIDITY;
-    }
-    // Need to look up via subgraph
-    return undefined;
-  }, []);
-
 // ----------------------------------------
 
 export default function useHumidity() {

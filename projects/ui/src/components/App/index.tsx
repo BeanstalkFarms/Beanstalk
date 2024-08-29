@@ -141,33 +141,40 @@ function Arbitrum() {
       {/* -----------------------
        * Appplication Setup
        * ----------------------- */}
-      <UnripeUpdater />
+      <AppUpdater />
+      {/* -----------------------
+       * Bean Updaters
+       * ----------------------- */}
+      {/* price contract not working */}
+      {false && <PoolsUpdater />}
+      {false && <UnripeUpdater />}
+
+      {/* -----------------------
+       * Beanstalk Updaters
+       * ----------------------- */}
+      <SiloUpdater />
+      <FieldUpdater />
+      <SunUpdater />
+      <BarnUpdater />
+      <MorningUpdater />
+      <MorningFieldUpdater />
+      <BeanstalkCaseUpdater />
+
       {false && (
         <>
-          <AppUpdater />
-          {/* price contract not working */}
-          <PoolsUpdater />
-          {/* -----------------------
-           * Bean Updaters
-           * ----------------------- */}
-          {/* -----------------------
-           * Beanstalk Updaters
-           * ----------------------- */}
-          <SiloUpdater />
-          <FieldUpdater />
-          <BarnUpdater />
-          <SunUpdater />
-          <MorningUpdater />
-          <MorningFieldUpdater />
           <GovernanceUpdater />
-          <BeanstalkCaseUpdater />
-          {/* -----------------------
-           * Farmer Updaters
-           * ----------------------- */}
-          <FarmerSiloUpdater />
-          <FarmerFieldUpdater />
-          <FarmerBarnUpdater />
-          <FarmerBalancesUpdater />
+        </>
+      )}
+
+      {/* -----------------------
+       * Farmer Updaters
+       * ----------------------- */}
+      <FarmerSiloUpdater />
+      <FarmerFieldUpdater />
+      <FarmerBarnUpdater />
+      <FarmerBalancesUpdater />
+      {false && (
+        <>
           <FarmerMarketUpdater />
           <FarmerDelegationsUpdater />
         </>
