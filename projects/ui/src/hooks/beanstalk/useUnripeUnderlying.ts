@@ -8,10 +8,10 @@ export default function useUnripeUnderlyingMap(
   keyedBy: 'unripe' | 'ripe' = 'unripe'
 ) {
   const sdk = useSdk();
-  const unripe = useTokenList([...sdk.tokens.unripeTokens] as ERC20Token[]);
-  const underlying = useTokenList([
-    ...sdk.tokens.unripeUnderlyingTokens,
-  ] as ERC20Token[]);
+  const unripe = useTokenList(sdk.tokens.unripeTokens as Set<ERC20Token>);
+  const underlying = useTokenList(
+    sdk.tokens.unripeUnderlyingTokens as Set<ERC20Token>
+  );
   return useMemo(
     () =>
       unripe.reduce<AddressMap<ERC20Token>>((prev, unripeToken, index) => {

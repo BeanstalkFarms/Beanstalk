@@ -82,7 +82,7 @@ const useAvgSeedsPerBDV = (
     setLoading(true);
     console.debug('[useAvgSeedsPerBDV/fetch]: fetching...');
 
-    const tokens = [sdk.tokens.BEAN, ...sdk.tokens.siloWhitelistedWellLP];
+    const tokens = [sdk.tokens.BEAN, ...sdk.tokens.wellLP];
     const document = createMultiTokenQuery(
       sdk.contracts.beanstalk.address,
       tokens
