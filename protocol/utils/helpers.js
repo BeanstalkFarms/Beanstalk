@@ -11,6 +11,12 @@ async function advanceTime(time) {
   });
 }
 
+async function changeNetwork(network, verbose = true) {
+  await hre.switchNetwork(network);
+  if (verbose) console.log(`Switched to ${network} network.`);
+}
+
 
 exports.toBN = toBN
 exports.advanceTime = advanceTime
+exports.changeNetwork = changeNetwork

@@ -43,7 +43,7 @@ async function reseed1(account) {
   // add the BeanL2MigrationFacet, L1TokenFacet, remove all selectors other than the diamond functionality.
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: ["BeanL2MigrationFacet", "L1TokenFacet"],
+    facetNames: ["L2MigrationFacet", "L1TokenFacet"],
     facetsToRemove: beanstalkSelectors,
     initFacetName: "ReseedL2Migration",
     bip: false,
