@@ -28,7 +28,7 @@ async function reseed({
   owner,
   beanstalkDeployer,
   l2owner,
-  mock = false,
+  mock = true,
   convertData = true,
   log = false,
   start = 0,
@@ -128,7 +128,6 @@ async function reseed({
       // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
     }
   }
-  console.log("Adding liquidity to wells and transferring to L2 Beanstalk.");
   await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
   console.log("Reseed successful.");
 }
