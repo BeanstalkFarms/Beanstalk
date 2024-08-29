@@ -1,18 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { BEAN, UNRIPE_BEAN } from '../../../constants/tokens';
 
-import { USDC_ADDRESSES } from '~/constants/addresses';
-
-import {
-  useBeanstalkContract,
-  useBeanstalkFertilizerContract,
-  useERC20Contract,
-} from '~/hooks/ledger/useContract';
+import { useERC20Contract } from '~/hooks/ledger/useContract';
 import { tokenResult, bigNumberResult } from '~/util';
 import useChainId from '~/hooks/chain/useChainId';
-import { resetBarn, updateBarn } from './actions';
 import { ZERO_BN } from '~/constants';
+import useSdk from '~/hooks/sdk';
+import { resetBarn, updateBarn } from './actions';
+import { BEAN, UNRIPE_BEAN } from '../../../constants/tokens';
 
 // const fetchGlobal = fetch;
 // const fetchFertilizerTotalSupply = async (): Promise<BigNumber> =>
@@ -31,9 +26,12 @@ import { ZERO_BN } from '~/constants';
 
 export const useFetchBeanstalkBarn = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
-  const [fertContract] = useBeanstalkFertilizerContract();
-  const [usdcContract] = useERC20Contract(USDC_ADDRESSES);
+  const sdk = useSdk();
+
+  // Contracts
+  const beanstalk = sdk.contracts.beanstalk;
+  const fertContract = sdk.contracts.fertilizer;
+  const [usdcContract] = useERC20Contract(sdk.tokens.USDC.address);
 
   // Handlers
   const fetch = useCallback(async () => {
