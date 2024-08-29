@@ -2,7 +2,6 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
@@ -21,7 +20,8 @@ import {
 
 export const useSun = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
+  const sdk = useSdk();
+  const beanstalk = sdk.contracts.beanstalk;
 
   const fetch = useCallback(async () => {
     try {
