@@ -24,8 +24,15 @@ import {
   WSTETH,
   BEAN_WSTETH_WELL_LP,
   SILO_WHITELIST,
+  BEAN_USDC_WELL_LP,
+  BEAN_USDT_WELL_LP,
+  BEAN_WBTC_WELL_LP,
+  BEAN_WEETH_WELL_LP,
+  WBTC,
+  WEETH,
 } from '~/constants/tokens';
 import { Token as TokenOld } from '~/classes';
+import { ChainConstant, SupportedChainId } from '~/constants';
 import useGetChainToken from '../chain/useGetChainToken';
 
 export default function useSdk() {
@@ -36,36 +43,51 @@ export default function useSdk() {
   return useMemo(() => sdk, [sdk]);
 }
 
+const i = SupportedChainId.ARBITRUM;
+
 const oldTokenMap = {
-  [ETH[1].symbol]: ETH[1],
-  [BEAN[1].symbol]: BEAN[1],
-  [BEAN_CRV3_LP[1].symbol]: BEAN_CRV3_LP[1],
-  [BEAN_ETH_WELL_LP[1].symbol]: BEAN_ETH_WELL_LP[1],
-  [UNRIPE_BEAN[1].symbol]: UNRIPE_BEAN[1],
-  [UNRIPE_BEAN_WSTETH[1].symbol]: UNRIPE_BEAN_WSTETH[1],
-  [WETH[1].symbol]: WETH[1],
-  [CRV3[1].symbol]: CRV3[1],
-  [DAI[1].symbol]: DAI[1],
-  [USDC[1].symbol]: USDC[1],
-  [USDT[1].symbol]: USDT[1],
-  [LUSD[1].symbol]: LUSD[1],
+  [ETH[i].symbol]: ETH,
+  [BEAN[i].symbol]: BEAN,
+  [UNRIPE_BEAN[i].symbol]: UNRIPE_BEAN,
+  [UNRIPE_BEAN_WSTETH[i].symbol]: UNRIPE_BEAN_WSTETH,
+  [WETH[i].symbol]: WETH,
+  [DAI[i].symbol]: DAI,
+  [USDC[i].symbol]: USDC,
+  [USDT[i].symbol]: USDT,
+  [WSTETH[i].symbol]: WSTETH,
+  [WEETH[i].symbol]: WEETH,
+  [WBTC[i].symbol]: WBTC,
+  [BEAN_ETH_WELL_LP[i].symbol]: BEAN_ETH_WELL_LP,
+  [BEAN_WSTETH_WELL_LP[i].symbol]: BEAN_WSTETH_WELL_LP,
+  [BEAN_WEETH_WELL_LP[i].symbol]: BEAN_WEETH_WELL_LP,
+  [BEAN_WBTC_WELL_LP[i].symbol]: BEAN_WBTC_WELL_LP,
+  [BEAN_USDC_WELL_LP[i].symbol]: BEAN_USDC_WELL_LP,
+  [BEAN_USDT_WELL_LP[i].symbol]: BEAN_USDT_WELL_LP,
   [STALK.symbol]: STALK,
   [SEEDS.symbol]: SEEDS,
   [PODS.symbol]: PODS,
   [SPROUTS.symbol]: SPROUTS,
   [RINSABLE_SPROUTS.symbol]: RINSABLE_SPROUTS,
+  [BEAN_CRV3_LP[1].symbol]: BEAN_CRV3_LP[1],
+  [CRV3[1].symbol]: CRV3[1],
   [BEAN_ETH_UNIV2_LP[1].symbol]: BEAN_ETH_UNIV2_LP[1],
   [BEAN_LUSD_LP[1].symbol]: BEAN_LUSD_LP[1],
-  [BEAN_WSTETH_WELL_LP[1].symbol]: BEAN_WSTETH_WELL_LP[1],
-  [WSTETH[1].symbol]: WSTETH[1],
-};
+  [LUSD[1].symbol]: LUSD[1],
+} as const;
 
 export function getNewToOldToken(_token: Token) {
-  const token = oldTokenMap[_token.symbol];
-  if (!token) {
-    throw new Error('Token could not found');
+  const mayToken = oldTokenMap[_token.symbol];
+  if (!mayToken) {
+    throw new Error(`getNewToOldToken: ${_token.symbol} could not found`);
   }
-  return token as TokenOld;
+
+  if (mayToken instanceof TokenOld) return mayToken;
+
+  const token = (mayToken as ChainConstant<TokenOld>)[_token.chainId];
+  if (!token) {
+    throw new Error(`getNewToOldToken: ${_token.symbol} could not found`);
+  }
+  return token;
 }
 
 export const useRefreshSeeds = () => {
@@ -76,7 +98,7 @@ export const useRefreshSeeds = () => {
       await sdk.refresh();
       // Copy the seed values from sdk tokens to ui tokens
 
-      for await (const chainToken of SILO_WHITELIST) {
+      for (const chainToken of SILO_WHITELIST) {
         const token = getChainToken(chainToken);
         const seeds = sdk.tokens.findBySymbol(token.symbol)?.rewards?.seeds;
         if (!seeds) {

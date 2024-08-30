@@ -1,12 +1,40 @@
 import { useMemo } from 'react';
-import { BeanstalkToken, ERC20Token, NativeToken } from '@beanstalk/sdk';
-import useSdk from '../sdk';
+import { Token, ERC20Token, BeanstalkToken, NativeToken } from '@beanstalk/sdk';
+import LegacyToken, {
+  ERC20Token as LegacyERC20Token,
+  BeanstalkToken as LegacyBeanstalkToken,
+  NativeToken as LegacyNativeToken,
+} from '~/classes/Token';
+import { TokenMap } from '~/constants';
+import useSdk from '~/hooks/sdk';
+import { useAppSelector } from '~/state';
+import { BeanPools } from '~/state/bean/pools';
+
+// -------------------------
+// Token Instances
+// eventually we should be able to remove the LegacyToken types
+// and just use the Token types from @beanstalk/sdk
+// -------------------------
+/** @deprecated */
+export type TokenInstance = Token | LegacyToken;
+/** @deprecated */
+export type ERC20TokenInstance = ERC20Token | LegacyERC20Token;
+/** @deprecated */
+export type BeanstalkTokenInstance = BeanstalkToken | LegacyBeanstalkToken;
+/** @deprecated */
+export type NativeTokenInstance = NativeToken | LegacyNativeToken;
+/** @deprecated */
+export type AnyToken =
+  | TokenInstance
+  | ERC20TokenInstance
+  | BeanstalkTokenInstance
+  | NativeTokenInstance;
 
 /**
  *
  * @returns all balance tokens from the SDK (includes Well LP tokens)
  */
-export const useBalanceTokens = (): {
+export const useTokens = (): {
   ETH: NativeToken;
   WETH: ERC20Token;
   WSTETH: ERC20Token;
@@ -80,3 +108,68 @@ export const useBeanstalkTokens = (): {
     return beanstalkTokens;
   }, [sdk]);
 };
+
+export const useUnripeTokens = () => {
+  const sdk = useSdk();
+
+  return useMemo(() => {
+    const arr = Array.from(sdk.tokens.unripeTokens as Set<ERC20Token>);
+    const tokenMap = arr.reduce<TokenMap<ERC20Token>>((acc, token) => {
+      acc[token.address] = token;
+      return acc;
+    }, {});
+    return {
+      UNRIPE_BEAN: sdk.tokens.UNRIPE_BEAN,
+      UNRIPE_BEAN_WSTETH: sdk.tokens.UNRIPE_BEAN_WSTETH,
+      tokenMap,
+    };
+  }, [sdk]);
+};
+
+export const useWhitelistedTokens = () => {
+  const sdk = useSdk();
+  const pools = useAppSelector((s) => s._bean.pools);
+
+  return useMemo(() => {
+    const whitelist = getWhitelistSorted(sdk, pools);
+    const tokenMap = whitelist.reduce<TokenMap<ERC20Token>>((acc, token) => {
+      acc[token.address] = token;
+      return acc;
+    }, {});
+
+    return { whitelist, tokenMap };
+  }, [sdk, pools]);
+};
+
+/**
+ * Sort the whitelist by
+ * [
+ *  0: BEAN,
+ *  1...n - 2: LP (sorted by liquidity)
+ *  n - 1: urBEAN,
+ *  n: urBEANwstETH
+ * ]
+ */
+function getWhitelistSorted(sdk: ReturnType<typeof useSdk>, pools: BeanPools) {
+  const whitelist = Array.from(sdk.tokens.siloWhitelist as Set<ERC20Token>);
+  return whitelist.sort((a, b) => {
+    if (a.isUnripe || b.isUnripe) {
+      if (a.isUnripe && b.isUnripe) {
+        return a.equals(sdk.tokens.UNRIPE_BEAN) ? -1 : 1;
+      }
+      if (a.isUnripe) return -1;
+      return 1;
+    }
+    if (a.equals(sdk.tokens.BEAN) || b.equals(sdk.tokens.BEAN)) {
+      return a.equals(sdk.tokens.BEAN) ? -1 : 1;
+    }
+
+    const poolA = pools[a.address];
+    const poolB = pools[b.address];
+
+    if (poolA && poolB) {
+      return poolA.liquidity.gt(poolB.liquidity) ? -1 : 1;
+    }
+    return 0;
+  });
+}
