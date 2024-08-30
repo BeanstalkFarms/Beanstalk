@@ -3,6 +3,7 @@ import { Token, TokenValue } from '@beanstalk/sdk';
 import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import { tokenValueToBN } from './BigNumber';
 import { exists, stringsEqual } from './UI';
 
@@ -304,4 +305,20 @@ export function tokenIshEqual(
   }
 
   return addressesEqual;
+}
+/**
+ * Used to convert an amount to string of the value stored on chain.
+ * Created to help merge sdk & app functionality.
+ */
+export function stringifyTokenAmount(
+  _amount: BigNumber | TokenValue,
+  tokenOrDecimals: TokenInstance | number
+) {
+  const amount = tokenValueToBN(_amount);
+  const decimals =
+    typeof tokenOrDecimals === 'number'
+      ? tokenOrDecimals
+      : tokenOrDecimals.decimals;
+
+  return toStringBaseUnitBN(amount, decimals);
 }

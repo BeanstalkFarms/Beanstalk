@@ -15,7 +15,7 @@ export const normaliseTV = (
 };
 
 export const formatTV = (
-  value: TokenValue | undefined,
+  value: TokenValue | undefined | null,
   decimals?: number,
   mode?: BigNumber.RoundingMode
 ) => {
