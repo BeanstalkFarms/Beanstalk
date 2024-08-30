@@ -1,9 +1,37 @@
 import BigNumber from 'bignumber.js';
-import { ZERO_BN, MAX_UINT256, ChainConstant, NEW_BN } from '~/constants';
+import {
+  ZERO_BN,
+  MAX_UINT256,
+  ChainConstant,
+  NEW_BN,
+  SupportedChainId,
+} from '~/constants';
 import { bigNumberResult } from '~/util/Ledger';
 import { erc20TokenContract } from '~/util/Contracts';
 import client from '~/util/wagmi/Client';
 import { toStringBaseUnitBN } from '~/util/Tokens';
+
+const fallbackChainIds: { [key: number]: SupportedChainId } = {
+  [SupportedChainId.LOCALHOST]: SupportedChainId.MAINNET,
+  [SupportedChainId.MAINNET]: SupportedChainId.MAINNET,
+  [SupportedChainId.ARBITRUM]: SupportedChainId.LOCALHOST_ARBITRUM,
+  [SupportedChainId.LOCALHOST_ARBITRUM]: SupportedChainId.LOCALHOST_ARBITRUM,
+};
+
+export type LegacyTokenMetadata = {
+  name: string;
+  symbol: string;
+  logo: string;
+  color?: string;
+  displayDecimals?: number;
+  isLP?: boolean;
+  isUnripe?: boolean;
+};
+
+export type LegacyTokenRewards = {
+  stalk: number;
+  seeds: number;
+};
 
 /**
  * @deprecated - use `Token` from `@beanstalk/sdk` instead
@@ -81,21 +109,26 @@ export default abstract class Token {
     chainId: number,
     address: string | ChainConstant<string>,
     decimals: number,
-    metadata: {
-      name: string;
-      symbol: string;
-      logo: string;
-      color?: string;
-      displayDecimals?: number;
-      isLP?: boolean;
-      isUnripe?: boolean;
-    },
-    rewards?: {
-      stalk: number;
-      seeds: number;
-    }
+    metadata: LegacyTokenMetadata,
+    rewards?: LegacyTokenRewards
   ) {
     this.chainId = chainId;
+
+    if (typeof address === 'string') {
+      this.address = address.toLowerCase();
+    } else if (!address[chainId]) {
+      const fallbackChainId = fallbackChainIds[chainId];
+      if (address[fallbackChainId]) {
+        this.address = address[fallbackChainId].toLowerCase();
+      } else {
+        throw new Error(
+          `Invalid address for chain ${chainId} for token ${metadata.symbol}`
+        );
+      }
+    } else {
+      this.address = address[chainId].toLowerCase();
+    }
+
     this.address =
       typeof address === 'string'
         ? address.toLowerCase()
@@ -250,5 +283,3 @@ export class BeanstalkToken extends Token {
     return undefined;
   }
 }
-
-export type AnyToken = BeanstalkToken | ERC20Token | NativeToken;

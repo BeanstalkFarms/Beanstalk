@@ -8,7 +8,6 @@ import {
 import { ChainConstant, AddressMap, SupportedChainId } from '~/constants';
 import { MinBN } from '~/util/Tokens';
 import client from '~/util/wagmi/Client';
-import { CRV3, DAI, USDC, USDT } from '~/constants/tokens';
 import { getChainConstant } from '~/util/Chain';
 import Token, { ERC20Token } from './Token';
 
@@ -86,19 +85,7 @@ export default abstract class Pool {
     this.lpToken = getChainConstant(lpToken, chainId);
     this.tokens = tokens.map((token) => getChainConstant(token, chainId));
     this.underlying = tokens.reduce<ERC20Token[]>((prev, token) => {
-      // CRV3 pools can access the underlying stables [DAI, USDC, USDT].
-      if (token === CRV3) {
-        // FIXME: hardcoded indices for 3CRV
-        prev.push(
-          ...[
-            getChainConstant(DAI, chainId),
-            getChainConstant(USDC, chainId),
-            getChainConstant(USDT, chainId),
-          ]
-        );
-      } else {
-        prev.push(getChainConstant(token, chainId));
-      }
+      prev.push(getChainConstant(token, chainId));
       return prev;
     }, []);
 
