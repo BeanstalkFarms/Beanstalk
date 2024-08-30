@@ -13,7 +13,7 @@ import {
 } from '../../constants/addresses';
 import { useAppSelector } from '../../state/index';
 import useSdk from '../sdk';
-import { useBalanceTokens } from './useTokens';
+import { useTokens } from './useTokens';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -33,7 +33,7 @@ export default function useDataFeedTokenPrices() {
   const tokenPriceMap = useAppSelector((state) => state._beanstalk.tokenPrices);
 
   const sdk = useSdk();
-  const tokens = useBalanceTokens();
+  const tokens = useTokens();
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
