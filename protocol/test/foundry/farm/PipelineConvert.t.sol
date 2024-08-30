@@ -1409,7 +1409,7 @@ contract PipelineConvertTest is TestHelper {
 
         vm.resumeGasMetering();
         vm.prank(users[1]);
-        bs.advancedFarm(advancedFarmCalls); // currently fails with: ReentrancyGuard: reentrant farm call
+        bs.advancedFarm(advancedFarmCalls);
     }
 
     ////// CONVERT TEST HELPERS //////
