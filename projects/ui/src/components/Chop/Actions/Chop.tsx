@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   Box,
   CircularProgress,
+  Link,
   Stack,
   Typography,
 } from '@mui/material';
@@ -25,7 +26,7 @@ import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSumma
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
+import Token, { ERC20Token } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -58,6 +59,7 @@ import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { useUnripe } from '~/state/bean/unripe/updater';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
@@ -71,7 +73,7 @@ const ChopForm: FC<
 > = ({ values, setFieldValue, balances, beanstalk }) => {
   const sdk = useSdk();
   const getBDV = useBDV();
-  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
+  const erc20TokenMap = useTokenMap<ERC20Token>(UNRIPE_TOKENS);
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const unripeUnderlying = useUnripeUnderlyingMap();
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
@@ -86,6 +88,9 @@ const ChopForm: FC<
   const inputToken = state.token;
   const tokenBalance = balances[inputToken.address];
   const outputToken = unripeUnderlying[inputToken.address];
+
+  const isUnripeLP =
+    values.tokens[0]?.token.symbol === UNRIPE_BEAN_WSTETH[1].symbol;
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -177,7 +182,9 @@ const ChopForm: FC<
         <TokenInputField
           token={inputToken}
           balance={tokenBalance || ZERO_BN}
+          balanceFrom={balanceFromIn}
           name="tokens.0.amount"
+          disabled={isUnripeLP}
           // MUI
           fullWidth
           InputProps={{
@@ -250,12 +257,27 @@ const ChopForm: FC<
             </Box>
           </>
         ) : null}
+        {isUnripeLP ? (
+          <WarningAlert>
+            <Typography>
+              urBEANwstETH must be Converted to urBEAN before it can be Chopped.
+              You must{' '}
+              <Typography
+                component={Link}
+                href={`#/silo/${sdk.tokens.UNRIPE_BEAN_WSTETH.address}`}
+              >
+                Deposit in the Silo
+              </Typography>{' '}
+              before being able to Convert.
+            </Typography>
+          </WarningAlert>
+        ) : null}
         <SmartSubmitButton
           type="submit"
           variant="contained"
           color="primary"
           size="large"
-          disabled={!isSubmittable}
+          disabled={!isSubmittable || isUnripeLP}
           contract={beanstalk}
           tokens={values.tokens}
           mode="auto"

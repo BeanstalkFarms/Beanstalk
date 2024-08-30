@@ -54,6 +54,7 @@ const BorderEffect: FC<
     if (!enabled || !ref.current) return;
     if (disabled) {
       ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+      ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
     }
   }, [enabled, disabled]);
 
