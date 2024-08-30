@@ -29,8 +29,8 @@ async function reseed({
   owner,
   beanstalkDeployer,
   l2owner,
-  mock = true,
-  convertData = true,
+  mock = false,
+  convertData = false,
   log = false,
   start = 0,
   end = 12,
@@ -44,16 +44,16 @@ async function reseed({
   reseeds = [
     reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    // reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
-    // reseedGlobal, // reseed global variables
-    // reseed2, // reseed pod marketplace
-    // reseed4, // reseed field
-    // reseed5, // reseed barn (fert)
-    // reseed6, // reseed silo
-    // reseed7, // reseed account status
-    // reseed8, // reseed internal balances
-    // reseed9, // reseed whitelist
-    // reseed10 // add selectors to l2
+    reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
+    reseedGlobal, // reseed global variables
+    reseed2, // reseed pod marketplace
+    reseed4, // reseed field
+    reseed5, // reseed barn (fert)
+    reseed6, // reseed silo
+    reseed7, // reseed account status
+    reseed8, // reseed internal balances
+    reseed9, // reseed whitelist
+    reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
 
@@ -66,7 +66,7 @@ async function reseed({
       if (true) {
         // migrate beanstalk L1 assets.
         await reseed1(owner);
-        await changeNetwork("localhostArbitrum");
+        // await changeNetwork("localhost", "http://127.0.0.1:8546/", "0xe26367ca850da09a478076481535d7c1c67d62f8");
       }
       continue;
     }
