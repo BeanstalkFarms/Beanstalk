@@ -34,9 +34,7 @@ const TokenAbout = ({ token }: { token: Token }) => {
   const amounts = balances[token.address];
   const deposited = amounts?.deposited.amount;
 
-  const isWell = sdk.tokens.siloWhitelistedWellLPAddresses.find(
-    (a) => a === token.address
-  );
+  const isWell = sdk.tokens.isWellLP(token);
 
   return (
     <Stack gap={2}>

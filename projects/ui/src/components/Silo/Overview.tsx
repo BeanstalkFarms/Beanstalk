@@ -1,6 +1,6 @@
+import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
-import React, { useCallback, useMemo } from 'react';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import { AppState } from '~/state';
 import useTabs from '~/hooks/display/useTabs';
@@ -17,13 +17,10 @@ import Stat from '~/components/Common/Stat';
 import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
 import { FC } from '~/types';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
-import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import stalkIconWinter from '~/img/beanstalk/stalk-icon-green.svg';
 import seedIconWinter from '~/img/beanstalk/seed-icon-green.svg';
-import { MigrateTab } from '~/components/Silo/MigrateTab';
 
-const SLUGS = ['migrate', 'deposits', 'stalk', 'seeds'];
-const altSLUGS = ['deposits', 'stalk', 'seeds'];
+const SLUGS = ['deposits', 'stalk', 'seeds'];
 
 const Overview: FC<{
   farmerSilo: AppState['_farmer']['silo'];
@@ -34,12 +31,8 @@ const Overview: FC<{
   //
   const account = useAccount();
   const { data, loading } = useFarmerSiloHistory(account, false, true);
-  const migrationNeeded = useMigrationNeeded();
   //
-  const [tab, handleChange] = useTabs(
-    migrationNeeded ? SLUGS : altSLUGS,
-    'view'
-  );
+  const [tab, handleChange] = useTabs(SLUGS, 'view');
 
   //
   const ownership =
@@ -61,113 +54,167 @@ const Overview: FC<{
         };
         stackedChartData.push(newData);
       });
-    };
+    }
   }, [data.stalk, data.grownStalk, stackedChartData]);
 
   const keysAndTooltips = {
-    'stalk': 'Stalk',
-    'grownStalk': 'Grown Stalk'
+    stalk: 'Stalk',
+    grownStalk: 'Grown Stalk',
   };
 
-  const depositStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
-    const latestData = data.deposits[data.deposits.length - 1];
+  const depositStats = useCallback(
+    (dataPoint: BaseDataPoint | undefined) => {
+      const latestData = data.deposits[data.deposits.length - 1];
 
-    const _season = dataPoint ? dataPoint.season : season;
-    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
-    const _value = BigNumber(dataPoint?.value ?? latestData?.value ?? 0);
+      const _season = dataPoint ? dataPoint.season : season;
+      const _date = dataPoint
+        ? dataPoint.date
+        : latestData
+          ? latestData.date
+          : '';
+      const _value = BigNumber(dataPoint?.value ?? latestData?.value ?? 0);
 
-    return (
-      <Stat
-        title="Value Deposited"
-        titleTooltip={
-          <>
-            The historical USD value of your Silo Deposits. <br />
-            <Typography variant="bodySmall">
-              Note: Unripe assets are valued based on the current Chop Rate. Earned
-              Beans are shown upon Plant.
-            </Typography>
-          </>
-        }
-        color="primary"
-        subtitle={`Season ${_season.toString()}`}
-        secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
-        amount={displayUSD(_value)}
-        amountIcon={undefined}
-        gap={0.25}
-        sx={{ ml: 0 }}
-      />
-    )},
+      return (
+        <Stat
+          title="Value Deposited"
+          titleTooltip={
+            <>
+              The historical USD value of your Silo Deposits. <br />
+              <Typography variant="bodySmall">
+                Note: Unripe assets are valued based on the current Chop Rate.
+                Earned Beans are shown upon Plant.
+              </Typography>
+            </>
+          }
+          color="primary"
+          subtitle={`Season ${_season.toString()}`}
+          secondSubtitle={
+            _date
+              ? _date.toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })
+              : '-'
+          }
+          amount={displayUSD(_value)}
+          amountIcon={undefined}
+          gap={0.25}
+          sx={{ ml: 0 }}
+        />
+      );
+    },
     [data.deposits, season]
   );
 
-  const stalkStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
-    const latestData = stackedChartData[stackedChartData.length - 1];
+  const stalkStats = useCallback(
+    (dataPoint: BaseDataPoint | undefined) => {
+      const latestData = stackedChartData[stackedChartData.length - 1];
 
-    const _season = dataPoint ? dataPoint.season : season;
-    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
-    const _stalkValue = dataPoint ? dataPoint.stalk : account ? farmerSilo.stalk.active : '';
-    const _grownStalkValue = dataPoint ? dataPoint.grownStalk : latestData && account ? latestData.grownStalk : '';
-    return (
-      <>
-        <Stat
-          title="Stalk Balance"
-          titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
-          subtitle={`Season ${_season.toString()}`}
-          secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
-          amount={_stalkValue ? displayStalk(BigNumber(_stalkValue, 10)) : '0'}
-          color="text.primary"
-          sx={{ minWidth: 220, ml: 0 }}
-          gap={0.25}
-        />
-        <Stat
-          title="Stalk Ownership"
-          titleTooltip="Your current ownership of Beanstalk is displayed as a percentage. Ownership is determined by your proportional ownership of the total Stalk supply."
-          amount={account ? displayPercentage(ownership.multipliedBy(100)) : '0'}
-          color="text.primary"
-          gap={0.25}
-          sx={{ minWidth: 200, ml: 0 }}
-        />
-        <Stat
-          title="Grown Stalk"
-          titleTooltip="The total number of Mowable Grown Stalk your Deposits have accrued."
-          amount={account && _grownStalkValue ? displayStalk(BigNumber( _grownStalkValue, 10)) : '0'}
-          color="text.primary"
-          gap={0.25}
-          sx={{ minWidth: 120, ml: 0 }}
-        />
-      </>
-    )},
+      const _season = dataPoint ? dataPoint.season : season;
+      const _date = dataPoint
+        ? dataPoint.date
+        : latestData
+          ? latestData.date
+          : '';
+      const _stalkValue = dataPoint
+        ? dataPoint.stalk
+        : account
+          ? farmerSilo.stalk.active
+          : '';
+      const _grownStalkValue = dataPoint
+        ? dataPoint.grownStalk
+        : latestData && account
+          ? latestData.grownStalk
+          : '';
+      return (
+        <>
+          <Stat
+            title="Stalk Balance"
+            titleTooltip="Stalk is the governance token of the Beanstalk DAO. Stalk entitles holders to passive interest in the form of a share of future Bean mints, and the right to propose and vote on BIPs. Your Stalk is forfeited when you Withdraw your Deposited assets from the Silo."
+            subtitle={`Season ${_season.toString()}`}
+            secondSubtitle={
+              _date
+                ? _date.toLocaleString(undefined, {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })
+                : '-'
+            }
+            amount={
+              _stalkValue ? displayStalk(BigNumber(_stalkValue, 10)) : '0'
+            }
+            color="text.primary"
+            sx={{ minWidth: 220, ml: 0 }}
+            gap={0.25}
+          />
+          <Stat
+            title="Stalk Ownership"
+            titleTooltip="Your current ownership of Beanstalk is displayed as a percentage. Ownership is determined by your proportional ownership of the total Stalk supply."
+            amount={
+              account ? displayPercentage(ownership.multipliedBy(100)) : '0'
+            }
+            color="text.primary"
+            gap={0.25}
+            sx={{ minWidth: 200, ml: 0 }}
+          />
+          <Stat
+            title="Grown Stalk"
+            titleTooltip="The total number of Mowable Grown Stalk your Deposits have accrued."
+            amount={
+              account && _grownStalkValue
+                ? displayStalk(BigNumber(_grownStalkValue, 10))
+                : '0'
+            }
+            color="text.primary"
+            gap={0.25}
+            sx={{ minWidth: 120, ml: 0 }}
+          />
+        </>
+      );
+    },
     [farmerSilo.stalk.active, season, stackedChartData, ownership, account]
   );
 
-  const seedsStats = useCallback((dataPoint: BaseDataPoint | undefined) => {
-    const latestData = data.deposits[data.deposits.length - 1];
+  const seedsStats = useCallback(
+    (dataPoint: BaseDataPoint | undefined) => {
+      const latestData = data.deposits[data.deposits.length - 1];
 
-    const _season = dataPoint ? dataPoint.season : season;
-    const _date = dataPoint ? dataPoint.date : latestData ? latestData.date : '';
-    const _value = dataPoint ? BigNumber(dataPoint.value, 10) : farmerSilo.seeds.active;
+      const _season = dataPoint ? dataPoint.season : season;
+      const _date = dataPoint
+        ? dataPoint.date
+        : latestData
+          ? latestData.date
+          : '';
+      const _value = dataPoint
+        ? BigNumber(dataPoint.value, 10)
+        : farmerSilo.seeds.active;
 
-    return (
-      <Stat
-        title="Seed Balance"
-        titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
-        subtitle={`Season ${_season.toString()}`}
-        secondSubtitle={_date ? _date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : '-'}
-        amount={displayStalk(_value)}
-        sx={{ minWidth: 180, ml: 0 }}
-        amountIcon={undefined}
-        gap={0.25}
-      />
-    )},
+      return (
+        <Stat
+          title="Seed Balance"
+          titleTooltip="Seeds are illiquid tokens that yield 1/10,000 Stalk each Season."
+          subtitle={`Season ${_season.toString()}`}
+          secondSubtitle={
+            _date
+              ? _date.toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })
+              : '-'
+          }
+          amount={displayStalk(_value)}
+          sx={{ minWidth: 180, ml: 0 }}
+          amountIcon={undefined}
+          gap={0.25}
+        />
+      );
+    },
     [data.deposits, farmerSilo.seeds.active, season]
   );
 
   return (
     <Module>
       <ModuleTabs value={tab} onChange={handleChange} sx={{ minHeight: 0 }}>
-        {migrationNeeded && (
-          <StyledTab label={<ChipLabel name="Silo V3">Migrate</ChipLabel>} />
-        )}
         <StyledTab
           label={
             <ChipLabel name="Deposits">
@@ -198,20 +245,7 @@ const Overview: FC<{
           }
         />
       </ModuleTabs>
-      {migrationNeeded && (
-        <Box
-          sx={{
-            display: tab === 0 ? 'block' : 'none',
-            minHeight: '400px',
-            backgroundColor: 'rgba(244, 244, 244, 0.4)',
-          }}
-        >
-          <MigrateTab />
-        </Box>
-      )}
-      <Box
-        sx={{ display: tab === (migrationNeeded ? 1 : 0) ? 'block' : 'none' }}
-      >
+      <Box>
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -223,9 +257,7 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box
-        sx={{ display: tab === (migrationNeeded ? 2 : 1) ? 'block' : 'none' }}
-      >
+      <Box>
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -237,9 +269,7 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box
-        sx={{ display: tab === (migrationNeeded ? 3 : 2) ? 'block' : 'none' }}
-      >
+      <Box>
         <OverviewPlot
           label="Seeds Ownership"
           account={account}
