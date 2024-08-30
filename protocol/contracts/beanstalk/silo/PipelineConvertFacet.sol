@@ -14,7 +14,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
-import {AdvancedFarmCall} from "../../libraries/LibFarm.sol";
+import {AdvancedPipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
@@ -52,7 +52,7 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
      * @param stems The stems of the deposits to convert from.
      * @param amounts The amounts of the deposits to convert from.
      * @param outputToken The token to convert to.
-     * @param advancedFarmCalls The farm calls to execute.
+     * @param advancedPipeCalls The pipe calls to execute.
      * @return toStem the new stems of the converted deposit
      * @return fromAmount the amount of tokens converted from
      * @return toAmount the amount of tokens converted to
@@ -64,12 +64,12 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts,
         address outputToken,
-        AdvancedFarmCall[] calldata advancedFarmCalls
+        AdvancedPipeCall[] memory advancedPipeCalls
     )
         external
         payable
         fundsSafu
-        nonReentrantFarm
+        nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         // require that input and output tokens be wells (Unripe not supported)
@@ -107,7 +107,7 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
             fromAmount,
             fromBdv,
             grownStalk,
-            advancedFarmCalls
+            advancedPipeCalls
         );
 
         toStem = LibConvert._depositTokensForConvert(
