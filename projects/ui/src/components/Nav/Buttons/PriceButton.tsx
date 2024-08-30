@@ -21,7 +21,7 @@ import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import usePrice from '~/hooks/beanstalk/usePrice';
 import { displayBeanPrice, displayBN } from '~/util/Tokens';
-import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
+import { BASIN_WELL_LINK, NEW_BN, ZERO_BN } from '~/constants';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { AppState } from '~/state';
 import ethereumLogo from '~/img/tokens/eth-logo-circled.svg';
@@ -31,24 +31,15 @@ import wstETHLogo from '~/img/tokens/wsteth-logo.svg';
 
 import { FC } from '~/types';
 import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
-import useSdk from '~/hooks/sdk';
 import useTwaDeltaB from '~/hooks/beanstalk/useTwaDeltaB';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
 import FolderMenu from '../FolderMenu';
-
-const poolLinks: { [key: string]: string } = {
-  '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49': CURVE_LINK,
-  '0xbea0e11282e2bb5893bece110cf199501e872bad': `${BASIN_WELL_LINK}0xbea0e11282e2bb5893bece110cf199501e872bad`,
-  '0xbea0000113b0d182f4064c86b71c315389e4715d': `${BASIN_WELL_LINK}0xbea0000113b0d182f4064c86b71c315389e4715d`,
-};
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
   const [showDeprecated, setShowDeprecated] = useState(false);
-  const sdk = useSdk();
+  const { WSTETH } = useTokens();
 
-  const pools = usePools(showDeprecated);
-  for (const [address, pool] of Object.entries(pools)) {
-    pool.link = poolLinks[address];
-  }
+  const pools = usePools();
   const [showTWA, setShowTWA] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
   const season = useSeason();
@@ -137,10 +128,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
                 {showTWA ? (
                   <> ${tokenPrices['wstETH-TWA']?.toFixed(2) || 0}</>
                 ) : (
-                  <>
-                    {' '}
-                    ${tokenPrices[sdk.tokens.WSTETH.address]?.toFixed(2) || 0}
-                  </>
+                  <> ${tokenPrices[WSTETH.address]?.toFixed(2) || 0}</>
                 )}
 
                 <ArrowOutwardIcon sx={{ fontSize: 12, marginLeft: '5px' }} />
@@ -183,7 +171,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           poolState={beanPools[pool.address]}
           useTWA={showTWA}
           ButtonProps={{
-            href: `${pool.link}`,
+            href: `${BASIN_WELL_LINK}${pool.address}`,
             target: '_blank',
             rel: 'noreferrer',
           }}
@@ -242,31 +230,6 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
               </>
             )}
           </Typography>
-
-          {/*  Leaving here for reference
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Cumulative Instantaneous deltaB:</div>
-            <div>
-              {combinedDeltaB.gte(0) && '+'}
-              {displayBN(combinedDeltaB, true)}
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Cumulative Time-Weighted deltaB:</div>
-            <div>
-              {beanTokenData.deltaB.gte(0) && '+'}
-              {displayBN(beanTokenData.deltaB, true)}
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Instantaneous ETH Price:</div>
-            <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Time-Weighted ETH Price:</div>
-            <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
-          </Box> */}
         </Box>
         <Box
           sx={{ padding: '5px', textAlign: 'center', fontSize: '12px' }}
@@ -349,7 +312,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           />{' '}
           wstETH Price
         </Box>
-        <div>${tokenPrices[sdk.tokens.WSTETH.address]?.toFixed(2) || 0}</div>
+        <div>${tokenPrices[WSTETH.address]?.toFixed(2) || 0}</div>
       </Box>
 
       {/* TWA ETH Price */}
@@ -433,3 +396,29 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
 };
 
 export default PriceButton;
+
+/*  
+Leaving here for reference
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div>Cumulative Instantaneous deltaB:</div>
+  <div>
+    {combinedDeltaB.gte(0) && '+'}
+    {displayBN(combinedDeltaB, true)}
+  </div>
+</Box>
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div>Cumulative Time-Weighted deltaB:</div>
+  <div>
+    {beanTokenData.deltaB.gte(0) && '+'}
+    {displayBN(beanTokenData.deltaB, true)}
+  </div>
+</Box>
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div>Instantaneous ETH Price:</div>
+  <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
+</Box>
+<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div>Time-Weighted ETH Price:</div>
+  <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
+</Box> 
+*/

@@ -4,14 +4,14 @@ import { Button, ButtonProps, Typography } from '@mui/material';
 import useAnchor from '~/hooks/display/useAnchor';
 import { SupportedChainId } from '~/constants/chains';
 import useChainState from '~/hooks/chain/useChainState';
-import { useBalanceTokens } from '~/hooks/beanstalk/useTokens';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
 import TokenIcon from '../TokenIcon';
 import DropdownIcon from '../DropdownIcon';
 import NetworkDialog from './NetworkDialog';
 
 const NetworkIcon = () => {
   const { isEthereum } = useChainState();
-  const { ETH, ARB } = useBalanceTokens();
+  const { ETH, ARB } = useTokens();
   const networkToken = isEthereum ? ETH : ARB;
 
   return <TokenIcon token={networkToken} css={{ height: '1.4em' }} />;
