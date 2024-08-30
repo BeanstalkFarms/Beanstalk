@@ -6,7 +6,7 @@ import { AddressMap, MULTISIGS } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { tokenResult } from '~/util';
 import { SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
-import { useBalanceTokens } from '~/hooks/beanstalk/useTokens';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
 import {
   resetBeanstalkGovernance,
   updateActiveProposals,
@@ -16,7 +16,7 @@ import {
 export const useFetchBeanstalkGovernance = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
-  const { BEAN } = useBalanceTokens();
+  const { BEAN } = useTokens();
 
   const [getProposals] = useProposalsLazyQuery({
     variables: {

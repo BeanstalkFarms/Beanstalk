@@ -4,7 +4,6 @@ import { Box, Card, Container, Stack, Typography, Button } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
 import PageHeaderSecondary from '~/components/Common/PageHeaderSecondary';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { useSdkWhitelist } from '~/hooks/beanstalk/useWhitelist';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
   HOW_TO_CONVERT_DEPOSITS,
@@ -37,6 +36,7 @@ import ToggleTabGroup from '~/components/Common/ToggleTabGroup';
 import Row from '~/components/Common/Row';
 import CloseIcon from '@mui/icons-material/Close';
 import LambdaConvert from '~/components/Silo/Actions/LambdaConvert';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -279,8 +279,9 @@ const TokenPage: FC<{}> = () => {
   let { address } = useParams<{ address: string }>();
   address = address?.toLowerCase();
 
-  const whitelist = useSdkWhitelist();
-  const whitelistedToken = whitelist?.[address || ''];
+  const { tokenMap } = useWhitelistedTokens();
+
+  const whitelistedToken = tokenMap[address || ''];
 
   if (!address || !whitelistedToken) {
     return <div>Not found</div>;

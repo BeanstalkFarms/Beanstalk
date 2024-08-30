@@ -28,8 +28,6 @@ import RewardsSummary from '~/components/Silo/RewardsSummary';
 import Whitelist from '~/components/Silo/Whitelist';
 import PageHeader from '~/components/Common/PageHeader';
 import DropdownIcon from '~/components/Common/DropdownIcon';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
-import usePools from '~/hooks/beanstalk/usePools';
 import useFarmerBalancesBreakdown from '~/hooks/farmer/useFarmerBalancesBreakdown';
 import useToggle from '~/hooks/display/useToggle';
 import useRevitalized from '~/hooks/farmer/useRevitalized';
@@ -62,6 +60,7 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
 import useSetting from '~/hooks/app/useSetting';
 import SeedGaugeDetails from '~/components/Silo/SeedGauge';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -676,11 +675,8 @@ const RewardsBar: FC<{
 };
 
 const SiloPage: FC<{}> = () => {
-  /// Chain Constants
-  const whitelist = useWhitelist();
-  const pools = usePools();
-
   /// State
+  const { whitelist } = useWhitelistedTokens();
   const farmerSilo = useFarmerSilo();
   const beanstalkSilo = useSilo();
 
@@ -689,14 +685,6 @@ const SiloPage: FC<{}> = () => {
   const breakdown = useFarmerBalancesBreakdown();
   const season = useSeason();
   const { revitalizedStalk, revitalizedSeeds } = useRevitalized();
-
-  const config = useMemo(
-    () => ({
-      whitelist: Object.values(whitelist),
-      poolsByAddress: pools,
-    }),
-    [whitelist, pools]
-  );
 
   const handleSetWhitelistVisible = (val: boolean, callback?: () => void) => {
     if (val === whitelistVisible) return;
@@ -738,7 +726,7 @@ const SiloPage: FC<{}> = () => {
         />
         <SeedGaugeDetails setWhitelistVisible={handleSetWhitelistVisible} />
         <Box display={whitelistVisible ? 'block' : 'none'}>
-          <Whitelist config={config} farmerSilo={farmerSilo} />
+          <Whitelist whitelist={whitelist} farmerSilo={farmerSilo} />
         </Box>
       </Stack>
     </Container>
