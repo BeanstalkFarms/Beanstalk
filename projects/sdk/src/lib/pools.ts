@@ -1,7 +1,6 @@
-import { CurveMetaPool } from "src/classes/Pool/CurveMetaPool";
-import { BasinWell } from "src/classes/Pool/BasinWell";
 import Pool from "src/classes/Pool/Pool";
-import { ERC20Token, Token } from "src/classes/Token";
+import { BasinWell } from "src/classes/Pool/BasinWell";
+import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 
 export class Pools {
