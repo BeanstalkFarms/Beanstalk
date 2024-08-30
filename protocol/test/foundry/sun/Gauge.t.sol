@@ -2,13 +2,10 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell} from "test/foundry/utils/TestHelper.sol";
-import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {TestHelper, IMockFBeanstalk, MockToken, C, IWell} from "test/foundry/utils/TestHelper.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
 import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -723,13 +720,23 @@ contract GaugeTest is TestHelper {
 
         for (uint i; i < whitelistedWells.length; i++) {
             vm.prank(BEANSTALK);
-            bytes4 gpSelector = bs.gaugePointsNoChange.selector;
-            bytes4 lwSelector = bs.maxWeight.selector;
+            IMockFBeanstalk.Implementation memory gpImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.gaugePointsNoChange.selector,
+                bytes1(0),
+                new bytes(0)
+            );
+            IMockFBeanstalk.Implementation memory lwImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.maxWeight.selector,
+                bytes1(0),
+                new bytes(0)
+            );
             bs.updateGaugeForToken(
                 whitelistedWells[i],
-                gpSelector,
-                lwSelector,
-                100e6 // unused.
+                100e6, // unused.
+                gpImplementation,
+                lwImplementation
             );
 
             addLiquidityToWellAtCurrentPrice(whitelistedWells[i], 1000 ether);
@@ -756,7 +763,23 @@ contract GaugeTest is TestHelper {
         // change settings
         vm.prank(BEANSTALK);
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(0),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            )
         );
 
         IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
@@ -772,6 +795,48 @@ contract GaugeTest is TestHelper {
         assertEq(ssg.lpToSupplyRatioOptimal, 0);
         assertEq(ssg.lpToSupplyRatioLowerBound, 0);
         assertEq(ssg.excessivePriceThreshold, 0);
+        assertEq(ssg.soilCoefficientHigh, 0);
+        assertEq(ssg.soilCoefficientLow, 0);
+        assertEq(ssg.baseReward, 0);
+
+        // change settings
+        vm.prank(BEANSTALK);
+        bs.updateSeedGaugeSettings(
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(1),
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+            )
+        );
+
+        ssg = bs.getSeedGaugeSetting();
+        assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 1);
+        assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 2);
+        assertEq(ssg.targetSeasonsToCatchUp, 3);
+        assertEq(ssg.podRateLowerBound, 4);
+        assertEq(ssg.podRateOptimal, 5);
+        assertEq(ssg.podRateUpperBound, 6);
+        assertEq(ssg.deltaPodDemandLowerBound, 7);
+        assertEq(ssg.deltaPodDemandUpperBound, 8);
+        assertEq(ssg.lpToSupplyRatioUpperBound, 9);
+        assertEq(ssg.lpToSupplyRatioOptimal, 10);
+        assertEq(ssg.lpToSupplyRatioLowerBound, 11);
+        assertEq(ssg.excessivePriceThreshold, 12);
+        assertEq(ssg.soilCoefficientHigh, 13);
+        assertEq(ssg.soilCoefficientLow, 14);
+        assertEq(ssg.baseReward, 15);
     }
 
     function getPercentDifference(

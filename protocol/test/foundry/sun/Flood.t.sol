@@ -436,7 +436,7 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), userCalcPlenty);
     }
@@ -570,7 +570,7 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], sopWell);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
         assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
     }
@@ -781,7 +781,7 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(
             bs.balanceOfPlenty(users[2], sopWell),
             0,

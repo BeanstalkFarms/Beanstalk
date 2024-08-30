@@ -57,12 +57,6 @@ contract MockSeasonFacet is SeasonFacet {
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Incentivization(address indexed account, uint256 beans);
     event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
-    event UpdateGaugeSettings(
-        address indexed token,
-        bytes4 gpSelector,
-        bytes4 lwSelector,
-        uint64 optimalPercentDepositedBdv
-    );
     event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
     event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
@@ -518,12 +512,6 @@ contract MockSeasonFacet is SeasonFacet {
         ss.gaugePointImplementation.selector = gaugePointSelector;
         ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit UpdateGaugeSettings(
-            token,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            optimalPercentDepositedBdv
-        );
     }
 
     function mockEndTotalGerminationForToken(address token) external {

@@ -46,7 +46,7 @@ contract GaugePointFacet {
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv,
-        bytes calldata
+        bytes memory
     ) public pure returns (uint256 newGaugePoints) {
         if (
             percentOfDepositedBdv >

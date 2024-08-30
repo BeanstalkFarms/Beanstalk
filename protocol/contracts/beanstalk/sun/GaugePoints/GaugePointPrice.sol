@@ -54,7 +54,7 @@ contract GaugePointPrice is GaugePointFacet {
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
         uint256 percentOfDepositedBdv,
-        bytes calldata data
+        bytes memory data
     ) public view returns (uint256 newGaugePoints) {
         try IBS(beanstalk).getTokenUsdPrice(token) returns (uint256 price) {
             if (priceThreshold >= price) {
