@@ -144,7 +144,7 @@ library LibPipelineConvert {
         PipeCall memory p;
         p.target = address(tokenOut);
         p.data = abi.encodeWithSelector(IERC20.transfer.selector, address(this), amountOut);
-        IPipeline(C.PIPELINE).pipe(p);
+        C.pipeline().pipe(p);
     }
 
     function populatePipelineConvertData(

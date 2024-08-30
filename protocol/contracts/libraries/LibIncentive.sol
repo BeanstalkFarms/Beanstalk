@@ -25,9 +25,6 @@ library LibIncentive {
     /// @dev The Sunrise reward reaches its maximum after this many seconds elapse.
     uint256 internal constant MAX_SECONDS_LATE = 300;
 
-    /// @dev Base BEAN reward to cover cost of operating a bot.
-    uint256 internal constant BASE_REWARD = 5e6; // 5 BEAN
-
     /// @dev `sunriseReward` is precomputed in {fracExp} using this precision.
     uint256 private constant FRAC_EXP_PRECISION = 1e6;
 
