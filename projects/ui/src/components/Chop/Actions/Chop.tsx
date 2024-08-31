@@ -65,12 +65,32 @@ type ChopFormValues = FormState & {
   destination: FarmToMode | undefined;
 };
 
+const useOptimizedBalanceSource = (
+  token: FormState['tokens'][number]['token'],
+  balances: ReturnType<typeof useFarmerBalances>
+) => {
+  const bal = balances[token.address];
+
+  if (bal && bal.external.gt(bal.internal)) {
+    return BalanceFrom.EXTERNAL;
+  }
+
+  return BalanceFrom.INTERNAL;
+};
+
 const ChopForm: FC<
   FormikProps<ChopFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
+    optimizedBalanceSource: BalanceFrom;
   }
-> = ({ values, setFieldValue, balances, beanstalk }) => {
+> = ({
+  values,
+  setFieldValue,
+  balances,
+  beanstalk,
+  optimizedBalanceSource,
+}) => {
   const sdk = useSdk();
   const getBDV = useBDV();
   const erc20TokenMap = useTokenMap<ERC20Token>(UNRIPE_TOKENS);
@@ -79,9 +99,7 @@ const ChopForm: FC<
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
   const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
   const [balanceFromIn, setBalanceFromIn] = useState<BalanceFrom>(
-    values.destination === FarmToMode.EXTERNAL
-      ? BalanceFrom.EXTERNAL
-      : BalanceFrom.INTERNAL
+    optimizedBalanceSource
   );
   /// Derived values
   const state = values.tokens[0];
@@ -90,7 +108,7 @@ const ChopForm: FC<
   const outputToken = unripeUnderlying[inputToken.address];
 
   const isUnripeLP =
-    values.tokens[0]?.token.symbol === UNRIPE_BEAN_WSTETH[1].symbol;
+    values.tokens[0]?.token.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -184,7 +202,6 @@ const ChopForm: FC<
           balance={tokenBalance || ZERO_BN}
           balanceFrom={balanceFromIn}
           name="tokens.0.amount"
-          disabled={isUnripeLP}
           // MUI
           fullWidth
           InputProps={{
@@ -260,15 +277,17 @@ const ChopForm: FC<
         {isUnripeLP ? (
           <WarningAlert>
             <Typography>
-              urBEANwstETH must be Converted to urBEAN before it can be Chopped.
-              You must{' '}
+              You can get more value by Converting to{' '}
+              {sdk.tokens.UNRIPE_BEAN.symbol} first by Depositing and Converting
+              in the Silo{' '}
               <Typography
                 component={Link}
-                href={`#/silo/${sdk.tokens.UNRIPE_BEAN_WSTETH.address}`}
+                href={`#/silo/${sdk.tokens.UNRIPE_BEAN_WSTETH.address}?action=deposit`}
               >
-                Deposit in the Silo
-              </Typography>{' '}
-              before being able to Convert.
+                here
+              </Typography>
+              . Note that you will have to wait 2 Seasons for your new Deposit
+              to Germinate before Converting.
             </Typography>
           </WarningAlert>
         ) : null}
@@ -277,7 +296,7 @@ const ChopForm: FC<
           variant="contained"
           color="primary"
           size="large"
-          disabled={!isSubmittable || isUnripeLP}
+          disabled={!isSubmittable}
           contract={beanstalk}
           tokens={values.tokens}
           mode="auto"
@@ -327,6 +346,11 @@ const Chop: FC<{}> = () => {
       destination: FarmToMode.INTERNAL,
     }),
     [baseToken]
+  );
+
+  const initialBalanceFrom = useOptimizedBalanceSource(
+    initialValues.tokens[0].token,
+    farmerBalances
   );
 
   /// Handlers
@@ -389,6 +413,7 @@ const Chop: FC<{}> = () => {
         <ChopForm
           balances={farmerBalances}
           beanstalk={beanstalk}
+          optimizedBalanceSource={initialBalanceFrom}
           {...formikProps}
         />
       )}
