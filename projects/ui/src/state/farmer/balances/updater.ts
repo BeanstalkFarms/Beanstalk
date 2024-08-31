@@ -3,25 +3,19 @@ import { useDispatch } from 'react-redux';
 import flatMap from 'lodash/flatMap';
 import { ZERO_BN } from '~/constants';
 import useChainId from '~/hooks/chain/useChainId';
-import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenResult } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
-import useSdk from '~/hooks/sdk';
-import { ERC20Token } from '@beanstalk/sdk';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
+import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { clearBalances, updateBalances } from './actions';
 
 export const useFetchFarmerBalances = () => {
   /// State
-  const dispatch = useDispatch();
+  const beanstalk = useBeanstalkContract();
+  const { erc20TokenMap, ETH: Eth } = useTokens();
   const account = useAccount();
-  const sdk = useSdk();
 
-  /// Constants
-  const erc20TokenMap = useTokenMap(sdk.tokens.erc20Tokens as Set<ERC20Token>);
-  const Eth = sdk.tokens.ETH;
-
-  /// Contracts
-  const beanstalk = sdk.contracts.beanstalk;
+  const dispatch = useDispatch();
 
   /// Handlers
   /// FIXME: make this callback accept a tokens array to prevent reloading all balances on every call
@@ -69,13 +63,6 @@ export const useFetchFarmerBalances = () => {
               })
             ),
         ]).then((results) => flatMap(results));
-
-        // const calls = [
-        //   // ETH cannot have an internal balance and isn't returned
-        //   // from the standard getAllBalances call.
-        //   multiCall.getEthBalance(account),
-        //   wrap(beanstalkReplanted).getAllBalances(account, erc20Addresses)
-        // ];
 
         console.debug(
           `[farmer/updater/useFetchBalances] FETCH: balances (account = ${account})`

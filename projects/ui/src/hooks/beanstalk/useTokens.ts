@@ -53,7 +53,7 @@ export const useTokens = (): {
   BEAN_WBTC_WELL_LP: ERC20Token;
   BEAN_USDC_WELL_LP: ERC20Token;
   BEAN_USDT_WELL_LP: ERC20Token;
-  tokenMap: TokenMap<ERC20Token>;
+  erc20TokenMap: TokenMap<ERC20Token>;
 } => {
   const sdk = useSdk();
 
@@ -81,15 +81,15 @@ export const useTokens = (): {
       BEAN_USDT_WELL_LP: tokens.BEAN_USDT_WELL_LP,
     };
 
-    const tokenMap = Object.values(balanceTokens).reduce<TokenMap<ERC20Token>>(
-      (acc, token) => {
-        acc[token.address] = token as ERC20Token;
-        return acc;
-      },
-      {}
-    );
+    const erc20TokenMap = Object.values(balanceTokens).reduce<
+      TokenMap<ERC20Token>
+    >((acc, token) => {
+      if (token.equals(tokens.ETH)) return acc;
+      acc[token.address] = token as ERC20Token;
+      return acc;
+    }, {});
 
-    return { ...balanceTokens, tokenMap };
+    return { ...balanceTokens, erc20TokenMap };
   }, [sdk]);
 };
 
