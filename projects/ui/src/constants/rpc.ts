@@ -9,6 +9,7 @@ export const TESTNET_RPC_ADDRESSES: { [chainId: number]: string } = {
   [SupportedChainId.TESTNET]:
     'https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587',
   [SupportedChainId.ANVIL1]: 'https://anvil1.bean.money:443',
+  [SupportedChainId.LOCALHOST_ARBITRUM]: 'http://localhost:8545',
 };
 
 export const BEANSTALK_SUBGRAPH_ADDRESSES: { [chainId: number]: string } = {

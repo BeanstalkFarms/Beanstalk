@@ -10,12 +10,13 @@ import { bigNumberResult } from '~/util/Ledger';
 import { erc20TokenContract } from '~/util/Contracts';
 import client from '~/util/wagmi/Client';
 import { toStringBaseUnitBN } from '~/util/Tokens';
+import { Address } from '@beanstalk/sdk-core';
 
 const fallbackChainIds: { [key: number]: SupportedChainId } = {
   [SupportedChainId.LOCALHOST]: SupportedChainId.MAINNET,
   [SupportedChainId.MAINNET]: SupportedChainId.MAINNET,
   [SupportedChainId.ARBITRUM]: SupportedChainId.LOCALHOST_ARBITRUM,
-  [SupportedChainId.LOCALHOST_ARBITRUM]: SupportedChainId.LOCALHOST_ARBITRUM,
+  [SupportedChainId.LOCALHOST_ARBITRUM]: SupportedChainId.ARBITRUM,
 };
 
 export type LegacyTokenMetadata = {
@@ -116,8 +117,10 @@ export default abstract class Token {
 
     if (typeof address === 'string') {
       this.address = address.toLowerCase();
-    } else if (!address[chainId]) {
-      const fallbackChainId = fallbackChainIds[chainId];
+    } else if (address[chainId]) {
+      this.address = address[chainId].toLowerCase();
+    } else {
+      const fallbackChainId = Address.getFallbackChainId(chainId);
       if (address[fallbackChainId]) {
         this.address = address[fallbackChainId].toLowerCase();
       } else {
@@ -125,14 +128,8 @@ export default abstract class Token {
           `Invalid address for chain ${chainId} for token ${metadata.symbol}`
         );
       }
-    } else {
-      this.address = address[chainId].toLowerCase();
     }
 
-    this.address =
-      typeof address === 'string'
-        ? address.toLowerCase()
-        : address[chainId].toLowerCase();
     this.decimals = decimals;
     this.symbol = metadata.symbol;
     this.name = metadata.name;

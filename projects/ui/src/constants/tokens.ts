@@ -27,6 +27,7 @@ import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import wbtcLogoUrl from '~/img/tokens/wbtc-logo.svg';
 import weethIcon from '~/img/tokens/weeth-logo.png';
+import arbLogoUrl from '~/img/tokens/arbitrum-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
 
@@ -62,6 +63,7 @@ import {
   BEANWBTC_WELL_ADDRESSES,
   BEANUSDC_WELL_ADDRESSES,
   BEANUSDT_WELL_ADDRESSES,
+  ARB_ADDRESSES,
 } from './addresses';
 
 // ----------------------------------------
@@ -84,7 +86,7 @@ const makeChainToken = (
       if (addresses[chainId]) {
         prev[chainId] = new ERC20Token(
           chainId,
-          addresses,
+          addresses[chainId],
           decimals,
           meta,
           rewards
@@ -231,6 +233,12 @@ export const USDT = makeChainToken(USDT_ADDRESSES, 6, {
   name: 'Tether',
   symbol: 'USDT',
   logo: usdtLogoUrl,
+});
+
+export const ARB = makeChainToken(ARB_ADDRESSES, 18, {
+  name: 'Arbitrum',
+  symbol: 'ARB',
+  logo: arbLogoUrl,
 });
 
 // ----------------------------------------

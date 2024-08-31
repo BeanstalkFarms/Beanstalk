@@ -72,3 +72,9 @@ export interface L2ChainInfo extends BaseChainInfo {
   readonly statusPage?: string;
   readonly defaultListUrl?: string;
 }
+
+export const FALLBACK_CHAIN_ID_MAP = {
+  [SupportedChainId.LOCALHOST_ARBITRUM]: SupportedChainId.ARBITRUM,
+  [SupportedChainId.LOCALHOST]: SupportedChainId.MAINNET,
+  [SupportedChainId.TESTNET]: SupportedChainId.ARBITRUM,
+};
