@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -63,6 +63,7 @@ import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
 import useChainState from '~/hooks/chain/useChainState';
+import EthMainnet from '~/pages/mainnet';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -124,7 +125,9 @@ function Mainnet() {
             justifyContent: 'center',
           }}
         >
-          <Typography variant="h1">We&apos;ve moved to Arbitrum!</Typography>
+          <Routes>
+            <Route path="/*" element={<EthMainnet />} />
+          </Routes>
         </Stack>
       </Box>
     </>
