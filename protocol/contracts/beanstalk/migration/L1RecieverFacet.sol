@@ -104,7 +104,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev Claims the Grown Stalk for user.
      */
     modifier mowAll() {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i; i < tokens.length; i++) {
             LibSilo._mow(LibTractor._user(), tokens[i]);
         }
