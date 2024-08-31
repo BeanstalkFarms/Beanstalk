@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 
-import Pool from '~/classes/Pool';
+import { Pool } from '@beanstalk/sdk';
 import Token from '~/classes/Token';
 import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
 
