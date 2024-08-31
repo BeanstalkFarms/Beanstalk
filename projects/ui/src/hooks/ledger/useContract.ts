@@ -167,7 +167,7 @@ export function useFertilizerContract(signer?: ethers.Signer | null) {
 
 export function useBeanstalkContract(_signer?: ethers.Signer | null) {
   const sdk = useSdk();
-  return sdk.contracts.beanstalk;
+  return useMemo(() => sdk.contracts.beanstalk, [sdk.contracts.beanstalk]);
 }
 
 export function useGenesisNFTContract(signer?: ethers.Signer | null) {

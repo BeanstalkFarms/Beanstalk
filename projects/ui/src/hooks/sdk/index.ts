@@ -100,6 +100,7 @@ export const useRefreshSeeds = () => {
 
       for (const chainToken of SILO_WHITELIST) {
         const token = getChainToken(chainToken);
+        // console.log('chainToken: ', chainToken);
         const seeds = sdk.tokens.findBySymbol(token.symbol)?.rewards?.seeds;
         if (!seeds) {
           console.log(`SDK token ${token.symbol} did not have any seeds set`);
