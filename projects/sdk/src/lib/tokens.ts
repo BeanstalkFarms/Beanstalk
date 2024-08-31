@@ -409,6 +409,7 @@ export class Tokens {
       providerOrSigner
     );
 
+    /** @deprecated */
     this.CRV3 = new ERC20Token(
       chainId,
       addresses.CRV3.get(chainId),
@@ -586,7 +587,7 @@ export class Tokens {
       this.WSTETH,
       this.WEETH,
       this.WBTC,
-      this.CRV3,
+      // this.CRV3,
       this.DAI,
       this.USDC,
       this.USDT
