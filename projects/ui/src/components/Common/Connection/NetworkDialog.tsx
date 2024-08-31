@@ -12,9 +12,16 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { SWITCH_NETWORK_ERRORS } from '~/constants/wallets';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
-import { ETH } from '~/constants/tokens';
+import { ETH, ARB } from '~/constants/tokens';
 import Row from '~/components/Common/Row';
 import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
+
+const CHAIN_ID_TO_LOGO: Record<number, string | undefined> = {
+  [SupportedChainId.MAINNET]: ETH[1].logo,
+  [SupportedChainId.LOCALHOST]: ETH[1].logo,
+  [SupportedChainId.ARBITRUM]: ARB[1].logo,
+  [SupportedChainId.LOCALHOST_ARBITRUM]: ARB[1].logo,
+};
 
 const NetworkDialog: React.FC<
   DialogProps & {
@@ -84,8 +91,8 @@ const NetworkDialog: React.FC<
                 ) : (
                   <img
                     src={
-                      ETH[chain.id as keyof typeof ETH]?.logo ||
-                      ETH[SupportedChainId.MAINNET].logo
+                      CHAIN_ID_TO_LOGO[chain.id as SupportedChainId] ||
+                      ARB[1].logo
                     }
                     alt=""
                     style={{ height: 35 }}
