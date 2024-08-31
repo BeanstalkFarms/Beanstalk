@@ -9,7 +9,7 @@ const { impersonateSigner, impersonateBeanstalkOwner } = require("./signer.js");
 const { mintUsdc, mintBeans, mintEth } = require("./mint.js");
 const { readPrune } = require("./read.js");
 const { packAdvanced, encodeAdvancedData, decodeAdvancedData } = require("./function.js");
-const { toBN, advanceTime, changeNetwork } = require("./helpers.js");
+const { toBN, advanceTime } = require("./helpers.js");
 const {
   signSiloDepositTokenPermit,
   signSiloDepositTokenPermitWithChainId,
@@ -43,4 +43,3 @@ exports.strDisplay = strDisplay;
 exports.packAdvanced = packAdvanced;
 exports.encodeAdvancedData = encodeAdvancedData;
 exports.decodeAdvancedData = decodeAdvancedData;
-exports.changeNetwork = changeNetwork;

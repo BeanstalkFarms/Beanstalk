@@ -2,6 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { BEANSTALK } = require("../test/hardhat/utils/constants.js");
 const SELECTORS = require("./data/beanstalkSelectors.json");
+const { printBeanstalk } = require("./reseedL2.js");
 
 /**
  * @notice reseed1 initializes migration by:
@@ -9,10 +10,12 @@ const SELECTORS = require("./data/beanstalkSelectors.json");
  * - pausing beanstalk.
  * - transferring bean LP tokens to BCM.
  */
-async function reseed1(account) {
+async function reseedL1(account) {
+  await printBeanstalk();
   beanstalkSelectors = [];
   console.log("-----------------------------------");
   console.log("reseed1: Initialize L2 migration\n");
+  console.log("Removing selectors and pausing Beanstalk...");
 
   // the following selectors come from the following facets.
   // diamondLoupeFacet,
@@ -47,9 +50,10 @@ async function reseed1(account) {
     facetsToRemove: beanstalkSelectors,
     initFacetName: "ReseedL2Migration",
     bip: false,
-    verbose: false,
+    verbose: true,
     account: account
   });
+  console.log("Beanstalk is now paused and bean LP tokens are transferred to BCM.");
   console.log("-----------------------------------");
 }
-exports.reseed1 = reseed1;
+exports.reseedL1 = reseedL1;

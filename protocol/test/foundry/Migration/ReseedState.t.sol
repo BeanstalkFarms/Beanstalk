@@ -12,14 +12,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import "forge-std/StdUtils.sol";
 
-interface IBeanstalkERC20 is IERC20 {
-    function mint(address to, uint256 amount) external;
-}
-
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
  */
-contract ReseedTest is TestHelper {
+contract ReseedStateTest is TestHelper {
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
@@ -63,31 +59,12 @@ contract ReseedTest is TestHelper {
 
     function setUp() public {
         // parse accounts and populate the accounts.txt file
-        accountNumber = parseAccounts();
-        // console.log("Number of accounts: ", accountNumber);
+        // the number of accounts to parse, for testing purposes
+        uint256 numAccounts = 110;
+        accountNumber = parseAccounts(numAccounts);
+        console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // l2Beanstalk.gm(address(this), 1);
-    }
-
-    function test_ReseedWell() public {
-        address beaneth = 0xBEA00ebA46820994d24E45dffc5c006bBE35FD89;
-        // IERC20[] memory tokens = IWell(beaneth).tokens();
-        // console.log("tokens: ", tokens.length);
-        address alice = makeAddr("alice");
-        // 1M BEAN
-        address weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
-        address owner = 0xe26367cA850dA09a478076481535D7c1C67D62F9;
-        // add liquidity
-        vm.startPrank(owner);
-        IBeanstalkERC20(L2BEAN).mint(owner, 1000000_000000);
-        deal(weth, owner, 10 ether);
-        IERC20(weth).approve(beaneth, 10 ether);
-        IERC20(L2BEAN).approve(beaneth, 1000000_000000);
-        uint256[] memory tokenAmountsIn = new uint256[](2);
-        tokenAmountsIn[0] = 1000000_000000;
-        tokenAmountsIn[1] = 10 ether;
-        IWell(beaneth).addLiquidity(tokenAmountsIn, 0, alice, block.timestamp + 1000000);
-        vm.stopPrank();
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -166,12 +143,27 @@ contract ReseedTest is TestHelper {
     }
 
     // pods
-    function test_totalPods() public {
-        uint256 pods = l2Beanstalk.totalPods(FIELD_ID);
-        bytes memory podsJson = searchGlobalPropertyData("fields.0.pods");
+    function test_Pods() public {
+        // state
+        uint256 totalPods = l2Beanstalk.totalPods(FIELD_ID);
+        uint256 totalHarvestable = l2Beanstalk.totalHarvestable(FIELD_ID);
+        uint256 totalHarvested = l2Beanstalk.totalHarvested(FIELD_ID);
+        // Json data
+        bytes memory totalPodsJson = searchGlobalPropertyData("fields.0.pods");
+        bytes memory totalHarvestableJson = searchGlobalPropertyData("fields.0.harvestable");
+        bytes memory totalHarvestedJson = searchGlobalPropertyData("fields.0.harvested");
         // decode the pods from json
-        uint256 podsJsonDecoded = vm.parseUint(vm.toString(podsJson));
-        assertEq(pods, podsJsonDecoded);
+        uint256 totalPodsJsonDecoded = vm.parseUint(vm.toString(totalPodsJson));
+        uint256 totalHarvestableJsonDecoded = vm.parseUint(vm.toString(totalHarvestableJson));
+        uint256 totalHarvestedJsonDecoded = vm.parseUint(vm.toString(totalHarvestedJson));
+        // total pods subtracts harvested pods from the calculation
+        totalPodsJsonDecoded -= totalHarvestedJsonDecoded;
+        // total harvestable pods subtracts harvested pods from the calculation
+        totalHarvestableJsonDecoded -= totalHarvestedJsonDecoded;
+        // compare the values
+        assertEq(totalPods, totalPodsJsonDecoded);
+        assertEq(totalHarvestable, totalHarvestableJsonDecoded);
+        assertEq(totalHarvested, totalHarvestedJsonDecoded);
     }
 
     function test_totalHarvested() public {
@@ -334,10 +326,11 @@ contract ReseedTest is TestHelper {
 
     //////////////////// Helpers ////////////////////
 
-    function parseAccounts() public returns (uint256) {
-        string[] memory inputs = new string[](2);
+    function parseAccounts(uint256 numAccounts) public returns (uint256) {
+        string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "./test/foundry/Migration/data/getAccounts.js"; // script
+        inputs[2] = vm.toString(numAccounts);
         bytes memory res = vm.ffi(inputs);
         // decode the number of accounts
         uint256 accountNumber = vm.parseUint(vm.toString(res));

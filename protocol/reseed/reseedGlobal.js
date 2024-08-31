@@ -14,7 +14,7 @@ async function reseedGlobal(account, L2Beanstalk, mock) {
     facetNames: [],
     initFacetName: "ReseedGlobal",
     initArgs: [settings],
-    bip: false,
+    bip: false, 
     verbose: true,
     account: account
   });
