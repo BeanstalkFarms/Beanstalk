@@ -413,7 +413,7 @@ const ConvertForm: FC<
                   component="span"
                   display="inline-block"
                 >
-                  You will forfeit {displayBN(chopPercent)}% your claim to
+                  You will forfeit {displayBN(chopPercent)}% of your claim to
                   future Ripe assets through this transaction
                   <br />
                 </Typography>
@@ -522,7 +522,7 @@ const ConvertForm: FC<
             >
               This conversion will effectively perform a CHOP opperation. Please
               confirm you understand this by typing{' '}
-              <strong>&quot;CHOP MY ASSETS&quot;</strong>below.
+              <strong>&quot;CHOP MY ASSETS&quot;</strong> below.
             </Typography>
             <TextField
               fullWidth
@@ -542,7 +542,7 @@ const ConvertForm: FC<
         )}
         {isChoppingLP && (
           <WarningAlert>
-            Note that you can get more value by first converting to{' '}
+            You can get more value by first converting to{' '}
             {sdk.tokens.UNRIPE_BEAN.symbol} first.
           </WarningAlert>
         )}
