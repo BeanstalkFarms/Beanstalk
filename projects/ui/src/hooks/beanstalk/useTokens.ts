@@ -32,7 +32,7 @@ export type AnyToken =
 
 /**
  *
- * @returns all balance tokens from the SDK (includes Well LP tokens)
+ * @returns all balance tokens from the SDK all ERC20 tokens + ETH
  */
 export const useTokens = (): {
   ETH: NativeToken;
@@ -84,8 +84,7 @@ export const useTokens = (): {
 };
 
 /**
- * @returns all beanstalk tokens from the SDK
- * STALK, SEEDS, SPROUTS, RSPROUTS, PODS
+ * @returns all beanstalk tokens from the SDK STALK, SEEDS, SPROUTS, rSPROUTS, PODS
  */
 export const useBeanstalkTokens = (): {
   STALK: BeanstalkToken;
@@ -126,50 +125,78 @@ export const useUnripeTokens = () => {
   }, [sdk]);
 };
 
-export const useWhitelistedTokens = () => {
+/**
+ * @param sortByLiquidity - If true, sort Well LP tokens by liquidity (highest to lowest)
+ */
+export const useWhitelistedTokens = (sortByLiquidity?: boolean) => {
   const sdk = useSdk();
   const pools = useAppSelector((s) => s._bean.pools);
 
   return useMemo(() => {
-    const whitelist = getWhitelistSorted(sdk, pools);
+    const whitelist = getWhitelistSorted(
+      sdk.tokens,
+      sortByLiquidity ? pools : undefined
+    );
     const tokenMap = whitelist.reduce<TokenMap<ERC20Token>>((acc, token) => {
       acc[token.address] = token;
       return acc;
     }, {});
 
     return { whitelist, tokenMap };
-  }, [sdk, pools]);
+  }, [sdk, pools, sortByLiquidity]);
 };
 
 /**
  * Sort the whitelist by
  * [
  *  0: BEAN,
- *  1...n - 2: LP (sorted by liquidity)
+ *  1...n - 2: LP (sorted by liquidity use default sort order)
  *  n - 1: urBEAN,
  *  n: urBEANwstETH
  * ]
  */
-function getWhitelistSorted(sdk: ReturnType<typeof useSdk>, pools: BeanPools) {
-  const whitelist = Array.from(sdk.tokens.siloWhitelist as Set<ERC20Token>);
+/**
+ * Sorts the whitelist of tokens based on specific criteria:
+ * 1. BEAN token is always first
+ * 2. Unripe tokens are pushed towards the end [...restTokens, urBEAN, urBEANwstETH]
+ * 3. Well LP tokens
+ *   - If pools data is provided, tokens are sorted by liquidity (highest to lowest)
+ *   - otherwise, retain original insertion order
+ *
+ * @param tokens - The tokens object from the SDK
+ * @param pools - Optional BeanPools object containing liquidity information
+ * @returns A sorted array of ERC20Token objects
+ */
+function getWhitelistSorted(
+  tokens: ReturnType<typeof useSdk>['tokens'],
+  pools?: BeanPools
+) {
+  const whitelist = Array.from(tokens.siloWhitelist as Set<ERC20Token>);
   return whitelist.sort((a, b) => {
+    // When either token is BEAN
+    if (a.equals(tokens.BEAN) || b.equals(tokens.BEAN)) {
+      // BEAN should always be first
+      return a.equals(tokens.BEAN) ? -1 : 1;
+    }
+    // When either token is unripe
     if (a.isUnripe || b.isUnripe) {
       if (a.isUnripe && b.isUnripe) {
-        return a.equals(sdk.tokens.UNRIPE_BEAN) ? -1 : 1;
+        return a.equals(tokens.UNRIPE_BEAN) ? -1 : 1;
       }
-      if (a.isUnripe) return -1;
-      return 1;
-    }
-    if (a.equals(sdk.tokens.BEAN) || b.equals(sdk.tokens.BEAN)) {
-      return a.equals(sdk.tokens.BEAN) ? -1 : 1;
+      // push unripe towards the end
+      return a.isUnripe ? 1 : -1;
     }
 
-    const poolA = pools[a.address];
-    const poolB = pools[b.address];
+    if (pools) {
+      const poolA = pools[a.address];
+      const poolB = pools[b.address];
 
-    if (poolA && poolB) {
-      return poolA.liquidity.gt(poolB.liquidity) ? -1 : 1;
+      if (poolA && poolB) {
+        return poolB.liquidity.minus(poolA.liquidity).toNumber();
+      }
     }
+
+    // If we can't sort by liquidity, retain insertion order
     return 0;
   });
 }
