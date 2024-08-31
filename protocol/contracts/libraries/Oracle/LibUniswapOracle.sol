@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {C} from "contracts/C.sol";
 import {LibUniswapOracleLibrary} from "./LibUniswapOracleLibrary.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 

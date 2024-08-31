@@ -4,14 +4,11 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
-import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -20,10 +17,9 @@ interface IERC20Decimals {
 }
 
 /**
- * @title Eth Usd Oracle Library
+ * @title Usd Oracle Library
  * @notice Contains functionalty to fetch the manipulation resistant USD price of different tokens.
  * @dev currently supports:
- * - ETH/USD price
  **/
 library LibUsdOracle {
     using LibRedundantMath256 for uint256;
