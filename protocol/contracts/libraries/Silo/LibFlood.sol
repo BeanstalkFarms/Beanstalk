@@ -73,6 +73,9 @@ library LibFlood {
             s.sys.season.rainStart = s.sys.season.current;
             s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
             s.sys.rain.roots = s.sys.silo.roots;
+
+            // upon rain, set beanToMaxLpGpPerBdvRatio to zero, to encourage converts down before starting to flood
+            s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
         } else {
             // flood podline first, because it checks current Bean supply
             floodPodline();
