@@ -207,6 +207,16 @@ export const BEANUSDT_WELL_ADDRESSES = {
     '0xBEA00699562C71C2d3fFc589a848353151a71A61'.toLowerCase(),
 };
 
+export const BEAN_LUSD_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D'.toLowerCase(),
+};
+
+export const BEAN_ETH_UNIV2_LP_ADDRESSES = {
+  [SupportedChainId.MAINNET]:
+    '0x87898263B6C5BABe34b4ec53F22d98430b91e371'.toLowerCase(),
+};
+
 export const DAI_CHAINLINK_ADDRESSES = Address.make({
   [SupportedChainId.MAINNET]:
     '0xaed0c38402a5d19df6e4c03f4e2dced6e29c1ee9'.toLowerCase(),

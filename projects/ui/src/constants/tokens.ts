@@ -64,6 +64,8 @@ import {
   BEANUSDC_WELL_ADDRESSES,
   BEANUSDT_WELL_ADDRESSES,
   ARB_ADDRESSES,
+  BEAN_LUSD_ADDRESSES,
+  BEAN_ETH_UNIV2_LP_ADDRESSES,
 } from './addresses';
 
 // ----------------------------------------
@@ -424,7 +426,7 @@ export const CRV3 = makeChainToken(CRV3_ADDRESSES, 18, {
 // TEMP
 /** @deprecated */
 export const BEAN_ETH_UNIV2_LP = makeChainToken(
-  '0x87898263B6C5BABe34b4ec53F22d98430b91e371',
+  BEAN_ETH_UNIV2_LP_ADDRESSES,
   18,
   {
     name: 'BEAN:ETH LP',
@@ -436,16 +438,12 @@ export const BEAN_ETH_UNIV2_LP = makeChainToken(
 );
 
 /** @deprecated */
-export const BEAN_LUSD_LP = makeChainToken(
-  '0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D',
-  18,
-  {
-    name: 'BEAN:LUSD LP',
-    symbol: 'Old BEANLUSD',
-    logo: beanLusdLogoUrl,
-    isLP: true,
-  }
-);
+export const BEAN_LUSD_LP = makeChainToken(BEAN_LUSD_ADDRESSES, 18, {
+  name: 'BEAN:LUSD LP',
+  symbol: 'Old BEANLUSD',
+  logo: beanLusdLogoUrl,
+  isLP: true,
+});
 
 /** @deprecated */
 export const BEAN_CRV3_LP = makeChainToken(BEAN_CRV3_ADDRESSES, 18, {
