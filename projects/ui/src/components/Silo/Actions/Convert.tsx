@@ -112,6 +112,10 @@ const ConvertForm: FC<
     (_state) => _state._bean.unripe
   );
 
+  const isChoppingLP =
+    isChopping &&
+    values.tokens[0].token.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
+
   const plantCrate = plantAndDoX?.crate?.bn;
 
   /// Extract values from form state
@@ -535,6 +539,12 @@ const ConvertForm: FC<
               }}
             />
           </Box>
+        )}
+        {isChoppingLP && (
+          <WarningAlert>
+            Note that you can get more value by first converting to{' '}
+            {sdk.tokens.UNRIPE_BEAN.symbol} first.
+          </WarningAlert>
         )}
 
         {/* Submit */}
