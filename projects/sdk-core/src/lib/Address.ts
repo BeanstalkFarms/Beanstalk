@@ -15,9 +15,20 @@ export class Address {
 
   static defaultChainId = ChainId.ARBITRUM;
 
+  private static fallbackChainIds = {
+    [ChainId.LOCALHOST]: ChainId.MAINNET,
+    [ChainId.LOCALHOST_ARBITRUM]: ChainId.ARBITRUM,
+    [ChainId.TESTNET]: Address.defaultChainId,
+    [ChainId.ANVIL1]: Address.defaultChainId
+  };
+
   static setDefaultChainId = (chainId: ChainId) => {
     Address.defaultChainId = chainId;
   };
+
+  static getFallbackChainId(chainId: ChainId) {
+    return Address.fallbackChainIds[chainId as keyof typeof Address.fallbackChainIds];
+  }
 
   static make<T extends string | AddressDefinition>(input: T): Address {
     const addresses: AddressDefinition = {};
@@ -40,13 +51,21 @@ export class Address {
     this.addresses = addresses;
 
     this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
-    this.LOCALHOST_ARBITRUM = this.addresses[ChainId.LOCALHOST_ARBITRUM] || this.ARBITRUM;
+    this.LOCALHOST_ARBITRUM =
+      this.addresses[ChainId.LOCALHOST_ARBITRUM] ||
+      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_ARBITRUM)];
 
     this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST] || this.MAINNET;
+    this.LOCALHOST =
+      this.addresses[ChainId.LOCALHOST] ||
+      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST)];
 
-    this.TESTNET = this.addresses[ChainId.TESTNET] || this.addresses[Address.defaultChainId];
-    this.ANVIL1 = this.addresses[ChainId.ANVIL1] || this.addresses[Address.defaultChainId];
+    this.TESTNET =
+      this.addresses[ChainId.TESTNET] ||
+      this.addresses[Address.getFallbackChainId(ChainId.TESTNET)];
+    this.ANVIL1 =
+      this.addresses[ChainId.ANVIL1] ||
+      this.addresses[Address.getFallbackChainId(ChainId.ANVIL1)];
   }
 
   get(chainId?: number) {
