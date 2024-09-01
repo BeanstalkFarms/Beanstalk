@@ -21,6 +21,11 @@ import {MockSeasonFacet, SeasonFacet} from "contracts/mocks/mockFacets/MockSeaso
 import {MockSiloFacet, SiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {MockPipelineConvertFacet, PipelineConvertFacet} from "contracts/mocks/mockFacets/MockPipelineConvertFacet.sol";
 import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
+import {DiamondCutFacet} from "contracts/beanstalk/diamond/DiamondCutFacet.sol";
+import {IDiamondLoupe} from "contracts/interfaces/IDiamondLoupe.sol";
+
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import "forge-std/console.sol";
 
 /**
  * @title TestHelper
@@ -61,6 +66,7 @@ contract BeanstalkDeployer is Utils {
         "PipelineConvertFacet" // MockPipelineConvertFacet
     ];
     address[] facetAddresses;
+    string[] facetNames;
 
     IDiamondCut.FacetCutAction[] cutActions;
 
@@ -75,7 +81,31 @@ contract BeanstalkDeployer is Utils {
         vm.label(BEANSTALK, "Beanstalk");
 
         // Create cuts.
+        setupFacetAddresses(mock);
 
+        IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses, cutActions);
+        d = deployDiamondAtAddress(deployer, BEANSTALK);
+
+        // if mocking, set the diamond address to
+        // the canonical beanstalk address.
+        address initDiamondAddress;
+        if (mock) {
+            initDiamondAddress = address(new MockInitDiamond());
+        } else {
+            initDiamondAddress = address(new InitDiamond());
+        }
+
+        vm.prank(deployer);
+        IDiamondCut(address(d)).diamondCut(
+            cut,
+            initDiamondAddress,
+            abi.encodeWithSignature("init()")
+        );
+
+        if (verbose) console.log("Diamond deployed at: ", address(d));
+    }
+
+    function setupFacetAddresses(bool mock) internal {
         // Facets that require external libraries need to be deployed by
         // `address(new Facet())`
         // otherwise, use deployCode() to speed up test compiles.
@@ -86,10 +116,12 @@ contract BeanstalkDeployer is Utils {
             if (keccak256(abi.encode(facetName)) == keccak256(abi.encode("SeasonGettersFacet"))) {
                 facetAddresses.push(address(new SeasonGettersFacet()));
             } else {
+                console.log("deployCode facet: ", facetName);
                 facetAddresses.push(address(deployCode(facetName)));
             }
 
             cutActions.push(IDiamondCut.FacetCutAction.Add);
+            facetNames.push(facetName);
         }
 
         // Deploy mock only facets.
@@ -97,6 +129,7 @@ contract BeanstalkDeployer is Utils {
             facetAddresses.push(address(new MockAttackFacet()));
             facets.push("MockAttackFacet");
             cutActions.push(IDiamondCut.FacetCutAction.Add);
+            facetNames.push("MockAttackFacet");
         }
 
         for (uint i; i < mockFacets.length; i++) {
@@ -148,27 +181,8 @@ contract BeanstalkDeployer is Utils {
             facets.push(facet);
 
             cutActions.push(IDiamondCut.FacetCutAction.Add);
+            facetNames.push(facet);
         }
-        IDiamondCut.FacetCut[] memory cut = _multiCut(facets, facetAddresses, cutActions);
-        d = deployDiamondAtAddress(deployer, BEANSTALK);
-
-        // if mocking, set the diamond address to
-        // the canonical beanstalk address.
-        address initDiamondAddress;
-        if (mock) {
-            initDiamondAddress = address(new MockInitDiamond());
-        } else {
-            initDiamondAddress = address(new InitDiamond());
-        }
-
-        vm.prank(deployer);
-        IDiamondCut(address(d)).diamondCut(
-            cut,
-            initDiamondAddress,
-            abi.encodeWithSignature("init()")
-        );
-
-        if (verbose) console.log("Diamond deployed at: ", address(d));
     }
 
     /**
@@ -207,6 +221,105 @@ contract BeanstalkDeployer is Utils {
 
         // call diamondcut
         IDiamondCut(diamondAddress).diamondCut(cut, initAddress, initFunctionCall);
+        vm.stopPrank();
+    }
+
+    // useful for debugging which facets are erroring by adding logs to LibDiamond and deploying after forking
+    function upgradeDiamondFacet() internal {
+        string[] memory _facetNames = new string[](1);
+        _facetNames[0] = "DiamondCutFacet";
+        address[] memory newFacetAddresses = new address[](1);
+        newFacetAddresses[0] = address(new DiamondCutFacet());
+
+        IDiamondCut.FacetCutAction[] memory facetCutActions = new IDiamondCut.FacetCutAction[](1);
+        facetCutActions[0] = IDiamondCut.FacetCutAction.Replace;
+
+        // upgrade just the diamond cut facet
+        upgradeWithNewFacets(
+            BEANSTALK, // upgrading beanstalk.
+            IMockFBeanstalk(BEANSTALK).owner(), // fetch beanstalk owner.
+            _facetNames,
+            newFacetAddresses,
+            facetCutActions,
+            address(new EmptyInitContract()), // deploy the ReseedL2Migration.
+            abi.encodeWithSignature("init()"), // call init.
+            new bytes4[](0)
+        );
+        console.log("done upgrading diamond cut facet");
+    }
+
+    /**
+     * @notice Forks mainnet at a given block,
+     */
+    function forkMainnetAndUpgradeAllFacets() internal {
+        vm.createSelectFork(vm.envString("FORKING_RPC"), 20641000);
+
+        setupFacetAddresses(true);
+
+        upgradeDiamondFacet();
+
+        // the idea is to add/upgrade all the facets/mock facets that are in the constants at the top of this file
+        // get the list of all current selectors
+        IDiamondLoupe.Facet[] memory currentFacets = IDiamondLoupe(BEANSTALK).facets();
+        bytes4[] memory currentSelectors = new bytes4[](1000);
+        uint256 selectorsCounter = 0;
+        for (uint256 i = 0; i < currentFacets.length; i++) {
+            // loop through all selectors in the facet
+            bytes4[] memory selectors = IDiamondLoupe(BEANSTALK).facetFunctionSelectors(
+                currentFacets[i].facetAddress
+            );
+            for (uint256 j = 0; j < selectors.length; j++) {
+                // add the selector to the currentSelectors array
+                currentSelectors[selectorsCounter++] = selectors[j];
+            }
+        }
+        assembly {
+            mstore(currentSelectors, selectorsCounter)
+        }
+        // generated list of all the new selectors
+
+        IDiamondLoupe.Facet[] memory newFacets = new IDiamondLoupe.Facet[](facetAddresses.length);
+
+        // was goigng to originally make one large diamond cut, but kept getting EvmError: MemoryOOG
+        // so instead, we make multiple diamond cuts, one for each facet
+        uint256 facetAddressesLength = facetAddresses.length;
+
+        bytes4[][] memory functionSelectorsArray = _generateMultiSelectors(facetNames);
+        for (uint256 i = 0; i < facetNames.length; i++) {
+            IDiamondLoupe.Facet memory facet = IDiamondLoupe.Facet(
+                facetAddresses[i],
+                functionSelectorsArray[i]
+            );
+            newFacets[i] = facet;
+        }
+
+        assembly {
+            mstore(newFacets, facetAddressesLength)
+        }
+
+        // generate new Facets
+
+        IDiamondCut.FacetCut[] memory cut = generateDiamondCut(currentFacets, newFacets);
+
+        // log all cuts
+        for (uint256 i = 0; i < cut.length; i++) {
+            console.log("cut: ", cut[i].facetAddress);
+            if (cut[i].action == IDiamondCut.FacetCutAction.Add) {
+                console.log("action: Add");
+            } else if (cut[i].action == IDiamondCut.FacetCutAction.Replace) {
+                console.log("action: Replace");
+            } else if (cut[i].action == IDiamondCut.FacetCutAction.Remove) {
+                console.log("action: Remove");
+            }
+            // loop through and log cut[i].functionSelectors
+            for (uint256 j = 0; j < cut[i].functionSelectors.length; j++) {
+                console.log("selector: ");
+                console.logBytes4(cut[i].functionSelectors[j]);
+            }
+        }
+
+        vm.startPrank(IMockFBeanstalk(BEANSTALK).owner());
+        IDiamondCut(BEANSTALK).diamondCut(cut, address(0), new bytes(0));
         vm.stopPrank();
     }
 
@@ -292,6 +405,106 @@ contract BeanstalkDeployer is Utils {
             cmd[i + 2] = _facetNames[i];
         }
         bytes memory res = vm.ffi(cmd);
+        console.log("got command back");
+        // log bytes length
+        console.log("res length: ", res.length);
         selectorsArray = abi.decode(res, (bytes4[][]));
+        console.log("decoded");
     }
+
+    function generateDiamondCut(
+        IDiamondLoupe.Facet[] memory _existingFacets,
+        IDiamondLoupe.Facet[] memory _newFacets
+    ) internal returns (IDiamondCut.FacetCut[] memory) {
+        // Encode the existing facets
+        string memory existingFacetsJson = _encodeFacetsToJson(_existingFacets);
+
+        // Encode the new facets
+        string memory newFacetsJson = _encodeFacetsToJson(_newFacets);
+
+        // Prepare the command to run the Node.js script
+        string[] memory cmd = new string[](4);
+        cmd[0] = "node";
+        cmd[1] = "scripts/genDiamondCut.js";
+        cmd[2] = existingFacetsJson;
+        cmd[3] = newFacetsJson;
+
+        // Run the script and get the result
+        bytes memory res = vm.ffi(cmd);
+        console.log("Diamond cut generated");
+
+        // Decode the result
+        IDiamondCut.FacetCut[] memory diamondCut = abi.decode(res, (IDiamondCut.FacetCut[]));
+        console.log("Diamond cut decoded");
+
+        return diamondCut;
+    }
+
+    function _encodeFacetsToJson(
+        IDiamondLoupe.Facet[] memory _facets
+    ) internal pure returns (string memory) {
+        string memory json = "[";
+        for (uint i = 0; i < _facets.length; i++) {
+            if (i > 0) json = string(abi.encodePacked(json, ","));
+            json = string(
+                abi.encodePacked(
+                    json,
+                    '{"facetAddress":"',
+                    _addressToString(_facets[i].facetAddress),
+                    '","selectors":['
+                )
+            );
+            for (uint j = 0; j < _facets[i].functionSelectors.length; j++) {
+                if (j > 0) json = string(abi.encodePacked(json, ","));
+                json = string(
+                    abi.encodePacked(
+                        json,
+                        '"',
+                        _bytes4ToString(_facets[i].functionSelectors[j]),
+                        '"'
+                    )
+                );
+            }
+            json = string(abi.encodePacked(json, "]}"));
+        }
+        json = string(abi.encodePacked(json, "]"));
+        return json;
+    }
+
+    function _addressToString(address _addr) internal pure returns (string memory) {
+        bytes memory s = new bytes(42);
+        s[0] = "0";
+        s[1] = "x";
+        for (uint i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint(uint160(_addr)) / (2 ** (8 * (19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2 + 2 * i] = _char(hi);
+            s[2 + 2 * i + 1] = _char(lo);
+        }
+        return string(s);
+    }
+
+    function _bytes4ToString(bytes4 _bytes) internal pure returns (string memory) {
+        bytes memory s = new bytes(10);
+        s[0] = "0";
+        s[1] = "x";
+        for (uint i = 0; i < 4; i++) {
+            bytes1 b = _bytes[i];
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2 + 2 * i] = _char(hi);
+            s[2 + 2 * i + 1] = _char(lo);
+        }
+        return string(s);
+    }
+
+    function _char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
+    }
+}
+
+contract EmptyInitContract {
+    function init() external {}
 }

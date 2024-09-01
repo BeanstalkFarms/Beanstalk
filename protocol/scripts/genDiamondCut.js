@@ -2,6 +2,8 @@ const ethers = require("ethers");
 
 async function generateDiamondCut(existingFacets, newFacets) {
   const cuts = [];
+
+  // console.log("Generating diamond cut...");
   
   // Helper function to convert selector strings to bytes4
   const selectorToBytes4 = (selector) => {
@@ -9,51 +11,69 @@ async function generateDiamondCut(existingFacets, newFacets) {
   };
 
   // Process existing facets
-  const existingSelectors = new Set();
+  const existingSelectors = new Map();
   existingFacets.forEach(facet => {
     facet.selectors.forEach(selector => {
-      existingSelectors.add(selectorToBytes4(selector));
+      existingSelectors.set(selectorToBytes4(selector), facet.facetAddress);
     });
   });
 
+  // console.log(`Found ${existingSelectors.size} existing selectors`);
+  // console.log("existing selectors: ", Array.from(existingSelectors.keys()));
+
   // Process new facets
   for (const newFacet of newFacets) {
-    const facetCut = {
-      facetAddress: newFacet.facetAddress,
-      action: 0, // 0 for Add, 1 for Replace, 2 for Remove
-      functionSelectors: []
-    };
+    const addSelectors = [];
+    const replaceSelectors = [];
 
     newFacet.selectors.forEach(selector => {
       const bytes4Selector = selectorToBytes4(selector);
       if (existingSelectors.has(bytes4Selector)) {
-        facetCut.action = 1; // Replace
+        replaceSelectors.push(bytes4Selector);
       } else {
-        facetCut.action = 0; // Add
+        addSelectors.push(bytes4Selector);
       }
-      facetCut.functionSelectors.push(bytes4Selector);
       existingSelectors.delete(bytes4Selector);
     });
 
-    if (facetCut.functionSelectors.length > 0) {
-      cuts.push(facetCut);
+    if (addSelectors.length > 0) {
+      cuts.push({
+        facetAddress: newFacet.facetAddress,
+        action: 0, // Add
+        functionSelectors: addSelectors
+      });
+    }
+
+    if (replaceSelectors.length > 0) {
+      cuts.push({
+        facetAddress: newFacet.facetAddress,
+        action: 1, // Replace
+        functionSelectors: replaceSelectors
+      });
     }
   }
+
+  // console.log(`Found ${existingSelectors.size} removed selectors`);
 
   // Handle removed selectors
   if (existingSelectors.size > 0) {
     cuts.push({
       facetAddress: '0x0000000000000000000000000000000000000000',
       action: 2, // Remove
-      functionSelectors: Array.from(existingSelectors)
+      functionSelectors: Array.from(existingSelectors.keys())
     });
   }
+
+  // console.log(`Generated ${cuts.length} cuts`);
+  // console.log("final cuts: ", cuts);
 
   return cuts;
 }
 
-async function processDiamondCut(existingFacets, newFacets) {
+async function processDiamondCut(existingFacetsJson, newFacetsJson) {
   try {
+    const existingFacets = JSON.parse(existingFacetsJson);
+    const newFacets = JSON.parse(newFacetsJson);
     const diamondCut = await generateDiamondCut(existingFacets, newFacets);
     const encoded = ethers.utils.defaultAbiCoder.encode(
       ["tuple(address facetAddress, uint8 action, bytes4[] functionSelectors)[]"],
@@ -66,26 +86,14 @@ async function processDiamondCut(existingFacets, newFacets) {
   }
 }
 
-// Example usage
-const existingFacets = [
-  {
-    facetAddress: '0x1111111111111111111111111111111111111111',
-    selectors: ['0x12345678', '0x23456789']
-  }
-];
+// Get command line arguments
+const args = process.argv.slice(2);
+if (args.length !== 2) {
+  console.error("Usage: node genDiamondCut.js <existingFacetsJson> <newFacetsJson>");
+  process.exit(1);
+}
 
-const newFacets = [
-  {
-    facetAddress: '0x2222222222222222222222222222222222222222',
-    selectors: ['0x12345678', '0x34567890']
-  },
-  {
-    facetAddress: '0x3333333333333333333333333333333333333333',
-    selectors: ['0x45678901', '0x56789012']
-  }
-];
-
-processDiamondCut(existingFacets, newFacets)
+processDiamondCut(args[0], args[1])
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
