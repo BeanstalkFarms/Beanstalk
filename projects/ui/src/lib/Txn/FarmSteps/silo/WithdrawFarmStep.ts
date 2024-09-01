@@ -5,11 +5,12 @@ import {
   ERC20Token,
   Token,
   TokenValue,
-  FarmFromMode,
 } from '@beanstalk/sdk';
 import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
 
-type WithdrawResult = ReturnType<typeof WithdrawFarmStep['calculateWithdraw']>;
+type WithdrawResult = ReturnType<
+  (typeof WithdrawFarmStep)['calculateWithdraw']
+>;
 
 export class WithdrawFarmStep extends FarmStep {
   private _withdrawResult: WithdrawResult | undefined;
@@ -66,8 +67,6 @@ export class WithdrawFarmStep extends FarmStep {
 
     const withdrawToMode = removeLiquidity ? FarmToMode.INTERNAL : toMode;
 
-    console.log('removeLIquidity: ', removeLiquidity);
-
     // FIXME
     const stems = result.crates.map((crate) => crate.stem.toString());
     const amounts = result.crates.map((crate) => crate.amount.blockchainString);
@@ -95,16 +94,20 @@ export class WithdrawFarmStep extends FarmStep {
     }
 
     if (removeLiquidity && tokenOut && pool) {
-      const removeStep = new this._sdk.farm.actions.RemoveLiquidityOneToken(
-        pool.address,
-        this._sdk.contracts.curve.registries.metaFactory.address,
-        tokenOut.address,
-        FarmFromMode.INTERNAL_TOLERANT,
-        toMode
-      );
-      this.pushInput({ input: removeStep });
-      console.debug('[WithdrawFarmStep][build] removing liquidity', removeStep);
+      // const removeStep = new this._sdk.farm.actions // TODO: fix me
     }
+
+    // if (removeLiquidity && tokenOut && pool) {
+    //   const removeStep = new this._sdk.farm.actions.RemoveLiquidityOneToken(
+    //     pool.address,
+    //     this._sdk.contracts.curve.registries.metaFactory.address,
+    //     tokenOut.address,
+    //     FarmFromMode.INTERNAL_TOLERANT,
+    //     toMode
+    //   );
+    //   this.pushInput({ input: removeStep });
+    //   console.debug('[WithdrawFarmStep][build] removing liquidity', removeStep);
+    // }
     console.debug('[WithdrawFarmStep][build]: ', this.getFarmInput());
 
     return this;

@@ -1,7 +1,6 @@
 import { BeanstalkSDK, TokenValue } from '@beanstalk/sdk';
 import { BigNumber } from 'ethers';
 import {
-  ClaimFarmStep,
   EnrootFarmStep,
   HarvestFarmStep,
   MowFarmStep,
@@ -22,8 +21,7 @@ type FormTxnFarmStep =
   | PlantFarmStep
   | EnrootFarmStep
   | RinseFarmStep
-  | HarvestFarmStep
-  | ClaimFarmStep;
+  | HarvestFarmStep;
 
 /**
  * Notes: @Bean-Sama
@@ -157,9 +155,9 @@ export class FormTxnBundler {
     // internal mow calls inside Plant and Enroot
     const allSteps = Object.entries(this.after);
     let tokensToMow: Map<Token, TokenValue> = new Map();
-    let tokensToRemove: string[] = []; 
+    let tokensToRemove: string[] = [];
     allSteps.forEach((farmOp) => {
-      if (farmOp[1] instanceof MowFarmStep) {  
+      if (farmOp[1] instanceof MowFarmStep) {
         // Create map of tokens to Mow
         tokensToMow = farmOp[1]._tokensToMow;
       } else if (farmOp[1] instanceof PlantFarmStep) {
@@ -169,7 +167,7 @@ export class FormTxnBundler {
         // If there's an Enroot step, add token(s) to the list of tokens to remove
         const tokensEnrooted = Object.keys(farmOp[1]._crates);
         tokensToRemove = tokensToRemove.concat(tokensEnrooted);
-      };
+      }
     });
 
     // Remove tokens from map of tokens to Mow.
@@ -179,7 +177,7 @@ export class FormTxnBundler {
     tokensToRemove.forEach((token) => {
       const tokenToDelete = tokenMap.get(token);
       if (tokenToDelete) tokensToMow.delete(tokenToDelete);
-    }); 
+    });
 
     allSteps.forEach(([step, farmStep]) => {
       const farmInput = farmStep.getFarmInput();
@@ -193,15 +191,19 @@ export class FormTxnBundler {
           // We check if there's any tokens in the map of tokens to Mow
           // and build the Mow step if necessary
           if (tokensToMow.size > 0) {
-            const newFarmStep = new MowFarmStep(this._sdk, farmStep._account, tokensToMow).build();
+            const newFarmStep = new MowFarmStep(
+              this._sdk,
+              farmStep._account,
+              tokensToMow
+            ).build();
             const newFarmInput = newFarmStep.getFarmInput();
             const newInput = newFarmInput[0].input;
             const newOptions = newFarmInput[0].options;
             farm.add(newInput, newOptions);
-          };
+          }
         } else {
           farm.add(input, options);
-        };
+        }
       });
     });
 
