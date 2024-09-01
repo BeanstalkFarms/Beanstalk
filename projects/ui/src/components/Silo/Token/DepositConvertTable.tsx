@@ -22,7 +22,7 @@ import {
 } from './TokenDepositsContext';
 
 export type FarmerTokenConvertRow = Deposit<TokenValue> & {
-  id: string;
+  key: string;
   owner?: string;
   currentBDV: TokenValue;
   deltaBDV: TokenValue;
@@ -105,12 +105,12 @@ const DepositConvertTable = ({
         renderCell: (params) => (
           <Stack direction="row" gap={1} alignItems="center">
             {isMultiSelect && (
-              <CircleSelect isSelected={selected.has(params.row.id)} />
+              <CircleSelect isSelected={selected.has(params.row.key)} />
             )}
             <Stack>
               <Typography>{token.symbol} Deposit</Typography>
               <Typography color="text.secondary" fontWeight={FontWeight.normal}>
-                {params.row.id}
+                {params.row.key}
               </Typography>
             </Stack>
           </Stack>
@@ -244,7 +244,7 @@ const DepositConvertTable = ({
 
   const getRowClassName = useCallback(
     (params: { row: FarmerTokenConvertRow }) =>
-      selected.has(params.row.id) ? 'selected-row' : '',
+      selected.has(params.row.key) ? 'selected-row' : '',
     [selected]
   );
 

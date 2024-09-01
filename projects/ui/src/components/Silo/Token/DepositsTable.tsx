@@ -40,7 +40,7 @@ import {
 } from './TokenDepositsContext';
 
 export type FarmerTokenDepositRow = Deposit<TokenValue> & {
-  id: string;
+  key: string;
   mowableStalk: TokenValue;
 };
 
@@ -66,14 +66,14 @@ const DepositsTable = ({
 
   const rows: FarmerTokenDepositRow[] = useMemo(() => {
     const rowData = Object.entries(depositsById).map(([key, deposit]) => ({
-      id: key,
-      mowableStalk: deposit.bdv?.mul(deltaStem.toNumber()).div(10000),
       ...deposit,
+      mowableStalk: deposit.bdv?.mul(deltaStem.toNumber()).div(10000),
+      key,
     }));
     return rowData;
   }, [depositsById, deltaStem]);
 
-  const selectedDeposits = rows.filter((row) => selected.has(row.id));
+  const selectedDeposits = rows.filter((row) => selected.has(row.key));
 
   const columns = React.useMemo(() => {
     const cols: GridColumns<FarmerTokenDepositRow> = [
@@ -84,15 +84,15 @@ const DepositsTable = ({
         align: 'left',
         headerAlign: 'left',
         sortable: true,
-        valueGetter: (params) => parseFloat(params.row.id),
+        valueGetter: (params) => parseFloat(params.row.key),
         renderCell: (params) => {
           const isMultiSelect = selectType === 'multi';
-          const isSelected = selected.has(params.row.id);
+          const isSelected = selected.has(params.row.key);
 
           return (
             <Stack direction="row" alignItems="center" gap={0.5}>
               {isMultiSelect ? <CircleSelect isSelected={isSelected} /> : null}
-              <Typography>{params.row.id}</Typography>
+              <Typography>{params.row.key}</Typography>
             </Stack>
           );
         },
@@ -107,7 +107,7 @@ const DepositsTable = ({
         valueGetter: (params) => params.row.amount.toNumber(),
         renderCell: (params) => {
           const isMultiSelect = selectType === 'multi';
-          const isSelected = selected.has(params.row.id);
+          const isSelected = selected.has(params.row.key);
           return (
             <Stack direction="row" alignItems="center" gap={0.5}>
               {isMultiSelect && isMobile ? (
@@ -263,7 +263,7 @@ const SingleTokenDepositDialogContent = ({
     </Row>
     <Row justifyContent="space-between" alignItems="flex-start">
       <Typography>Deposit Id</Typography>
-      <Typography>{row.id}</Typography>
+      <Typography>{row.key}</Typography>
     </Row>
     {/* Deposit Amount */}
     <Row justifyContent="space-between" alignItems="flex-start">

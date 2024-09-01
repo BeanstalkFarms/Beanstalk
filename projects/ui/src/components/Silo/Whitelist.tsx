@@ -262,17 +262,11 @@ const Whitelist: FC<{
                                     }}
                                   />
                                   <Typography color="text.primary" mr={0.2}>
-                                    {formatTV(
-                                      token.rewards?.stalk,
-                                      STALK.decimals
-                                    )}
+                                    {formatTV(token.rewards?.stalk, 0)}
                                   </Typography>
                                   <TokenIcon token={SEEDS} />
                                   <Typography color="text.primary">
-                                    {formatTV(
-                                      token.rewards?.seeds,
-                                      STALK.decimals
-                                    )}
+                                    {formatTV(token.rewards?.seeds, 3)}
                                   </Typography>
                                 </Row>
                               </Stack>
@@ -285,7 +279,7 @@ const Whitelist: FC<{
                                   css={{ height: '0.8em', marginTop: '-1px' }}
                                 />
                                 <Typography color="text.primary" mr={0.2}>
-                                  {formatTV(token.rewards?.stalk)}
+                                  {formatTV(token.rewards?.stalk, 0)}
                                 </Typography>
                                 <TokenIcon token={SEEDS} />
                                 <Typography color="text.primary">
@@ -316,7 +310,7 @@ const Whitelist: FC<{
                           placement="right"
                           componentsProps={TOOLTIP_COMPONENT_PROPS}
                           title={
-                            isUnripe ? (
+                            isUnripe && underlyingToken ? (
                               <Stack gap={0.5}>
                                 <Stack
                                   direction={{ xs: 'column', md: 'row' }}
@@ -330,15 +324,15 @@ const Whitelist: FC<{
                                     <Stat
                                       title={
                                         <Row gap={0.5}>
-                                          <TokenIcon token={underlyingToken!} />{' '}
-                                          Ripe {underlyingToken!.symbol}
+                                          <TokenIcon token={underlyingToken} />{' '}
+                                          Ripe {underlyingToken.symbol}
                                         </Row>
                                       }
                                       gap={0.25}
                                       variant="h4"
                                       amount={
                                         <Fiat
-                                          token={underlyingToken!}
+                                          token={underlyingToken}
                                           amount={
                                             unripeTokens[token.address]
                                               ?.underlying || ZERO_BN
@@ -347,7 +341,7 @@ const Whitelist: FC<{
                                         />
                                       }
                                       subtitle={`The ${denomination.toUpperCase()} value of the ${
-                                        underlyingToken!.symbol
+                                        underlyingToken?.symbol
                                       } underlying all ${token.symbol}.`}
                                     />
                                   </Box>

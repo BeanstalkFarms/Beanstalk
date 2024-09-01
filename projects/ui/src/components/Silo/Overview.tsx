@@ -245,7 +245,7 @@ const Overview: FC<{
           }
         />
       </ModuleTabs>
-      <Box>
+      <Box sx={{ display: tab === 0 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Silo Deposits"
           account={account}
@@ -257,7 +257,7 @@ const Overview: FC<{
           empty={breakdown.states.deposited.value.eq(0)}
         />
       </Box>
-      <Box>
+      <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Stalk Ownership"
           account={account}
@@ -269,7 +269,7 @@ const Overview: FC<{
           empty={farmerSilo.stalk.total.lte(0)}
         />
       </Box>
-      <Box>
+      <Box sx={{ display: tab === 2 ? 'block' : 'none' }}>
         <OverviewPlot
           label="Seeds Ownership"
           account={account}

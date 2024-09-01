@@ -26,7 +26,7 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
 
       if (deposit.bdv.gte(currentBDV)) return;
       updateable.push({
-        id: key,
+        key,
         currentBDV: currentBDV,
         deltaBDV: deltaBDV,
         deltaStalk: sdk.tokens.STALK.fromHuman('50'), // FIX ME
@@ -41,7 +41,7 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   }, [depositsById, getBDV, token, sdk.tokens]);
 
   const handleSelectAll = () => {
-    setWithIds(updatableDeposits.map(({ id }) => id));
+    setWithIds(updatableDeposits.map(({ key }) => key));
   };
 
   const deltaStalk = sdk.tokens.STALK.fromHuman('50');
