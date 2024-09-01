@@ -1,13 +1,12 @@
 import BigNumber from 'bignumber.js';
 import { useCallback, useMemo } from 'react';
-import { ERC20Token, NativeToken } from '~/classes/Token';
+
 import { TokenMap, ZERO_BN } from '~/constants';
-import { ERC20_TOKENS, ETH } from '~/constants/tokens';
+import { ERC20Token, NativeToken } from '@beanstalk/sdk';
 import useDataFeedTokenPrices from '../beanstalk/useDataFeedTokenPrices';
-import useWhitelist from '../beanstalk/useWhitelist';
-import useTokenMap from '../chain/useTokenMap';
 import useFarmerBalances from './useFarmerBalances';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
+import { useWhitelistedTokens } from '../beanstalk/useTokens';
 
 const sortMap = {
   BEAN: 0,
@@ -16,7 +15,7 @@ const sortMap = {
   urBEAN3CRV: 3,
   ETH: 4,
   WETH: 5,
-  "3CRV": 6,
+  '3CRV': 6,
   DAI: 7,
   USDC: 8,
   USDT: 9,
@@ -43,14 +42,9 @@ const sortTokens = (
  */
 export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
   // constants
-  const whitelist = useWhitelist();
+  const { whitelist, tokenMap } = useWhitelistedTokens();
 
   // data
-  const tokenMap = useTokenMap<ERC20Token | NativeToken>([
-    ...ERC20_TOKENS,
-    ETH,
-  ]);
-  const tokenList = useMemo(() => Object.values(tokenMap), [tokenMap]);
   const breakdown = useFarmerBalancesBreakdown();
   const farmerBalances = useFarmerBalances();
   const tokenPrices = useDataFeedTokenPrices();
@@ -68,7 +62,7 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
     const internal: TokenMap<TokenBalanceWithFiatValue> = {};
     const external: TokenMap<TokenBalanceWithFiatValue> = {};
 
-    tokenList.forEach((token) => {
+    whitelist.forEach((token) => {
       const balance = getBalances(token.address);
       const value = tokenPrices[token.address] ?? ZERO_BN;
       if (balance.farm?.gt(0) || includeZero) {
@@ -91,7 +85,7 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
     const circulating = breakdown.states.circulating.byToken;
 
     farm.forEach(([addr, { value, amount }]) => {
-      const token = whitelist[addr];
+      const token = tokenMap[addr];
       if (!token) return;
       if (amount?.gt(0) || includeZero) {
         internal[addr] = {
@@ -117,13 +111,13 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
       external: _external,
     };
   }, [
-    tokenList,
+    whitelist,
     breakdown.states.farm.byToken,
     breakdown.states.circulating.byToken,
     getBalances,
     tokenPrices,
     includeZero,
-    whitelist,
+    tokenMap,
   ]);
 
   return balanceData;

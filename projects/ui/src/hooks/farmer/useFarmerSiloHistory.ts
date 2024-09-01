@@ -10,14 +10,14 @@ import useSeasonsQuery, {
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useInterpolateDeposits from '~/hooks/farmer/useInterpolateDeposits';
 import useInterpolateStalk from '~/hooks/farmer/useInterpolateStalk';
-import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
+import { useFarmerBalancesL1Breakdown } from './useFarmerBalancesBreakdown';
 
 const useFarmerSiloHistory = (
   account: string | undefined,
   itemizeByToken: boolean = false,
   includeStalk: boolean = false
 ) => {
-  const breakdown = useFarmerBalancesBreakdown();
+  const breakdown = useFarmerBalancesL1Breakdown(); // TODO: Fix me
 
   /// Data
   const siloRewardsQuery = useFarmerSiloRewardsQuery({
