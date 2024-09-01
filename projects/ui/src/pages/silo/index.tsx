@@ -50,7 +50,6 @@ import Row from '~/components/Common/Row';
 import { displayFullBN, selectCratesForEnrootNew, transform } from '~/util';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import Centered from '~/components/Common/ZeroState/Centered';
-import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useAccount from '~/hooks/ledger/useAccount';
 import useQuoteAgnostic from '~/hooks/ledger/useQuoteAgnostic';
 import GasTag from '~/components/Common/GasTag';
@@ -129,7 +128,6 @@ const RewardsBar: FC<{
 
   const [refetchFarmerSilo] = useFetchFarmerSilo();
   const account = useAccount();
-  const migrationNeeded = useMigrationNeeded();
   const enrootData = useMemo(
     () => selectCratesForEnrootNew(sdk, balances, getBDV),
     [balances, getBDV, sdk]
@@ -348,11 +346,11 @@ const RewardsBar: FC<{
   const [gas, isEstimatingGas, estimateGas] = useQuoteAgnostic(quoteGas);
 
   useEffect(() => {
-    if (open && migrationNeeded === false) {
+    if (open) {
       estimateGas();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claimState, migrationNeeded, open]);
+  }, [claimState, open]);
 
   const handleSubmit = useCallback(async () => {
     let txToast;
@@ -455,219 +453,178 @@ const RewardsBar: FC<{
             p: 1.5,
           }}
         >
-          {migrationNeeded ? (
-            <Grid
-              container
-              spacing={0}
-              direction="column"
-              alignItems="center"
-              sx={{ background: '#fdf4e7' }}
-            >
-              <Box component="section" sx={{ p: 2, minWidth: '400px' }}>
-                <Typography variant="h2" align="center">
-                  Migration Required
-                </Typography>
-                <br />
-                <Typography variant="body1" align="center">
-                  In order to claim your Silo rewards, you must first migrate to
-                  Silo V3.
-                </Typography>
-                <br />
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h4">Mow</Typography>
+              <Box>
+                <FormGroup>
+                  {tokens.map((token) => {
+                    const amount =
+                      farmerSilo.stalk.grownByToken.get(token) ||
+                      sdk.tokens.STALK.amount(0);
+                    const disabled = amount.eq(0);
+                    const required =
+                      // Mowing BEAN is required if `plant` is checked
+                      (claimState.plant &&
+                        token.address === sdk.tokens.BEAN.address) ||
+                      // Mowing an Unripe token is required if `enroot` is checked and
+                      // we have enrootable crates for that token
+                      (claimState.enroot &&
+                        enrootData[token.address]?.crates.length > 0);
+                    return (
+                      <FormControlLabelStat
+                        key={token.address}
+                        label={`Grown Stalk from ${token.symbol}`}
+                        stat={disabled ? 0 : displayFullBN(amount, 2, 0, true)}
+                        disabled={disabled || required}
+                        checked={
+                          disabled ? false : claimState.mow.has(token.address)
+                        }
+                        onChange={(e: any) => {
+                          setClaimState((prevState) => {
+                            // Planting requires mowing BEAN
+                            if (required) {
+                              return prevState;
+                            }
+
+                            const newMow = new Set(prevState.mow);
+                            e.target.checked
+                              ? newMow.add(token.address)
+                              : newMow.delete(token.address);
+
+                            return {
+                              ...prevState,
+                              mow: newMow,
+                            };
+                          });
+                        }}
+                      />
+                    );
+                  })}
+                </FormGroup>
               </Box>
             </Grid>
-          ) : (
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h4">Mow</Typography>
+            <Grid item xs={12} md={4}>
+              <Stack spacing={1.5}>
                 <Box>
-                  <FormGroup>
-                    {tokens.map((token) => {
-                      const amount =
-                        farmerSilo.stalk.grownByToken.get(token) ||
-                        sdk.tokens.STALK.amount(0);
-                      const disabled = amount.eq(0);
-                      const required =
-                        // Mowing BEAN is required if `plant` is checked
-                        (claimState.plant &&
-                          token.address === sdk.tokens.BEAN.address) ||
-                        // Mowing an Unripe token is required if `enroot` is checked and
-                        // we have enrootable crates for that token
-                        (claimState.enroot &&
-                          enrootData[token.address]?.crates.length > 0);
-                      return (
-                        <FormControlLabelStat
-                          key={token.address}
-                          label={`Grown Stalk from ${token.symbol}`}
-                          stat={
-                            disabled ? 0 : displayFullBN(amount, 2, 0, true)
-                          }
-                          disabled={disabled || required}
-                          checked={
-                            disabled ? false : claimState.mow.has(token.address)
-                          }
-                          onChange={(e: any) => {
-                            setClaimState((prevState) => {
-                              // Planting requires mowing BEAN
-                              if (required) {
-                                return prevState;
-                              }
-
-                              const newMow = new Set(prevState.mow);
-                              e.target.checked
-                                ? newMow.add(token.address)
-                                : newMow.delete(token.address);
-
-                              return {
-                                ...prevState,
-                                mow: newMow,
-                              };
-                            });
-                          }}
-                        />
-                      );
-                    })}
+                  <Typography variant="h4">Plant</Typography>
+                  {/* <Typography variant="bodySmall">Claim your seignorage.</Typography> */}
+                  <FormGroup sx={{ position: 'relative' }}>
+                    <Connector top={29} />
+                    <Connector top={69.5} />
+                    <FormControlLabelStat
+                      label="Earned Beans"
+                      stat={displayFullBN(farmerSilo.beans.earned, 2, 0, true)}
+                      disabled={farmerSilo.beans.earned.lte(0)}
+                      checked={claimState.plant}
+                      onChange={onChangePlant}
+                    />
+                    <FormControlLabelStat
+                      label="Earned Stalk"
+                      stat={displayFullBN(farmerSilo.stalk.earned, 2, 0, true)}
+                      disabled={farmerSilo.beans.earned.lte(0)}
+                      checked={claimState.plant}
+                      onChange={onChangePlant}
+                    />
+                    <FormControlLabelStat
+                      label="Plantable Seeds"
+                      stat={displayFullBN(farmerSilo.seeds.earned, 2, 0, true)}
+                      disabled={farmerSilo.seeds.earned.lte(0)}
+                      checked={claimState.plant}
+                      onChange={onChangePlant}
+                    />
                   </FormGroup>
                 </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Stack spacing={1.5}>
-                  <Box>
-                    <Typography variant="h4">Plant</Typography>
-                    {/* <Typography variant="bodySmall">Claim your seignorage.</Typography> */}
-                    <FormGroup sx={{ position: 'relative' }}>
-                      <Connector top={29} />
-                      <Connector top={69.5} />
-                      <FormControlLabelStat
-                        label="Earned Beans"
-                        stat={displayFullBN(
-                          farmerSilo.beans.earned,
-                          2,
-                          0,
-                          true
-                        )}
-                        disabled={farmerSilo.beans.earned.lte(0)}
-                        checked={claimState.plant}
-                        onChange={onChangePlant}
-                      />
-                      <FormControlLabelStat
-                        label="Earned Stalk"
-                        stat={displayFullBN(
-                          farmerSilo.stalk.earned,
-                          2,
-                          0,
-                          true
-                        )}
-                        disabled={farmerSilo.beans.earned.lte(0)}
-                        checked={claimState.plant}
-                        onChange={onChangePlant}
-                      />
-                      <FormControlLabelStat
-                        label="Plantable Seeds"
-                        stat={displayFullBN(
-                          farmerSilo.seeds.earned,
-                          2,
-                          0,
-                          true
-                        )}
-                        disabled={farmerSilo.seeds.earned.lte(0)}
-                        checked={claimState.plant}
-                        onChange={onChangePlant}
-                      />
-                    </FormGroup>
-                  </Box>
-                  <Box>
-                    <Typography variant="h4">Enroot</Typography>
-                    <FormGroup sx={{ position: 'relative' }}>
-                      <Connector top={29} />
-                      <FormControlLabelStat
-                        label="Revitalized Stalk"
-                        stat={displayFullBN(
-                          revitalizedStalk || ZERO_BN,
-                          2,
-                          0,
-                          true
-                        )}
-                        disabled={!revitalizedStalk || revitalizedStalk.lte(0)}
-                        checked={claimState.enroot}
-                        onChange={onChangeEnroot}
-                      />
-                      <FormControlLabelStat
-                        label="Revitalized Seeds"
-                        stat={displayFullBN(
-                          revitalizedSeeds || ZERO_BN,
-                          2,
-                          0,
-                          true
-                        )}
-                        disabled={!revitalizedSeeds || revitalizedSeeds.lte(0)}
-                        checked={claimState.enroot}
-                        onChange={onChangeEnroot}
-                      />
-                    </FormGroup>
-                  </Box>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Stack spacing={1}>
-                  <TokenOutput danger={false}>
-                    {empty && (
-                      <Centered>
-                        <Typography variant="body1" color="text.secondary">
-                          Select Silo rewards to claim
-                        </Typography>
-                      </Centered>
-                    )}
-                    <TokenOutput.Row
-                      token={sdk.tokens.BEAN}
-                      label="Deposited BEAN"
-                      amount={output.get(sdk.tokens.BEAN)!}
-                      hideIfZero
+                <Box>
+                  <Typography variant="h4">Enroot</Typography>
+                  <FormGroup sx={{ position: 'relative' }}>
+                    <Connector top={29} />
+                    <FormControlLabelStat
+                      label="Revitalized Stalk"
+                      stat={displayFullBN(
+                        revitalizedStalk || ZERO_BN,
+                        2,
+                        0,
+                        true
+                      )}
+                      disabled={!revitalizedStalk || revitalizedStalk.lte(0)}
+                      checked={claimState.enroot}
+                      onChange={onChangeEnroot}
                     />
-                    <TokenOutput.Row
-                      token={sdk.tokens.STALK}
-                      amount={output.get(sdk.tokens.STALK)!}
-                      hideIfZero
+                    <FormControlLabelStat
+                      label="Revitalized Seeds"
+                      stat={displayFullBN(
+                        revitalizedSeeds || ZERO_BN,
+                        2,
+                        0,
+                        true
+                      )}
+                      disabled={!revitalizedSeeds || revitalizedSeeds.lte(0)}
+                      checked={claimState.enroot}
+                      onChange={onChangeEnroot}
                     />
-                    <TokenOutput.Row
-                      token={sdk.tokens.SEEDS}
-                      amount={output.get(sdk.tokens.SEEDS)!}
-                      hideIfZero
-                    />
-                  </TokenOutput>
-                  <Button
-                    disabled={empty || isImpersonating}
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={handleSubmit}
-                  >
-                    {isImpersonating
-                      ? 'Impersonating Account'
-                      : 'Claim Rewards'}
-                  </Button>
-                  <Row justifyContent="flex-end" spacing={0.5}>
-                    {isEstimatingGas ? (
-                      <CircularProgress thickness={3} size={16} />
-                    ) : (
-                      <div />
-                    )}
-                    <Chip
-                      variant="filled"
-                      color="secondary"
-                      label={
-                        <GasTag
-                          px={0}
-                          gasLimit={BigNumberJS(
-                            Math.floor((gas?.toNumber() || 0) * gasMultiplier)
-                          )}
-                        />
-                      }
-                    />
-                  </Row>
-                </Stack>
-              </Grid>
+                  </FormGroup>
+                </Box>
+              </Stack>
             </Grid>
-          )}
+            <Grid item xs={12} md={4}>
+              <Stack spacing={1}>
+                <TokenOutput danger={false}>
+                  {empty && (
+                    <Centered>
+                      <Typography variant="body1" color="text.secondary">
+                        Select Silo rewards to claim
+                      </Typography>
+                    </Centered>
+                  )}
+                  <TokenOutput.Row
+                    token={sdk.tokens.BEAN}
+                    label="Deposited BEAN"
+                    amount={output.get(sdk.tokens.BEAN)!}
+                    hideIfZero
+                  />
+                  <TokenOutput.Row
+                    token={sdk.tokens.STALK}
+                    amount={output.get(sdk.tokens.STALK)!}
+                    hideIfZero
+                  />
+                  <TokenOutput.Row
+                    token={sdk.tokens.SEEDS}
+                    amount={output.get(sdk.tokens.SEEDS)!}
+                    hideIfZero
+                  />
+                </TokenOutput>
+                <Button
+                  disabled={empty || isImpersonating}
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={handleSubmit}
+                >
+                  {isImpersonating ? 'Impersonating Account' : 'Claim Rewards'}
+                </Button>
+                <Row justifyContent="flex-end" spacing={0.5}>
+                  {isEstimatingGas ? (
+                    <CircularProgress thickness={3} size={16} />
+                  ) : (
+                    <div />
+                  )}
+                  <Chip
+                    variant="filled"
+                    color="secondary"
+                    label={
+                      <GasTag
+                        px={0}
+                        gasLimit={BigNumberJS(
+                          Math.floor((gas?.toNumber() || 0) * gasMultiplier)
+                        )}
+                      />
+                    }
+                  />
+                </Row>
+              </Stack>
+            </Grid>
+          </Grid>
         </Box>
       )}
     </Card>

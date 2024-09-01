@@ -7,7 +7,6 @@ import FieldActions from '~/components/Field/Actions';
 import TableCard from '~/components/Common/TableCard';
 import { displayBN, displayFullBN } from '~/util';
 import FieldOverview from '~/components/Field/FieldOverview';
-import { PODS } from '../constants/tokens';
 import useAccount from '~/hooks/ledger/useAccount';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
@@ -19,6 +18,7 @@ import {
 import { FC } from '~/types';
 import { XXLWidth } from '~/components/App/muiTheme';
 import { useAppSelector } from '~/state';
+import { PODS } from '../constants/tokens';
 
 export const podlineColumns: DataGridProps['columns'] = [
   {
@@ -57,8 +57,8 @@ const FieldPage: FC<{}> = () => {
   const state = !account
     ? 'disconnected'
     : farmerField.loading
-    ? 'loading'
-    : 'ready';
+      ? 'loading'
+      : 'ready';
   const harvestablePods = farmerField.harvestablePods;
 
   const rows: any[] = useMemo(() => {
