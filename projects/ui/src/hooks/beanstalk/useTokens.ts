@@ -1,14 +1,17 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Token, ERC20Token, BeanstalkToken, NativeToken } from '@beanstalk/sdk';
 import LegacyToken, {
   ERC20Token as LegacyERC20Token,
   BeanstalkToken as LegacyBeanstalkToken,
   NativeToken as LegacyNativeToken,
 } from '~/classes/Token';
-import { TokenMap } from '~/constants';
+import { ChainConstant, SupportedChainId, TokenMap } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import { useAppSelector } from '~/state';
 import { BeanPools } from '~/state/bean/pools';
+import * as LegacyTokens from '~/constants/tokens';
+import { isSdkToken } from '~/util';
+import useChainId from '../chain/useChainId';
 
 // -------------------------
 // Token Instances
@@ -151,8 +154,9 @@ export const useWhitelistedTokens = (sortByLiquidity?: boolean) => {
       acc[token.address] = token;
       return acc;
     }, {});
+    const addresses = whitelist.map((t) => t.address);
 
-    return { whitelist, tokenMap };
+    return { whitelist, tokenMap, addresses };
   }, [sdk, pools, sortByLiquidity]);
 };
 
@@ -210,3 +214,56 @@ function getWhitelistSorted(
     return 0;
   });
 }
+
+const i = SupportedChainId.ARBITRUM;
+
+const oldTokenMap: Record<string, ChainConstant<LegacyToken> | LegacyToken> = {
+  [LegacyTokens.ETH[i].symbol]: LegacyTokens.ETH,
+  [LegacyTokens.BEAN[i].symbol]: LegacyTokens.BEAN,
+  [LegacyTokens.UNRIPE_BEAN[i].symbol]: LegacyTokens.UNRIPE_BEAN,
+  [LegacyTokens.UNRIPE_BEAN_WSTETH[i].symbol]: LegacyTokens.UNRIPE_BEAN_WSTETH,
+  [LegacyTokens.WETH[i].symbol]: LegacyTokens.WETH,
+  [LegacyTokens.DAI[i].symbol]: LegacyTokens.DAI,
+  [LegacyTokens.USDC[i].symbol]: LegacyTokens.USDC,
+  [LegacyTokens.USDT[i].symbol]: LegacyTokens.USDT,
+  [LegacyTokens.WSTETH[i].symbol]: LegacyTokens.WSTETH,
+  [LegacyTokens.WEETH[i].symbol]: LegacyTokens.WEETH,
+  [LegacyTokens.WBTC[i].symbol]: LegacyTokens.WBTC,
+  [LegacyTokens.BEAN_ETH_WELL_LP[i].symbol]: LegacyTokens.BEAN_ETH_WELL_LP,
+  [LegacyTokens.BEAN_WSTETH_WELL_LP[i].symbol]:
+    LegacyTokens.BEAN_WSTETH_WELL_LP,
+  [LegacyTokens.BEAN_WEETH_WELL_LP[i].symbol]: LegacyTokens.BEAN_WEETH_WELL_LP,
+  [LegacyTokens.BEAN_WBTC_WELL_LP[i].symbol]: LegacyTokens.BEAN_WBTC_WELL_LP,
+  [LegacyTokens.BEAN_USDC_WELL_LP[i].symbol]: LegacyTokens.BEAN_USDC_WELL_LP,
+  [LegacyTokens.BEAN_USDT_WELL_LP[i].symbol]: LegacyTokens.BEAN_USDT_WELL_LP,
+  [LegacyTokens.STALK.symbol]: LegacyTokens.STALK,
+  [LegacyTokens.SEEDS.symbol]: LegacyTokens.SEEDS,
+  [LegacyTokens.PODS.symbol]: LegacyTokens.PODS,
+  [LegacyTokens.SPROUTS.symbol]: LegacyTokens.SPROUTS,
+  [LegacyTokens.RINSABLE_SPROUTS.symbol]: LegacyTokens.RINSABLE_SPROUTS,
+  [LegacyTokens.BEAN_CRV3_LP[1].symbol]: LegacyTokens.BEAN_CRV3_LP,
+  [LegacyTokens.CRV3[1].symbol]: LegacyTokens.CRV3,
+  [LegacyTokens.BEAN_ETH_UNIV2_LP[1].symbol]: LegacyTokens.BEAN_ETH_UNIV2_LP,
+  [LegacyTokens.BEAN_LUSD_LP[1].symbol]: LegacyTokens.BEAN_LUSD_LP,
+  [LegacyTokens.LUSD[1].symbol]: LegacyTokens.LUSD,
+} as const;
+
+export const useGetLegacyToken = () => {
+  const chainId = useChainId() || SupportedChainId.ARBITRUM;
+
+  const getLegacyToken = useCallback(
+    (token: TokenInstance): LegacyToken => {
+      if (!isSdkToken(token)) return token;
+
+      const oldToken = oldTokenMap[token.symbol];
+      if (!oldToken) {
+        throw new Error(`getLegacyToken: ${token.symbol} could not found`);
+      }
+      if (oldToken instanceof LegacyToken) return oldToken;
+      return oldToken[chainId];
+    },
+    [chainId]
+  );
+
+  return getLegacyToken;
+};
