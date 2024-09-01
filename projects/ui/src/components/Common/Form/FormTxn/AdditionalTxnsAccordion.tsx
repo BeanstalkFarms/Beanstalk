@@ -27,9 +27,8 @@ const sortOrder: { [key in FormTxn]: number } = {
   [FormTxn.MOW]: 0,
   [FormTxn.PLANT]: 1,
   [FormTxn.ENROOT]: 2,
-  [FormTxn.CLAIM]: 3,
-  [FormTxn.HARVEST]: 4,
-  [FormTxn.RINSE]: 5,
+  [FormTxn.HARVEST]: 3,
+  [FormTxn.RINSE]: 4,
 };
 
 const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
@@ -80,6 +79,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
     const copy = new Set([...local]);
     const affected = new Set([
       item,
+      // @ts-ignore TODO: fix me
       ...([FormTxnBundler.implied[item]] || []),
     ] as FormTxn[]);
 
@@ -91,6 +91,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
       });
 
       [...filtered].forEach((remaining) => {
+        // @ts-ignore TODO: fix me
         ([FormTxnBundler.implied[remaining]] || []).forEach((k) => {
           if (k && affected.has(k)) {
             affected.delete(k);
@@ -121,6 +122,7 @@ const AdditionalTxnsAccordion: React.FC<Props> = ({ filter }) => {
   const handleMouseOver = useCallback(
     (item: FormTxn) => {
       const copy = new Set<FormTxn>();
+      // @ts-ignore TODO: fix me
       const affected = [...([FormTxnBundler.implied[item]] || [])] as FormTxn[];
       copy.add(item);
       affected.forEach((option) => {

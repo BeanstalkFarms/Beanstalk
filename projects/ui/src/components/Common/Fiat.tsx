@@ -2,8 +2,7 @@ import React from 'react';
 import BigNumber from 'bignumber.js';
 import { Box } from '@mui/material';
 import logo from '~/img/tokens/bean-logo.svg';
-import { Token as LegacyToken } from '~/classes';
-import { Token, TokenValue } from '@beanstalk/sdk';
+import { TokenValue } from '@beanstalk/sdk';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
 import useSetting from '~/hooks/app/useSetting';
 import usePrice from '~/hooks/beanstalk/usePrice';
@@ -12,11 +11,12 @@ import { ZERO_BN } from '~/constants';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 
 const Fiat: FC<{
   /* The USD value of `amount`. If provided, we don't try to derive via `siloTokenToFiat`. */
   value?: BigNumber | TokenValue;
-  token?: LegacyToken | Token;
+  token?: TokenInstance;
   amount: BigNumber | TokenValue | undefined;
   allowNegative?: boolean;
   chop?: boolean;

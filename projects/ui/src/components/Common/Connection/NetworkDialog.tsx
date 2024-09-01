@@ -12,15 +12,24 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { SWITCH_NETWORK_ERRORS } from '~/constants/wallets';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
-import { ETH, ARB } from '~/constants/tokens';
 import Row from '~/components/Common/Row';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
+import { Address } from '@beanstalk/sdk-core';
 import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
 
-const CHAIN_ID_TO_LOGO: Record<number, string | undefined> = {
-  [SupportedChainId.MAINNET]: ETH[1].logo,
-  [SupportedChainId.LOCALHOST]: ETH[1].logo,
-  [SupportedChainId.ARBITRUM]: ARB[1].logo,
-  [SupportedChainId.LOCALHOST_ARBITRUM]: ARB[1].logo,
+const useChainIdToLogo = () => {
+  const { ETH, ARB } = useTokens();
+
+  return useCallback(
+    (_chainId: SupportedChainId | undefined) => {
+      const chainId = _chainId || Address.defaultChainId;
+      if (chainId === SupportedChainId.LOCALHOST || SupportedChainId.MAINNET) {
+        return ETH.logo;
+      }
+      return ARB.logo;
+    },
+    [ETH, ARB]
+  );
 };
 
 const NetworkDialog: React.FC<
@@ -32,6 +41,8 @@ const NetworkDialog: React.FC<
   /// Theme
   const theme = useTheme();
   const isMedium = useMediaQuery(theme.breakpoints.down('md'));
+
+  const getLogoWithChainId = useChainIdToLogo();
 
   ///
   const { chain: _chain } = useAccount();
@@ -90,10 +101,7 @@ const NetworkDialog: React.FC<
                   </Typography>
                 ) : (
                   <img
-                    src={
-                      CHAIN_ID_TO_LOGO[chain.id as SupportedChainId] ||
-                      ARB[1].logo
-                    }
+                    src={getLogoWithChainId(chain.id)}
                     alt=""
                     style={{ height: 35 }}
                   />
