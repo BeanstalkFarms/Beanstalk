@@ -1,6 +1,7 @@
+/* eslint-disable no-redeclare */
 import BigNumber from 'bignumber.js';
-import { Token, TokenValue } from '@beanstalk/sdk';
-import TokenOld from '~/classes/Token';
+import { NativeToken, Token, TokenValue } from '@beanstalk/sdk';
+import LegacyToken, { NativeToken as LegacyNativeToken } from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { TokenInstance } from '~/hooks/beanstalk/useTokens';
@@ -103,7 +104,7 @@ export function displayFullBN(
  */
 export function displayTokenAmount(
   _amount: BigNumber | TokenValue,
-  token: TokenOld | Token,
+  token: LegacyToken | Token,
   config: {
     allowNegative?: boolean;
     showName?: boolean;
@@ -278,12 +279,44 @@ export function getTokenIndex(token: { symbol: string; address: string }) {
   return token.address;
 }
 
-export type TokenIsh = string | Token | TokenOld | undefined;
+export type TokenIsh = string | Token | LegacyToken | undefined;
 
-export type TokenClassInstance = Token | TokenOld;
+export type TokenClassInstance = Token | LegacyToken;
 
-export function isTokenInstance(tk: TokenIsh): tk is TokenClassInstance {
-  return tk instanceof Token || tk instanceof TokenOld;
+/**
+ * @param tk
+ * returns true if token is instance of a Token from either UI or SDK classes
+ */
+export function isTokenInstance(tk: TokenIsh): tk is Token;
+export function isTokenInstance(tk: TokenIsh): tk is LegacyToken;
+export function isTokenInstance(tk: TokenIsh): boolean {
+  return tk instanceof Token || tk instanceof LegacyToken;
+}
+
+/**
+ * @param tk
+ * returns true if token is instance of NativeToken from either UI or SDK classes
+ */
+export function isNativeToken(tk: TokenIsh): tk is LegacyNativeToken;
+export function isNativeToken(tk: TokenIsh): tk is NativeToken;
+export function isNativeToken(tk: TokenIsh): boolean {
+  return tk instanceof LegacyNativeToken || tk instanceof NativeToken;
+}
+
+/**
+ * @param tk
+ * returns true if token is instance of Token from SDK
+ */
+export function isSdkToken(tk: TokenIsh): tk is Token {
+  return tk instanceof Token;
+}
+
+/**
+ * @param tk
+ * returns true if token is instance of LegacyToken
+ */
+export function isLegacyToken(tk: TokenIsh): tk is LegacyToken {
+  return tk instanceof LegacyToken;
 }
 
 /**
@@ -291,8 +324,8 @@ export function isTokenInstance(tk: TokenIsh): tk is TokenClassInstance {
  * if either string is undefined, returns false.
  */
 export function tokenIshEqual(
-  a: string | Token | TokenOld | undefined,
-  b: string | Token | TokenOld | undefined
+  a: string | Token | LegacyToken | undefined,
+  b: string | Token | LegacyToken | undefined
 ): boolean {
   if (!exists(a) || !exists(b)) return false;
   const addressesEqual = stringsEqual(

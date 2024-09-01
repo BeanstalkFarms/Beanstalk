@@ -62,6 +62,10 @@ const setTokenMetadatas = (sdk: BeanstalkSDK) => {
     logo: beathWstethWellLPLogo,
   });
   sdk.tokens.UNRIPE_BEAN_WSTETH.setMetadata({ logo: unripeBeanWstethLogoUrl });
+  sdk.tokens.BEAN_WEETH_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
+  sdk.tokens.BEAN_WBTC_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
+  sdk.tokens.BEAN_USDC_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
+  sdk.tokens.BEAN_USDT_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
 
   // ERC-20 tokens
   sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
