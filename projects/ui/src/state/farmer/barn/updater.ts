@@ -10,12 +10,14 @@ import { castFertilizerBalance } from '~/state/farmer/barn';
 import { SPROUTS } from '~/constants/tokens';
 import { useFertilizerBalancesLazyQuery } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
+import useChainState from '~/hooks/chain/useChainState';
 import { resetFarmerBarn, updateFarmerBarn } from './actions';
 
 export const useFetchFarmerBarn = () => {
   /// Helpers
   const dispatch = useDispatch();
   const replantId = useChainConstant(REPLANT_INITIAL_ID);
+  const { isEthereum } = useChainState();
   const account = useAccount();
   const sdk = useSdk();
 
@@ -25,7 +27,7 @@ export const useFetchFarmerBarn = () => {
   const fertContract = sdk.contracts.fertilizer;
   const beanstalk = sdk.contracts.beanstalk;
 
-  const initialized = fertContract && account;
+  const initialized = fertContract && account && !isEthereum;
 
   /// Handlers
   const fetch = useCallback(async () => {

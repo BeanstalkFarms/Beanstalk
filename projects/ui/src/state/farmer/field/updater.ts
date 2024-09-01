@@ -4,6 +4,7 @@ import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import useSdk from '~/hooks/sdk';
 import { transform } from '~/util/BigNumber';
+import useChainState from '~/hooks/chain/useChainState';
 import {
   resetFarmerField,
   updateFarmerField,
@@ -13,6 +14,7 @@ import {
 export const useFetchFarmerField = () => {
   /// Helpers
   const dispatch = useDispatch();
+  const { isEthereum } = useChainState();
 
   /// Contracts
   const sdk = useSdk();
@@ -22,7 +24,7 @@ export const useFetchFarmerField = () => {
 
   /// Handlers
   const fetch = useCallback(async () => {
-    if (account) {
+    if (account && !isEthereum) {
       const data = await sdk.field.getParsedPlotsFromAccount(account);
       if (!data) return;
 
@@ -49,7 +51,7 @@ export const useFetchFarmerField = () => {
         })
       );
     }
-  }, [sdk, account, dispatch]);
+  }, [sdk, account, isEthereum, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerField] CLEAR');
