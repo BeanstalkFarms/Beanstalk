@@ -26,7 +26,7 @@ export class Field {
     );
   }
 
-  public async getParsedPlotsFromAccount(account: string, fieldId: BigNumberish) {
+  public async getParsedPlotsFromAccount(account: string, fieldId: BigNumberish = "0") {
     const [plots, harvestableIndex] = await Promise.all([
       this.getPlotsFromAccount(account, fieldId),
       this.getHarvestableIndex(fieldId)
