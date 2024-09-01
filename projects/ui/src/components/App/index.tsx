@@ -125,9 +125,10 @@ function Mainnet() {
             justifyContent: 'center',
           }}
         >
-          <Routes>
+          <EthMainnet />
+          {/* <Routes>
             <Route path="/*" element={<EthMainnet />} />
-          </Routes>
+          </Routes> */}
         </Stack>
       </Box>
     </>
@@ -264,9 +265,9 @@ function Arbitrum() {
 }
 
 export default function App() {
-  const { isEthereum } = useChainState();
+  const { isArbitrum } = useChainState();
 
-  if (isEthereum) {
+  if (!isArbitrum) {
     return <Mainnet />;
   }
 

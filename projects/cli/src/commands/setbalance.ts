@@ -19,8 +19,15 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
       "USDC",
       "DAI",
       "CRV3",
-      "BEAN3CRV",
+      "wstETH",
+      "WBTC",
+      "weETH",
       "BEANWETH",
+      "BEANwstETH",
+      "BEANweETH",
+      "BEANWBTC",
+      "BEANUSDC",
+      "BEANUSDT",
       "urBEAN",
       "urBEANwstETH",
       "ROOT"
@@ -33,10 +40,15 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
       process.exit(-1);
     }
     let t = sdk.tokens[symbol] as Token;
-    if (symbol === "urBEAN") t = sdk.tokens.UNRIPE_BEAN;
-    if (symbol === "urBEANwstETH") t = sdk.tokens.UNRIPE_BEAN_WSTETH;
-    if (symbol === "BEAN3CRV") t = sdk.tokens.BEAN_CRV3_LP;
-    if (symbol === "BEANWETH") t = sdk.tokens.BEAN_ETH_WELL_LP;
+    if (!t) {
+      if (symbol === "urBEAN") t = sdk.tokens.UNRIPE_BEAN;
+      if (symbol === "urBEANwstETH") t = sdk.tokens.UNRIPE_BEAN_WSTETH;
+      if (symbol === "BEANWETH") t = sdk.tokens.BEAN_ETH_WELL_LP;
+      if (symbol === "BEANweETH") t = sdk.tokens.BEAN_WEETH_WELL_LP;
+      if (symbol === "BEANWBTC") t = sdk.tokens.BEAN_WBTC_WELL_LP;
+      if (symbol === "BEANUSDC") t = sdk.tokens.BEAN_USDC_WELL_LP;
+      if (symbol === "BEANUSDT") t = sdk.tokens.BEAN_USDT_WELL_LP;
+    }
     if (typeof chain[`set${symbol}Balance`] !== "function")
       throw new Error(`${symbol} is not a valid token or the method ${chalk.bold.whiteBright("")}`);
 
