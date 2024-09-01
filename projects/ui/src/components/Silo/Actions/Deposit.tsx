@@ -60,6 +60,7 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 // -----------------------------------------------------------------------
 
@@ -109,6 +110,7 @@ const DepositForm: FC<
   const sdk = useSdk();
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
+  const getLegacyToken = useGetLegacyToken();
 
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
@@ -130,7 +132,8 @@ const DepositForm: FC<
     whitelistedToken,
     combinedTokenState,
     getAmountsBySource(),
-    amountToBdv
+    amountToBdv,
+    getLegacyToken
   );
 
   // Memoized params to prevent infinite loop
