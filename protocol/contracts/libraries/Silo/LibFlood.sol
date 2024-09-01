@@ -62,20 +62,7 @@ library LibFlood {
             }
             return;
         } else if (!s.sys.season.raining) {
-            s.sys.season.raining = true;
-            address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
-            // Set the plenty per root equal to previous rain start.
-            uint32 season = s.sys.season.current;
-            uint32 rainstartSeason = s.sys.season.rainStart;
-            for (uint i; i < wells.length; i++) {
-                s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
-            }
-            s.sys.season.rainStart = s.sys.season.current;
-            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
-            s.sys.rain.roots = s.sys.silo.roots;
-
-            // upon rain, set beanToMaxLpGpPerBdvRatio to zero, to encourage converts down before starting to flood
-            s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
+            startRain();
         } else {
             // flood podline first, because it checks current Bean supply
             floodPodline();
@@ -102,6 +89,28 @@ library LibFlood {
                 s.sys.season.lastSopSeason = s.sys.season.current;
             }
         }
+    }
+
+    /**
+     * @notice Handles any system-level logic that occurs when it starts raining.
+     */
+    function startRain() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.sys.season.raining = true;
+        address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
+        // Set the plenty per root equal to previous rain start.
+        uint32 season = s.sys.season.current;
+        uint32 rainstartSeason = s.sys.season.rainStart;
+        for (uint i; i < wells.length; i++) {
+            s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
+        }
+        s.sys.season.rainStart = s.sys.season.current;
+        s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
+        s.sys.rain.roots = s.sys.silo.roots;
+
+        // upon rain, set beanToMaxLpGpPerBdvRatio to zero, to encourage converts down before starting to flood
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
     }
 
     /**
