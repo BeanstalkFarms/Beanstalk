@@ -1,4 +1,4 @@
-import { BeanstalkSDK, DataSource, TestUtils } from "@beanstalk/sdk";
+import { BeanstalkSDK, ChainId, DataSource, TestUtils } from "@beanstalk/sdk";
 import { Provider } from "@beanstalk/sdk/dist/types/lib/BeanstalkSDK";
 import { ethers } from "ethers";
 
@@ -6,7 +6,7 @@ const RPC_URL = "http://127.0.0.1:8545";
 
 const network = {
   name: "local",
-  chainId: 41337,
+  chainId: ChainId.LOCALHOST,
   _defaultProvider: () => new ethers.providers.JsonRpcProvider(RPC_URL)
 };
 // const RPC_URL = "https://anvil1.bean.money:443"
