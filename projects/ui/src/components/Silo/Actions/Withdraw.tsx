@@ -53,7 +53,6 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import copy from '~/constants/copy';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
-import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 // -----------------------------------------------------------------------
 
@@ -113,9 +112,6 @@ const WithdrawForm: FC<
     ],
     [pool, sdk.tokens, whitelistedToken]
   );
-
-  const isUnripeLP =
-    whitelistedToken.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
 
   const handleQuote = useCallback<
     QuoteHandlerWithParams<WithdrawQuoteHandlerParams>
@@ -369,12 +365,6 @@ const WithdrawForm: FC<
             </Box>
           </Stack>
         ) : null}
-        {isUnripeLP && (
-          <WarningAlert>
-            Note that {whitelistedToken.symbol} must first be Converted to{' '}
-            {sdk.tokens.UNRIPE_BEAN.symbol} before Chopping.
-          </WarningAlert>
-        )}
         <SmartSubmitButton
           loading={isSubmitting}
           disabled={!isReady || !isLPReady || isSubmitting}
