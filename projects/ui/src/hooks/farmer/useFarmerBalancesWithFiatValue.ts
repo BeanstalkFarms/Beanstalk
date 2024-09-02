@@ -6,19 +6,26 @@ import { ERC20Token, NativeToken } from '@beanstalk/sdk';
 import useDataFeedTokenPrices from '../beanstalk/useDataFeedTokenPrices';
 import useFarmerBalances from './useFarmerBalances';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
-import { useWhitelistedTokens } from '../beanstalk/useTokens';
+import { useSupportedBalanceTokens } from '../beanstalk/useTokens';
 
 const sortMap = {
   BEAN: 0,
-  BEAN3CRV: 1,
-  urBEAN: 2,
-  urBEAN3CRV: 3,
-  ETH: 4,
-  WETH: 5,
-  '3CRV': 6,
-  DAI: 7,
-  USDC: 8,
-  USDT: 9,
+  BEANETH: 1,
+  BEANwstETH: 2,
+  BEANweETH: 3,
+  BEANWBTC: 4,
+  BEANUSDC: 5,
+  BEANUSDT: 6,
+  urBEAN: 7,
+  urBEANwstETH: 8,
+  ETH: 9,
+  WETH: 10,
+  wstETH: 11,
+  weETH: 12,
+  WBTC: 13,
+  USDC: 14,
+  USDT: 15,
+  DAI: 16,
 } as const;
 
 export type TokenBalanceWithFiatValue = {
@@ -42,7 +49,7 @@ const sortTokens = (
  */
 export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
   // constants
-  const { whitelist, tokenMap } = useWhitelistedTokens();
+  const { tokens, tokenMap } = useSupportedBalanceTokens();
 
   // data
   const breakdown = useFarmerBalancesBreakdown();
@@ -62,7 +69,7 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
     const internal: TokenMap<TokenBalanceWithFiatValue> = {};
     const external: TokenMap<TokenBalanceWithFiatValue> = {};
 
-    whitelist.forEach((token) => {
+    tokens.forEach((token) => {
       const balance = getBalances(token.address);
       const value = tokenPrices[token.address] ?? ZERO_BN;
       if (balance.farm?.gt(0) || includeZero) {
@@ -111,7 +118,7 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
       external: _external,
     };
   }, [
-    whitelist,
+    tokens,
     breakdown.states.farm.byToken,
     breakdown.states.circulating.byToken,
     getBalances,

@@ -10,7 +10,7 @@ import useSdk from '~/hooks/sdk';
 import { useAppSelector } from '~/state';
 import { BeanPools } from '~/state/bean/pools';
 import * as LegacyTokens from '~/constants/tokens';
-import { isSdkToken } from '~/util';
+import { getTokenIndex, isSdkToken } from '~/util';
 import useChainState from '../chain/useChainState';
 
 // -------------------------
@@ -57,6 +57,8 @@ export const useTokens = (): {
   BEAN_USDC_WELL_LP: ERC20Token;
   BEAN_USDT_WELL_LP: ERC20Token;
   erc20TokenMap: TokenMap<ERC20Token>;
+  erc20Tokens: ERC20Token[];
+  addresses: string[];
 } => {
   const sdk = useSdk();
 
@@ -88,16 +90,15 @@ export const useTokens = (): {
       TokenMap<ERC20Token>
     >((acc, token) => {
       if (token.equals(tokens.ETH)) return acc;
-      acc[token.address] = token as ERC20Token;
+      acc[getTokenIndex(token)] = token as ERC20Token;
       return acc;
     }, {});
 
-    return { ...balanceTokens, erc20TokenMap };
-  }, [sdk]);
-};
+    const erc20Tokens = Object.values(erc20TokenMap);
+    const addresses = Object.values(balanceTokens).map((t) => t.address);
 
-const useWellUnderlyingTokens = () => {
-  const sdk = useSdk();
+    return { ...balanceTokens, erc20TokenMap, erc20Tokens, addresses };
+  }, [sdk]);
 };
 
 /**
@@ -163,6 +164,24 @@ export const useWhitelistedTokens = (sortByLiquidity?: boolean) => {
 
     return { whitelist, tokenMap, addresses };
   }, [sdk, pools, sortByLiquidity]);
+};
+
+export const useSupportedBalanceTokens = () => {
+  const { erc20TokenMap, ARB } = useTokens();
+
+  return useMemo(() => {
+    const map = { ...erc20TokenMap };
+    delete map[ARB.address];
+
+    const tokens = Object.values(map);
+    const addresses = tokens.map((t) => t.address);
+
+    return {
+      tokenMap: map,
+      tokens,
+      addresses,
+    };
+  }, [erc20TokenMap, ARB]);
 };
 
 /**
