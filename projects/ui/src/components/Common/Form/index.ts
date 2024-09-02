@@ -6,12 +6,12 @@ import {
 } from '@beanstalk/sdk';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
-import { BalanceFrom } from './BalanceFromRow';
 import { QuoteHandlerResultNew } from '~/hooks/ledger/useQuoteWithParams';
 import { FormTxnBundlerInterface } from '~/lib/Txn';
+import { BalanceFrom } from './BalanceFromRow';
 
 /**
- *
+ * @deprecated
  */
 export type FormState = {
   /** */
@@ -31,6 +31,7 @@ export type FormStateWithPlotSelect = FormState & {
 };
 
 /**
+ * @deprecated
  * Fragment: A single Token stored within a form.
  */
 export type FormTokenState =

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -46,7 +46,7 @@ import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
-import "react-day-picker/dist/style.css";
+import 'react-day-picker/dist/style.css';
 
 import { FC } from '~/types';
 
@@ -62,6 +62,8 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+import useChainState from '~/hooks/chain/useChainState';
+import EthMainnet from '~/pages/mainnet';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -97,10 +99,47 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   </Toaster>
 );
 
-export default function App() {
+function Mainnet() {
+  const banner = useBanner();
+  const navHeight = useNavHeight(!!banner);
+  return (
+    <>
+      <NavBar>{null}</NavBar>
+      <Box
+        sx={{
+          bgcolor: 'background.default',
+          backgroundImage: `url(${pageBackground})`,
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'bottom center',
+          backgroundSize: '100%',
+          backgroundRepeat: 'no-repeat',
+          width: '100%',
+          minHeight: `calc(100vh - ${navHeight}px)`,
+        }}
+      >
+        <Stack
+          sx={{
+            width: '100vw',
+            minHeight: `calc(100vh - ${navHeight}px)`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <EthMainnet />
+          {/* <Routes>
+            <Route path="/*" element={<EthMainnet />} />
+          </Routes> */}
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+function Arbitrum() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
   const account = useAccount();
+
   return (
     <>
       {/* -----------------------
@@ -110,19 +149,27 @@ export default function App() {
       {/* -----------------------
        * Bean Updaters
        * ----------------------- */}
-      <PoolsUpdater />
-      <UnripeUpdater />
+      {/* price contract not working */}
+      {false && <PoolsUpdater />}
+      {false && <UnripeUpdater />}
+
       {/* -----------------------
        * Beanstalk Updaters
        * ----------------------- */}
       <SiloUpdater />
       <FieldUpdater />
-      <BarnUpdater />
       <SunUpdater />
+      <BarnUpdater />
       <MorningUpdater />
       <MorningFieldUpdater />
-      <GovernanceUpdater />
       <BeanstalkCaseUpdater />
+
+      {false && (
+        <>
+          <GovernanceUpdater />
+        </>
+      )}
+
       {/* -----------------------
        * Farmer Updaters
        * ----------------------- */}
@@ -130,8 +177,12 @@ export default function App() {
       <FarmerFieldUpdater />
       <FarmerBarnUpdater />
       <FarmerBalancesUpdater />
-      <FarmerMarketUpdater />
-      <FarmerDelegationsUpdater />
+      {false && (
+        <>
+          <FarmerMarketUpdater />
+          <FarmerDelegationsUpdater />
+        </>
+      )}
       {/* -----------------------
        * Routes & Content
        * ----------------------- */}
@@ -207,26 +258,18 @@ export default function App() {
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-          {/*
-          <Box
-            sx={{
-              position: 'fixed',
-              bottom: 0,
-              right: 0,
-              pr: 1,
-              pb: 0.4,
-              opacity: 0.6,
-              display: { xs: 'none', lg: 'block' },
-            }}
-          >
-            <Typography fontSize="small">
-              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0, 6)}{' '}
-              &middot; {sgEnvKey}
-            </Typography>
-          </Box>
-          */}
         </Box>
       </Box>
     </>
   );
+}
+
+export default function App() {
+  const { isArbitrum } = useChainState();
+
+  if (!isArbitrum) {
+    return <Mainnet />;
+  }
+
+  return <Arbitrum />;
 }

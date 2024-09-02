@@ -10,7 +10,6 @@ import {
   TokenValue,
   BeanstalkSDK,
   FarmToMode,
-  FarmFromMode,
   StepGenerator,
 } from '@beanstalk/sdk';
 import { SEEDS, STALK } from '~/constants/tokens';
@@ -33,7 +32,7 @@ import { ZERO_BN } from '~/constants';
 import { useFetchBeanstalkSilo } from '~/state/beanstalk/silo/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import useAccount from '~/hooks/ledger/useAccount';
@@ -53,6 +52,7 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import copy from '~/constants/copy';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 // -----------------------------------------------------------------------
 
@@ -99,6 +99,7 @@ const WithdrawForm: FC<
     () => sdk.pools.getPoolByLPToken(whitelistedToken),
     [sdk.pools, whitelistedToken]
   );
+  const getLegacyToken = useGetLegacyToken();
 
   const claimableTokens = useMemo(
     // FIXME: Disable remove single sided liquidity for Well tokens for now.
@@ -119,7 +120,7 @@ const WithdrawForm: FC<
     async (_tokenIn, _amountIn, _tokenOut, { destination }) => {
       const amountIn = _tokenIn.amount(_amountIn.toString());
 
-      const { curve } = sdk.contracts;
+      // const { curve } = sdk.contracts; // TODO: fix me
 
       if (!pool || !_tokenIn.isLP || !_tokenOut)
         return {
@@ -127,15 +128,15 @@ const WithdrawForm: FC<
           steps: [],
         };
       const work = sdk.farm.create();
-      work.add(
-        new sdk.farm.actions.RemoveLiquidityOneToken(
-          pool.address,
-          curve.registries.metaFactory.address,
-          _tokenOut.address,
-          FarmFromMode.INTERNAL,
-          destination || FarmToMode.INTERNAL
-        )
-      );
+      // work.add(
+      //   new sdk.farm.actions.RemoveLiquidityOneToken(
+      //     pool.address,
+      //     curve.registries.metaFactory.address,
+      //     _tokenOut.address,
+      //     FarmFromMode.INTERNAL,
+      //     destination || FarmToMode.INTERNAL
+      //   )
+      // );
       const estimate = await work.estimate(amountIn);
 
       return {
@@ -143,6 +144,8 @@ const WithdrawForm: FC<
         steps: work.generators as StepGenerator[],
       };
     },
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [pool, sdk.contracts, sdk.farm]
   );
 
@@ -284,7 +287,7 @@ const WithdrawForm: FC<
             />
           </>
         </Stack>
-        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText='Withdraw'/>
+        <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Withdraw" />
         {isReady ? (
           <Stack direction="column" gap={1}>
             <TxnSeparator />
@@ -334,7 +337,7 @@ const WithdrawForm: FC<
                     {
                       type: ActionType.WITHDRAW,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(whitelistedToken),
+                      token: getLegacyToken(whitelistedToken),
                     },
                     {
                       type: ActionType.UPDATE_SILO_REWARDS,
@@ -345,15 +348,15 @@ const WithdrawForm: FC<
                       ? {
                           type: ActionType.SWAP,
                           amountIn: toBN(withdrawResult.amount),
-                          tokenIn: getNewToOldToken(whitelistedToken),
+                          tokenIn: getLegacyToken(whitelistedToken),
                           amountOut: toBN(amountOut),
-                          tokenOut: getNewToOldToken(values.tokenOut),
+                          tokenOut: getLegacyToken(values.tokenOut),
                         }
                       : undefined,
                     {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getNewToOldToken(
+                      token: getLegacyToken(
                         values.tokenOut || whitelistedToken
                       ),
                       destination: values.destination || FarmToMode.EXTERNAL,

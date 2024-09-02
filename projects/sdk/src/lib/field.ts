@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, ethers } from "ethers";
+import { BigNumber, BigNumberish } from "ethers";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { TokenValue } from "@beanstalk/sdk-core";
 
@@ -15,7 +15,10 @@ export class Field {
     return Field.sdk.contracts.beanstalk.harvestableIndex(fieldId);
   }
 
-  public async getAllPlots(account: string, fieldId: BigNumberish = Field.DEFAULT_FIELD_ID) {
+  public async getPlotsFromAccount(
+    account: string,
+    fieldId: BigNumberish = Field.DEFAULT_FIELD_ID
+  ) {
     const plots = await Field.sdk.contracts.beanstalk.getPlotsFromAccount(account, fieldId);
 
     return new Map<string, BigNumber>(
@@ -23,27 +26,41 @@ export class Field {
     );
   }
 
-  public async getPlots({ account, fieldId }: { account: string; fieldId?: BigNumberish }) {
+  public async getParsedPlotsFromAccount(
+    account: string,
+    fieldId: BigNumberish = Field.DEFAULT_FIELD_ID
+  ) {
     const [plots, harvestableIndex] = await Promise.all([
-      this.getAllPlots(account, fieldId),
+      this.getPlotsFromAccount(account, fieldId),
       this.getHarvestableIndex(fieldId)
     ]);
 
+    return this.summarizePlotsFromAccount(plots, harvestableIndex);
+  }
+
+  /**
+   * Summarizes plot data into harvestable / unharvestable plots & amounts
+   * @Note Extracted mainly for unit testing purposes
+   */
+  private summarizePlotsFromAccount(plots: Map<string, BigNumber>, _harvestableIndex: BigNumber) {
     const PODS = Field.sdk.tokens.PODS;
-
-    let pods = PODS.fromHuman("0");
-    let harvestablePods = PODS.fromHuman("0");
-
+    const harvestableIndex = PODS.fromBlockchain(_harvestableIndex);
     const unharvestablePlots: Map<string, TokenValue> = new Map();
     const harvestablePlots: Map<string, TokenValue> = new Map();
 
-    plots.forEach((plot, startIndexStr) => {
-      const startIndex = ethers.BigNumber.from(startIndexStr);
+    let pods = PODS.fromHuman("0");
+    let harvestablePods = PODS.fromHuman("0");
+    let plot = PODS.fromHuman("0");
+    let startIndex = PODS.fromHuman("0");
+
+    plots.forEach((_plot, startIndexStr) => {
+      plot = PODS.fromBlockchain(_plot);
+      startIndex = PODS.fromBlockchain(startIndexStr);
 
       // Fully harvestable
       if (startIndex.add(plot).lte(harvestableIndex)) {
         harvestablePods = harvestablePods.add(plot);
-        harvestablePlots.set(startIndexStr, PODS.fromBlockchain(plot));
+        harvestablePlots.set(startIndexStr, plot);
       }
 
       // Partially harvestable
@@ -53,17 +70,14 @@ export class Field {
         harvestablePods = harvestablePods.add(partialAmount);
         pods = pods.add(plot.sub(partialAmount));
 
-        harvestablePlots.set(startIndexStr, PODS.fromBlockchain(partialAmount));
-        unharvestablePlots.set(
-          harvestableIndex.toString(),
-          PODS.fromBlockchain(plot.sub(partialAmount))
-        );
+        harvestablePlots.set(startIndexStr, partialAmount);
+        unharvestablePlots.set(harvestableIndex.blockchainString, plot.sub(partialAmount));
       }
 
       // Unharvestable
       else {
         pods = pods.add(plot);
-        unharvestablePlots.set(startIndexStr, PODS.fromBlockchain(plot));
+        unharvestablePlots.set(startIndexStr, plot);
       }
     });
 

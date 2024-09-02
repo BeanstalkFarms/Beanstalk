@@ -14,6 +14,7 @@ export const useFetchBeanstalkField = () => {
     if (beanstalk) {
       console.debug('[beanstalk/field/useBeanstalkField] FETCH');
 
+      // TODO: multicall?
       const [
         harvestableIndex,
         podIndex,

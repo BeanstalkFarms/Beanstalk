@@ -29,7 +29,6 @@ export type Sun = {
     start: BigNumber;
     period: BigNumber;
     timestamp: DateTime;
-    beanEthStartMintingSeason: number;
   };
   morning: {
     /** The current Block Number on chain */
@@ -72,7 +71,6 @@ export const parseSeasonResult = (
   start: bigNumberResult(result.start), /// The timestamp of the Beanstalk deployment rounded down to the nearest hour.
   period: bigNumberResult(result.period), /// The length of each season in Beanstalk in seconds.
   timestamp: DateTime.fromSeconds(bigNumberResult(result.timestamp).toNumber()), /// The timestamp of the start of the current Season.
-  beanEthStartMintingSeason: result.beanEthStartMintingSeason, /// The Season in which Beanstalk started minting BeanETH.
 });
 
 export const getDiffNow = (dt: DateTime, _now?: DateTime) => {

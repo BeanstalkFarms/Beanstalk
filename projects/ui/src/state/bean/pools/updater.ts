@@ -3,46 +3,38 @@ import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
 
-import {
-  useBeanstalkContract,
-  useBeanstalkPriceContract,
-} from '~/hooks/ledger/useContract';
-import { tokenResult, getChainConstant, displayBeanPrice } from '~/util';
-import { BEAN } from '~/constants/tokens';
-import { ALL_POOLS, WHITELISTED_POOLS } from '~/constants/pools';
+import { tokenResult, displayBeanPrice } from '~/util';
 import { ERC20__factory } from '~/generated';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
+import useSdk from '~/hooks/sdk';
 import { updatePrice, updateDeltaB, updateSupply } from '../token/actions';
 import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
-  const [beanstalkPriceContract, chainId] = useBeanstalkPriceContract();
   const provider = useEthersProvider();
+  const sdk = useSdk();
+  const { beanstalk, beanstalkPrice } = sdk.contracts;
 
   // Handlers
   const _fetch = useCallback(async () => {
     try {
-      if (beanstalk && beanstalkPriceContract) {
-        console.debug(
-          '[bean/pools/useGetPools] FETCH',
-          beanstalkPriceContract.address,
-          chainId
-        );
-        const Pools = getChainConstant(ALL_POOLS, chainId);
-        const WhitelistedPools = getChainConstant(WHITELISTED_POOLS, chainId);
-        const Bean = getChainConstant(BEAN, chainId);
+      if (beanstalk && beanstalkPrice) {
+        console.debug('[bean/pools/useGetPools] FETCH', beanstalkPrice.address);
+
+        const whitelistedPools = sdk.pools.whitelistedPools;
+        const BEAN = sdk.tokens.BEAN;
 
         // FIXME: find regression with Bean.totalSupply()
-        const beanErc20 = ERC20__factory.connect(Bean.address, provider);
         const [priceResult, totalSupply, totalDeltaB] = await Promise.all([
-          beanstalkPriceContract.price(),
+          beanstalkPrice.price(),
           // FIXME: these should probably reside in bean/token/updater,
           // but the above beanstalkPriceContract call also grabs the
           // aggregate price, so for now we bundle them here.
-          beanErc20.totalSupply().then(tokenResult(Bean)),
-          beanstalk.totalDeltaB().then(tokenResult(Bean)), // TWAdeltaB
+          sdk.tokens.BEAN.getTotalSupply().then(
+            (r) => new BigNumber(r.toHuman())
+          ),
+          beanstalk.totalDeltaB().then(tokenResult(BEAN)), // TWAdeltaB
         ]);
 
         if (!priceResult) return;
@@ -65,10 +57,11 @@ export const useFetchPools = () => {
               // If a new pool is added to the Pools contract before it's
               // configured in the frontend, this function would throw an error.
               // Thus, we only process the pool's data if we have it configured.
-              if (Pools[address]) {
-                const POOL = Pools[address];
+
+              const pool = sdk.pools.getPoolByLPToken(address);
+              if (pool) {
                 acc.push(
-                  ERC20__factory.connect(POOL.lpToken.address, provider)
+                  ERC20__factory.connect(pool.lpToken.address, provider)
                     .totalSupply()
                     .then(
                       (supply) =>
@@ -80,13 +73,13 @@ export const useFetchPools = () => {
                               // NOTE:
                               // Assumes that the ordering of tokens in the Pool instance
                               // matches the order returned by the price contract.
-                              tokenResult(POOL.tokens[0])(poolData.balances[0]),
-                              tokenResult(POOL.tokens[1])(poolData.balances[1]),
+                              tokenResult(pool.tokens[0])(poolData.balances[0]),
+                              tokenResult(pool.tokens[1])(poolData.balances[1]),
                             ],
                             deltaB: tokenResult(BEAN)(
                               poolData.deltaB.toString()
                             ),
-                            supply: tokenResult(POOL.lpToken)(
+                            supply: tokenResult(pool.lpToken)(
                               supply.toString()
                             ),
                             // Liquidity: always denominated in USD for the price contract
@@ -102,7 +95,7 @@ export const useFetchPools = () => {
                         }) as UpdatePoolPayload
                     )
                     .then((data) => {
-                      if (WhitelistedPools[data.address.toLowerCase()]) {
+                      if (whitelistedPools.has(data.address.toLowerCase())) {
                         return beanstalk
                           .poolDeltaB(data.address)
                           .then((twaDeltaB) => {
@@ -118,7 +111,7 @@ export const useFetchPools = () => {
                     .catch((err) => {
                       console.debug(
                         '[beanstalk/pools/updater] Failed to get LP token supply',
-                        POOL.lpToken
+                        pool.lpToken
                       );
                       console.error(err);
                       throw err;
@@ -127,7 +120,7 @@ export const useFetchPools = () => {
               } else {
                 console.debug(
                   `[bean/pools/useGetPools] price contract returned data for pool ${address} but it isn't configured, skipping. available pools:`,
-                  Pools
+                  sdk.pools.pools
                 );
               }
               return acc;
@@ -155,7 +148,14 @@ export const useFetchPools = () => {
       console.debug('[bean/pools/useGetPools] FAILED', e);
       console.error(e);
     }
-  }, [dispatch, beanstalkPriceContract, beanstalk, chainId, provider]);
+  }, [
+    beanstalk,
+    beanstalkPrice,
+    sdk.pools,
+    sdk.tokens.BEAN,
+    dispatch,
+    provider,
+  ]);
   const clear = useCallback(() => {
     dispatch(resetPools());
   }, [dispatch]);

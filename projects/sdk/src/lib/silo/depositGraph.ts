@@ -113,7 +113,7 @@ export const getDepositGraph = (sdk: BeanstalkSDK): Graph => {
       throw new Error(`sdk.pools.wells no initialized`);
     }
 
-    sdk.pools.pools.forEach((well) => {
+    sdk.pools.getWells().forEach((well) => {
       if (!well.tokens.length) {
         throw new Error(`Well tokens not initialized: ${well.name}`);
       }

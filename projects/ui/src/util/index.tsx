@@ -45,3 +45,13 @@ export function ordinal(number: number): string {
   const suffix = suffixes[category];
   return number + suffix;
 }
+
+export function isSetObject(obj: unknown): obj is Set<unknown> {
+  return (
+    obj instanceof Set && Object.prototype.toString.call(obj) === '[object Set]'
+  );
+}
+
+export function arrayifyIfSet<T>(obj: T[] | Set<T>): T[] {
+  return Array.isArray(obj) ? obj : [...obj];
+}

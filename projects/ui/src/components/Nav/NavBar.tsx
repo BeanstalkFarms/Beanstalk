@@ -9,6 +9,7 @@ import {
 } from '~/hooks/app/usePageDimensions';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
+import useChainState from '~/hooks/chain/useChainState';
 import PriceButton from './Buttons/PriceButton';
 import SunButton from './Buttons/SunButton';
 import LinkButton from './Buttons/LinkButton';
@@ -18,8 +19,37 @@ import HoverMenu from './HoverMenu';
 
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
 
+const L1NavBar = () => (
+  <>
+    <AppBar
+      className="navbar"
+      sx={{
+        position: 'sticky',
+        bgcolor: 'background.default',
+        borderBottom: `${NAV_BORDER_HEIGHT}px solid ${PAGE_BORDER_COLOR}`,
+        zIndex: 80,
+      }}
+    >
+      {/* Desktop: Right Side */}
+      <Row justifyContent="flex-end" gap={1} px={1} height={`${NAV_HEIGHT}px`}>
+        <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
+          <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />
+        </Box>
+        <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />
+        <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />
+      </Row>
+    </AppBar>
+  </>
+);
+
 const NavBar: FC<{}> = ({ children }) => {
-  const content = (
+  const { isEthereum } = useChainState();
+
+  if (isEthereum) {
+    return <L1NavBar />;
+  }
+
+  return (
     <AppBar
       // Using position: sticky means that
       // the main content region will always start
@@ -70,8 +100,6 @@ const NavBar: FC<{}> = ({ children }) => {
       </Row>
     </AppBar>
   );
-
-  return content;
 };
 
 export default NavBar;

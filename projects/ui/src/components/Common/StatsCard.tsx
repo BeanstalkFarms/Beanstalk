@@ -4,8 +4,8 @@ import BigNumber from 'bignumber.js';
 import Stat from '~/components/Common/Stat';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { displayFullBN } from '~/util';
-import { Token } from '~/classes';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { Token } from '@beanstalk/sdk';
 
 /**
  * Show a Card with multiple statistics inside.
@@ -27,7 +27,12 @@ const StatsCard: FC<
   } & CardProps
 > = ({ stats }, props) => (
   <Card sx={{ p: 1, borderColor: BeanstalkPalette.lightestGrey }} {...props}>
-    <Grid container sx={{ justifyContent: 'space-between' }} spacing={1} rowSpacing={3}>
+    <Grid
+      container
+      sx={{ justifyContent: 'space-between' }}
+      spacing={1}
+      rowSpacing={3}
+    >
       {stats.map((stat, index) => (
         <Grid key={index} item xs={12} md={3}>
           <Stat

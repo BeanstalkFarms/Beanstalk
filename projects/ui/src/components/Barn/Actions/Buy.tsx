@@ -56,7 +56,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import {
   BalanceFrom,
@@ -502,14 +502,7 @@ const BuyPropProvider: FC<{}> = () => {
             farmerBalances: true,
             farmerSilo: true,
           },
-          [
-            () =>
-              refetchAllowances(
-                account,
-                fertilizer.address,
-                getNewToOldToken(USDC)
-              ),
-          ]
+          [() => refetchAllowances(account, fertilizer.address, USDC)]
         );
         txToast.success(receipt);
         formActions.resetForm();

@@ -25,8 +25,8 @@ import NetworkButton from '~/components/Common/Connection/NetworkButton';
  *   form state, it changes every time an input value changes.
  */
 import { FC } from '~/types';
-import { getNewToOldToken } from '~/hooks/sdk';
 import useSetting from '~/hooks/app/useSetting';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import WalletButton from '../Connection/WalletButton';
 import { FormState, FormStateNew, FormTokenState, FormTokenStateNew } from '.';
 import TransactionToast from '../TxnToast';
@@ -81,11 +81,11 @@ const SmartSubmitButton: FC<
 
   // Convert the current `FormTokenState[]` into more convenient forms,
   // and find the next token that we need to seek approval for.
-  const selectedTokens: Token[] = useMemo(
+  const selectedTokens: TokenInstance[] = useMemo(
     () =>
       tokens?.map((elem) => {
         if (elem.token instanceof Token) return elem.token;
-        return getNewToOldToken(elem.token);
+        return elem.token;
       }),
     [tokens]
   );

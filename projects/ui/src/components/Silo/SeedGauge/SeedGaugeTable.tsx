@@ -217,7 +217,7 @@ const useTableConfig = (
 ) => {
   const sdk = useSdk();
   const rowData = useMemo(() => {
-    const baseTokens = [...sdk.tokens.siloWhitelistedWellLP] as ERC20Token[];
+    const baseTokens = [...sdk.tokens.wellLP] as ERC20Token[];
     const tokens = advancedView
       ? [
           sdk.tokens.BEAN,

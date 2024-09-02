@@ -1,7 +1,15 @@
+import { ChainId } from '@beanstalk/sdk-core';
 import { providers } from 'ethers';
 import { useMemo } from 'react';
 import type { Account, Chain, Client, Transport } from 'viem';
 import { Config, useClient, useConnectorClient } from 'wagmi';
+
+const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
+
+const fallbackChain = {
+  chainId: IS_DEVELOPMENT_ENV ? ChainId.LOCALHOST : ChainId.ARBITRUM,
+  name: IS_DEVELOPMENT_ENV ? 'locahost:8545' : 'arbitrum',
+} as const;
 
 export function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client;
@@ -12,10 +20,7 @@ export function clientToProvider(client: Client<Transport, Chain>) {
         name: chain.name,
         ensAddress: chain.contracts?.ensRegistry?.address,
       }
-    : {
-        chainId: 1,
-        name: 'mainnet',
-      };
+    : fallbackChain;
 
   if (transport.type === 'fallback')
     return new providers.FallbackProvider(
@@ -34,10 +39,7 @@ export function clientToSigner(client: Client<Transport, Chain, Account>) {
         name: chain.name,
         ensAddress: chain.contracts?.ensRegistry?.address,
       }
-    : {
-        chainId: 1,
-        name: 'mainnet',
-      };
+    : fallbackChain;
   const provider = new providers.Web3Provider(transport, network);
   const signer = provider.getSigner(account.address);
 
@@ -48,7 +50,9 @@ export function clientToSigner(client: Client<Transport, Chain, Account>) {
 export function useEthersProvider({
   chainId,
 }: { chainId?: number | undefined } = {}) {
-  const client = useClient<Config>({ chainId });
+  const client = useClient<Config>({
+    chainId: chainId ?? fallbackChain.chainId,
+  });
   if (!client) {
     throw new Error('No client to create Ethers Adapter');
   }

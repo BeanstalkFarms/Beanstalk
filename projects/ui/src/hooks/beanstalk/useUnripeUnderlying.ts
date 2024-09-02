@@ -1,14 +1,17 @@
 import { useMemo } from 'react';
-import { ERC20Token } from '~/classes/Token';
 import { AddressMap } from '~/constants';
-import { UNRIPE_TOKENS, UNRIPE_UNDERLYING_TOKENS } from '~/constants/tokens';
 import useTokenList from '~/hooks/chain/useTokenList';
+import { ERC20Token } from '@beanstalk/sdk';
+import useSdk from '../sdk';
 
 export default function useUnripeUnderlyingMap(
   keyedBy: 'unripe' | 'ripe' = 'unripe'
 ) {
-  const unripe = useTokenList(UNRIPE_TOKENS);
-  const underlying = useTokenList(UNRIPE_UNDERLYING_TOKENS);
+  const sdk = useSdk();
+  const unripe = useTokenList(sdk.tokens.unripeTokens as Set<ERC20Token>);
+  const underlying = useTokenList(
+    sdk.tokens.unripeUnderlyingTokens as Set<ERC20Token>
+  );
   return useMemo(
     () =>
       unripe.reduce<AddressMap<ERC20Token>>((prev, unripeToken, index) => {

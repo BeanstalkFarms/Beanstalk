@@ -14,16 +14,21 @@ export const balance = async (sdk, { account, symbol }) => {
       [
         "ETH",
         "WETH",
+        "WSTETH",
+        "WEETH",
+        "WBTC",
         "BEAN",
-        "USDT",
-        "USDC",
         "DAI",
-        "CRV3",
-        "UNRIPE_BEAN",
-        "UNRIPE_BEAN_wstETH",
-        "BEAN_CRV3_LP",
-        "BEAN_ETH_WELL_LP",
-        "ROOT"
+        "USDC",
+        "USDT",
+        "urBEAN",
+        "urBEANwstETH",
+        "BEANWETH",
+        "BEANWSTETH",
+        "BEANWEETH",
+        "BEANWBTC",
+        "BEANUSDC",
+        "BEANUSDT"
       ].map((s) => getBal(sdk, s, account))
     );
     res.push(...bals);
@@ -32,7 +37,17 @@ export const balance = async (sdk, { account, symbol }) => {
 };
 
 async function getBal(sdk, symbol: string, account: string) {
-  const token = sdk.tokens[symbol];
+  let token = sdk.tokens[symbol];
+  if (!token) {
+    if (symbol === "urBEAN") token = sdk.tokens.UNRIPE_BEAN;
+    if (symbol === "urBEANwstETH") token = sdk.tokens.UNRIPE_BEAN_WSTETH;
+    if (symbol === "BEANWETH") token = sdk.tokens.BEAN_ETH_WELL_LP;
+    if (symbol === "BEANWEETH") token = sdk.tokens.BEAN_WEETH_WELL_LP;
+    if (symbol === "BEANWSTETH") token = sdk.tokens.BEAN_WSTETH_WELL_LP;
+    if (symbol === "BEANWBTC") token = sdk.tokens.BEAN_WBTC_WELL_LP;
+    if (symbol === "BEANUSDC") token = sdk.tokens.BEAN_USDC_WELL_LP;
+    if (symbol === "BEANUSDT") token = sdk.tokens.BEAN_USDT_WELL_LP;
+  }
   if (!token) throw new Error(`No token found: ${symbol}`);
 
   try {

@@ -68,7 +68,7 @@ export const getSwapGraph = (sdk: BeanstalkSDK): Graph => {
   });
 
   // set BasinWell.tokens[0] <> BasinWell.tokens[1] for Basin Well swaps
-  sdk.pools.pools.forEach((well) => {
+  sdk.pools.getWells().forEach((well) => {
     setBiDirectionalWellSwapEdges(sdk, graph, well);
   });
 

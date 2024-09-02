@@ -126,27 +126,41 @@ export class BlockchainUtils {
   async setAllBalances(account: string, amount: string) {
     await Promise.allSettled([
       this.setETHBalance(account, this.sdk.tokens.ETH.amount(amount)),
-      this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount)),
+      this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
       this.setUSDCBalance(account, this.sdk.tokens.USDC.amount(amount)),
       this.setUSDTBalance(account, this.sdk.tokens.USDT.amount(amount)),
-      this.setCRV3Balance(account, this.sdk.tokens.CRV3.amount(amount)),
       this.setWETHBalance(account, this.sdk.tokens.WETH.amount(amount)),
-      this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
+      this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount)),
       this.setWSTETHBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
-      this.setROOTBalance(account, this.sdk.tokens.ROOT.amount(amount)),
+      this.setWEETHBalance(account, this.sdk.tokens.WEETH.amount(amount)),
+      this.setWBTCBalance(account, this.sdk.tokens.WBTC.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
-      // this.seturBEAN3CRVBalance(account, this.sdk.tokens.UNRIPE_BEAN_CRV3.amount(amount)),
       this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
-      this.setBEAN3CRVBalance(account, this.sdk.tokens.BEAN_CRV3_LP.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
-      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount))
+      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
+      this.setBEANWEETHBalance(account, this.sdk.tokens.BEAN_WEETH_WELL_LP.amount(amount)),
+      this.setBEANWBTCBalance(account, this.sdk.tokens.BEAN_WBTC_WELL_LP.amount(amount)),
+      this.setBEANUSDCBalance(account, this.sdk.tokens.BEAN_USDC_WELL_LP.amount(amount)),
+      this.setBEANUSDTBalance(account, this.sdk.tokens.BEAN_USDT_WELL_LP.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
     await this.sdk.provider.send("hardhat_setBalance", [account, balance.toHex()]);
   }
-  async setDAIBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.DAI, account, balance);
+  async setBEANBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN, account, balance);
+  }
+  async setWETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WETH, account, balance);
+  }
+  async setWSTETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WSTETH, account, balance);
+  }
+  async setWEETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WEETH, account, balance);
+  }
+  async setWBTCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WBTC, account, balance);
   }
   async setUSDCBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.USDC, account, balance);
@@ -154,17 +168,8 @@ export class BlockchainUtils {
   async setUSDTBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.USDT, account, balance);
   }
-  async setCRV3Balance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.CRV3, account, balance);
-  }
-  async setWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WETH, account, balance);
-  }
-  async setBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN, account, balance);
-  }
-  async setROOTBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.ROOT, account, balance);
+  async setDAIBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.DAI, account, balance);
   }
   async seturBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
@@ -172,34 +177,43 @@ export class BlockchainUtils {
   async seturBEANWSTETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN_WSTETH, account, balance);
   }
-  async setBEAN3CRVBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN_CRV3_LP, account, balance);
-  }
   async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
   }
   async setBEANWSTETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
   }
-  async setWSTETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WSTETH, account, balance);
+  async setBEANWEETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WEETH_WELL_LP, account, balance);
+  }
+  async setBEANWBTCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WBTC_WELL_LP, account, balance);
+  }
+  async setBEANUSDCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_USDC_WELL_LP, account, balance);
+  }
+  async setBEANUSDTBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_USDT_WELL_LP, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
     const slotConfig = new Map();
-    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
-    slotConfig.set(this.sdk.tokens.USDC.address, [9, false]);
-    slotConfig.set(this.sdk.tokens.USDT.address, [2, false]);
-    slotConfig.set(this.sdk.tokens.CRV3.address, [3, true]);
-    slotConfig.set(this.sdk.tokens.WETH.address, [3, false]);
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.ROOT.address, [151, false]);
+    slotConfig.set(this.sdk.tokens.WETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WEETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WBTC.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.USDC.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.USDT.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.BEAN_CRV3_LP.address, [15, true]);
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
     slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]);
-    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_WEETH_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_WBTC_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_USDC_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_USDT_WELL_LP.address, [51, false]);
     return slotConfig.get(tokenAddress);
   }
 
@@ -229,40 +243,6 @@ export class BlockchainUtils {
       index.toString(),
       this.toBytes32(balanceAmount).toString()
     );
-  }
-
-  /**
-   * This method will change the liquidity in the the BEAN:3CRV pool to whatever
-   * amounts are passed in.
-   * Examples of prices (around block # 16549841)
-   *  (10M, 10M) => price $1.011764, deltaB = 117,988
-   *  (15M, 10M) => price $0.823969, deltaB = -2,495,837
-   *  (10M, 15M) => price $1.243677, deltaB = 2,533,294
-   *  (10_236_668, 10M) => price $1.00000, deltaB = 0.177251 (at block )
-   * @param beanAmount
-   * @param crv3Amount
-   */
-  async setCurveLiquidity(beanAmount: TokenValue | number, crv3Amount: TokenValue | number) {
-    const BALANCE_SLOT = 3;
-    const PREV_BALANCE_SLOT = 5;
-    const POOL_ADDRESS = this.sdk.contracts.curve.pools.beanCrv3.address;
-
-    // Get the existing liquidity amounts
-    const [currentBean, currentCrv3] = await this.getCurvePoolBalances(BALANCE_SLOT, POOL_ADDRESS);
-
-    const newBean =
-      beanAmount instanceof TokenValue ? beanAmount : this.sdk.tokens.BEAN.amount(beanAmount);
-    const newCrv3 =
-      crv3Amount instanceof TokenValue ? crv3Amount : this.sdk.tokens.CRV3.amount(crv3Amount);
-
-    // update the array tracking balances
-    await this.setCurvePoolBalances(POOL_ADDRESS, BALANCE_SLOT, newBean, newCrv3);
-    // actually give the pool the ERC20's
-    await this.setBEANBalance(POOL_ADDRESS, newBean);
-    await this.setCRV3Balance(POOL_ADDRESS, newCrv3);
-
-    // Curve also keeps track of the previous balance, so we just copy the existing current to old.
-    await this.setCurvePoolBalances(POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);
   }
 
   async setWellLiquidity(
@@ -341,63 +321,12 @@ export class BlockchainUtils {
     }
   }
 
-  /**
-   * Returns the amounts of bean and 3crv in the Curve pool
-   */
-  private async getCurvePoolBalances(slot: number, address: string) {
-    const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
-    const crv3Location = this.addOne(beanLocation);
-
-    const t1 = await this.sdk.provider.getStorageAt(address, beanLocation);
-    const beanAmount = TokenValue.fromBlockchain(t1, this.sdk.tokens.BEAN.decimals);
-
-    const t2 = await this.sdk.provider.getStorageAt(address, crv3Location);
-    const crv3Amount = TokenValue.fromBlockchain(t2, this.sdk.tokens.CRV3.decimals);
-
-    return [beanAmount, crv3Amount];
-  }
-
-  /** This will set the balance of BEAN and 3CRV tokens in the Curve liquidity pool contract
-   * by directly editing the storage in the evm.
-   * Cur balance slot: 3
-   * Pre balance slot: 5
-   *
-   * Curve stores liquidity in an array in the .balances property
-   * it also stores the previous blances as a security feature, in .previousBalances property
-   *
-   * @param address
-   * @param slot
-   * @param beanBalance
-   * @param crv3Balance
-   */
-  private async setCurvePoolBalances(
-    address: string,
-    slot: number,
-    beanBalance: TokenValue,
-    crv3Balance: TokenValue
-  ) {
-    const beanLocation = ethers.utils.solidityKeccak256(["uint256"], [slot]);
-    const crv3Location = this.addOne(beanLocation);
-
-    // Set BEAN balance
-    await this.setStorageAt(address, beanLocation, this.toBytes32(beanBalance.toBigNumber()));
-    // Set 3CRV balance
-    await this.setStorageAt(address, crv3Location, this.toBytes32(crv3Balance.toBigNumber()));
-  }
-
   private async setStorageAt(address: string, index: string, value: string) {
     await this.sdk.provider.send("hardhat_setStorageAt", [address, index, value]);
   }
 
   private toBytes32(bn: ethers.BigNumber) {
     return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
-  }
-
-  // Used by setCurveLiquidity()
-  private addOne(kek: string) {
-    let b = ethers.BigNumber.from(kek);
-    b = b.add(1);
-    return b.toHexString();
   }
 
   mockDepositCrate(

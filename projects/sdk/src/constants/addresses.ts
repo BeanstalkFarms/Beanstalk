@@ -36,8 +36,8 @@ export const addresses = {
     [ChainId.ARBITRUM]: "0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0"
   }),
   UNWRAP_AND_SEND_ETH: Address.make({
-    [ChainId.MAINNET]: "0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96"
-    // [ChainId.ARBITRUM]: "" // TODO
+    [ChainId.MAINNET]: "0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96",
+    [ChainId.ARBITRUM]: "0xD6Fc4a63d7E93267c3007eA176081052369A4749"
   }),
 
   /** @deprecated */
@@ -166,6 +166,7 @@ export const addresses = {
     [ChainId.MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
   }),
   ARB: Address.make({
+    [ChainId.MAINNET]: "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
     [ChainId.ARBITRUM]: "0x912CE59144191C1204E64559FE8253a0e49E6548"
   }),
   RETH: Address.make({

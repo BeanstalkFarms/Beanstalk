@@ -20,18 +20,26 @@ import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
 
 // ERC-20 Token Images
 import wstethLogo from '~/img/tokens/wsteth-logo.svg';
-import stethLogo from '~/img/tokens/steth-logo.svg';
 import crv3LogoUrl from '~/img/tokens/crv3-logo.png';
 import daiLogoUrl from '~/img/tokens/dai-logo.svg';
 import usdcLogoUrl from '~/img/tokens/usdc-logo.svg';
 import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
+import wbtcLogoUrl from '~/img/tokens/wbtc-logo.svg';
+import weethIcon from '~/img/tokens/weeth-logo.png';
+import arbLogoUrl from '~/img/tokens/arbitrum-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 // Other imports
-import { ERC20Token, NativeToken, BeanstalkToken } from '~/classes/Token';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
+import {
+  ERC20Token,
+  NativeToken,
+  BeanstalkToken,
+  LegacyTokenMetadata,
+  LegacyTokenRewards,
+} from '~/classes/Token';
 import { SupportedChainId } from './chains';
 import { ChainConstant } from '.';
 import {
@@ -47,25 +55,53 @@ import {
   BEAN_ETH_WELL_ADDRESSES,
   BEAN_CRV3_V1_ADDRESSES,
   BEAN_WSTETH_ADDRESSS,
-  STETH_ADDRESSES,
   WSTETH_ADDRESSES,
+  WETH_ADDRESSES,
+  WEETH_ADDRESSES,
+  WBTC_ADDRESSES,
+  BEANWEETH_WELL_ADDRESSES,
+  BEANWBTC_WELL_ADDRESSES,
+  BEANUSDC_WELL_ADDRESSES,
+  BEANUSDT_WELL_ADDRESSES,
+  ARB_ADDRESSES,
+  BEAN_LUSD_ADDRESSES,
+  BEAN_ETH_UNIV2_LP_ADDRESSES,
 } from './addresses';
 
 // ----------------------------------------
 // Types + Utilities
 // ----------------------------------------
 
-// const multiChain = (
-//   addressByChainId: ChainConstant<string>,
-//   token:  BaseClassConstructor<Token>,
-//   params: ConstructorParameters<typeof Token>,
-// ) => {
-//   const result : { [key: number]: Token }= {};
-//   return Object.keys(addressByChainId).reduce<{ [key: number]: Token }>((prev, chainId) => {
-//     prev[curr as number] = addressByChainId[curr]
-//     return prev;
-//   }, {});
-// }
+const CHAIN_IDS = [
+  SupportedChainId.MAINNET,
+  SupportedChainId.ARBITRUM,
+] as const;
+
+const makeChainToken = (
+  addresses: ChainConstant<string>,
+  decimals: number,
+  meta: LegacyTokenMetadata,
+  rewards?: LegacyTokenRewards
+) => {
+  const tokensByChainId = CHAIN_IDS.reduce<ChainConstant<ERC20Token>>(
+    (prev, chainId) => {
+      if (addresses[chainId]) {
+        prev[chainId] = new ERC20Token(
+          chainId,
+          addresses[chainId],
+          decimals,
+          meta,
+          rewards
+        );
+      }
+
+      return prev;
+    },
+    {}
+  );
+
+  return tokensByChainId;
+};
 
 // ----------------------------------------
 // Native Tokens
@@ -84,38 +120,50 @@ export const ETH = {
       displayDecimals: 4,
     }
   ),
+  [SupportedChainId.ARBITRUM]: new NativeToken(
+    SupportedChainId.ARBITRUM,
+    'ETH',
+    ETH_DECIMALS,
+    {
+      name: 'Ether',
+      symbol: 'ETH',
+      logo: ethIconCircledUrl,
+      displayDecimals: 4,
+    }
+  ),
 };
 
 // ----------------------------------------
 // Beanstalk Internal Tokens (not ERC20)
+//
+// We don't need to make these tokens chain specific.
 // ----------------------------------------
-
-export const STALK = new BeanstalkToken(SupportedChainId.MAINNET, '', 10, {
+export const STALK = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 16, {
   name: 'Stalk',
   symbol: 'STALK',
   logo: stalkLogo,
 });
 
-export const SEEDS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+export const SEEDS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
   name: 'Seeds',
   symbol: 'SEED',
   logo: seedLogo,
 });
 
-export const PODS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+export const PODS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
   name: 'Pods',
   symbol: 'PODS',
   logo: podsLogo,
 });
 
-export const SPROUTS = new BeanstalkToken(SupportedChainId.MAINNET, '', 6, {
+export const SPROUTS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
   name: 'Sprouts',
   symbol: 'SPROUT',
   logo: sproutLogo,
 });
 
 export const RINSABLE_SPROUTS = new BeanstalkToken(
-  SupportedChainId.MAINNET,
+  SupportedChainId.ARBITRUM,
   '',
   6,
   {
@@ -129,298 +177,190 @@ export const RINSABLE_SPROUTS = new BeanstalkToken(
 // ERC20 Tokens
 // ----------------------------------------
 
-export const WETH = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    18,
-    {
-      name: 'Wrapped Ether',
-      symbol: 'WETH',
-      logo: wEthIconCircledUrl,
-      displayDecimals: 4,
-    }
-  ),
-};
+const defaultRewards: LegacyTokenRewards = {
+  stalk: 1,
+  seeds: 0,
+} as const;
 
-export const BEAN = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    BEAN_ADDRESSES,
-    6,
-    {
-      name: 'Bean',
-      symbol: 'BEAN',
-      logo: beanCircleLogoUrl,
-      color: BeanstalkPalette.logoGreen,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const BEAN = makeChainToken(
+  BEAN_ADDRESSES,
+  6,
+  {
+    name: 'Bean',
+    symbol: 'BEAN',
+    logo: beanCircleLogoUrl,
+    color: BeanstalkPalette.logoGreen,
+  },
+  { ...defaultRewards }
+);
 
-export const WSTETH = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    WSTETH_ADDRESSES,
-    18,
-    {
-      name: 'Wrapped liquid staked Ether 2.0',
-      symbol: 'wstETH',
-      logo: wstethLogo,
-    }
-  ),
-};
+export const WETH = makeChainToken(WETH_ADDRESSES, 18, {
+  name: 'Wrapped Ether',
+  symbol: 'WETH',
+  logo: wEthIconCircledUrl,
+  displayDecimals: 4,
+});
 
-export const STETH = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    STETH_ADDRESSES,
-    18,
-    {
-      name: 'Liquid staked Ether 2.0',
-      symbol: 'stETH',
-      logo: stethLogo,
-    }
-  ),
-};
+export const WSTETH = makeChainToken(WSTETH_ADDRESSES, 18, {
+  name: 'Wrapped liquid staked Ether 2.0',
+  symbol: 'wstETH',
+  logo: wstethLogo,
+});
 
-// CRV3 + Underlying Stables
-const crv3Meta = {
-  name: '3CRV',
-  symbol: '3CRV',
-  logo: crv3LogoUrl,
-  isLP: true,
-};
-export const CRV3 = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    CRV3_ADDRESSES,
-    18,
-    crv3Meta
-  ),
-};
+export const WEETH = makeChainToken(WEETH_ADDRESSES, 18, {
+  name: 'Wrapped Ether',
+  symbol: 'WEETH',
+  logo: weethIcon,
+});
 
-export const DAI = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    DAI_ADDRESSES,
-    18,
-    {
-      name: 'Dai',
-      symbol: 'DAI',
-      logo: daiLogoUrl,
-    }
-  ),
-};
+export const WBTC = makeChainToken(WBTC_ADDRESSES, 18, {
+  name: 'Wrapped Bitcoin',
+  symbol: 'WBTC',
+  logo: wbtcLogoUrl,
+});
 
-const usdcMeta = {
+export const DAI = makeChainToken(DAI_ADDRESSES, 18, {
+  name: 'Dai',
+  symbol: 'DAI',
+  logo: daiLogoUrl,
+});
+
+export const USDC = makeChainToken(USDC_ADDRESSES, 6, {
   name: 'USD Coin',
   symbol: 'USDC',
   logo: usdcLogoUrl,
-};
-export const USDC = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    USDC_ADDRESSES,
-    6,
-    usdcMeta
-  ),
-};
+});
 
-export const USDT = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    USDT_ADDRESSES,
-    6,
-    {
-      name: 'Tether',
-      symbol: 'USDT',
-      logo: usdtLogoUrl,
-    }
-  ),
-};
+export const USDT = makeChainToken(USDT_ADDRESSES, 6, {
+  name: 'Tether',
+  symbol: 'USDT',
+  logo: usdtLogoUrl,
+});
 
-// Other
-const lusdMeta = {
-  name: 'LUSD',
-  symbol: 'LUSD',
-  logo: lusdLogoUrl,
-};
-export const LUSD = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    LUSD_ADDRESSES,
-    18,
-    lusdMeta
-  ),
-};
-
-// TEMP
-// Keep the old BEAN_ETH and BEAN_LUSD tokens to let
-// the Pick dialog properly display pickable assets.
-export const BEAN_ETH_UNIV2_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    '0x87898263B6C5BABe34b4ec53F22d98430b91e371',
-    18,
-    {
-      name: 'BEAN:ETH LP',
-      symbol: 'Old BEANETH',
-      logo: beanEthLpLogoUrl,
-      displayDecimals: 9,
-      isLP: true,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
-export const BEAN_LUSD_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    '0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D',
-    18,
-    {
-      name: 'BEAN:LUSD LP',
-      symbol: 'Old BEANLUSD',
-      logo: beanLusdLogoUrl,
-      isLP: true,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const ARB = makeChainToken(ARB_ADDRESSES, 18, {
+  name: 'Arbitrum',
+  symbol: 'ARB',
+  logo: arbLogoUrl,
+});
 
 // ----------------------------------------
 // ERC20 Tokens - LP
 // ----------------------------------------
 
-export const BEAN_CRV3_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    BEAN_CRV3_ADDRESSES,
-    18,
-    {
-      name: 'BEAN:3CRV LP',
-      symbol: 'BEAN3CRV',
-      logo: beanCrv3LpLogoUrl,
-      isLP: true,
-      color: '#DFB385',
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const BEAN_ETH_WELL_LP = makeChainToken(
+  BEAN_ETH_WELL_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:ETH LP',
+    symbol: 'BEANETH',
+    logo: beanEthWellLpLogoUrl,
+    isLP: true,
+    color: '#DFB385',
+  },
+  { ...defaultRewards }
+);
 
-export const BEAN_ETH_WELL_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    BEAN_ETH_WELL_ADDRESSES,
-    18,
-    {
-      name: 'BEAN:ETH LP',
-      symbol: 'BEANETH',
-      logo: beanEthWellLpLogoUrl,
-      isLP: true,
-      color: '#DFB385',
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const BEAN_WSTETH_WELL_LP = makeChainToken(
+  BEAN_WSTETH_ADDRESSS,
+  18,
+  {
+    name: 'BEAN:wstETH LP',
+    symbol: 'BEANwstETH',
+    logo: beanWstethLogo,
+    displayDecimals: 2,
+    color: BeanstalkPalette.lightBlue,
+    isUnripe: false,
+  },
+  { ...defaultRewards }
+);
 
-export const BEAN_WSTETH_WELL_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    BEAN_WSTETH_ADDRESSS,
-    18,
-    {
-      name: 'BEAN:wstETH LP',
-      symbol: 'BEANwstETH',
-      logo: beanWstethLogo,
-      displayDecimals: 2,
-      color: BeanstalkPalette.lightBlue,
-      isUnripe: false,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const BEAN_WEETH_WELL_LP = makeChainToken(
+  BEANWEETH_WELL_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:weETH LP',
+    symbol: 'BEANweETH',
+    isLP: true,
+    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    isUnripe: false,
+    displayDecimals: 2,
+  },
+  { ...defaultRewards }
+);
 
-export const BEAN_CRV3_V1_LP = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    BEAN_CRV3_V1_ADDRESSES,
-    6,
-    {
-      name: 'BEAN:CRV3 V1 LP',
-      symbol: 'Old BEAN3CRV',
-      logo: beanCrv3LpLogoUrl,
-      isLP: true,
-      color: '#DFB385',
-    },
-    {
-      stalk: 1,
-      seeds: 4.5,
-    }
-  ),
-};
+export const BEAN_WBTC_WELL_LP = makeChainToken(
+  BEANWBTC_WELL_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:WBTC LP',
+    symbol: 'BEANWBTC',
+    isLP: true,
+    isUnripe: false,
+    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    displayDecimals: 2,
+  },
+  { ...defaultRewards }
+);
+
+export const BEAN_USDC_WELL_LP = makeChainToken(
+  BEANUSDC_WELL_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:USDC LP',
+    symbol: 'BEANUSDC',
+    isLP: true,
+    isUnripe: false,
+    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    displayDecimals: 2,
+  },
+  { ...defaultRewards }
+);
+
+export const BEAN_USDT_WELL_LP = makeChainToken(
+  BEANUSDT_WELL_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:USDT LP',
+    symbol: 'BEANUSDT',
+    isLP: true,
+    isUnripe: false,
+    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    displayDecimals: 2,
+  },
+  { ...defaultRewards }
+);
 
 // ----------------------------------------
 // ERC20 Tokens - Unripe
 // ----------------------------------------
 
-export const UNRIPE_BEAN = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    UNRIPE_BEAN_ADDRESSES,
-    6,
-    {
-      name: 'Unripe Bean',
-      symbol: 'urBEAN',
-      logo: unripeBeanLogoUrl,
-      displayDecimals: 2,
-      color: '#ECBCB3',
-      isUnripe: true,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const UNRIPE_BEAN = makeChainToken(
+  UNRIPE_BEAN_ADDRESSES,
+  6,
+  {
+    name: 'Unripe Bean',
+    symbol: 'urBEAN',
+    logo: unripeBeanLogoUrl,
+    displayDecimals: 2,
+    color: '#ECBCB3',
+    isUnripe: true,
+  },
+  { ...defaultRewards }
+);
 
-export const UNRIPE_BEAN_WSTETH = {
-  [SupportedChainId.MAINNET]: new ERC20Token(
-    SupportedChainId.MAINNET,
-    UNRIPE_BEAN_WSTETH_ADDRESSES,
-    6,
-    {
-      name: 'Unripe BEAN:wstETH LP',
-      symbol: 'urBEANwstETH',
-      logo: unripeBeanWstethLogoUrl,
-      displayDecimals: 2,
-      color: BeanstalkPalette.lightBlue,
-      isUnripe: true,
-    },
-    {
-      stalk: 1,
-      seeds: 0,
-    }
-  ),
-};
+export const UNRIPE_BEAN_WSTETH = makeChainToken(
+  UNRIPE_BEAN_WSTETH_ADDRESSES,
+  6,
+  {
+    name: 'Unripe BEAN:wstETH LP',
+    symbol: 'urBEANwstETH',
+    logo: unripeBeanWstethLogoUrl,
+    displayDecimals: 2,
+    color: BeanstalkPalette.lightBlue,
+    isUnripe: true,
+  },
+  { ...defaultRewards }
+);
 
 // ----------------------------------------
 // Token Lists
@@ -432,23 +372,28 @@ export const UNRIPE_TOKENS: ChainConstant<ERC20Token>[] = [
 ];
 export const UNRIPE_UNDERLYING_TOKENS: ChainConstant<ERC20Token>[] = [
   BEAN,
+  WSTETH,
+];
+
+export const L1_SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
+  BEAN,
   BEAN_WSTETH_WELL_LP,
+  BEAN_ETH_WELL_LP,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_WSTETH,
 ];
 
 // Show these tokens as whitelisted in the Silo.
 export const SILO_WHITELIST: ChainConstant<ERC20Token>[] = [
   BEAN,
-  BEAN_ETH_WELL_LP,
   BEAN_WSTETH_WELL_LP,
+  BEAN_ETH_WELL_LP,
+  BEAN_WEETH_WELL_LP,
+  BEAN_WBTC_WELL_LP,
+  BEAN_USDC_WELL_LP,
+  BEAN_USDT_WELL_LP,
   UNRIPE_BEAN,
   UNRIPE_BEAN_WSTETH,
-  BEAN_CRV3_LP,
-];
-
-// Tokens that are no longer whitelisted.
-// If you edit this, make sure you also edit WHITELISTED_POOLS in pools.ts
-export const SILO_WHITELIST_DEPRECATED: ChainConstant<ERC20Token>[] = [
-  BEAN_CRV3_LP,
 ];
 
 // All supported ERC20 tokens.
@@ -457,12 +402,71 @@ export const ERC20_TOKENS: ChainConstant<ERC20Token>[] = [
   ...SILO_WHITELIST,
   // Commonly-used tokens
   WETH,
-  CRV3,
+  WEETH,
+  WBTC,
   DAI,
   USDC,
   USDT,
   WSTETH,
 ];
 
-// Assets underlying 3CRV (accessible when depositing/removing liquidity)
-export const CRV3_UNDERLYING: ChainConstant<ERC20Token>[] = [DAI, USDC, USDT];
+// ----------------------------------------
+// LEGACY TOKENS
+//
+// Keep for reference & for legacy support.
+// ----------------------------------------
+
+/** @deprecated */
+export const LUSD = makeChainToken(LUSD_ADDRESSES, 18, {
+  name: 'LUSD',
+  symbol: 'LUSD',
+  logo: lusdLogoUrl,
+});
+
+/** @deprecated */
+export const CRV3 = makeChainToken(CRV3_ADDRESSES, 18, {
+  name: '3CRV',
+  symbol: '3CRV',
+  logo: crv3LogoUrl,
+  isLP: true,
+});
+
+// TEMP
+/** @deprecated */
+export const BEAN_ETH_UNIV2_LP = makeChainToken(
+  BEAN_ETH_UNIV2_LP_ADDRESSES,
+  18,
+  {
+    name: 'BEAN:ETH LP',
+    symbol: 'Old BEANETH',
+    logo: beanEthLpLogoUrl,
+    displayDecimals: 9,
+    isLP: true,
+  }
+);
+
+/** @deprecated */
+export const BEAN_LUSD_LP = makeChainToken(BEAN_LUSD_ADDRESSES, 18, {
+  name: 'BEAN:LUSD LP',
+  symbol: 'Old BEANLUSD',
+  logo: beanLusdLogoUrl,
+  isLP: true,
+});
+
+/** @deprecated */
+export const BEAN_CRV3_LP = makeChainToken(BEAN_CRV3_ADDRESSES, 18, {
+  name: 'BEAN:3CRV LP',
+  symbol: 'BEAN3CRV',
+  logo: beanCrv3LpLogoUrl,
+  isLP: true,
+  color: '#DFB385',
+});
+
+/** @deprecated */
+export const BEAN_CRV3_V1_LP = makeChainToken(BEAN_CRV3_V1_ADDRESSES, 6, {
+  name: 'BEAN:CRV3 V1 LP',
+  symbol: 'Old BEAN3CRV',
+  logo: beanCrv3LpLogoUrl,
+  isLP: true,
+  color: '#DFB385',
+});

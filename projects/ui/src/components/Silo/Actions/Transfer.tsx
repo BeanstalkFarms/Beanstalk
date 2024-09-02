@@ -34,7 +34,7 @@ import { ActionType } from '~/util/Actions';
 import TransactionToast from '~/components/Common/TxnToast';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TxnAccordion from '~/components/Common/TxnAccordion';
@@ -52,6 +52,7 @@ import {
 } from '~/lib/Txn';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 /// tokenValueToBN is too long
 /// remove me when we migrate everything to TokenValue & DecimalBigNumber
@@ -81,6 +82,7 @@ const TransferForm: FC<
 }) => {
   const sdk = useSdk();
   const { BEAN, STALK, SEEDS } = sdk.tokens;
+  const getLegacyToken = useGetLegacyToken();
 
   // Check address on change
 
@@ -239,7 +241,7 @@ const TransferForm: FC<
                                   ).abs()
                                 )
                               : ZERO_BN,
-                            token: getNewToOldToken(whitelistedToken),
+                            token: getLegacyToken(whitelistedToken),
                             stalk: withdrawResult
                               ? toBN(
                                   (isUsingPlant
@@ -301,7 +303,7 @@ const TransferForm: FC<
                             : undefined,
                           {
                             type: ActionType.END_TOKEN,
-                            token: getNewToOldToken(whitelistedToken),
+                            token: getLegacyToken(whitelistedToken),
                           },
                         ]}
                         {...txnActions}

@@ -1,23 +1,23 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
+import { useProposalsLazyQuery } from '~/generated/graphql';
+import { AddressMap, MULTISIGS } from '~/constants';
+import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import { tokenResult } from '~/util';
+import { SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
 import {
   resetBeanstalkGovernance,
   updateActiveProposals,
   updateMultisigBalances,
 } from './actions';
-import { useProposalsLazyQuery } from '~/generated/graphql';
-import { AddressMap, MULTISIGS } from '~/constants';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import useChainConstant from '~/hooks/chain/useChainConstant';
-import { BEAN } from '~/constants/tokens';
-import { tokenResult } from '~/util';
-import { SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
 
 export const useFetchBeanstalkGovernance = () => {
   const dispatch = useDispatch();
   const beanstalk = useBeanstalkContract();
-  const Bean = useChainConstant(BEAN);
+  const { BEAN } = useTokens();
+
   const [getProposals] = useProposalsLazyQuery({
     variables: {
       space_in: SNAPSHOT_SPACES,
@@ -34,7 +34,7 @@ export const useFetchBeanstalkGovernance = () => {
         getProposals(),
         Promise.all(
           MULTISIGS.map((address) =>
-            beanstalk.getBalance(address, Bean.address).then(tokenResult(BEAN))
+            beanstalk.getBalance(address, BEAN.address).then(tokenResult(BEAN))
           )
         ),
       ]);
@@ -49,11 +49,18 @@ export const useFetchBeanstalkGovernance = () => {
               /// array can have `null` elements. I believe this shouldn't
               /// be allowed, but to fix we check for null values and manually
               /// assert existence of `p`.
-              .filter((p) => p !== null && (
-                (p.title.startsWith("BIP") || p.title.startsWith("BOP")) && p.space?.id === "beanstalkdao.eth" || 
-                (p.title.startsWith("Temp-Check") || p.title.startsWith("BFCP")) && p.space?.id === "beanstalkfarms.eth" || 
-                p.title.startsWith("BSP") && p.space?.id === "wearebeansprout.eth" || 
-                p.title.startsWith("BNP") && p.space?.id === "beanft.eth"))
+              .filter(
+                (p) =>
+                  p !== null &&
+                  (((p.title.startsWith('BIP') || p.title.startsWith('BOP')) &&
+                    p.space?.id === 'beanstalkdao.eth') ||
+                    ((p.title.startsWith('Temp-Check') ||
+                      p.title.startsWith('BFCP')) &&
+                      p.space?.id === 'beanstalkfarms.eth') ||
+                    (p.title.startsWith('BSP') &&
+                      p.space?.id === 'wearebeansprout.eth') ||
+                    (p.title.startsWith('BNP') && p.space?.id === 'beanft.eth'))
+              )
               .map((p) => ({
                 id: p!.id,
                 title: p!.title,
@@ -77,7 +84,7 @@ export const useFetchBeanstalkGovernance = () => {
         );
       }
     }
-  }, [beanstalk, getProposals, Bean.address, dispatch]);
+  }, [beanstalk, getProposals, BEAN, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[beanstalk/governance/useBeanstalkGovernance] CLEAR');

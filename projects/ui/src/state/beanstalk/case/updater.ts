@@ -18,14 +18,15 @@ export const useUpdateBeanstalkCaseState = () => {
   const refetch = useCallback(async () => {
     const seasonFetchDiff = season.minus(time.season);
     const timeDiff = Date.now() - time.time;
-
-    if (seasonFetchDiff.eq(0) && timeDiff < REFETCH_INTERVAL) return;
+    if (seasonFetchDiff.eq(0) && timeDiff < REFETCH_INTERVAL) {
+      return;
+    }
 
     const bs = sdk.contracts.beanstalk;
     const [deltaPodDemand, l2sr, podRate, largestLiqWell] = await Promise.all([
       bs.getDeltaPodDemand().then(ethersBNResult(18)),
       bs.getLiquidityToSupplyRatio().then(ethersBNResult(18)),
-      bs.getPodRate().then(ethersBNResult(18)),
+      bs.getPodRate('0').then(ethersBNResult(18)),
       bs.getLargestLiqWell(),
     ]);
 

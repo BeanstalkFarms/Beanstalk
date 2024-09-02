@@ -15,9 +15,11 @@ export const HUMIDITY_DECREASE_AT_REPLANT = new BigNumber(2.5);
 export const HUMIDITY_DECREASE_PER_SEASON = new BigNumber(0.005);
 export const REPLANT_SEASON: { [key: number]: BigNumber } = {
   [SupportedChainId.MAINNET]: new BigNumber(6074),
+  [SupportedChainId.ARBITRUM]: new BigNumber(6074),
 };
 export const REPLANT_INITIAL_ID: { [key: number]: BigNumber } = {
   [SupportedChainId.MAINNET]: new BigNumber(6_000_000),
+  [SupportedChainId.ARBITRUM]: new BigNumber(6_000_000),
 };
 
 // ----------------------------------------s
@@ -53,23 +55,6 @@ export const useHumidityAtSeason = () => {
     [endDecreaseSeason, replantSeason]
   );
 };
-
-// Until a sufficient subgraph is built, Humidity will
-// be hard-coded to these values.
-export const useHumidityFromId = () =>
-  useCallback(
-    () => [INITIAL_HUMIDITY, HUMIDITY_DECREASE_AT_REPLANT] as const,
-    []
-  );
-
-export const useHumidityAtId = () =>
-  useCallback((id: BigNumber) => {
-    if (id.eq(REPLANT_INITIAL_ID[1])) {
-      return INITIAL_HUMIDITY;
-    }
-    // Need to look up via subgraph
-    return undefined;
-  }, []);
 
 // ----------------------------------------
 

@@ -3,7 +3,6 @@ import { Box, Stack } from '@mui/material';
 import { Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import { useSelector } from 'react-redux';
 import {
   ERC20Token,
   FarmFromMode,
@@ -31,7 +30,7 @@ import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import useToggle from '~/hooks/display/useToggle';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -60,6 +59,8 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
+import { selectBdvPerToken } from '~/state/beanstalk/silo';
 
 // -----------------------------------------------------------------------
 
@@ -87,7 +88,7 @@ const defaultFarmActionsFormState = {
 const DepositForm: FC<
   FormikProps<DepositFormValues> & {
     tokenList: (ERC20Token | NativeToken)[];
-    whitelistedToken: ERC20Token | NativeToken;
+    whitelistedToken: ERC20Token;
     amountToBdv: (amount: BigNumber) => BigNumber;
     balances: FarmerBalances;
     contract: ethers.Contract;
@@ -109,6 +110,7 @@ const DepositForm: FC<
   const sdk = useSdk();
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
+  const getLegacyToken = useGetLegacyToken();
 
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
@@ -130,7 +132,8 @@ const DepositForm: FC<
     whitelistedToken,
     combinedTokenState,
     getAmountsBySource(),
-    amountToBdv
+    amountToBdv,
+    getLegacyToken
   );
 
   // Memoized params to prevent infinite loop
@@ -212,14 +215,9 @@ const DepositForm: FC<
       <Stack gap={1} ref={siblingRef}>
         {values.tokens.map((tokenState, index) => {
           const key = getTokenIndex(tokenState.token);
-          const balanceType = values.balanceFrom
-            ? values.balanceFrom
-            : BalanceFrom.TOTAL;
+          const balanceType = values.balanceFrom || BalanceFrom.TOTAL;
           const _balance = balances?.[key];
-          const balance =
-            _balance && balanceType in _balance
-              ? _balance[balanceType]
-              : ZERO_BN;
+          const balance = _balance?.[balanceType] || ZERO_BN;
 
           return (
             <TokenQuoteProviderWithParams<DepositQuoteHandler>
@@ -324,7 +322,7 @@ const DepositForm: FC<
 // -----------------------------------------------------------------------
 
 const DepositPropProvider: FC<{
-  token: ERC20Token | NativeToken;
+  token: ERC20Token;
 }> = ({ token: whitelistedToken }) => {
   const sdk = useSdk();
   const account = useAccount();
@@ -334,59 +332,25 @@ const DepositPropProvider: FC<{
   const middleware = useFormMiddleware();
   const { txnBundler, refetch } = useFormTxnContext();
 
+  // BS3TODO: Add other tokens when swap is complete
   const initTokenList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [
-        tokens.BEAN,
-        tokens.ETH,
-        tokens.WETH,
-        tokens.WSTETH,
-        tokens.CRV3,
-        tokens.DAI,
-        tokens.USDC,
-        tokens.USDT,
-      ];
+      return [sdk.tokens.BEAN];
     }
-    return [
-      tokens.BEAN,
-      tokens.ETH,
-      tokens.WETH,
-      tokens.WSTETH,
-      whitelistedToken,
-      tokens.CRV3,
-      tokens.DAI,
-      tokens.USDC,
-      tokens.USDT,
-    ];
-  }, [sdk.tokens, whitelistedToken]);
+    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
+    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
+  }, [sdk, whitelistedToken]);
 
+  // BS3TODO: Add other tokens when swap is complete
   const priorityList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [
-        tokens.BEAN,
-        tokens.ETH,
-        tokens.WETH,
-        tokens.WSTETH,
-        tokens.CRV3,
-        tokens.DAI,
-        tokens.USDC,
-        tokens.USDT,
-      ];
+      return [tokens.BEAN];
     }
-    return [
-      whitelistedToken,
-      tokens.ETH,
-      tokens.WETH,
-      tokens.WSTETH,
-      tokens.BEAN,
-      tokens.CRV3,
-      tokens.DAI,
-      tokens.USDC,
-      tokens.USDT,
-    ];
-  }, [sdk.tokens, whitelistedToken]);
+    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
+    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
+  }, [sdk, whitelistedToken]);
 
   const allAvailableTokens = useTokenMap(initTokenList);
   const priorityListTokens = useTokenMap(priorityList);
@@ -409,14 +373,8 @@ const DepositPropProvider: FC<{
     | NativeToken;
 
   /// Beanstalk
-  const bdvPerToken = useSelector<
-    AppState,
-    | AppState['_beanstalk']['silo']['balances'][string]['bdvPerToken']
-    | BigNumber
-  >(
-    (state) =>
-      state._beanstalk.silo.balances[whitelistedToken.address]?.bdvPerToken ||
-      ZERO_BN
+  const bdvPerToken = useAppSelector(
+    selectBdvPerToken(whitelistedToken.address)
   );
 
   const amountToBdv = useCallback(
@@ -623,7 +581,7 @@ const DepositPropProvider: FC<{
 };
 
 const Deposit: FC<{
-  token: ERC20Token | NativeToken;
+  token: ERC20Token;
 }> = (props) => (
   <FormTxnProvider>
     <DepositPropProvider {...props} />
@@ -631,3 +589,54 @@ const Deposit: FC<{
 );
 
 export default Deposit;
+
+// const initTokenList = useMemo(() => {
+//   const tokens = sdk.tokens;
+//   if (tokens.BEAN.equals(whitelistedToken)) {
+//     return [
+//       tokens.BEAN,
+//       tokens.ETH,
+//       tokens.WETH,
+//       tokens.WSTETH,
+//       tokens.DAI,
+//       tokens.USDC,
+//       tokens.USDT,
+//     ];
+//   }
+//   return [
+//     tokens.BEAN,
+//     tokens.ETH,
+//     tokens.WETH,
+//     tokens.WSTETH,
+//     whitelistedToken,
+//     tokens.DAI,
+//     tokens.USDC,
+//     tokens.USDT,
+//   ];
+// }, [sdk.tokens, whitelistedToken]);
+
+// const priorityList = useMemo(() => {
+//   const tokens = sdk.tokens;
+//   if (tokens.BEAN.equals(whitelistedToken)) {
+//     return [
+//       tokens.BEAN,
+//       tokens.ETH,
+//       tokens.WETH,
+//       tokens.WSTETH,
+//       tokens.DAI,
+//       tokens.USDC,
+//       tokens.USDT,
+//     ];
+//   }
+//   return [
+//     whitelistedToken,
+//     tokens.ETH,
+//     tokens.WETH,
+//     tokens.WSTETH,
+//     tokens.BEAN,
+//     tokens.CRV3,
+//     tokens.DAI,
+//     tokens.USDC,
+//     tokens.USDT,
+//   ];
+// }, [sdk.tokens, whitelistedToken]);

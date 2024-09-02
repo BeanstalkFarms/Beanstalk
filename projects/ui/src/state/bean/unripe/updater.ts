@@ -1,21 +1,23 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainId from '~/hooks/chain/useChainId';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { tokenResult } from '~/util';
-import { AddressMap, ONE_BN } from '~/constants';
-import { UNRIPE_BEAN_WSTETH, UNRIPE_TOKENS } from '~/constants/tokens';
+import { tokenIshEqual, tokenResult } from '~/util';
+import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
 import { UnripeToken } from '~/state/bean/unripe';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import BigNumber from 'bignumber.js';
+import useSdk from '~/hooks/sdk';
+import { ERC20Token } from '@beanstalk/sdk';
 import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
-  const unripeTokens = useTokenMap(UNRIPE_TOKENS);
+  const sdk = useSdk();
+  const beanstalk = sdk.contracts.beanstalk;
+  const unripeTokens = useTokenMap(sdk.tokens.unripeTokens as Set<ERC20Token>);
   const unripeUnderlyingTokens = useUnripeUnderlyingMap(); // [unripe token address] => Ripe Token
+  const unripeLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
 
   const fetch = useCallback(async () => {
     if (beanstalk) {
@@ -36,13 +38,13 @@ export const useUnripe = () => {
                 .getTotalUnderlying(addr)
                 .then(tokenResult(unripeUnderlyingTokens[addr])),
               unripeTokens[addr]
-                .getTotalSupply()
-                .then(tokenResult(unripeTokens[addr])),
+                ?.getTotalSupply()
+                ?.then(tokenResult(unripeTokens[addr])),
               beanstalk
                 .getRecapPaidPercent()
                 .then(tokenResult(unripeTokens[addr])),
               beanstalk.getPenalty(addr).then((result) => {
-                if (addr === UNRIPE_BEAN_WSTETH[1].address) {
+                if (tokenIshEqual(addr, unripeLP)) {
                   // handle this case separately b/c urBEAN:ETH LP liquidity was originally
                   // bean:3crv, which had 18 decimals
                   return new BigNumber(result.toString()).div(1e18);
@@ -60,7 +62,7 @@ export const useUnripe = () => {
               chopRate: chopRate,
               chopPenalty: ONE_BN.minus(chopRate).times(100),
               underlying: results[index][1],
-              supply: results[index][2],
+              supply: results[index][2] || ZERO_BN,
               recapPaidPercent: results[index][3],
               penalty: results[index][4],
             };
@@ -74,7 +76,7 @@ export const useUnripe = () => {
         console.error(err);
       }
     }
-  }, [beanstalk, unripeTokens, dispatch, unripeUnderlyingTokens]);
+  }, [beanstalk, unripeTokens, dispatch, unripeUnderlyingTokens, unripeLP]);
 
   const clear = useCallback(() => {
     dispatch(resetUnripe());

@@ -33,6 +33,7 @@ type BoostSettings {
 type DelegationPortal {
   delegationApi: String!
   delegationContract: String!
+  delegationNetwork: String!
   delegationType: String!
 }
 
@@ -364,6 +365,7 @@ input SpaceWhere {
   id_in: [String]
   plugin: String
   strategy: String
+  verified: Boolean
 }
 
 type Statement {
@@ -374,6 +376,7 @@ type Statement {
   id: String!
   ipfs: String!
   network: String
+  source: String
   space: String!
   statement: String
   status: String
@@ -393,6 +396,9 @@ input StatementsWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  network: String
+  source: String
+  source_in: [String]
   space: String
   space_in: [String]
 }

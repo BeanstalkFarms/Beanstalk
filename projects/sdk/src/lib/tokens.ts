@@ -27,6 +27,7 @@ export class Tokens {
   public readonly LUSD: ERC20Token;
   public readonly CRV3: ERC20Token;
   public readonly ROOT: ERC20Token;
+  public readonly ARB: ERC20Token;
 
   public readonly UNRIPE_BEAN: ERC20Token;
   public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
@@ -62,9 +63,6 @@ export class Tokens {
   public wellLPAddresses: string[];
   public siloWhitelist: Set<Token>;
   public siloWhitelistAddresses: string[];
-
-  public siloWhitelistedWellLP: Set<Token>;
-  public siloWhitelistedWellLPAddresses: string[];
 
   private map: Map<string, Token>;
 
@@ -133,7 +131,7 @@ export class Tokens {
     this.STALK = new BeanstalkToken(
       chainId,
       null,
-      10,
+      16,
       "STALK",
       {
         name: "Stalk"
@@ -411,6 +409,7 @@ export class Tokens {
       providerOrSigner
     );
 
+    /** @deprecated */
     this.CRV3 = new ERC20Token(
       chainId,
       addresses.CRV3.get(chainId),
@@ -454,6 +453,18 @@ export class Tokens {
       "USDT",
       {
         name: "Tether USD"
+      },
+      providerOrSigner
+    );
+
+    this.ARB = new ERC20Token(
+      chainId,
+      addresses.ARB.get(chainId),
+      18,
+      "ARB",
+      {
+        name: "Arbitrum",
+        displayDecimals: 2
       },
       providerOrSigner
     );
@@ -539,13 +550,15 @@ export class Tokens {
       providerOrSigner
     );
 
-    this.map.set(addresses.ROOT.get(chainId) ?? "root", this.ROOT);
-    this.map.set(addresses.BEAN_CRV3.get(chainId) ?? "bean3crv", this.BEAN_CRV3_LP);
+    this.map.set(addresses.ROOT.get(chainId) ?? this.ROOT.symbol.toLowerCase(), this.ROOT);
     this.map.set(
-      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? "beaneth_univ2",
+      addresses.BEAN_CRV3.get(chainId) ?? this.BEAN_CRV3_LP.symbol.toLowerCase(),
+      this.BEAN_CRV3_LP
+    );
+    this.map.set(
+      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? this.BEAN_ETH_UNIV2_LP.symbol.toLowerCase(),
       this.BEAN_ETH_UNIV2_LP
     );
-
     ////////// Groups //////////
 
     const wellLP = [
@@ -557,14 +570,16 @@ export class Tokens {
       this.BEAN_USDT_WELL_LP
     ];
 
-    const siloWhitelist = [this.BEAN, ...wellLP, this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH];
+    const unripeTokens = [this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH];
+
+    const siloWhitelist = [this.BEAN, ...wellLP, ...unripeTokens];
 
     this.wellLP = new Set(wellLP);
     this.wellLPAddresses = wellLP.map((t) => t.address);
     this.siloWhitelist = new Set(siloWhitelist);
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
-    this.unripeTokens = new Set([this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH]);
+    this.unripeTokens = new Set(unripeTokens);
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.WSTETH]);
     this.erc20Tokens = new Set([
       ...this.siloWhitelist,
@@ -572,7 +587,7 @@ export class Tokens {
       this.WSTETH,
       this.WEETH,
       this.WBTC,
-      this.CRV3,
+      // this.CRV3,
       this.DAI,
       this.USDC,
       this.USDT
@@ -716,7 +731,7 @@ export class Tokens {
    */
   public getIsWhitelistedWellLPToken(token: Token) {
     const foundToken = this.map.get(token.address.toLowerCase());
-    return foundToken ? this.siloWhitelistedWellLP.has(foundToken) : false;
+    return foundToken ? this.wellLP.has(foundToken) : false;
   }
 
   //////////////////////// Permit Data ////////////////////////

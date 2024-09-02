@@ -391,7 +391,7 @@ module.exports = {
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
-      timeout: 100000,
+      timeout: 1000000000,
       accounts: "remote"
     },
     mainnet: {
@@ -414,8 +414,8 @@ module.exports = {
       url: process.env.GOERLI_RPC || "",
       timeout: 100000
     },
-    localhostAribtrum: {
-      chainId: 42161,
+    localhostArbitrum: {
+      chainId: 41337,
       url: "http://127.0.0.1:8545/",
       timeout: 100000,
       account: "remote"

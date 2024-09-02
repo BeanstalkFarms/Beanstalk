@@ -14,18 +14,18 @@ export const setPrice = async (sdk: BeanstalkSDK, chain: TestUtils.BlockchainUti
   console.log(beanInput, crv3Input);
 
   const newBeanAmount = (beanInput ? beanInput : 20) * 1_000_000;
-  const newCrv3Amount = (crv3Input ? crv3Input : beanInput ? beanInput : 20) * 1_000_000;
+  // const newCrv3Amount = (crv3Input ? crv3Input : beanInput ? beanInput : 20) * 1_000_000;
 
-  const newBean = sdk.tokens.BEAN.amount(newBeanAmount);
-  const newCrv3 = sdk.tokens.CRV3.amount(newCrv3Amount);
+  // const newBean = sdk.tokens.BEAN.amount(newBeanAmount);
+  // const newCrv3 = sdk.tokens.CRV3.amount(newCrv3Amount);
 
   ////// Set the new balance
-  console.log(`New Balances: ${newBean.toHuman()} ${newCrv3.toHuman()}`);
+  // console.log(`New Balances: ${newBean.toHuman()} ${newCrv3.toHuman()}`);
   // update the array tracking balances
-  await setBalance(sdk, POOL_ADDRESS, BALANCE_SLOT, newBean, newCrv3);
+  // await setBalance(sdk, POOL_ADDRESS, BALANCE_SLOT, newBean, newCrv3);
   // actually give the pool the ERC20's
-  await chain.setBEANBalance(POOL_ADDRESS, newBean);
-  await chain.setCRV3Balance(POOL_ADDRESS, newCrv3);
+  // await chain.setBEANBalance(POOL_ADDRESS, newBean);
+  // await chain.setCRV3Balance(POOL_ADDRESS, newCrv3);
 
   // Curve also keeps track of the previous balance, so we just copy the existing current to old.
   await setBalance(sdk, POOL_ADDRESS, PREV_BALANCE_SLOT, currentBean, currentCrv3);

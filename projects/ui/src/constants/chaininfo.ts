@@ -25,19 +25,12 @@ export const CHAIN_INFO: ChainInfoMap = {
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   },
-  [SupportedChainId.LOCALHOST]: {
+  [SupportedChainId.LOCALHOST_MAINNET]: {
     networkType: NetworkType.L1,
     explorer: 'https://etherscan.io',
     label: 'Localhost',
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Localhost Ether', symbol: 'locETH', decimals: 18 },
-  },
-  [SupportedChainId.TESTNET]: {
-    networkType: NetworkType.L1,
-    explorer: 'https://etherscan.io',
-    label: 'Silo V3 Test (Tenderly)',
-    logoUrl: ethereumLogoUrl,
-    nativeCurrency: { name: 'Tenderly Ether', symbol: 'tETH', decimals: 18 },
   },
   [SupportedChainId.ANVIL1]: {
     networkType: NetworkType.L1,
@@ -45,5 +38,32 @@ export const CHAIN_INFO: ChainInfoMap = {
     label: 'Basin Integration Test',
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Basin Test Ether', symbol: 'btETH', decimals: 18 },
+  },
+  [SupportedChainId.TESTNET]: {
+    networkType: NetworkType.L2,
+    explorer: 'https://arbiscan.io',
+    label: 'Arbitrum Testnet',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Tenderly Ether', symbol: 'tETH', decimals: 18 },
+    statusPage: 'https://status.arbitrum.io/',
+    bridge: 'https://bridge.arbitrum.io',
+  },
+  [SupportedChainId.ARBITRUM]: {
+    networkType: NetworkType.L2,
+    explorer: 'https://arbiscan.io',
+    label: 'Arbitrum',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    statusPage: 'https://status.arbitrum.io/',
+    bridge: 'https://bridge.arbitrum.io',
+  },
+  [SupportedChainId.LOCALHOST]: {
+    networkType: NetworkType.L2,
+    explorer: 'https://arbiscan.io',
+    label: 'Localhost Arbitrum',
+    logoUrl: ethereumLogoUrl,
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    statusPage: 'https://status.arbitrum.io/',
+    bridge: 'https://bridge.arbitrum.io',
   },
 };

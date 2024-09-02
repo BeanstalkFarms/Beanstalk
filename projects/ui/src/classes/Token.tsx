@@ -4,8 +4,25 @@ import { bigNumberResult } from '~/util/Ledger';
 import { erc20TokenContract } from '~/util/Contracts';
 import client from '~/util/wagmi/Client';
 import { toStringBaseUnitBN } from '~/util/Tokens';
+import { Address } from '@beanstalk/sdk-core';
+
+export type LegacyTokenMetadata = {
+  name: string;
+  symbol: string;
+  logo: string;
+  color?: string;
+  displayDecimals?: number;
+  isLP?: boolean;
+  isUnripe?: boolean;
+};
+
+export type LegacyTokenRewards = {
+  stalk: number;
+  seeds: number;
+};
 
 /**
+ * @deprecated - use `Token` from `@beanstalk/sdk` instead
  * A currency is any fungible financial instrument, including Ether, all ERC20 tokens, and other chain-native currencies
  */
 export default abstract class Token {
@@ -80,25 +97,26 @@ export default abstract class Token {
     chainId: number,
     address: string | ChainConstant<string>,
     decimals: number,
-    metadata: {
-      name: string;
-      symbol: string;
-      logo: string;
-      color?: string;
-      displayDecimals?: number;
-      isLP?: boolean;
-      isUnripe?: boolean;
-    },
-    rewards?: {
-      stalk: number;
-      seeds: number;
-    }
+    metadata: LegacyTokenMetadata,
+    rewards?: LegacyTokenRewards
   ) {
     this.chainId = chainId;
-    this.address =
-      typeof address === 'string'
-        ? address.toLowerCase()
-        : address[chainId].toLowerCase();
+
+    if (typeof address === 'string') {
+      this.address = address.toLowerCase();
+    } else if (address[chainId]) {
+      this.address = address[chainId].toLowerCase();
+    } else {
+      const fallbackChainId = Address.getFallbackChainId(chainId);
+      if (address[fallbackChainId]) {
+        this.address = address[fallbackChainId].toLowerCase();
+      } else {
+        throw new Error(
+          `Invalid address for chain ${chainId} for token ${metadata.symbol}`
+        );
+      }
+    }
+
     this.decimals = decimals;
     this.symbol = metadata.symbol;
     this.name = metadata.name;
@@ -249,5 +267,3 @@ export class BeanstalkToken extends Token {
     return undefined;
   }
 }
-
-export type AnyToken = BeanstalkToken | ERC20Token | NativeToken;

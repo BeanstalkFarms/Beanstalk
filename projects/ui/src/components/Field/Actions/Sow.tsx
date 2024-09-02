@@ -48,7 +48,7 @@ import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { AppState } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { useFetchBeanstalkField } from '~/state/beanstalk/field/updater';
@@ -67,6 +67,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 type SowFormValues = FormStateNew & {
   settings: SlippageSettingsFragment & {
@@ -114,6 +115,7 @@ const SowForm: FC<
   const account = useAccount();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
+  const getLegacyToken = useGetLegacyToken();
 
   /// Chain
   const Bean = sdk.tokens.BEAN;
@@ -268,7 +270,7 @@ const SowForm: FC<
           balanceFrom={values.balanceFrom}
           disableTokenSelect={!hasSoil || !maxAmountIn}
         />
-        {hasSoil && <ClaimBeanDrawerToggle actionText='Sow'/>}
+        {hasSoil && <ClaimBeanDrawerToggle actionText="Sow" />}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -310,7 +312,7 @@ const SowForm: FC<
                       type: ActionType.BUY_BEANS,
                       beanAmount: beans,
                       beanPrice: beanPrice,
-                      token: getNewToOldToken(tokenIn),
+                      token: getLegacyToken(tokenIn),
                       tokenAmount: amountIn || ZERO_BN,
                     },
                     {

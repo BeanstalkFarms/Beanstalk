@@ -45,7 +45,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 
 import { BuyPlotsFarmStep } from '~/lib/Txn/FarmSteps/market/BuyPlotsFarmStep';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
@@ -57,6 +57,7 @@ import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
@@ -123,6 +124,7 @@ const CreateOrderV2Form: FC<
   const Bean = sdk.tokens.BEAN;
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const balances = useFarmerBalances();
+  const getLegacyToken = useGetLegacyToken();
 
   const [showTokenSelect, handleOpen, handleClose] = useToggle();
   const handleSelectTokens = useCallback(
@@ -264,9 +266,9 @@ const CreateOrderV2Form: FC<
                       ? undefined
                       : {
                           type: ActionType.SWAP,
-                          tokenIn: getNewToOldToken(tokenIn),
+                          tokenIn: getLegacyToken(tokenIn),
                           amountIn: amountIn,
-                          tokenOut: getNewToOldToken(tokenOut),
+                          tokenOut: getLegacyToken(tokenOut),
                           amountOut: amountOut,
                         },
                     {

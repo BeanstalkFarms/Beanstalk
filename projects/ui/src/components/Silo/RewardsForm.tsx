@@ -5,10 +5,7 @@ import BigNumber from 'bignumber.js';
 import { useSelector } from 'react-redux';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { ClaimRewardsAction } from '~/util';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { UNRIPE_TOKENS } from '~/constants/tokens';
-import useTokenMap from '~/hooks/chain/useTokenMap';
-import { selectCratesForEnroot } from '~/util/Crates';
+import { selectCratesForEnrootNew } from '~/util/Crates';
 import useAccount from '~/hooks/ledger/useAccount';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
@@ -55,9 +52,6 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const isImpersonating =
     !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
-  /// Helpers
-  const unripeTokens = useTokenMap(UNRIPE_TOKENS);
-
   /// Farmer data
   const farmerSilo = useSelector<AppState, AppState['_farmer']['silo']>(
     (state) => state._farmer.silo
@@ -70,7 +64,7 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const sdk = useSdk();
 
   /// Contracts
-  const beanstalk = useBeanstalkContract(signer);
+  const beanstalk = sdk.contracts.beanstalk;
 
   /// Form
   const initialValues: ClaimRewardsFormValues = useMemo(
@@ -86,9 +80,8 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
   const estimateGas = useCallback(async () => {
     if (!account || !signer || isImpersonating) return;
 
-    const selectedCratesByToken = selectCratesForEnroot(
-      beanstalk,
-      unripeTokens,
+    const selectedCratesByToken = selectCratesForEnrootNew(
+      sdk,
       siloBalances,
       getBDV
     );
@@ -201,15 +194,14 @@ const RewardsForm: React.FC<RewardsFormProps> = ({ open, children }) => {
     setGas(_gas);
   }, [
     account,
-    beanstalk,
-    farmerSilo.seeds.earned,
-    farmerSilo.stalk.grown,
-    getBDV,
-    sdk.tokens.BEAN.address,
     signer,
-    siloBalances,
-    unripeTokens,
     isImpersonating,
+    sdk,
+    siloBalances,
+    getBDV,
+    farmerSilo.stalk.grown,
+    farmerSilo.seeds.earned,
+    beanstalk,
   ]);
 
   useTimedRefresh(estimateGas, 20 * 1000, open);

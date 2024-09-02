@@ -9,10 +9,10 @@ import {
 } from '@mui/material';
 import { BeanPoolState } from '~/state/bean/pools';
 import { displayBeanPrice, displayBN } from '~/util';
-import { Pool } from '~/classes';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { ZERO_BN } from '~/constants';
 import Row from '~/components/Common/Row';
+import { Pool } from '@beanstalk/sdk';
 
 /**
  * Displays data about a Pool containing Beans and other assets.

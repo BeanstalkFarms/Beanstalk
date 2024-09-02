@@ -18,16 +18,16 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import Token from '~/classes/Token';
 import { displayBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
-import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
-import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
 import { ETH } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
+import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 
 export enum TokenSelectMode {
   MULTI,
@@ -45,9 +45,9 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   /** Close the dialog. */
   handleClose: () => void;
   /** The list of selected Tokens when the User opens the dialog. Updated on submit. */
-  selected: ({ token: Token } & any)[];
+  selected: ({ token: TokenInstance } & any)[];
   /** Called when the user "submits" their changes to selected tokens. */
-  handleSubmit: (s: Set<Token>) => void;
+  handleSubmit: (s: Set<TokenInstance>) => void;
 
   /** Override the dialog title */
   title?: string | JSX.Element;
@@ -69,7 +69,7 @@ export type TokenSelectDialogProps<K extends keyof TokenBalanceMode> = {
   balances?: TokenBalanceMode[K] | undefined;
   // balances: FarmerSiloBalance['deposited'] | FarmerBalances | undefined;
   /** A list of tokens to show in the Dialog. */
-  tokenList: Token[];
+  tokenList: TokenInstance[];
   /** Single or multi-select */
   mode?: TokenSelectMode;
 };
@@ -108,18 +108,21 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     const Eth = getChainToken(ETH);
 
     /** keep an internal copy of selected tokens */
-    const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(
-      new Set<Token>()
+    const [selectedInternal, setSelectedInternal] = useState<
+      Set<TokenInstance>
+    >(new Set<TokenInstance>());
+    const [balanceFromInternal, setBalanceFromInternal] = useState<BalanceFrom>(
+      BalanceFrom.TOTAL
     );
-    const [balanceFromInternal, setBalanceFromInternal] = useState<BalanceFrom>(BalanceFrom.TOTAL);
 
     const getBalance = useCallback(
       (addr: string) => {
         if (!_balances) return ZERO_BN;
         if (balancesType === 'farm')
           return (
-            (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFromInternal] ||
-            ZERO_BN
+            (_balances as TokenBalanceMode['farm'])?.[addr]?.[
+              balanceFromInternal
+            ] || ZERO_BN
           );
         return (
           (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited
@@ -131,7 +134,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
 
     // Toggle the selection state of a token.
     const toggle = useCallback(
-      (token: Token) => {
+      (token: TokenInstance) => {
         const copy = new Set(selectedInternal);
         if (selectedInternal.has(token)) {
           copy.delete(token);
@@ -170,7 +173,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     const setBalanceFromAndClose = useCallback(() => {
       if (setBalanceFrom) {
         setBalanceFrom(balanceFromInternal);
-      };
+      }
       handleClose(); // hide dialog
     }, [handleClose, setBalanceFrom, balanceFromInternal]);
 
@@ -179,15 +182,16 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     // the newSelection state variable so the handler can
     // be reused with onClickItem.
     const onClickSubmit = useCallback(
-      (_newSelection: Set<Token>) => () => {
+      (_newSelection: Set<TokenInstance>) => () => {
         handleSubmit(_newSelection); // update form state
         setBalanceFromAndClose();
-      }, [handleSubmit, setBalanceFromAndClose]
+      },
+      [handleSubmit, setBalanceFromAndClose]
     );
 
     // Click an item in the token list.
     const onClickItem = useCallback(
-      (_token: Token) => {
+      (_token: TokenInstance) => {
         if (mode === TokenSelectMode.MULTI) return () => toggle(_token);
         return onClickSubmit(new Set([_token])); // submit just this token
       },
