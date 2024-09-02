@@ -126,9 +126,13 @@ const BuyForm: FC<
   const [wstETHPrice, setWstETHPrice] = useState(TokenValue.ZERO);
 
   useEffect(() => {
-    getWstETHPrice().then((price) => {
-      setWstETHPrice(price);
-    });
+    getWstETHPrice()
+      .then((price) => {
+        setWstETHPrice(price);
+      })
+      .catch((e) => {
+        console.log('Error getting wstETH price: ', e);
+      });
   }, [getWstETHPrice]);
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];

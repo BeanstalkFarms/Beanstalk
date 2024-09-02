@@ -23,18 +23,18 @@ if (!WALLET_CONNECT_PROJECT_ID) {
 
 const SHOW_DEV = import.meta.env.VITE_SHOW_DEV_CHAINS;
 
-const prodChains: readonly [Chain, ...Chain[]] = [arbitrum, mainnet] as const;
+const prodChains: readonly [Chain, ...Chain[]] = [mainnet, arbitrum] as const;
 const preBS3DevChains: readonly [Chain, ...Chain[]] = [
-  localForkArbitrum,
-  localForkMainnet,
   mainnet,
+  localForkMainnet,
+  localForkArbitrum,
 ] as const;
 
 const postBS3DevChains: readonly [Chain, ...Chain[]] = [
+  mainnet,
+  localForkMainnet,
   localForkArbitrum,
   arbitrum,
-  localForkMainnet,
-  mainnet,
 ] as const;
 
 const devChains = import.meta.env.VITE_BS3_DEPLOYED
@@ -45,14 +45,14 @@ const chains: readonly [Chain, ...Chain[]] = !SHOW_DEV ? prodChains : devChains;
 
 const transports: Record<number, Transport> = !SHOW_DEV
   ? {
-      [arbitrum.id]: http(ARBITRUM_RPC),
       [mainnet.id]: http(MAINNET_RPC),
+      [arbitrum.id]: http(ARBITRUM_RPC),
     }
   : {
-      [localForkArbitrum.id]: http(localForkArbitrum.rpcUrls.default.http[0]),
-      // [arbitrum.id]: http(ARBITRUM_RPC),
-      [localForkMainnet.id]: http(localForkMainnet.rpcUrls.default.http[0]),
       [mainnet.id]: http(MAINNET_RPC),
+      [localForkMainnet.id]: http(localForkMainnet.rpcUrls.default.http[0]),
+      [localForkArbitrum.id]: http(localForkArbitrum.rpcUrls.default.http[0]),
+      [arbitrum.id]: http(ARBITRUM_RPC),
     };
 
 export const config = createConfig({

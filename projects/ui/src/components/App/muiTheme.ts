@@ -295,10 +295,9 @@ const muiThemeBase: ThemeOptions = {
       contrastText: '#ffffff',
     },
     naked: {
-      main: 'transparent',
+      main: BeanstalkPalette.white,
       contrastText: BeanstalkPalette.black,
     },
-    //
     text: {
       primary: BeanstalkPalette.textBlue,
       secondary: BeanstalkPalette.grey,
