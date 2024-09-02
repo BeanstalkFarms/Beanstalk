@@ -14,23 +14,23 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
     const symbols = [
       "ETH",
       "WETH",
-      "BEAN",
-      "USDT",
-      "USDC",
-      "DAI",
-      "CRV3",
-      "wstETH",
+      "WSTETH",
+      "STETH",
+      "WEETH",
       "WBTC",
-      "weETH",
-      "BEANWETH",
-      "BEANwstETH",
-      "BEANweETH",
-      "BEANWBTC",
-      "BEANUSDC",
-      "BEANUSDT",
+      "BEAN",
+      "DAI",
+      "USDC",
+      "USDT",
+      "ARB",
       "urBEAN",
       "urBEANwstETH",
-      "ROOT"
+      "BEANWETH",
+      "BEANWSTETH",
+      "BEANWEETH",
+      "BEANWBTC",
+      "BEANUSDC",
+      "BEANUSDT"
     ];
     if (!symbols.includes(symbol)) {
       console.log(
@@ -44,7 +44,8 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
       if (symbol === "urBEAN") t = sdk.tokens.UNRIPE_BEAN;
       if (symbol === "urBEANwstETH") t = sdk.tokens.UNRIPE_BEAN_WSTETH;
       if (symbol === "BEANWETH") t = sdk.tokens.BEAN_ETH_WELL_LP;
-      if (symbol === "BEANweETH") t = sdk.tokens.BEAN_WEETH_WELL_LP;
+      if (symbol === "BEANWEETH") t = sdk.tokens.BEAN_WEETH_WELL_LP;
+      if (symbol === "BEANWSTETH") t = sdk.tokens.BEAN_WSTETH_WELL_LP;
       if (symbol === "BEANWBTC") t = sdk.tokens.BEAN_WBTC_WELL_LP;
       if (symbol === "BEANUSDC") t = sdk.tokens.BEAN_USDC_WELL_LP;
       if (symbol === "BEANUSDT") t = sdk.tokens.BEAN_USDT_WELL_LP;

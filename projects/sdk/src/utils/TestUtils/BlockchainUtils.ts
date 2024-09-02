@@ -126,23 +126,41 @@ export class BlockchainUtils {
   async setAllBalances(account: string, amount: string) {
     await Promise.allSettled([
       this.setETHBalance(account, this.sdk.tokens.ETH.amount(amount)),
-      this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount)),
+      this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
       this.setUSDCBalance(account, this.sdk.tokens.USDC.amount(amount)),
       this.setUSDTBalance(account, this.sdk.tokens.USDT.amount(amount)),
       this.setWETHBalance(account, this.sdk.tokens.WETH.amount(amount)),
-      this.setBEANBalance(account, this.sdk.tokens.BEAN.amount(amount)),
+      this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount)),
       this.setWSTETHBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
+      this.setWEETHBalance(account, this.sdk.tokens.WEETH.amount(amount)),
+      this.setWBTCBalance(account, this.sdk.tokens.WBTC.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
       this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
-      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount))
+      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
+      this.setBEANWEETHBalance(account, this.sdk.tokens.BEAN_WEETH_WELL_LP.amount(amount)),
+      this.setBEANWBTCBalance(account, this.sdk.tokens.BEAN_WBTC_WELL_LP.amount(amount)),
+      this.setBEANUSDCBalance(account, this.sdk.tokens.BEAN_USDC_WELL_LP.amount(amount)),
+      this.setBEANUSDTBalance(account, this.sdk.tokens.BEAN_USDT_WELL_LP.amount(amount))
     ]);
   }
   async setETHBalance(account: string, balance: TokenValue) {
     await this.sdk.provider.send("hardhat_setBalance", [account, balance.toHex()]);
   }
-  async setDAIBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.DAI, account, balance);
+  async setBEANBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN, account, balance);
+  }
+  async setWETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WETH, account, balance);
+  }
+  async setWSTETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WSTETH, account, balance);
+  }
+  async setWEETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WEETH, account, balance);
+  }
+  async setWBTCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.WBTC, account, balance);
   }
   async setUSDCBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.USDC, account, balance);
@@ -150,11 +168,8 @@ export class BlockchainUtils {
   async setUSDTBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.USDT, account, balance);
   }
-  async setWETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WETH, account, balance);
-  }
-  async setBEANBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.BEAN, account, balance);
+  async setDAIBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.DAI, account, balance);
   }
   async seturBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
@@ -168,22 +183,37 @@ export class BlockchainUtils {
   async setBEANWSTETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
   }
-  async setWSTETHBalance(account: string, balance: TokenValue) {
-    this.setBalance(this.sdk.tokens.WSTETH, account, balance);
+  async setBEANWEETHBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WEETH_WELL_LP, account, balance);
+  }
+  async setBEANWBTCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_WBTC_WELL_LP, account, balance);
+  }
+  async setBEANUSDCBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_USDC_WELL_LP, account, balance);
+  }
+  async setBEANUSDTBalance(account: string, balance: TokenValue) {
+    this.setBalance(this.sdk.tokens.BEAN_USDT_WELL_LP, account, balance);
   }
 
   private getBalanceConfig(tokenAddress: string) {
     const slotConfig = new Map();
-    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
-    slotConfig.set(this.sdk.tokens.USDC.address, [9, false]);
-    slotConfig.set(this.sdk.tokens.USDT.address, [2, false]);
-    slotConfig.set(this.sdk.tokens.WETH.address, [3, false]);
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WEETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WBTC.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.USDC.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.USDT.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);
     slotConfig.set(this.sdk.tokens.BEAN_ETH_WELL_LP.address, [51, false]);
     slotConfig.set(this.sdk.tokens.BEAN_WSTETH_WELL_LP.address, [51, false]);
-    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_WEETH_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_WBTC_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_USDC_WELL_LP.address, [51, false]);
+    slotConfig.set(this.sdk.tokens.BEAN_USDT_WELL_LP.address, [51, false]);
     return slotConfig.get(tokenAddress);
   }
 
