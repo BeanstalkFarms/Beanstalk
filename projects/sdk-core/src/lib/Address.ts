@@ -6,18 +6,18 @@ export type AddressDefinition = {
 
 export class Address {
   private addresses: AddressDefinition;
-  public MAINNET: string;
   public ARBITRUM: string;
+  public MAINNET: string;
   public LOCALHOST: string;
-  public LOCALHOST_ARBITRUM: string;
+  public LOCALHOST_MAINNET: string;
   public ANVIL1: string;
   public TESTNET: string;
 
   static defaultChainId = ChainId.ARBITRUM;
 
   private static fallbackChainIds = {
+    [ChainId.LOCALHOST_MAINNET]: ChainId.MAINNET,
     [ChainId.LOCALHOST]: ChainId.MAINNET,
-    [ChainId.LOCALHOST_ARBITRUM]: ChainId.ARBITRUM,
     [ChainId.TESTNET]: Address.defaultChainId,
     [ChainId.ANVIL1]: Address.defaultChainId
   };
@@ -51,21 +51,20 @@ export class Address {
     this.addresses = addresses;
 
     this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
-    this.LOCALHOST_ARBITRUM =
-      this.addresses[ChainId.LOCALHOST_ARBITRUM] ||
-      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_ARBITRUM)];
-
-    this.MAINNET = this.addresses[ChainId.MAINNET];
     this.LOCALHOST =
       this.addresses[ChainId.LOCALHOST] ||
       this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST)];
+
+    this.MAINNET = this.addresses[ChainId.MAINNET];
+    this.LOCALHOST_MAINNET =
+      this.addresses[ChainId.LOCALHOST_MAINNET] ||
+      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_MAINNET)];
 
     this.TESTNET =
       this.addresses[ChainId.TESTNET] ||
       this.addresses[Address.getFallbackChainId(ChainId.TESTNET)];
     this.ANVIL1 =
-      this.addresses[ChainId.ANVIL1] ||
-      this.addresses[Address.getFallbackChainId(ChainId.ANVIL1)];
+      this.addresses[ChainId.ANVIL1] || this.addresses[Address.getFallbackChainId(ChainId.ANVIL1)];
   }
 
   get(chainId?: number) {
@@ -85,10 +84,11 @@ export class Address {
 
     // If user wants an address on a TESTNET chain
     // return ARBITRUM one if it's not found
+    const fallbackChainId = Address.getFallbackChainId(chainId);
     if (TESTNET_CHAINS.has(chainId)) {
-      address = this.addresses[chainId] || defaultAddress;
+      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
     } else {
-      address = this.addresses[chainId] || defaultAddress;
+      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
     }
 
     return address;
