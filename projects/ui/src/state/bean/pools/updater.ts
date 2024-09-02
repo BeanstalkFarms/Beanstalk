@@ -3,7 +3,6 @@ import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
 
-import { useBeanstalkPriceContract } from '~/hooks/ledger/useContract';
 import { tokenResult, displayBeanPrice } from '~/util';
 import { ERC20__factory } from '~/generated';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
@@ -13,26 +12,22 @@ import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
-  const sdk = useSdk();
-  const beanstalk = sdk.contracts.beanstalk;
-  const beanstalkPriceContract = useBeanstalkPriceContract();
   const provider = useEthersProvider();
+  const sdk = useSdk();
+  const { beanstalk, beanstalkPrice } = sdk.contracts;
 
   // Handlers
   const _fetch = useCallback(async () => {
     try {
-      if (beanstalk && beanstalkPriceContract) {
-        console.debug(
-          '[bean/pools/useGetPools] FETCH',
-          beanstalkPriceContract.address
-        );
+      if (beanstalk && beanstalkPrice) {
+        console.debug('[bean/pools/useGetPools] FETCH', beanstalkPrice.address);
 
         const whitelistedPools = sdk.pools.whitelistedPools;
         const BEAN = sdk.tokens.BEAN;
 
         // FIXME: find regression with Bean.totalSupply()
         const [priceResult, totalSupply, totalDeltaB] = await Promise.all([
-          beanstalkPriceContract.price(),
+          beanstalkPrice.price(),
           // FIXME: these should probably reside in bean/token/updater,
           // but the above beanstalkPriceContract call also grabs the
           // aggregate price, so for now we bundle them here.
@@ -155,7 +150,7 @@ export const useFetchPools = () => {
     }
   }, [
     beanstalk,
-    beanstalkPriceContract,
+    beanstalkPrice,
     sdk.pools,
     sdk.tokens.BEAN,
     dispatch,
