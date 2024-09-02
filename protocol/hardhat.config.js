@@ -403,9 +403,9 @@ module.exports = {
       timeout: 1000000000,
       accounts: "remote"
     },
-    localhostL2: {
+    localhostL1: {
       chainId: 1338,
-      url: "http://127.0.0.1:8546/",
+      url: "http://127.0.0.1:9545/",
       timeout: 1000000000,
       accounts: "remote"
     },
