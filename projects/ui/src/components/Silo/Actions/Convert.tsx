@@ -520,7 +520,7 @@ const ConvertForm: FC<
               component="span"
               display="inline-block"
             >
-              This conversion will effectively perform a CHOP opperation. Please
+              This Convert will effectively perform a CHOP operation. Please
               confirm you understand this by typing{' '}
               <strong>&quot;CHOP MY ASSETS&quot;</strong> below.
             </Typography>
@@ -542,7 +542,7 @@ const ConvertForm: FC<
         )}
         {isChoppingLP && (
           <WarningAlert>
-            You can get more value by first converting to{' '}
+            You can get more value by converting to{' '}
             {sdk.tokens.UNRIPE_BEAN.symbol} first.
           </WarningAlert>
         )}
