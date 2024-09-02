@@ -304,6 +304,8 @@ contract FloodTest is TestHelper {
     }
 
     function testRaining() public {
+        // verify the beanToMaxLpGpPerBdvRatio is not zero before raining
+        assertGt(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
         field.incrementTotalPodsE(1000e18, bs.activeField());
         season.rainSunrise();
         bs.mow(users[1], BEAN);
@@ -320,6 +322,9 @@ contract FloodTest is TestHelper {
 
         assertEq(sop.lastRain, s.rainStart);
         assertEq(sop.roots, 10004000e24);
+
+        // verify the beanToMaxLpGpPerBdvRatio is zero after rain starts
+        assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
     }
 
     function testStopsRaining() public {
@@ -355,6 +360,8 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
+        assertGt(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
+
         address sopWell = BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
@@ -376,6 +383,10 @@ contract FloodTest is TestHelper {
             C.SOP_PRECISION; // 25595575914848452999
 
         season.rainSunrise();
+
+        // verify the beanToMaxLpGpPerBdvRatio is zero after rain starts
+        assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
+
         bs.mow(users[1], BEAN);
 
         vm.expectEmit();
@@ -444,8 +455,11 @@ contract FloodTest is TestHelper {
     function testMultipleSop() public {
         address sopWell = BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
+        assertGt(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
 
         season.rainSunrise();
+
+        assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
         bs.mow(users[2], BEAN);
         season.rainSunrise();
         season.droughtSunrise();
