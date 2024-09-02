@@ -5,6 +5,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import useSdk from '~/hooks/sdk';
 import { transform } from '~/util/BigNumber';
 import useChainState from '~/hooks/chain/useChainState';
+import BigNumber from 'bignumber.js';
 import {
   resetFarmerField,
   updateFarmerField,
@@ -12,15 +13,10 @@ import {
 } from './actions';
 
 export const useFetchFarmerField = () => {
-  /// Helpers
-  const dispatch = useDispatch();
   const { isEthereum } = useChainState();
-
-  /// Contracts
-  const sdk = useSdk();
-
-  /// Data
   const account = useAccount();
+  const sdk = useSdk();
+  const dispatch = useDispatch();
 
   /// Handlers
   const fetch = useCallback(async () => {
@@ -38,12 +34,8 @@ export const useFetchFarmerField = () => {
 
       dispatch(
         updateFarmerField({
-          pods: transform(data.pods, 'bnjs', sdk.tokens.PODS),
-          harvestablePods: transform(
-            data.harvestablePods,
-            'bnjs',
-            sdk.tokens.PODS
-          ),
+          pods: new BigNumber(data.pods.toHuman()),
+          harvestablePods: new BigNumber(data.harvestablePods.toHuman()),
           plots: Object.fromEntries(transformMap(data.plots)),
           harvestablePlots: Object.fromEntries(
             transformMap(data.harvestablePlots)
@@ -51,20 +43,21 @@ export const useFetchFarmerField = () => {
         })
       );
     }
-  }, [sdk, account, isEthereum, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdk, account, isEthereum]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useFarmerField] CLEAR');
     dispatch(resetFarmerField());
   }, [dispatch]);
 
-  return [fetch, true, clear] as const;
+  return [fetch, clear] as const;
 };
 
 // -- Updater
 
 const FarmerFieldUpdater = () => {
-  const [fetch, initialized, clear] = useFetchFarmerField();
+  const [fetch, clear] = useFetchFarmerField();
   const dispatch = useDispatch();
   const account = useAccount();
   const chainId = useChainId();
@@ -72,7 +65,7 @@ const FarmerFieldUpdater = () => {
   useEffect(() => {
     clear();
 
-    if (account && initialized) {
+    if (account) {
       dispatch(updateFarmerFieldLoading(true));
       fetch()
         .catch((err) => {
@@ -81,7 +74,7 @@ const FarmerFieldUpdater = () => {
               'Failed to fetch Field events: RPC query limit exceeded'
             );
           } else {
-            console.log(
+            console.error(
               'Failed to fetch Field events: ',
               (err as Error).message
             );
@@ -92,7 +85,7 @@ const FarmerFieldUpdater = () => {
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId, initialized]);
+  }, [account, chainId]);
 
   return null;
 };
