@@ -14,6 +14,7 @@ import { ZERO_BN } from '~/constants';
 import { AppState } from '~/state';
 import { Settings } from '~/state/app';
 import { Token } from '@beanstalk/sdk';
+import { tokenIshEqual } from '~/util';
 
 /**
  * FIXME: this function is being called very frequently
@@ -45,12 +46,12 @@ const useSiloTokenToFiat = () => {
       if (!_amount) return ZERO_BN;
 
       /// For Beans, use the aggregate Bean price.
-      if (_token === Bean) {
+      if (tokenIshEqual(_token, Bean)) {
         return _denomination === 'bdv' ? _amount : _amount.times(price);
       }
 
       /// For Unripe assets
-      if (_token === urBean) {
+      if (tokenIshEqual(_token, urBean)) {
         const choppedBeans = _chop
           ? _amount.times(unripe[urBean.address]?.chopRate || ZERO_BN)
           : _amount;
@@ -65,7 +66,7 @@ const useSiloTokenToFiat = () => {
       const _poolAddress = _token.address;
       const _amountLP = _amount;
 
-      if (_token === urBeanWstETH) {
+      if (tokenIshEqual(_token, urBeanWstETH)) {
         // formula for calculating chopped urBEANWstETH LP:
         // amount * penalty (where penalty is amount of beanWstETH for 1 urBeanWstETH)
         const penalty = unripe[urBeanWstETH.address]?.penalty || ZERO_BN;

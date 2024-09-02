@@ -11,7 +11,7 @@ import { useAppSelector } from '~/state';
 import { BeanPools } from '~/state/bean/pools';
 import * as LegacyTokens from '~/constants/tokens';
 import { isSdkToken } from '~/util';
-import useChainId from '../chain/useChainId';
+import useChainState from '../chain/useChainState';
 
 // -------------------------
 // Token Instances
@@ -96,6 +96,10 @@ export const useTokens = (): {
   }, [sdk]);
 };
 
+const useWellUnderlyingTokens = () => {
+  const sdk = useSdk();
+};
+
 /**
  * @returns all beanstalk tokens from the SDK STALK, SEEDS, SPROUTS, rSPROUTS, PODS
  */
@@ -133,6 +137,7 @@ export const useUnripeTokens = () => {
     return {
       UNRIPE_BEAN: sdk.tokens.UNRIPE_BEAN,
       UNRIPE_BEAN_WSTETH: sdk.tokens.UNRIPE_BEAN_WSTETH,
+      unripeTokens: arr,
       tokenMap,
     };
   }, [sdk]);
@@ -249,20 +254,17 @@ const oldTokenMap: Record<string, ChainConstant<LegacyToken> | LegacyToken> = {
 } as const;
 
 export const useGetLegacyToken = () => {
-  const chainId = useChainId() || SupportedChainId.ARBITRUM;
+  const { chainId, fallbackChainId } = useChainState();
 
   const getLegacyToken = useCallback(
     (token: TokenInstance): LegacyToken => {
       if (!isSdkToken(token)) return token;
-
       const oldToken = oldTokenMap[token.symbol];
-      if (!oldToken) {
-        throw new Error(`getLegacyToken: ${token.symbol} could not found`);
-      }
+
       if (oldToken instanceof LegacyToken) return oldToken;
-      return oldToken[chainId];
+      return oldToken[chainId] || oldToken[fallbackChainId];
     },
-    [chainId]
+    [chainId, fallbackChainId]
   );
 
   return getLegacyToken;

@@ -22,7 +22,11 @@ function useChainState() {
     const isDev = SUPPORTED_DEV_CHAINS.has(chainId);
     const isArbitrum = SUPPORTED_ARB_CHAINS.has(chainId);
 
-    return { isEthereum, isDev, isArbitrum };
+    const fallbackChainId = isEthereum
+      ? SupportedChainId.MAINNET
+      : SupportedChainId.ARBITRUM;
+
+    return { isEthereum, isDev, isArbitrum, chainId, fallbackChainId };
   }, [chainId]);
 }
 

@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { AddressMap, ZERO_BN } from '~/constants';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
-import { useSelector } from 'react-redux';
 import { L1_SILO_WHITELIST } from '~/constants/tokens';
 import useSiloTokenToFiat from '../beanstalk/useSiloTokenToFiat';
 import useTokenMap from '../chain/useTokenMap';
@@ -92,13 +91,8 @@ export default function useFarmerBalancesBreakdown() {
   const { tokenMap: whitelist, addresses } = useWhitelistedTokens();
 
   /// Balances
-  const siloBalances = useSelector<
-    AppState,
-    AppState['_farmer']['silo']['balances']
-  >((s) => s._farmer.silo.balances);
-  const tokenBalances = useSelector<AppState, AppState['_farmer']['balances']>(
-    (s) => s._farmer.balances
-  );
+  const siloBalances = useAppSelector((s) => s._farmer.silo.balances);
+  const tokenBalances = useAppSelector((s) => s._farmer.balances);
 
   /// Helpers
   const getUSD = useSiloTokenToFiat();
@@ -167,13 +161,8 @@ export function useFarmerBalancesL1Breakdown() {
   const addresses = useMemo(() => Object.keys(whitelist), [whitelist]);
 
   /// Balances
-  const siloBalances = useSelector<
-    AppState,
-    AppState['_farmer']['silo']['balances']
-  >((s) => s._farmer.silo.balances);
-  const tokenBalances = useSelector<AppState, AppState['_farmer']['balances']>(
-    (s) => s._farmer.balances
-  );
+  const siloBalances = useAppSelector((s) => s._farmer.silo.balances);
+  const tokenBalances = useAppSelector((s) => s._farmer.balances);
 
   /// Helpers
   const getUSD = useSiloTokenToFiat();
