@@ -45,7 +45,6 @@ ignored_warnings_from = [
 gas_reports = ['*']
  # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
 no_storage_caching = false
-no_match_contract = "ReseedStateTest"
  
 [profile.differential]
 match_test = "testDiff"

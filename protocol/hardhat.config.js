@@ -37,7 +37,12 @@ const { reseedL2 } = require("./reseed/reseedL2.js");
 const { reseedL1 } = require("./reseed/reseedL1.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMiscellaneousImprovements } = require("./scripts/bips.js");
+const {
+  bipNewSilo,
+  bipMorningAuction,
+  bipSeedGauge,
+  bipMiscellaneousImprovements
+} = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -398,9 +403,9 @@ module.exports = {
       timeout: 1000000000,
       accounts: "remote"
     },
-    localhostL2: {
+    localhostL1: {
       chainId: 1338,
-      url: "http://127.0.0.1:8546/",
+      url: "http://127.0.0.1:9545/",
       timeout: 1000000000,
       accounts: "remote"
     },
