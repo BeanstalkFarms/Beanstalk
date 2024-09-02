@@ -62,6 +62,7 @@ library LibFlood {
             }
             return;
         } else if (!s.sys.season.raining) {
+            initRainVariables();
             startRain();
         } else {
             // flood podline first, because it checks current Bean supply
@@ -92,9 +93,9 @@ library LibFlood {
     }
 
     /**
-     * @notice Handles any system-level logic that occurs when it starts raining.
+     * @notice Snapshot variables required to start raining.
      */
-    function startRain() internal {
+    function initRainVariables() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         s.sys.season.raining = true;
@@ -108,6 +109,13 @@ library LibFlood {
         s.sys.season.rainStart = s.sys.season.current;
         s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
         s.sys.rain.roots = s.sys.silo.roots;
+    }
+
+    /**
+     * @notice Handles any system-level logic that occurs when it starts raining.
+     */
+    function startRain() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
 
         // upon rain, set beanToMaxLpGpPerBdvRatio to zero, to encourage converts down before starting to flood
         s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
