@@ -4,14 +4,15 @@ import useChainId from './useChainId';
 
 const SUPPORTED_DEV_CHAINS = new Set<SupportedChainId>([
   SupportedChainId.LOCALHOST,
-  SupportedChainId.LOCALHOST_ARBITRUM,
+  SupportedChainId.LOCALHOST_MAINNET,
+  SupportedChainId.TESTNET,
 ]);
 
 const SUPPORTED_L1_CHAINS = new Set<SupportedChainId>(L1_CHAIN_IDS);
 
 const SUPPORTED_ARB_CHAINS = new Set<SupportedChainId>([
   SupportedChainId.ARBITRUM,
-  SupportedChainId.LOCALHOST_ARBITRUM,
+  SupportedChainId.LOCALHOST,
 ]);
 
 function useChainState() {

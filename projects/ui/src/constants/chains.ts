@@ -32,14 +32,14 @@ export enum NetworkType {
 
 export const L1_CHAIN_IDS = [
   SupportedChainId.MAINNET,
-  SupportedChainId.LOCALHOST,
+  SupportedChainId.LOCALHOST_MAINNET,
   SupportedChainId.TESTNET,
   SupportedChainId.ANVIL1,
 ] as const;
 
 export const L2_CHAIN_IDS = [
   SupportedChainId.ARBITRUM,
-  SupportedChainId.LOCALHOST_ARBITRUM,
+  SupportedChainId.LOCALHOST,
 ] as const;
 
 export type SupportedL1ChainId = (typeof L1_CHAIN_IDS)[number];
@@ -72,9 +72,3 @@ export interface L2ChainInfo extends BaseChainInfo {
   readonly statusPage?: string;
   readonly defaultListUrl?: string;
 }
-
-export const FALLBACK_CHAIN_ID_MAP = {
-  [SupportedChainId.LOCALHOST_ARBITRUM]: SupportedChainId.ARBITRUM,
-  [SupportedChainId.LOCALHOST]: SupportedChainId.MAINNET,
-  [SupportedChainId.TESTNET]: SupportedChainId.ARBITRUM,
-};

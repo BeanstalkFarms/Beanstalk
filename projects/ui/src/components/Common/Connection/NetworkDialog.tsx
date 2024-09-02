@@ -23,7 +23,10 @@ const useChainIdToLogo = () => {
   return useCallback(
     (_chainId: SupportedChainId | undefined) => {
       const chainId = _chainId || Address.defaultChainId;
-      if (chainId === SupportedChainId.LOCALHOST || SupportedChainId.MAINNET) {
+      if (
+        chainId === SupportedChainId.LOCALHOST_MAINNET ||
+        chainId === SupportedChainId.MAINNET
+      ) {
         return ETH.logo;
       }
       return ARB.logo;

@@ -10,7 +10,7 @@ import { SupportedChainId } from '~/constants';
  */
 
 const defaultChainId = import.meta.env.DEV
-  ? SupportedChainId.LOCALHOST_ARBITRUM
+  ? SupportedChainId.LOCALHOST
   : SupportedChainId.ARBITRUM;
 
 export default function useChainId() {

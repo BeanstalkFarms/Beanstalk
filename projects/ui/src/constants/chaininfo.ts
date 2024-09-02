@@ -25,7 +25,7 @@ export const CHAIN_INFO: ChainInfoMap = {
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   },
-  [SupportedChainId.LOCALHOST]: {
+  [SupportedChainId.LOCALHOST_MAINNET]: {
     networkType: NetworkType.L1,
     explorer: 'https://etherscan.io',
     label: 'Localhost',
@@ -55,7 +55,7 @@ export const CHAIN_INFO: ChainInfoMap = {
     statusPage: 'https://status.arbitrum.io/',
     bridge: 'https://bridge.arbitrum.io',
   },
-  [SupportedChainId.LOCALHOST_ARBITRUM]: {
+  [SupportedChainId.LOCALHOST]: {
     networkType: NetworkType.L2,
     explorer: 'https://arbiscan.io',
     label: 'Localhost Arbitrum',
