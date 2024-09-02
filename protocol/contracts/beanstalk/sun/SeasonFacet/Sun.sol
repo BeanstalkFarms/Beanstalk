@@ -25,12 +25,6 @@ contract Sun is Oracle, Distribution {
     using LibRedundantMath128 for uint128;
     using SignedMath for int256;
 
-    /// @dev When the Pod Rate is high, issue less Soil.
-    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
-
-    /// @dev When the Pod Rate is low, issue more Soil.
-    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
-
     /**
      * @notice Emitted during Sunrise when Beanstalk adjusts the amount of available Soil.
      * @param season The Season in which Soil was adjusted.
@@ -76,9 +70,9 @@ contract Sun is Oracle, Distribution {
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.sys.weather.temp);
         if (caseId.mod(36) >= 24) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
+            newSoil = newSoil.mul(s.sys.evaluationParameters.soilCoefficientHigh).div(C.PRECISION); // high podrate
         } else if (caseId.mod(36) < 8) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
+            newSoil = newSoil.mul(s.sys.evaluationParameters.soilCoefficientLow).div(C.PRECISION); // low podrate
         }
         setSoil(newSoil);
     }

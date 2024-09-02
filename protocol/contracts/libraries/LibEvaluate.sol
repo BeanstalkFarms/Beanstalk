@@ -318,7 +318,9 @@ library LibEvaluate {
         address target = lw.target;
         if (target == address(0)) target = address(this);
 
-        (bool success, bytes memory data) = target.staticcall(abi.encodeWithSelector(lw.selector));
+        (bool success, bytes memory data) = target.staticcall(
+            abi.encodeWithSelector(lw.selector, lw.data)
+        );
 
         if (!success) return 0;
         assembly {

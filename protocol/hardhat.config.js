@@ -36,7 +36,12 @@ const { to6 } = require("./test/hardhat/utils/helpers.js");
 const { reseed } = require("./reseed/reseed.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMiscellaneousImprovements } = require("./scripts/bips.js");
+const {
+  bipNewSilo,
+  bipMorningAuction,
+  bipSeedGauge,
+  bipMiscellaneousImprovements
+} = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -119,7 +124,17 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
+  const modules = [
+    "barn",
+    "diamond",
+    "farm",
+    "field",
+    "market",
+    "silo",
+    "sun",
+    "metadata",
+    "migration"
+  ];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -190,7 +205,17 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
+  const modules = [
+    "barn",
+    "diamond",
+    "farm",
+    "field",
+    "market",
+    "silo",
+    "sun",
+    "metadata",
+    "migration"
+  ];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol

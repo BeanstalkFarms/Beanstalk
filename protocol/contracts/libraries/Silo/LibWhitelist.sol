@@ -33,8 +33,6 @@ library LibWhitelist {
      * @param selector The function selector that returns the BDV of a given token.
      * @param stalkEarnedPerSeason The Stalk per BDV per Season received from depositing `token`.
      * @param stalkIssuedPerBdv The Stalk per BDV given from depositing `token`.
-     * @param gpSelector The function selector that returns the gauge points of a given token.
-     * @param lwSelector The function selector that returns the liquidity weight of a given token.
      * @param gaugePoints The gauge points of the token.
      * @param optimalPercentDepositedBdv The target percentage
      * of the total LP deposited BDV for this token.
@@ -44,19 +42,8 @@ library LibWhitelist {
         bytes4 selector,
         uint32 stalkEarnedPerSeason,
         uint256 stalkIssuedPerBdv,
-        bytes4 gpSelector,
-        bytes4 lwSelector,
         uint128 gaugePoints,
         uint64 optimalPercentDepositedBdv
-    );
-
-    /**
-     * @notice Emitted when a token is added to the Silo Whitelist with external implementation(s).
-     */
-    event WhitelistTokenWithExternalImplementation(
-        Implementation oracleImplementation,
-        Implementation gpImplementation,
-        Implementation lwImplementation
     );
 
     /**
@@ -78,7 +65,7 @@ library LibWhitelist {
     /**
      * @notice Emitted when the liquidity weight implementation for a token is updated.
      */
-    event UpdatedLiqudityWeightImplementationForToken(
+    event UpdatedLiquidityWeightImplementationForToken(
         address indexed token,
         Implementation liquidityWeightImplementation
     );
@@ -86,14 +73,10 @@ library LibWhitelist {
     /**
      * @notice Emitted when the gauge settings are updated.
      * @param token Token that is being updated.
-     * @param gpSelector The new gaugePoint selector.
-     * @param lwSelector The new liquidityWeight selector.
      * @param optimalPercentDepositedBdv The new optimal Percent deposited BDV
      */
-    event UpdateGaugeSettings(
+    event UpdatedOptimalPercentDepositedBdvForToken(
         address indexed token,
-        bytes4 gpSelector,
-        bytes4 lwSelector,
         uint64 optimalPercentDepositedBdv
     );
 
@@ -118,80 +101,11 @@ library LibWhitelist {
     /**
      * @dev Adds an ERC-20 token to the Silo Whitelist.
      * Assumes future tokens will be well pool tokens.
+     * Assumes if the gpImplementation and lwImplementation targets are not set,
+     * that they are implemented in this diamond.
+     * Oracle Implementations may or may not be implemented, depending on the token.
      */
     function whitelistToken(
-        address token,
-        bytes4 selector,
-        uint48 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason,
-        bytes1 encodeType,
-        bytes4 gaugePointSelector,
-        bytes4 liquidityWeightSelector,
-        uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv,
-        Implementation memory oracleImplementation
-    ) internal {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        // verify the gaugePoint and liquidityWeight selector.
-        verifyGaugePointSelector(gaugePointSelector);
-        verifyLiquidityWeightSelector(liquidityWeightSelector);
-        verifyOracleImplementation(
-            token,
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType,
-            oracleImplementation.data
-        );
-
-        // verify whitelist status of token.
-        // reverts on an invalid stalkIssuedPerBdv if previously whitelisted.
-        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
-
-        // If an LP token, initialize oracle storage variables.
-        if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
-            s.sys.usdTokenPrice[token] = 1;
-            s.sys.twaReserves[token].reserve0 = 1;
-            s.sys.twaReserves[token].reserve1 = 1;
-        }
-
-        // beanstalk requires all whitelisted assets to have a minimum stalkEarnedPerSeason
-        // of 1 (due to the germination update). set stalkEarnedPerSeason to 1 to prevent revert.
-        if (stalkEarnedPerSeason == 0) stalkEarnedPerSeason = 1;
-        s.sys.silo.assetSettings[token].selector = selector;
-        s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
-        s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
-        s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
-        s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = gaugePointSelector;
-        s
-            .sys
-            .silo
-            .assetSettings[token]
-            .liquidityWeightImplementation
-            .selector = liquidityWeightSelector;
-        s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
-        s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-
-        // the Oracle should return the price for the non-bean asset in USD
-        s.sys.oracleImplementation[token] = oracleImplementation;
-
-        emit WhitelistToken(
-            token,
-            selector,
-            stalkEarnedPerSeason,
-            stalkIssuedPerBdv,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            gaugePoints,
-            optimalPercentDepositedBdv
-        );
-    }
-
-    /**
-     * @notice whitelists a token with an external implementation(s).
-     */
-    function whitelistTokenWithExternalImplementation(
         address token,
         bytes4 selector,
         uint48 stalkIssuedPerBdv,
@@ -206,30 +120,23 @@ library LibWhitelist {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // verify the gaugePoint and liquidityWeight selector.
-        verifyOracleImplementation(
-            token,
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType,
-            oracleImplementation.data
-        );
-        verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
-        verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
+        verifyGaugePointImplementation(gpImplementation);
+        verifyLiquidityWeightImplementation(lwImplementation);
 
         // add whitelist status
-        LibWhitelistedTokens.addWhitelistStatus(
-            token,
-            true, // Whitelisted by default.
-            token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token), // Assumes tokens that are not Unripe and not Bean are LP tokens.
-            selector == LibWell.WELL_BDV_SELECTOR,
-            selector == LibWell.WELL_BDV_SELECTOR // Assumes wells are soppable if selector is WELL_BDV_SELECTOR
-        );
+        verifyWhitelistStatus(token, selector, stalkIssuedPerBdv);
 
-        // If an LP token, initialize oracle storage variables.
+        // If an LP token, initialize oracle storage variables and set Oracle Implementation:
         if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
             s.sys.usdTokenPrice[token] = 1;
             s.sys.twaReserves[token].reserve0 = 1;
             s.sys.twaReserves[token].reserve1 = 1;
+
+            // the Oracle should return the price for the non-bean asset in USD
+            address nonBeanToken = address(LibWell.getNonBeanTokenFromWell(token));
+            verifyOracleImplementation(nonBeanToken, oracleImplementation);
+            s.sys.oracleImplementation[nonBeanToken] = oracleImplementation;
+            emit UpdatedOracleImplementationForToken(nonBeanToken, oracleImplementation);
         }
 
         require(
@@ -251,42 +158,17 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].gaugePointImplementation = gpImplementation;
         s.sys.silo.assetSettings[token].liquidityWeightImplementation = lwImplementation;
 
-        // the Oracle should return the price for the non-bean asset in USD
-        s.sys.oracleImplementation[token] = oracleImplementation;
-
         emit WhitelistToken(
             token,
             selector,
             stalkEarnedPerSeason,
             stalkIssuedPerBdv,
-            bytes4(0),
-            bytes4(0),
             gaugePoints,
             optimalPercentDepositedBdv
         );
 
-        emit WhitelistTokenWithExternalImplementation(
-            oracleImplementation,
-            gpImplementation,
-            lwImplementation
-        );
-    }
-
-    /**
-     * @notice Updates optimalPercentDepositedBdv token.
-     * @dev {LibWhitelistedTokens} must be updated to include the new token.
-     */
-    function updateOptimalPercentDepositedBdvForToken(
-        address token,
-        uint64 optimalPercentDepositedBdv
-    ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        updateGaugeForToken(
-            token,
-            ss.gaugePointImplementation.selector,
-            ss.liquidityWeightImplementation.selector,
-            optimalPercentDepositedBdv
-        );
+        emit UpdatedGaugePointImplementationForToken(token, gpImplementation);
+        emit UpdatedLiquidityWeightImplementationForToken(token, lwImplementation);
     }
 
     /**
@@ -295,25 +177,13 @@ library LibWhitelist {
      */
     function updateGaugeForToken(
         address token,
-        bytes4 gaugePointSelector,
-        bytes4 liquidityWeightSelector,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory gpImplementation,
+        Implementation memory lwImplementation
     ) internal {
-        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
-        require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
-        verifyGaugePointSelector(gaugePointSelector);
-        verifyLiquidityWeightSelector(liquidityWeightSelector);
-
-        ss.gaugePointImplementation.selector = gaugePointSelector;
-        ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
-        ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-
-        emit UpdateGaugeSettings(
-            token,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            optimalPercentDepositedBdv
-        );
+        updateGaugePointImplementationForToken(token, gpImplementation);
+        updateLiqudityWeightImplementationForToken(token, lwImplementation);
+        updateOptimalPercentDepositedBdvForToken(token, optimalPercentDepositedBdv);
     }
 
     /**
@@ -343,6 +213,19 @@ library LibWhitelist {
     }
 
     /**
+     * @notice Updates optimalPercentDepositedBdv token.
+     * @dev {LibWhitelistedTokens} must be updated to include the new token.
+     */
+    function updateOptimalPercentDepositedBdvForToken(
+        address token,
+        uint64 optimalPercentDepositedBdv
+    ) internal {
+        AssetSettings storage ss = LibAppStorage.diamondStorage().sys.silo.assetSettings[token];
+        ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
+        emit UpdatedOptimalPercentDepositedBdvForToken(token, optimalPercentDepositedBdv);
+    }
+
+    /**
      * @notice updates the oracle implementation for a token.
      */
     function updateOracleImplementationForToken(
@@ -350,13 +233,7 @@ library LibWhitelist {
         Implementation memory oracleImplementation
     ) internal {
         // check that new implementation is valid.
-        verifyOracleImplementation(
-            token,
-            oracleImplementation.target,
-            oracleImplementation.selector,
-            oracleImplementation.encodeType,
-            oracleImplementation.data
-        );
+        verifyOracleImplementation(token, oracleImplementation);
 
         AppStorage storage s = LibAppStorage.diamondStorage();
         s.sys.oracleImplementation[token] = oracleImplementation;
@@ -375,7 +252,7 @@ library LibWhitelist {
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
         // check that new implementation is valid.
-        verifyGaugePointImplementation(gpImplementation.target, gpImplementation.selector);
+        verifyGaugePointImplementation(gpImplementation);
 
         ss.gaugePointImplementation = gpImplementation;
 
@@ -393,11 +270,11 @@ library LibWhitelist {
         require(ss.selector != 0, "Whitelist: Token not whitelisted in Silo");
 
         // check that new implementation is valid.
-        verifyLiquidityWeightImplementation(lwImplementation.target, lwImplementation.selector);
+        verifyLiquidityWeightImplementation(lwImplementation);
 
         ss.liquidityWeightImplementation = lwImplementation;
 
-        emit UpdatedLiqudityWeightImplementationForToken(token, lwImplementation);
+        emit UpdatedLiquidityWeightImplementationForToken(token, lwImplementation);
     }
 
     /**
@@ -433,7 +310,6 @@ library LibWhitelist {
         delete s.sys.silo.assetSettings[token].optimalPercentDepositedBdv;
 
         // delete implementations:
-        delete s.sys.oracleImplementation[token];
         delete s.sys.silo.assetSettings[token].gaugePointImplementation;
         delete s.sys.silo.assetSettings[token].liquidityWeightImplementation;
 
@@ -456,69 +332,65 @@ library LibWhitelist {
      */
     function verifyOracleImplementation(
         address token,
-        address oracleImplementation,
-        bytes4 selector,
-        bytes1 encodeType,
-        bytes memory data
-    ) internal view {
+        Implementation memory oracleImplementation
+    ) internal {
         bool success;
+        bytes memory returnData;
         // if the encode type is 0x01, verify using the chainlink implementation.
-        if (encodeType == bytes1(0x01)) {
-            (success, ) = oracleImplementation.staticcall(
+        if (oracleImplementation.encodeType == bytes1(0x01)) {
+            (success, returnData) = oracleImplementation.target.staticcall(
                 abi.encodeWithSelector(IChainlinkAggregator.decimals.selector)
             );
-        } else if (encodeType == bytes1(0x02)) {
+        } else if (oracleImplementation.encodeType == bytes1(0x02)) {
             // 0x0dfe1681 == token0() for uniswap pools.
-            (success, ) = oracleImplementation.staticcall(abi.encodeWithSelector(0x0dfe1681));
+            (success, returnData) = oracleImplementation.target.staticcall(
+                abi.encodeWithSelector(0x0dfe1681)
+            );
         } else {
             // verify you passed in a callable oracle selector
-            (success, ) = oracleImplementation.staticcall(
-                abi.encodeWithSelector(selector, IERC20Decimals(token).decimals(), 0, data)
+            (success, returnData) = oracleImplementation.target.call(
+                abi.encodeWithSelector(
+                    oracleImplementation.selector,
+                    IERC20Decimals(token).decimals(),
+                    0,
+                    oracleImplementation.data
+                )
             );
         }
-
-        require(success, "Whitelist: Invalid Oracle Implementation");
-    }
-
-    /**
-     * @notice Verifies whether the gaugePointSelector is valid for the gauge system.
-     */
-    function verifyGaugePointSelector(bytes4 selector) internal view {
-        verifyGaugePointImplementation(address(this), selector);
+        require(success && returnData.length > 0, "Whitelist: Invalid Oracle Implementation");
     }
 
     /**
      * @notice Verifies whether a gaugePointSelector at an external contract
      * is valid for the gauge system.
      */
-    function verifyGaugePointImplementation(
-        address gpImplementation,
-        bytes4 selector
-    ) internal view {
+    function verifyGaugePointImplementation(Implementation memory gpImplementation) internal view {
+        // if the target is not set, assume the gaugePoint implementation is in this diamond.
+        address target = gpImplementation.target == address(0)
+            ? address(this)
+            : gpImplementation.target;
         // verify you passed in a callable gaugePoint selector
-        (bool success, ) = gpImplementation.staticcall(abi.encodeWithSelector(selector, 0, 0, 0));
-        require(success, "Whitelist: Invalid GaugePoint selector");
-    }
-
-    /**
-     * @notice Verifies whether the selector is valid for the gauge system.
-     */
-    function verifyLiquidityWeightSelector(bytes4 selector) internal view {
-        // verify you passed in a callable liquidityWeight selector
-        verifyLiquidityWeightImplementation(address(this), selector);
+        (bool success, bytes memory returnData) = target.staticcall(
+            abi.encodeWithSelector(gpImplementation.selector, 0, 0, 0, gpImplementation.data)
+        );
+        require(success && returnData.length > 0, "Whitelist: Invalid GaugePoint Implementation");
     }
 
     /**
      * @notice Verifies whether liquidityWeight selector at an external contract
      * is valid for the gauge system.
      */
-    function verifyLiquidityWeightImplementation(
-        address lwImplementation,
-        bytes4 selector
-    ) internal view {
+    function verifyLiquidityWeightImplementation(Implementation memory lw) internal view {
+        // if the target is not set, assume the liquidity weight implementation is in this diamond.
+        address target = lw.target == address(0) ? address(this) : lw.target;
         // verify you passed in a callable liquidityWeight selector
-        (bool success, ) = lwImplementation.staticcall(abi.encodeWithSelector(selector));
-        require(success, "Whitelist: Invalid LiquidityWeight selector");
+        (bool success, bytes memory returnData) = target.staticcall(
+            abi.encodeWithSelector(lw.selector, lw.data)
+        );
+        require(
+            success && returnData.length > 0,
+            "Whitelist: Invalid LiquidityWeight Implementation"
+        );
     }
 
     /**
@@ -567,12 +439,5 @@ library LibWhitelist {
                 "Whitelist: Cannot update stalkIssuedPerBdv"
             );
         }
-    }
-
-    function getOracleImplementationForToken(
-        address token
-    ) internal view returns (Implementation memory) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.sys.oracleImplementation[token];
     }
 }
