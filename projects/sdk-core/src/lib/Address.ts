@@ -17,7 +17,7 @@ export class Address {
 
   private static fallbackChainIds = {
     [ChainId.LOCALHOST_MAINNET]: ChainId.MAINNET,
-    [ChainId.LOCALHOST]: ChainId.MAINNET,
+    [ChainId.LOCALHOST]: ChainId.ARBITRUM,
     [ChainId.TESTNET]: Address.defaultChainId,
     [ChainId.ANVIL1]: Address.defaultChainId
   };
