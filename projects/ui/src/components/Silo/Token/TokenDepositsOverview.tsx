@@ -100,3 +100,15 @@ const TokenDepositsOverview = ({ token }: Props) => {
 };
 
 export default TokenDepositsOverview;
+
+/**
+ * Shorten an Silo Deposit Id for UI display.
+ */
+export function trimDepositId(
+  address: string,
+  options?: { start?: number; end?: number }
+) {
+  const start = options?.start || 4;
+  const end = options?.end || 2;
+  return `${address.substring(0, start)}${address ? `...${address.slice(-end)}` : ''}`;
+}

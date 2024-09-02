@@ -38,6 +38,7 @@ import {
   TokenDepositsSelectType,
   useTokenDepositsContext,
 } from './TokenDepositsContext';
+import { trimDepositId } from './TokenDepositsOverview';
 
 export type FarmerTokenDepositRow = Deposit<TokenValue> & {
   key: string;
@@ -92,7 +93,7 @@ const DepositsTable = ({
           return (
             <Stack direction="row" alignItems="center" gap={0.5}>
               {isMultiSelect ? <CircleSelect isSelected={isSelected} /> : null}
-              <Typography>{params.row.key}</Typography>
+              <Typography>{trimDepositId(params.row.key)}</Typography>
             </Stack>
           );
         },
@@ -205,7 +206,7 @@ const DepositsTable = ({
     <>
       <TableCard
         title="Deposits"
-        onRowClick={(e) => handleSelect(e.row.id)}
+        onRowClick={(e) => handleSelect(e.row.key)}
         rows={rows}
         columns={columns}
         state={state}
@@ -225,7 +226,7 @@ const DepositsTable = ({
           cell: 'data-grid-cell-overflow',
         }}
       />
-      {account && selectedDeposits.length === 1 && (
+      {account && selectType === 'single' && selectedDeposits.length === 1 && (
         <Dialog open={modalOpen} onClose={handleModalClose}>
           <SingleTokenDepositDialogContent
             row={selectedDeposits[0]}
@@ -263,7 +264,7 @@ const SingleTokenDepositDialogContent = ({
     </Row>
     <Row justifyContent="space-between" alignItems="flex-start">
       <Typography>Deposit Id</Typography>
-      <Typography>{row.key}</Typography>
+      <Typography>{trimDepositId(row.key)}</Typography>
     </Row>
     {/* Deposit Amount */}
     <Row justifyContent="space-between" alignItems="flex-start">
@@ -440,6 +441,7 @@ const baseTableCSS = {
     outlineOffset: '-1px',
     maxHeight: 'none !important',
     width: '100%',
+    backgroundColor: 'white',
     '&:hover': {
       outlineColor: BeanstalkPalette.blue,
       backgroundColor: `${BeanstalkPalette.lightestBlue} !important`,

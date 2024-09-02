@@ -252,7 +252,7 @@ const Whitelist: FC<{
                             title={
                               <Stack gap={0.25}>
                                 1 {token.symbol} ={' '}
-                                {displayFullBN(getBDV(token))} BDV
+                                {displayFullBN(getBDV(token), 6)} BDV
                                 <Row gap={0.2}>
                                   <TokenIcon
                                     token={STALK}
@@ -266,7 +266,10 @@ const Whitelist: FC<{
                                   </Typography>
                                   <TokenIcon token={SEEDS} />
                                   <Typography color="text.primary">
-                                    {formatTV(token.rewards?.seeds, 3)}
+                                    {formatTV(
+                                      token.rewards?.seeds,
+                                      SEEDS.decimals
+                                    )}
                                   </Typography>
                                 </Row>
                               </Stack>

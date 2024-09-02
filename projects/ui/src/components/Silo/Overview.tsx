@@ -34,16 +34,18 @@ const Overview: FC<{
   //
   const [tab, handleChange] = useTabs(SLUGS, 'view');
 
+  console.log('data', data);
+
   //
   const ownership =
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)
       ? farmerSilo.stalk.active.div(beanstalkSilo.stalk.total)
       : ZERO_BN;
 
-  const stackedChartData: any[] = useMemo(() => [], []);
-  useMemo(() => {
+  const stackedChartData: any[] = useMemo(() => {
+    const chartData: any[] = [];
     if (data.stalk.length > 0) {
-      stackedChartData.length = 0;
+      chartData.length = 0;
       data.stalk.forEach((_, index) => {
         const newData = {
           season: data.stalk[index].season,
@@ -52,10 +54,11 @@ const Overview: FC<{
           grownStalk: data.grownStalk[index].value,
           value: data.stalk[index].value + data.grownStalk[index].value,
         };
-        stackedChartData.push(newData);
+        chartData.push(newData);
       });
     }
-  }, [data.stalk, data.grownStalk, stackedChartData]);
+    return chartData;
+  }, [data]);
 
   const keysAndTooltips = {
     stalk: 'Stalk',

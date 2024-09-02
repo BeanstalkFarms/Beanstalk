@@ -3,7 +3,6 @@ import { Box, Stack } from '@mui/material';
 import { Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import { useSelector } from 'react-redux';
 import {
   ERC20Token,
   FarmFromMode,
@@ -31,7 +30,7 @@ import TxnSeparator from '~/components/Common/Form/TxnSeparator';
 import useToggle from '~/hooks/display/useToggle';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useTokenMap from '~/hooks/chain/useTokenMap';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import { useFetchPools } from '~/state/bean/pools/updater';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -61,6 +60,7 @@ import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
+import { selectBdvPerToken } from '~/state/beanstalk/silo';
 
 // -----------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ const defaultFarmActionsFormState = {
 const DepositForm: FC<
   FormikProps<DepositFormValues> & {
     tokenList: (ERC20Token | NativeToken)[];
-    whitelistedToken: ERC20Token | NativeToken;
+    whitelistedToken: ERC20Token;
     amountToBdv: (amount: BigNumber) => BigNumber;
     balances: FarmerBalances;
     contract: ethers.Contract;
@@ -215,14 +215,9 @@ const DepositForm: FC<
       <Stack gap={1} ref={siblingRef}>
         {values.tokens.map((tokenState, index) => {
           const key = getTokenIndex(tokenState.token);
-          const balanceType = values.balanceFrom
-            ? values.balanceFrom
-            : BalanceFrom.TOTAL;
+          const balanceType = values.balanceFrom || BalanceFrom.TOTAL;
           const _balance = balances?.[key];
-          const balance =
-            _balance && balanceType in _balance
-              ? _balance[balanceType]
-              : ZERO_BN;
+          const balance = _balance?.[balanceType] || ZERO_BN;
 
           return (
             <TokenQuoteProviderWithParams<DepositQuoteHandler>
@@ -327,7 +322,7 @@ const DepositForm: FC<
 // -----------------------------------------------------------------------
 
 const DepositPropProvider: FC<{
-  token: ERC20Token | NativeToken;
+  token: ERC20Token;
 }> = ({ token: whitelistedToken }) => {
   const sdk = useSdk();
   const account = useAccount();
@@ -412,14 +407,8 @@ const DepositPropProvider: FC<{
     | NativeToken;
 
   /// Beanstalk
-  const bdvPerToken = useSelector<
-    AppState,
-    | AppState['_beanstalk']['silo']['balances'][string]['bdvPerToken']
-    | BigNumber
-  >(
-    (state) =>
-      state._beanstalk.silo.balances[whitelistedToken.address]?.bdvPerToken ||
-      ZERO_BN
+  const bdvPerToken = useAppSelector(
+    selectBdvPerToken(whitelistedToken.address)
   );
 
   const amountToBdv = useCallback(
@@ -626,7 +615,7 @@ const DepositPropProvider: FC<{
 };
 
 const Deposit: FC<{
-  token: ERC20Token | NativeToken;
+  token: ERC20Token;
 }> = (props) => (
   <FormTxnProvider>
     <DepositPropProvider {...props} />
