@@ -8,7 +8,6 @@ import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAg
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
-import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -262,10 +261,12 @@ contract OracleTest is TestHelper {
     }
 
     function testForkMainnetWBTCOracle() public {
-        // fork mainnet and upgrade all facets
-        forkMainnetAndUpgradeAllFacets();
+        forkMainnetAndUpgradeAllFacets(20641000);
 
-        console.log("WBTC Price: ", OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC));
+        setupUniswapWBTCOracleImplementation();
+
+        uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
+        assertEq(priceWBTC, 16); // adjusted to 8 decimals. This is clearly not enough precision for WBTC and needs to be increased.
     }
 
     function setupUniswapWBTCOracleImplementation() public {
@@ -276,7 +277,7 @@ contract OracleTest is TestHelper {
                 WBTC_USDC_03_POOL,
                 bytes4(0),
                 bytes1(0x02),
-                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
             )
         );
 

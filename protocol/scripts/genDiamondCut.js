@@ -75,10 +75,19 @@ async function processDiamondCut(existingFacetsJson, newFacetsJson) {
     const existingFacets = JSON.parse(existingFacetsJson);
     const newFacets = JSON.parse(newFacetsJson);
     const diamondCut = await generateDiamondCut(existingFacets, newFacets);
-    const encoded = ethers.utils.defaultAbiCoder.encode(
-      ["tuple(address facetAddress, uint8 action, bytes4[] functionSelectors)[]"],
-      [diamondCut]
-    );
+    
+    // Compact encoding
+    let encoded = ethers.utils.hexlify(ethers.utils.pack(['uint256'], [diamondCut.length]));
+    
+    for (const cut of diamondCut) {
+      encoded += ethers.utils.hexlify(cut.facetAddress).slice(2);
+      encoded += ethers.utils.hexZeroPad(ethers.utils.hexlify(cut.action), 1).slice(2);
+      encoded += ethers.utils.hexZeroPad(ethers.utils.hexlify(cut.functionSelectors.length), 2).slice(2);
+      for (const selector of cut.functionSelectors) {
+        encoded += selector.slice(2);
+      }
+    }
+
     process.stdout.write(encoded);
   } catch (error) {
     console.error(error);
