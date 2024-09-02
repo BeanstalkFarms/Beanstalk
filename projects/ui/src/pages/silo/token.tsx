@@ -276,14 +276,12 @@ const SlugSwitchContent = (props: Props) => {
 };
 
 const TokenPage: FC<{}> = () => {
-  let { address } = useParams<{ address: string }>();
-  address = address?.toLowerCase();
-
+  const { address } = useParams<{ address: string }>();
   const { tokenMap } = useWhitelistedTokens();
 
-  const whitelistedToken = tokenMap[address || ''];
+  const whitelistedToken = tokenMap[address?.toLowerCase() || ''];
 
-  if (!address || !whitelistedToken) {
+  if (!whitelistedToken) {
     return <div>Not found</div>;
   }
 

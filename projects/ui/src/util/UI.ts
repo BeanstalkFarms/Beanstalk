@@ -50,14 +50,6 @@ export const remToPx = (_rem: string | number) => {
   }
 };
 
-export const roundWithDecimals = (
-  value: number | undefined,
-  decimals?: number
-) => {
-  const factor = 10 ** (decimals ?? 2);
-  return Math.round((value || 0 + Number.EPSILON) * factor) / factor;
-};
-
 export function exists<T>(
   value: T | undefined | null
 ): value is NonNullable<T> {

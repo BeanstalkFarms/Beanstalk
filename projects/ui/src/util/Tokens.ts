@@ -319,6 +319,10 @@ export function isLegacyToken(tk: TokenIsh): tk is LegacyToken {
   return tk instanceof LegacyToken;
 }
 
+export function symbolsEqual(a: TokenInstance, b: TokenInstance) {
+  return stringsEqual(a.symbol, b.symbol);
+}
+
 /**
  * Compares two strings case-insensitively.
  * if either string is undefined, returns false.

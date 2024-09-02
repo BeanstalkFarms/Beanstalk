@@ -33,8 +33,6 @@ import useToggle from '~/hooks/display/useToggle';
 import useRevitalized from '~/hooks/farmer/useRevitalized';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
-import { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import {
   CLAIM_SILO_REWARDS,
@@ -59,7 +57,11 @@ import useFarmerSilo from '~/hooks/farmer/useFarmerSilo';
 import useSilo from '~/hooks/beanstalk/useSilo';
 import useSetting from '~/hooks/app/useSetting';
 import SeedGaugeDetails from '~/components/Silo/SeedGauge';
-import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
+import {
+  useBeanstalkTokens,
+  useTokens,
+  useWhitelistedTokens,
+} from '~/hooks/beanstalk/useTokens';
 
 const FormControlLabelStat: FC<
   Partial<FormControlLabelProps> & {
@@ -109,17 +111,20 @@ const RewardsBar: FC<{
   revitalizedSeeds: BigNumberJS | undefined;
 }> = ({ breakdown, farmerSilo, revitalizedStalk, revitalizedSeeds }) => {
   /// Helpers
-  const getChainToken = useGetChainToken();
   const getBDV = useBDV();
   const sdk = useSdk();
+  const {
+    UNRIPE_BEAN: urBean,
+    UNRIPE_BEAN_WSTETH: urBeanWstETH,
+    BEAN,
+  } = useTokens();
+  const { STALK, SEEDS } = useBeanstalkTokens();
 
   // Are we impersonating a different account while not in dev mode
   const isImpersonating =
     !!useSetting('impersonatedAccount')[0] && !import.meta.env.DEV;
 
   /// Calculate Unripe Silo Balance
-  const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
 
   const balances = farmerSilo.balances;
   const unripeDepositedBalance = balances[
@@ -177,7 +182,7 @@ const RewardsBar: FC<{
 
         // When checking either of the plant boxes, we force BEAN to be Mown
         if (e.target.checked) {
-          newMow.add(sdk.tokens.BEAN.address); // no-op if already added
+          newMow.add(BEAN.address); // no-op if already added
         }
 
         return {
@@ -187,7 +192,7 @@ const RewardsBar: FC<{
         };
       });
     },
-    [sdk.tokens.BEAN.address]
+    [BEAN.address]
   );
 
   const onChangeEnroot = useCallback(
@@ -225,9 +230,7 @@ const RewardsBar: FC<{
       if (claimState.mow.has(token.address)) {
         const grownStalk = farmerSilo.stalk.grownByToken.get(token);
         if (grownStalk) {
-          amountStalk = amountStalk.plus(
-            transform(grownStalk, 'bnjs', sdk.tokens.STALK)
-          );
+          amountStalk = amountStalk.plus(transform(grownStalk, 'bnjs', STALK));
         }
       }
     });
@@ -247,32 +250,46 @@ const RewardsBar: FC<{
       empty: amountBean.eq(0) && amountStalk.eq(0) && amountSeeds.eq(0),
       output: new Map<Token, TokenValue>([
         [
-          sdk.tokens.BEAN,
+          BEAN,
           transform(
             amountBean.isNaN() ? ZERO_BN : amountBean,
             'tokenValue',
-            sdk.tokens.BEAN
+            BEAN
           ),
         ],
         [
-          sdk.tokens.STALK,
+          STALK,
           transform(
             amountStalk.isNaN() ? ZERO_BN : amountStalk,
             'tokenValue',
-            sdk.tokens.STALK
+            STALK
           ),
         ],
         [
-          sdk.tokens.SEEDS,
+          SEEDS,
           transform(
             amountSeeds.isNaN() ? ZERO_BN : amountSeeds,
             'tokenValue',
-            sdk.tokens.SEEDS
+            SEEDS
           ),
         ],
       ]),
     };
-  }, [claimState, farmerSilo, revitalizedSeeds, revitalizedStalk, sdk, tokens]);
+  }, [
+    BEAN,
+    SEEDS,
+    STALK,
+    claimState.mow,
+    claimState.enroot,
+    claimState.plant,
+    farmerSilo.beans.earned,
+    farmerSilo.seeds.earned,
+    farmerSilo.stalk.earned,
+    farmerSilo.stalk.grownByToken,
+    revitalizedSeeds,
+    revitalizedStalk,
+    tokens,
+  ]);
 
   const buildWorkflow = useCallback(
     (c: typeof claimState) => {
