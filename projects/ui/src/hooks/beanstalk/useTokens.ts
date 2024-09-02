@@ -167,21 +167,27 @@ export const useWhitelistedTokens = (sortByLiquidity?: boolean) => {
 };
 
 export const useSupportedBalanceTokens = () => {
-  const { erc20TokenMap, ARB } = useTokens();
+  const sdk = useSdk();
 
   return useMemo(() => {
-    const map = { ...erc20TokenMap };
-    delete map[ARB.address];
+    const tokens = [...sdk.tokens.erc20Tokens, sdk.tokens.ETH] as (
+      | ERC20Token
+      | NativeToken
+    )[];
 
-    const tokens = Object.values(map);
-    const addresses = tokens.map((t) => t.address);
+    const tokenMap = tokens.reduce<TokenMap<ERC20Token | NativeToken>>(
+      (acc, token) => {
+        acc[token.address] = token as ERC20Token;
+        return acc;
+      },
+      { [getTokenIndex(sdk.tokens.ETH)]: sdk.tokens.ETH }
+    );
 
     return {
-      tokenMap: map,
+      tokenMap,
       tokens,
-      addresses,
     };
-  }, [erc20TokenMap, ARB]);
+  }, [sdk]);
 };
 
 /**

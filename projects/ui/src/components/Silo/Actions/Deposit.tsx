@@ -332,59 +332,25 @@ const DepositPropProvider: FC<{
   const middleware = useFormMiddleware();
   const { txnBundler, refetch } = useFormTxnContext();
 
+  // BS3TODO: Add other tokens when swap is complete
   const initTokenList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [
-        tokens.BEAN,
-        tokens.ETH,
-        tokens.WETH,
-        tokens.WSTETH,
-        tokens.CRV3,
-        tokens.DAI,
-        tokens.USDC,
-        tokens.USDT,
-      ];
+      return [sdk.tokens.BEAN];
     }
-    return [
-      tokens.BEAN,
-      tokens.ETH,
-      tokens.WETH,
-      tokens.WSTETH,
-      whitelistedToken,
-      tokens.CRV3,
-      tokens.DAI,
-      tokens.USDC,
-      tokens.USDT,
-    ];
-  }, [sdk.tokens, whitelistedToken]);
+    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
+    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
+  }, [sdk, whitelistedToken]);
 
+  // BS3TODO: Add other tokens when swap is complete
   const priorityList = useMemo(() => {
     const tokens = sdk.tokens;
     if (tokens.BEAN.equals(whitelistedToken)) {
-      return [
-        tokens.BEAN,
-        tokens.ETH,
-        tokens.WETH,
-        tokens.WSTETH,
-        tokens.CRV3,
-        tokens.DAI,
-        tokens.USDC,
-        tokens.USDT,
-      ];
+      return [tokens.BEAN];
     }
-    return [
-      whitelistedToken,
-      tokens.ETH,
-      tokens.WETH,
-      tokens.WSTETH,
-      tokens.BEAN,
-      tokens.CRV3,
-      tokens.DAI,
-      tokens.USDC,
-      tokens.USDT,
-    ];
-  }, [sdk.tokens, whitelistedToken]);
+    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
+    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
+  }, [sdk, whitelistedToken]);
 
   const allAvailableTokens = useTokenMap(initTokenList);
   const priorityListTokens = useTokenMap(priorityList);
@@ -623,3 +589,54 @@ const Deposit: FC<{
 );
 
 export default Deposit;
+
+// const initTokenList = useMemo(() => {
+//   const tokens = sdk.tokens;
+//   if (tokens.BEAN.equals(whitelistedToken)) {
+//     return [
+//       tokens.BEAN,
+//       tokens.ETH,
+//       tokens.WETH,
+//       tokens.WSTETH,
+//       tokens.DAI,
+//       tokens.USDC,
+//       tokens.USDT,
+//     ];
+//   }
+//   return [
+//     tokens.BEAN,
+//     tokens.ETH,
+//     tokens.WETH,
+//     tokens.WSTETH,
+//     whitelistedToken,
+//     tokens.DAI,
+//     tokens.USDC,
+//     tokens.USDT,
+//   ];
+// }, [sdk.tokens, whitelistedToken]);
+
+// const priorityList = useMemo(() => {
+//   const tokens = sdk.tokens;
+//   if (tokens.BEAN.equals(whitelistedToken)) {
+//     return [
+//       tokens.BEAN,
+//       tokens.ETH,
+//       tokens.WETH,
+//       tokens.WSTETH,
+//       tokens.DAI,
+//       tokens.USDC,
+//       tokens.USDT,
+//     ];
+//   }
+//   return [
+//     whitelistedToken,
+//     tokens.ETH,
+//     tokens.WETH,
+//     tokens.WSTETH,
+//     tokens.BEAN,
+//     tokens.CRV3,
+//     tokens.DAI,
+//     tokens.USDC,
+//     tokens.USDT,
+//   ];
+// }, [sdk.tokens, whitelistedToken]);
