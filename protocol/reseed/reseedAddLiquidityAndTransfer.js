@@ -1,4 +1,12 @@
-const { MAX_UINT256, L2_WETH, L2_WSTETH, L2_WEETH, L2_WBTC, L2_USDC, L2_USDT } = require("../test/hardhat/utils/constants.js");
+const {
+  MAX_UINT256,
+  L2_WETH,
+  L2_WSTETH,
+  L2_WEETH,
+  L2_WBTC,
+  L2_USDC,
+  L2_USDT
+} = require("../test/hardhat/utils/constants.js");
 const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
 
@@ -41,7 +49,7 @@ const beanAmounts = [
 
 async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, verbose = true) {
   console.log("-----------------------------------");
-  console.log("adds liquidity to wells and transfers to l2 beanstalk.\n");
+  console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
 
   // todo: update bean address once finalized.
   await impersonateToken("0xBEA0005B8599265D41256905A9B3073D397812E4", 6);

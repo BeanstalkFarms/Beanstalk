@@ -5,7 +5,6 @@ const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
-const { reseed1 } = require("./reseed1.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
@@ -24,16 +23,14 @@ const { getBeanstalk } = require("../utils/contracts.js");
 const { deployContract } = require("../scripts/contracts.js");
 
 let reseeds;
-async function reseed({
-  owner,
+async function reseedL2({
   beanstalkDeployer,
   l2owner,
-  mock = true,
+  mock = false,
   convertData = true,
   log = false,
   start = 0,
-  end = 12,
-  deployL1 = true,
+  end = 11,
   setState = true,
   deployBasin = true
 }) {
@@ -41,11 +38,10 @@ async function reseed({
   // delete prev gas report
   if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
   reseeds = [
-    reseed1, // pause l1 beanstalk
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
-    reseed3, // reseedbean + deploy wells and fertilizer proxy on l2
+    reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
-    reseed2, // reseed pod marketplace
+    reseed3, // reseed pod marketplace
     reseed4, // reseed field
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
@@ -61,22 +57,14 @@ async function reseed({
   for (let i = start; i < reseeds.length; i++) {
     await printStage(i, end, mock, log);
     console.log("L2 Beanstalk:", l2BeanstalkAddress);
-    if (i == 0) {
-      if (deployL1 == true) {
-        // migrate beanstalk L1 assets.
-        await reseed1(owner);
-        return;
-      }
-      continue;
-    }
 
-    if (i == 1) {
-      // deploy L2 beanstalk with predetermined address.
+    if (i == 0) {
+      // first step on the l2 is to deploy the L2 beanstalk diamond with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
       continue;
     }
 
-    if (i == 2) {
+    if (i == 1) {
       // deploy fertilizer (TODO: Remove when fert is deployed on L2)
       const fertilizerImplementation = await deployContract(
         "Fertilizer",
@@ -90,8 +78,8 @@ async function reseed({
         l2BeanstalkAddress
       ]);
       console.log("BeanstalkPrice:", beanstalkPrice.address);
-      // deploy beans addresses.
-      await reseed3(
+      // deploy bean addresses.
+      await reseed2(
         beanstalkDeployer,
         l2BeanstalkAddress,
         deployBasin,
@@ -105,6 +93,7 @@ async function reseed({
       await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
       continue;
     }
+
     if (i == reseeds.length - 2) {
       // prior to the last reseed (i.e, adding facets to L2 beanstalk),
       // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
@@ -125,10 +114,9 @@ async function reseed({
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
       // initialize beanstalk state add selectors to L2 beanstalk.
       await reseed10(l2owner, l2BeanstalkAddress, mock);
-      // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
     }
   }
-  console.log("Adding liquidity to wells and transferring to L2 Beanstalk.");
+  // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
   await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
   console.log("Reseed successful.");
 }
@@ -152,6 +140,7 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
+  // TODO: Replace with actual smart contract accounts.
   const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
   const BLOCK_NUMBER = 20577510;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
@@ -183,4 +172,5 @@ async function printBeanstalk() {
   console.log("");
 }
 
-exports.reseed = reseed;
+exports.reseedL2 = reseedL2;
+exports.printBeanstalk = printBeanstalk;
