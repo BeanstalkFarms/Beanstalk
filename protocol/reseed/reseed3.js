@@ -28,36 +28,21 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
   console.log("-----------------------------------");
   console.log("reseed3: deploy bean tokens.\n");
   [beanSupply, unripeBeanSupply, unripeLpSupply] = JSON.parse(await fs.readFileSync(INIT_SUPPLY));
-  [ethInBeanEthWell, wstEthInBeanWstEthWell, stableInBeanStableWell] = JSON.parse(
+  [balancesBeanEthWell, balancesInBeanWstEthWell, balancesInBeanStableWell] = JSON.parse(
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
   [urBean, urBeanLP] = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE));
-
-  // mint:
-  let weth, wsteth, stable, owner;
-  let approver = account;
-  if (mock) {
-    // Deploy mock tokens
-    weth = await deployMockToken("WETH", "WETH");
-    wsteth = await deployMockToken("wstETH", "wstETH");
-    stable = await deployMockToken("USDC", "USDC");
-    owner = await impersonateSigner(account.address);
-    approver = owner;
-    await weth.mint(account.address, ethInBeanEthWell[0]);
-    await wsteth.mint(account.address, wstEthInBeanWstEthWell[0]);
-    await stable.mint(account.address, stableInBeanStableWell[0]);
-  } else {
-    // TODO: Replace with actual token addresses on the L2
-    weth = await ethers.getContractAt("IERC20", L2_WETH);
-    wsteth = await ethers.getContractAt("IERC20", L2_WEETH);
-    stable = await ethers.getContractAt("IERC20", L2_WBTC);
-  }
 
   if (deployBasin) {
     [uWell, stable2] = await deployBasinV1_2Components();
     console.log("uWell:", uWell.address);
     console.log("stable2:", stable2.address);
   }
+
+  // get the bean sided liquidity from the L1 wells to mint it to the bcm.
+  const beansInBeanEthWell = balancesBeanEthWell[0];
+  const beansInBeanWstEthWell = balancesInBeanWstEthWell[0];
+  const beansInBeanStableWell = balancesInBeanStableWell[0];
 
   // call init:
   await upgradeWithNewFacets({
@@ -68,6 +53,9 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
       beanSupply,
       unripeBeanSupply,
       unripeLpSupply,
+      beansInBeanEthWell,
+      beansInBeanWstEthWell,
+      beansInBeanStableWell,
       urBean,
       urBeanLP,
       fertilizerImplementation
