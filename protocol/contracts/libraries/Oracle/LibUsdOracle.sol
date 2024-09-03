@@ -14,6 +14,7 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -124,14 +125,16 @@ library LibUsdOracle {
                 lookback
             );
 
-            // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
-            // thus the price needs to be inverted.
+            // Calculate USD per token
+            uint256 usdPerToken = (tokenPrice * chainlinkTokenPrice) / 1e6;
+
             if (tokenDecimals != 0) {
-                tokenPrice = (10 ** (6 + tokenDecimals)) / tokenPrice;
-                return (tokenPrice * chainlinkTokenPrice) / (10 ** tokenDecimals);
+                // Calculate token per USD, 1e12 because precision of chainlink/uniswap is each 1e6
+                uint256 tokenPerUsd = 1e12 / usdPerToken;
+                return tokenPerUsd;
             } else {
-                // return the TOKEN/USD price.
-                return (tokenPrice * chainlinkTokenPrice) / CHAINLINK_DENOMINATOR;
+                // Return the TOKEN/USD price
+                return usdPerToken;
             }
         }
 

@@ -266,7 +266,23 @@ contract OracleTest is TestHelper {
         setupUniswapWBTCOracleImplementation();
 
         uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
-        assertEq(priceWBTC, 16); // adjusted to 8 decimals. This is clearly not enough precision for WBTC and needs to be increased.
+        assertEq(priceWBTC, 16); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272, but 16 is 6 decimal precision
+    }
+
+    function testForkMainnetAAVEOracle() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapAaveOracleImplementation();
+
+        uint256 priceAAVE = OracleFacet(BEANSTALK).getUsdTokenPrice(AAVE);
+        assertEq(priceAAVE, 7478);
+        // chainlink price: 2541090000 (2541 usd per weth at 6 decimals)
+        // uniswap price: 52620 (0.052620 WETH per AAVE at 6 decimals)
+        // these multiplied together: 133712155800000 (12 decimal precision)
+        // but inverse is needed, so 1e12/133712155800000 = 0.007478751607
+        // and 0.007478751607 at 6 decimal precision is 7479
+
+        // approx expected result for $133.71 - 7478872186074340
     }
 
     function setupUniswapWBTCOracleImplementation() public {
@@ -287,6 +303,33 @@ contract OracleTest is TestHelper {
             USDC,
             IMockFBeanstalk.Implementation(
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+    }
+
+    // AAVE:WETH is the highest volume non-memcoin/non-stablecoin pair on uniswap as of the time of writing
+    function setupUniswapAaveOracleImplementation() internal {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            AAVE,
+            IMockFBeanstalk.Implementation(
+                AAVE_ETH_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+
+        // also uniswap relies on having a chainlink oracle for the token that's trading against the uniswap target token
+        // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WETH,
+            IMockFBeanstalk.Implementation(
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
                 bytes4(0),
                 bytes1(0x01),
                 abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
