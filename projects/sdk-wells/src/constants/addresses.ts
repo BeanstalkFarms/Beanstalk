@@ -18,10 +18,6 @@ export const addresses = {
     [ChainId.MAINNET]: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
     [ChainId.ARBITRUM]: "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe"
   }),
-  DAI: Address.make({
-    [ChainId.MAINNET]: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-    [ChainId.ARBITRUM]: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
-  }),
   WBTC: Address.make({
     [ChainId.MAINNET]: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     [ChainId.ARBITRUM]: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"
@@ -34,8 +30,16 @@ export const addresses = {
     [ChainId.MAINNET]: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     [ChainId.ARBITRUM]: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
   }),
+  DAI: Address.make({
+    [ChainId.MAINNET]: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    [ChainId.ARBITRUM]: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+  }),
   STETH: Address.make({
     [ChainId.MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+  }),
+  ARB: Address.make({
+    [ChainId.MAINNET]: "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
+    [ChainId.ARBITRUM]: "0x912CE59144191C1204E64559FE8253a0e49E6548"
   }),
 
   // Contracts
@@ -52,8 +56,8 @@ export const addresses = {
     [ChainId.ARBITRUM]: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
   }),
   UNWRAP_AND_SEND_JUNCTION: Address.make({
-    [ChainId.MAINNET]: "0x737cad465b75cdc4c11b3e312eb3fe5bef793d96"
-    // [ChainId.ARBITRUM]: ""
+    [ChainId.MAINNET]: "0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96",
+    [ChainId.ARBITRUM]: "0xD6Fc4a63d7E93267c3007eA176081052369A4749"
   }),
 
   // Well Components
