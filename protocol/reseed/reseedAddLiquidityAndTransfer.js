@@ -64,7 +64,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
-    console.log(`Adding liquidity to ${WellAddresses[i]} and ${NonBeanToken[i]}`);
+    console.log(`Adding liquidity to ${WellAddresses[i]}`);
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
