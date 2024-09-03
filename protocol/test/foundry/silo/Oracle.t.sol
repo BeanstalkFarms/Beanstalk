@@ -63,7 +63,7 @@ contract OracleTest is TestHelper {
             WBTC,
             0
         );
-        assertEq(usdTokenPriceFromExternal, 0.00002e6, "usdTokenPriceFromExternal");
+        assertEq(usdTokenPriceFromExternal, 0.00002e8, "usdTokenPriceFromExternal"); // e8 because wbtc has 8 decimals
     }
 
     /**
