@@ -1,11 +1,35 @@
 import { defineChain } from "viem";
+import { RPC_URLS } from "./urls";
+import { ChainId } from "@beanstalk/sdk-core";
 
 export const localFork = defineChain({
-  id: 1337,
-  name: "localhost:8545",
+  id: ChainId.LOCALHOST,
+  name: "localhost:8545 - arbitrum",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: { http: ["http://localhost:8545"] }
+  },
+  contracts: {
+    ensRegistry: {
+      address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+    },
+    ensUniversalResolver: {
+      address: "0xE4Acdd618deED4e6d2f03b9bf62dc6118FC9A4da",
+      blockCreated: 16773775
+    },
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 14353601
+    }
+  }
+});
+
+export const localForkMainnet = defineChain({
+  id: ChainId.LOCALHOST_MAINNET,
+  name: "localhost:9545 - mainnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["http://localhost:9545"] }
   },
   contracts: {
     ensRegistry: {
@@ -40,6 +64,61 @@ export const anvil1 = defineChain({
     multicall3: {
       address: "0xca11bde05977b3631167028862be2a173976ca11",
       blockCreated: 14353601
+    }
+  }
+});
+
+export const mainnet = defineChain({
+  id: ChainId.MAINNET,
+  name: "Ethereum",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [RPC_URLS.mainnet]
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: "Etherscan",
+      url: "https://etherscan.io",
+      apiUrl: "https://api.etherscan.io/api"
+    }
+  },
+  contracts: {
+    ensRegistry: {
+      address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+    },
+    ensUniversalResolver: {
+      address: "0xce01f8eee7E479C928F8919abD53E553a36CeF67",
+      blockCreated: 19_258_213
+    },
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 14_353_601
+    }
+  }
+});
+
+export const arbitrum = defineChain({
+  id: ChainId.ARBITRUM,
+  name: "Arbitrum One",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [RPC_URLS.arbitrum]
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: "Arbiscan",
+      url: "https://arbiscan.io",
+      apiUrl: "https://api.arbiscan.io/api"
+    }
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 7654707
     }
   }
 });
