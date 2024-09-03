@@ -8,6 +8,9 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "contracts/interfaces/IDiamondLoupe.sol";
 
 /**
  * @author Brean
@@ -22,6 +25,9 @@ contract InitReseed {
         s.sys.paused = false;
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        ds.supportedInterfaces[type(IERC165).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
 

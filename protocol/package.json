@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@beanstalk/wells": "0.4.1",
-    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0-prerelease1",
+    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0-prerelease3",
     "@ethereum-waffle/chai": "4.0.10",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@openzeppelin/contracts": "5.0.2",

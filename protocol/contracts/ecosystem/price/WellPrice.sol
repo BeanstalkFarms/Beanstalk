@@ -33,7 +33,6 @@ contract WellPrice {
     constructor(address _beanstalk) {
         beanstalk = IBeanstalk(_beanstalk);
     }
-
     uint256 private constant WELL_DECIMALS = 1e18;
     uint256 private constant PRICE_PRECISION = 1e6;
 

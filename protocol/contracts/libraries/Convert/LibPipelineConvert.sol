@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
 import {LibConvert} from "./LibConvert.sol";
-import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
+import {AdvancedPipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibWell} from "../Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -40,7 +40,7 @@ library LibPipelineConvert {
         uint256 fromAmount,
         uint256 fromBdv,
         uint256 initialGrownStalk,
-        AdvancedFarmCall[] calldata advancedFarmCalls
+        AdvancedPipeCall[] memory advancedPipeCalls
     ) external returns (uint256 toAmount, uint256 newGrownStalk, uint256 newBdv) {
         PipelineConvertData memory pipeData = LibPipelineConvert.populatePipelineConvertData(
             inputToken,
@@ -51,7 +51,7 @@ library LibPipelineConvert {
         pipeData.overallConvertCapacity = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
 
         IERC20(inputToken).transfer(C.PIPELINE, fromAmount);
-        executeAdvancedFarmCalls(advancedFarmCalls);
+        IPipeline(C.PIPELINE).advancedPipe(advancedPipeCalls);
 
         // user MUST leave final assets in pipeline, allowing us to verify that the farm has been called successfully.
         // this also let's us know how many assets to attempt to pull out of the final type
@@ -122,18 +122,6 @@ library LibPipelineConvert {
     }
 
     /**
-     * @param calls The advanced farm calls to execute.
-     */
-    function executeAdvancedFarmCalls(AdvancedFarmCall[] calldata calls) internal {
-        bytes[] memory results;
-        results = new bytes[](calls.length);
-        for (uint256 i = 0; i < calls.length; ++i) {
-            require(calls[i].callData.length != 0, "Convert: empty AdvancedFarmCall");
-            results[i] = LibFarm._advancedFarm(calls[i], results);
-        }
-    }
-
-    /**
      * @notice Determines input token amount left in pipeline and returns to Beanstalk
      * @param tokenOut The token to pull out of pipeline
      */
@@ -144,7 +132,7 @@ library LibPipelineConvert {
         PipeCall memory p;
         p.target = address(tokenOut);
         p.data = abi.encodeWithSelector(IERC20.transfer.selector, address(this), amountOut);
-        IPipeline(C.PIPELINE).pipe(p);
+        C.pipeline().pipe(p);
     }
 
     function populatePipelineConvertData(

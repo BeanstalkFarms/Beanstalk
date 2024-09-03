@@ -11,10 +11,17 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
       if (accounts.hasOwnProperty(account)) {
         const accountData = accounts[account];
         const stalk = accountData.stalk ? convertToBigNum(accountData.stalk) : "0";
+        const lastUpdate = accountData.lastUpdate ? convertToBigNum(accountData.lastUpdate) : "0";
         const mowStatuses = accountData.mowStatuses;
         const tokenAddresses = [];
         const mowStatusArray = [];
-
+        // Parse germinatingStalk field
+        const germinatingStalkOdd = accountData.germinatingStalk?.["0"]
+          ? convertToBigNum(accountData.germinatingStalk["0"])
+          : "0";
+        const germinatingStalkEven = accountData.germinatingStalk?.["1"]
+          ? convertToBigNum(accountData.germinatingStalk["1"])
+          : "0";
         for (const tokenAddress in mowStatuses) {
           if (mowStatuses.hasOwnProperty(tokenAddress)) {
             tokenAddresses.push(tokenAddress);
@@ -26,7 +33,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
 
         // do not include contract accounts
         if (!contractAccounts.includes(account)) {
-          result.push([account, stalk, tokenAddresses, mowStatusArray]);
+          result.push([account, stalk, tokenAddresses, mowStatusArray, lastUpdate, germinatingStalkOdd, germinatingStalkEven]);
         }
       }
     }

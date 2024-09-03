@@ -134,10 +134,11 @@ library LibUsdOracle {
                 tokenPrice = 1e12 / tokenPrice;
                 // return the USD/TOKEN price.
                 // 1e6 * 1e`n` / 1e`n` = 1e6
+                return (tokenPrice * chainlinkTokenPrice) / (10 ** chainlinkTokenDecimals);
+            } else {
+                // return the TOKEN/USD price.
+                return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
             }
-
-            // return the TOKEN/USD price.
-            return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
         // If the oracle implementation address is not set, use the current contract.

@@ -77,18 +77,6 @@ async function reseed3(account, L2Beanstalk, deployBasin = true, fertilizerImple
     account: account
   });
 
-  // current mock addresses. This can change upon reordering the reseed/changing the salt:
-  // Fertilizer deployed at:  0x7B50EbC3E5128F315dc097F7cbd1600399e3E796
-  // Bean deployed at:  0xe64718A6d44406dE942d3d0f591E370B22263382
-  // Unripe Bean deployed at:  0x9dBA4d8D19a35c5cf191C3F93a0C112e75a627E4
-  // Unripe LP deployed at:  0xECA13f8A535876C8293B0E140B56fFe5768c5816
-  // bean weth well proxy: 0x441657D23F030E9F8Ce68b518AC6952Abc4e8c5E
-  // bean wsteth well proxy: 0x96B57c91eDe37fc09CD8016526F99015271a7c02
-  // bean weeth well proxy: 0x4A26f88C9a9508f10253649da94Eb4633bC130Aa
-  // bean wbtc well proxy: 0xc0F171447Ecb93C7D38Fe0bB8Bc5020339f637d1
-  // bean usdc well proxy: 0xA6D38498fb88bB79DA89de007aF86E051f7DA8ea
-  // bean usdt well proxy: 0x10a1B1d06dD1b3A671D285c91DDA4A5e6a001ea1
-
   console.log("-----------------------------------");
 }
 
