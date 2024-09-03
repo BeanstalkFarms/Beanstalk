@@ -283,14 +283,14 @@ contract OracleTest is TestHelper {
         // and 0.007478751607 at 6 decimal precision is 7479
     }
 
-    // function testForkMainnetWSTETHOracle() public {
-    //     forkMainnetAndUpgradeAllFacets(20666000);
+    function testForkMainnetWSTETHOracle() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
 
-    //     setupUniswapWstethOracleImplementation();
+        setupUniswapWstethOracleImplementation();
 
-    //     uint256 priceWSTET = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
-    //     assertEq(priceWSTET, 7478);
-    // }
+        uint256 priceWSTETH = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
+        assertEq(priceWSTETH, 334243752683826);
+    }
 
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(BEANSTALK);
