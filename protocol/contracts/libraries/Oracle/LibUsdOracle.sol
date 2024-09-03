@@ -14,7 +14,6 @@ import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -29,7 +28,7 @@ interface IERC20Decimals {
 library LibUsdOracle {
     using LibRedundantMath256 for uint256;
 
-    uint256 constant CHAINLINK_DENOMINATOR = 1e6;
+    uint256 constant UNISWAP_DENOMINATOR = 1e6;
 
     function getUsdPrice(address token) internal view returns (uint256) {
         return getUsdPrice(token, 0);
@@ -104,38 +103,41 @@ library LibUsdOracle {
             }
 
             // get twap from the `chainlinkToken` to `token`
-            // exchange 1 `chainlinkToken` for `token`
+            // exchange 1 `token` for `chainlinkToken`.
             tokenPrice = LibUniswapOracle.getTwap(
                 lookback == 0 ? LibUniswapOracle.FIFTEEN_MINUTES : uint32(lookback),
                 oracleImpl.target,
                 token,
                 chainlinkToken,
-                uint128(10 ** IERC20Decimals(token).decimals())
+                tokenDecimals == 0
+                    ? uint128(10 ** IERC20Decimals(token).decimals())
+                    : uint128(10 ** tokenDecimals)
             );
 
             // call chainlink oracle from the OracleImplmentation contract
-            Implementation memory chainlinkOracleImpl = s.sys.oracleImplementation[chainlinkToken];
-            address chainlinkOraclePriceAddress = chainlinkOracleImpl.target;
+            Implementation memory chainlinkOracle = s.sys.oracleImplementation[chainlinkToken];
 
-            uint32 timeout = abi.decode(oracleImpl.data, (uint32));
+            // return the CL_TOKEN/USD or USD/CL_TOKEN, depending on `tokenDecimals`.
+            uint256 chainlinkTokenDecimals = IERC20Decimals(chainlinkToken).decimals();
             uint256 chainlinkTokenPrice = LibChainlinkOracle.getTokenPrice(
-                chainlinkOraclePriceAddress,
-                timeout,
-                0,
+                chainlinkOracle.target,
+                abi.decode(chainlinkOracle.data, (uint256)), // timeout
+                tokenDecimals == 0 ? tokenDecimals : chainlinkTokenDecimals,
                 lookback
             );
 
-            // Calculate USD per token
-            uint256 usdPerToken = (tokenPrice * chainlinkTokenPrice) / 1e6;
-
+            // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
+            // thus the price needs to be inverted.
             if (tokenDecimals != 0) {
-                // Calculate token per USD, 1e12 because precision of chainlink/uniswap is each 1e6
-                uint256 tokenPerUsd = 1e12 / usdPerToken;
-                return tokenPerUsd;
-            } else {
-                // Return the TOKEN/USD price
-                return usdPerToken;
+                // invert tokenPrice (to get CL_TOKEN/TOKEN).
+                // `tokenPrice` has 6 decimal precision (see {LibUniswapOracle.getTwap}).
+                tokenPrice = 1e12 / tokenPrice;
+                // return the USD/TOKEN price.
+                // 1e6 * 1e`n` / 1e`n` = 1e6
             }
+
+            // return the TOKEN/USD price.
+            return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
         // If the oracle implementation address is not set, use the current contract.

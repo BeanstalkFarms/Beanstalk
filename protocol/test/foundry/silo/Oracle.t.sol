@@ -281,8 +281,15 @@ contract OracleTest is TestHelper {
         // these multiplied together: 133712155800000 (12 decimal precision)
         // but inverse is needed, so 1e12/133712155800000 = 0.007478751607
         // and 0.007478751607 at 6 decimal precision is 7479
+    }
 
-        // approx expected result for $133.71 - 7478872186074340
+    function testForkMainnetWSTETHOracle() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapWstethOracleImplementation();
+
+        uint256 priceWSTET = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
+        assertEq(priceWSTET, 7478);
     }
 
     function setupUniswapWBTCOracleImplementation() public {
@@ -317,6 +324,32 @@ contract OracleTest is TestHelper {
             AAVE,
             IMockFBeanstalk.Implementation(
                 AAVE_ETH_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+
+        // also uniswap relies on having a chainlink oracle for the token that's trading against the uniswap target token
+        // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WETH,
+            IMockFBeanstalk.Implementation(
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+    }
+
+    function setupUniswapWstethOracleImplementation() internal {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WSTETH,
+            IMockFBeanstalk.Implementation(
+                WSTETH_ETH_001_POOL,
                 bytes4(0),
                 bytes1(0x02),
                 abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
