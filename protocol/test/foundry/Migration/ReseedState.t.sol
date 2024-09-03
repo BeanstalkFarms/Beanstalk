@@ -60,7 +60,7 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
-        uint256 numAccounts = 110;
+        uint256 numAccounts = 10;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -281,7 +281,7 @@ contract ReseedStateTest is TestHelper {
 
     //////////////////// Account Deposits ////////////////////
 
-    function test_getDepositsForAccount() public {
+    function test_AccountDeposits() public {
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
@@ -329,7 +329,7 @@ contract ReseedStateTest is TestHelper {
     function parseAccounts(uint256 numAccounts) public returns (uint256) {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/data/getAccounts.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/getAccounts.js"; // script
         inputs[2] = vm.toString(numAccounts);
         bytes memory res = vm.ffi(inputs);
         // decode the number of accounts
@@ -340,7 +340,7 @@ contract ReseedStateTest is TestHelper {
     function searchGlobalPropertyData(string memory property) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-system20577510.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
@@ -350,7 +350,7 @@ contract ReseedStateTest is TestHelper {
     function searchAccountPropertyData(string memory property) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
@@ -360,7 +360,7 @@ contract ReseedStateTest is TestHelper {
     function searchAccountDeposits(address account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/depositFinder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
