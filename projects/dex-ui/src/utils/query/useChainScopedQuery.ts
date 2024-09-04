@@ -1,24 +1,20 @@
 import { useCallback } from "react";
 import { QueryKey, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
-import { useAccount, useChainId } from "wagmi";
+import { useChainId } from "wagmi";
 
-import { AddressIsh } from "src/types";
-
-const makeScopedQueryKey = (chainId: number, address: AddressIsh, queryKey: QueryKey) => {
-  const scope = [chainId, address || "no-address"];
+const makeScopedQueryKey = (chainId: number, queryKey: QueryKey) => {
+  const scope = [chainId];
   return [scope, ...(typeof queryKey === "string" ? [queryKey] : queryKey)];
 };
 
-export function useScopedQuery<
+export function useChainScopedQuery<
   TQueryFnData,
   TError,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey
 >(arg: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
-  const { address } = useAccount();
-  const chainId = useChainId();
-
   const { queryKey, ...rest } = arg;
+  const chainId = useChainId();
 
   let key: string[] = [];
   if (typeof queryKey === "string") {
@@ -27,7 +23,7 @@ export function useScopedQuery<
     key = queryKey;
   }
 
-  const scopedQueryKey: QueryKey = makeScopedQueryKey(chainId, address, key);
+  const scopedQueryKey: QueryKey = makeScopedQueryKey(chainId, key);
   const modifiedArguments = {
     ...rest,
     queryKey: scopedQueryKey
@@ -36,20 +32,20 @@ export function useScopedQuery<
   return useQuery(modifiedArguments);
 }
 
-export function useSetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+export function useSetChainScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
   const chainId = useChainId();
-  const { address } = useAccount();
+
   const queryClient = useQueryClient();
 
   return useCallback(
     <T>(queryKey: TQueryKey, mergeData: (oldData: undefined | void | T) => T) =>
       queryClient.setQueryData(
-        makeScopedQueryKey(chainId, address, queryKey),
+        makeScopedQueryKey(chainId, queryKey),
         (oldData: undefined | void | T) => {
           const merged = mergeData(oldData);
           return merged;
         }
       ),
-    [queryClient, address, chainId]
+    [queryClient, chainId]
   );
 }
