@@ -347,6 +347,9 @@ library LibWhitelist {
                 abi.encodeWithSelector(0x0dfe1681)
             );
         } else {
+            if (oracleImplementation.target == address(0))
+                oracleImplementation.target = address(this);
+
             // verify you passed in a callable oracle selector
             (success, returnData) = oracleImplementation.target.call(
                 abi.encodeWithSelector(
