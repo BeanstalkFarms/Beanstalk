@@ -45,7 +45,9 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "LibFlood",
     "LibSilo",
     "LibPipelineConvert",
-    "LibUsdOracle"
+    "LibUsdOracle",
+    "LibChainlinkOracle",
+    "LibWell"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
