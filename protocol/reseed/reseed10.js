@@ -16,6 +16,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "WhitelistFacet",
     "ApprovalFacet",
     "BDVFacet",
+    "OracleFacet",
     "ConvertFacet", // CONVERT
     "ConvertGettersFacet",
     "MetadataFacet", // METADATA
@@ -43,7 +44,8 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "LibShipping",
     "LibFlood",
     "LibSilo",
-    "LibPipelineConvert"
+    "LibPipelineConvert",
+    "LibUsdOracle"
   ];
 
   // A mapping of facet to public library names that will be linked to it.

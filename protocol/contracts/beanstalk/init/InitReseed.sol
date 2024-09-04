@@ -36,6 +36,7 @@ contract InitReseed {
         s.sys.season.start =
             ((s.sys.season.timestamp / s.sys.season.period) * s.sys.season.period) -
             (s.sys.season.period * s.sys.season.current);
+
         emit Reseed(block.timestamp);
     }
 }

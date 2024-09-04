@@ -33,7 +33,8 @@ const {
 const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
-const { reseed } = require("./reseed/reseed.js");
+const { reseedL2 } = require("./reseed/reseedL2.js");
+const { reseedL1 } = require("./reseed/reseedL1.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const {
@@ -101,20 +102,23 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
-task("reseed", async () => {
-  // mint more eth to the bcm to cover gas costs
+task("reseedL1", async () => {
+  // mint more eth to the bcm to cover gas costs.
   let bcm = await impersonateSigner(BCM);
+  await mintEth(bcm.address);
+  await reseedL1(bcm);
+});
+
+task("reseedL2", async () => {
+  // the account that deploys the new diamond address at nonce 0.
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
   // todo: get l2bcm once deployed.
   let l2bcm = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f8");
-  await mintEth(bcm.address);
   await mintEth(beanstalkDeployer.address);
   await mintEth(l2bcm.address);
-  await reseed({
-    owner: bcm,
+  await reseedL2({
     beanstalkDeployer: beanstalkDeployer,
     l2owner: l2bcm,
-    deployL1: false,
     setState: true
   });
 });
@@ -416,7 +420,13 @@ module.exports = {
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
-      timeout: 100000,
+      timeout: 1000000000,
+      accounts: "remote"
+    },
+    localhostL1: {
+      chainId: 1338,
+      url: "http://127.0.0.1:9545/",
+      timeout: 1000000000,
       accounts: "remote"
     },
     mainnet: {
