@@ -393,7 +393,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated plots to the account.
-     * @dev active field is hardcoded here to confirm with L1 field id.
+     * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
         address reciever,
