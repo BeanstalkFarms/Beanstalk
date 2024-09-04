@@ -410,6 +410,7 @@ struct MigrationData {
     bool migratedPlots;
     bool migratedFert;
     bool migratedInternalBalances;
+    bool migratedPodOrdersAndListings;
 }
 
 /**
