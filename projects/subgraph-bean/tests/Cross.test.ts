@@ -50,7 +50,6 @@ describe("Peg Crosses", () => {
   });
 
   afterEach(() => {
-    log.debug("clearing the store", []);
     clearStore();
   });
 

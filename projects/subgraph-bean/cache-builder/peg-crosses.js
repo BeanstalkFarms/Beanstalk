@@ -1,7 +1,7 @@
 const { GraphQLClient, gql } = require("graphql-request");
 const fs = require("fs");
 
-const url = "https://graph.bean.money/bean";
+const url = "https://graph.bean.money/bean_eth";
 const subgraph = new GraphQLClient(url);
 
 // Gets all unique blocks in which there was either a pool or peg cross.
@@ -40,9 +40,11 @@ async function getAllPegCrossBlocks() {
   allCrossBlocks.sort();
 
   const outFile = `${__dirname}/results/PegCrossBlocks_eth.ts`;
-  await fs.promises.appendFile(
+  await fs.promises.writeFile(
     outFile,
-    `export const PEG_CROSS_BLOCKS: u32[] = [${allCrossBlocks.join(",")}];
+    `/* This is a generated file */
+    
+    export const PEG_CROSS_BLOCKS: u32[] = [${allCrossBlocks.join(",")}];
     export const PEG_CROSS_BLOCKS_LAST: u32 = ${allCrossBlocks[allCrossBlocks.length - 1]};
   `
   );
