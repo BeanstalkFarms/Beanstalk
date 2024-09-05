@@ -17,7 +17,8 @@ const WELL_BLACKLIST: Record<number, WellAddresses> = {
     "0xbEa00022Ee2F7E2eb222f75fE79eFE4871E655ca".toLowerCase(), // bean:wstETH duplicate
     "0xbea0009b5b96D87643DFB7392293f18af7C041F4".toLowerCase(), // bean:wstETH duplicate
     "0x5997111CbBAA0f4C613Ae678Ba4803e764140266".toLowerCase() // usdc:frax duplicate
-  ]
+  ],
+  [ChainId.ARBITRUM]: []
 };
 
 const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
