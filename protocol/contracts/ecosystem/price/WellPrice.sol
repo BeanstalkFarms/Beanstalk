@@ -49,10 +49,10 @@ contract WellPrice {
 
     /**
      * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
-     * Bean a given Well.
+     * Bean in a given Well.
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
      **/
-    function getConstantProductWell(address wellAddress) public view returns (P.Pool memory pool) {
+    function getWell(address wellAddress) public view returns (P.Pool memory pool) {
         IWell well = IWell(wellAddress);
         pool.pool = wellAddress;
 
