@@ -9,7 +9,8 @@ const netlifyBuildId = import.meta.env.VITE_NETLIFY_BUILD_ID;
 
 export type DexSettings = {
   PRODUCTION: boolean;
-  AQUIFER_ADDRESS: Address;
+  AQUIFER_ADDRESS_MAINNET: Address;
+  AQUIFER_ADDRESS_ARBITRUM: Address;
   SUBGRAPH_URL: string;
   BEANSTALK_SUBGRAPH_URL: string;
   WELLS_ORIGIN_BLOCK: number;
@@ -19,16 +20,23 @@ export type DexSettings = {
   NETLIFY_BUILD_ID?: string;
 };
 
-const temp = netlifyContext === "production" || netlifyContext === "deploy-preview" ? ProdSettings : DevSettings;
+const baseSettings =
+  netlifyContext === "production" || netlifyContext === "deploy-preview"
+    ? ProdSettings
+    : DevSettings;
 
 export const Settings = {
-  ...temp,
+  ...baseSettings,
   NETLIFY_CONTEXT: netlifyContext,
   NETLIFY_COMMIT_HASH: netlifyCommitHash,
   NETLIFY_BUILD_ID: netlifyBuildId
 };
 
-export const isNetlifyContext = netlifyContext === 'deploy-preview';
+export const isDeployPreview = netlifyContext === "deploy-preview";
+
+export const isDEV = !Settings.PRODUCTION && !isDeployPreview;
+
+export const isPROD = Settings.PRODUCTION;
 
 // @ts-ignore
 globalThis.settings = () => Log.module("settings").log(Settings);

@@ -1,5 +1,5 @@
 import { defineChain } from "viem";
-import { RPC_URLS } from "./urls";
+import { getRpcUrl } from "./urls";
 import { ChainId } from "@beanstalk/sdk-core";
 
 export const localFork = defineChain({
@@ -7,7 +7,7 @@ export const localFork = defineChain({
   name: "localhost:8545 - arbitrum",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["http://localhost:8545"] }
+    default: { http: [getRpcUrl(ChainId.LOCALHOST)] }
   },
   contracts: {
     ensRegistry: {
@@ -29,7 +29,7 @@ export const localForkMainnet = defineChain({
   name: "localhost:9545 - mainnet",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["http://localhost:9545"] }
+    default: { http: [getRpcUrl(ChainId.LOCALHOST_MAINNET)] }
   },
   contracts: {
     ensRegistry: {
@@ -47,11 +47,11 @@ export const localForkMainnet = defineChain({
 });
 
 export const anvil1 = defineChain({
-  id: 1007,
+  id: ChainId.ANVIL1,
   name: "anvil1.bean.money",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://anvil1.bean.money:443"] }
+    default: { http: [getRpcUrl(ChainId.ANVIL1)] }
   },
   contracts: {
     ensRegistry: {
@@ -74,7 +74,7 @@ export const mainnet = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [RPC_URLS.mainnet]
+      http: [getRpcUrl(ChainId.MAINNET)]
     }
   },
   blockExplorers: {
@@ -105,7 +105,31 @@ export const arbitrum = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [RPC_URLS.arbitrum]
+      http: [getRpcUrl(ChainId.ARBITRUM)]
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: "Arbiscan",
+      url: "https://arbiscan.io",
+      apiUrl: "https://api.arbiscan.io/api"
+    }
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 7654707
+    }
+  }
+});
+
+export const testnet = defineChain({
+  id: ChainId.TESTNET,
+  name: "Testnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [getRpcUrl(ChainId.TESTNET)]
     }
   },
   blockExplorers: {
