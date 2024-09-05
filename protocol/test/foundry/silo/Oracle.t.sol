@@ -212,7 +212,7 @@ contract OracleTest is TestHelper {
     function testZeroAddressOracleImplementationTarget() public {
         vm.prank(BEANSTALK);
         // exersizes address 0 and bytes 0x00, although there's no current way to whitelist something with these values.
-        vm.expectRevert("Whitelist: Invalid Oracle Implementation");
+        vm.expectRevert("Whitelist: Invalid Target Address");
         bs.updateOracleImplementationForToken(
             WBTC,
             IMockFBeanstalk.Implementation(
