@@ -15,7 +15,7 @@ import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "
 import { mockPoolPriceAndLiquidity, mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
 import { updatePricesAndCheckCrosses as crv_updatePricesAndCheckCrosses } from "../src/Bean3CRVHandler_V1";
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
-import { PEG_CROSS_BLOCKS } from "../cache-builder/results/PegCrossBlocks";
+import { PEG_CROSS_BLOCKS } from "../cache-builder/results/PegCrossBlocks_eth";
 import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
 
 const wellCrossId = (n: u32): string => {

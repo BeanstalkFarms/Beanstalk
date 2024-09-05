@@ -39,7 +39,7 @@ async function getAllPegCrossBlocks() {
   }
   allCrossBlocks.sort();
 
-  const outFile = `${__dirname}/results/PegCrossBlocks.ts`;
+  const outFile = `${__dirname}/results/PegCrossBlocks_eth.ts`;
   await fs.promises.appendFile(
     outFile,
     `export const PEG_CROSS_BLOCKS: u32[] = [${allCrossBlocks.join(",")}];
