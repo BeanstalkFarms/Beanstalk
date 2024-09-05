@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
