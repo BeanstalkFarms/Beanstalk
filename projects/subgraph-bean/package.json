@@ -22,6 +22,7 @@
     "@graphprotocol/graph-ts": "0.34.0"
   },
   "devDependencies": {
+    "graphql-request": "^6.1.0",
     "matchstick-as": "^0.6.0"
   },
   "private": true
