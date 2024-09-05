@@ -6,7 +6,7 @@ import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals"
 import { checkBeanCross, checkPoolCross } from "./utils/Cross";
 import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
-import { PEG_CROSS_BLOCKS, PEG_CROSS_BLOCKS_LAST } from "./cache/PegCrossBlocks";
+import { PEG_CROSS_BLOCKS, PEG_CROSS_BLOCKS_LAST } from "../cache-builder/results/PegCrossBlocks";
 import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
 
 // Processing as each new ethereum block is created
