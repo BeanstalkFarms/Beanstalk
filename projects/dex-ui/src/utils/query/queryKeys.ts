@@ -1,4 +1,8 @@
 export const queryKeys = {
+  // wells
+  wells: ["wells"],
+  wellTokens: ["wells", "tokens"],
+
   erc20TokenWithAddress: (address: string) => ["token", "erc20", address],
   tokenMetadata: (address: string) => ["token", "metadata", address],
   tokenAllowance: (tokenAddress: string | undefined, spender: string) => [
@@ -9,7 +13,7 @@ export const queryKeys = {
   ],
   lpSummaryAll: ["token", "lpSummary"],
 
-  // wells
+  // well implementations
   wellImplementations: (addresses: string[]) => ["wells", "implementations", addresses],
 
   // well Function

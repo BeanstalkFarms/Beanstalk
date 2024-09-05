@@ -9,7 +9,7 @@ const makeScopedQueryKey = (chainId: number, queryKey: QueryKey) => {
 
 export function useChainScopedQuery<
   TQueryFnData,
-  TError,
+  TError = Error,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey
 >(arg: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {

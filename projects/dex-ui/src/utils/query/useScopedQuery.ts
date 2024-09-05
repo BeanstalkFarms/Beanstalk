@@ -11,7 +11,7 @@ const makeScopedQueryKey = (chainId: number, address: AddressIsh, queryKey: Quer
 
 export function useScopedQuery<
   TQueryFnData,
-  TError,
+  TError = Error,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey
 >(arg: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
