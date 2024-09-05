@@ -11,9 +11,9 @@ class BeanInitialValues {
 }
 
 export const BEAN_INITIAL_VALUES: BeanInitialValues = {
-  volume: BigInt.fromU64(1),
-  volumeUsd: BigDecimal.fromString("1.2"),
-  crosses: 1,
-  lastCross: BigInt.fromU64(1),
-  lastSeason: 3
+  volume: BigInt.fromString("71805665964835"),
+  volumeUsd: BigDecimal.fromString("82309886.099993589468"),
+  crosses: 5675,
+  lastCross: BigInt.fromString("1716828947"),
+  lastSeason: 24344
 };
