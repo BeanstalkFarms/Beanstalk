@@ -2,7 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
 
-async function reseed9(account, L2Beanstalk, mock) {
+async function reseed9(account, L2Beanstalk, mock = false) {
   console.log("-----------------------------------");
   console.log("reseed9: whitelist tokens.\n");
 
@@ -14,7 +14,7 @@ async function reseed9(account, L2Beanstalk, mock) {
     whitelistSettingsPath = "./reseed/data/r9-whitelist.json";
   }
 
-  let assets = JSON.parse(await fs.readFileSync(WHITELIST_SETTINGS));
+  let assets = JSON.parse(await fs.readFileSync(whitelistSettingsPath));
   let tokens = assets.map((asset) => asset[0]);
   let nonBeanTokens = assets.map((asset) => asset[1]);
   let siloSettings = assets.map((asset) => asset[2]);
