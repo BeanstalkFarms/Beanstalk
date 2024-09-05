@@ -1,6 +1,6 @@
 import { Token, TokenValue } from "@beanstalk/sdk";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useTokens } from "src/tokens/TokenProvider";
+import { useTokens } from "src/tokens/useTokens";
 import styled from "styled-components";
 import { ArrowButton } from "./ArrowButton";
 import { TokenInput } from "./TokenInput";
@@ -32,8 +32,12 @@ export const SwapRoot = () => {
   // We need _some_ address in order to make quotes work when there's no account connected.
   const [recipient, setRecipient] = useState<string>(NULL_ADDRESS);
   const [inAmount, setInAmount] = useState<TokenValue>();
-  const [inToken, setInToken] = useState<Token>(fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["ETH"]) : tokens["ETH"]);
-  const [outToken, setOutToken] = useState<Token>(toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]);
+  const [inToken, setInToken] = useState<Token>(
+    fromToken ? (tokens[fromToken] ? tokens[fromToken] : tokens["ETH"]) : tokens["ETH"]
+  );
+  const [outToken, setOutToken] = useState<Token>(
+    toToken ? (tokens[toToken] ? tokens[toToken] : tokens["BEAN"]) : tokens["BEAN"]
+  );
   const [outAmount, setOutAmount] = useState<TokenValue>();
   const [slippage, setSlippage] = useState<number>(0.1);
   const [isLoadingAllBalances, setIsLoadingAllBalances] = useState(true);
@@ -67,7 +71,9 @@ export const SwapRoot = () => {
   // Fetch all tokens. Needed for populating the token selector dropdowns
   useEffect(() => {
     const fetching = isAllTokenLoading;
-    fetching ? setIsLoadingAllBalances(true) : setTimeout(() => setIsLoadingAllBalances(false), 500);
+    fetching
+      ? setIsLoadingAllBalances(true)
+      : setTimeout(() => setIsLoadingAllBalances(false), 500);
   }, [isAllTokenLoading]);
 
   // Builds a Quoter object. Dependency array updates it when those change
@@ -77,7 +83,11 @@ export const SwapRoot = () => {
   }, [inToken, outToken, builder, account]);
 
   useEffect(() => {
-    readyToSwap && hasEnoughBalance && !!account && inAmount?.gt(TokenValue.ZERO) && outAmount?.gt(TokenValue.ZERO)
+    readyToSwap &&
+    hasEnoughBalance &&
+    !!account &&
+    inAmount?.gt(TokenValue.ZERO) &&
+    outAmount?.gt(TokenValue.ZERO)
       ? setButtonEnabled(true)
       : setButtonEnabled(false);
   }, [readyToSwap, account, inAmount, outAmount, hasEnoughBalance]);
@@ -326,7 +336,6 @@ export const SwapRoot = () => {
     }
   };
 
-
   const getLabel = useCallback(() => {
     if (!routeExists) return "No route available";
     if (!inAmount && !outAmount) return "Enter Amount";
@@ -339,7 +348,11 @@ export const SwapRoot = () => {
   }, [hasEnoughBalance, inAmount, needsApproval, outAmount, inToken, outToken, routeExists]);
 
   if (Object.keys(tokens).length === 0)
-    return <Container>There are no tokens. Please check you are connected to the right network.</Container>;
+    return (
+      <Container>
+        There are no tokens. Please check you are connected to the right network.
+      </Container>
+    );
 
   return (
     <Container>
@@ -377,7 +390,11 @@ export const SwapRoot = () => {
       </SwapInputContainer>
       <QuoteDetails
         type={isForwardQuote ? "FORWARD_SWAP" : "REVERSE_SWAP"}
-        quote={{ quote: quote?.amount || TokenValue.ZERO, estimate: quote?.amountWithSlippage || TokenValue.ZERO, gas: quote?.gas }}
+        quote={{
+          quote: quote?.amount || TokenValue.ZERO,
+          estimate: quote?.amountWithSlippage || TokenValue.ZERO,
+          gas: quote?.gas
+        }}
         inputs={[inAmount || TokenValue.ZERO, outAmount || TokenValue.ZERO]}
         handleSlippageValueChange={handleSlippageValueChange}
         wellTokens={[inToken, outToken]}
@@ -386,7 +403,12 @@ export const SwapRoot = () => {
       />
       <SwapButtonContainer data-trace="true">
         <ActionWalletButtonWrapper>
-          <Button label={getLabel()} disabled={!buttonEnabled || !routeExists} onClick={handleButtonClick} loading={txLoading} />
+          <Button
+            label={getLabel()}
+            disabled={!buttonEnabled || !routeExists}
+            onClick={handleButtonClick}
+            loading={txLoading}
+          />
         </ActionWalletButtonWrapper>
       </SwapButtonContainer>
     </Container>

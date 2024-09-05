@@ -6,3 +6,8 @@ export function useTokens() {
   const atom = useAtomValue(underlyingTokenMapAtom);
   return useMemo(() => atom, [atom]);
 }
+
+export const useTokensArr = () => {
+  const tokens = useTokens();
+  return useMemo(() => Object.values(tokens), [tokens]);
+}

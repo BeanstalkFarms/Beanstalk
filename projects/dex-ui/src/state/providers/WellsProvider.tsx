@@ -14,6 +14,7 @@ import { Error } from "src/components/Error";
 import { Token } from "@beanstalk/sdk-core";
 import { underlyingTokenMapAtom } from "../atoms/tokens.atoms";
 import { useChainId } from "wagmi";
+import { getTokenIndex } from "src/tokens/utils";
 
 export const clearWellsCache = () => findWells.cache.clear?.();
 
@@ -60,18 +61,23 @@ export const useWellsQuery = () => {
           .filter<Well>((p): p is Well => !!p);
         // set token metadatas
         setTokenMetadatas(wellsResult);
-
-        const tokenMap = (wellsResult || []).reduce<TokenSymbolMap<Token>>((prev, well) => {
-          if (well.tokens && Array.isArray(well.tokens)) {
-            well.tokens.forEach((token) => {
-              prev[token.symbol] = token;
-            });
-          }
-          return prev;
-        }, {});
-
         setWells({ data: wellsResult, error: null, isLoading: false });
-        setTokenMap(tokenMap);
+
+        if (wellsResult.length) {
+          const tokenMap = (wellsResult || []).reduce<TokenSymbolMap<Token>>((prev, well) => {
+            if (well.tokens && Array.isArray(well.tokens)) {
+              well.tokens.forEach((token) => {
+                prev[token.symbol] = token;
+              });
+            }
+            return prev;
+          }, {
+            [getTokenIndex(sdk.tokens.ETH)]: sdk.tokens.ETH
+          });
+
+          setTokenMap(tokenMap);
+        }
+
 
         return wellsResult;
       } catch (err: any) {

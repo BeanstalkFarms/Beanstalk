@@ -1,7 +1,7 @@
 import { Token } from "@beanstalk/sdk";
 import React, { useCallback, useEffect, useState } from "react";
 import { FC } from "src/types";
-import { useTokens } from "src/tokens/TokenProvider";
+import { useTokens } from "src/tokens/useTokens";
 import styled, { keyframes } from "styled-components";
 import { TokenLogo } from "src/components/TokenLogo";
 import x from "src/assets/images/x.svg";

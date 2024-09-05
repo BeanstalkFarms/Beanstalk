@@ -4,13 +4,13 @@ import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { SwapRoot } from "src/components/Swap/SwapRoot";
-import { useWellTokens } from "src/tokens/useWellTokens";
+import { useTokens } from "src/tokens/useTokens";
 import styled from "styled-components";
 
 export const Swap = () => {
-  const { isLoading, data } = useWellTokens();
+  const tokens = useTokens();
 
-  const loading = !data || isLoading || !data.length;
+  const loading = !Object.keys(tokens).length;
 
   return (
     <Page>

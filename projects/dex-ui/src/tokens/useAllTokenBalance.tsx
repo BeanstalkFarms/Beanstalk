@@ -2,7 +2,7 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
 import { useAccount } from "wagmi";
-import { useTokens } from "./TokenProvider";
+import { useTokens } from "src/tokens/useTokens";
 import { Log } from "src/utils/logger";
 import { config } from "src/utils/wagmi/config";
 import { ContractFunctionParameters } from "viem";

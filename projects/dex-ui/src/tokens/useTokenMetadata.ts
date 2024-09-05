@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { alchemy } from "../utils/alchemy";
 import { TokenMetadataResponse } from "alchemy-sdk";
 
-import { useTokens } from "src/tokens/TokenProvider";
+import { useTokens } from "src/tokens/useTokens";
 import { useWells } from "src/wells/useWells";
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";

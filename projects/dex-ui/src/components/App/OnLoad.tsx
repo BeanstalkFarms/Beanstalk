@@ -13,20 +13,20 @@ export const OnLoad: FC<{}> = ({ children }) => {
     refetch();
   }, [address, chain?.id, refetch]);
 
-  // useEffect(() => {
-  //   const unwatch = watchAccount(config, {
-  //     onChange(account, prevAccount) {
-  //       // if (account.chain?.id !== chain?.id) {
-  //       //   console.log("CHECK ME");
-  //       // }
-  //       // if (prevAccount.address !== account.address) {
-  //       //   console.log(`CHANGED! - from(${prevAccount.address}) to => ${account.address}`);
-  //       // }
-  //     }
-  //   });
-
-  //   return () => unwatch();
-  // });
-
   return <>{children}</>;
 };
+
+// useEffect(() => {
+//   const unwatch = watchAccount(config, {
+//     onChange(account, prevAccount) {
+//       // if (account.chain?.id !== chain?.id) {
+//       //   console.log("CHECK ME");
+//       // }
+//       // if (prevAccount.address !== account.address) {
+//       //   console.log(`CHANGED! - from(${prevAccount.address}) to => ${account.address}`);
+//       // }
+//     }
+//   });
+
+//   return () => unwatch();
+// });

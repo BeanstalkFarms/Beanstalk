@@ -7,7 +7,7 @@ import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
 import { usePumps } from "src/wells/pump/usePumps";
 import BoreWellUtils from "src/wells/boreWell";
-import { clearWellsCache } from "src/wells/useWells";
+import { clearWellsCache } from "src/state/providers/WellsProvider";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**

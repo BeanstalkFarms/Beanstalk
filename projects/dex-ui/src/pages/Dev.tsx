@@ -7,17 +7,18 @@ import { Button } from "src/components/Swap/Button";
 import { TokenInput } from "src/components/Swap/TokenInput";
 import toast from "react-hot-toast";
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
-import { useWellTokens } from "src/tokens/useWellTokens";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ToastAlert } from "src/components/TxnToast/ToastAlert";
 import { useWells } from "src/wells/useWells";
 import { useEthersProvider } from "src/utils/wagmi/ethersAdapter";
+import { useTokensArr } from "src/tokens/useTokens";
 
 export const Dev = () => {
   const provider = useEthersProvider();
   const account = useAccount();
-  const { data } = useWellTokens();
+  const data = useTokensArr();
+
   const { data: wells } = useWells();
 
   const [amounts, setAmounts] = useState<Map<string, TokenValue>>(new Map());
