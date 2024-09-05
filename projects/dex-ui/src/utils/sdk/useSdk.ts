@@ -1,9 +1,10 @@
 import { BeanstalkSDK } from "@beanstalk/sdk";
-import { useContext, useMemo } from "react";
-import { BeanstalkSDKContext } from "src/utils/sdk/SdkProvider";
+import { useAtom } from "jotai";
+import { useMemo } from "react";
+import { sdkAtom } from "src/utils/sdk/SdkProvider";
 
-export default function useSdk() {
-  const sdk: BeanstalkSDK = useContext(BeanstalkSDKContext);
+export default function useSdk(): BeanstalkSDK {
+  const [sdk] = useAtom(sdkAtom);
   if (!sdk) {
     throw new Error("Expected sdk to be used within BeanstalkSDK context");
   }

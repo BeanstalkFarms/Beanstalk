@@ -1,39 +1,51 @@
-import React, { createContext, useMemo } from "react";
-import { BeanstalkSDK } from "@beanstalk/sdk";
+import React, { createContext, useEffect, useMemo } from "react";
+import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { Log } from "../logger";
 import { useEthersProvider, useEthersSigner } from "../wagmi/ethersAdapter";
+import { isDEV } from "src/settings";
+import { atom, useAtom, Provider as JotaiProvider, createStore } from "jotai";
+import { getRpcUrl } from "../wagmi/urls";
 
-const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== "production";
+export const sdkAtom = atom<BeanstalkSDK | null>(null);
+sdkAtom.debugLabel = "sdk";
 
-const getSDK = (provider?: JsonRpcProvider, signer?: Signer) => {
+const sdkStore = createStore();
+sdkStore.set(sdkAtom, null);
+
+const getSDK = (provider?: JsonRpcProvider, signer?: Signer, chainId?: number) => {
   const sdk = new BeanstalkSDK({
+    rpcUrl: getRpcUrl(chainId as ChainId),
     signer: signer,
     provider: provider,
-    DEBUG: IS_DEVELOPMENT_ENV
+    DEBUG: isDEV
   });
 
   Log.module("sdk").debug("sdk initialized", sdk);
   return sdk;
 };
 
-const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
-// TODO: use the correct RPC_URL for the current network
-const RPC_URL = IS_DEVELOPMENT_ENV
-  ? "http://localhost:8545"
-  : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
-
-export const BeanstalkSDKContext = createContext<BeanstalkSDK>(
-  new BeanstalkSDK({ rpcUrl: RPC_URL, DEBUG: import.meta.env.DEV })
-);
-
-function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
+function BeanstalkSdkSetter({ children }: { children: React.ReactNode }) {
+  const [sdk, setSdk] = useAtom(sdkAtom);
   const signer = useEthersSigner();
   const provider = useEthersProvider();
-  const sdk = useMemo(() => getSDK(provider as JsonRpcProvider, signer), [provider, signer]);
+  const chainId = provider.network.chainId;
 
-  return <BeanstalkSDKContext.Provider value={sdk}>{children}</BeanstalkSDKContext.Provider>;
+  useEffect(() => {
+    setSdk(getSDK(provider as JsonRpcProvider, signer, chainId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider, signer, chainId]);
+
+  if (!sdk) return null;
+
+  return <>{children}</>;
 }
 
-export const SdkProvider = React.memo(BeanstalkSDKProvider);
+export const SdkProvider = React.memo(({ children }: { children: React.ReactNode }) => (
+  <>
+    <JotaiProvider store={sdkStore}>
+      <BeanstalkSdkSetter>{children}</BeanstalkSdkSetter>
+    </JotaiProvider>
+  </>
+));
