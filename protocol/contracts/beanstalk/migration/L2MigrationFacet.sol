@@ -115,7 +115,7 @@ contract L2MigrationFacet is ReentrancyGuard {
             0,
             maxSubmissionCost,
             receiver, // excessFeeRefundAddress
-            msg.sender, 
+            msg.sender,
             maxGas,
             gasPriceBid,
             data
