@@ -1,26 +1,27 @@
 import React, { useEffect } from "react";
-import useSdk from "src/utils/sdk/useSdk";
-import { Well } from "@beanstalk/sdk/Wells";
+import { useChainId } from "wagmi";
+import { Well } from "@beanstalk/sdk-wells";
 import { findWells } from "src/wells/wellLoader";
 import { Log } from "src/utils/logger";
+import useSdk from "src/utils/sdk/useSdk";
 import tokenMetadataJson from "src/token-metadata.json";
 import { TokenMetadataMap, TokenSymbolMap } from "src/types";
 import { images } from "src/assets/images/tokens";
 import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import { useSetAtom } from "jotai";
-import { setWellsLoadingAtom, wellsAtom } from "../atoms/wells.atoms";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { Error } from "src/components/Error";
 import { Token } from "@beanstalk/sdk-core";
-import { underlyingTokenMapAtom } from "../atoms/tokens.atoms";
-import { useChainId } from "wagmi";
+import { underlyingTokenMapAtom, setWellsLoadingAtom, wellsAtom } from "src/state/atoms";
 import { getTokenIndex } from "src/tokens/utils";
+import { useAquifer } from "src/wells/aquifer/aquifer";
 
 export const clearWellsCache = () => findWells.cache.clear?.();
 
 export const useWellsQuery = () => {
   const sdk = useSdk();
   const chainId = useChainId();
+  const aquifer = useAquifer();
   const setWells = useSetAtom(wellsAtom);
   const setTokenMap = useSetAtom(underlyingTokenMapAtom);
   const setWellsLoading = useSetAtom(setWellsLoadingAtom);
@@ -34,7 +35,7 @@ export const useWellsQuery = () => {
     queryFn: async () => {
       try {
         setWellsLoading(true);
-        const wellAddresses = await findWells(sdk);
+        const wellAddresses = await findWells(sdk, aquifer);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
 
         // TODO: convert this to a multicall at some point
@@ -64,20 +65,22 @@ export const useWellsQuery = () => {
         setWells({ data: wellsResult, error: null, isLoading: false });
 
         if (wellsResult.length) {
-          const tokenMap = (wellsResult || []).reduce<TokenSymbolMap<Token>>((prev, well) => {
-            if (well.tokens && Array.isArray(well.tokens)) {
-              well.tokens.forEach((token) => {
-                prev[token.symbol] = token;
-              });
+          const tokenMap = (wellsResult || []).reduce<TokenSymbolMap<Token>>(
+            (prev, well) => {
+              if (well.tokens && Array.isArray(well.tokens)) {
+                well.tokens.forEach((token) => {
+                  prev[token.symbol] = token;
+                });
+              }
+              return prev;
+            },
+            {
+              [getTokenIndex(sdk.tokens.ETH)]: sdk.tokens.ETH
             }
-            return prev;
-          }, {
-            [getTokenIndex(sdk.tokens.ETH)]: sdk.tokens.ETH
-          });
+          );
 
           setTokenMap(tokenMap);
         }
-
 
         return wellsResult;
       } catch (err: any) {
