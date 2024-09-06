@@ -1,16 +1,19 @@
 import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20, BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";
 import { getV1Crosses } from "../utils/Cross";
+import { getVersionEntity } from "../utils/constants/Version";
 
 export function loadBean(token: Address): Bean {
   let bean = Bean.load(token);
   if (bean == null) {
     bean = new Bean(token);
-    bean.chain = "ethereum";
-    bean.beanstalk = BEANSTALK.toHexString();
+    const version = getVersionEntity();
+    bean.chain = version.chain;
+    bean.beanstalk = version.protocolAddress.toHexString();
+
     bean.supply = ZERO_BI;
     bean.marketCap = ZERO_BD;
     bean.lockedBeans = ZERO_BI;
@@ -19,7 +22,7 @@ export function loadBean(token: Address): Bean {
     bean.volumeUSD = ZERO_BD;
     bean.liquidityUSD = ZERO_BD;
     bean.price = BigDecimal.fromString("1.072");
-    bean.crosses = token == BEAN_ERC20 ? getV1Crosses() : 0; // starting point for v2 is where v1 left off
+    bean.crosses = token == BEAN_ERC20 ? getV1Crosses() : 0;
     bean.lastCross = ZERO_BI;
     bean.lastSeason = token == BEAN_ERC20 ? 6074 : 0;
     bean.pools = [];

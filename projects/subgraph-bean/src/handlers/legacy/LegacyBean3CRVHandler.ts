@@ -9,14 +9,8 @@ import {
   TokenExchangeUnderlying
 } from "../../../generated/Bean-ABIs/Bean3CRV";
 import { updateBeanAfterPoolSwap } from "../../utils/Bean";
-import { BEAN_3CRV_V1, BEAN_ERC20_V1, BEAN_LUSD_V1, CURVE_PRICE } from "../../../../subgraph-core/utils/Constants";
-import { curveDeltaBUsingVPrice, curvePriceAndLp } from "../../utils/price/CurvePrice";
-import { loadOrCreatePool } from "../../entities/Pool";
-import { ERC20 } from "../../../generated/Bean-ABIs/ERC20";
-import { manualTwa } from "../../utils/price/TwaOracle";
-import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues } from "../../utils/Pool";
+import { setPoolReserves, updatePoolPrice, updatePoolValues } from "../../utils/Pool";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { CurvePrice } from "../../../generated/Bean-ABIs/CurvePrice";
 import { calcPostSwapValues } from "../../utils/legacy/Curve";
 
 export function handleTokenExchange(event: TokenExchange): void {

@@ -1,4 +1,4 @@
-import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
 import { Transfer } from "../../generated/Bean-ABIs/ERC20";
 import { adjustSupply, updateBeanSupplyPegPercent } from "../utils/Bean";
 

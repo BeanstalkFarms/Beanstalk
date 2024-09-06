@@ -1,26 +1,22 @@
 import { BigDecimal, BigInt, Address, log } from "@graphprotocol/graph-ts";
-import {
-  BEAN_3CRV,
-  BEAN_WETH_CP2_WELL,
-  BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
-  BEAN_WSTETH_CP2_WELL,
-  BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
-  BEANSTALK,
-  GAUGE_BIP45_BLOCK,
-  UNRIPE_BEAN,
-  UNRIPE_LP
-} from "../../../subgraph-core/utils/Constants";
+import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 import { loadOrCreatePool } from "../entities/Pool";
+import { getVersionEntity } from "./constants/Version";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
+import { getUnripeBeanAddr, getUnripeLpAddr, getUnripeUnderlying } from "./constants/Addresses";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
+  const protocol = toAddress(getVersionEntity().protocolAddress);
+  const underlyingLpPool = getUnripeUnderlying(getUnripeLpAddr(), blockNumber);
+
   // If BIP45 is deployed - return the result from the contract
   if (blockNumber >= GAUGE_BIP45_BLOCK) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
-    const twaOracle = loadOrCreateTwaOracle(getUnderlyingUnripe(blockNumber));
+    const twaOracle = loadOrCreateTwaOracle(underlyingLpPool);
     const twaReserves =
       blockNumber == twaOracle.cumulativeWellReservesBlock ? twaOracle.cumulativeWellReservesPrev : twaOracle.cumulativeWellReserves;
     const twaTime =
@@ -28,7 +24,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
         ? twaOracle.cumulativeWellReservesPrevTime
         : twaOracle.cumulativeWellReservesTime;
 
-    let beanstalkBIP45 = SeedGauge.bind(BEANSTALK);
+    let beanstalkBIP45 = SeedGauge.bind(protocol);
     let lockedBeans = beanstalkBIP45.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
     if (!lockedBeans.reverted) {
       return lockedBeans.value;
@@ -36,7 +32,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   }
 
   // Pre-gauge there was no lockedBeans contract function, instead we recreate the same calculation.
-  let beanstalk = SeedGauge.bind(BEANSTALK);
+  let beanstalk = SeedGauge.bind(protocol);
   const recapPercentResult = beanstalk.try_getRecapPaidPercent();
   if (recapPercentResult.reverted) {
     // This function was made available later in the Replant process, for a few hundred blocks it is unavailable
@@ -44,30 +40,19 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   }
 
   const recapPaidPercent = new BigDecimal(recapPercentResult.value).div(BigDecimal.fromString("1000000"));
-  const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(UNRIPE_BEAN, recapPaidPercent);
-  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(UNRIPE_LP, recapPaidPercent);
-  const underlyingLpPool = getUnderlyingUnripe(blockNumber);
+  const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeBeanAddr(), recapPaidPercent);
+  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeLpAddr(), recapPaidPercent);
 
   const poolBeanReserves = loadOrCreatePool(underlyingLpPool, blockNumber).reserves[0];
-  const totalLpTokens = ERC20.bind(getUnderlyingUnripe(blockNumber)).totalSupply();
+  const totalLpTokens = ERC20.bind(underlyingLpPool).totalSupply();
   // Simplification here: does not account for twa reserves nor twa lp tokens
   const lockedBeansUrLP = lockedUnripeLp.times(poolBeanReserves).div(totalLpTokens);
 
   return lockedBeansUrBean.plus(lockedBeansUrLP);
 }
 
-function getUnderlyingUnripe(blockNumber: BigInt): Address {
-  if (blockNumber < BEAN_WETH_UNRIPE_MIGRATION_BLOCK) {
-    return BEAN_3CRV;
-  } else if (blockNumber < BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK) {
-    return BEAN_WETH_CP2_WELL;
-  } else {
-    return BEAN_WSTETH_CP2_WELL;
-  }
-}
-
-export function LibLockedUnderlying_getLockedUnderlying(unripeToken: Address, recapPercentPaid: BigDecimal): BigInt {
-  const balanceOfUnderlying = SeedGauge.bind(BEANSTALK).getTotalUnderlying(unripeToken);
+export function LibLockedUnderlying_getLockedUnderlying(protocol: Address, unripeToken: Address, recapPercentPaid: BigDecimal): BigInt {
+  const balanceOfUnderlying = SeedGauge.bind(protocol).getTotalUnderlying(unripeToken);
   const percentLocked = LibLockedUnderlying_getPercentLockedUnderlying(unripeToken, recapPercentPaid);
   return BigInt.fromString(new BigDecimal(balanceOfUnderlying).times(percentLocked).truncate(0).toString());
 }

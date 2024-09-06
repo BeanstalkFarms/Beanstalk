@@ -127,13 +127,12 @@ export function getV1Crosses(): i32 {
  * @returns false if the price contract reverted
  */
 export function updatePoolPricesOnCross(priceOnlyOnCross: boolean, block: ethereum.Block): boolean {
-  const beanToken = getProtocolToken(block.number);
-
-  const priceResult = BeanstalkPrice_try_price(beanToken, block.number);
+  const priceResult = BeanstalkPrice_try_price(block.number);
   if (priceResult.reverted) {
     // Price contract was unavailable briefly after well deployment
     return false;
   }
+  const beanToken = getProtocolToken(block.number);
   const bean = loadBean(beanToken);
   const prevPrice = bean.price;
   const newPrice = toDecimal(priceResult.value.price);

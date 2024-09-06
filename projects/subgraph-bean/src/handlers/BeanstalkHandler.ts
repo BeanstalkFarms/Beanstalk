@@ -37,6 +37,7 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
 
 // POST REPLANT TWA DELTAB //
 
+// TODO: move to legacy
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   setTwaLast(BEAN_3CRV, event.params.balances, event.block.timestamp);
   setCurveTwa(BEAN_3CRV, event.block);

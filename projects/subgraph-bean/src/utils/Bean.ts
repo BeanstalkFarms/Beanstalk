@@ -142,7 +142,7 @@ export function updateBeanAfterPoolSwap(
       beanPrice = calcLiquidityWeightedBeanPrice(beanAddr);
     } else {
       if (priceContractResult === null) {
-        priceContractResult = BeanstalkPrice_try_price(beanAddr, block.number);
+        priceContractResult = BeanstalkPrice_try_price(block.number);
       }
       if (!priceContractResult.reverted) {
         beanPrice = toDecimal(priceContractResult.value.price);

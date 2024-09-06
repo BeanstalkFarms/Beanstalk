@@ -82,14 +82,14 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Can set the price", () => {
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     assert.assertTrue(priceResult.value.price.equals(overallPrice));
     assert.assertTrue(priceResult.value.ps.length == 2);
     assert.assertTrue(priceResult.dewhitelistedPools.length == 0);
   });
 
   test("Extract pool price", () => {
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     const curvePriceResult = getPoolPrice(priceResult, BEAN_3CRV)!;
     assert.assertTrue(curvePriceResult.price.equals(curvePrice));
 
@@ -102,7 +102,7 @@ describe("BeanstalkPrice", () => {
     event.block.number = PRICE_1_BLOCK;
     handleDewhitelistToken(event);
 
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     const curvePriceResult = getPoolPrice(priceResult, BEAN_3CRV);
     assert.assertTrue(priceResult.value.ps.length == 1);
     assert.assertTrue(priceResult.dewhitelistedPools.length == 1);
@@ -111,10 +111,10 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Calls correct price contract by block", () => {
-    const price1 = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const price1 = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     assert.assertTrue(price1.value.price.equals(overallPrice));
 
-    const price2 = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_2_BLOCK);
+    const price2 = BeanstalkPrice_try_price(PRICE_2_BLOCK);
     assert.assertTrue(price2.value.price.equals(contract2Price));
   });
 });

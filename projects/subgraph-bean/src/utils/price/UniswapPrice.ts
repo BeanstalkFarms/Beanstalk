@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
+import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
@@ -8,6 +8,8 @@ import { loadOrCreateToken } from "../../entities/Token";
 import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
 import { Pool } from "../../../generated/schema";
 import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
+import { getVersionEntity } from "../constants/Version";
 
 export function updatePreReplantPriceETH(): BigDecimal {
   let token = loadOrCreateToken(WETH);
@@ -97,7 +99,8 @@ export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp
 }
 
 export function uniswapTwaDeltaBAndPrice(prices: BigInt[], blockNumber: BigInt): DeltaBAndPrice {
-  let beanstalk = PreReplant.bind(BEANSTALK);
+  const protocol = toAddress(getVersionEntity().protocolAddress);
+  let beanstalk = PreReplant.bind(protocol);
   let reserves: BigInt[];
   // After BIP-9, reserves calculation changes
   if (blockNumber.lt(BigInt.fromU64(13953949))) {
