@@ -360,11 +360,7 @@ contract ReseedStateTest is TestHelper {
     function searchAccountPlots(string memory account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-<<<<<<< HEAD
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
-=======
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
->>>>>>> origin/reseed-whitelist-fix
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = account;
         bytes memory accountPlots = vm.ffi(inputs);
