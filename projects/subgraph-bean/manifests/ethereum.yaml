@@ -227,6 +227,8 @@ dataSources:
       abis:
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
       eventHandlers:
