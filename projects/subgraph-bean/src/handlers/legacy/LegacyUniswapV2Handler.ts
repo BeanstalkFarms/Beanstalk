@@ -9,38 +9,27 @@ import { setPoolReserves, updatePoolPrice, updatePoolValues } from "../../utils/
 import { calcUniswapV2Inst_2, getPreReplantPriceETH, updatePreReplantPriceETH } from "../../utils/price/UniswapPrice";
 import { checkBeanCross, checkPoolCross } from "../../utils/Cross";
 import { updateTokenPrice } from "../../utils/Token";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 // Reserves/price already updated by Sync event. Sync event is always emitted prior to a swap.
 // Just update the volume for usd/bean
 export function handleSwap(event: Swap): void {
-  // Do not index post-exploit data
-  if (event.block.number >= BigInt.fromI32(14602790)) return;
-
-  let weth = loadOrCreateToken(WETH.toHexString());
+  let weth = loadOrCreateToken(WETH);
   let usdVolume = toDecimal(event.params.amount0In.plus(event.params.amount0Out), 18).times(weth.lastPriceUSD);
 
-  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
-  updatePoolValues(
-    event.address.toHexString(),
-    event.params.amount1In.plus(event.params.amount1Out),
-    usdVolume,
-    ZERO_BD,
-    pool.deltaBeans,
-    event.block
-  );
+  let pool = loadOrCreatePool(event.address, event.block.number);
+  updatePoolValues(event.address, event.params.amount1In.plus(event.params.amount1Out), usdVolume, ZERO_BD, pool.deltaBeans, event.block);
 
-  updateBeanValues(pool.bean, null, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD, event.block);
+  updateBeanValues(toAddress(pool.bean), null, ZERO_BI, ZERO_BI, usdVolume, ZERO_BD, event.block);
 }
 
 // Sync is called in UniswapV2 on any liquidity or swap transaction.
 // It updates the `reserves` value on the contract.
 
 export function handleSync(event: Sync): void {
-  // Do not index post-exploit data
-  if (event.block.number >= BigInt.fromI32(14602790)) return;
-
-  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
-  const oldBeanPrice = getLastBeanPrice(pool.bean);
+  let pool = loadOrCreatePool(event.address, event.block.number);
+  const beanAddress = toAddress(pool.bean);
+  const oldBeanPrice = getLastBeanPrice(beanAddress);
 
   // Token 0 is WETH and Token 1 is BEAN
   let reserves = [event.params.reserve0, event.params.reserve1];
@@ -51,32 +40,32 @@ export function handleSync(event: Sync): void {
 
   let deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
 
-  setPoolReserves(event.address.toHexString(), reserves, event.block);
-  updatePoolValues(event.address.toHexString(), ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB, event.block);
-  updatePoolPrice(event.address.toHexString(), newPoolPrices.price, event.block);
+  setPoolReserves(event.address, reserves, event.block);
+  updatePoolValues(event.address, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB, event.block);
+  updatePoolPrice(event.address, newPoolPrices.price, event.block);
 
-  updateBeanSupplyPegPercent(event.block.number);
+  updateBeanSupplyPegPercent(beanAddress, event.block.number);
 
-  const newBeanPrice = calcLiquidityWeightedBeanPrice(pool.bean);
-  checkBeanCross(pool.bean, oldBeanPrice, newBeanPrice, event.block);
-  updateBeanValues(pool.bean, newBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD, event.block);
+  const newBeanPrice = calcLiquidityWeightedBeanPrice(beanAddress);
+  checkBeanCross(beanAddress, oldBeanPrice, newBeanPrice, event.block);
+  updateBeanValues(beanAddress, newBeanPrice, ZERO_BI, ZERO_BI, ZERO_BD, deltaLiquidityUSD, event.block);
 }
 
 // Update pool price/liquidity/deltaB. This is for updating the price when a swap occurs in another pool.
 // The caller is expected to update overall bean prices after this function completes.
 export function externalUpdatePoolPrice(poolAddr: Address, block: ethereum.Block): void {
-  const pool = loadOrCreatePool(poolAddr.toHexString(), block.number);
+  const pool = loadOrCreatePool(poolAddr, block.number);
 
   const ethPrice = updatePreReplantPriceETH();
   const newPoolPrices = calcUniswapV2Inst_2(toDecimal(pool.reserves[1]), toDecimal(pool.reserves[0], 18), ethPrice);
   const deltaLiquidityUSD = newPoolPrices.liquidity.minus(pool.liquidityUSD);
 
-  updatePoolValues(poolAddr.toHexString(), ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB, block);
-  updatePoolPrice(poolAddr.toHexString(), newPoolPrices.price, block);
+  updatePoolValues(poolAddr, ZERO_BI, ZERO_BD, deltaLiquidityUSD, newPoolPrices.deltaB, block);
+  updatePoolPrice(poolAddr, newPoolPrices.price, block);
 }
 
 export function checkPegCrossEth(block: ethereum.Block): void {
-  const poolAddrString = BEAN_WETH_V1.toHexString();
+  const poolAddrString = BEAN_WETH_V1;
   const pool = loadOrCreatePool(poolAddrString, block.number);
   const prevPoolPrice = pool.lastPrice;
 
@@ -99,12 +88,12 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   }
 
   // Check for overall Bean cross
-  const oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1.toHexString());
-  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1.toHexString());
-  const beanCrossed = checkBeanCross(BEAN_ERC20_V1.toHexString(), oldBeanPrice, newBeanPrice, block);
+  const oldBeanPrice = getLastBeanPrice(BEAN_ERC20_V1);
+  const newBeanPrice = calcLiquidityWeightedBeanPrice(BEAN_ERC20_V1);
+  const beanCrossed = checkBeanCross(BEAN_ERC20_V1, oldBeanPrice, newBeanPrice, block);
   if (beanCrossed) {
     updateBeanValues(
-      pool.bean,
+      toAddress(pool.bean),
       newBeanPrice,
       ZERO_BI,
       ZERO_BI,
@@ -115,6 +104,6 @@ export function checkPegCrossEth(block: ethereum.Block): void {
   }
 
   if (poolCrossed || beanCrossed) {
-    updateTokenPrice(WETH.toHexString(), ethPrice);
+    updateTokenPrice(WETH, ethPrice);
   }
 }

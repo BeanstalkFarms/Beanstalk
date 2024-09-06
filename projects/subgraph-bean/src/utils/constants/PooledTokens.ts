@@ -1,4 +1,4 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
+import { BigInt, Address, log } from "@graphprotocol/graph-ts";
 import {
   BEAN_ERC20,
   BEAN_ERC20_V1,
@@ -16,7 +16,7 @@ import {
 
 // Use this mapping to determine which tokens are in each pool. Pools may each follow a distinct interface,
 // so a view function shouldn't be used, and a new subgraph build is already required to track a newly whitelisted asset.
-export function getTokensForPool(pool: string): string[] {
+export function getTokensForPool(pool: Address): Address[] {
   for (let i = 0; i < poolTokens.length; ++i) {
     if (poolTokens[i].pool == pool) {
       return poolTokens[i].tokens;
@@ -26,7 +26,7 @@ export function getTokensForPool(pool: string): string[] {
 }
 
 // Name/Decimals are not guaranteed as part of the ERC20 interface, so predefined values are necessary
-export function getTokenInfo(token: string): TokenInfo {
+export function getTokenInfo(token: Address): TokenInfo {
   for (let i = 0; i < tokens.length; ++i) {
     if (tokens[i].address == token) {
       return tokens[i].info;
@@ -36,39 +36,39 @@ export function getTokenInfo(token: string): TokenInfo {
 }
 
 class PoolTokens {
-  pool: string;
-  tokens: string[];
+  pool: Address;
+  tokens: Address[];
 }
 // WHITELIST: Add new pools here
 const poolTokens: PoolTokens[] = [
   {
-    pool: BEAN_WETH_V1.toHexString(),
-    tokens: [BEAN_ERC20_V1.toHexString(), WETH.toHexString()]
+    pool: BEAN_WETH_V1,
+    tokens: [BEAN_ERC20_V1, WETH]
   },
   {
-    pool: BEAN_3CRV_V1.toHexString(),
-    tokens: [BEAN_ERC20_V1.toHexString(), CRV3_TOKEN.toHexString()]
+    pool: BEAN_3CRV_V1,
+    tokens: [BEAN_ERC20_V1, CRV3_TOKEN]
   },
   {
-    pool: BEAN_LUSD_V1.toHexString(),
-    tokens: [BEAN_ERC20_V1.toHexString(), LUSD.toHexString()]
+    pool: BEAN_LUSD_V1,
+    tokens: [BEAN_ERC20_V1, LUSD]
   },
   {
-    pool: BEAN_3CRV.toHexString(),
-    tokens: [BEAN_ERC20.toHexString(), CRV3_TOKEN.toHexString()]
+    pool: BEAN_3CRV,
+    tokens: [BEAN_ERC20, CRV3_TOKEN]
   },
   {
-    pool: BEAN_WETH_CP2_WELL.toHexString(),
-    tokens: [BEAN_ERC20.toHexString(), WETH.toHexString()]
+    pool: BEAN_WETH_CP2_WELL,
+    tokens: [BEAN_ERC20, WETH]
   },
   {
-    pool: BEAN_WSTETH_CP2_WELL.toHexString(),
-    tokens: [BEAN_ERC20.toHexString(), WSTETH.toHexString()]
+    pool: BEAN_WSTETH_CP2_WELL,
+    tokens: [BEAN_ERC20, WSTETH]
   }
 ];
 
 class Token {
-  address: string;
+  address: Address;
   info: TokenInfo;
 }
 
@@ -80,27 +80,27 @@ class TokenInfo {
 // WHITELIST: Add new tokens here
 const tokens: Token[] = [
   {
-    address: BEAN_ERC20_V1.toHexString(),
+    address: BEAN_ERC20_V1,
     info: { name: "BEAN", decimals: BigInt.fromU32(6) }
   },
   {
-    address: BEAN_ERC20.toHexString(),
+    address: BEAN_ERC20,
     info: { name: "BEAN", decimals: BigInt.fromU32(6) }
   },
   {
-    address: WETH.toHexString(),
+    address: WETH,
     info: { name: "WETH", decimals: BigInt.fromU32(18) }
   },
   {
-    address: CRV3_TOKEN.toHexString(),
+    address: CRV3_TOKEN,
     info: { name: "3CRV", decimals: BigInt.fromU32(18) }
   },
   {
-    address: LUSD.toHexString(),
+    address: LUSD,
     info: { name: "LUSD", decimals: BigInt.fromU32(18) }
   },
   {
-    address: WSTETH.toHexString(),
+    address: WSTETH,
     info: { name: "wstETH", decimals: BigInt.fromU32(18) }
   }
 ];

@@ -10,13 +10,13 @@ import {
   LUSD,
   LUSD_3POOL
 } from "../../../../subgraph-core/utils/Constants";
-import { CalculationsCurve } from "../../../generated/Bean-ABIs/CalculationsCurve";
 import { ERC20 } from "../../../generated/Bean-ABIs/ERC20";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { Pool } from "../../../generated/schema";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
 import { loadOrCreateTwaOracle } from "../../entities/TwaOracle";
+import { CalculationsCurve } from "../../../generated/Bean-ABIs/CalculationsCurve";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
@@ -60,11 +60,11 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
 }
 
 export function calcCurveInst(pool: Pool): DeltaBPriceLiquidity {
-  const priceAndLp = curvePriceAndLp(Address.fromString(pool.id));
+  const priceAndLp = curvePriceAndLp(pool.id);
   return {
     price: priceAndLp[0],
     liquidity: priceAndLp[1],
-    deltaB: curveDeltaBUsingVPrice(Address.fromString(pool.id), pool.reserves[0])
+    deltaB: curveDeltaBUsingVPrice(pool.id, pool.reserves[0])
   };
 }
 
@@ -80,11 +80,10 @@ export function curveDeltaBUsingVPrice(pool: Address, beanReserves: BigInt): Big
 }
 
 // Calculates and sets the TWA on the pool hourly/daily snapshots
-export function setCurveTwa(poolAddress: string, block: ethereum.Block): void {
+export function setCurveTwa(poolAddress: Address, block: ethereum.Block): void {
   const twaBalances = getTWAPrices(poolAddress, TWAType.CURVE, block.timestamp);
-  const beanPool = Address.fromString(poolAddress);
-  const otherPool = beanPool == BEAN_LUSD_V1 ? LUSD_3POOL : CRV3_POOL;
-  const twaResult = curveTwaDeltaBAndPrice(twaBalances, beanPool, otherPool);
+  const otherPool = poolAddress == BEAN_LUSD_V1 ? LUSD_3POOL : CRV3_POOL;
+  const twaResult = curveTwaDeltaBAndPrice(twaBalances, poolAddress, otherPool);
 
   setPoolTwa(poolAddress, twaResult, block);
 }
@@ -102,7 +101,7 @@ export function curveCumulativePrices(pool: Address, timestamp: BigInt): BigInt[
     // if (pool == BEAN_LUSD_V1) {
     // BEANLUSD does not have the above functions, uses manual calculation
     // BEAN_3CRV(_V2) uses this also, oracle values are updated from MetapoolOracle event.
-    let twaOracle = loadOrCreateTwaOracle(pool.toHexString());
+    let twaOracle = loadOrCreateTwaOracle(pool);
     cumulativeLast = twaOracle.priceCumulativeLast;
     currentBalances = twaOracle.lastBalances;
     lastTimestamp = twaOracle.lastUpdated;

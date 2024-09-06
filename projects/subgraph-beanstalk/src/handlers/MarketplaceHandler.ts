@@ -8,26 +8,13 @@ import {
   PodOrderCancelled
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import {
-  PodListingCancelled as PodListingCancelledEvent,
-  PodOrderCancelled as PodOrderCancelledEvent,
-  PodOrder,
-  PodListing
-} from "../../generated/schema";
-import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import {
-  MarketplaceAction,
   podListingCancelled,
   podListingCreated,
   podListingFilled,
   podOrderCancelled,
   podOrderCreated,
-  podOrderFilled,
-  updateActiveListings,
-  updateActiveOrders,
-  updateMarketListingBalances,
-  updateMarketOrderBalances
+  podOrderFilled
 } from "../utils/Marketplace";
-import { getHarvestableIndex } from "../entities/Beanstalk";
 
 export function handlePodListingCreated(event: PodListingCreated): void {
   podListingCreated({

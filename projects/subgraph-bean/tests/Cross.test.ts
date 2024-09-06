@@ -7,15 +7,16 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
 import { BEAN_3CRV_V1, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_CP2_WELL, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
-import { BD_10, BigDecimal_round, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BigDecimal_round, toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 
 import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
-import { mockPoolPriceAndLiquidity, mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
+import { mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
 import { PEG_CROSS_BLOCKS } from "../cache-builder/results/PegCrossBlocks_eth";
 import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
 import { handleBlock } from "../src/handlers/BlockHandler";
 import { loadBean } from "../src/entities/Bean";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -34,12 +35,14 @@ const WELL_CROSS_BLOCK = BigInt.fromU32(18965881);
 
 describe("Peg Crosses", () => {
   beforeEach(() => {
+    initL1Version();
+
     // Bean price is init at 1.07, set to 0 so it is consistent will pool starting price
-    let bean = loadBean(BEAN_ERC20.toHexString());
+    let bean = loadBean(BEAN_ERC20);
     bean.price = ZERO_BD;
     bean.save();
 
-    let beanv1 = loadBean(BEAN_ERC20_V1.toHexString());
+    let beanv1 = loadBean(BEAN_ERC20_V1);
     beanv1.price = ZERO_BD;
     beanv1.save();
 
@@ -121,7 +124,7 @@ describe("Peg Crosses", () => {
 
   describe("BEAN:ETH Well", () => {
     beforeEach(() => {
-      setWhitelistedPools([BEAN_WETH_CP2_WELL.toHexString()]);
+      setWhitelistedPools([BEAN_WETH_CP2_WELL]);
     });
 
     test("Well/Bean cross above", () => {

@@ -1,7 +1,16 @@
-# Custommized base schema from Messari
-# Subgraph Schema: DEX AMM (Extended)
-# Version: 3.0.3
-# See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
 
 enum LiquidityEvent {
   # Additions
@@ -15,18 +24,6 @@ enum LiquidityEvent {
 enum SwapEvent {
   SWAP
   SHIFT
-}
-
-# This same entity schema is intended for use across the subgraphs
-type Version @entity {
-  "= 'subgraph'"
-  id: ID!
-  "= 'beanstalk'"
-  subgraphName: String!
-  "Verison number of the subgraph"
-  versionNumber: String!
-  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
-  chain: String!
 }
 
 type Token @entity {

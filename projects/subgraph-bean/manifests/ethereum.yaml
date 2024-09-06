@@ -27,6 +27,9 @@ dataSources:
           filter:
             kind: once
       file: ../src/utils/Init.ts
+  ###
+  # BEAN TOKEN
+  ###
   - kind: ethereum/contract
     name: BeanV1
     network: mainnet
@@ -43,8 +46,6 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
@@ -67,54 +68,16 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ../src/BeanHandler.ts
-  - kind: ethereum/contract
-    name: Bean3CRV
-    network: mainnet
-    source:
-      address: "0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49"
-      abi: Bean3CRV
-      startBlock: 15278082
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities:
-        - Bean3CRV
-      abis:
-        - name: Bean3CRV
-          file: ../../subgraph-core/abis/Bean3CRV.json
-        - name: BeanstalkPrice
-          file: ../../subgraph-core/abis/BeanstalkPrice.json
-        - name: CurvePrice
-          file: ../../subgraph-core/abis/CurvePrice.json
-        - name: ERC20
-          file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-      eventHandlers:
-        - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
-          handler: handleTokenExchange
-        - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
-          handler: handleTokenExchangeUnderlying
-        - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
-          handler: handleAddLiquidity
-        - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
-          handler: handleRemoveLiquidity
-        - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
-          handler: handleRemoveLiquidityImbalance
-        - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
-          handler: handleRemoveLiquidityOne
-      file: ../src/Bean3CRVHandler.ts
+  ###
+  # BEANSTALK PROTOCOL
+  ###
+  # TODO: refactor sunrise part to pre/post exploit
   - kind: ethereum/contract
     name: Beanstalk
     network: mainnet
@@ -160,12 +123,44 @@ dataSources:
           handler: handleConvert
       file: ../src/BeanstalkHandler.ts
   - kind: ethereum/contract
+    name: TWAPOracles
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: BasinBip
+      startBlock: 15277988
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        # This abi is chosen because it contains both MetapoolOracle and WellOracle events.
+        # Indexing of this source should begin prior to BIP37 deployment.
+        - name: BasinBip
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+        - name: Bean3CRV
+          file: ../../subgraph-core/abis/Bean3CRV.json
+        - name: Well
+          file: ../../subgraph-core/abis/Well.json
+      eventHandlers:
+        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
+          handler: handleMetapoolOracle
+        - event: WellOracle(indexed uint32,address,int256,bytes)
+          handler: handleWellOracle
+      file: ../src/handlers/BeanstalkHandler.ts
+  ###
+  # POOLS
+  ###
+  - kind: ethereum/contract
     name: BeanUniswapV2Pair
     network: mainnet
     source:
       address: "0x87898263B6C5BABe34b4ec53F22d98430b91e371"
-      abi: UniswapV2Pair
+      abi: UniswapV2Pair-V1
       startBlock: 12974077
+      endBlock: 14602790
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -183,15 +178,11 @@ dataSources:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
       eventHandlers:
-        # - event: Burn(indexed address,uint256,uint256,indexed address)
-        #   handler: handleBurn
-        # - event: Mint(indexed address,uint256,uint256)
-        #   handler: handleMint
         - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
           handler: handleSwap
         - event: Sync(uint112,uint112)
           handler: handleSync
-      file: ../src/UniswapV2Handler.ts
+      file: ../src/handlers/legacy/LegacyUniswapV2Handler.ts
   - kind: ethereum/contract
     name: Bean3CRV-V1
     network: mainnet
@@ -199,6 +190,7 @@ dataSources:
       address: "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD"
       abi: Bean3CRV
       startBlock: 13954026
+      endBlock: 14602790
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -227,7 +219,7 @@ dataSources:
           handler: handleRemoveLiquidityImbalance
         - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
           handler: handleRemoveLiquidityOne
-      file: ../src/Bean3CRVHandler_V1.ts
+      file: ../src/handlers/legacy/LegacyBean3CRVHandler.ts
   - kind: ethereum/contract
     name: BeanLUSD-V1
     network: mainnet
@@ -235,6 +227,7 @@ dataSources:
       address: "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D"
       abi: Bean3CRV
       startBlock: 14450075
+      endBlock: 14602790
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -263,9 +256,49 @@ dataSources:
           handler: handleRemoveLiquidityImbalance
         - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
           handler: handleRemoveLiquidityOne
-      file: ../src/Bean3CRVHandler_V1.ts
+      file: ../src/handlers/legacy/LegacyBean3CRVHandler.ts
   - kind: ethereum/contract
-    name: BeanWETHCP2w
+    name: Bean3CRV-V2
+    network: mainnet
+    source:
+      address: "0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49"
+      abi: Bean3CRV
+      startBlock: 15278082
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean3CRV
+      abis:
+        - name: Bean3CRV
+          file: ../../subgraph-core/abis/Bean3CRV.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: Beanstalk
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchange
+        - event: TokenExchangeUnderlying(indexed address,int128,uint256,int128,uint256)
+          handler: handleTokenExchangeUnderlying
+        - event: AddLiquidity(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(indexed address,uint256[2],uint256[2],uint256)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityImbalance(indexed address,uint256[2],uint256[2],uint256,uint256)
+          handler: handleRemoveLiquidityImbalance
+        - event: RemoveLiquidityOne(indexed address,uint256,uint256,uint256)
+          handler: handleRemoveLiquidityOne
+      file: ../src/handlers/legacy/LegacyBean3CRVHandler.ts
+  - kind: ethereum/contract
+    name: BeanWETHCP2w-V2
     network: mainnet
     source:
       address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"
@@ -301,9 +334,9 @@ dataSources:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
-      file: ../src/BeanWellHandler.ts
+      file: ../src/handlers/BeanWellHandler.ts
   - kind: ethereum/contract
-    name: BEANwstETHCP2w
+    name: BEANwstETHCP2w-V2
     network: mainnet
     source:
       address: "0xBeA0000113B0d182f4064C86B71c315389E4715D"
@@ -339,38 +372,11 @@ dataSources:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
-      file: ../src/BeanWellHandler.ts
-  - kind: ethereum/contract
-    name: TWAPOracles
-    network: mainnet
-    source:
-      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: BIP37
-      startBlock: 15277988
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities:
-        - BeanHourlySnapshot
-        - BeanDailySnapshot
-        - PoolHourlySnapshot
-        - PoolDailySnapshot
-      abis:
-        # This abi is chosen because it contains both MetapoolOracle and WellOracle events.
-        # Indexing of this source should begin prior to BIP37 deployment.
-        - name: BIP37
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
-        - name: Bean3CRV
-          file: ../../subgraph-core/abis/Bean3CRV.json
-        - name: Well
-          file: ../../subgraph-core/abis/Well.json
-      eventHandlers:
-        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
-          handler: handleMetapoolOracle
-        - event: WellOracle(indexed uint32,address,int256,bytes)
-          handler: handleWellOracle
-      file: ../src/BeanstalkHandler.ts
+      file: ../src/handlers/BeanWellHandler.ts
+  ###
+  # PEG CROSS CHECK PER BLOCK
+  ###
+  # TODO: refactor this into multiple data sources
   - kind: ethereum/contract
     name: BlockHandler
     network: mainnet
@@ -383,15 +389,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Token
-        - Bean
-        - BeanHourlySnapshot
-        - BeanDailySnapshot
         - BeanCross
-        - PoolCross
-        - Pool
-        - PoolHourlySnapshot
-        - PoolDailySnapshot
       abis:
         - name: UniswapV2Pair
           file: ../../subgraph-core/abis/UniswapV2Pair.json
@@ -399,7 +397,7 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       blockHandlers:
         - handler: handleBlock
-      file: ../src/BlockHandler.ts
+      file: ../src/handlers/BlockHandler.ts
 # features:
 #   - grafting
 # graft:

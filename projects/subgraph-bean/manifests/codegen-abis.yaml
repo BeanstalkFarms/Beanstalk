@@ -33,7 +33,7 @@ dataSources:
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
         - name: Beanstalk
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: BIP37
+        - name: BasinBip
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json

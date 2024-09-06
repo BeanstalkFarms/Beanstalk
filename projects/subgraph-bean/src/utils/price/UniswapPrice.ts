@@ -73,7 +73,7 @@ export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDec
 }
 
 // Calculates and sets the TWA on the pool hourly/daily snapshots
-export function setUniswapV2Twa(poolAddress: string, block: ethereum.Block): void {
+export function setUniswapV2Twa(poolAddress: Address, block: ethereum.Block): void {
   const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, block.timestamp);
   const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, block.number);
 

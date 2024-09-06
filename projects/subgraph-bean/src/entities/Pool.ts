@@ -1,22 +1,23 @@
-import { BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { getBeanTokenAddress } from "../utils/Bean";
+import { BigInt, Address, ethereum } from "@graphprotocol/graph-ts";
 import { loadBean } from "./Bean";
 import { getTokensForPool } from "../utils/constants/PooledTokens";
 import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/schema";
 import { loadOrCreateToken } from "./Token";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { getProtocolToken } from "../utils/constants/Addresses";
+import { toAddress, toBytesArray } from "../../../subgraph-core/utils/Bytes";
 
-export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool {
+export function loadOrCreatePool(poolAddress: Address, blockNumber: BigInt): Pool {
   let pool = Pool.load(poolAddress);
   if (pool == null) {
-    let beanAddress = getBeanTokenAddress(blockNumber);
+    let beanAddress = getProtocolToken(blockNumber);
     let bean = loadBean(beanAddress);
 
     pool = new Pool(poolAddress);
-    pool.tokens = getTokensForPool(poolAddress);
+    pool.tokens = toBytesArray(getTokensForPool(poolAddress));
     for (let i = 0; i < pool.tokens.length; ++i) {
-      loadOrCreateToken(pool.tokens[i]);
+      loadOrCreateToken(toAddress(pool.tokens[i]));
     }
     pool.bean = beanAddress;
     pool.reserves = emptyBigIntArray(2);
@@ -39,9 +40,9 @@ export function loadOrCreatePool(poolAddress: string, blockNumber: BigInt): Pool
   return pool as Pool;
 }
 
-export function loadOrCreatePoolHourlySnapshot(pool: string, block: ethereum.Block): PoolHourlySnapshot {
+export function loadOrCreatePoolHourlySnapshot(pool: Address, block: ethereum.Block): PoolHourlySnapshot {
   let hour = hourFromTimestamp(block.timestamp).toString();
-  let id = pool + "-" + hour;
+  let id = pool.toHexString() + "-" + hour;
   let snapshot = PoolHourlySnapshot.load(id);
   if (snapshot == null) {
     let currentPool = loadOrCreatePool(pool, block.number);
@@ -70,10 +71,10 @@ export function loadOrCreatePoolHourlySnapshot(pool: string, block: ethereum.Blo
   return snapshot as PoolHourlySnapshot;
 }
 
-export function loadOrCreatePoolDailySnapshot(pool: string, block: ethereum.Block): PoolDailySnapshot {
+export function loadOrCreatePoolDailySnapshot(pool: Address, block: ethereum.Block): PoolDailySnapshot {
   let day = dayFromTimestamp(block.timestamp).toString();
 
-  let id = pool + "-" + day;
+  let id = pool.toHexString() + "-" + day;
   let snapshot = PoolDailySnapshot.load(id);
   if (snapshot == null) {
     let currentPool = loadOrCreatePool(pool, block.number);

@@ -1,13 +1,6 @@
 import { BigDecimal, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { Pool } from "../../generated/schema";
-import {
-  BEAN_ERC20_V1,
-  BEAN_ERC20,
-  BEAN_WETH_V1,
-  BEAN_3CRV_V1,
-  BEAN_LUSD_V1,
-  NEW_BEAN_TOKEN_BLOCK
-} from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/utils/Constants";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross } from "./Cross";
 import { BeanstalkPrice_try_price, BeanstalkPriceResult } from "./price/BeanstalkPrice";
@@ -15,9 +8,18 @@ import { calcLockedBeans } from "./LockedBeans";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../entities/Bean";
 import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
 import { externalUpdatePoolPrice as univ2_externalUpdatePoolPrice } from "../handlers/legacy/LegacyUniswapV2Handler";
+import { updateBeanSupplyPegPercent_v1 } from "./legacy/Bean";
+import { getProtocolToken } from "./constants/Addresses";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
+
+export function adjustSupply(beanToken: Address, amount: BigInt): void {
+  let bean = loadBean(beanToken);
+  bean.supply = bean.supply.plus(amount);
+  bean.save();
+}
 
 export function updateBeanValues(
-  token: string,
+  token: Address,
   newPrice: BigDecimal | null,
   deltaSupply: BigInt,
   deltaVolume: BigInt,
@@ -64,7 +66,7 @@ export function updateBeanValues(
   beanDaily.save();
 }
 
-export function updateBeanSeason(token: string, timestamp: BigInt, season: i32): void {
+export function updateBeanSeason(token: Address, timestamp: BigInt, season: i32): void {
   let bean = loadBean(token);
   bean.lastSeason = season;
   bean.save();
@@ -80,13 +82,13 @@ export function updateBeanSeason(token: string, timestamp: BigInt, season: i32):
 }
 
 // Returns the last stored bean price
-export function getLastBeanPrice(token: string): BigDecimal {
+export function getLastBeanPrice(token: Address): BigDecimal {
   let bean = loadBean(token);
   return bean.price;
 }
 
 // Returns the liquidity-weighted bean price across all of the whitelisted pools.
-export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
+export function calcLiquidityWeightedBeanPrice(token: Address): BigDecimal {
   let bean = loadBean(token);
   let weightedPrice = ZERO_BD;
   let totalLiquidity = ZERO_BD;
@@ -99,49 +101,26 @@ export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
   return weightedPrice.div(totalLiquidity == ZERO_BD ? ONE_BD : totalLiquidity);
 }
 
-export function getBeanTokenAddress(blockNumber: BigInt): string {
-  return blockNumber < NEW_BEAN_TOKEN_BLOCK ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
-}
-
-export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
-  if (blockNumber < NEW_BEAN_TOKEN_BLOCK) {
-    let bean = loadBean(BEAN_ERC20_V1.toHexString());
-    let lpSupply = ZERO_BD;
-
-    let pool = Pool.load(BEAN_WETH_V1.toHexString());
-    if (pool != null) {
-      lpSupply = lpSupply.plus(toDecimal(pool.reserves[1]));
-    }
-
-    pool = Pool.load(BEAN_3CRV_V1.toHexString());
-    if (pool != null) {
-      lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
-    }
-
-    pool = Pool.load(BEAN_LUSD_V1.toHexString());
-    if (pool != null) {
-      lpSupply = lpSupply.plus(toDecimal(pool.reserves[0]));
-    }
-
-    bean.supplyInPegLP = lpSupply.div(toDecimal(bean.supply));
-    bean.save();
-  } else {
-    let bean = loadBean(BEAN_ERC20.toHexString());
-    let pegSupply = ZERO_BI;
-    for (let i = 0; i < bean.pools.length; ++i) {
-      let pool = loadOrCreatePool(bean.pools[i], blockNumber);
-      // Assumption that beans is in the 0 index for all pools, this may need to be revisited.
-      pegSupply = pegSupply.plus(pool.reserves[0]);
-    }
-    bean.lockedBeans = calcLockedBeans(blockNumber);
-    bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply.minus(bean.lockedBeans)));
-    bean.save();
+export function updateBeanSupplyPegPercent(beanToken: Address, blockNumber: BigInt): void {
+  if (beanToken === BEAN_ERC20_V1) {
+    updateBeanSupplyPegPercent_v1(beanToken, blockNumber);
+    return;
   }
+  let bean = loadBean(beanToken);
+  let pegSupply = ZERO_BI;
+  for (let i = 0; i < bean.pools.length; ++i) {
+    let pool = loadOrCreatePool(toAddress(bean.pools[i]), blockNumber);
+    // Assumption that beans is in the 0 index for all pools, this may need to be revisited.
+    pegSupply = pegSupply.plus(pool.reserves[0]);
+  }
+  bean.lockedBeans = calcLockedBeans(blockNumber);
+  bean.supplyInPegLP = toDecimal(pegSupply).div(toDecimal(bean.supply.minus(bean.lockedBeans)));
+  bean.save();
 }
 
 // Update bean information if the pool is still whitelisted
 export function updateBeanAfterPoolSwap(
-  poolAddress: string,
+  poolAddress: Address,
   poolPrice: BigDecimal,
   volumeBean: BigInt,
   volumeUSD: BigDecimal,
@@ -151,38 +130,39 @@ export function updateBeanAfterPoolSwap(
 ): void {
   let pool = loadOrCreatePool(poolAddress, block.number);
   let bean = loadBean(pool.bean);
+  const beanToken = toAddress(bean.id);
   // Verify the pool is still whitelisted
   if (bean.pools.indexOf(poolAddress) >= 0) {
     let oldBeanPrice = bean.price;
     let beanPrice = poolPrice;
 
     // Get overall price from price contract if a result was not already provided
-    if (bean.id == BEAN_ERC20_V1.toHexString()) {
+    if (beanToken == BEAN_ERC20_V1) {
       univ2_externalUpdatePoolPrice(BEAN_WETH_V1, block);
-      beanPrice = calcLiquidityWeightedBeanPrice(bean.id);
+      beanPrice = calcLiquidityWeightedBeanPrice(beanToken);
     } else {
       if (priceContractResult === null) {
-        priceContractResult = BeanstalkPrice_try_price(Address.fromString(bean.id), block.number);
+        priceContractResult = BeanstalkPrice_try_price(beanToken, block.number);
       }
       if (!priceContractResult.reverted) {
         beanPrice = toDecimal(priceContractResult.value.price);
       }
     }
 
-    updateBeanSupplyPegPercent(block.number);
-    updateBeanValues(bean.id, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD, block);
-    checkBeanCross(bean.id, oldBeanPrice, beanPrice, block);
+    updateBeanSupplyPegPercent(pool.bean, block.number);
+    updateBeanValues(beanToken, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD, block);
+    checkBeanCross(beanToken, oldBeanPrice, beanPrice, block);
   }
 }
 
-export function updateInstDeltaB(token: string, block: ethereum.Block): void {
+export function updateInstDeltaB(token: Address, block: ethereum.Block): void {
   let bean = loadBean(token);
   let beanHourly = loadOrCreateBeanHourlySnapshot(token, block.timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(token, block.timestamp);
 
   let cumulativeDeltaB = ZERO_BI;
   for (let i = 0; i < bean.pools.length; i++) {
-    let pool = loadOrCreatePool(bean.pools[i], block.number);
+    let pool = loadOrCreatePool(toAddress(bean.pools[i]), block.number);
     cumulativeDeltaB = cumulativeDeltaB.plus(pool.deltaBeans);
   }
 
@@ -194,7 +174,7 @@ export function updateInstDeltaB(token: string, block: ethereum.Block): void {
 
 // Update Bean's TWA deltaB and price. Individual pools' values must be computed prior to calling this method.
 export function updateBeanTwa(block: ethereum.Block): void {
-  let beanAddress = getBeanTokenAddress(block.number);
+  let beanAddress = getProtocolToken(block.number);
   let bean = loadBean(beanAddress);
   let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, block.timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, block.timestamp);
@@ -202,7 +182,7 @@ export function updateBeanTwa(block: ethereum.Block): void {
   let twaDeltaB = ZERO_BI;
   let weightedTwaPrice = ZERO_BD;
   for (let i = 0; i < bean.pools.length; i++) {
-    let poolHourly = loadOrCreatePoolHourlySnapshot(bean.pools[i], block);
+    let poolHourly = loadOrCreatePoolHourlySnapshot(toAddress(bean.pools[i]), block);
     twaDeltaB = twaDeltaB.plus(poolHourly.twaDeltaBeans);
     weightedTwaPrice = weightedTwaPrice.plus(poolHourly.twaPrice.times(poolHourly.liquidityUSD));
   }

@@ -8,16 +8,16 @@ import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues
 import { updateBeanAfterPoolSwap } from "../utils/Bean";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
-  handleLiquidityChange(event.address.toHexString(), event.params.tokenAmountsIn[0], event.params.tokenAmountsIn[1], false, event.block);
+  handleLiquidityChange(event.address, event.params.tokenAmountsIn[0], event.params.tokenAmountsIn[1], false, event.block);
 }
 
 export function handleRemoveLiquidity(event: RemoveLiquidity): void {
-  handleLiquidityChange(event.address.toHexString(), event.params.tokenAmountsOut[0], event.params.tokenAmountsOut[1], true, event.block);
+  handleLiquidityChange(event.address, event.params.tokenAmountsOut[0], event.params.tokenAmountsOut[1], true, event.block);
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
   handleLiquidityChange(
-    event.address.toHexString(),
+    event.address,
     event.params.tokenOut == BEAN_ERC20 ? event.params.tokenAmountOut : ZERO_BI,
     event.params.tokenOut != BEAN_ERC20 ? event.params.tokenAmountOut : ZERO_BI,
     true,
@@ -26,24 +26,24 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 }
 
 export function handleSync(event: Sync): void {
-  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
+  let pool = loadOrCreatePool(event.address, event.block.number);
 
   let deltaReserves = deltaBigIntArray(event.params.reserves, pool.reserves);
 
-  handleLiquidityChange(event.address.toHexString(), deltaReserves[0], deltaReserves[1], false, event.block);
+  handleLiquidityChange(event.address, deltaReserves[0], deltaReserves[1], false, event.block);
 }
 
 export function handleSwap(event: Swap): void {
-  handleSwapEvent(event.address.toHexString(), event.params.toToken, event.params.amountIn, event.params.amountOut, event.block);
+  handleSwapEvent(event.address, event.params.toToken, event.params.amountIn, event.params.amountOut, event.block);
 }
 
 export function handleShift(event: Shift): void {
-  let pool = loadOrCreatePool(event.address.toHexString(), event.block.number);
+  let pool = loadOrCreatePool(event.address, event.block.number);
 
   let deltaReserves = deltaBigIntArray(event.params.reserves, pool.reserves);
 
   handleSwapEvent(
-    event.address.toHexString(),
+    event.address,
     event.params.toToken,
     event.params.toToken == BEAN_ERC20 ? deltaReserves[1] : deltaReserves[0],
     event.params.amountOut,
@@ -52,7 +52,7 @@ export function handleShift(event: Shift): void {
 }
 
 function handleLiquidityChange(
-  poolAddress: string,
+  poolAddress: Address,
   token0Amount: BigInt,
   token1Amount: BigInt,
   removal: boolean,
@@ -63,7 +63,7 @@ function handleLiquidityChange(
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  let wellPrice = getPoolPrice(beanPrice, poolAddress);
   if (wellPrice == null) {
     return;
   }
@@ -100,13 +100,13 @@ function handleLiquidityChange(
   updateBeanAfterPoolSwap(poolAddress, toDecimal(wellPrice.price), volumeBean, volumeUSD, deltaLiquidityUSD, block, beanPrice);
 }
 
-function handleSwapEvent(poolAddress: string, toToken: Address, amountIn: BigInt, amountOut: BigInt, block: ethereum.Block): void {
+function handleSwapEvent(poolAddress: Address, toToken: Address, amountIn: BigInt, amountOut: BigInt, block: ethereum.Block): void {
   // Get Price Details via Price contract
   let beanPrice = BeanstalkPrice_try_price(BEAN_ERC20, block.number);
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  let wellPrice = getPoolPrice(beanPrice, poolAddress);
   if (wellPrice == null) {
     return;
   }

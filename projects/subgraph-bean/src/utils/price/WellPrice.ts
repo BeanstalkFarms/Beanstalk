@@ -29,7 +29,7 @@ export function decodeCumulativeWellReserves(data: Bytes): BigInt[] {
 
 // This gets set from WellOracle event
 export function wellCumulativePrices(pool: Address, timestamp: BigInt): BigInt[] {
-  let twaOracle = loadOrCreateTwaOracle(pool.toHexString());
+  let twaOracle = loadOrCreateTwaOracle(pool);
   if (twaOracle.lastUpdated != timestamp) {
     // If this becomes an issue, could call into the pump
     throw new Error("Attempted to access updated Well cumulative prices when they were not available.");
@@ -47,7 +47,7 @@ export function wellTwaReserves(currentReserves: BigInt[], pastReserves: BigInt[
   ];
 }
 
-export function setWellTwa(wellAddress: string, twaDeltaB: BigInt, block: ethereum.Block): void {
+export function setWellTwa(wellAddress: Address, twaDeltaB: BigInt, block: ethereum.Block): void {
   const twaBalances = getTWAPrices(wellAddress, TWAType.WELL_PUMP, block.timestamp);
   const twaResult = wellTwaDeltaBAndPrice(twaBalances, twaDeltaB);
 

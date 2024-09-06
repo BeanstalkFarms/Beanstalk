@@ -1,6 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
-import { getBeanTokenAddress, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../utils/Bean";
+import { updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../utils/Bean";
 import { Chop, Convert, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Beanstalk";
 import { CurvePrice } from "../../generated/Bean-ABIs/CurvePrice";
 import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
@@ -12,15 +12,15 @@ import { checkBeanCross } from "../utils/Cross";
 import { DeltaBPriceLiquidity } from "../utils/price/Types";
 import { calcUniswapV2Inst, setUniswapV2Twa } from "../utils/price/UniswapPrice";
 import { calcCurveInst, setCurveTwa } from "../utils/price/CurvePrice";
-import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BIP37";
+import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BasinBip";
 import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
-import { isUnripe } from "../utils/constants/Addresses";
+import { getProtocolToken, isUnripe } from "../utils/constants/Addresses";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
 
-  let beanToken = getBeanTokenAddress(event.block.number);
+  let beanToken = getProtocolToken(event.block.number);
 
   updateBeanSeason(beanToken, event.block.timestamp, event.params.season.toI32());
 
@@ -44,19 +44,19 @@ export function handleSunrise(event: Sunrise): void {
       // Pre Basin deployment - Use original Curve price contract to update on each season.
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
       let curve = curvePrice.try_getCurve();
-      let beanCurve = loadOrCreatePool(BEAN_3CRV.toHexString(), event.block.number);
+      let beanCurve = loadOrCreatePool(BEAN_3CRV, event.block.number);
 
       if (!curve.reverted) {
         updateBeanValues(beanToken, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD, event.block);
         updatePoolValues(
-          BEAN_3CRV.toHexString(),
+          BEAN_3CRV,
           ZERO_BI,
           ZERO_BD,
           toDecimal(curve.value.liquidity).minus(beanCurve.liquidityUSD),
           curve.value.deltaB,
           event.block
         );
-        updatePoolPrice(BEAN_3CRV.toHexString(), toDecimal(curve.value.price), event.block);
+        updatePoolPrice(BEAN_3CRV, toDecimal(curve.value.price), event.block);
         checkBeanCross(beanToken, oldBeanPrice, toDecimal(curve.value.price), event.block);
       }
     }
@@ -68,7 +68,7 @@ export function handleSunrise(event: Sunrise): void {
     for (let i = 0; i < bean.pools.length; i++) {
       const pool = loadOrCreatePool(bean.pools[i], event.block.number);
       let inst: DeltaBPriceLiquidity;
-      if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
+      if (bean.pools[i] == BEAN_WETH_V1) {
         inst = calcUniswapV2Inst(pool);
         setUniswapV2Twa(bean.pools[i], event.block);
       } else {
@@ -93,8 +93,9 @@ export function handleSunrise(event: Sunrise): void {
 
 // Assumption is that the whitelisted token corresponds to a pool lp. If not, this method will simply do nothing.
 export function handleDewhitelistToken(event: DewhitelistToken): void {
-  let bean = loadBean(getBeanTokenAddress(event.block.number));
-  let index = bean.pools.indexOf(event.params.token.toHexString());
+  let beanToken = getProtocolToken(event.block.number);
+  let bean = loadBean(beanToken);
+  let index = bean.pools.indexOf(event.params.token);
   if (index >= 0) {
     const newPools = bean.pools;
     const newDewhitelistedPools = bean.dewhitelistedPools;
@@ -108,15 +109,15 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
 // POST REPLANT TWA DELTAB //
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
-  setTwaLast(BEAN_3CRV.toHexString(), event.params.balances, event.block.timestamp);
-  setCurveTwa(BEAN_3CRV.toHexString(), event.block);
+  setTwaLast(BEAN_3CRV, event.params.balances, event.block.timestamp);
+  setCurveTwa(BEAN_3CRV, event.block);
   updateBeanTwa(event.block);
 }
 
 export function handleWellOracle(event: WellOracle): void {
   setRawWellReserves(event);
-  setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
-  setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block);
+  setTwaLast(event.params.well, decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
+  setWellTwa(event.params.well, event.params.deltaB, event.block);
   updateBeanTwa(event.block);
 }
 
@@ -127,15 +128,18 @@ export function handleWellOracle(event: WellOracle): void {
 // The result of fertilizer purchases will be included by the AddLiquidity event
 
 export function handleChop(event: Chop): void {
-  updateBeanSupplyPegPercent(event.block.number);
+  let beanToken = getProtocolToken(event.block.number);
+  updateBeanSupplyPegPercent(beanToken, event.block.number);
 }
 
 export function handleConvert(event: Convert): void {
   if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
-    updateBeanSupplyPegPercent(event.block.number);
+    let beanToken = getProtocolToken(event.block.number);
+    updateBeanSupplyPegPercent(beanToken, event.block.number);
   }
 }
 
 export function handleRewardMint(event: Reward): void {
-  updateBeanSupplyPegPercent(event.block.number);
+  let beanToken = getProtocolToken(event.block.number);
+  updateBeanSupplyPegPercent(beanToken, event.block.number);
 }

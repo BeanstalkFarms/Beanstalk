@@ -1,8 +1,8 @@
-import { Bytes } from "@graphprotocol/graph-ts";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { emptyBigIntArray, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { TwaOracle } from "../../generated/schema";
 
-export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
+export function loadOrCreateTwaOracle(poolAddress: Address): TwaOracle {
   let twaOracle = TwaOracle.load(poolAddress);
   if (twaOracle == null) {
     twaOracle = new TwaOracle(poolAddress);

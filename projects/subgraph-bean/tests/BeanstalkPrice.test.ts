@@ -16,6 +16,7 @@ import { BI_10 } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice_try_price, getPoolPrice } from "../src/utils/price/BeanstalkPrice";
 import { loadBean } from "../src/entities/Bean";
 import { handleDewhitelistToken } from "../src/handlers/BeanstalkHandler";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const curvePrice = BigInt.fromU32(1012000);
 const beanEthPrice = BigInt.fromU32(1025000);
@@ -68,8 +69,10 @@ describe("BeanstalkPrice", () => {
   });
 
   beforeEach(() => {
-    let bean = loadBean(BEAN_ERC20.toHexString());
-    bean.pools = [BEAN_3CRV.toHexString(), BEAN_WETH_CP2_WELL.toHexString()];
+    initL1Version();
+
+    let bean = loadBean(BEAN_ERC20);
+    bean.pools = [BEAN_3CRV, BEAN_WETH_CP2_WELL];
     bean.save();
   });
 
@@ -95,7 +98,7 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Price response only includes whitelisted tokens", () => {
-    const event = createDewhitelistTokenEvent(BEAN_3CRV.toHexString());
+    const event = createDewhitelistTokenEvent(BEAN_3CRV);
     event.block.number = PRICE_1_BLOCK;
     handleDewhitelistToken(event);
 

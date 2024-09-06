@@ -1,4 +1,16 @@
-# Some items included in this schema come from and are inspired by the Messari Generic Schema
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
 
 enum MarketStatus {
   ACTIVE
@@ -19,18 +31,6 @@ enum EmaWindow {
   ROLLING_24_HOUR
   ROLLING_7_DAY
   ROLLING_30_DAY
-}
-
-# This same entity schema is intended for use across the subgraphs
-type Version @entity {
-  "= 'subgraph'"
-  id: ID!
-  "= 'beanstalk'"
-  subgraphName: String!
-  "Verison number of the subgraph"
-  versionNumber: String!
-  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
-  chain: String!
 }
 
 type Beanstalk @entity {

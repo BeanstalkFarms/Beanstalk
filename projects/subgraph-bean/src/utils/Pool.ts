@@ -1,12 +1,13 @@
-import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, ethereum, Address, log } from "@graphprotocol/graph-ts";
 import { ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateInstDeltaB } from "./Bean";
 import { checkPoolCross } from "./Cross";
 import { DeltaBAndPrice } from "./price/Types";
 import { loadOrCreatePool, loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 export function updatePoolValues(
-  poolAddress: string,
+  poolAddress: Address,
   volumeBean: BigInt,
   volumeUSD: BigDecimal,
   deltaLiquidityUSD: BigDecimal,
@@ -49,10 +50,10 @@ export function updatePoolValues(
   poolDaily.updatedAt = block.timestamp;
   poolDaily.save();
 
-  updateInstDeltaB(pool.bean, block);
+  updateInstDeltaB(toAddress(pool.bean), block);
 }
 
-export function incrementPoolCross(poolAddress: string, block: ethereum.Block): void {
+export function incrementPoolCross(poolAddress: Address, block: ethereum.Block): void {
   let pool = loadOrCreatePool(poolAddress, block.number);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, block);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, block);
@@ -69,7 +70,7 @@ export function incrementPoolCross(poolAddress: string, block: ethereum.Block): 
   poolDaily.save();
 }
 
-export function updatePoolSeason(poolAddress: string, season: i32, block: ethereum.Block): void {
+export function updatePoolSeason(poolAddress: Address, season: i32, block: ethereum.Block): void {
   let pool = loadOrCreatePool(poolAddress, block.number);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, block);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, block);
@@ -83,7 +84,7 @@ export function updatePoolSeason(poolAddress: string, season: i32, block: ethere
   poolDaily.save();
 }
 
-export function updatePoolPrice(poolAddress: string, price: BigDecimal, block: ethereum.Block, checkCross: boolean = true): void {
+export function updatePoolPrice(poolAddress: Address, price: BigDecimal, block: ethereum.Block, checkCross: boolean = true): void {
   let pool = loadOrCreatePool(poolAddress, block.number);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, block);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, block);
@@ -104,7 +105,7 @@ export function updatePoolPrice(poolAddress: string, price: BigDecimal, block: e
   }
 }
 
-export function setPoolReserves(poolAddress: string, reserves: BigInt[], block: ethereum.Block): void {
+export function setPoolReserves(poolAddress: Address, reserves: BigInt[], block: ethereum.Block): void {
   let pool = loadOrCreatePool(poolAddress, block.number);
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, block);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, block);
@@ -133,12 +134,12 @@ export function setPoolReserves(poolAddress: string, reserves: BigInt[], block: 
   poolDaily.save();
 }
 
-export function getPoolLiquidityUSD(poolAddress: string, block: ethereum.Block): BigDecimal {
+export function getPoolLiquidityUSD(poolAddress: Address, block: ethereum.Block): BigDecimal {
   let pool = loadOrCreatePool(poolAddress, block.number);
   return pool.liquidityUSD;
 }
 
-export function setPoolTwa(poolAddress: string, twaValues: DeltaBAndPrice, block: ethereum.Block): void {
+export function setPoolTwa(poolAddress: Address, twaValues: DeltaBAndPrice, block: ethereum.Block): void {
   let poolHourly = loadOrCreatePoolHourlySnapshot(poolAddress, block);
   let poolDaily = loadOrCreatePoolDailySnapshot(poolAddress, block);
   poolHourly.twaDeltaBeans = twaValues.deltaB;

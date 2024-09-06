@@ -5,10 +5,10 @@ import { WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
 import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";
-import { WellOracle } from "../../../generated/Bean-ABIs/BIP37";
+import { WellOracle } from "../../../generated/Bean-ABIs/BasinBip";
 import { loadOrCreateTwaOracle } from "../../entities/TwaOracle";
 
-export function manualTwa(poolAddress: string, newReserves: BigInt[], timestamp: BigInt): void {
+export function manualTwa(poolAddress: Address, newReserves: BigInt[], timestamp: BigInt): void {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
   const elapsedTime = timestamp.minus(twaOracle.lastUpdated);
   const newPriceCumulative = [
@@ -21,7 +21,7 @@ export function manualTwa(poolAddress: string, newReserves: BigInt[], timestamp:
   twaOracle.save();
 }
 
-export function setTwaLast(poolAddress: string, newCumulative: BigInt[], timestamp: BigInt): void {
+export function setTwaLast(poolAddress: Address, newCumulative: BigInt[], timestamp: BigInt): void {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
   twaOracle.priceCumulativeLast = newCumulative;
   twaOracle.lastUpdated = timestamp;
@@ -29,7 +29,7 @@ export function setTwaLast(poolAddress: string, newCumulative: BigInt[], timesta
 }
 
 export function setRawWellReserves(event: WellOracle): void {
-  let twaOracle = loadOrCreateTwaOracle(event.params.well.toHexString());
+  let twaOracle = loadOrCreateTwaOracle(event.params.well);
   twaOracle.cumulativeWellReservesPrev = twaOracle.cumulativeWellReserves;
   twaOracle.cumulativeWellReservesPrevTime = twaOracle.cumulativeWellReservesTime;
   twaOracle.cumulativeWellReservesPrevBlock = twaOracle.cumulativeWellReservesBlock;
@@ -40,7 +40,7 @@ export function setRawWellReserves(event: WellOracle): void {
 }
 
 // Returns the current TWA prices (balances) since the previous TwaOracle update
-export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigInt): BigInt[] {
+export function getTWAPrices(poolAddress: Address, type: TWAType, timestamp: BigInt): BigInt[] {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
   const initialized = twaOracle.lastSun != ZERO_BI;
 
@@ -49,7 +49,7 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
 
   const timeElapsed = timestamp.minus(twaOracle.lastSun);
   if (type == TWAType.UNISWAP) {
-    const beanPrice = uniswapCumulativePrice(Address.fromString(poolAddress), 1, timestamp);
+    const beanPrice = uniswapCumulativePrice(poolAddress, 1, timestamp);
     const pegPrice = uniswapCumulativePrice(WETH_USDC_PAIR, 0, timestamp);
     newPriceCumulative = [beanPrice, pegPrice];
 
@@ -60,13 +60,13 @@ export function getTWAPrices(poolAddress: string, type: TWAType, timestamp: BigI
     ];
   } else if (type == TWAType.CURVE) {
     // Curve
-    newPriceCumulative = curveCumulativePrices(Address.fromString(poolAddress), timestamp);
+    newPriceCumulative = curveCumulativePrices(poolAddress, timestamp);
     twaPrices = [
       newPriceCumulative[0].minus(twaOracle.priceCumulativeSun[0]).div(timeElapsed),
       newPriceCumulative[1].minus(twaOracle.priceCumulativeSun[1]).div(timeElapsed)
     ];
   } else if (type == TWAType.WELL_PUMP) {
-    newPriceCumulative = wellCumulativePrices(Address.fromString(poolAddress), timestamp);
+    newPriceCumulative = wellCumulativePrices(poolAddress, timestamp);
     twaPrices = wellTwaReserves(newPriceCumulative, twaOracle.priceCumulativeSun, new BigDecimal(timeElapsed));
   }
 

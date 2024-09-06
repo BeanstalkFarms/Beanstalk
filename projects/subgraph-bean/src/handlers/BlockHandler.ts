@@ -36,38 +36,38 @@ export function beanstalkPrice_updatePoolPrices(priceOnlyOnCross: boolean, block
     // Price contract was unavailable briefly after well deployment
     return false;
   }
-  const bean = loadBean(BEAN_ERC20.toHexString());
+  const bean = loadBean(BEAN_ERC20);
   const prevPrice = bean.price;
   const newPrice = toDecimal(priceResult.value.price);
 
   // Check for overall peg cross
-  const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), prevPrice, newPrice, block);
+  const beanCrossed = checkBeanCross(BEAN_ERC20, prevPrice, newPrice, block);
 
   // Update pool price for each pool - necessary for checking pool cross
   let totalLiquidity = ZERO_BD;
   for (let i = 0; i < priceResult.value.ps.length; ++i) {
     const poolPriceInfo = priceResult.value.ps[i];
-    const pool = loadOrCreatePool(poolPriceInfo.pool.toHexString(), block.number);
+    const pool = loadOrCreatePool(poolPriceInfo.pool, block.number);
 
-    const poolCrossed = checkPoolCross(poolPriceInfo.pool.toHexString(), pool.lastPrice, toDecimal(poolPriceInfo.price), block);
+    const poolCrossed = checkPoolCross(poolPriceInfo.pool, pool.lastPrice, toDecimal(poolPriceInfo.price), block);
 
     if (!priceOnlyOnCross || poolCrossed || beanCrossed) {
       totalLiquidity = totalLiquidity.plus(toDecimal(poolPriceInfo.liquidity));
       updatePoolValues(
-        poolPriceInfo.pool.toHexString(),
+        poolPriceInfo.pool,
         ZERO_BI,
         ZERO_BD,
         toDecimal(poolPriceInfo.liquidity).minus(pool.liquidityUSD),
         poolPriceInfo.deltaB,
         block
       );
-      updatePoolPrice(poolPriceInfo.pool.toHexString(), toDecimal(poolPriceInfo.price), block, false);
+      updatePoolPrice(poolPriceInfo.pool, toDecimal(poolPriceInfo.price), block, false);
     }
   }
 
   // Update bean values at the end now that the summation of pool liquidity is known
   if (!priceOnlyOnCross || beanCrossed) {
-    updateBeanValues(BEAN_ERC20.toHexString(), newPrice, ZERO_BI, ZERO_BI, ZERO_BD, totalLiquidity.minus(bean.liquidityUSD), block);
+    updateBeanValues(BEAN_ERC20, newPrice, ZERO_BI, ZERO_BI, ZERO_BD, totalLiquidity.minus(bean.liquidityUSD), block);
   }
   return true;
 }

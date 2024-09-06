@@ -5,7 +5,7 @@ import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot
 
 export function handleInitBeanEntity(block: ethereum.Block): void {
   // TODO: how to determine correct token address? this is wrong
-  const token = BEAN_ERC20.toHexString();
+  const token = BEAN_ERC20;
   const bean = loadBean(token);
 
   bean.volume = BEAN_INITIAL_VALUES.volume;

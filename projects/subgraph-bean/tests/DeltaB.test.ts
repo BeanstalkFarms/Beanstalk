@@ -14,6 +14,7 @@ import { pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
 import { handleMetapoolOracle, handleWellOracle } from "../src/handlers/BeanstalkHandler";
 import { loadBean } from "../src/entities/Bean";
 import { loadOrCreatePool } from "../src/entities/Pool";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -27,7 +28,9 @@ describe("DeltaB", () => {
     mock_virtual_price(CRV3_POOL, BigInt.fromString("1000000000000000000"));
     mock_virtual_price(BEAN_3CRV, BigInt.fromString("1000000000000000000"));
   });
-
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     clearStore();
   });
@@ -120,10 +123,10 @@ describe("DeltaB", () => {
       ];
 
       // Set liquidity so weighted twa prices can be set
-      let pool = loadOrCreatePool(BEAN_3CRV.toHexString(), b2.number);
+      let pool = loadOrCreatePool(BEAN_3CRV, b2.number);
       pool.liquidityUSD = BigDecimal.fromString("10000");
       pool.save();
-      let bean = loadBean(BEAN_ERC20.toHexString());
+      let bean = loadBean(BEAN_ERC20);
       bean.liquidityUSD = BigDecimal.fromString("10000");
       bean.save();
 

@@ -28,11 +28,12 @@ import { loadOrCreatePool } from "../src/entities/Pool";
 import { loadBean } from "../src/entities/Bean";
 import { handleChop, handleConvert } from "../src/handlers/BeanstalkHandler";
 import { createConvertEvent } from "./event-mocking/Beanstalk";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const mockReserves = Bytes.fromHexString("0xabcdef");
 const mockReservesTime = BigInt.fromString("123456");
 const mockTwaOracle = (): TwaOracle => {
-  let twaOracle = loadOrCreateTwaOracle(BEAN_WETH_CP2_WELL.toHexString());
+  let twaOracle = loadOrCreateTwaOracle(BEAN_WETH_CP2_WELL);
   twaOracle.cumulativeWellReserves = mockReserves;
   twaOracle.cumulativeWellReservesTime = mockReservesTime;
   twaOracle.save();
@@ -40,6 +41,9 @@ const mockTwaOracle = (): TwaOracle => {
 };
 
 describe("L2SR", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     mockSeedGaugeLockedBeansReverts(mockReserves, mockReservesTime);
     clearStore();
@@ -57,7 +61,7 @@ describe("L2SR", () => {
       assert.assertTrue(lockedUnderlyingBean.equals(BigDecimal.fromString("0.6620572696973799")));
       assert.assertTrue(lockedUnderlyingLp.equals(BigDecimal.fromString("0.6620572696973799")));
 
-      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
+      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
       pool.reserves = [BigInt.fromString("14544448316811"), BigInt.fromString("4511715111212845829348")];
       pool.save();
 
@@ -73,11 +77,11 @@ describe("L2SR", () => {
 
   describe("Post-Replant", () => {
     beforeEach(() => {
-      let bean = loadBean(BEAN_ERC20.toHexString());
+      let bean = loadBean(BEAN_ERC20);
       bean.supply = BigInt.fromString("5000").times(BI_10.pow(6));
       bean.save();
 
-      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), BEAN_WETH_CP2_WELL_BLOCK);
+      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, BEAN_WETH_CP2_WELL_BLOCK);
       pool.reserves = [BigInt.fromString("1000").times(BI_10.pow(6)), ONE_BI];
       pool.save();
     });

@@ -13,7 +13,6 @@ import {
 import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
-import { Beanstalk } from "../../generated/Bean-ABIs/Beanstalk";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 import { loadOrCreatePool } from "../entities/Pool";
 
@@ -21,7 +20,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   // If BIP45 is deployed - return the result from the contract
   if (blockNumber >= GAUGE_BIP45_BLOCK) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
-    const twaOracle = loadOrCreateTwaOracle(getUnderlyingUnripe(blockNumber).toHexString());
+    const twaOracle = loadOrCreateTwaOracle(getUnderlyingUnripe(blockNumber));
     const twaReserves =
       blockNumber == twaOracle.cumulativeWellReservesBlock ? twaOracle.cumulativeWellReservesPrev : twaOracle.cumulativeWellReserves;
     const twaTime =
@@ -37,7 +36,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   }
 
   // Pre-gauge there was no lockedBeans contract function, instead we recreate the same calculation.
-  let beanstalk = Beanstalk.bind(BEANSTALK);
+  let beanstalk = SeedGauge.bind(BEANSTALK);
   const recapPercentResult = beanstalk.try_getRecapPaidPercent();
   if (recapPercentResult.reverted) {
     // This function was made available later in the Replant process, for a few hundred blocks it is unavailable
@@ -49,7 +48,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(UNRIPE_LP, recapPaidPercent);
   const underlyingLpPool = getUnderlyingUnripe(blockNumber);
 
-  const poolBeanReserves = loadOrCreatePool(underlyingLpPool.toHexString(), blockNumber).reserves[0];
+  const poolBeanReserves = loadOrCreatePool(underlyingLpPool, blockNumber).reserves[0];
   const totalLpTokens = ERC20.bind(getUnderlyingUnripe(blockNumber)).totalSupply();
   // Simplification here: does not account for twa reserves nor twa lp tokens
   const lockedBeansUrLP = lockedUnripeLp.times(poolBeanReserves).div(totalLpTokens);
@@ -68,7 +67,7 @@ function getUnderlyingUnripe(blockNumber: BigInt): Address {
 }
 
 export function LibLockedUnderlying_getLockedUnderlying(unripeToken: Address, recapPercentPaid: BigDecimal): BigInt {
-  const balanceOfUnderlying = Beanstalk.bind(BEANSTALK).getTotalUnderlying(unripeToken);
+  const balanceOfUnderlying = SeedGauge.bind(BEANSTALK).getTotalUnderlying(unripeToken);
   const percentLocked = LibLockedUnderlying_getPercentLockedUnderlying(unripeToken, recapPercentPaid);
   return BigInt.fromString(new BigDecimal(balanceOfUnderlying).times(percentLocked).truncate(0).toString());
 }

@@ -1,16 +1,12 @@
-import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, Address, ethereum, log } from "@graphprotocol/graph-ts";
 import { ONE_BD } from "../../../subgraph-core/utils/Decimals";
 import { BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
 import { loadOrCreatePool, loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../entities/Bean";
 import { loadOrCreateBeanCross, loadOrCreatePoolCross } from "../entities/Cross";
 
-export function checkPoolCross(pool: string, oldPrice: BigDecimal, newPrice: BigDecimal, block: ethereum.Block): boolean {
+export function checkPoolCross(pool: Address, oldPrice: BigDecimal, newPrice: BigDecimal, block: ethereum.Block): boolean {
   let poolInfo = loadOrCreatePool(pool, block.number);
-  let token = poolInfo.bean;
-  let bean = loadBean(token);
-
-  // log.debug("Prev/New well price {} / {}", [oldPrice.toString(), newPrice.toString()]);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
     let cross = loadOrCreatePoolCross(poolInfo.crosses, pool, block);
@@ -62,7 +58,7 @@ export function checkPoolCross(pool: string, oldPrice: BigDecimal, newPrice: Big
   return false;
 }
 
-export function checkBeanCross(token: string, oldPrice: BigDecimal, newPrice: BigDecimal, block: ethereum.Block): boolean {
+export function checkBeanCross(token: Address, oldPrice: BigDecimal, newPrice: BigDecimal, block: ethereum.Block): boolean {
   let bean = loadBean(token);
 
   if (oldPrice >= ONE_BD && newPrice < ONE_BD) {
@@ -116,6 +112,6 @@ export function checkBeanCross(token: string, oldPrice: BigDecimal, newPrice: Bi
 }
 
 export function getV1Crosses(): i32 {
-  let bean = loadBean(BEAN_ERC20_V1.toHexString());
+  let bean = loadBean(BEAN_ERC20_V1);
   return bean.crosses;
 }

@@ -1,23 +1,10 @@
 import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
 import { Transfer } from "../../generated/Bean-ABIs/ERC20";
-import { loadBean } from "../entities/Bean";
-import { updateBeanSupplyPegPercent } from "../utils/Bean";
+import { adjustSupply, updateBeanSupplyPegPercent } from "../utils/Bean";
 
 export function handleTransfer(event: Transfer): void {
   if (event.params.from == ADDRESS_ZERO || event.params.to == ADDRESS_ZERO) {
-    let bean = loadBean(event.address.toHexString());
-
-    if (event.params.from == ADDRESS_ZERO) {
-      // Minted
-      bean.supply = bean.supply.plus(event.params.value);
-    } else {
-      // Burned
-      bean.supply = bean.supply.minus(event.params.value);
-    }
-    bean.save();
-
-    if (event.address != BEAN_ERC20_V1) {
-      updateBeanSupplyPegPercent(event.block.number);
-    }
+    adjustSupply(event.address, event.params.from == ADDRESS_ZERO ? event.params.value : event.params.value.neg());
+    updateBeanSupplyPegPercent(event.address, event.block.number);
   }
 }

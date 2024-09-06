@@ -1,5 +1,5 @@
 import { BigInt, ethereum, Address, Bytes } from "@graphprotocol/graph-ts";
-import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BIP37";
+import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BasinBip";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 import { Convert, DewhitelistToken } from "../../generated/Bean-ABIs/Beanstalk";
 
@@ -54,10 +54,10 @@ export function createWellOracleEvent(
   return event as WellOracle;
 }
 
-export function createDewhitelistTokenEvent(token: string): DewhitelistToken {
+export function createDewhitelistTokenEvent(token: Address): DewhitelistToken {
   let event = changetype<DewhitelistToken>(mockBeanstalkEvent());
   event.parameters = new Array();
-  let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
+  let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(token));
   event.parameters.push(param1);
   return event as DewhitelistToken;
 }

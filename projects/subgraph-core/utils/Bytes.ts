@@ -1,4 +1,4 @@
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
 
 // If all zeros are provided, convert into a null. Otherwise return the provided value
 export function Bytes4_emptyToNull(b: Bytes): Bytes | null {
@@ -12,4 +12,24 @@ export function BigInt_bigEndian(s: string): BigInt {
 
 export function Bytes_bigEndian(s: string): Bytes {
   return Bytes.fromUint8Array(Bytes.fromHexString(s).reverse());
+}
+
+export function toAddress(b: Bytes): Address {
+  return Address.fromBytes(b);
+}
+
+export function toAddressArray(b: Bytes[]): Address[] {
+  const retval: Address[] = [];
+  for (let i = 0; i < b.length; ++i) {
+    retval.push(Address.fromBytes(b[i]));
+  }
+  return retval;
+}
+
+export function toBytesArray(a: Address[]): Bytes[] {
+  const retval: Bytes[] = [];
+  for (let i = 0; i < a.length; ++i) {
+    retval.push(a[i]);
+  }
+  return retval;
 }

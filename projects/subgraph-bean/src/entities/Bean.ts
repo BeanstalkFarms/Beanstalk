@@ -1,11 +1,11 @@
-import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 import { BEAN_ERC20, BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";
 import { getV1Crosses } from "../utils/Cross";
 
-export function loadBean(token: string): Bean {
+export function loadBean(token: Address): Bean {
   let bean = Bean.load(token);
   if (bean == null) {
     bean = new Bean(token);
@@ -19,9 +19,9 @@ export function loadBean(token: string): Bean {
     bean.volumeUSD = ZERO_BD;
     bean.liquidityUSD = ZERO_BD;
     bean.price = BigDecimal.fromString("1.072");
-    bean.crosses = token == BEAN_ERC20.toHexString() ? getV1Crosses() : 0; // starting point for v2 is where v1 left off
+    bean.crosses = token == BEAN_ERC20 ? getV1Crosses() : 0; // starting point for v2 is where v1 left off
     bean.lastCross = ZERO_BI;
-    bean.lastSeason = token == BEAN_ERC20.toHexString() ? 6074 : 0;
+    bean.lastSeason = token == BEAN_ERC20 ? 6074 : 0;
     bean.pools = [];
     bean.dewhitelistedPools = [];
     bean.save();
@@ -29,8 +29,8 @@ export function loadBean(token: string): Bean {
   return bean as Bean;
 }
 
-export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt, season: i32): BeanHourlySnapshot {
-  let id = token + "-" + season.toString();
+export function loadOrCreateBeanHourlySnapshot(token: Address, timestamp: BigInt, season: i32): BeanHourlySnapshot {
+  let id = token.toHexString() + "-" + season.toString();
   let snapshot = BeanHourlySnapshot.load(id);
   if (snapshot == null) {
     let bean = loadBean(token);
@@ -60,7 +60,7 @@ export function loadOrCreateBeanHourlySnapshot(token: string, timestamp: BigInt,
   return snapshot as BeanHourlySnapshot;
 }
 
-export function loadOrCreateBeanDailySnapshot(token: string, timestamp: BigInt): BeanDailySnapshot {
+export function loadOrCreateBeanDailySnapshot(token: Address, timestamp: BigInt): BeanDailySnapshot {
   let day = dayFromTimestamp(timestamp).toString();
   let snapshot = BeanDailySnapshot.load(day);
   if (snapshot == null) {
