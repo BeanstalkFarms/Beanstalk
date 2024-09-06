@@ -68,16 +68,18 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
       // mint tokens to add liquidity:
       console.log(`Minting tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
       await token.mint(account.address, nonBeanAmounts[i]);
-      await bean.mint(account.address, beanAmounts[i]);
+      await bean.mint(account.address, beanAmounts[i] + to6("1000000"));
     }
     console.log(`Approving tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
-    console.log(`Adding liquidity to ${WellAddresses[i]} and ${NonBeanToken[i]}`);
+    console.log(`Adding liquidity to ${WellAddresses[i]} and performing a swap to update the well pump.`);
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
+    // perform a swap to update the well pumps and avoid "NotInitialized" error.
+    await well.connect(account).swapFrom(bean.address, token.address, to6("1"), 0, account.address, MAX_UINT256);
   }
 }
 

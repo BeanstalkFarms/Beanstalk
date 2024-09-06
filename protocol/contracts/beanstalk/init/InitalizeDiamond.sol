@@ -53,6 +53,15 @@ contract InitalizeDiamond {
     // Excessive price threshold constant
     uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
+    /// @dev When the Pod Rate is high, issue less Soil.
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+
+    /// @dev When the Pod Rate is low, issue more Soil.
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
+
+    /// @dev Base BEAN reward to cover cost of operating a bot.
+    uint256 internal constant BASE_REWARD = 5e6; // 5 BEAN
+
     // Gauge
     uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
@@ -270,6 +279,9 @@ contract InitalizeDiamond {
         s.sys.evaluationParameters.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
         s.sys.evaluationParameters.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
         s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.soilCoefficientHigh = SOIL_COEFFICIENT_HIGH;
+        s.sys.evaluationParameters.soilCoefficientLow = SOIL_COEFFICIENT_LOW;
+        s.sys.evaluationParameters.baseReward = BASE_REWARD;
     }
 
     function initalizeFarmAndTractor() internal {

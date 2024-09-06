@@ -442,6 +442,9 @@ struct EvaluationParameters {
     uint256 lpToSupplyRatioOptimal;
     uint256 lpToSupplyRatioLowerBound;
     uint256 excessivePriceThreshold;
+    uint256 soilCoefficientHigh;
+    uint256 soilCoefficientLow;
+    uint256 baseReward;
 }
 
 /**

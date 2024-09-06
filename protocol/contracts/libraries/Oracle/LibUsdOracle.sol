@@ -66,6 +66,7 @@ library LibUsdOracle {
      * @dev if address is 0, use the current contract.
      * If encodeType is 0x01, use the default chainlink implementation.
      * Returns 0 rather than reverting if the call fails.
+     * Note: token here refers to the non bean token when quoting for a well price.
      */
     function getTokenPriceFromExternal(
         address token,
@@ -76,7 +77,7 @@ library LibUsdOracle {
         Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 
         // If the encode type is type 1, use the default chainlink implementation instead.
-        // `target` refers to the address of the price aggergator implmenation
+        // `target` refers to the address of the price aggergator implmentation
         if (oracleImpl.encodeType == bytes1(0x01)) {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;

@@ -23,24 +23,27 @@ contract ReseedWhitelist {
      */
     function init(
         address[] calldata tokens,
+        address[] calldata nonBeanTokens,
         AssetSettings[] calldata assets,
         WhitelistStatus[] calldata whitelistStatus,
         Implementation[] calldata oracle
     ) external {
         for (uint i; i < tokens.length; i++) {
             address token = tokens[i];
+            address nonBeanToken = nonBeanTokens[i];
             // If an LP token, initialize oracle storage variables.
             if (token != address(s.sys.tokens.bean) && !LibUnripe.isUnripe(token)) {
                 s.sys.usdTokenPrice[token] = 1;
                 s.sys.twaReserves[token].reserve0 = 1;
                 s.sys.twaReserves[token].reserve1 = 1;
             }
+            // add asset settings for the underlying lp token
             s.sys.silo.assetSettings[token] = assets[i];
 
             // add whitelist status
             s.sys.silo.whitelistStatuses.push(whitelistStatus[i]);
             // the Oracle should return the price for the non-bean asset in USD
-            s.sys.oracleImplementation[token] = oracle[i];
+            s.sys.oracleImplementation[nonBeanToken] = oracle[i];
         }
     }
 }
