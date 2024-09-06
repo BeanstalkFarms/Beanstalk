@@ -1,7 +1,7 @@
 import { BigInt, ethereum, Address, Bytes } from "@graphprotocol/graph-ts";
 import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BIP37";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import { DewhitelistToken } from "../../generated/Bean-ABIs/Beanstalk";
+import { Convert, DewhitelistToken } from "../../generated/Bean-ABIs/Beanstalk";
 
 export function createMetapoolOracleEvent(
   season: BigInt,
@@ -60,4 +60,23 @@ export function createDewhitelistTokenEvent(token: string): DewhitelistToken {
   let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
   event.parameters.push(param1);
   return event as DewhitelistToken;
+}
+
+export function createConvertEvent(account: Address, fromToken: Address, toToken: Address, fromAmount: BigInt, toAmount: BigInt): Convert {
+  let event = changetype<Convert>(mockBeanstalkEvent());
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));
+  let param2 = new ethereum.EventParam("fromToken", ethereum.Value.fromAddress(fromToken));
+  let param3 = new ethereum.EventParam("toToken", ethereum.Value.fromAddress(toToken));
+  let param4 = new ethereum.EventParam("fromAmount", ethereum.Value.fromUnsignedBigInt(fromAmount));
+  let param5 = new ethereum.EventParam("toAmount", ethereum.Value.fromUnsignedBigInt(toAmount));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+  event.parameters.push(param4);
+  event.parameters.push(param5);
+
+  return event as Convert;
 }

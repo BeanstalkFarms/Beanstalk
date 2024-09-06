@@ -1,6 +1,8 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 import {
+  ADDRESS_ZERO,
+  BEAN_3CRV,
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_CP2_WELL_BLOCK,
@@ -17,14 +19,15 @@ import {
   mockSeedGaugeLockedBeansReverts
 } from "./call-mocking/Beanstalk";
 import { mockBeanstalkEvent } from "../../subgraph-core/tests/event-mocking/Util";
-import { Chop } from "../generated/Bean-ABIs/Beanstalk";
+import { Chop, Convert } from "../generated/Bean-ABIs/Beanstalk";
 import { calcLockedBeans, LibLockedUnderlying_getPercentLockedUnderlying } from "../src/utils/LockedBeans";
 import { mockERC20TokenSupply } from "../../subgraph-core/tests/event-mocking/Tokens";
 import { TwaOracle } from "../generated/schema";
 import { loadOrCreateTwaOracle } from "../src/entities/TwaOracle";
 import { loadOrCreatePool } from "../src/entities/Pool";
 import { loadBean } from "../src/entities/Bean";
-import { handleChop } from "../src/handlers/BeanstalkHandler";
+import { handleChop, handleConvert } from "../src/handlers/BeanstalkHandler";
+import { createConvertEvent } from "./event-mocking/Beanstalk";
 
 const mockReserves = Bytes.fromHexString("0xabcdef");
 const mockReservesTime = BigInt.fromString("123456");
@@ -103,6 +106,22 @@ describe("L2SR", () => {
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "supplyInPegLP", "0.5");
+    });
+
+    test("Chop convert updates Locked Beans", () => {
+      const lockedBeans = BigInt.fromString("3000").times(BI_10.pow(6));
+      let twaOracle = mockTwaOracle();
+      mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
+
+      const event = createConvertEvent(ADDRESS_ZERO, BEAN_3CRV, BEAN_ERC20, ONE_BI, ONE_BI);
+      event.block.number = GAUGE_BIP45_BLOCK;
+      handleConvert(event);
+      assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", "0");
+
+      const event2 = createConvertEvent(ADDRESS_ZERO, UNRIPE_BEAN, BEAN_ERC20, ONE_BI, ONE_BI);
+      event2.block.number = GAUGE_BIP45_BLOCK;
+      handleConvert(event2);
+      assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
     });
 
     // Its unclear how to mock a specific amount of locked beans. The Pre-gauge calculation is verified above

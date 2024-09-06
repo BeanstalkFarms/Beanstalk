@@ -156,6 +156,8 @@ dataSources:
           handler: handleRewardMint
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
+        - event: Convert(indexed address,address,address,uint256,uint256)
+          handler: handleConvert
       file: ../src/BeanstalkHandler.ts
   - kind: ethereum/contract
     name: BeanUniswapV2Pair

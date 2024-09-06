@@ -1,7 +1,7 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
 import { getBeanTokenAddress, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../utils/Bean";
-import { Chop, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Beanstalk";
+import { Chop, Convert, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Beanstalk";
 import { CurvePrice } from "../../generated/Bean-ABIs/CurvePrice";
 import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
 import { loadOrCreatePool } from "../entities/Pool";
@@ -15,6 +15,7 @@ import { calcCurveInst, setCurveTwa } from "../utils/price/CurvePrice";
 import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BIP37";
 import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
+import { isUnripe } from "../utils/constants/Addresses";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -128,7 +129,12 @@ export function handleWellOracle(event: WellOracle): void {
 export function handleChop(event: Chop): void {
   updateBeanSupplyPegPercent(event.block.number);
 }
-// TODO: add handler for convert-chops here as well.
+
+export function handleConvert(event: Convert): void {
+  if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
+    updateBeanSupplyPegPercent(event.block.number);
+  }
+}
 
 export function handleRewardMint(event: Reward): void {
   updateBeanSupplyPegPercent(event.block.number);
