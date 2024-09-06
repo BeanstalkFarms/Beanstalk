@@ -73,6 +73,13 @@ export const addresses = {
     [ChainId.ETH_MAINNET]: "0xba510e11eeb387fad877812108a3406ca3f43a4b",
     [ChainId.ARBITRUM_MAINNET]: "0xBA5106bd62b342afAcB93f1078fe60177A62d1a9"
   }),
+  STABLE2: Address.make({
+    [ChainId.ARBITRUM_MAINNET]: "0xBA51055Ac3068Ffd884B495BF58314493cde9653"
+  }),
+
+  STABLE2_LOOKUP: Address.make({
+    [ChainId.ARBITRUM_MAINNET]: "0xBA51055dAD14d3920e1798D2e8A152d91CaDb461"
+  }),
 
   /**
    * @note Use `MULTI_FLOW_PUMP_V1_1` for new wells instead
