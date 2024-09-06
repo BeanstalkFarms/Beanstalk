@@ -43,7 +43,6 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   console.log("-----------------------------------");
   console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
 
-  // todo: update bean address once finalized.
   await impersonateToken("0xBEA0005B8599265D41256905A9B3073D397812E4", 6);
   const bean = await ethers.getContractAt(
     "MockToken",
