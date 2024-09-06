@@ -8,6 +8,7 @@ const DEPOSITS = "./scripts/beanstalk-3/data/inputs/Deposits.json";
 const PLOTS = "./scripts/beanstalk-3/data/inputs/Plots.json";
 const INTERNAL_BALS = "./scripts/beanstalk-3/data/inputs/InternalBalances.json";
 const FERTILIZERS = "./scripts/beanstalk-3/data/inputs/Fertilizers.json";
+const POD_ORDERS = "./scripts/beanstalk-3/data/inputs/PodOrders.json";
 
 function getDepositMerkleRoot(verbose = false) {
   const accounts = JSON.parse(fs.readFileSync(DEPOSITS));
@@ -173,7 +174,47 @@ function getFertMerkleRoot(verbose = false) {
   );
 }
 
-getDepositMerkleRoot(false);
-getPlotMerkleRoot(false);
-getInternalBalMerkleRoot(false);
-getFertMerkleRoot(false);
+function getPodOrderMerkleRoot(verbose = false) {
+  const accounts = JSON.parse(fs.readFileSync(POD_ORDERS));
+  let data = [];
+  let encodedData = "";
+  let orderStruct = ["address", "tuple(tuple(address,uint256,uint24,uint256,uint256),uint256)[]"];
+  for (let i = 0; i < accounts.length; i++) {
+    encodedData = ethers.utils.defaultAbiCoder.encode(orderStruct, accounts[i]);
+    // hash encoded data:
+    encodedData = ethers.utils.keccak256(encodedData);
+    data[i] = [accounts[i][0], encodedData];
+  }
+  const tree = StandardMerkleTree.of(data, ["address", "bytes32"]);
+
+  // (3)
+  console.log("PodOrder Merkle Root:", tree.root);
+
+  // (4)
+  const treeData = tree.dump();
+  const treeWithProofs = {
+    tree: treeData,
+    proofs: {}
+  };
+
+  for (const [i, v] of tree.entries()) {
+    const proof = tree.getProof(i);
+    treeWithProofs.proofs[v[0]] = proof; // Use the address as the key
+
+    if (verbose) {
+      console.log("Value:", v);
+      console.log("Proof:", proof);
+    }
+  }
+
+  fs.writeFileSync(
+    "./scripts/beanstalk-3/data/merkle/podOrder_tree.json",
+    JSON.stringify(treeWithProofs, null, 2)
+  );
+}
+
+// getDepositMerkleRoot(false);
+// getPlotMerkleRoot(false);
+// getInternalBalMerkleRoot(false);
+// getFertMerkleRoot(false);
+getPodOrderMerkleRoot(false);

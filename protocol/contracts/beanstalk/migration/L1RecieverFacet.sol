@@ -30,7 +30,7 @@ import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
  * in order to migrate their deposits, plots, fertilizer, and internal balances to L2.
  **/
 
-contract L1RecieverFacet is ReentrancyGuard, Order {
+contract L1RecieverFacet is ReentrancyGuard {
     // todo: update with correct external beans once L1 Beanstalk has been paused.
     uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
 
@@ -47,7 +47,7 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
     bytes32 internal constant PODLISTING_ORDER_MERKLE_ROOT =
-        0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
+        0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
@@ -300,9 +300,11 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
 
     /**
      * @notice Recreates the PodOrders for contract addresses.
-     * @dev Listings are not migrated from contracts, and will need to be recreated.
+     * @dev Listings are not migrated from contracts (as no bean is
+     * locked, and that the listed plot may have been already filled),
+     * and will need to be recreated.
      */
-    function issueOrdersAndListings(
+    function issuePodOrders(
         address owner,
         L1PodOrder[] memory orders,
         bytes32[] calldata proof
@@ -313,16 +315,16 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
             account.reciever != address(0) && account.reciever == reciever,
             "L2Migration: Invalid Reciever"
         );
-        require(!account.migratedPodOrdersAndListings, "L2Migration: Orders have been migrated");
+        require(!account.migratedPodOrders, "L2Migration: Orders have been migrated");
 
         // verify order validity:
-        require(verifyOrderProof(owner, orders, proof), "L2Migration: Invalid Listing And Order");
+        require(verifyOrderProof(owner, orders, proof), "L2Migration: Invalid Order");
 
         // add migrated orders to account.
         addPodOrders(reciever, orders);
 
         // set migrated order to true.
-        account.migratedPodOrdersAndListings = true;
+        account.migratedPodOrders = true;
 
         emit L1OrdersMigrated(owner, reciever, orders);
     }
@@ -409,7 +411,7 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
-        return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, PODLISTING_ORDER_MERKLE_ROOT, leaf);
     }
 
     //////////// MIGRATION HELPERS ////////////
@@ -490,6 +492,10 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
         }
     }
 
+    /**
+     * @notice adds the migrated pod orders to the account.
+     * @dev `orderer` is updated to the reciever.
+     */
     function addPodOrders(address reciever, L1PodOrder[] memory orders) internal {
         for (uint i; i < orders.length; i++) {
             // change orders[i].podOrder.orderer to the reciever.
@@ -499,7 +505,7 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
             bytes32 id = _getOrderId(orders[i].podOrder);
             s.sys.podOrders[id] = orders[i].beanAmount;
 
-            emit PodOrderCreated(
+            emit Order.PodOrderCreated(
                 orders[i].podOrder.orderer,
                 id,
                 orders[i].beanAmount,
@@ -557,5 +563,21 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
         unchecked {
             l2Address = address(uint160(l1Address) + OFFSET);
         }
+    }
+
+    /*
+     * @notice internal orderId
+     */
+    function _getOrderId(Order.PodOrder memory podOrder) internal pure returns (bytes32 id) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    podOrder.orderer,
+                    podOrder.fieldId,
+                    podOrder.pricePerPod,
+                    podOrder.maxPlaceInLine,
+                    podOrder.minFillAmount
+                )
+            );
     }
 }
