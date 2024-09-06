@@ -57,11 +57,11 @@ export function handleRemoveLiquidityOne(event: RemoveLiquidityOne): void {
 }
 
 function handleLiquidityChange(poolAddress: Address, isBoth: boolean, block: ethereum.Block): void {
-  // TODO: refactor this part out from liquidity and swap
-  let deltaB;
-  let newPoolPrice;
-  let reserveBalances;
-  let deltaLiquidityUSD;
+  // TODO: refactor this part out from liquidity and swap so it is not repeated
+  let deltaB = ZERO_BI;
+  let newPoolPrice = ZERO_BD;
+  let reserveBalances: BigInt[] = [];
+  let deltaLiquidityUSD = ZERO_BD;
   if (poolAddress === BEAN_3CRV_V1) {
     let pool = loadOrCreatePool(poolAddress, block.number);
 
@@ -104,7 +104,7 @@ function handleLiquidityChange(poolAddress: Address, isBoth: boolean, block: eth
     deltaLiquidityUSD < ZERO_BD
       ? deltaLiquidityUSD.div(BigDecimal.fromString("2")).times(BigDecimal.fromString("-1"))
       : deltaLiquidityUSD.div(BigDecimal.fromString("2"));
-  let volumeBean = BigInt.fromString(volumeUSD.div(newPoolPrice!).times(BigDecimal.fromString("1000000")).truncate(0).toString());
+  let volumeBean = BigInt.fromString(volumeUSD.div(newPoolPrice).times(BigDecimal.fromString("1000000")).truncate(0).toString());
 
   // Ideally this would constitute volume if both tokens are involved, but not in equal proportion.
   if (isBoth) {
@@ -114,9 +114,9 @@ function handleLiquidityChange(poolAddress: Address, isBoth: boolean, block: eth
 
   setPoolReserves(poolAddress, reserveBalances, block);
   updatePoolValues(poolAddress, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, block);
-  updatePoolPrice(poolAddress, newPoolPrice!, block);
+  updatePoolPrice(poolAddress, newPoolPrice, block);
 
-  updateBeanAfterPoolSwap(poolAddress, newPoolPrice!, volumeBean, volumeUSD, deltaLiquidityUSD, block);
+  updateBeanAfterPoolSwap(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, block);
 }
 
 function handleSwap(
@@ -127,29 +127,29 @@ function handleSwap(
   tokens_bought: BigInt,
   block: ethereum.Block
 ): void {
-  let deltaB;
-  let newPoolPrice;
-  let reserveBalances;
-  let deltaLiquidityUSD;
-  if (poolAddress === BEAN_3CRV_V1.toHexString()) {
+  let deltaB = ZERO_BI;
+  let newPoolPrice = ZERO_BD;
+  let reserveBalances: BigInt[] = [];
+  let deltaLiquidityUSD = ZERO_BD;
+  if (poolAddress === BEAN_3CRV_V1) {
     let pool = loadOrCreatePool(poolAddress, block.number);
 
-    let priceAndLp = curvePriceAndLp(Address.fromString(poolAddress));
+    let priceAndLp = curvePriceAndLp(poolAddress);
     let newPoolPrice = priceAndLp[0];
     let lpValue = priceAndLp[1];
 
     let beanContract = ERC20.bind(BEAN_ERC20_V1);
-    let beanHolding = toDecimal(beanContract.balanceOf(Address.fromString(poolAddress)));
+    let beanHolding = toDecimal(beanContract.balanceOf(poolAddress));
     let beanValue = beanHolding.times(newPoolPrice);
 
     let liquidityUSD = beanValue.plus(lpValue);
     deltaLiquidityUSD = liquidityUSD.minus(pool.liquidityUSD);
 
-    let lpContract = Bean3CRV.bind(Address.fromString(poolAddress));
+    let lpContract = Bean3CRV.bind(poolAddress);
     reserveBalances = lpContract.get_balances();
-    deltaB = curveDeltaBUsingVPrice(Address.fromString(poolAddress), reserveBalances[0]);
+    deltaB = curveDeltaBUsingVPrice(poolAddress, reserveBalances[0]);
 
-    if (poolAddress == BEAN_LUSD_V1.toHexString()) {
+    if (poolAddress == BEAN_LUSD_V1) {
       manualTwa(poolAddress, reserveBalances, block.timestamp);
     }
   } else {
@@ -175,11 +175,11 @@ function handleSwap(
   } else if (bought_id == ZERO_BI) {
     volumeBean = tokens_bought;
   }
-  let volumeUSD = toDecimal(volumeBean).times(newPoolPrice!);
+  let volumeUSD = toDecimal(volumeBean).times(newPoolPrice);
 
   setPoolReserves(poolAddress, reserveBalances, block);
   updatePoolValues(poolAddress, volumeBean, volumeUSD, deltaLiquidityUSD, deltaB, block);
-  updatePoolPrice(poolAddress, newPoolPrice!, block);
+  updatePoolPrice(poolAddress, newPoolPrice, block);
 
-  updateBeanAfterPoolSwap(poolAddress, newPoolPrice!, volumeBean, volumeUSD, deltaLiquidityUSD, block);
+  updateBeanAfterPoolSwap(poolAddress, newPoolPrice, volumeBean, volumeUSD, deltaLiquidityUSD, block);
 }

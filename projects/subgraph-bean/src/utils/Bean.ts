@@ -128,30 +128,30 @@ export function updateBeanAfterPoolSwap(
   block: ethereum.Block,
   priceContractResult: BeanstalkPriceResult | null = null
 ): void {
-  let pool = loadOrCreatePool(poolAddress, block.number);
-  let bean = loadBean(pool.bean);
-  const beanToken = toAddress(bean.id);
+  const pool = loadOrCreatePool(poolAddress, block.number);
+  const beanAddr = toAddress(pool.bean);
+  const bean = loadBean(beanAddr);
   // Verify the pool is still whitelisted
   if (bean.pools.indexOf(poolAddress) >= 0) {
-    let oldBeanPrice = bean.price;
+    const oldBeanPrice = bean.price;
     let beanPrice = poolPrice;
 
     // Get overall price from price contract if a result was not already provided
-    if (beanToken == BEAN_ERC20_V1) {
+    if (beanAddr == BEAN_ERC20_V1) {
       univ2_externalUpdatePoolPrice(BEAN_WETH_V1, block);
-      beanPrice = calcLiquidityWeightedBeanPrice(beanToken);
+      beanPrice = calcLiquidityWeightedBeanPrice(beanAddr);
     } else {
       if (priceContractResult === null) {
-        priceContractResult = BeanstalkPrice_try_price(beanToken, block.number);
+        priceContractResult = BeanstalkPrice_try_price(beanAddr, block.number);
       }
       if (!priceContractResult.reverted) {
         beanPrice = toDecimal(priceContractResult.value.price);
       }
     }
 
-    updateBeanSupplyPegPercent(pool.bean, block.number);
-    updateBeanValues(beanToken, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD, block);
-    checkBeanCross(beanToken, oldBeanPrice, beanPrice, block);
+    updateBeanSupplyPegPercent(beanAddr, block.number);
+    updateBeanValues(beanAddr, beanPrice, ZERO_BI, volumeBean, volumeUSD, deltaLiquidityUSD, block);
+    checkBeanCross(beanAddr, oldBeanPrice, beanPrice, block);
   }
 }
 

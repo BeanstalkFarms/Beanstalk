@@ -14,9 +14,10 @@ import { mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
 import { PEG_CROSS_BLOCKS } from "../cache-builder/results/PegCrossBlocks_eth";
 import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
-import { handleBlock } from "../src/handlers/BlockHandler";
+import { handleBlock } from "../src/handlers/CrossHandler";
 import { loadBean } from "../src/entities/Bean";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { handleBlock_v1 } from "../src/handlers/legacy/LegacyCrossHandler";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -95,13 +96,13 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross above", () => {
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.99"));
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
+      handleBlock_v1(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.notInStore("BeanCross", "0");
       assert.notInStore("PoolCross", univ2CrossId(0));
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.01"));
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
+      handleBlock_v1(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
@@ -109,13 +110,13 @@ describe("Peg Crosses", () => {
 
     test("UniswapV2/Bean cross below", () => {
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.25"));
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
+      handleBlock_v1(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "0", "above", "true");
       assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
 
       mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.8"));
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
+      handleBlock_v1(mockBlock(UNIV2_CROSS_BLOCK));
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
       assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");

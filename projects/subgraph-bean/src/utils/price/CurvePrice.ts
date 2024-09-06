@@ -17,6 +17,7 @@ import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
 import { loadOrCreateTwaOracle } from "../../entities/TwaOracle";
 import { CalculationsCurve } from "../../../generated/Bean-ABIs/CalculationsCurve";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 // Note that the Bean3CRV type applies to any curve pool (including lusd)
 
@@ -60,11 +61,12 @@ export function curvePriceAndLp(pool: Address): BigDecimal[] {
 }
 
 export function calcCurveInst(pool: Pool): DeltaBPriceLiquidity {
-  const priceAndLp = curvePriceAndLp(pool.id);
+  const poolAddr = toAddress(pool.id);
+  const priceAndLp = curvePriceAndLp(poolAddr);
   return {
     price: priceAndLp[0],
     liquidity: priceAndLp[1],
-    deltaB: curveDeltaBUsingVPrice(pool.id, pool.reserves[0])
+    deltaB: curveDeltaBUsingVPrice(poolAddr, pool.reserves[0])
   };
 }
 

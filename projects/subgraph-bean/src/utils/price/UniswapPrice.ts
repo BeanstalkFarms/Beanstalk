@@ -1,16 +1,16 @@
 import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { Pool } from "../../../generated/schema";
-import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
 import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
-import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
 import { loadOrCreateToken } from "../../entities/Token";
+import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
+import { Pool } from "../../../generated/schema";
+import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
 
 export function updatePreReplantPriceETH(): BigDecimal {
-  let token = loadOrCreateToken(WETH.toHexString());
+  let token = loadOrCreateToken(WETH);
   let price = getPreReplantPriceETH();
   if (price.lt(ZERO_BD)) {
     return token.lastPriceUSD;
