@@ -1,5 +1,4 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, log } from "matchstick-as/assembly/index";
-import { loadBean } from "../src/utils/Bean";
 import {
   BEAN_3CRV,
   BEAN_ERC20,
@@ -10,12 +9,13 @@ import {
   PRICE_2_BLOCK,
   WETH
 } from "../../subgraph-core/utils/Constants";
-import { handleDewhitelistToken } from "../src/BeanstalkHandler";
 import { createDewhitelistTokenEvent } from "./event-mocking/Beanstalk";
 import { setMockBeanPrice } from "../../subgraph-core/tests/event-mocking/Price";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { BI_10 } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice_try_price, getPoolPrice } from "../src/utils/price/BeanstalkPrice";
+import { loadBean } from "../src/entities/Bean";
+import { handleDewhitelistToken } from "../src/handlers/BeanstalkHandler";
 
 const curvePrice = BigInt.fromU32(1012000);
 const beanEthPrice = BigInt.fromU32(1025000);

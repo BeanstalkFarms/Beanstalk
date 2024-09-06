@@ -12,7 +12,7 @@ import {
   BEAN_WETH_CP2_WELL,
   BEAN_WSTETH_CP2_WELL,
   WSTETH
-} from "../../../subgraph-core/utils/Constants";
+} from "../../../../subgraph-core/utils/Constants";
 
 // Use this mapping to determine which tokens are in each pool. Pools may each follow a distinct interface,
 // so a view function shouldn't be used, and a new subgraph build is already required to track a newly whitelisted asset.

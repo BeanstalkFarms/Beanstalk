@@ -1,13 +1,15 @@
 import { ethereum } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, EXPLOIT_BLOCK } from "../../subgraph-core/utils/Constants";
-import { checkPegCrossEth as univ2_checkPegCrossEth } from "./UniswapV2Handler";
-import { loadBean, updateBeanValues } from "./utils/Bean";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { checkBeanCross, checkPoolCross } from "./utils/Cross";
-import { loadOrCreatePool, updatePoolPrice, updatePoolValues } from "./utils/Pool";
-import { BeanstalkPrice_try_price } from "./utils/price/BeanstalkPrice";
-import { PEG_CROSS_BLOCKS, PEG_CROSS_BLOCKS_LAST } from "../cache-builder/results/PegCrossBlocks_eth";
-import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
+import { checkPegCrossEth as univ2_checkPegCrossEth } from "./legacy/LegacyUniswapV2Handler";
+import { PEG_CROSS_BLOCKS, PEG_CROSS_BLOCKS_LAST } from "../../cache-builder/results/PegCrossBlocks_eth";
+import { BEAN_ERC20, BEAN_WETH_CP2_WELL_BLOCK, EXPLOIT_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { u32_binarySearchIndex } from "../../../subgraph-core/utils/Math";
+import { BeanstalkPrice_try_price } from "../utils/price/BeanstalkPrice";
+import { loadBean } from "../entities/Bean";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { checkBeanCross, checkPoolCross } from "../utils/Cross";
+import { loadOrCreatePool } from "../entities/Pool";
+import { updatePoolPrice, updatePoolValues } from "../utils/Pool";
+import { updateBeanValues } from "../utils/Bean";
 
 // Processing as each new ethereum block is created
 export function handleBlock(block: ethereum.Block): void {
@@ -39,7 +41,7 @@ export function beanstalkPrice_updatePoolPrices(priceOnlyOnCross: boolean, block
   const newPrice = toDecimal(priceResult.value.price);
 
   // Check for overall peg cross
-  const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), block.timestamp, block.number, prevPrice, newPrice);
+  const beanCrossed = checkBeanCross(BEAN_ERC20.toHexString(), prevPrice, newPrice, block);
 
   // Update pool price for each pool - necessary for checking pool cross
   let totalLiquidity = ZERO_BD;
@@ -47,40 +49,25 @@ export function beanstalkPrice_updatePoolPrices(priceOnlyOnCross: boolean, block
     const poolPriceInfo = priceResult.value.ps[i];
     const pool = loadOrCreatePool(poolPriceInfo.pool.toHexString(), block.number);
 
-    const poolCrossed = checkPoolCross(
-      poolPriceInfo.pool.toHexString(),
-      block.timestamp,
-      block.number,
-      pool.lastPrice,
-      toDecimal(poolPriceInfo.price)
-    );
+    const poolCrossed = checkPoolCross(poolPriceInfo.pool.toHexString(), pool.lastPrice, toDecimal(poolPriceInfo.price), block);
 
     if (!priceOnlyOnCross || poolCrossed || beanCrossed) {
       totalLiquidity = totalLiquidity.plus(toDecimal(poolPriceInfo.liquidity));
       updatePoolValues(
         poolPriceInfo.pool.toHexString(),
-        block.timestamp,
-        block.number,
         ZERO_BI,
         ZERO_BD,
         toDecimal(poolPriceInfo.liquidity).minus(pool.liquidityUSD),
-        poolPriceInfo.deltaB
+        poolPriceInfo.deltaB,
+        block
       );
-      updatePoolPrice(poolPriceInfo.pool.toHexString(), block.timestamp, block.number, toDecimal(poolPriceInfo.price), false);
+      updatePoolPrice(poolPriceInfo.pool.toHexString(), toDecimal(poolPriceInfo.price), block, false);
     }
   }
 
   // Update bean values at the end now that the summation of pool liquidity is known
   if (!priceOnlyOnCross || beanCrossed) {
-    updateBeanValues(
-      BEAN_ERC20.toHexString(),
-      block.timestamp,
-      newPrice,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BD,
-      totalLiquidity.minus(bean.liquidityUSD)
-    );
+    updateBeanValues(BEAN_ERC20.toHexString(), newPrice, ZERO_BI, ZERO_BI, ZERO_BD, totalLiquidity.minus(bean.liquidityUSD), block);
   }
   return true;
 }

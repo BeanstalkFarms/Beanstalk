@@ -1,7 +1,7 @@
 import { ethereum } from "@graphprotocol/graph-ts";
-import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../Bean";
 import { BEAN_ERC20 } from "../../../../subgraph-core/utils/Constants";
 import { BEAN_INITIAL_VALUES } from "../../../cache-builder/results/BeanInit_arb";
+import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../../entities/Bean";
 
 export function handleInitBeanEntity(block: ethereum.Block): void {
   // TODO: how to determine correct token address? this is wrong

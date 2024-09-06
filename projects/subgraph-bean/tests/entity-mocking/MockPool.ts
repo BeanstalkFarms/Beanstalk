@@ -1,7 +1,7 @@
 import { BigInt, Address, BigDecimal } from "@graphprotocol/graph-ts";
-import { loadOrCreatePool } from "../../src/utils/Pool";
 import { mockPreReplantBeanEthPriceAndLiquidity } from "../../../subgraph-core/tests/event-mocking/Price";
 import { BEAN_WETH_V1, BEANSTALK_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { loadOrCreatePool } from "../../src/entities/Pool";
 
 export function mockPoolPriceAndLiquidity(poolAddr: Address, price: BigDecimal, liquidityUSD: BigDecimal, blockNumber: BigInt): void {
   let pool = loadOrCreatePool(poolAddr.toHexString(), blockNumber);

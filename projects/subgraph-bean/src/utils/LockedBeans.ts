@@ -11,11 +11,11 @@ import {
   UNRIPE_LP
 } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
-import { ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
 import { Beanstalk } from "../../generated/Bean-ABIs/Beanstalk";
-import { loadOrCreatePool } from "./Pool";
-import { loadOrCreateTwaOracle } from "./price/TwaOracle";
+import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
+import { loadOrCreatePool } from "../entities/Pool";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   // If BIP45 is deployed - return the result from the contract

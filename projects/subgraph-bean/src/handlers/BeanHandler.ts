@@ -1,6 +1,7 @@
-import { Transfer } from "../generated/Bean-ABIs/ERC20";
-import { loadBean, updateBeanSupplyPegPercent } from "./utils/Bean";
-import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../subgraph-core/utils/Constants";
+import { ADDRESS_ZERO, BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
+import { Transfer } from "../../generated/Bean-ABIs/ERC20";
+import { loadBean } from "../entities/Bean";
+import { updateBeanSupplyPegPercent } from "../utils/Bean";
 
 export function handleTransfer(event: Transfer): void {
   if (event.params.from == ADDRESS_ZERO || event.params.to == ADDRESS_ZERO) {

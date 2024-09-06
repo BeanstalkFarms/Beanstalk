@@ -1,6 +1,5 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
-import { loadBean } from "../src/utils/Bean";
 import {
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
@@ -17,14 +16,15 @@ import {
   mockSeedGaugeLockedBeans,
   mockSeedGaugeLockedBeansReverts
 } from "./call-mocking/Beanstalk";
-import { handleChop } from "../src/BeanstalkHandler";
 import { mockBeanstalkEvent } from "../../subgraph-core/tests/event-mocking/Util";
 import { Chop } from "../generated/Bean-ABIs/Beanstalk";
-import { loadOrCreatePool } from "../src/utils/Pool";
 import { calcLockedBeans, LibLockedUnderlying_getPercentLockedUnderlying } from "../src/utils/LockedBeans";
 import { mockERC20TokenSupply } from "../../subgraph-core/tests/event-mocking/Tokens";
-import { loadOrCreateTwaOracle } from "../src/utils/price/TwaOracle";
 import { TwaOracle } from "../generated/schema";
+import { loadOrCreateTwaOracle } from "../src/entities/TwaOracle";
+import { loadOrCreatePool } from "../src/entities/Pool";
+import { loadBean } from "../src/entities/Bean";
+import { handleChop } from "../src/handlers/BeanstalkHandler";
 
 const mockReserves = Bytes.fromHexString("0xabcdef");
 const mockReservesTime = BigInt.fromString("123456");

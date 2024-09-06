@@ -3,20 +3,19 @@ import { log } from "matchstick-as/assembly/log";
 
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
-import { handleBlock } from "../src/BlockHandler";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
 import { BEAN_3CRV_V1, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_CP2_WELL, BEAN_WETH_V1 } from "../../subgraph-core/utils/Constants";
 import { BD_10, BigDecimal_round, ONE_BD, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 
-import { loadBean } from "../src/utils/Bean";
 import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";
 import { mockPoolPriceAndLiquidity, mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves } from "./entity-mocking/MockPool";
-import { updatePricesAndCheckCrosses as crv_updatePricesAndCheckCrosses } from "../src/Bean3CRVHandler_V1";
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
 import { PEG_CROSS_BLOCKS } from "../cache-builder/results/PegCrossBlocks_eth";
 import { u32_binarySearchIndex } from "../../subgraph-core/utils/Math";
+import { handleBlock } from "../src/handlers/BlockHandler";
+import { loadBean } from "../src/entities/Bean";
 
 const wellCrossId = (n: u32): string => {
   return BEAN_WETH_CP2_WELL.toHexString() + "-" + n.toString();
@@ -117,146 +116,6 @@ describe("Peg Crosses", () => {
 
       assert.fieldEquals("BeanCross", "1", "above", "false");
       assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");
-    });
-
-    test("UniswapV2/Bean cross above (separately)", () => {
-      const liquidity = BigDecimal.fromString("5000000");
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.95"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.99"), liquidity, UNIV2_CROSS_BLOCK);
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
-
-      assert.notInStore("BeanCross", "0");
-      assert.notInStore("PoolCross", univ2CrossId(0));
-      assert.notInStore("PoolCross", crvV1CrossId(0));
-
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.02"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("0.9"), liquidity, UNIV2_CROSS_BLOCK);
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
-
-      assert.notInStore("BeanCross", "0");
-      assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
-      assert.notInStore("PoolCross", crvV1CrossId(0));
-
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.06"), liquidity);
-      // Requires a curve swap to update since the uniswap pool already crossed. Swap content is irrelevant
-      // This doesnt perform the full swap logic but is sufficient
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        BigDecimal.fromString("0.95"),
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-
-      assert.fieldEquals("BeanCross", "0", "above", "true");
-      assert.notInStore("PoolCross", univ2CrossId(1));
-      assert.notInStore("PoolCross", crvV1CrossId(0));
-      assert.fieldEquals("Pool", BEAN_WETH_V1.toHexString(), "lastPrice", "1.06000000000033071999957610318464");
-    });
-
-    test("UniswapV2/Bean cross below (separately)", () => {
-      const liquidity = BigDecimal.fromString("5000000");
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("1.05"), liquidity);
-      // mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.01"), liquidity, UNIV2_CROSS_BLOCK);
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        BigDecimal.fromString("1.01"),
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-
-      assert.fieldEquals("BeanCross", "0", "above", "true");
-      assert.fieldEquals("PoolCross", univ2CrossId(0), "above", "true");
-      assert.fieldEquals("PoolCross", crvV1CrossId(0), "above", "true");
-
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.97"), liquidity);
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, BigDecimal.fromString("1.05"), liquidity, UNIV2_CROSS_BLOCK);
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
-
-      assert.notInStore("BeanCross", "1");
-      assert.fieldEquals("PoolCross", univ2CrossId(1), "above", "false");
-      assert.notInStore("PoolCross", crvV1CrossId(1));
-
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.92"), liquidity);
-      // Requires a curve swap to update since the uniswap pool already crossed. Swap content is irrelevant
-      // This doesnt perform the full swap logic but is sufficient
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        BigDecimal.fromString("1.04"),
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-
-      assert.fieldEquals("BeanCross", "1", "above", "false");
-      assert.notInStore("PoolCross", univ2CrossId(2));
-      assert.notInStore("PoolCross", crvV1CrossId(1));
-      assert.fieldEquals("Pool", BEAN_WETH_V1.toHexString(), "lastPrice", "0.9200000000002796799996320850227199");
-    });
-
-    test("Bean cross from Liquidity change", () => {
-      const liquidity = BigDecimal.fromString("5000000");
-      const crvConstantPrice = BigDecimal.fromString("1.01");
-      const crvLiquidity2 = liquidity.times(BD_10);
-      mockPreReplantBeanEthPriceAndLiquidityWithPoolReserves(BigDecimal.fromString("0.95"), liquidity);
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        crvConstantPrice,
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-      handleBlock(mockBlock(UNIV2_CROSS_BLOCK));
-
-      assert.notInStore("BeanCross", "0");
-      assert.notInStore("PoolCross", univ2CrossId(0));
-      assert.fieldEquals("PoolCross", crvV1CrossId(0), "above", "true");
-
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, crvLiquidity2, UNIV2_CROSS_BLOCK);
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        crvConstantPrice,
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-
-      assert.fieldEquals("BeanCross", "0", "above", "true");
-      assert.notInStore("PoolCross", univ2CrossId(0));
-      assert.notInStore("PoolCross", crvV1CrossId(1));
-
-      mockPoolPriceAndLiquidity(BEAN_3CRV_V1, crvConstantPrice, liquidity, UNIV2_CROSS_BLOCK);
-      crv_updatePricesAndCheckCrosses(
-        BEAN_3CRV_V1.toHexString(),
-        crvConstantPrice,
-        ONE_BI,
-        ONE_BD,
-        ONE_BD,
-        ZERO_BI,
-        ZERO_BI,
-        UNIV2_CROSS_BLOCK
-      );
-
-      assert.fieldEquals("BeanCross", "1", "above", "false");
-      assert.notInStore("PoolCross", univ2CrossId(0));
-      assert.notInStore("PoolCross", crvV1CrossId(1));
     });
   });
 

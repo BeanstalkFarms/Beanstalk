@@ -4,7 +4,7 @@ import {
   BEAN_WETH_CP2_WELL_BLOCK,
   BEAN_WSTETH_CP2_WELL,
   BEAN_WSTETH_CP2_WELL_BLOCK
-} from "../../../subgraph-core/utils/Constants";
+} from "../../../../subgraph-core/utils/Constants";
 
 export enum WellFunction {
   ConstantProduct

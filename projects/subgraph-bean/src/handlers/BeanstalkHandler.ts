@@ -1,18 +1,20 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { Chop, DewhitelistToken, Reward, Sunrise } from "../generated/Bean-ABIs/Beanstalk";
-import { getBeanTokenAddress, loadBean, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "./utils/Bean";
-import { loadOrCreatePool, updatePoolPrice, updatePoolSeason, updatePoolValues } from "./utils/Pool";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_V1, CURVE_PRICE } from "../../subgraph-core/utils/Constants";
-import { ZERO_BD, ZERO_BI, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { CurvePrice } from "../generated/Bean-ABIs/CurvePrice";
-import { checkBeanCross } from "./utils/Cross";
-import { calcUniswapV2Inst, setUniswapV2Twa } from "./utils/price/UniswapPrice";
-import { calcCurveInst, setCurveTwa } from "./utils/price/CurvePrice";
-import { MetapoolOracle, WellOracle } from "../generated/Bean-ABIs/BIP37";
-import { DeltaBPriceLiquidity } from "./utils/price/Types";
-import { setRawWellReserves, setTwaLast } from "./utils/price/TwaOracle";
-import { decodeCumulativeWellReserves, setWellTwa } from "./utils/price/WellPrice";
+import { BigInt } from "@graphprotocol/graph-ts";
 import { beanstalkPrice_updatePoolPrices } from "./BlockHandler";
+import { getBeanTokenAddress, updateBeanSeason, updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../utils/Bean";
+import { Chop, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Beanstalk";
+import { CurvePrice } from "../../generated/Bean-ABIs/CurvePrice";
+import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { loadOrCreatePool } from "../entities/Pool";
+import { updatePoolPrice, updatePoolSeason, updatePoolValues } from "../utils/Pool";
+import { loadBean } from "../entities/Bean";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { checkBeanCross } from "../utils/Cross";
+import { DeltaBPriceLiquidity } from "../utils/price/Types";
+import { calcUniswapV2Inst, setUniswapV2Twa } from "../utils/price/UniswapPrice";
+import { calcCurveInst, setCurveTwa } from "../utils/price/CurvePrice";
+import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BIP37";
+import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
+import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
 
 export function handleSunrise(event: Sunrise): void {
   // Update the season for hourly and daily liquidity metrics
@@ -24,11 +26,11 @@ export function handleSunrise(event: Sunrise): void {
   let bean = loadBean(beanToken);
   let oldBeanPrice = bean.price;
   for (let i = 0; i < bean.pools.length; i++) {
-    updatePoolSeason(bean.pools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
+    updatePoolSeason(bean.pools[i], event.params.season.toI32(), event.block);
   }
 
   for (let i = 0; i < bean.dewhitelistedPools.length; i++) {
-    updatePoolSeason(bean.dewhitelistedPools[i], event.block.timestamp, event.block.number, event.params.season.toI32());
+    updatePoolSeason(bean.dewhitelistedPools[i], event.params.season.toI32(), event.block);
   }
 
   // Fetch price from price contract to capture any non-bean token price movevements
@@ -44,23 +46,22 @@ export function handleSunrise(event: Sunrise): void {
       let beanCurve = loadOrCreatePool(BEAN_3CRV.toHexString(), event.block.number);
 
       if (!curve.reverted) {
-        updateBeanValues(BEAN_ERC20.toHexString(), event.block.timestamp, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD);
+        updateBeanValues(beanToken, toDecimal(curve.value.price), ZERO_BI, ZERO_BI, ZERO_BD, ZERO_BD, event.block);
         updatePoolValues(
           BEAN_3CRV.toHexString(),
-          event.block.timestamp,
-          event.block.number,
           ZERO_BI,
           ZERO_BD,
           toDecimal(curve.value.liquidity).minus(beanCurve.liquidityUSD),
-          curve.value.deltaB
+          curve.value.deltaB,
+          event.block
         );
-        updatePoolPrice(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number, toDecimal(curve.value.price));
-        checkBeanCross(BEAN_ERC20.toHexString(), event.block.timestamp, event.block.number, oldBeanPrice, toDecimal(curve.value.price));
+        updatePoolPrice(BEAN_3CRV.toHexString(), toDecimal(curve.value.price), event.block);
+        checkBeanCross(beanToken, oldBeanPrice, toDecimal(curve.value.price), event.block);
       }
     }
   } else {
     // Pre-Replant
-    let bean = loadBean(BEAN_ERC20_V1.toHexString());
+    let bean = loadBean(beanToken);
     let weightedPrice = ZERO_BD;
     let totalLiquidity = ZERO_BD;
     for (let i = 0; i < bean.pools.length; i++) {
@@ -68,40 +69,24 @@ export function handleSunrise(event: Sunrise): void {
       let inst: DeltaBPriceLiquidity;
       if (bean.pools[i] == BEAN_WETH_V1.toHexString()) {
         inst = calcUniswapV2Inst(pool);
-        setUniswapV2Twa(bean.pools[i], event.block.timestamp, event.block.number);
+        setUniswapV2Twa(bean.pools[i], event.block);
       } else {
         inst = calcCurveInst(pool);
-        setCurveTwa(bean.pools[i], event.block.timestamp, event.block.number);
+        setCurveTwa(bean.pools[i], event.block);
       }
 
       // Update price, liquidity, and deltaB in the pool
-      updatePoolValues(
-        bean.pools[i],
-        event.block.timestamp,
-        event.block.number,
-        ZERO_BI,
-        ZERO_BD,
-        inst.liquidity.minus(pool.liquidityUSD),
-        inst.deltaB
-      );
-      updatePoolPrice(bean.pools[i], event.block.timestamp, event.block.number, inst.price);
+      updatePoolValues(bean.pools[i], ZERO_BI, ZERO_BD, inst.liquidity.minus(pool.liquidityUSD), inst.deltaB, event.block);
+      updatePoolPrice(bean.pools[i], inst.price, event.block);
 
       weightedPrice = weightedPrice.plus(inst.price.times(inst.liquidity));
       totalLiquidity = totalLiquidity.plus(inst.liquidity);
     }
 
     const totalPrice = weightedPrice.div(totalLiquidity);
-    updateBeanValues(
-      BEAN_ERC20_V1.toHexString(),
-      event.block.timestamp,
-      totalPrice,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BD,
-      totalLiquidity.minus(bean.liquidityUSD)
-    );
-    checkBeanCross(BEAN_ERC20_V1.toHexString(), event.block.timestamp, event.block.number, bean.price, totalPrice);
-    updateBeanTwa(event.block.timestamp, event.block.number);
+    updateBeanValues(beanToken, totalPrice, ZERO_BI, ZERO_BI, ZERO_BD, totalLiquidity.minus(bean.liquidityUSD), event.block);
+    checkBeanCross(beanToken, bean.price, totalPrice, event.block);
+    updateBeanTwa(event.block);
   }
 }
 
@@ -123,15 +108,15 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
 
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   setTwaLast(BEAN_3CRV.toHexString(), event.params.balances, event.block.timestamp);
-  setCurveTwa(BEAN_3CRV.toHexString(), event.block.timestamp, event.block.number);
-  updateBeanTwa(event.block.timestamp, event.block.number);
+  setCurveTwa(BEAN_3CRV.toHexString(), event.block);
+  updateBeanTwa(event.block);
 }
 
 export function handleWellOracle(event: WellOracle): void {
   setRawWellReserves(event);
   setTwaLast(event.params.well.toHexString(), decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
-  setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block.timestamp, event.block.number);
-  updateBeanTwa(event.block.timestamp, event.block.number);
+  setWellTwa(event.params.well.toHexString(), event.params.deltaB, event.block);
+  updateBeanTwa(event.block);
 }
 
 // LOCKED BEANS //
@@ -143,6 +128,7 @@ export function handleWellOracle(event: WellOracle): void {
 export function handleChop(event: Chop): void {
   updateBeanSupplyPegPercent(event.block.number);
 }
+// TODO: add handler for convert-chops here as well.
 
 export function handleRewardMint(event: Reward): void {
   updateBeanSupplyPegPercent(event.block.number);

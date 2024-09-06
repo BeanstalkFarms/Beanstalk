@@ -1,7 +1,6 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 // import { log } from "matchstick-as/assembly/log";
-import { handleMetapoolOracle, handleWellOracle } from "../src/BeanstalkHandler";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mocking/Beanstalk";
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subgraph-core/utils/Constants";
@@ -10,10 +9,11 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
 import { decodeCumulativeWellReserves } from "../src/utils/price/WellPrice";
 import { mock_virtual_price } from "./event-mocking/Curve";
-import { loadOrCreatePool } from "../src/utils/Pool";
-import { loadBean } from "../src/utils/Bean";
 import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
 import { pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
+import { handleMetapoolOracle, handleWellOracle } from "../src/handlers/BeanstalkHandler";
+import { loadBean } from "../src/entities/Bean";
+import { loadOrCreatePool } from "../src/entities/Pool";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
