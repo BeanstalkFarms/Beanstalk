@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Avatar } from "src/utils/wagmi/Avatar";
 import { OnLoad } from "./OnLoad";
-import { SdkProvider } from "src/utils/sdk/SdkProvider";
+import { SdkProvider } from "src/state/providers/SdkProvider";
 import { config } from "src/utils/wagmi/config";
 import WellsProvider from "src/state/providers/WellsProvider";
 import AquiferProvider from "src/state/providers/AquiverProvider";

@@ -12,7 +12,7 @@ import { useSetAtom } from "jotai";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { Error } from "src/components/Error";
 import { Token } from "@beanstalk/sdk-core";
-import { underlyingTokenMapAtom, setWellsLoadingAtom, wellsAtom } from "src/state/atoms";
+import { setWellsLoadingAtom, underlyingTokenMapAtom, wellsAtom } from "src/state/atoms";
 import { getTokenIndex } from "src/tokens/utils";
 import { useAquifer } from "src/wells/aquifer/aquifer";
 
