@@ -1,13 +1,16 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { ERC20Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk-wells";
-import { queryKeys } from "../query/queryKeys";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import useSdk from "../sdk/useSdk";
-import { getPrice } from "./usePrice";
-import { PriceLookups } from "./priceLookups";
-import { Log } from "../../utils/logger";
+
 import { AddressMap } from "src/types";
-import { UseReactQueryOptions } from "../query/types";
+import { Log } from "src/utils/logger";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { UseReactQueryOptions } from "src/utils/query/types";
+import useSdk from "src/utils/sdk/useSdk";
+
+import { PriceLookups } from "./priceLookups";
+import { getPrice } from "./usePrice";
 
 type WellOrToken = Well | ERC20Token;
 
@@ -48,7 +51,11 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
         tokens.map((token) => {
           if (PriceLookups[token.symbol]) return getPrice(token, sdk);
 
-          Log.module("useTokenPrices").debug("No price lookup function for ", token.symbol, "... resolving with 0");
+          Log.module("useTokenPrices").debug(
+            "No price lookup function for ",
+            token.symbol,
+            "... resolving with 0"
+          );
           return Promise.resolve(token.fromHuman("0"));
         })
       );
