@@ -1,7 +1,7 @@
 import { BeanstalkSDK } from "@beanstalk/sdk";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
-import { sdkAtom } from "src/utils/sdk/SdkProvider";
+import { sdkAtom } from "src/state/providers/SdkProvider";
 
 export default function useSdk(): BeanstalkSDK {
   const [sdk] = useAtom(sdkAtom);
