@@ -1,7 +1,7 @@
 import { SupportedChainId } from '~/constants/chains';
 import { BEAN, BEAN_CRV3_LP, BEAN_ETH_UNIV2_LP } from '~/constants/tokens';
 
-const m = SupportedChainId.MAINNET;
+const m = SupportedChainId.ETH_MAINNET;
 
 export const mockLiquidityByToken = {
   [BEAN[m].address]: 10,

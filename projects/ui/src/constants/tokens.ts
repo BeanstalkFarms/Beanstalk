@@ -27,7 +27,6 @@ import usdtLogoUrl from '~/img/tokens/usdt-logo.svg';
 import lusdLogoUrl from '~/img/tokens/lusd-logo.svg';
 import wbtcLogoUrl from '~/img/tokens/wbtc-logo.svg';
 import weethIcon from '~/img/tokens/weeth-logo.png';
-import arbLogoUrl from '~/img/tokens/arbitrum-logo.svg';
 import unripeBeanLogoUrl from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
 
@@ -40,6 +39,7 @@ import {
   LegacyTokenMetadata,
   LegacyTokenRewards,
 } from '~/classes/Token';
+import arbLogoUrl from '~/img/tokens/arbitrum-logo.svg';
 import { SupportedChainId } from './chains';
 import { ChainConstant } from '.';
 import {
@@ -73,8 +73,8 @@ import {
 // ----------------------------------------
 
 const CHAIN_IDS = [
-  SupportedChainId.MAINNET,
-  SupportedChainId.ARBITRUM,
+  SupportedChainId.ETH_MAINNET,
+  SupportedChainId.ARBITRUM_MAINNET,
 ] as const;
 
 const makeChainToken = (
@@ -109,8 +109,8 @@ const makeChainToken = (
 
 export const ETH_DECIMALS = 18;
 export const ETH = {
-  [SupportedChainId.MAINNET]: new NativeToken(
-    SupportedChainId.MAINNET,
+  [SupportedChainId.ETH_MAINNET]: new NativeToken(
+    SupportedChainId.ETH_MAINNET,
     'ETH',
     ETH_DECIMALS,
     {
@@ -120,8 +120,8 @@ export const ETH = {
       displayDecimals: 4,
     }
   ),
-  [SupportedChainId.ARBITRUM]: new NativeToken(
-    SupportedChainId.ARBITRUM,
+  [SupportedChainId.ARBITRUM_MAINNET]: new NativeToken(
+    SupportedChainId.ARBITRUM_MAINNET,
     'ETH',
     ETH_DECIMALS,
     {
@@ -138,32 +138,52 @@ export const ETH = {
 //
 // We don't need to make these tokens chain specific.
 // ----------------------------------------
-export const STALK = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 16, {
-  name: 'Stalk',
-  symbol: 'STALK',
-  logo: stalkLogo,
-});
+export const STALK = new BeanstalkToken(
+  SupportedChainId.ARBITRUM_MAINNET,
+  '',
+  16,
+  {
+    name: 'Stalk',
+    symbol: 'STALK',
+    logo: stalkLogo,
+  }
+);
 
-export const SEEDS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
-  name: 'Seeds',
-  symbol: 'SEED',
-  logo: seedLogo,
-});
+export const SEEDS = new BeanstalkToken(
+  SupportedChainId.ARBITRUM_MAINNET,
+  '',
+  6,
+  {
+    name: 'Seeds',
+    symbol: 'SEED',
+    logo: seedLogo,
+  }
+);
 
-export const PODS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
-  name: 'Pods',
-  symbol: 'PODS',
-  logo: podsLogo,
-});
+export const PODS = new BeanstalkToken(
+  SupportedChainId.ARBITRUM_MAINNET,
+  '',
+  6,
+  {
+    name: 'Pods',
+    symbol: 'PODS',
+    logo: podsLogo,
+  }
+);
 
-export const SPROUTS = new BeanstalkToken(SupportedChainId.ARBITRUM, '', 6, {
-  name: 'Sprouts',
-  symbol: 'SPROUT',
-  logo: sproutLogo,
-});
+export const SPROUTS = new BeanstalkToken(
+  SupportedChainId.ARBITRUM_MAINNET,
+  '',
+  6,
+  {
+    name: 'Sprouts',
+    symbol: 'SPROUT',
+    logo: sproutLogo,
+  }
+);
 
 export const RINSABLE_SPROUTS = new BeanstalkToken(
-  SupportedChainId.ARBITRUM,
+  SupportedChainId.ARBITRUM_MAINNET,
   '',
   6,
   {
@@ -238,7 +258,7 @@ export const USDT = makeChainToken(USDT_ADDRESSES, 6, {
 });
 
 export const ARB = makeChainToken(ARB_ADDRESSES, 18, {
-  name: 'Arbitrum',
+  name: 'Arbitrum_MAINNET',
   symbol: 'ARB',
   logo: arbLogoUrl,
 });

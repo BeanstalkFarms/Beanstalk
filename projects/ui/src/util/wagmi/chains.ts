@@ -61,7 +61,7 @@ export const arbitrum = defineChain({
 });
 
 export const localForkMainnet = defineChain({
-  id: ChainId.LOCALHOST_MAINNET,
+  id: ChainId.LOCALHOST_ETH,
   name: 'localhost:9545',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {

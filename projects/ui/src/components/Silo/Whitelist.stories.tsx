@@ -15,17 +15,17 @@ const Template: ComponentStory<typeof Whitelist> = (args: any) => (
     {...args}
     config={{
       whitelist: [
-        BEAN[SupportedChainId.MAINNET],
-        BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET],
+        BEAN[SupportedChainId.ETH_MAINNET],
+        BEAN_ETH_UNIV2_LP[SupportedChainId.ETH_MAINNET],
       ],
     }}
     farmerSilo={{
       balances: {
-        [BEAN[SupportedChainId.MAINNET].address]: {
+        [BEAN[SupportedChainId.ETH_MAINNET].address]: {
           // input fake data here
           deposited: new BigNumber(123_456_789),
         },
-        [BEAN_ETH_UNIV2_LP[SupportedChainId.MAINNET].address]: {
+        [BEAN_ETH_UNIV2_LP[SupportedChainId.ETH_MAINNET].address]: {
           // input fake data here
           deposited: new BigNumber(0.0001),
         },

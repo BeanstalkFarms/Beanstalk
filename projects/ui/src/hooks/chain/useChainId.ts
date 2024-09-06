@@ -11,7 +11,7 @@ import { SupportedChainId } from '~/constants';
 
 const defaultChainId = import.meta.env.DEV
   ? SupportedChainId.LOCALHOST
-  : SupportedChainId.ARBITRUM;
+  : SupportedChainId.ARBITRUM_MAINNET;
 
 export default function useChainId() {
   const { chain } = useAccount();

@@ -24,8 +24,8 @@ const useChainIdToLogo = () => {
     (_chainId: SupportedChainId | undefined) => {
       const chainId = _chainId || Address.defaultChainId;
       if (
-        chainId === SupportedChainId.LOCALHOST_MAINNET ||
-        chainId === SupportedChainId.MAINNET
+        chainId === SupportedChainId.LOCALHOST_ETH ||
+        chainId === SupportedChainId.ETH_MAINNET
       ) {
         return ETH.logo;
       }

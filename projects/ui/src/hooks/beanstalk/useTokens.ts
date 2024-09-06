@@ -245,7 +245,7 @@ function getWhitelistSorted(
   });
 }
 
-const i = SupportedChainId.ARBITRUM;
+const i = SupportedChainId.ARBITRUM_MAINNET;
 
 const oldTokenMap: Record<string, ChainConstant<LegacyToken> | LegacyToken> = {
   [LegacyTokens.ETH[i].symbol]: LegacyTokens.ETH,
