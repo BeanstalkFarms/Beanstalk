@@ -1,5 +1,5 @@
 import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
-import { Aquifer } from "@beanstalk/sdk/Wells";
+import { Aquifer } from "@beanstalk/sdk-wells";
 import memoize from "lodash/memoize";
 import { Settings } from "src/settings";
 import { Log } from "src/utils/logger";
@@ -11,25 +11,19 @@ import { getChainIdOrFallbackChainId } from "src/utils/chain";
 type WellAddresses = string[];
 
 const WELL_BLACKLIST: Record<number, WellAddresses> = {
-  [ChainId.MAINNET]: [
+  [ChainId.ETH_MAINNET]: [
     "0x875b1da8dcba757398db2bc35043a72b4b62195d".toLowerCase(),
     "0xBea0061680A2DEeBFA59076d77e0b6c769660595".toLowerCase(), // bean:wstETH duplicate
     "0xbEa00022Ee2F7E2eb222f75fE79eFE4871E655ca".toLowerCase(), // bean:wstETH duplicate
     "0xbea0009b5b96D87643DFB7392293f18af7C041F4".toLowerCase(), // bean:wstETH duplicate
     "0x5997111CbBAA0f4C613Ae678Ba4803e764140266".toLowerCase() // usdc:frax duplicate
   ],
-  [ChainId.ARBITRUM]: []
+  [ChainId.ARBITRUM_MAINNET]: []
 };
 
-const loadFromChain = async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
+const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellAddresses> => {
   const chainId = getChainIdOrFallbackChainId(sdk.chainId);
 
-  const aquiferAddress =
-    chainId === ChainId.MAINNET
-      ? Settings.AQUIFER_ADDRESS_MAINNET
-      : Settings.AQUIFER_ADDRESS_ARBITRUM;
-
-  const aquifer = new Aquifer(sdk.wells, aquiferAddress);
   const contract = aquifer.contract;
   const eventFilter = contract.filters.BoreWell();
 
@@ -60,9 +54,9 @@ const loadFromGraph = async (chainId: ChainId): Promise<WellAddresses> => {
 };
 
 export const findWells = memoize(
-  async (sdk: BeanstalkSDK): Promise<WellAddresses> => {
+  async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellAddresses> => {
     const addresses = await Promise.any([
-      loadFromChain(sdk)
+      loadFromChain(sdk, aquifer)
         .then((res) => {
           Log.module("wells").debug("Used blockchain to load wells");
           return res;

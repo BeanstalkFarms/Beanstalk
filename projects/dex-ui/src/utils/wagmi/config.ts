@@ -4,7 +4,7 @@ import {
   localFork,
   anvil1,
   localForkMainnet,
-  mainnet,
+  ethMainnet,
   arbitrum
   // testnet
 } from "./chains";
@@ -25,19 +25,19 @@ if (!WALLET_CONNECT_PROJECT_ID) {
 }
 
 const chains: ChainsConfig = isPROD
-  ? [mainnet, arbitrum]
-  : [localFork, localForkMainnet, anvil1, mainnet, arbitrum];
+  ? [ethMainnet, arbitrum]
+  : [localFork, localForkMainnet, anvil1, ethMainnet, arbitrum];
 
 const transports: TransportsConfig = isPROD
   ? {
-      [mainnet.id]: http(getRpcUrl(ChainId.MAINNET)),
-      [arbitrum.id]: http(getRpcUrl(ChainId.ARBITRUM))
+      [ethMainnet.id]: http(getRpcUrl(ChainId.ETH_MAINNET)),
+      [arbitrum.id]: http(getRpcUrl(ChainId.ARBITRUM_MAINNET))
     }
   : {
       [localFork.id]: http(localFork.rpcUrls.default.http[0]),
       [localForkMainnet.id]: http(localForkMainnet.rpcUrls.default.http[0]),
       [anvil1.id]: http(anvil1.rpcUrls.default.http[0]),
-      [mainnet.id]: http(mainnet.rpcUrls.default.http[0]),
+      [ethMainnet.id]: http(ethMainnet.rpcUrls.default.http[0]),
       [arbitrum.id]: http(arbitrum.rpcUrls.default.http[0])
       // [testnet.id]: http(testnet.rpcUrls.default.http[0])
     };

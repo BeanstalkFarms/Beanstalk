@@ -1,4 +1,4 @@
-import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
+import { BeanstalkSDK, ChainId, TokenValue } from "@beanstalk/sdk";
 import { PriceContract__factory } from "src/generated/types";
 import { memoize } from "src/utils/memoize";
 import { Log } from "../logger";
@@ -65,9 +65,11 @@ const BEAN = async (sdk: BeanstalkSDK) => {
   return sdk.bean.getPrice();
 };
 
-
 const chainLinkWithCallback =
-  (from: keyof typeof FEEDS, getMultiplier: (sdk: BeanstalkSDK) => Promise<(value: TokenValue) => TokenValue>) =>
+  (
+    from: keyof typeof FEEDS,
+    getMultiplier: (sdk: BeanstalkSDK) => Promise<(value: TokenValue) => TokenValue>
+  ) =>
   async (sdk: BeanstalkSDK) => {
     const [fromPrice, calculate] = await Promise.all([
       chainlinkLookup(from)(sdk),
@@ -109,4 +111,30 @@ export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenVa
   LDO: memoize(multiChainlinkLookup("LDO_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
   weETH: memoize(multiChainlinkLookup("WeETH_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
   wstETH: memoize(chainLinkWithCallback("STETH_USD", getWstETHWithSteth), PRICE_EXPIRY_TIMEOUT)
+};
+
+export const priceLookup = {
+  [ChainId.ETH_MAINNET]: {
+    BEAN: memoize(BEAN, PRICE_EXPIRY_TIMEOUT),
+    ETH: memoize(chainlinkLookup("ETH_USD"), PRICE_EXPIRY_TIMEOUT),
+    WETH: memoize(chainlinkLookup("ETH_USD"), PRICE_EXPIRY_TIMEOUT),
+    USDC: memoize(chainlinkLookup("USDC_USD"), PRICE_EXPIRY_TIMEOUT),
+    DAI: memoize(chainlinkLookup("DAI_USD"), PRICE_EXPIRY_TIMEOUT),
+    USDT: memoize(chainlinkLookup("USDT_USD"), PRICE_EXPIRY_TIMEOUT),
+    BNB: memoize(chainlinkLookup("BNB_USD"), PRICE_EXPIRY_TIMEOUT),
+    ARB: memoize(chainlinkLookup("ARB_USD"), PRICE_EXPIRY_TIMEOUT),
+    AMPL: memoize(chainlinkLookup("AMPL_USD"), PRICE_EXPIRY_TIMEOUT),
+    AAVE: memoize(chainlinkLookup("AAVE_USD"), PRICE_EXPIRY_TIMEOUT),
+    CRV: memoize(chainlinkLookup("CRV_USD"), PRICE_EXPIRY_TIMEOUT),
+    FRAX: memoize(chainlinkLookup("FRAX_USD"), PRICE_EXPIRY_TIMEOUT),
+    LINK: memoize(chainlinkLookup("LINK_USD"), PRICE_EXPIRY_TIMEOUT),
+    LUSD: memoize(chainlinkLookup("LUSD_USD"), PRICE_EXPIRY_TIMEOUT),
+    STETH: memoize(chainlinkLookup("STETH_USD"), PRICE_EXPIRY_TIMEOUT),
+    UNI: memoize(chainlinkLookup("UNI_USD"), PRICE_EXPIRY_TIMEOUT),
+    BTC: memoize(chainlinkLookup("BTC_USD"), PRICE_EXPIRY_TIMEOUT),
+    WBTC: memoize(multiChainlinkLookup("WBTC_BTC", "BTC_USD"), PRICE_EXPIRY_TIMEOUT),
+    LDO: memoize(multiChainlinkLookup("LDO_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
+    weETH: memoize(multiChainlinkLookup("WeETH_ETH", "ETH_USD"), PRICE_EXPIRY_TIMEOUT),
+    wstETH: memoize(chainLinkWithCallback("STETH_USD", getWstETHWithSteth), PRICE_EXPIRY_TIMEOUT)
+  }
 };

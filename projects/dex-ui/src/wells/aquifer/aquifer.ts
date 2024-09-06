@@ -1,13 +1,14 @@
 import { useMemo } from "react";
-import { Aquifer } from "@beanstalk/sdk-wells";
-import { Settings } from "src/settings";
 
-import useSdk from "src/utils/sdk/useSdk";
+import { useAtomValue } from "jotai";
+import { aquiferAtom } from "src/state/atoms";
 
 export const useAquifer = () => {
-  const sdk = useSdk();
+  const aquifer = useAtomValue(aquiferAtom);
 
-  return useMemo(() => {
-    return new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
-  }, [sdk.wells]);
+  if (!aquifer) {
+    throw new Error("Aquifer not set");
+  }
+
+  return useMemo(() => aquifer, [aquifer]);
 };

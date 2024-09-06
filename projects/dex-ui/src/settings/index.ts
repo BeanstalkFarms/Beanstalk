@@ -1,4 +1,3 @@
-import { Address } from "src/types";
 import { DevSettings } from "./development";
 import { ProdSettings } from "./production";
 import { Log } from "src/utils/logger";
@@ -9,8 +8,6 @@ const netlifyBuildId = import.meta.env.VITE_NETLIFY_BUILD_ID;
 
 export type DexSettings = {
   PRODUCTION: boolean;
-  AQUIFER_ADDRESS_MAINNET: Address;
-  AQUIFER_ADDRESS_ARBITRUM: Address;
   SUBGRAPH_URL: string;
   BEANSTALK_SUBGRAPH_URL: string;
   WELLS_ORIGIN_BLOCK: number;

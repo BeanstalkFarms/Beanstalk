@@ -25,11 +25,11 @@ export const localFork = defineChain({
 });
 
 export const localForkMainnet = defineChain({
-  id: ChainId.LOCALHOST_MAINNET,
+  id: ChainId.LOCALHOST_ETH,
   name: "localhost:9545 - mainnet",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: [getRpcUrl(ChainId.LOCALHOST_MAINNET)] }
+    default: { http: [getRpcUrl(ChainId.LOCALHOST_ETH)] }
   },
   contracts: {
     ensRegistry: {
@@ -68,13 +68,13 @@ export const anvil1 = defineChain({
   }
 });
 
-export const mainnet = defineChain({
-  id: ChainId.MAINNET,
+export const ethMainnet = defineChain({
+  id: ChainId.ETH_MAINNET,
   name: "Ethereum",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [getRpcUrl(ChainId.MAINNET)]
+      http: [getRpcUrl(ChainId.ETH_MAINNET)]
     }
   },
   blockExplorers: {
@@ -100,12 +100,12 @@ export const mainnet = defineChain({
 });
 
 export const arbitrum = defineChain({
-  id: ChainId.ARBITRUM,
+  id: ChainId.ARBITRUM_MAINNET,
   name: "Arbitrum One",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [getRpcUrl(ChainId.ARBITRUM)]
+      http: [getRpcUrl(ChainId.ARBITRUM_MAINNET)]
     }
   },
   blockExplorers: {

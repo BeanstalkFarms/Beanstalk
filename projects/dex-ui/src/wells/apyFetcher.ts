@@ -21,6 +21,7 @@ const normalise = (data: string | number) => {
   return TokenValue.ZERO.add(parseFloat(typeof data === "string" ? data : data.toString()));
 };
 
+// BS3TODO: use correct subgraph
 const fetchAPYFromSubgraph = async () => {
   Log.module("SiloAPYData").debug("Loading APY data from Graph");
   const fetch = await fetchFromSubgraphRequest(BeanstalkSiloLatestApyDocument, undefined, { useBeanstalkSubgraph: true });

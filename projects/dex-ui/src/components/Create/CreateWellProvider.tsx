@@ -9,6 +9,7 @@ import { usePumps } from "src/wells/pump/usePumps";
 import BoreWellUtils from "src/wells/boreWell";
 import { clearWellsCache } from "src/state/providers/WellsProvider";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAquifer } from "src/wells/aquifer/aquifer";
 
 /**
  * Architecture notes: @Space-Bean
@@ -123,6 +124,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const { address: walletAddress } = useAccount();
   const sdk = useSdk();
   const pumps = usePumps();
+  const aquifer = useAquifer();
   const queryClient = useQueryClient();
 
   /// ----- Local State -----
@@ -242,6 +244,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
         const { wellAddress } = await BoreWellUtils.boreWell(
           sdk,
+          aquifer,
           walletAddress,
           wellImplementation,
           wellFunction,
@@ -277,7 +280,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       wellTokens.token2,
       wellDetails.name,
       wellDetails.symbol,
-      sdk
+      sdk,
+      aquifer
     ]
   );
 

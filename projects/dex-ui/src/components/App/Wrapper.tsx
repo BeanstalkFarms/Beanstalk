@@ -10,6 +10,7 @@ import { OnLoad } from "./OnLoad";
 import { SdkProvider } from "src/utils/sdk/SdkProvider";
 import { config } from "src/utils/wagmi/config";
 import WellsProvider from "src/state/providers/WellsProvider";
+import AquiferProvider from "src/state/providers/AquiverProvider";
 
 export const Wrapper: FC<{}> = ({ children }) => {
   const queryClient = new QueryClient();
@@ -32,9 +33,11 @@ export const Wrapper: FC<{}> = ({ children }) => {
           >
             <ReactQueryDevtools initialIsOpen={false} />
             <SdkProvider>
-              <WellsProvider>
-                <OnLoad>{children}</OnLoad>
-              </WellsProvider>
+              <AquiferProvider>
+                <WellsProvider>
+                  <OnLoad>{children}</OnLoad>
+                </WellsProvider>
+              </AquiferProvider>
             </SdkProvider>
           </ConnectKitProvider>
         </QueryClientProvider>

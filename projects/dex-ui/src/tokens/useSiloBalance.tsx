@@ -39,7 +39,7 @@ export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
-  const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
+  const wellTokens = Array.from(sdk.tokens.wellLP);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.siloBalancesAll,

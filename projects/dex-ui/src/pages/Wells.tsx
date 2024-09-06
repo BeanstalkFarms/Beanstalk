@@ -33,6 +33,8 @@ export const Wells = () => {
   const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
 
+  console.log(wells);
+
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
