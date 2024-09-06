@@ -6,28 +6,37 @@ export type AddressDefinition = {
 
 export class Address {
   private addresses: AddressDefinition;
-  public ARBITRUM: string;
-  public MAINNET: string;
+  public ARBITRUM_MAINNET: string;
+  public ETH_MAINNET: string;
   public LOCALHOST: string;
-  public LOCALHOST_MAINNET: string;
+  public LOCALHOST_ETH: string;
   public ANVIL1: string;
   public TESTNET: string;
 
-  static defaultChainId = ChainId.ARBITRUM;
+  static defaultChainId = ChainId.ARBITRUM_MAINNET;
 
   private static fallbackChainIds = {
-    [ChainId.LOCALHOST_MAINNET]: ChainId.MAINNET,
-    [ChainId.LOCALHOST]: ChainId.ARBITRUM,
-    [ChainId.TESTNET]: Address.defaultChainId,
-    [ChainId.ANVIL1]: Address.defaultChainId
+    [ChainId.LOCALHOST_ETH]: ChainId.ETH_MAINNET,
+    [ChainId.LOCALHOST]: ChainId.ARBITRUM_MAINNET,
+    // anvil1 was originally a mainnet fork, so we use mainnet addresses as fallback
+    [ChainId.ANVIL1]: ChainId.ETH_MAINNET,
+    [ChainId.TESTNET]: Address.defaultChainId
   };
+
+  // ---------- Static methods ----------
 
   static setDefaultChainId = (chainId: ChainId) => {
     Address.defaultChainId = chainId;
   };
 
   static getFallbackChainId(chainId: ChainId) {
-    return Address.fallbackChainIds[chainId as keyof typeof Address.fallbackChainIds];
+    if (chainId in Address.fallbackChainIds) {
+      return Address.fallbackChainIds[chainId as keyof typeof Address.fallbackChainIds];
+    }
+
+    throw new Error(
+      `chainId: ${chainId} could not be found in fallbackChainIds: ${Address.fallbackChainIds}`
+    );
   }
 
   static make<T extends string | AddressDefinition>(input: T): Address {
@@ -50,16 +59,14 @@ export class Address {
   constructor(addresses: AddressDefinition) {
     this.addresses = addresses;
 
-    this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
+    this.ARBITRUM_MAINNET = this.addresses[ChainId.ARBITRUM_MAINNET];
+    this.ETH_MAINNET = this.addresses[ChainId.ETH_MAINNET];
     this.LOCALHOST =
       this.addresses[ChainId.LOCALHOST] ||
       this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST)];
-
-    this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST_MAINNET =
-      this.addresses[ChainId.LOCALHOST_MAINNET] ||
-      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_MAINNET)];
-
+    this.LOCALHOST_ETH =
+      this.addresses[ChainId.ETH_MAINNET] ||
+      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_ETH)];
     this.TESTNET =
       this.addresses[ChainId.TESTNET] ||
       this.addresses[Address.getFallbackChainId(ChainId.TESTNET)];
@@ -68,13 +75,9 @@ export class Address {
   }
 
   get(chainId?: number) {
-    const defaultAddress = this.addresses[Address.defaultChainId] || "";
-
-    let address = defaultAddress;
-
     // Default to Address.defaultChainId if no chain is specified
     if (!chainId) {
-      return address;
+      return this.addresses[Address.defaultChainId];
     }
 
     // Throw if user wants a specific chain which we don't support
@@ -82,16 +85,17 @@ export class Address {
       throw new Error(`Chain ID ${chainId} is not supported`);
     }
 
-    // If user wants an address on a TESTNET chain
-    // return ARBITRUM one if it's not found
-    const fallbackChainId = Address.getFallbackChainId(chainId);
+    // If user wants an address on a TESTNET chain.
+    // return Address.defaultChainId one if it's not found
     if (TESTNET_CHAINS.has(chainId)) {
-      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
-    } else {
-      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
+      return (
+        this.addresses[chainId] ||
+        this.addresses[Address.getFallbackChainId(chainId)] ||
+        this.addresses[Address.defaultChainId]
+      );
     }
 
-    return address;
+    return this.addresses[chainId];
   }
 
   set<T extends string | AddressDefinition>(input: T) {
