@@ -324,7 +324,39 @@ contract ReseedStateTest is TestHelper {
         }
     }
 
+    //////////////////// Account Fertilizer ////////////////////
+    function test_fertilizerProperties() public {
+        uint256 activeFertilizerJson = getGlobalPropertyUint("fert.activeFertilizer");
+        uint256 activeFertilizer = l2Beanstalk.getActiveFertilizer();
+        assertEq(activeFertilizer, activeFertilizerJson);
+
+        uint256 fertilizedIndexJson = getGlobalPropertyUint("fert.fertilizedIndex");
+        uint256 fertilizedIndex = l2Beanstalk.totalFertilizedBeans();
+        assertEq(fertilizedIndex, fertilizedIndexJson);
+
+        uint256 unfertilizedIndexJson = getGlobalPropertyUint("fert.unfertilizedIndex");
+        uint256 unfertilizedIndex = l2Beanstalk.totalUnfertilizedBeans();
+        assertEq(unfertilizedIndex, unfertilizedIndexJson);
+
+        uint256 fertilizedPaidIndexJson = getGlobalPropertyUint("fert.fertilizedPaidIndex");
+        uint256 fertilizedPaidIndex = l2Beanstalk.rinsedSprouts();
+        assertEq(fertilizedPaidIndex, fertilizedPaidIndexJson);
+
+        uint256 fertFirstJson = getGlobalPropertyUint("fert.fertFirst");
+        uint256 fertFirst = l2Beanstalk.getFirst();
+        assertEq(fertFirst, fertFirstJson);
+
+        uint256 fertLastJson = getGlobalPropertyUint("fert.fertLast");
+        uint256 fertLast = l2Beanstalk.getLast();
+        assertEq(fertLast, fertLastJson);
+    }
+
     //////////////////// Helpers ////////////////////
+
+    function getGlobalPropertyUint(string memory property) public returns (uint256) {
+        bytes memory globalPropertyJson = searchGlobalPropertyData(property);
+        return vm.parseUint(vm.toString(globalPropertyJson));
+    }
 
     function parseAccounts(uint256 numAccounts) public returns (uint256) {
         string[] memory inputs = new string[](3);
