@@ -10,7 +10,7 @@ import {
   UNRIPE_BEAN,
   UNRIPE_LP,
   LUSD_3POOL
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/BeanstalkEth";
 import { setSeason } from "./utils/Season";
 import { calculateAPYPreGauge } from "../src/utils/legacy/LegacyYield";
 import { calculateGaugeVAPYs, updateSiloVAPYs } from "../src/utils/Yield";

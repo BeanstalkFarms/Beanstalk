@@ -1,7 +1,6 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 import {
-  ADDRESS_ZERO,
   BEAN_3CRV,
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
@@ -10,7 +9,7 @@ import {
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   mockGetRecapPaidPercent,
@@ -29,6 +28,7 @@ import { loadBean } from "../src/entities/Bean";
 import { handleChop, handleConvert } from "../src/handlers/BeanstalkHandler";
 import { createConvertEvent } from "./event-mocking/Beanstalk";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { ADDRESS_ZERO } from "../../subgraph-core/utils/Bytes";
 
 const mockReserves = Bytes.fromHexString("0xabcdef");
 const mockReservesTime = BigInt.fromString("123456");

@@ -9,7 +9,7 @@ import {
   CRV3_TOKEN,
   LUSD,
   LUSD_3POOL
-} from "../../../../subgraph-core/utils/Constants";
+} from "../../../../subgraph-core/constants/BeanstalkEth";
 import { ERC20 } from "../../../generated/Bean-ABIs/ERC20";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { Pool } from "../../../generated/schema";

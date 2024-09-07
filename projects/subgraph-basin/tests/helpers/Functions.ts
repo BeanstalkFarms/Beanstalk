@@ -1,6 +1,13 @@
 import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEANSTALK_PRICE_1, CRV3_TOKEN, WETH } from "../../../subgraph-core/utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  BEANSTALK_PRICE_1,
+  CRV3_TOKEN,
+  WETH
+} from "../../../subgraph-core/constants/BeanstalkEth";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
 import { setMockBeanPrice } from "../../../subgraph-core/tests/event-mocking/Price";
 import { ONE_BD, ZERO_BD } from "../../../subgraph-core/utils/Decimals";

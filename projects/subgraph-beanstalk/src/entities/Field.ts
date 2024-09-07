@@ -1,8 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Field, Plot } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { ADDRESS_ZERO, BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
-import { loadBeanstalk, loadSeason } from "./Beanstalk";
+import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
 export function loadField(account: Address): Field {
   let field = Field.load(account.toHexString());

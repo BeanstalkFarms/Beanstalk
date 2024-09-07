@@ -22,7 +22,7 @@ import {
   PodOrderCancelled,
   PodListingCancelled
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
 import { transferPlot } from "./Field";
 import {
   PodListingCreated as PodListingCreated_v1,

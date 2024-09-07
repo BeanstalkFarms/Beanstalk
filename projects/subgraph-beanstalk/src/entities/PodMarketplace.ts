@@ -2,7 +2,7 @@ import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { loadField } from "./Field";
 import { PodFill, PodListing, PodMarketplace, PodOrder } from "../../generated/schema";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
 
 export function loadPodMarketplace(protocol: Address): PodMarketplace {
   let marketplace = PodMarketplace.load(protocol.toHexString());

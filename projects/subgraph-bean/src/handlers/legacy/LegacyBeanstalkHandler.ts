@@ -1,5 +1,5 @@
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
-import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/constants/BeanstalkEth";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../../../generated/Bean-ABIs/CurvePrice";
 import { Sunrise } from "../../../generated/Bean-ABIs/PreReplant";

@@ -15,7 +15,7 @@ import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
 import { getProtocolFertilizer } from "./Constants";
-import { REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
+import { REPLANT_SEASON } from "../../../subgraph-core/constants/BeanstalkEth";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 const ROLLING_24_WINDOW = 24;

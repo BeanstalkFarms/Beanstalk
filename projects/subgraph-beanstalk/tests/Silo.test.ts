@@ -9,7 +9,7 @@ import {
   LUSD_3POOL,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/BeanstalkEth";
 import {
   createAddDepositV2Event,
   createAddDepositV3Event,

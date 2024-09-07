@@ -1,7 +1,6 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { getFertilizerProtocol } from "../utils/Constants";
 

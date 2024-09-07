@@ -1,5 +1,5 @@
 import { BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20 } from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../../subgraph-core/constants/BeanstalkEth";
 import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";

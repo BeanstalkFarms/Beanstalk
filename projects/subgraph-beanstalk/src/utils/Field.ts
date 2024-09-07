@@ -1,7 +1,7 @@
 import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
 import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
 import { BeanstalkPrice_try_price } from "./contracts/BeanstalkPrice";
-import { CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { CURVE_PRICE } from "../../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { setFieldHourlyCaseId, setHourlySoilSoldOut, takeFieldSnapshots } from "../entities/snapshots/Field";
 import { getCurrentSeason, getHarvestableIndex, loadBeanstalk, loadFarmer, loadSeason } from "../entities/Beanstalk";

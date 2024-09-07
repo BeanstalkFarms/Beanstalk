@@ -1,10 +1,10 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Version } from "../../../generated/schema";
-import { BEANSTALK } from "../../../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../../../subgraph-core/constants/BeanstalkEth";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
-  versionEntity.versionNumber = "2.3.1";
+  versionEntity.versionNumber = "3.0.0";
   versionEntity.subgraphName = subgraphNameForBlockNumber(block.number);
   versionEntity.protocolAddress = protocolForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);

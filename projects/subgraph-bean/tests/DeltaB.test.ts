@@ -3,7 +3,7 @@ import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 // import { log } from "matchstick-as/assembly/log";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mocking/Beanstalk";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subgraph-core/constants/BeanstalkEth";
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";

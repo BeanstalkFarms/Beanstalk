@@ -1,26 +1,14 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import {
-  BEAN_3CRV,
-  BEAN_ERC20,
-  BEAN_ERC20_V1,
-  BEAN_WETH_CP2_WELL,
-  BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
-  BEAN_WSTETH_CP2_WELL,
-  BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
-  BEANSTALK,
-  NEW_BEAN_TOKEN_BLOCK,
-  UNRIPE_BEAN,
-  UNRIPE_LP
-} from "../../../../subgraph-core/utils/Constants";
+import * as BeanstalkEth from "../../../../subgraph-core/constants/BeanstalkEth";
 import { getVersionEntity } from "./Version";
 
 export function getProtocolToken(blockNumber: BigInt): Address {
   const protocol = getVersionEntity().protocolAddress;
-  if (protocol == BEANSTALK) {
-    if (blockNumber < NEW_BEAN_TOKEN_BLOCK) {
-      return BEAN_ERC20_V1;
+  if (protocol == BeanstalkEth.BEANSTALK) {
+    if (blockNumber < BeanstalkEth.NEW_BEAN_TOKEN_BLOCK) {
+      return BeanstalkEth.BEAN_ERC20_V1;
     } else {
-      return BEAN_ERC20;
+      return BeanstalkEth.BEAN_ERC20;
     }
   }
   throw new Error("Unsupported protocol");
@@ -28,16 +16,16 @@ export function getProtocolToken(blockNumber: BigInt): Address {
 
 export function getUnripeBeanAddr(): Address {
   const protocol = getVersionEntity().protocolAddress;
-  if (protocol == BEANSTALK) {
-    return UNRIPE_BEAN;
+  if (protocol == BeanstalkEth.BEANSTALK) {
+    return BeanstalkEth.UNRIPE_BEAN;
   }
   throw new Error("Unsupported protocol");
 }
 
 export function getUnripeLpAddr(): Address {
   const protocol = getVersionEntity().protocolAddress;
-  if (protocol == BEANSTALK) {
-    return UNRIPE_LP;
+  if (protocol == BeanstalkEth.BEANSTALK) {
+    return BeanstalkEth.UNRIPE_LP;
   }
   throw new Error("Unsupported protocol");
 }

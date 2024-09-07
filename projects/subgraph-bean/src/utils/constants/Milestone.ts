@@ -13,7 +13,7 @@ import {
   PRICE_2_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../../../subgraph-core/utils/Constants";
+} from "../../../../subgraph-core/constants/BeanstalkEth";
 import { getVersionEntity } from "./Version";
 
 export function isGaugeDeployed(blockNumber: BigInt): boolean {

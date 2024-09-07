@@ -4,7 +4,7 @@ import { beforeEach, afterEach, assert, clearStore, describe, test, createMocked
 import { log } from "matchstick-as/assembly/log";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 
-import { BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { beans_BI as beans, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { assertFarmerHasPlot, assertFieldHas, setHarvestable, sow, transferPlot } from "./utils/Field";

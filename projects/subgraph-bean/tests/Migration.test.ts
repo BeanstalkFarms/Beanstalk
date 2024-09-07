@@ -1,7 +1,7 @@
 import { clearStore, beforeEach, afterEach, describe, test, assert } from "matchstick-as/assembly/index";
 import { handleInitBeanEntity } from "../src/utils/b3-migration/BeanInit";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
-import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../subgraph-core/constants/BeanstalkEth";
 import { BEAN_INITIAL_VALUES } from "../cache-builder/results/BeanInit_arb";
 import { initL1Version } from "./entity-mocking/MockVersion";
 

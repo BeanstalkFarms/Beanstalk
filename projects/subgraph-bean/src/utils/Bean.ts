@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { Pool } from "../../generated/schema";
-import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/constants/BeanstalkEth";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross } from "./Cross";
 import { BeanstalkPrice_try_price, BeanstalkPriceResult } from "./price/BeanstalkPrice";

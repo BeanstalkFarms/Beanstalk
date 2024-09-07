@@ -1,5 +1,5 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_LP } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_LP } from "../../../../subgraph-core/constants/BeanstalkEth";
 import { BI_10 } from "../../../../subgraph-core/utils/Decimals";
 
 const STEM_START_SEASON = 14210;

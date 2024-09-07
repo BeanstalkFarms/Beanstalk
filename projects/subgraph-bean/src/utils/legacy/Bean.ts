@@ -1,5 +1,5 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { BEAN_3CRV_V1, BEAN_LUSD_V1, BEAN_WETH_V1 } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_3CRV_V1, BEAN_LUSD_V1, BEAN_WETH_V1 } from "../../../../subgraph-core/constants/BeanstalkEth";
 import { toDecimal, ZERO_BD } from "../../../../subgraph-core/utils/Decimals";
 import { Pool } from "../../../generated/schema";
 import { loadBean } from "../../entities/Bean";

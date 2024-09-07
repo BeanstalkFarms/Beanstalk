@@ -3,7 +3,7 @@ import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
 import { stemFromSeason } from "./contracts/SiloCalculations";
-import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
+import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
 

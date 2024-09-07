@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../generated/schema";
-import { BEAN_ERC20, WETH } from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../../subgraph-core/constants/BeanstalkEth";
 import { handleAddLiquidity, handleRemoveLiquidity, handleRemoveLiquidityOneToken, handleSync } from "../../src/WellHandler";
 import { BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, WELL, WELL_LP_AMOUNT, WETH_SWAP_AMOUNT } from "./Constants";
 import { createContractCallMocks } from "./Functions";

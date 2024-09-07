@@ -8,7 +8,7 @@ import {
   PRICE_1_BLOCK,
   PRICE_2_BLOCK,
   WETH
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/BeanstalkEth";
 import { createDewhitelistTokenEvent } from "./event-mocking/Beanstalk";
 import { setMockBeanPrice } from "../../subgraph-core/tests/event-mocking/Price";
 import { BigInt } from "@graphprotocol/graph-ts";

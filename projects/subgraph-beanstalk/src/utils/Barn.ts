@@ -1,7 +1,6 @@
 import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Chop as ChopEntity } from "../../generated/schema";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
-import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Constants";
 import { loadFarmer } from "../entities/Beanstalk";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { loadUnripeToken, loadWhitelistTokenSetting } from "../entities/Silo";
@@ -9,6 +8,7 @@ import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
 import { getUnripeUnderlying } from "./Constants";
 import { BI_10, toDecimal } from "../../../subgraph-core/utils/Decimals";
 import { getLatestBdv } from "../entities/snapshots/WhitelistTokenSetting";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
 class ChopParams {
   event: ethereum.Event;

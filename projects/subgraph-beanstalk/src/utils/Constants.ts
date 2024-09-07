@@ -14,7 +14,7 @@ import {
   FERTILIZER,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../../subgraph-core/utils/Constants";
+} from "../../../subgraph-core/constants/BeanstalkEth";
 
 export function getProtocolToken(protocol: Address): Address {
   if (protocol == BEANSTALK) {

@@ -17,7 +17,7 @@ import { mockShift, mockSwap } from "./helpers/Swap";
 import { mockAddLiquidity } from "./helpers/Liquidity";
 import { dayFromTimestamp, hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../subgraph-core/constants/BeanstalkEth";
 
 describe("Well Entity: Exchange Tests", () => {
   beforeEach(() => {

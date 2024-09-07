@@ -1,7 +1,4 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-
-// Standard Addresses
-export const ADDRESS_ZERO = Address.fromString("0x0000000000000000000000000000000000000000");
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 
 // Token Addresses
 export const BEAN_ERC20_V1 = Address.fromString("0xDC59ac4FeFa32293A95889Dc396682858d52e5Db");
@@ -33,10 +30,6 @@ export const BEAN_LUSD_V1 = Address.fromString("0xD652c40fBb3f06d6B58Cb9aa9CFF06
 export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA");
 export const BEAN_WETH_CP2_WELL = Address.fromString("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
 export const BEAN_WSTETH_CP2_WELL = Address.fromString("0xBeA0000113B0d182f4064C86B71c315389E4715D");
-
-export const INITIAL_HUMIDITY = BigDecimal.fromString("500");
-export const MIN_HUMIDITY = BigDecimal.fromString("500");
-export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");
 
 export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
 

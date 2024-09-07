@@ -1,9 +1,10 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_FARMS } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK_FARMS } from "../../../subgraph-core/constants/BeanstalkEth";
 import { loadField } from "../entities/Field";
 import { harvest, plotTransfer, sow, temperatureChanged } from "../utils/Field";
 import { Sow, Harvest, PlotTransfer, TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";
 
+// TODO: add legacy field for the part using beanstalk farms address
 export function handleSow(event: Sow): void {
   let sownOverride: BigInt | null = null;
   if (event.params.account == BEANSTALK_FARMS) {

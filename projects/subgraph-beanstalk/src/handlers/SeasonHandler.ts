@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { BEANSTALK, GAUGE_BIP45_BLOCK, REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK, GAUGE_BIP45_BLOCK, REPLANT_SEASON } from "../../../subgraph-core/constants/BeanstalkEth";
 import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
@@ -55,6 +55,7 @@ export function handleReward(event: Reward): void {
 export function handleWellOracle(event: WellOracle): void {
   let season = loadSeason(event.address, event.params.season);
   season.deltaB = season.deltaB.plus(event.params.deltaB);
+  // TODO: something like isGaugeDeployed(v())?
   if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
     let beanstalkPrice = getBeanstalkPrice(event.block.number);
     let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);

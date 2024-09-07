@@ -2,7 +2,7 @@ import { BigInt, ethereum, Address, log } from "@graphprotocol/graph-ts";
 import { getLastBeanPrice, calcLiquidityWeightedBeanPrice, updateBeanSupplyPegPercent, updateBeanValues } from "../../utils/Bean";
 import { Swap, Sync } from "../../../generated/Bean-ABIs/UniswapV2Pair";
 import { loadOrCreateToken } from "../../entities/Token";
-import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../../../subgraph-core/constants/BeanstalkEth";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool } from "../../entities/Pool";
 import { setPoolReserves, updatePoolPrice, updatePoolValues } from "../../utils/Pool";

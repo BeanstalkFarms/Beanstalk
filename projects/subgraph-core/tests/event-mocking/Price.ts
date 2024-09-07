@@ -9,7 +9,7 @@ import {
   CURVE_PRICE,
   WETH,
   WETH_USDC_PAIR
-} from "../../utils/Constants";
+} from "../../constants/BeanstalkEth";
 import { BD_10, BI_10, pow, toDecimal, ZERO_BI } from "../../utils/Decimals";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract

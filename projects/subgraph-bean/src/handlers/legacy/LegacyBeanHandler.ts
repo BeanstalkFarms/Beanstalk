@@ -1,4 +1,4 @@
-import { ADDRESS_ZERO } from "../../../../subgraph-core/utils/Constants";
+import { ADDRESS_ZERO } from "../../../../subgraph-core/utils/Bytes";
 import { Transfer } from "../../../generated/Bean-ABIs/ERC20";
 import { adjustSupply } from "../../utils/Bean";
 

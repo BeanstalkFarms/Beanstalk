@@ -1,7 +1,7 @@
 import { BigInt, Address, BigDecimal } from "@graphprotocol/graph-ts";
 import { BI_10, ONE_BI, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { uniswapCumulativePrice } from "./UniswapPrice";
-import { WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
+import { WETH_USDC_PAIR } from "../../../../subgraph-core/constants/BeanstalkEth";
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
 import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";

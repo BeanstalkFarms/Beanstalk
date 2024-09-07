@@ -1,5 +1,5 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadWell } from "../src/utils/Well";
 import {

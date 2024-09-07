@@ -1,6 +1,6 @@
 import { BigDecimal, Address, ethereum, log } from "@graphprotocol/graph-ts";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEAN_ERC20_V1 } from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1 } from "../../../subgraph-core/constants/BeanstalkEth";
 import { loadOrCreatePool, loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../entities/Bean";
 import { loadOrCreateBeanCross, loadOrCreatePoolCross } from "../entities/Cross";

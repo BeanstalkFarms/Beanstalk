@@ -1,9 +1,10 @@
 import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Transfer } from "../../generated/Beanstalk-ABIs/ERC20";
-import { ADDRESS_ZERO, BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
 import { getTokenProtocol } from "../utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
 export function handleTransfer(event: Transfer): void {
   if (event.params.from == ADDRESS_ZERO || event.params.to == ADDRESS_ZERO) {

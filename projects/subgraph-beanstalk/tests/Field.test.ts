@@ -1,7 +1,7 @@
 import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigInt } from "@graphprotocol/graph-ts";
 
-import { BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { BEANSTALK } from "../../subgraph-core/constants/BeanstalkEth";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { beans_BI as beans, podlineMil_BI as mil } from "../../subgraph-core/tests/Values";
 import { assertFarmerHasPlot, assertFieldHas, sow } from "./utils/Field";
