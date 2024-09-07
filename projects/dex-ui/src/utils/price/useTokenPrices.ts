@@ -69,7 +69,6 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
         return prev;
       }, {});
 
-      console.log("pricesResult: ", addressToPriceMap);
       /// set the cache for all token prices
       setQueryData(queryKeys.tokenPricesAll, (oldData: TokenPricesAllCache) => {
         if (!oldData) return { ...addressToPriceMap };

@@ -139,6 +139,7 @@ const WBTC = async (sdk: BeanstalkSDK) => {
 
 const PRICE_EXPIRY_TIMEOUT = 60 * 5; // 5 minute cache
 
+// cache should automatically update when sdk instance is updated
 export const PriceLookups: Record<string, (sdk: BeanstalkSDK) => Promise<TokenValue>> = {
   BEAN: memoize(BEAN, PRICE_EXPIRY_TIMEOUT),
   ETH: memoize(chainlinkLookup("ETH_USD")),
