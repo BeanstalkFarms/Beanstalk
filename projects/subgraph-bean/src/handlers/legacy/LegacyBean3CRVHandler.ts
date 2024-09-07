@@ -1,7 +1,6 @@
 import { BigInt, BigDecimal, ethereum, Address } from "@graphprotocol/graph-ts";
 import {
   AddLiquidity,
-  Bean3CRV,
   RemoveLiquidity,
   RemoveLiquidityImbalance,
   RemoveLiquidityOne,

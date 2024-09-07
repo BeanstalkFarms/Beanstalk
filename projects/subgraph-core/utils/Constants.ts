@@ -34,9 +34,6 @@ export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4b
 export const BEAN_WETH_CP2_WELL = Address.fromString("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
 export const BEAN_WSTETH_CP2_WELL = Address.fromString("0xBeA0000113B0d182f4064C86B71c315389E4715D");
 
-// Other Constants
-export const BEAN_DECIMALS = 6;
-
 export const INITIAL_HUMIDITY = BigDecimal.fromString("500");
 export const MIN_HUMIDITY = BigDecimal.fromString("500");
 export const DELTA_HUMIDITY = BigDecimal.fromString("0.5");

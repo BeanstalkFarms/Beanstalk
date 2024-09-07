@@ -75,7 +75,6 @@ dataSources:
   ###
   # BEANSTALK PROTOCOL
   ###
-  # TODO: refactor sunrise part to pre/post exploit
   - kind: ethereum/contract
     name: Beanstalk
     network: mainnet

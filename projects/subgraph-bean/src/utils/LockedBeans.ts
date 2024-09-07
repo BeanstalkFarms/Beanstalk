@@ -1,5 +1,4 @@
 import { BigDecimal, BigInt, Address, log } from "@graphprotocol/graph-ts";
-import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
 import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
@@ -7,14 +6,15 @@ import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 import { loadOrCreatePool } from "../entities/Pool";
 import { getVersionEntity } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
-import { getUnripeBeanAddr, getUnripeLpAddr, getUnripeUnderlying } from "./constants/Addresses";
+import { getUnripeBeanAddr, getUnripeLpAddr } from "./constants/Addresses";
+import { getUnripeUnderlying, isGaugeDeployed } from "./constants/Milestone";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   const protocol = toAddress(getVersionEntity().protocolAddress);
   const underlyingLpPool = getUnripeUnderlying(getUnripeLpAddr(), blockNumber);
 
   // If BIP45 is deployed - return the result from the contract
-  if (blockNumber >= GAUGE_BIP45_BLOCK) {
+  if (isGaugeDeployed(blockNumber)) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
     const twaOracle = loadOrCreateTwaOracle(underlyingLpPool);
     const twaReserves =
