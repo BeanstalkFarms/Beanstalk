@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+
 import {
   Control,
   Controller,
@@ -8,30 +8,31 @@ import {
   useFormContext,
   useWatch
 } from "react-hook-form";
-import { theme } from "src/utils/ui/theme";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { useAccount } from "wagmi";
+
+import { ERC20Token, TokenValue } from "@beanstalk/sdk";
 
 import { StyledForm, SwitchField, TextInputField } from "src/components/Form";
 import { Box, Divider, Flex, FlexCard } from "src/components/Layout";
 import { SelectCard } from "src/components/Selectable";
+import { TokenInput } from "src/components/Swap/TokenInput";
 import { Text } from "src/components/Typography";
+import { useTokenAllowance } from "src/tokens/useTokenAllowance";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useInvalidateQueries, useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
+import useSdk from "src/utils/sdk/useSdk";
+import { theme } from "src/utils/ui/theme";
+import { useBoolean } from "src/utils/ui/useBoolean";
 
 import { CreateWellContext, CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
-import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
-
-import { ERC20Token, TokenValue } from "@beanstalk/sdk";
-import { TokenInput } from "src/components/Swap/TokenInput";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
-import { useTokenAllowance } from "src/tokens/useTokenAllowance";
-import useSdk from "src/utils/sdk/useSdk";
+import { WellComponentInfo, useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 import { ButtonPrimary } from "../Button";
 import { ensureAllowance } from "../Liquidity/allowance";
-import { useAccount } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "src/utils/query/queryKeys";
-import { useBoolean } from "src/utils/ui/useBoolean";
-import { ProgressCircle } from "../ProgressCircle";
-import { useNavigate } from "react-router-dom";
 import { Modal } from "../Modal";
+import { ProgressCircle } from "../ProgressCircle";
 
 type FormValues = CreateWellStepProps["step4"] & {
   usingSalt: boolean;
@@ -73,11 +74,15 @@ const FormContent = ({
     }
   });
 
-  const [seeding, _amt1, _amt2] = methods.watch(['seedingLiquidity', 'token1Amount', 'token2Amount']);
+  const [seeding, _amt1, _amt2] = methods.watch([
+    "seedingLiquidity",
+    "token1Amount",
+    "token2Amount"
+  ]);
 
   const amt1 = Number(_amt1 || 0);
   const amt2 = Number(_amt2 || 0);
-  const bothAmountsNeeded = seeding ? (amt1 > 0 && amt2 <= 0) || (amt1 <= 0 && amt2 > 0)  : false;
+  const bothAmountsNeeded = seeding ? (amt1 > 0 && amt2 <= 0) || (amt1 <= 0 && amt2 > 0) : false;
 
   const handleSave = (formValues?: FormValues) => {
     const values = formValues || methods.getValues();
@@ -280,7 +285,8 @@ const AllowanceButtons = ({
 }) => {
   const { address } = useAccount();
   const sdk = useSdk();
-  const queryClient = useQueryClient();
+
+  const invalidateQueries = useInvalidateQueries();
 
   const { data: token1Allowance } = useTokenAllowance(token1, sdk.contracts.beanstalk.address);
   const { data: token2Allowance } = useTokenAllowance(token2, sdk.contracts.beanstalk.address);
@@ -294,9 +300,7 @@ const AllowanceButtons = ({
   const approveToken = async (token: ERC20Token, amount: TokenValue) => {
     if (!address) return;
     await ensureAllowance(address, sdk.contracts.beanstalk.address, token, amount);
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.tokenAllowance(token.address, sdk.contracts.beanstalk.address)
-    });
+    invalidateQueries(queryKeys.tokenAllowance(token.address, sdk.contracts.beanstalk.address));
   };
 
   useEffect(() => {

@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
 
@@ -8,7 +7,10 @@ import { BeanstalkSDK } from "@beanstalk/sdk";
 import { WellFunction } from "@beanstalk/sdk-wells";
 
 import { queryKeys } from "src/utils/query/queryKeys";
-import { useSetChainScopedQueryData } from "src/utils/query/useChainScopedQuery";
+import {
+  useGetChainScopedQueryData,
+  useSetChainScopedQueryData
+} from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { config } from "src/utils/wagmi/config";
 
@@ -85,15 +87,15 @@ export const useValidateWellFunction = () => {
   const wellFunctions = useWellFunctions();
   const sdk = useSdk();
 
-  const queryClient = useQueryClient();
   const setQueryData = useSetChainScopedQueryData();
+  const getQueryData = useGetChainScopedQueryData();
 
   const validate = useCallback(
     async ({ address, data, wellFunction }: ValidateWellFunctionParams) => {
       const queryKey = queryKeys.wellFunctionValid(address || "no-address", data || "no-data");
       try {
         // check the queryClientCache first
-        const cachedWellFunction = queryClient.getQueryData(queryKey) as CachedWellFunctionData;
+        const cachedWellFunction = getQueryData(queryKey) as CachedWellFunctionData;
         if (cachedWellFunction) {
           if (typeof cachedWellFunction === "string") return undefined;
           return cachedWellFunction;
@@ -119,7 +121,7 @@ export const useValidateWellFunction = () => {
         return undefined;
       }
     },
-    [wellFunctions, sdk, queryClient, setQueryData]
+    [wellFunctions, sdk, setQueryData, getQueryData]
   );
 
   return [validate] as const;

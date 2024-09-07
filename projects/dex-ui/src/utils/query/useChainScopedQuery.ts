@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+
 import { QueryKey, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { useChainId } from "wagmi";
 
@@ -46,6 +47,27 @@ export function useSetChainScopedQueryData<TQueryKey extends QueryKey = QueryKey
           return merged;
         }
       ),
+    [queryClient, chainId]
+  );
+}
+
+export function useGetChainScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useChainId();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    <T>(queryKey: TQueryKey) => queryClient.getQueryData<T>(makeScopedQueryKey(chainId, queryKey)),
+    [queryClient, chainId]
+  );
+}
+
+export function useFetchChainScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useChainId();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    <T>(queryKey: TQueryKey) =>
+      queryClient.fetchQuery<T>({ queryKey: makeScopedQueryKey(chainId, queryKey) }),
     [queryClient, chainId]
   );
 }

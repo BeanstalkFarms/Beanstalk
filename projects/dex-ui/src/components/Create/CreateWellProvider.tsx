@@ -1,15 +1,18 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
-import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+
 import { DeepRequired } from "react-hook-form";
-import useSdk from "src/utils/sdk/useSdk";
-import { Log } from "src/utils/logger";
-import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
-import { usePumps } from "src/wells/pump/usePumps";
-import BoreWellUtils from "src/wells/boreWell";
+
+import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+import { Pump, WellFunction } from "@beanstalk/sdk-wells";
+
 import { clearWellsCache } from "src/state/providers/WellsProvider";
-import { useQueryClient } from "@tanstack/react-query";
+import { Log } from "src/utils/logger";
+import { useFetchChainScopedQueryData } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
+import BoreWellUtils from "src/wells/boreWell";
+import { usePumps } from "src/wells/pump/usePumps";
 
 /**
  * Architecture notes: @Space-Bean
@@ -125,7 +128,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const sdk = useSdk();
   const pumps = usePumps();
   const aquifer = useAquifer();
-  const queryClient = useQueryClient();
+  const fetchScopedQueryData = useFetchChainScopedQueryData();
 
   /// ----- Local State -----
   const [deploying, setDeploying] = useState(false);
@@ -258,7 +261,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         );
 
         clearWellsCache();
-        queryClient.fetchQuery({ queryKey: ["wells", sdk] });
+        fetchScopedQueryData(["wells", sdk]);
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
         setDeploying(false);
@@ -271,7 +274,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     },
     [
       pumpAddress,
-      queryClient,
       walletAddress,
       wellImplementation,
       wellFunction,
@@ -281,7 +283,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       wellDetails.name,
       wellDetails.symbol,
       sdk,
-      aquifer
+      aquifer,
+      fetchScopedQueryData
     ]
   );
 

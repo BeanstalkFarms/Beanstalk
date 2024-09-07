@@ -54,3 +54,27 @@ export function useSetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
     [queryClient, address, chainId]
   );
 }
+
+export function useGetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useChainId();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    (queryKey: TQueryKey) =>
+      queryClient.getQueryData(makeScopedQueryKey(chainId, address, queryKey)),
+    [queryClient, address, chainId]
+  );
+}
+
+export function useFetchScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useChainId();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    (queryKey: TQueryKey) =>
+      queryClient.fetchQuery({ queryKey: makeScopedQueryKey(chainId, address, queryKey) }),
+    [queryClient, address, chainId]
+  );
+}
