@@ -4,11 +4,10 @@
       "version": "detect"
     },
     "import/resolver": {
-      // "@typescript-eslint/parser": [".ts", ".tsx"],
       "typescript": {},
       "node": {
-        "paths": ["src"]
-        // "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        "paths": ["src"],
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   },
