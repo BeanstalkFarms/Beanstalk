@@ -11,6 +11,7 @@ import useSdk from "src/utils/sdk/useSdk";
 
 import { PriceLookups } from "./priceLookups";
 import { getPrice } from "./usePrice";
+import { useChainScopedQuery, useSetChainScopedQueryData } from "../query/useChainScopedQuery";
 
 type WellOrToken = Well | ERC20Token;
 
@@ -37,14 +38,14 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
   params: WellOrToken | WellOrToken[] | undefined,
   options?: UseReactQueryOptions<AddressMap<TokenValue>, K>
 ) => {
-  const queryClient = useQueryClient();
+  const setQueryData = useSetChainScopedQueryData();
   const sdk = useSdk();
 
   const tokens = getTokens(params);
 
   const tokenSymbol = tokens.map((token) => token.symbol);
 
-  const query = useQuery({
+  const query = useChainScopedQuery({
     queryKey: queryKeys.tokenPrices(tokenSymbol),
     queryFn: async () => {
       const pricesResult = await Promise.all(
@@ -68,8 +69,9 @@ export const useTokenPrices = <K = AddressMap<TokenValue>>(
         return prev;
       }, {});
 
+      console.log("pricesResult: ", addressToPriceMap);
       /// set the cache for all token prices
-      queryClient.setQueryData(queryKeys.tokenPricesAll, (oldData: TokenPricesAllCache) => {
+      setQueryData(queryKeys.tokenPricesAll, (oldData: TokenPricesAllCache) => {
         if (!oldData) return { ...addressToPriceMap };
         return { ...oldData, ...addressToPriceMap };
       });
