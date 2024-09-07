@@ -1,9 +1,12 @@
 import React from "react";
-import { FC } from "src/types";
-import styled from "styled-components";
-import { BodyL, BodyS, H2, H3 } from "../Typography";
+
 import { Link } from "react-router-dom";
+import styled from "styled-components";
+
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
+import { BodyL, BodyS, H3 } from "../Typography";
 
 type Props = {
   title: string;

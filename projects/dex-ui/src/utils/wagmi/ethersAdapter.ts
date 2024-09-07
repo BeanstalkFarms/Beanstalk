@@ -1,7 +1,9 @@
-import { providers } from "ethers";
 import { useMemo } from "react";
-import type { Account, Chain, Client, Transport } from "viem";
+
+import { providers } from "ethers";
 import { Config, useClient, useConnectorClient } from "wagmi";
+
+import type { Account, Chain, Client, Transport } from "viem";
 
 function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client;

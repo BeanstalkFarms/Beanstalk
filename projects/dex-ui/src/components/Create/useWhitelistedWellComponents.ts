@@ -1,21 +1,22 @@
 import { useMemo } from "react";
+
 import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
+import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
+import ClockIcon from "src/assets/images/clock-icon.svg";
+import Code4renaLogo from "src/assets/images/code4rena-logo.png";
+import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
 import HalbornLogo from "src/assets/images/halborn-logo.png";
+import { AddressMap } from "src/types";
 import {
   WELL_DOT_SOL_ADDRESS,
   toAddressMap,
   MULTI_FLOW_PUMP_V_1PT1_ADDRESS,
   CONSTANT_PRODUCT_2_V2_ADDRESS
 } from "src/utils/addresses";
-import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
-import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
-import Code4renaLogo from "src/assets/images/code4rena-logo.png";
-import ClockIcon from "src/assets/images/clock-icon.svg";
-import { useWells } from "src/wells/useWells";
-import { useWellImplementations } from "src/wells/useWellImplementations";
-import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 import { usePumps } from "src/wells/pump/usePumps";
-import { AddressMap } from "src/types";
+import { useWellImplementations } from "src/wells/useWellImplementations";
+import { useWells } from "src/wells/useWells";
+import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 
 export enum WellComponentType {
   WellImplementation = "WellImplementation",

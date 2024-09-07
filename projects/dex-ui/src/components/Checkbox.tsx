@@ -1,8 +1,11 @@
-import { FC } from "src/types";
 import React from "react";
+
 import styled from "styled-components";
-import { BodyXS } from "./Typography";
+
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
+import { BodyXS } from "./Typography";
 
 type Props = {
   label?: string;
@@ -12,12 +15,23 @@ type Props = {
   onClick?: () => void;
 };
 
-export const Checkbox: FC<Props> = ({ label, checked = false, mode, checkboxColor = "black", onClick = () => {} }) => {
+export const Checkbox: FC<Props> = ({
+  label,
+  checked = false,
+  mode,
+  checkboxColor = "black",
+  onClick = () => {}
+}) => {
   return (
     <StyledCheckbox>
       <HiddenCheckbox type="checkbox" role={"checkbox"} checked={checked} readOnly />
       <HoverContainer>
-        <StyledCheckboxContainer checked={checked} onClick={onClick} mode={mode} checkboxColor={checkboxColor}>
+        <StyledCheckboxContainer
+          checked={checked}
+          onClick={onClick}
+          mode={mode}
+          checkboxColor={checkboxColor}
+        >
           {checked && (
             <CheckMark xmlns="http://www.w3.org/2000/svg" width={13} viewBox="0 0 179 129">
               <path
@@ -68,7 +82,8 @@ const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
 `;
 
 const StyledCheckboxContainer = styled.div<CheckboxProps>`
-  border: 1px solid ${(props) => (props.checkboxColor && props.checked ? props.checkboxColor : "#000")};
+  border: 1px solid
+    ${(props) => (props.checkboxColor && props.checked ? props.checkboxColor : "#000")};
   width: 16px;
   height: 16px;
   position: ${(props) => (props.mode === "checkOnly" ? "relative" : "absolute")};

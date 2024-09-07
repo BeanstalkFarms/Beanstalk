@@ -1,6 +1,8 @@
 import { defineChain } from "viem";
-import { getRpcUrl } from "./urls";
+
 import { ChainId } from "@beanstalk/sdk-core";
+
+import { getRpcUrl } from "./urls";
 
 export const localFork = defineChain({
   id: ChainId.LOCALHOST,

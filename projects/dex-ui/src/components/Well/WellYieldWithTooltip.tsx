@@ -1,16 +1,19 @@
 import React, { useMemo } from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
-import { BodyL, BodyS } from "../Typography";
-import { TokenLogo } from "../TokenLogo";
-import useSdk from "src/utils/sdk/useSdk";
-import { Tooltip, TooltipProps } from "../Tooltip";
+
 import { TokenValue } from "@beanstalk/sdk";
 
 import StartSparkle from "src/assets/images/start-sparkle.svg";
-import { useIsMobile } from "src/utils/ui/useIsMobile";
-import { Well } from "@beanstalk/sdk/Wells";
-import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { mediaQuery } from "src/breakpoints";
+import useSdk from "src/utils/sdk/useSdk";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+
+import { TokenLogo } from "../TokenLogo";
+import { Tooltip, TooltipProps } from "../Tooltip";
+import { BodyL, BodyS } from "../Typography";
 
 type Props = {
   well: Well | undefined;
@@ -20,10 +23,10 @@ type Props = {
   returnNullOnNoAPY?: boolean;
 };
 
-export const WellYieldWithTooltip: React.FC<Props> = ({ 
-  tooltipProps, 
+export const WellYieldWithTooltip: React.FC<Props> = ({
+  tooltipProps,
   well,
-  returnNullOnNoAPY = false,
+  returnNullOnNoAPY = false
 }) => {
   const sdk = useSdk();
 

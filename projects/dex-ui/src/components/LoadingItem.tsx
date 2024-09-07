@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+
 import { Skeleton, SkeletonProps } from "./Skeleton";
 
 type BaseProps = {

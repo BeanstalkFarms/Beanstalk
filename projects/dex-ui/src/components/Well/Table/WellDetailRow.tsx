@@ -1,15 +1,19 @@
-import { TokenValue } from "@beanstalk/sdk";
 import React, { FC } from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
+import { TokenValue } from "@beanstalk/sdk";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { Item } from "src/components/Layout";
+import { Skeleton } from "src/components/Skeleton";
 import { Row, Td } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
-import styled from "styled-components";
-import { mediaQuery, size } from "src/breakpoints";
 import { formatNum } from "src/utils/format";
-import { Well } from "@beanstalk/sdk/Wells";
-import { Skeleton } from "src/components/Skeleton";
+
 import { WellYieldWithTooltip } from "../WellYieldWithTooltip";
-import { Item } from "src/components/Layout";
 
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {

@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
+
 import styled from "styled-components";
-import { ExpandBox } from "src/components/ExpandBox";
-import { TextNudge } from "../Typography";
-import { FC } from "src/types";
-import { WellFunction as WellFunctionIcon } from "../Icons";
+
 import { Well } from "@beanstalk/sdk-wells";
+
+import { ExpandBox } from "src/components/ExpandBox";
+import { FC } from "src/types";
 import { formatWellTokenSymbols } from "src/wells/utils";
 import { isConstantProduct2 } from "src/wells/wellFunction/utils";
+
+import { WellFunction as WellFunctionIcon } from "../Icons";
+import { TextNudge } from "../Typography";
 
 type Props = {
   well: Well | undefined;

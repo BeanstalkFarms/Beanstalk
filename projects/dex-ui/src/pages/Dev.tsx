@@ -1,18 +1,21 @@
-import { BeanstalkSDK, TestUtils, Token, TokenValue } from "@beanstalk/sdk";
-import { ethers } from "ethers";
 import React, { useState } from "react";
+
+import { ethers } from "ethers";
+import toast from "react-hot-toast";
+import styled from "styled-components";
+import { useAccount } from "wagmi";
+
+import { BeanstalkSDK, TestUtils, Token, TokenValue } from "@beanstalk/sdk";
+
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { Button } from "src/components/Swap/Button";
 import { TokenInput } from "src/components/Swap/TokenInput";
-import toast from "react-hot-toast";
-import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
-import styled from "styled-components";
-import { useAccount } from "wagmi";
 import { ToastAlert } from "src/components/TxnToast/ToastAlert";
-import { useWells } from "src/wells/useWells";
-import { useEthersProvider } from "src/utils/wagmi/ethersAdapter";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { useTokensArr } from "src/tokens/useTokens";
+import { useEthersProvider } from "src/utils/wagmi/ethersAdapter";
+import { useWells } from "src/wells/useWells";
 
 export const Dev = () => {
   const provider = useEthersProvider();
@@ -38,7 +41,9 @@ export const Dev = () => {
     await utils.setBalance(token, account.address || "", amount);
     await mine();
     await refetchTokenBalances();
-    toast.success(<ToastAlert desc={`Set ${token.symbol} balance to  ${amount.toHuman("short")}`} />);
+    toast.success(
+      <ToastAlert desc={`Set ${token.symbol} balance to  ${amount.toHuman("short")}`} />
+    );
   };
 
   const clearApproval = async (token: Token) => {

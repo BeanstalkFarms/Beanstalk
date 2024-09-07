@@ -1,20 +1,23 @@
 import React, { useState } from "react";
+
 import { Link } from "react-router-dom";
-import { FC } from "src/types";
 import styled from "styled-components";
-import { Footer } from "./Footer";
-import { Window } from "./Window";
-import { Settings } from "src/settings";
-import CustomToaster from "../TxnToast/CustomToaster";
+import { useChainId } from "wagmi";
+
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
-import { LinksNav } from "../Typography";
-import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
-import { TokenMarquee } from "./TokenMarquee";
 import { WalletButton } from "src/components/Wallet";
+import { Settings } from "src/settings";
+import { FC } from "src/types";
 import { theme } from "src/utils/ui/theme";
-import { useChainId } from "wagmi";
+
+import { Footer } from "./Footer";
+import { TokenMarquee } from "./TokenMarquee";
+import { Window } from "./Window";
+import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
+import CustomToaster from "../TxnToast/CustomToaster";
+import { LinksNav } from "../Typography";
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;

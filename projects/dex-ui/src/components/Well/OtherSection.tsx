@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { FC } from "src/types";
-import { Row, TBody, THead, Table, Td, Th } from "./Table";
+
 import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
-import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
+
 import { Token } from "@beanstalk/sdk";
-import { Skeleton } from "../Skeleton";
-import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
-import { useWellImplementations } from "src/wells/useWellImplementations";
+
+import { size } from "src/breakpoints";
+import { FC } from "src/types";
+import { displayTokenSymbol } from "src/utils/format";
 import { getIsMultiPumpWell } from "src/wells/pump/utils";
+import { useWellImplementations } from "src/wells/useWellImplementations";
+
+import { Row, TBody, THead, Table, Td, Th } from "./Table";
+import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
+import { Skeleton } from "../Skeleton";
 
 type Props = { well: Well };
 
@@ -74,12 +78,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
     });
 
     setItems(data);
-  }, [
-    implementationAddress,
-    pumpLookup,
-    well,
-    wellFunctionName
-  ]);
+  }, [implementationAddress, pumpLookup, well, wellFunctionName]);
 
   return (
     <div>

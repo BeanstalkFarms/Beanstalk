@@ -1,7 +1,5 @@
 import React from "react";
 
-import { Page } from "src/components/Page";
-import { Flex } from "src/components/Layout";
 import {
   CreateWellStep1,
   CreateWellStep2,
@@ -10,6 +8,8 @@ import {
   CreateWellProvider,
   useCreateWell
 } from "src/components/Create";
+import { Flex } from "src/components/Layout";
+import { Page } from "src/components/Page";
 
 export const Create = () => {
   return (

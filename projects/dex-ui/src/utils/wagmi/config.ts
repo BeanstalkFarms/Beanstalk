@@ -1,4 +1,10 @@
+import { getDefaultConfig } from "connectkit";
+import { Chain, Transport } from "viem";
 import { http, createConfig } from "wagmi";
+
+import { ChainId } from "@beanstalk/sdk-core";
+
+import { isPROD } from "src/settings";
 
 import {
   localFork,
@@ -8,11 +14,7 @@ import {
   arbitrum
   // testnet
 } from "./chains";
-import { isPROD } from "src/settings";
-import { getDefaultConfig } from "connectkit";
 import { getRpcUrl } from "./urls";
-import { Chain, Transport } from "viem";
-import { ChainId } from "@beanstalk/sdk-core";
 
 type ChainsConfig = readonly [Chain, ...Chain[]];
 

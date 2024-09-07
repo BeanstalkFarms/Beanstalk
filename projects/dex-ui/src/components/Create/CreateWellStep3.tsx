@@ -1,14 +1,17 @@
 import React from "react";
+
+import { FormProvider, useForm } from "react-hook-form";
+import styled from "styled-components";
+
 import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
-import styled from "styled-components";
+import { useWells } from "src/wells/useWells";
+
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
-import { FormProvider, useForm } from "react-hook-form";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { StyledForm, TextInputField } from "../Form";
-import { useWells } from "src/wells/useWells";
-import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
 

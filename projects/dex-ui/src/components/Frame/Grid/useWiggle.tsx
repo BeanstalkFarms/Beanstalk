@@ -1,7 +1,9 @@
 import { RefObject, useEffect, useRef } from "react";
-import { roundPathCorners } from "./roundCorners";
+
 import throttle from "lodash/throttle";
+
 import { Queue } from "./Queue";
+import { roundPathCorners } from "./roundCorners";
 import useRequestAnimationFrame from "./useAnimationFrame";
 import {
   debugPoint,
@@ -25,7 +27,11 @@ const SHRINK = true;
 const SHRINK_START_DELAY = 150;
 const SHRINK_SPEED = 20;
 
-export const useWiggle = (pathRef: RefObject<SVGPathElement>, svgRef: RefObject<SVGSVGElement>, contentEl: HTMLDivElement) => {
+export const useWiggle = (
+  pathRef: RefObject<SVGPathElement>,
+  svgRef: RefObject<SVGSVGElement>,
+  contentEl: HTMLDivElement
+) => {
   // A FILO Queue to store the last N mouse positions
   const wiggleLinePointsRef = useRef<Queue<DOMPoint>>(new Queue(10));
 
@@ -213,7 +219,13 @@ export const useWiggle = (pathRef: RefObject<SVGPathElement>, svgRef: RefObject<
    * - repeat until current point is in the same spot as exitPoint
    *
    */
-  const traceObject = (box: DOMRect, current: DOMPoint, entryPoint: DOMPoint, exitPoint: DOMPoint, wiggleLine: Queue<DOMPoint>) => {
+  const traceObject = (
+    box: DOMRect,
+    current: DOMPoint,
+    entryPoint: DOMPoint,
+    exitPoint: DOMPoint,
+    wiggleLine: Queue<DOMPoint>
+  ) => {
     // Helper object with useful coordinates
     const obj = {
       top: box.y,

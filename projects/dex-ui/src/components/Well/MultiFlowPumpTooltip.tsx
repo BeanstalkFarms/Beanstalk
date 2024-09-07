@@ -1,13 +1,16 @@
 import React, { FC } from "react";
-import { Info } from "src/components/Icons";
-import { Tooltip, TooltipProps } from "src/components/Tooltip";
-import { mediaQuery } from "src/breakpoints";
-import styled from "styled-components";
-import { Item, Row } from "src/components/Layout";
-import { BodyS } from "src/components/Typography";
+
 import { Well } from "@beanstalk/sdk/Wells";
-import { TokenLogo } from "src/components/TokenLogo";
+import styled from "styled-components";
+
 import { TokenValue } from "@beanstalk/sdk";
+
+import { mediaQuery } from "src/breakpoints";
+import { Info } from "src/components/Icons";
+import { Item, Row } from "src/components/Layout";
+import { TokenLogo } from "src/components/TokenLogo";
+import { Tooltip, TooltipProps } from "src/components/Tooltip";
+import { BodyS } from "src/components/Typography";
 import { formatNum } from "src/utils/format";
 
 export const MultiFlowPumpTooltip: FC<{
@@ -35,11 +38,16 @@ export const MultiFlowPumpTooltip: FC<{
             <div className="container-title">Multi Flow Pump</div>
             <div className="content">
               The&nbsp;
-              <a className="content-link" href="/multi-flow-pump.pdf" target="_blank" rel="noopener noreferrer">
+              <a
+                className="content-link"
+                href="/multi-flow-pump.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Multi Flow Pump
               </a>
-              , an inter-block MEV manipulation resistant oracle, stores reserve data from this Well. In particular, Multi Flow stores
-              reserve data in two formats:
+              , an inter-block MEV manipulation resistant oracle, stores reserve data from this
+              Well. In particular, Multi Flow stores reserve data in two formats:
             </div>
           </TitleAndContentContainer>
           <ReservesInfo column stretch>

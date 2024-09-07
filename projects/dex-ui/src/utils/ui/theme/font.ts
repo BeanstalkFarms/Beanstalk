@@ -1,6 +1,7 @@
+import { css } from "styled-components";
+
 import { H1, H2, H3, BodyL, BodyS, BodyXS, LinksButtonText } from "src/components/Typography";
 import { exists } from "src/utils/check";
-import { css } from "styled-components";
 
 export type FontWeight = "normal" | "semi-bold" | "bold";
 

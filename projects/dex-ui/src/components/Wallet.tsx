@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
-import styled from "styled-components";
+
 import { ConnectKitButton, useModal as useConnectKitModal } from "connectkit";
+import styled from "styled-components";
 import { useAccount } from "wagmi";
+
 import { ButtonPrimary } from "./Button";
 
 type ActionWalletButtonProps = {
@@ -37,10 +39,16 @@ export const ActionWalletButtonWrapper = ({ children, allow }: ActionWalletButto
   return !address && !allow ? (
     <ConnectKitButton.Custom>
       {({ show }) => {
-        return <ButtonPrimary onClick={(e) => {
-          e.preventDefault();
-          show?.();
-        }}>Connect Wallet</ButtonPrimary>;
+        return (
+          <ButtonPrimary
+            onClick={(e) => {
+              e.preventDefault();
+              show?.();
+            }}
+          >
+            Connect Wallet
+          </ButtonPrimary>
+        );
       }}
     </ConnectKitButton.Custom>
   ) : (

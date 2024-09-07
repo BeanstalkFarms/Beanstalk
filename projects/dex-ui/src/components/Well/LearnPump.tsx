@@ -1,8 +1,11 @@
 import React from "react";
-import { ExpandBox } from "src/components/ExpandBox";
+
 import styled from "styled-components";
-import { FC } from "src/types";
+
 import { Well } from "@beanstalk/sdk-wells";
+
+import { ExpandBox } from "src/components/ExpandBox";
+import { FC } from "src/types";
 import { getIsMultiPumpWell } from "src/wells/pump/utils";
 import { formatWellTokenSymbols } from "src/wells/utils";
 

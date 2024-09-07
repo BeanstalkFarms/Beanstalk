@@ -1,12 +1,15 @@
 import React from "react";
-import styled from "styled-components";
+
 import { Link } from "react-router-dom";
-import { theme } from "src/utils/ui/theme";
+import styled from "styled-components";
+
 import { Box, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
-import { WellComponentInfo } from "../useWhitelistedWellComponents";
-import { AccordionSelectCard } from "../../Selectable";
+import { theme } from "src/utils/ui/theme";
+
 import { Etherscan, Github } from "../../Icons";
+import { AccordionSelectCard } from "../../Selectable";
+import { WellComponentInfo } from "../useWhitelistedWellComponents";
 
 export type WellComponentAccordionCardProps = {
   selected: boolean;

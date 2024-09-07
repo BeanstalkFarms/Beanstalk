@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
+
+import { useAccount } from "wagmi";
+
 import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
 import { FC } from "src/types";
-import { useAccount } from "wagmi";
 
 export const OnLoad: FC<{}> = ({ children }) => {
   const { address, chain } = useAccount();
