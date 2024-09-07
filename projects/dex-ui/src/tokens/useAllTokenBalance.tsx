@@ -1,13 +1,16 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
+import { ContractFunctionParameters } from "viem";
 import { useAccount } from "wagmi";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
 import { useTokens } from "src/tokens/useTokens";
 import { Log } from "src/utils/logger";
-import { config } from "src/utils/wagmi/config";
-import { ContractFunctionParameters } from "viem";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
+import { config } from "src/utils/wagmi/config";
+
 import { getTokenIndex } from "./utils";
 
 const TokenBalanceABI = [
@@ -48,7 +51,7 @@ const makeCalls = (tokensToLoad: Token[], address: string) => {
   if (callBucket.length) contractCalls.push([...callBucket]);
 
   return contractCalls;
-}
+};
 
 export const useAllTokensBalance = () => {
   const tokens = useTokens();
@@ -76,8 +79,8 @@ export const useAllTokensBalance = () => {
 
       if (ethBalance) {
         Log.module("app").debug(`ETH balance: `, ethBalance.toHuman());
-        setQueryData<Record<string, TokenValue>>(queryKeys.tokenBalance(ETH.symbol), () => { 
-          return { [getTokenIndex(ETH)]: ethBalance }
+        setQueryData<Record<string, TokenValue>>(queryKeys.tokenBalance(ETH.symbol), () => {
+          return { [getTokenIndex(ETH)]: ethBalance };
         });
         balances.ETH = ethBalance;
       }
@@ -90,8 +93,8 @@ export const useAllTokensBalance = () => {
 
         // set the balance in the query cache too
         setQueryData(queryKeys.tokenBalance(token.address), () => {
-          return { [tokenIndex]: balances[token.address] }
-        })
+          return { [tokenIndex]: balances[token.address] };
+        });
       }
 
       return balances;

@@ -49,9 +49,7 @@ export const useFarmerWellsSiloBalances = () => {
       if (!address) return resultMap;
 
       const results = await Promise.all(
-        wellTokens.map((token) =>
-          sdk.silo.getBalance(token, address, { source: DataSource.LEDGER })
-        )
+        wellTokens.map((token) => sdk.silo.getBalance(token, address))
       );
 
       results.forEach((val, i) => {
