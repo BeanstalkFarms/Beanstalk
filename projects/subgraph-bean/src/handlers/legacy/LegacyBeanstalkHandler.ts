@@ -3,6 +3,7 @@ import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../../../generated/Bean-ABIs/CurvePrice";
 import { Sunrise } from "../../../generated/Bean-ABIs/PreReplant";
+import { MetapoolOracle } from "../../../generated/Bean-ABIs/Replanted";
 import { loadBean } from "../../entities/Bean";
 import { loadOrCreatePool } from "../../entities/Pool";
 import { updateBeanTwa, updateBeanValues } from "../../utils/Bean";
@@ -11,6 +12,7 @@ import { checkBeanCross, updatePoolPricesOnCross } from "../../utils/Cross";
 import { updateSeason } from "../../utils/legacy/Beanstalk";
 import { updatePoolPrice, updatePoolValues } from "../../utils/Pool";
 import { calcCurveInst, setCurveTwa } from "../../utils/price/CurvePrice";
+import { setTwaLast } from "../../utils/price/TwaOracle";
 import { DeltaBPriceLiquidity } from "../../utils/price/Types";
 import { calcUniswapV2Inst, setUniswapV2Twa } from "../../utils/price/UniswapPrice";
 
@@ -82,4 +84,12 @@ export function handleSunrise_v2(event: Sunrise): void {
       checkBeanCross(beanToken, oldBeanPrice, toDecimal(curve.value.price), event.block);
     }
   }
+}
+
+// POST REPLANT TWA DELTAB //
+
+export function handleMetapoolOracle(event: MetapoolOracle): void {
+  setTwaLast(BEAN_3CRV, event.params.balances, event.block.timestamp);
+  setCurveTwa(BEAN_3CRV, event.block);
+  updateBeanTwa(event.block);
 }

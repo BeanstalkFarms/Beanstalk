@@ -10,7 +10,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: Replanted
       startBlock: 12974075
       endBlock: 12974075
     mapping:
@@ -20,7 +20,7 @@ dataSources:
       entities:
         - Version
       abis:
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
       blockHandlers:
         - handler: handleInitVersion
@@ -80,7 +80,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
+      abi: Replanted
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -89,7 +89,7 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
@@ -179,7 +179,30 @@ dataSources:
           handler: handleSunrise_v2
       file: ../src/handlers/legacy/LegacyBeanstalkHandler.ts
   - kind: ethereum/contract
-    name: TWAPOracles
+    name: LegacyCurveTWAP
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Replanted
+      startBlock: 15277988
+      endBlock: 19927634 # SeedGauge
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: Bean3CRV
+          file: ../../subgraph-core/abis/Bean3CRV.json
+      eventHandlers:
+        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
+          handler: handleMetapoolOracle
+      file: ../src/handlers/legacy/LegacyBeanstalkHandler.ts
+  - kind: ethereum/contract
+    name: WellTWAP
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
@@ -192,17 +215,11 @@ dataSources:
       entities:
         - Bean
       abis:
-        # This abi is chosen because it contains both MetapoolOracle and WellOracle events.
-        # Indexing of this source should begin prior to BIP37 deployment.
         - name: BasinBip
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
-        - name: Bean3CRV
-          file: ../../subgraph-core/abis/Bean3CRV.json
         - name: Well
           file: ../../subgraph-core/abis/Well.json
       eventHandlers:
-        - event: MetapoolOracle(indexed uint32,int256,uint256[2])
-          handler: handleMetapoolOracle
         - event: WellOracle(indexed uint32,address,int256,bytes)
           handler: handleWellOracle
       file: ../src/handlers/BeanstalkHandler.ts
@@ -332,7 +349,7 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
@@ -370,7 +387,7 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
@@ -408,7 +425,7 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json

@@ -11,10 +11,11 @@ import { decodeCumulativeWellReserves } from "../src/utils/price/WellPrice";
 import { mock_virtual_price } from "./event-mocking/Curve";
 import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
 import { pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
-import { handleMetapoolOracle, handleWellOracle } from "../src/handlers/BeanstalkHandler";
+import { handleWellOracle } from "../src/handlers/BeanstalkHandler";
 import { loadBean } from "../src/entities/Bean";
 import { loadOrCreatePool } from "../src/entities/Pool";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { handleMetapoolOracle } from "../src/handlers/legacy/LegacyBeanstalkHandler";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();

@@ -1,10 +1,8 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../utils/Bean";
-import { Chop, Convert, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Beanstalk";
-import { BEAN_3CRV } from "../../../subgraph-core/utils/Constants";
+import { updateBeanSupplyPegPercent, updateBeanTwa } from "../utils/Bean";
+import { Chop, Convert, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Replanted";
 import { loadBean } from "../entities/Bean";
-import { setCurveTwa } from "../utils/price/CurvePrice";
-import { MetapoolOracle, WellOracle } from "../../generated/Bean-ABIs/BasinBip";
+import { WellOracle } from "../../generated/Bean-ABIs/BasinBip";
 import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
 import { getProtocolToken, isUnripe } from "../utils/constants/Addresses";
@@ -36,13 +34,6 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
 }
 
 // POST REPLANT TWA DELTAB //
-
-// TODO: move to legacy
-export function handleMetapoolOracle(event: MetapoolOracle): void {
-  setTwaLast(BEAN_3CRV, event.params.balances, event.block.timestamp);
-  setCurveTwa(BEAN_3CRV, event.block);
-  updateBeanTwa(event.block);
-}
 
 export function handleWellOracle(event: WellOracle): void {
   setRawWellReserves(event);

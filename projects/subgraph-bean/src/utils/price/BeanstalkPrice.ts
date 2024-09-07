@@ -5,7 +5,6 @@ import {
   BeanstalkPrice__priceResultPPsStruct,
   BeanstalkPrice__priceResultPStruct
 } from "../../../generated/Bean-ABIs/BeanstalkPrice";
-import { BEANSTALK_PRICE_1, BEANSTALK_PRICE_2, PRICE_2_BLOCK } from "../../../../subgraph-core/utils/Constants";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { loadBean } from "../../entities/Bean";
 import { toAddressArray } from "../../../../subgraph-core/utils/Bytes";
