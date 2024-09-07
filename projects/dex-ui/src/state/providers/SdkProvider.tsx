@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
-import { Provider as JotaiProvider, atom, createStore, useAtom } from "jotai";
+import { atom, createStore, useAtom } from "jotai";
 
 import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
 
@@ -37,18 +37,15 @@ function BeanstalkSdkSetter({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setSdk(getSDK(provider as JsonRpcProvider, signer, chainId));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, signer, chainId]);
+  }, [provider, signer, chainId, setSdk]);
 
-  if (!sdk) return null;
+  if (!sdk || !chainId || !provider) return null;
 
   return <>{children}</>;
 }
 
 export const SdkProvider = React.memo(({ children }: { children: React.ReactNode }) => (
   <>
-    <JotaiProvider store={sdkStore}>
-      <BeanstalkSdkSetter>{children}</BeanstalkSdkSetter>
-    </JotaiProvider>
+    <BeanstalkSdkSetter>{children}</BeanstalkSdkSetter>
   </>
 ));

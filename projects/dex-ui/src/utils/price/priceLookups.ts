@@ -59,7 +59,7 @@ const chainlinkLookup = (feed: FeedId) => async (sdk: BeanstalkSDK) => {
   const chainId = getChainIdOrFallbackChainId(sdk.chainId);
   const chainFeed = FEEDS[chainId];
   const address = chainFeed[feed as unknown as keyof typeof chainFeed];
-  if (!chainFeed || address) {
+  if (!chainFeed || !address) {
     Log.module("price").debug(
       `Unable to fetch price. No Chainlink lookup for feed: ${feed} on chainId: ${chainId}`
     );

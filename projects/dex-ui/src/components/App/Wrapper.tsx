@@ -1,16 +1,17 @@
 import React from "react";
-import { HashRouter } from "react-router-dom";
-import { FC } from "src/types";
-import { ConnectKitProvider } from "connectkit";
-import { WagmiProvider } from "wagmi";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ConnectKitProvider } from "connectkit";
+import { HashRouter } from "react-router-dom";
+import { WagmiProvider } from "wagmi";
+
+import JotaiProvider from "src/state";
+import { FC } from "src/types";
 import { Avatar } from "src/utils/wagmi/Avatar";
-import { OnLoad } from "./OnLoad";
-import { SdkProvider } from "src/state/providers/SdkProvider";
 import { config } from "src/utils/wagmi/config";
-import WellsProvider from "src/state/providers/WellsProvider";
-import AquiferProvider from "src/state/providers/AquiverProvider";
+
+import { OnLoad } from "./OnLoad";
 
 export const Wrapper: FC<{}> = ({ children }) => {
   const queryClient = new QueryClient();
@@ -32,13 +33,9 @@ export const Wrapper: FC<{}> = ({ children }) => {
             }}
           >
             <ReactQueryDevtools initialIsOpen={false} />
-            <SdkProvider>
-              <AquiferProvider>
-                <WellsProvider>
-                  <OnLoad>{children}</OnLoad>
-                </WellsProvider>
-              </AquiferProvider>
-            </SdkProvider>
+            <JotaiProvider>
+              <OnLoad>{children}</OnLoad>
+            </JotaiProvider>
           </ConnectKitProvider>
         </QueryClientProvider>
       </WagmiProvider>

@@ -1,10 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useEffect } from "react";
+
 import { useAtom } from "jotai";
-import useSdk from "src/utils/sdk/useSdk";
 import { useChainId } from "wagmi";
-import { aquiferAtom } from "../atoms";
-import { isArbitrum } from "src/utils/chain";
+
 import { Aquifer } from "@beanstalk/sdk-wells";
+
+import { isArbitrum } from "src/utils/chain";
+import useSdk from "src/utils/sdk/useSdk";
+
+import { aquiferAtom } from "../atoms";
 
 const arbitrumAquiferAddress = import.meta.env.VITE_AQUIFER_ADDRESS_ARBITRUM as string;
 const ethereumAquiferAddress = import.meta.env.VITE_AQUIFER_ADDRESS_ETH as string;
@@ -27,20 +31,20 @@ const useSetAquifer = () => {
   const sdk = useSdk();
   const chainId = useChainId();
 
-  React.useEffect(() => {
-    const aquiferAddress = isArbitrum(chainId) ? arbitrumAquiferAddress : ethereumAquiferAddress;
+  useEffect(() => {
+    const aquiferAddress = getAquiferAddress(chainId);
     setAquifer(new Aquifer(sdk.wells, aquiferAddress));
   }, [sdk, chainId, setAquifer]);
 
-  return useMemo(() => aquifer, [aquifer]);
+  return aquifer;
 };
 
-const AquiferProvider = ({ children }: { children: React.ReactNode }) => {
+const AquiferProvider = React.memo(({ children }: { children: React.ReactNode }) => {
   const aquifer = useSetAquifer();
 
   if (!aquifer) return null;
 
   return <>{children}</>;
-};
+});
 
 export default AquiferProvider;

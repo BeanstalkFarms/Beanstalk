@@ -1,15 +1,15 @@
 import { atom } from "jotai";
-import { Well } from "@beanstalk/sdk-wells";
-import { AddressMap } from "src/types";
-import { isDEV } from "src/settings";
 
-const empty: Well[] = [];
+import { Well } from "@beanstalk/sdk-wells";
+
+import { isDEV } from "src/settings";
+import { AddressMap } from "src/types";
 
 export const wellsAtom = atom<{
   data: Well[];
   error: Error | null;
   isLoading: boolean;
-}>({ data: empty, error: null, isLoading: true });
+}>({ data: [], error: null, isLoading: true });
 
 export const wellsByAddressAtom = atom((get) =>
   get(wellsAtom).data.reduce<AddressMap<Well>>((acc, well) => {

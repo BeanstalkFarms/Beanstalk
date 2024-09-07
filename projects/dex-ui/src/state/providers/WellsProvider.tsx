@@ -1,41 +1,37 @@
 import React, { useEffect } from "react";
-import { useChainId } from "wagmi";
-import { Well } from "@beanstalk/sdk-wells";
-import { findWells } from "src/wells/wellLoader";
-import { Log } from "src/utils/logger";
-import useSdk from "src/utils/sdk/useSdk";
-import tokenMetadataJson from "src/token-metadata.json";
-import { TokenMetadataMap, TokenSymbolMap } from "src/types";
-import { images } from "src/assets/images/tokens";
-import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+
 import { useSetAtom } from "jotai";
-import { queryKeys } from "src/utils/query/queryKeys";
+
+import { Well } from "@beanstalk/sdk-wells";
+
+import { images } from "src/assets/images/tokens";
 import { Error } from "src/components/Error";
-import { Token } from "@beanstalk/sdk-core";
-import { setWellsLoadingAtom, underlyingTokenMapAtom, wellsAtom } from "src/state/atoms";
-import { getTokenIndex } from "src/tokens/utils";
+import { setWellsLoadingAtom, wellsAtom } from "src/state/atoms";
+import tokenMetadataJson from "src/token-metadata.json";
+import { TokenMetadataMap } from "src/types";
+import { Log } from "src/utils/logger";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
+import { findWells } from "src/wells/wellLoader";
 
 export const clearWellsCache = () => findWells.cache.clear?.();
 
 export const useWellsQuery = () => {
   const sdk = useSdk();
-  const chainId = useChainId();
+
   const aquifer = useAquifer();
   const setWells = useSetAtom(wellsAtom);
-  const setTokenMap = useSetAtom(underlyingTokenMapAtom);
   const setWellsLoading = useSetAtom(setWellsLoadingAtom);
 
-  useEffect(() => {
-    // clearWellsCache();
-  }, [chainId]);
-
-  return useChainScopedQuery({
-    queryKey: queryKeys.wells,
+  const query = useChainScopedQuery({
+    queryKey: queryKeys.wells(sdk),
     queryFn: async () => {
+      Log.module("wells").debug("Fetching wells...");
+      const wellAddresses = await findWells(sdk, aquifer);
       try {
         setWellsLoading(true);
-        const wellAddresses = await findWells(sdk, aquifer);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
 
         // TODO: convert this to a multicall at some point
@@ -62,47 +58,37 @@ export const useWellsQuery = () => {
           .filter<Well>((p): p is Well => !!p);
         // set token metadatas
         setTokenMetadatas(wellsResult);
-        setWells({ data: wellsResult, error: null, isLoading: false });
-
-        if (wellsResult.length) {
-          const tokenMap = (wellsResult || []).reduce<TokenSymbolMap<Token>>(
-            (prev, well) => {
-              if (well.tokens && Array.isArray(well.tokens)) {
-                well.tokens.forEach((token) => {
-                  prev[token.symbol] = token;
-                });
-              }
-              return prev;
-            },
-            {
-              [getTokenIndex(sdk.tokens.ETH)]: sdk.tokens.ETH
-            }
-          );
-
-          setTokenMap(tokenMap);
-        }
 
         return wellsResult;
       } catch (err: any) {
         Log.module("useWells").debug(`Error during findWells(): ${(err as Error).message}`);
-        setWells({ data: [], error: err, isLoading: false });
         return [];
       }
     },
     retry: false,
     staleTime: Infinity
   });
+
+  useEffect(() => {
+    setWells({ data: query.data || [], error: query.error, isLoading: query.isLoading });
+  }, [query, setWells]);
+
+  return query;
 };
 
-const WellsProvider = ({ children }: { children: React.ReactNode }) => {
-  const { error } = useWellsQuery();
+const WellsProvider = React.memo(({ children }: { children: React.ReactNode }) => {
+  const query = useWellsQuery();
 
-  if (error) {
-    return <Error message={error.message} />;
+  if (!query.data?.length) {
+    return null;
+  }
+
+  if (query.error) {
+    return <Error message={query.error.message} />;
   }
 
   return <>{children}</>;
-};
+});
 
 const tokenMetadata = tokenMetadataJson as TokenMetadataMap;
 
