@@ -13,7 +13,7 @@ import { PriceLookups } from "src/utils/price/priceLookups";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
-import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
 import useSdk from "src/utils/sdk/useSdk";
 import { useWellReserves } from "src/wells/useWellReserves";
 
@@ -84,7 +84,7 @@ const AddLiquidityContent = ({
       return [data[token1.symbol] || null, data[token2.symbol] || null]; // price indexed by token symbol
     }
   });
-  const invalidate = useInvalidateScopedQueries();
+  const invalidate = useInvalidateQueries();
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);

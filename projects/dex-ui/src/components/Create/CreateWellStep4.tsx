@@ -21,7 +21,7 @@ import { TokenInput } from "src/components/Swap/TokenInput";
 import { Text } from "src/components/Typography";
 import { useTokenAllowance } from "src/tokens/useTokenAllowance";
 import { queryKeys } from "src/utils/query/queryKeys";
-import { useInvalidateQueries, useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
+import { useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
 import useSdk from "src/utils/sdk/useSdk";
 import { theme } from "src/utils/ui/theme";
 import { useBoolean } from "src/utils/ui/useBoolean";
