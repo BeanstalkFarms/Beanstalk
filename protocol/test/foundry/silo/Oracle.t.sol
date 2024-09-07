@@ -8,6 +8,7 @@ import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAg
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -206,6 +207,21 @@ contract OracleTest is TestHelper {
         IMockFBeanstalk.Implementation memory oracleImplementation = bs
             .getOracleImplementationForToken(WBTC);
         assertEq(oracleImplementation.target, WBTC_USD_CHAINLINK_PRICE_AGGREGATOR);
+    }
+
+    function testZeroAddressOracleImplementationTarget() public {
+        vm.prank(BEANSTALK);
+        // exersizes address 0 and bytes 0x00, although there's no current way to whitelist something with these values.
+        vm.expectRevert("Whitelist: Invalid Target Address");
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                address(0),
+                IMockFBeanstalk.getUsdTokenPriceFromExternal.selector,
+                bytes1(0x00),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
     }
 
     function testGetTokenPrice() public {

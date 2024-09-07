@@ -140,11 +140,10 @@ library LibUsdOracle {
             }
         }
 
-        // If the oracle implementation address is not set, use the current contract.
-        address target = oracleImpl.target;
-        if (target == address(0)) target = address(this);
+        // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
+        if (oracleImpl.target == address(0)) return 0;
 
-        (bool success, bytes memory data) = target.staticcall(
+        (bool success, bytes memory data) = oracleImpl.target.staticcall(
             abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
         );
 
