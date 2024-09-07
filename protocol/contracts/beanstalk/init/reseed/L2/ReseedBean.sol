@@ -120,6 +120,8 @@ contract ReseedBean {
     bytes32 internal constant FERTILIZER_PROXY_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
 
+    address beanWstethLP;
+
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
      * @dev mints bean assets to the beanstalk contract,
@@ -138,11 +140,25 @@ contract ReseedBean {
         // deploy new bean contract. Issue beans.
         BeanstalkERC20 bean = deployBean(beanSupply);
         // deploy new unripe bean contract. Issue external unripe beans and urLP.
-        deployUnripeBean(internalUrBeanSupply, urBean);
+        BeanstalkERC20 unripeBean = deployUnripeBean(internalUrBeanSupply, urBean);
         // deploy new unripe lp contract.
-        deployUnripeLP(internalUnripeLpSupply, urBeanLP);
+        BeanstalkERC20 unripeLP = deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
+        // set unripe to underlying tokens.
+        setUnripeToUnderlyingTokens(address(unripeBean), address(bean), address(unripeLP));
+    }
+
+    function setUnripeToUnderlyingTokens(
+        address unripeBean,
+        address bean,
+        address unripeLP
+    ) internal {
+        // add unripe tokens
+        // set the underlying token of the unripe bean to bean.
+        s.sys.silo.unripeSettings[unripeBean].underlyingToken = bean;
+        // set the underlying token of the unripe lp to BeanWstethLP.
+        s.sys.silo.unripeSettings[unripeLP].underlyingToken = beanWstethLP;
     }
 
     function deployFertilizerProxy(address fertImplementation) internal {
@@ -242,6 +258,8 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
+
+        if (tokens[1] == IERC20(WSTETH)) beanWstethLP = wellProxy;
 
         console.log("Well Proxy for token pair %s deployed at: %s", name, wellProxy);
     }
