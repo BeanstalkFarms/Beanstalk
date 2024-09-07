@@ -128,16 +128,12 @@ library LibUsdOracle {
             // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
             // thus the price needs to be inverted.
             if (tokenDecimals != 0) {
-                // invert tokenPrice (to get CL_TOKEN/TOKEN).
-                // `tokenPrice` has 6 decimal precision (see {LibUniswapOracle.getTwap}).
-                tokenPrice = 1e12 / tokenPrice;
-                // return the USD/TOKEN price.
-                // 1e6 * 1e`n` / 1e`n` = 1e6
+                // invert tokenPrice, taking tokenDecimals into account.
+                tokenPrice = (1e6 * (10 ** tokenDecimals)) / tokenPrice;
                 return (tokenPrice * chainlinkTokenPrice) / (10 ** chainlinkTokenDecimals);
-            } else {
-                // return the TOKEN/USD price.
-                return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
             }
+
+            return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
         // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
