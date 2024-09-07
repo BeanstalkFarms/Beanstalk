@@ -1,15 +1,17 @@
-import { BEANETH_ADDRESS, getIsValidEthereumAddress } from "../utils/addresses";
-import useSdk from "../utils/sdk/useSdk";
-import { ERC20Token } from "@beanstalk/sdk";
-import { useQuery } from "@tanstack/react-query";
-
-import { queryKeys } from "src/utils/query/queryKeys";
-import { erc20Abi as abi } from "viem";
 import { multicall } from "@wagmi/core";
-import { useWells } from "src/wells/useWells";
+import { erc20Abi as abi } from "viem";
+
+import { ERC20Token } from "@beanstalk/sdk";
+
 import { images } from "src/assets/images/tokens";
 import { alchemy } from "src/utils/alchemy";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import { config } from "src/utils/wagmi/config";
+import { useWells } from "src/wells/useWells";
+
+import { getIsValidEthereumAddress } from "../utils/addresses";
+import useSdk from "../utils/sdk/useSdk";
 
 export const USE_ERC20_TOKEN_ERRORS = {
   notERC20Ish: "Invalid ERC20 Token Address"
@@ -41,7 +43,7 @@ export const useERC20TokenWithAddress = (_address: string | undefined = "") => {
     data: tokenMetadata,
     refetch: refetchTokenMetadata,
     ...tokenMetadataQuery
-  } = useQuery({
+  } = useChainScopedQuery({
     queryKey: queryKeys.tokenMetadata(isValidAddress ? address : "invalid"),
     queryFn: async () => {
       console.debug("[useERC20Token] fetching: ", address);
@@ -114,7 +116,7 @@ export const useERC20TokenWithAddress = (_address: string | undefined = "") => {
   const shouldRunWhenNonSdkToken = Boolean(!sdkToken && isValidAddress && tokenMetadata);
   const shouldRunWhenSdkToken = Boolean(sdkToken && isValidAddress && lpTokens.length);
 
-  const erc20Query = useQuery({
+  const erc20Query = useChainScopedQuery({
     queryKey: queryKeys.erc20TokenWithAddress(isValidAddress ? address : "invalid"),
     queryFn: async () => {
       let token: ERC20Token | undefined = undefined;

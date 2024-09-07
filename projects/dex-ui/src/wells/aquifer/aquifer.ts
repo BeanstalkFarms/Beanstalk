@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-
 import { useAtomValue } from "jotai";
+
 import { aquiferAtom } from "src/state/atoms";
 
 export const useAquifer = () => {
@@ -10,5 +9,5 @@ export const useAquifer = () => {
     throw new Error("Aquifer not set");
   }
 
-  return useMemo(() => aquifer, [aquifer]);
+  return aquifer;
 };

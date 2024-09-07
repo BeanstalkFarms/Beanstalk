@@ -1,26 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TokenInput } from "../../components/Swap/TokenInput";
-import { ChainId, ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
+
 import styled from "styled-components";
 import { useAccount, useChainId } from "wagmi";
+
+import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
 import { AddLiquidityETH, Well } from "@beanstalk/sdk-wells";
-import { useQuery } from "@tanstack/react-query";
-import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
-import { Button } from "../Swap/Button";
-import { ensureAllowance, hasMinimumAllowance } from "./allowance";
-import { Log } from "../../utils/logger";
-import QuoteDetails from "./QuoteDetails";
-import { TransactionToast } from "../TxnToast/TransactionToast";
-import useSdk from "src/utils/sdk/useSdk";
-import { useWellReserves } from "src/wells/useWellReserves";
-import { Checkbox } from "../Checkbox";
+
 import { size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
-import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { PriceLookups } from "src/utils/price/priceLookups";
-import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import useSdk from "src/utils/sdk/useSdk";
+import { useWellReserves } from "src/wells/useWellReserves";
+
+import { ensureAllowance, hasMinimumAllowance } from "./allowance";
+import QuoteDetails from "./QuoteDetails";
+import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
+import { TokenInput } from "../../components/Swap/TokenInput";
+import { Log } from "../../utils/logger";
+import { Checkbox } from "../Checkbox";
+import { Button } from "../Swap/Button";
+import { TransactionToast } from "../TxnToast/TransactionToast";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -210,7 +214,7 @@ const AddLiquidityContent = ({
     [tokenAllowance]
   );
 
-  const { data: quote } = useQuery({
+  const { data: quote } = useChainScopedQuery({
     queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
 
     queryFn: async () => {

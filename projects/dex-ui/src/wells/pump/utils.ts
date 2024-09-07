@@ -1,4 +1,5 @@
 import { Well } from "@beanstalk/sdk-wells";
+
 import { MULTI_FLOW_PUMP_ADDRESS, MULTI_FLOW_PUMP_V_1PT1_ADDRESS } from "src/utils/addresses";
 
 export const getIsMultiPumpWell = (well: Well | undefined) => {

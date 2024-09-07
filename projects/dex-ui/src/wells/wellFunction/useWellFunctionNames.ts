@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { multicall } from "@wagmi/core";
 import { ContractFunctionParameters, MulticallReturnType } from "viem";
 
@@ -7,6 +6,7 @@ import { Well, WellFunction } from "@beanstalk/sdk-wells";
 import { AddressMap } from "src/types";
 import { Log } from "src/utils/logger";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import { config } from "src/utils/wagmi/config";
 
 interface WellWithWellFn extends Well {
@@ -24,7 +24,7 @@ export const useWellFunctionNames = (_wells: Well[] | undefined) => {
   const wellsWithWellFunctions = wells.filter((w) => !!w.wellFunction) as WellWithWellFn[];
   const addresses = wellsWithWellFunctions.map((well) => well.wellFunction.address);
 
-  return useQuery({
+  return useChainScopedQuery({
     queryKey: queryKeys.wellFunctionNames(addresses.length ? addresses : ["invalid"]),
     queryFn: async () => {
       Logger.debug(`Fetching well function names for wells: ${addresses}`);

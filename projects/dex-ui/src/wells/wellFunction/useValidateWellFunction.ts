@@ -1,13 +1,18 @@
-import { multicall } from "@wagmi/core";
 import { useCallback } from "react";
-import { useWellFunctions } from "./useWellFunctions";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { multicall } from "@wagmi/core";
+import { BigNumber } from "ethers";
+
+import { BeanstalkSDK } from "@beanstalk/sdk";
 import { WellFunction } from "@beanstalk/sdk-wells";
+
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useSetChainScopedQueryData } from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { config } from "src/utils/wagmi/config";
-import { BigNumber } from "ethers";
-import { BeanstalkSDK } from "@beanstalk/sdk";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "src/utils/query/queryKeys";
+
+import { useWellFunctions } from "./useWellFunctions";
 
 const getWellFunctionCalls = (wellFunction: WellFunction) => {
   const address = wellFunction.address as `0x${string}`;
@@ -81,6 +86,7 @@ export const useValidateWellFunction = () => {
   const sdk = useSdk();
 
   const queryClient = useQueryClient();
+  const setQueryData = useSetChainScopedQueryData();
 
   const validate = useCallback(
     async ({ address, data, wellFunction }: ValidateWellFunctionParams) => {
@@ -100,15 +106,20 @@ export const useValidateWellFunction = () => {
         });
 
         // set the queryClientCache for future use.
-        queryClient.setQueryData(queryKey, result || invalidWellFunctionData);
+        setQueryData(queryKey, () => {
+          return result || invalidWellFunctionData;
+        });
+
         return result;
       } catch (e) {
         // set the queryClientCache for future use.
-        queryClient.setQueryData(queryKey, invalidWellFunctionData);
+        setQueryData(queryKey, () => {
+          return invalidWellFunctionData;
+        });
         return undefined;
       }
     },
-    [wellFunctions, sdk, queryClient]
+    [wellFunctions, sdk, queryClient, setQueryData]
   );
 
   return [validate] as const;

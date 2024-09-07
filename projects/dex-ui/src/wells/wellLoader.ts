@@ -1,12 +1,15 @@
-import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
-import { Aquifer } from "@beanstalk/sdk-wells";
 import memoize from "lodash/memoize";
-import { Settings } from "src/settings";
-import { Log } from "src/utils/logger";
-import { fetchFromSubgraphRequest } from "./subgraphFetch";
-import { GetWellAddressesDocument } from "src/generated/graph/graphql";
+
+import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
 import { Address } from "@beanstalk/sdk-core";
+import { Aquifer } from "@beanstalk/sdk-wells";
+
+import { GetWellAddressesDocument } from "src/generated/graph/graphql";
+import { Settings } from "src/settings";
 import { getChainIdOrFallbackChainId } from "src/utils/chain";
+import { Log } from "src/utils/logger";
+
+import { fetchFromSubgraphRequest } from "./subgraphFetch";
 
 type WellAddresses = string[];
 
