@@ -1,32 +1,34 @@
-import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
 import React, { useMemo, useState } from "react";
+
+import styled from "styled-components";
+
+import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
+import { Well } from "@beanstalk/sdk-wells";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { Error } from "src/components/Error";
 import { Item } from "src/components/Layout";
+import { Row as TabRow } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { TabButton } from "src/components/TabButton";
 import { Row, TBody, THead, Table, Th } from "src/components/Table";
-import { Row as TabRow } from "src/components/Layout";
-import { useWells } from "src/wells/useWells";
-import styled from "styled-components";
-import { mediaQuery, size } from "src/breakpoints";
-import { Error } from "src/components/Error";
-import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
-import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-
-import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
 import {
   MyWellPositionLoadingRow,
   MyWellPositionRow
 } from "src/components/Well/Table/MyWellPositionRow";
-import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
-import { useLagLoading } from "src/utils/ui/useLagLoading";
-import useBasinStats from "src/wells/useBasinStats";
-import { useTokenPrices } from "src/utils/price/useTokenPrices";
-import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
+import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { BasinAPIResponse } from "src/types";
-import { Well } from "@beanstalk/sdk-wells";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import useSdk from "src/utils/sdk/useSdk";
 import { theme } from "src/utils/ui/theme";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
+import useBasinStats from "src/wells/useBasinStats";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
+import { useWells } from "src/wells/useWells";
+import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();

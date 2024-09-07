@@ -1,7 +1,8 @@
-import useSdk from "src/utils/sdk/useSdk";
 import { useQuery } from "@tanstack/react-query";
-import { TokenValue } from "@beanstalk/sdk";
+
 import { ERC20Token } from "@beanstalk/sdk-core";
+
+import useSdk from "src/utils/sdk/useSdk";
 
 export const useTokenSupply = (address: ERC20Token) => {
   const sdk = useSdk();
