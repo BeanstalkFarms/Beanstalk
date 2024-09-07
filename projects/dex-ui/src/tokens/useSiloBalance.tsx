@@ -1,9 +1,11 @@
+import { useAccount } from "wagmi";
+
 import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
+
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
-import { useAccount } from "wagmi";
 
 export const useSiloBalance = (token: Token) => {
   const { address } = useAccount();
@@ -18,9 +20,7 @@ export const useSiloBalance = (token: Token) => {
         balance = TokenValue.ZERO;
       } else {
         const sdkLPToken = sdk.tokens.findByAddress(token.address);
-        const result = await sdk.silo.getBalance(sdkLPToken!, address, {
-          source: DataSource.LEDGER
-        });
+        const result = await sdk.silo.getBalance(sdkLPToken!, address);
         balance = result.amount;
       }
       return balance;
@@ -40,9 +40,10 @@ export const useFarmerWellsSiloBalances = () => {
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
   const wellTokens = Array.from(sdk.tokens.wellLP);
+  const addresses = wellTokens.map((token) => token.address);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalancesAll,
+    queryKey: queryKeys.siloBalancesAll(addresses),
     queryFn: async () => {
       const resultMap: Record<string, TokenValue> = {};
       if (!address) return resultMap;

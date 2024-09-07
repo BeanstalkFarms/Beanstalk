@@ -42,7 +42,7 @@ export const queryKeys = {
     address || "invalid"
   ],
 
-  siloBalancesAll: ["silo", "balance"],
+  siloBalancesAll: (addresses: string[]) => ["silo", "balance", ...addresses],
   siloBalance: (address: string) => ["silo", "balance", address],
   siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses]
 } as const;

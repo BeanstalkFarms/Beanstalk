@@ -59,6 +59,24 @@ export const Wells = () => {
       wellNamesLoading
   );
 
+  React.useEffect(() => {
+    console.log("loading", {
+      isLoading,
+      apysLoading,
+      positionsLoading,
+      lpTokenPricesLoading,
+      tokenPricesLoading,
+      wellNamesLoading
+    });
+  }, [
+    isLoading,
+    apysLoading,
+    positionsLoading,
+    lpTokenPricesLoading,
+    tokenPricesLoading,
+    wellNamesLoading
+  ]);
+
   if (error) {
     return <Error message={error?.message} errorOnly />;
   }
