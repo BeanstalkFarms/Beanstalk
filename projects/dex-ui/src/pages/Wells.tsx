@@ -35,8 +35,6 @@ export const Wells = () => {
   const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
 
-  console.log(wells);
-
   const [tab, showTab] = useState<number>(0);
 
   const { data: lpTokenPrices, isLoading: lpTokenPricesLoading } = useWellLPTokenPrice(wells);
@@ -58,24 +56,6 @@ export const Wells = () => {
       tokenPricesLoading ||
       wellNamesLoading
   );
-
-  React.useEffect(() => {
-    console.log("loading", {
-      isLoading,
-      apysLoading,
-      positionsLoading,
-      lpTokenPricesLoading,
-      tokenPricesLoading,
-      wellNamesLoading
-    });
-  }, [
-    isLoading,
-    apysLoading,
-    positionsLoading,
-    lpTokenPricesLoading,
-    tokenPricesLoading,
-    wellNamesLoading
-  ]);
 
   if (error) {
     return <Error message={error?.message} errorOnly />;
