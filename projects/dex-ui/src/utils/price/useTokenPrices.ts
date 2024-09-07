@@ -1,5 +1,3 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
 import { ERC20Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk-wells";
 
