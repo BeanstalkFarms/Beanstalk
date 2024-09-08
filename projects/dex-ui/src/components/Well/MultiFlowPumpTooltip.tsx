@@ -136,7 +136,7 @@ const TitleAndContentContainer = styled(Item)`
   }
 
   .content {
-    color: #4B556;
+    color: "#4B556";
 
     .content-link {
       color: #46b955;
@@ -163,7 +163,7 @@ const ReserveData = styled(Item)`
   .reserve-type {
     ${BodyS}
     font-weight: 400;
-    color: #4B556;
+    color: "#4B556";
   }
 
   .reserve-token-container {

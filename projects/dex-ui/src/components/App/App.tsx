@@ -22,17 +22,14 @@ export const App = ({}) => {
       <Routes>
         <Route index element={<Home />} />
         <Route path="/wells" element={<Wells />} />
-        {false && (
-          <>
-            <Route path="/wells/:address" element={<Well />} />
-            <Route path="/wells/:address/liquidity" element={<Liquidity />} />
-            <Route path="/swap" element={<Swap />} />
-            <Route path="/build" element={<Build />} />
-            <Route path="/create" element={<Create />} />
-            {isNotProd && <Route path="/dev" element={<Dev />} />}
-            <Route path="*" element={<NotFound />} />
-          </>
-        )}
+        <Route path="/wells/:address" element={<Well />} />
+        <Route path="/wells/:address/liquidity" element={<Liquidity />} />
+        <Route path="/swap" element={<Swap />} />
+        <Route path="/build" element={<Build />} />
+        <Route path="/create" element={<Create />} />
+        {isNotProd && <Route path="/dev" element={<Dev />} />}
+        <Route path="*" element={<NotFound />} />
+        {false && <></>}
       </Routes>
     </Frame>
   );
