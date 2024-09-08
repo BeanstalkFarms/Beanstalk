@@ -28,8 +28,8 @@ export const useWellsQuery = () => {
   const query = useChainScopedQuery({
     queryKey: queryKeys.wells(sdk),
     queryFn: async () => {
-      Log.module("wells").debug("Fetching wells...");
       const wellAddresses = await findWells(sdk, aquifer);
+
       try {
         setWellsLoading(true);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
@@ -65,13 +65,14 @@ export const useWellsQuery = () => {
         return [];
       }
     },
+    enabled: !!sdk && !!aquifer,
     retry: false,
     staleTime: Infinity
   });
 
   useEffect(() => {
     setWells({ data: query.data || [], error: query.error, isLoading: query.isLoading });
-  }, [query, setWells]);
+  }, [query.data, query.error, query.isLoading, setWells]);
 
   return query;
 };

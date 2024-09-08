@@ -5,6 +5,7 @@ import { useAccount, useChainId } from "wagmi";
 
 import { AddressIsh } from "src/types";
 
+
 const makeScopedQueryKey = (chainId: number, address: AddressIsh, queryKey: QueryKey) => {
   const scope = [chainId, address || "no-address"];
   return [scope, ...(typeof queryKey === "string" ? [queryKey] : queryKey)];

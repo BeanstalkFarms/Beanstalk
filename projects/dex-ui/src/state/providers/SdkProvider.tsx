@@ -33,6 +33,10 @@ function BeanstalkSdkSetter({ children }: { children: React.ReactNode }) {
   const chainId = provider.network.chainId;
 
   useEffect(() => {
+    setSdk(null);
+  }, [chainId]);
+
+  useEffect(() => {
     setSdk(getSDK(provider as JsonRpcProvider, signer, chainId));
   }, [provider, signer, chainId, setSdk]);
 

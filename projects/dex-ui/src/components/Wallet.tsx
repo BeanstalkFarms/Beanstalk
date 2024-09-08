@@ -1,8 +1,11 @@
 import React, { useEffect } from "react";
 
 import { ConnectKitButton, useModal as useConnectKitModal } from "connectkit";
+import { useAtom } from "jotai";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
+
+import { sdkAtom } from "src/state/atoms";
 
 import { ButtonPrimary } from "./Button";
 
@@ -19,7 +22,7 @@ export const WalletButton = () => {
 
   return (
     <ConnectKitButton.Custom>
-      {({ isConnected, show, truncatedAddress, ensName }) => {
+      {({ isConnected, show, truncatedAddress, ensName, chain }) => {
         return (
           <>
             <StyledConnectButton onClick={show}>
@@ -85,7 +88,12 @@ const StyledConnectButton = styled.button`
  */
 const useUpdateWalletModalStyles = () => {
   const { address } = useAccount();
-  const { open, setOpen } = useConnectKitModal();
+  const { open, setOpen } = useConnectKitModal({
+    onConnect: () => {
+      console.log("connecting....");
+    }
+  });
+  const [sdk, setSdk] = useAtom(sdkAtom);
 
   useEffect(() => {
     if (address || !open) return;

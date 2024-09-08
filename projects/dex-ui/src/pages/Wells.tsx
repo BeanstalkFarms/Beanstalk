@@ -41,12 +41,10 @@ export const Wells = () => {
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { data: tokenPrices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
+
   const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
-  const tableData = useMemo(
-    () => makeTableData(sdk, wells, wellStats, tokenPrices),
-    [sdk, tokenPrices, wellStats, wells]
-  );
+  const tableData = makeTableData(sdk, wells, wellStats, tokenPrices);
 
   const loading = useLagLoading(
     isLoading ||
@@ -230,9 +228,10 @@ const makeTableData = (
     };
   });
 
+  // console.log("data: ", data);
   const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
 
-  const sortedByLiquidity = whitelistedSort.sort((a, b) => {
+  whitelistedSort.sort((a, b) => {
     if (!a.liquidityUSDInferred) return 1;
     if (!b.liquidityUSDInferred) return -1;
 
@@ -241,12 +240,12 @@ const makeTableData = (
     return diff.gt(0) ? -1 : 1;
   });
 
-  const sortedByHasReserves = sortedByLiquidity.sort((a, b) => {
+  whitelistedSort.sort((a, b) => {
     if (a.hasReserves === b.hasReserves) return 0;
     return a.hasReserves && !b.hasReserves ? -1 : 1;
   });
 
-  return sortedByHasReserves;
+  return whitelistedSort;
 };
 
 const getSortByWhitelisted =

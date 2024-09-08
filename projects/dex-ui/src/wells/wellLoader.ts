@@ -21,7 +21,14 @@ const WELL_BLACKLIST: Record<number, WellAddresses> = {
     "0xbea0009b5b96D87643DFB7392293f18af7C041F4".toLowerCase(), // bean:wstETH duplicate
     "0x5997111CbBAA0f4C613Ae678Ba4803e764140266".toLowerCase() // usdc:frax duplicate
   ],
-  [ChainId.ARBITRUM_MAINNET]: []
+  [ChainId.ARBITRUM_MAINNET]: [
+    "0x0adf75da6980fee8f848d52a7af1f8d6f34a8169".toLowerCase(), // bean:WETH duplicate,
+    "0xb968de36ce9c61371a82a78b715af660c2209d11".toLowerCase(), // bean:wstETH duplicate
+    "0x8d74ff8e729b4e78898488775b619c05d1ecb5e5".toLowerCase(), // bean:weETH duplicate
+    "0x370062BE2d6Fc8d02948fEA75fAfe471F74854CF".toLowerCase(), // bean:WBTC duplicate
+    "0x157219b5D112F2D8aaFD3c7F3bA5D4c73343cc96".toLowerCase(), // bean:USDC duplicate
+    "0xF3e4FC5c53D5500989e68F81d070094525caC240".toLowerCase() // bean:USDT duplicate
+  ]
 };
 
 const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellAddresses> => {
@@ -46,19 +53,19 @@ const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellA
   return addresses;
 };
 
-const loadFromGraph = async (chainId: ChainId): Promise<WellAddresses> => {
+const loadFromGraph = async (_chainId: ChainId): Promise<WellAddresses> => {
   const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined);
   const results = await data();
 
-  const fallbackChainId = Address.getFallbackChainId(chainId);
-  const blacklist = WELL_BLACKLIST[chainId] || WELL_BLACKLIST[fallbackChainId];
+  const chainId = getChainIdOrFallbackChainId(_chainId);
+  const blacklist = WELL_BLACKLIST[chainId];
 
   return results.wells.map((w) => w.id).filter((addr) => !blacklist.includes(addr.toLowerCase()));
 };
 
 export const findWells = memoize(
   async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellAddresses> => {
-    const addresses = await Promise.any([
+    const result = await Promise.any([
       loadFromChain(sdk, aquifer)
         .then((res) => {
           Log.module("wells").debug("Used blockchain to load wells");
@@ -80,11 +87,16 @@ export const findWells = memoize(
       //     throw err;
       //   })
     ]);
-    if (addresses.length === 0) {
+
+    const wellLPAddresses = sdk.pools.getWells().map((w) => w.address.toLowerCase());
+    const resultAddresses = result.map((r) => r.toLowerCase());
+    const addresses = new Set([...wellLPAddresses, ...resultAddresses]);
+
+    if (!addresses.size) {
       throw new Error("No deployed wells found");
     }
 
-    return addresses;
+    return [...addresses];
   },
   // Override the default memoize caching with just a '1'
   // so it always caches, regardless of parameter passed
