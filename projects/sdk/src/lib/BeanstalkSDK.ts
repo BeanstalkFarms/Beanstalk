@@ -157,10 +157,6 @@ export class BeanstalkSDK {
 
   private getProviderFromUrl(url: string, _provider: BeanstalkConfig["provider"]): Provider {
     const networkish = _provider?.network || _provider?._network || Address.defaultChainId;
-    console.log("\tSDK: getProviderFromUrl: ", {
-      url,
-      networkish
-    });
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
