@@ -36,7 +36,7 @@ export function handleSeasonSnapshot(event: SeasonSnapshot): void {
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   let season = loadSeason(event.params.season);
   // Attempt to pull from Beanstalk Price contract first
-  let beanstalkQuery = BeanstalkPrice_try_price(event.address, event.block.number);
+  let beanstalkQuery = BeanstalkPrice_try_price(event.block.number);
   if (beanstalkQuery.reverted) {
     let curvePrice = CurvePrice.bind(CURVE_PRICE);
     season.price = toDecimal(curvePrice.getCurve().price);

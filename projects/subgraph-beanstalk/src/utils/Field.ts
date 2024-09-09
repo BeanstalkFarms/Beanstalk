@@ -359,7 +359,6 @@ export function temperatureChanged(params: TemperatureChangedParams): void {
     currentPrice = seasonEntity.price;
   } else {
     // Attempt to pull from Beanstalk Price contract first
-    // TODO: check whether protocol should be supplied here
     let beanstalkQuery = BeanstalkPrice_try_price(params.event.block.number);
     if (beanstalkQuery.reverted) {
       let curvePrice = CurvePrice.bind(CURVE_PRICE);

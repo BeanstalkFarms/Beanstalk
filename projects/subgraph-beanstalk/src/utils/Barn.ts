@@ -50,7 +50,7 @@ export function unripeChopped(params: ChopParams): void {
 
   let id = params.type + "-" + params.event.transaction.hash.toHexString() + "-" + params.event.transactionLogIndex.toString();
   let chop = new ChopEntity(id);
-  chop.farmer = params.account.toHexString();
+  chop.farmer = params.account;
   chop.unripeToken = unripe.id;
   chop.unripeAmount = params.unripeAmount;
   chop.unripeBdv = params.unripeAmount.times(unripeBdvOne).div(BI_10.pow(<u8>unripeWhitelist.decimals));
@@ -91,6 +91,6 @@ export function updateUnripeStats(unripe: Address, protocol: Address, block: eth
     unripeToken.choppableBdvOne = unripeToken.choppableAmountOne.times(underlyingBdvOne).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
   }
 
-  takeUnripeTokenSnapshots(unripeToken, protocol, block.timestamp);
+  takeUnripeTokenSnapshots(unripeToken, block);
   unripeToken.save();
 }

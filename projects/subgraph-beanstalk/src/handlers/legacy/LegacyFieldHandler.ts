@@ -14,50 +14,17 @@ export function handleWeatherChange(event: WeatherChange): void {
 
 // PreReplant -> Replanted
 export function handleSupplyIncrease(event: SupplyIncrease): void {
-  updateFieldTotals(
-    event.address,
-    event.address,
-    event.params.newSoil,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp,
-    event.block.number
-  );
+  updateFieldTotals(event.address, event.address, event.params.newSoil, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, event.block);
 }
 
 // PreReplant -> Replanted
 export function handleSupplyDecrease(event: SupplyDecrease): void {
-  updateFieldTotals(
-    event.address,
-    event.address,
-    event.params.newSoil,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp,
-    event.block.number
-  );
+  updateFieldTotals(event.address, event.address, event.params.newSoil, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, event.block);
 }
 
 // PreReplant -> Replanted
 export function handleSupplyNeutral(event: SupplyNeutral): void {
-  updateFieldTotals(
-    event.address,
-    event.address,
-    event.params.newSoil,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    event.block.timestamp,
-    event.block.number
-  );
+  updateFieldTotals(event.address, event.address, event.params.newSoil, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, event.block);
 }
 
 // PreReplant -> Replanted
@@ -72,7 +39,6 @@ export function handleFundFundraiser(event: FundFundraiser): void {
     ZERO_BI,
     ZERO_BI,
     ZERO_BI,
-    event.block.timestamp,
-    event.block.number
+    event.block
   );
 }

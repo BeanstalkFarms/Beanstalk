@@ -81,7 +81,7 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
     return;
   }
 
-  updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block.timestamp);
+  updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block);
 }
 
 export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
@@ -90,7 +90,7 @@ export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
     return;
   }
 
-  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block.timestamp);
+  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block);
 }
 
 export function handlePlant(event: Plant): void {
