@@ -20,7 +20,6 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
-import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
 
 /**
  * @author Brean
@@ -30,7 +29,7 @@ import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
  * in order to migrate their deposits, plots, fertilizer, and internal balances to L2.
  **/
 
-contract L1RecieverFacet is ReentrancyGuard, Order {
+contract L1RecieverFacet is ReentrancyGuard {
     // todo: update with correct external beans once L1 Beanstalk has been paused.
     uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
 
@@ -411,7 +410,7 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
-        return MerkleProof.verify(proof, PODLISTING_ORDER_MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
     }
 
     //////////// MIGRATION HELPERS ////////////
