@@ -2,7 +2,7 @@ import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import {
   assertMarketListingsState,
   assertMarketOrdersState,

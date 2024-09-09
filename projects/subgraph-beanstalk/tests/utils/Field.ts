@@ -5,7 +5,7 @@ import { handleHarvest, handlePlotTransfer, handleSow } from "../../src/handlers
 import { createIncentivizationEvent } from "../event-mocking/Season";
 import { handleIncentive } from "../../src/handlers/SeasonHandler";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 
 const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 

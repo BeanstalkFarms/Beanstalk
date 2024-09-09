@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts
 import { BoreWellWellFunctionStruct } from "../../generated/Basin-ABIs/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
-import { BEAN_ERC20 } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import {
   deltaBigDecimalArray,

@@ -3,7 +3,7 @@ import { createMockedFunction } from "matchstick-as";
 
 import { TokenExchangeUnderlying } from "../../generated/Bean-ABIs/Bean3CRV";
 import { mockContractEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import { BEAN_3CRV_V1 } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_3CRV_V1 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 
 export function mock_virtual_price(contract: Address, retval: BigInt): void {
   createMockedFunction(contract, "get_virtual_price", "get_virtual_price():(uint256)")

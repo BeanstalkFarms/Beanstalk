@@ -5,9 +5,10 @@ import { loadBean } from "../entities/Bean";
 import { WellOracle } from "../../generated/Bean-ABIs/BasinBip";
 import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
-import { getProtocolToken, isUnripe } from "../utils/constants/Addresses";
 import { updateSeason } from "../utils/legacy/Beanstalk";
 import { updatePoolPricesOnCross } from "../utils/Cross";
+import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 // Beanstalk 3 handler here, might not put this in the manifest yet - do not delete.
 export function handleSunrise(event: Sunrise): void {
@@ -20,7 +21,7 @@ export function handleSunrise(event: Sunrise): void {
 
 // Assumption is that the whitelisted token corresponds to a pool lp. If not, this method will simply do nothing.
 export function handleDewhitelistToken(event: DewhitelistToken): void {
-  let beanToken = getProtocolToken(event.block.number);
+  let beanToken = getProtocolToken(v(), event.block.number);
   let bean = loadBean(beanToken);
   let index = bean.pools.indexOf(event.params.token);
   if (index >= 0) {
@@ -49,18 +50,18 @@ export function handleWellOracle(event: WellOracle): void {
 // The result of fertilizer purchases will be included by the AddLiquidity event
 
 export function handleChop(event: Chop): void {
-  let beanToken = getProtocolToken(event.block.number);
+  let beanToken = getProtocolToken(v(), event.block.number);
   updateBeanSupplyPegPercent(beanToken, event.block.number);
 }
 
 export function handleConvert(event: Convert): void {
-  if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
-    let beanToken = getProtocolToken(event.block.number);
+  if (isUnripe(v(), event.params.fromToken) && !isUnripe(v(), event.params.toToken)) {
+    let beanToken = getProtocolToken(v(), event.block.number);
     updateBeanSupplyPegPercent(beanToken, event.block.number);
   }
 }
 
 export function handleRewardMint(event: Reward): void {
-  let beanToken = getProtocolToken(event.block.number);
+  let beanToken = getProtocolToken(v(), event.block.number);
   updateBeanSupplyPegPercent(beanToken, event.block.number);
 }

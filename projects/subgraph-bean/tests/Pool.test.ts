@@ -1,5 +1,12 @@
 import { beforeEach, afterEach, clearStore, describe, assert, test } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_V1, CRV3_TOKEN, WETH } from "../../subgraph-core/constants/BeanstalkEth";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_ERC20_V1,
+  BEAN_WETH_V1,
+  CRV3_TOKEN,
+  WETH
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BigInt, Address } from "@graphprotocol/graph-ts";
 import { loadOrCreatePool } from "../src/entities/Pool";
 import { toAddress } from "../../subgraph-core/utils/Bytes";

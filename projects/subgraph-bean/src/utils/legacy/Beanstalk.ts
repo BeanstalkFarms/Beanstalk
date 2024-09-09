@@ -1,12 +1,13 @@
 import { ethereum } from "@graphprotocol/graph-ts";
 import { loadBean } from "../../entities/Bean";
 import { updateBeanSeason } from "../Bean";
-import { getProtocolToken } from "../constants/Addresses";
 import { updatePoolSeason } from "../Pool";
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
+import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../constants/Version";
 
 export function updateSeason(season: i32, block: ethereum.Block): void {
-  let beanToken = getProtocolToken(block.number);
+  let beanToken = getProtocolToken(v(), block.number);
   updateBeanSeason(beanToken, block.timestamp, season);
 
   let bean = loadBean(beanToken);

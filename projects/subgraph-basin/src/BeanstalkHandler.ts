@@ -1,5 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { AQUIFER } from "../../subgraph-core/constants/BeanstalkEth";
+import { AQUIFER } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { Sunrise } from "../generated/Basin-ABIs/Beanstalk";
 import { loadOrCreateAquifer } from "./utils/Aquifer";
 import { checkForSnapshot } from "./utils/Well";

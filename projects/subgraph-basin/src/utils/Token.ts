@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { Token } from "../../generated/schema";
 import { CurvePrice } from "../../generated/Basin-ABIs/CurvePrice";
-import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanstalkPrice } from "./BeanstalkPrice";
 

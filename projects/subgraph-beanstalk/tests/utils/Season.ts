@@ -1,4 +1,4 @@
-import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadBeanstalk } from "../../src/entities/Beanstalk";
 
 export function setSeason(season: u32): void {

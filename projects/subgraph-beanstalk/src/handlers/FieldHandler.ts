@@ -1,5 +1,5 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_FARMS } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK_FARMS } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadField } from "../entities/Field";
 import { harvest, plotTransfer, sow, temperatureChanged } from "../utils/Field";
 import { Sow, Harvest, PlotTransfer, TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";

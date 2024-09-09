@@ -5,13 +5,14 @@ import { Pool, PoolDailySnapshot, PoolHourlySnapshot } from "../../generated/sch
 import { loadOrCreateToken } from "./Token";
 import { emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
-import { getProtocolToken } from "../utils/constants/Addresses";
 import { toAddress, toBytesArray } from "../../../subgraph-core/utils/Bytes";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 export function loadOrCreatePool(poolAddress: Address, blockNumber: BigInt): Pool {
   let pool = Pool.load(poolAddress);
   if (pool == null) {
-    let beanAddress = getProtocolToken(blockNumber);
+    let beanAddress = getProtocolToken(v(), blockNumber);
     let bean = loadBean(beanAddress);
 
     pool = new Pool(poolAddress);

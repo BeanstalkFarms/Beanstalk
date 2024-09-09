@@ -9,7 +9,7 @@ import {
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../subgraph-core/constants/BeanstalkEth";
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   mockGetRecapPaidPercent,

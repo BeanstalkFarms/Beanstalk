@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
 import { Pool } from "../../generated/schema";
-import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross } from "./Cross";
 import { BeanstalkPrice_try_price, BeanstalkPriceResult } from "./price/BeanstalkPrice";
@@ -9,8 +9,9 @@ import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot
 import { loadOrCreatePool, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
 import { externalUpdatePoolPrice as univ2_externalUpdatePoolPrice } from "../handlers/legacy/LegacyUniswapV2Handler";
 import { updateBeanSupplyPegPercent_v1 } from "./legacy/Bean";
-import { getProtocolToken } from "./constants/Addresses";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 export function adjustSupply(beanToken: Address, amount: BigInt): void {
   let bean = loadBean(beanToken);
@@ -174,7 +175,7 @@ export function updateInstDeltaB(token: Address, block: ethereum.Block): void {
 
 // Update Bean's TWA deltaB and price. Individual pools' values must be computed prior to calling this method.
 export function updateBeanTwa(block: ethereum.Block): void {
-  let beanAddress = getProtocolToken(block.number);
+  let beanAddress = getProtocolToken(v(), block.number);
   let bean = loadBean(beanAddress);
   let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, block.timestamp, bean.lastSeason);
   let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, block.timestamp);

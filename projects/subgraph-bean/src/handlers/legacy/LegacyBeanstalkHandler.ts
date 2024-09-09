@@ -1,5 +1,5 @@
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
-import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../../../generated/Bean-ABIs/CurvePrice";
 import { Sunrise } from "../../../generated/Bean-ABIs/PreReplant";
@@ -7,7 +7,6 @@ import { MetapoolOracle } from "../../../generated/Bean-ABIs/Replanted";
 import { loadBean } from "../../entities/Bean";
 import { loadOrCreatePool } from "../../entities/Pool";
 import { updateBeanTwa, updateBeanValues } from "../../utils/Bean";
-import { getProtocolToken } from "../../utils/constants/Addresses";
 import { checkBeanCross, updatePoolPricesOnCross } from "../../utils/Cross";
 import { updateSeason } from "../../utils/legacy/Beanstalk";
 import { updatePoolPrice, updatePoolValues } from "../../utils/Pool";
@@ -15,12 +14,14 @@ import { calcCurveInst, setCurveTwa } from "../../utils/price/CurvePrice";
 import { setTwaLast } from "../../utils/price/TwaOracle";
 import { DeltaBPriceLiquidity } from "../../utils/price/Types";
 import { calcUniswapV2Inst, setUniswapV2Twa } from "../../utils/price/UniswapPrice";
+import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../../utils/constants/Version";
 
 export function handleSunrise_v1(event: Sunrise): void {
   updateSeason(event.params.season.toI32(), event.block);
 
   // V1 logic below
-  let beanToken = getProtocolToken(event.block.number);
+  let beanToken = getProtocolToken(v(), event.block.number);
 
   let bean = loadBean(beanToken);
   let weightedPrice = ZERO_BD;
@@ -55,7 +56,7 @@ export function handleSunrise_v2(event: Sunrise): void {
   updateSeason(event.params.season.toI32(), event.block);
 
   // V2 logic below
-  let beanToken = getProtocolToken(event.block.number);
+  let beanToken = getProtocolToken(v(), event.block.number);
   let bean = loadBean(beanToken);
   let oldBeanPrice = bean.price;
 

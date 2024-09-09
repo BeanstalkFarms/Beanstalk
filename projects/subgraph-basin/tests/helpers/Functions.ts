@@ -7,7 +7,7 @@ import {
   BEANSTALK_PRICE_1,
   CRV3_TOKEN,
   WETH
-} from "../../../subgraph-core/constants/BeanstalkEth";
+} from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BEAN_USD_PRICE, WELL } from "./Constants";
 import { setMockBeanPrice } from "../../../subgraph-core/tests/event-mocking/Price";
 import { ONE_BD, ZERO_BD } from "../../../subgraph-core/utils/Decimals";

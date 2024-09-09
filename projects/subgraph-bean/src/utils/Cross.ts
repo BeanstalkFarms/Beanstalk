@@ -1,13 +1,14 @@
 import { BigDecimal, Address, ethereum, log } from "@graphprotocol/graph-ts";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEAN_ERC20_V1 } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20_V1 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadOrCreatePool, loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "../entities/Pool";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../entities/Bean";
 import { loadOrCreateBeanCross, loadOrCreatePoolCross } from "../entities/Cross";
 import { BeanstalkPrice_try_price } from "./price/BeanstalkPrice";
 import { updatePoolPrice, updatePoolValues } from "./Pool";
 import { updateBeanValues } from "./Bean";
-import { getProtocolToken } from "./constants/Addresses";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 export function checkPoolCross(pool: Address, oldPrice: BigDecimal, newPrice: BigDecimal, block: ethereum.Block): boolean {
   let poolInfo = loadOrCreatePool(pool, block.number);
@@ -132,7 +133,7 @@ export function updatePoolPricesOnCross(priceOnlyOnCross: boolean, block: ethere
     // Price contract was unavailable briefly after well deployment
     return false;
   }
-  const beanToken = getProtocolToken(block.number);
+  const beanToken = getProtocolToken(v(), block.number);
   const bean = loadBean(beanToken);
   const prevPrice = bean.price;
   const newPrice = toDecimal(priceResult.value.price);

@@ -1,5 +1,10 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, BEAN_WETH_CP2_WELL_BLOCK } from "../../subgraph-core/constants/BeanstalkEth";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_CP2_WELL_BLOCK
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { createDewhitelistTokenEvent } from "./event-mocking/Beanstalk";
 import { setWhitelistedPools } from "./entity-mocking/MockBean";
 import { handleDewhitelistToken } from "../src/handlers/BeanstalkHandler";

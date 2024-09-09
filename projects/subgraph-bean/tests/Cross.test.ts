@@ -6,7 +6,13 @@ import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { mockPreReplantETHPrice, simpleMockPrice } from "../../subgraph-core/tests/event-mocking/Price";
 
-import { BEAN_3CRV_V1, BEAN_ERC20, BEAN_ERC20_V1, BEAN_WETH_CP2_WELL, BEAN_WETH_V1 } from "../../subgraph-core/constants/BeanstalkEth";
+import {
+  BEAN_3CRV_V1,
+  BEAN_ERC20,
+  BEAN_ERC20_V1,
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_V1
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BigDecimal_round, toDecimal, ZERO_BD } from "../../subgraph-core/utils/Decimals";
 
 import { getPreReplantPriceETH, constantProductPrice, uniswapV2Reserves } from "../src/utils/price/UniswapPrice";

@@ -4,17 +4,21 @@ import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 import { loadOrCreatePool } from "../entities/Pool";
-import { getVersionEntity } from "./constants/Version";
+import { getVersionEntity, v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
-import { getUnripeBeanAddr, getUnripeLpAddr } from "./constants/Addresses";
-import { getUnripeUnderlying, isGaugeDeployed } from "./constants/Milestone";
+import {
+  getUnripeBeanAddr,
+  getUnripeLpAddr,
+  getUnripeUnderlying,
+  isGaugeDeployed
+} from "../../../subgraph-core/constants/RuntimeConstants";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
   const protocol = toAddress(getVersionEntity().protocolAddress);
-  const underlyingLpPool = getUnripeUnderlying(getUnripeLpAddr(), blockNumber);
+  const underlyingLpPool = getUnripeUnderlying(v(), getUnripeLpAddr(v()), blockNumber);
 
   // If BIP45 is deployed - return the result from the contract
-  if (isGaugeDeployed(blockNumber)) {
+  if (isGaugeDeployed(v(), blockNumber)) {
     // If we are trying to calculate locked beans on the same block as the sunrise, use the values from the previous hour
     const twaOracle = loadOrCreateTwaOracle(underlyingLpPool);
     const twaReserves =
@@ -40,8 +44,8 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
   }
 
   const recapPaidPercent = new BigDecimal(recapPercentResult.value).div(BigDecimal.fromString("1000000"));
-  const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeBeanAddr(), recapPaidPercent);
-  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeLpAddr(), recapPaidPercent);
+  const lockedBeansUrBean = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeBeanAddr(v()), recapPaidPercent);
+  const lockedUnripeLp = LibLockedUnderlying_getLockedUnderlying(protocol, getUnripeLpAddr(v()), recapPaidPercent);
 
   const poolBeanReserves = loadOrCreatePool(underlyingLpPool, blockNumber).reserves[0];
   const totalLpTokens = ERC20.bind(underlyingLpPool).totalSupply();

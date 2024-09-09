@@ -1,10 +1,11 @@
 import { ethereum } from "@graphprotocol/graph-ts";
 import { BEAN_INITIAL_VALUES } from "../../../cache-builder/results/BeanInit_arb";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../../entities/Bean";
-import { getProtocolToken } from "../constants/Addresses";
+import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../constants/Version";
 
 export function handleInitBeanEntity(block: ethereum.Block): void {
-  const token = getProtocolToken(block.number);
+  const token = getProtocolToken(v(), block.number);
   const bean = loadBean(token);
 
   bean.volume = BEAN_INITIAL_VALUES.volume;

@@ -1,7 +1,7 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Field, Plot } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
 export function loadField(account: Address): Field {

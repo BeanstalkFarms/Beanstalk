@@ -1,5 +1,5 @@
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
-import { CURVE_PRICE, REPLANT_SEASON } from "../../../../subgraph-core/constants/BeanstalkEth";
+import { CURVE_PRICE, REPLANT_SEASON } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal } from "../../../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../../../generated/Beanstalk-ABIs/CurvePrice";
 import { SeasonSnapshot, Sunrise } from "../../../generated/Beanstalk-ABIs/PreReplant";

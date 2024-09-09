@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Transfer } from "../../generated/Beanstalk-ABIs/ERC20";
-import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
 import { getTokenProtocol } from "../utils/Constants";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";

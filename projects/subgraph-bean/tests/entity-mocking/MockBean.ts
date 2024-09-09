@@ -1,5 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20 } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadBean } from "../../src/entities/Bean";
 import { toBytesArray } from "../../../subgraph-core/utils/Bytes";
 

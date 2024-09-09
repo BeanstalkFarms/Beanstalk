@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/constants/BeanstalkEth";
+import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";

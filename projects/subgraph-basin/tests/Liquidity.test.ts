@@ -22,7 +22,7 @@ import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { BigDecimal_max, BigDecimal_min } from "../../subgraph-core/utils/ArrayMath";
 import { calcLiquidityVolume } from "../src/utils/VolumeCP";
 import { loadToken } from "../src/utils/Token";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/BeanstalkEth";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);

@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, ethereum, Address, Bytes } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
-import { BEANSTALK } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 
 export function mockSeedGaugeLockedBeans(reserveBytes: Bytes, twaTimestamp: BigInt, lockedBeans: BigInt): void {
   createMockedFunction(BEANSTALK, "getLockedBeansFromTwaReserves", "getLockedBeansFromTwaReserves(bytes,uint40):(uint256)")

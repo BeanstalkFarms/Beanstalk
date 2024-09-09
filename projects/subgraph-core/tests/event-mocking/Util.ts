@@ -1,6 +1,6 @@
 import { Address, ethereum } from "@graphprotocol/graph-ts";
 import { newMockEvent } from "matchstick-as/assembly/index";
-import { BEANSTALK } from "../../constants/BeanstalkEth";
+import { BEANSTALK } from "../../constants/raw/BeanstalkEthConstants";
 
 // Default mock to include beanstalk address
 export function mockBeanstalkEvent(): ethereum.Event {

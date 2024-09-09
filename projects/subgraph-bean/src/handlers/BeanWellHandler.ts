@@ -5,8 +5,9 @@ import { loadOrCreatePool } from "../entities/Pool";
 import { BeanstalkPrice_try_price, getPoolPrice } from "../utils/price/BeanstalkPrice";
 import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues } from "../utils/Pool";
 import { updateBeanAfterPoolSwap } from "../utils/Bean";
-import { getProtocolToken } from "../utils/constants/Addresses";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
+import { v } from "../utils/constants/Version";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   handleLiquidityChange(event.address, event.params.tokenAmountsIn[0], event.params.tokenAmountsIn[1], false, event.block);
@@ -17,7 +18,7 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 }
 
 export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): void {
-  const beanAddr = getProtocolToken(event.block.number);
+  const beanAddr = getProtocolToken(v(), event.block.number);
   handleLiquidityChange(
     event.address,
     event.params.tokenOut == beanAddr ? event.params.tokenAmountOut : ZERO_BI,
@@ -113,7 +114,7 @@ function handleSwapEvent(poolAddress: Address, toToken: Address, amountIn: BigIn
     return;
   }
 
-  const beanAddr = getProtocolToken(block.number);
+  const beanAddr = getProtocolToken(v(), block.number);
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, block);
 

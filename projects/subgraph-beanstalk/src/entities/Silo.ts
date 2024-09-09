@@ -9,7 +9,7 @@ import {
   TokenYield,
   UnripeToken
 } from "../../generated/schema";
-import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/constants/BeanstalkEth";
+import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, getUnripeUnderlying } from "../utils/Constants";
 
