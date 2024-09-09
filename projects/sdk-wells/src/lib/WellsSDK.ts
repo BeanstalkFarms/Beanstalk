@@ -1,4 +1,4 @@
-import { ChainId } from "@beanstalk/sdk-core";
+import { Address, ChainId } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
@@ -69,7 +69,7 @@ export class WellsSDK {
 
   handleConfig(config: SDKConfig = {}) {
     if (config.rpcUrl) {
-      config.provider = this.getProviderFromUrl(config.rpcUrl);
+      config.provider = this.getProviderFromUrl(config.rpcUrl, config.provider);
     }
 
     this.signer = config.signer;
@@ -84,12 +84,13 @@ export class WellsSDK {
     this.DEBUG = config.DEBUG ?? false;
   }
 
-  private getProviderFromUrl(url: string): Provider {
+  private getProviderFromUrl(url: string, _provider: SDKConfig["provider"]): Provider {
+    const networkish = _provider?.network || _provider?._network || Address.defaultChainId;
     if (url.startsWith("ws")) {
-      return new ethers.providers.WebSocketProvider(url);
+      return new ethers.providers.WebSocketProvider(url, networkish);
     }
     if (url.startsWith("http")) {
-      return new ethers.providers.JsonRpcProvider(url);
+      return new ethers.providers.JsonRpcProvider(url, networkish);
     }
 
     throw new Error("Invalid rpcUrl");
