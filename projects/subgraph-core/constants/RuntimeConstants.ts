@@ -18,6 +18,13 @@ export function getProtocolToken(v: VersionDto, blockNumber: BigInt): Address {
   throw new Error("Unsupported protocol");
 }
 
+export function getProtocolFertilizer(v: VersionDto): Address | null {
+  if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
+    return BeanstalkEth.getProtocolFertilizer();
+  }
+  throw new Error("Unsupported protocol");
+}
+
 export function getUnripeBeanAddr(v: VersionDto): Address {
   if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
     return BeanstalkEth.getUnripeBeanAddr();
@@ -35,6 +42,13 @@ export function getUnripeLpAddr(v: VersionDto): Address {
 export function isUnripe(v: VersionDto, token: Address): boolean {
   if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
     return BeanstalkEth.isUnripe(token);
+  }
+  throw new Error("Unsupported protocol");
+}
+
+export function getTokenDecimals(v: VersionDto, token: Address): i32 {
+  if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
+    return BeanstalkEth.getTokenDecimals(token);
   }
   throw new Error("Unsupported protocol");
 }

@@ -1,5 +1,5 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
-import { assert, describe, test } from "matchstick-as/assembly/index";
+import { assert, beforeEach, describe, test } from "matchstick-as/assembly/index";
 import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/entities/Silo";
 import {
@@ -14,8 +14,12 @@ import {
 import { setSeason } from "./utils/Season";
 import { calculateAPYPreGauge } from "../src/utils/legacy/LegacyYield";
 import { calculateGaugeVAPYs, updateSiloVAPYs } from "../src/utils/Yield";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("APY Calculations", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   describe("Pre-Gauge", () => {
     test("No Bean mints", () => {
       const apy = calculateAPYPreGauge(

@@ -13,10 +13,6 @@ export function handleInitVersion(block: ethereum.Block): void {
   versionEntity.save();
 }
 
-export function getVersionEntity(): Version {
-  return Version.load("subgraph")!;
-}
-
 function subgraphNameForBlockNumber(blockNumber: BigInt): string {
   if (blockNumber == BigInt.fromU32(12974075)) {
     return "bean";

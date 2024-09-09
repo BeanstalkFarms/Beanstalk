@@ -2,13 +2,13 @@ import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { getFertilizerProtocol } from "../utils/Constants";
+import { v } from "../utils/constants/Version";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
   let fertilizer = Fertilizer.load(fertilizerAddress.toHexString());
   if (fertilizer == null) {
     fertilizer = new Fertilizer(fertilizerAddress.toHexString());
-    fertilizer.beanstalk = getFertilizerProtocol(fertilizerAddress).toHexString();
+    fertilizer.beanstalk = v().protocolAddress.toHexString();
     fertilizer.supply = ZERO_BI;
     fertilizer.save();
   }

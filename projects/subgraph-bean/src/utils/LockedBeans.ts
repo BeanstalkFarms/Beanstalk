@@ -4,7 +4,7 @@ import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 import { loadOrCreatePool } from "../entities/Pool";
-import { getVersionEntity, v } from "./constants/Version";
+import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 import {
   getUnripeBeanAddr,
@@ -14,7 +14,7 @@ import {
 } from "../../../subgraph-core/constants/RuntimeConstants";
 
 export function calcLockedBeans(blockNumber: BigInt): BigInt {
-  const protocol = toAddress(getVersionEntity().protocolAddress);
+  const protocol = toAddress(v().protocolAddress);
   const underlyingLpPool = getUnripeUnderlying(v(), getUnripeLpAddr(v()), blockNumber);
 
   // If BIP45 is deployed - return the result from the contract

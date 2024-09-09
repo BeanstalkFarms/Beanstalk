@@ -3,7 +3,8 @@ import { Beanstalk } from "../../generated/schema";
 import { Farmer } from "../../generated/schema";
 import { Season } from "../../generated/schema";
 import { BI_MAX, ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getProtocolFertilizer, getProtocolToken } from "../utils/Constants";
+import { getProtocolFertilizer, getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 export function loadBeanstalk(protocol: Address): Beanstalk {
   let beanstalk = Beanstalk.load(protocol.toHexString());
@@ -11,8 +12,8 @@ export function loadBeanstalk(protocol: Address): Beanstalk {
     beanstalk = new Beanstalk(protocol.toHexString());
     beanstalk.name = "Beanstalk";
     // Pre-replant token currently would not be set
-    beanstalk.token = getProtocolToken(protocol).toHexString();
-    const fert = getProtocolFertilizer(protocol);
+    beanstalk.token = getProtocolToken(v(), BI_MAX).toHexString();
+    const fert = getProtocolFertilizer(v());
     if (fert !== null) {
       beanstalk.fertilizer1155 = fert.toHexString();
     }

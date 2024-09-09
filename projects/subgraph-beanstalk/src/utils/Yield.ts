@@ -14,9 +14,10 @@ import { calculateAPYPreGauge } from "./legacy/LegacyYield";
 import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
-import { getProtocolFertilizer } from "./Constants";
 import { REPLANT_SEASON } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { getProtocolFertilizer } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -414,7 +415,7 @@ function updateGaugePoints(gaugePoints: f64, currentPercent: f64, optimalPercent
 }
 
 function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void {
-  const fertAddress = getProtocolFertilizer(protocol);
+  const fertAddress = getProtocolFertilizer(v());
   if (fertAddress === null) {
     return;
   }

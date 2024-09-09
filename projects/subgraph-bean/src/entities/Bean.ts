@@ -4,13 +4,13 @@ import { dayFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot } from "../../generated/schema";
 import { getV1Crosses } from "../utils/Cross";
-import { getVersionEntity } from "../utils/constants/Version";
+import { v } from "../utils/constants/Version";
 
 export function loadBean(token: Address): Bean {
   let bean = Bean.load(token);
   if (bean == null) {
     bean = new Bean(token);
-    const version = getVersionEntity();
+    const version = v();
     bean.chain = version.chain;
     bean.beanstalk = version.protocolAddress.toHexString();
 

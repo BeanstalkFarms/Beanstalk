@@ -19,8 +19,9 @@ import {
   WhitelistToken
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
-import { getProtocolToken, isUnripe } from "../utils/Constants";
 import { unripeChopped } from "../utils/Barn";
+import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -62,7 +63,7 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
 }
 
 export function handleConvert(event: Convert): void {
-  if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
+  if (isUnripe(v(), event.params.fromToken) && !isUnripe(v(), event.params.toToken)) {
     unripeChopped({
       event,
       type: "convert",
@@ -112,7 +113,7 @@ export function handlePlant(event: Plant): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getProtocolToken(event.address),
+    getProtocolToken(v(), event.block.number),
     event.params.beans,
     event.params.beans,
     event.block.timestamp

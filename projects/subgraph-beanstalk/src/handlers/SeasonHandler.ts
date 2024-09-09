@@ -13,8 +13,9 @@ import { loadField } from "../entities/Field";
 import { updateBeanEMA } from "../utils/Yield";
 import { updateExpiredPlots } from "../utils/Marketplace";
 import { updateHarvestablePlots } from "../utils/Field";
-import { getProtocolToken } from "../utils/Constants";
 import { sunrise } from "../utils/Season";
+import { getProtocolToken, isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 export function handleSunrise(event: Sunrise): void {
   // (Legacy) Update any farmers that had silo transfers from the prior season.
@@ -45,7 +46,7 @@ export function handleReward(event: Reward): void {
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getProtocolToken(event.address),
+    getProtocolToken(v(), event.block.number),
     event.params.toSilo,
     event.params.toSilo,
     event.block.timestamp
@@ -55,8 +56,7 @@ export function handleReward(event: Reward): void {
 export function handleWellOracle(event: WellOracle): void {
   let season = loadSeason(event.address, event.params.season);
   season.deltaB = season.deltaB.plus(event.params.deltaB);
-  // TODO: something like isGaugeDeployed(v())?
-  if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
+  if (isGaugeDeployed(v(), event.block.number) && season.price == ZERO_BD) {
     let beanstalkPrice = getBeanstalkPrice(event.block.number);
     let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);
     season.price = toDecimal(beanstalkQuery.price);

@@ -11,7 +11,8 @@ import {
 } from "../../generated/schema";
 import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getTokenDecimals, getUnripeUnderlying } from "../utils/Constants";
+import { getTokenDecimals, getUnripeUnderlying } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 /* ===== Base Silo Entities ===== */
 
@@ -76,7 +77,7 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     setting.stalkEarnedPerSeason = ZERO_BI;
     setting.stalkIssuedPerBdv = ZERO_BI;
     setting.milestoneSeason = 0;
-    setting.decimals = getTokenDecimals(token);
+    setting.decimals = getTokenDecimals(v(), token);
     setting.updatedAt = ZERO_BI;
 
     // Check token addresses and set replant seeds/stalk for Unripe due to event timing.
@@ -98,7 +99,7 @@ export function loadUnripeToken(token: Address): UnripeToken {
   let unripe = UnripeToken.load(token);
   if (unripe == null) {
     unripe = new UnripeToken(token);
-    unripe.underlyingToken = getUnripeUnderlying(token, ZERO_BI);
+    unripe.underlyingToken = getUnripeUnderlying(v(), token, ZERO_BI);
     unripe.totalUnderlying = ZERO_BI;
     unripe.amountUnderlyingOne = ZERO_BI;
     unripe.bdvUnderlyingOne = ZERO_BI;

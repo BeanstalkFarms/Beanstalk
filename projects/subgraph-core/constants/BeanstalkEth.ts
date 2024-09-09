@@ -1,15 +1,19 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
   BEAN_3CRV,
+  BEAN_3CRV_V1,
   BEAN_ERC20,
   BEAN_ERC20_V1,
+  BEAN_LUSD_V1,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_UNRIPE_MIGRATION_BLOCK,
+  BEAN_WETH_V1,
   BEAN_WSTETH_CP2_WELL,
   BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
   BEANSTALK,
   BEANSTALK_PRICE_1,
   BEANSTALK_PRICE_2,
+  FERTILIZER,
   GAUGE_BIP45_BLOCK,
   NEW_BEAN_TOKEN_BLOCK,
   PRICE_2_BLOCK,
@@ -25,6 +29,10 @@ export function getProtocolToken(blockNumber: BigInt): Address {
   } else {
     return BEAN_ERC20;
   }
+}
+
+export function getProtocolFertilizer(): Address {
+  return FERTILIZER;
 }
 
 export function getUnripeBeanAddr(): Address {
@@ -43,6 +51,31 @@ export function isUnripe(token: Address): boolean {
     }
   }
   return false;
+}
+
+export function getTokenDecimals(token: Address): i32 {
+  if (token == BEAN_ERC20) {
+    return 6;
+  } else if (token == UNRIPE_BEAN) {
+    return 6;
+  } else if (token == UNRIPE_LP) {
+    return 6;
+  } else if (token == BEAN_3CRV) {
+    return 18;
+  } else if (token == BEAN_WETH_CP2_WELL) {
+    return 18;
+  } else if (token == BEAN_WSTETH_CP2_WELL) {
+    return 18;
+  } else if (token == BEAN_ERC20_V1) {
+    return 6;
+  } else if (token == BEAN_WETH_V1) {
+    return 18;
+  } else if (token == BEAN_3CRV_V1) {
+    return 18;
+  } else if (token == BEAN_LUSD_V1) {
+    return 18;
+  }
+  throw new Error("Unsupported token");
 }
 
 /// MILESTONE ///

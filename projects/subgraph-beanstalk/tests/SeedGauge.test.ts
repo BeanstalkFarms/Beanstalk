@@ -1,4 +1,4 @@
-import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
+import { afterEach, beforeEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
 import { BigInt } from "@graphprotocol/graph-ts";
 import {
@@ -6,7 +6,6 @@ import {
   handleGaugePointChange,
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
-  handleTotalGerminatingBalanceChanged,
   handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
@@ -16,7 +15,6 @@ import {
   createBeanToMaxLpGpPerBdvRatioChangeEvent,
   createFarmerGerminatingStalkBalanceChangedEvent,
   createGaugePointChangeEvent,
-  createTotalGerminatingBalanceChangedEvent,
   createTotalGerminatingStalkChangedEvent,
   createTotalStalkChangedFromGerminationEvent,
   createUpdateAverageStalkPerBdvPerSeasonEvent,
@@ -31,12 +29,16 @@ import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { loadSilo } from "../src/entities/Silo";
 import { handleWhitelistToken } from "../src/handlers/SiloHandler";
 import { handleTemperatureChange } from "../src/handlers/FieldHandler";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
 const ratioDecimals = BigInt.fromU32(10).pow(18);
 
 describe("Seed Gauge", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     log.debug("clearing the store", []);
     clearStore();

@@ -9,7 +9,7 @@ import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
 import { Pool } from "../../../generated/schema";
 import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
-import { getVersionEntity } from "../constants/Version";
+import { v } from "../constants/Version";
 
 export function updatePreReplantPriceETH(): BigDecimal {
   let token = loadOrCreateToken(WETH);
@@ -99,7 +99,7 @@ export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp
 }
 
 export function uniswapTwaDeltaBAndPrice(prices: BigInt[], blockNumber: BigInt): DeltaBAndPrice {
-  const protocol = toAddress(getVersionEntity().protocolAddress);
+  const protocol = toAddress(v().protocolAddress);
   let beanstalk = PreReplant.bind(protocol);
   let reserves: BigInt[];
   // After BIP-9, reserves calculation changes

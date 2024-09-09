@@ -5,10 +5,11 @@ import { loadFarmer } from "../entities/Beanstalk";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { loadUnripeToken, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
-import { getUnripeUnderlying } from "./Constants";
 import { BI_10, toDecimal } from "../../../subgraph-core/utils/Decimals";
 import { getLatestBdv } from "../entities/snapshots/WhitelistTokenSetting";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
+import { getUnripeUnderlying } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 class ChopParams {
   event: ethereum.Event;
@@ -82,7 +83,7 @@ export function updateUnripeStats(unripe: Address, protocol: Address, block: eth
   unripeToken.recapPercent = toDecimal(beanstalk_call.getRecapFundedPercent(unripe));
 
   // Further calculated values
-  unripeToken.underlyingToken = getUnripeUnderlying(unripe, block.number);
+  unripeToken.underlyingToken = getUnripeUnderlying(v(), unripe, block.number);
   const underlyingWhitelist = loadWhitelistTokenSetting(Address.fromBytes(unripeToken.underlyingToken));
   const underlyingBdvOne = getLatestBdv(underlyingWhitelist);
   if (underlyingBdvOne !== null) {
