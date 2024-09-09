@@ -270,12 +270,16 @@ dataSources:
       abis:
         - name: Bean3CRV
           file: ../../subgraph-core/abis/Bean3CRV.json
-        - name: CalculationsCurve
-          file: ../../subgraph-core/abis/CalculationsCurve.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: UniswapV2Pair
-          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -307,12 +311,16 @@ dataSources:
       abis:
         - name: Bean3CRV
           file: ../../subgraph-core/abis/Bean3CRV.json
-        - name: CalculationsCurve
-          file: ../../subgraph-core/abis/CalculationsCurve.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: UniswapV2Pair
-          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
