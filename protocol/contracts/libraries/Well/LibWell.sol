@@ -272,6 +272,12 @@ library LibWell {
         }
     }
 
+    /**
+     * @notice Calculates the token price in terms of Bean by increasing
+     * the bean reserves of the given well by 1 and recaclulating the new reserves,
+     * while maintaining the same liquidity levels.
+     * This essentially simulates a swap of 1 Bean for the non bean token and quotes the price.
+     */
     function calculateTokenBeanPriceFromReserves(
         address well,
         uint256 beanIndex,
@@ -293,12 +299,9 @@ library LibWell {
             lpTokenSupply,
             wellFunction.data
         );
-        uint256 delta;
-        if (nonBeanIndex == 1) {
-            delta = oldReserve - newReserve;
-        } else {
-            delta = newReserve - oldReserve;
-        }
+        // Measure the delta of the non bean reserve.
+        // Due to the invariant of the well function, old reserve > new reserve.
+        uint256 delta = oldReserve - newReserve;
         price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
     }
 
