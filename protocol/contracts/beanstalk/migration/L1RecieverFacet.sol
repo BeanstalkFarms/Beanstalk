@@ -411,7 +411,7 @@ contract L1RecieverFacet is ReentrancyGuard, Order {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
-        return MerkleProof.verify(proof, PODLISTING_ORDER_MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
     }
 
     //////////// MIGRATION HELPERS ////////////
