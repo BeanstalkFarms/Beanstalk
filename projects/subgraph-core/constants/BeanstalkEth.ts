@@ -17,6 +17,7 @@ import {
   GAUGE_BIP45_BLOCK,
   NEW_BEAN_TOKEN_BLOCK,
   PRICE_2_BLOCK,
+  REPLANT_SEASON,
   UNRIPE_BEAN,
   UNRIPE_LP
 } from "./raw/BeanstalkEthConstants";
@@ -79,6 +80,10 @@ export function getTokenDecimals(token: Address): i32 {
 }
 
 /// MILESTONE ///
+
+export function isReplanted(blockNumber: BigInt): boolean {
+  return blockNumber >= REPLANT_SEASON;
+}
 
 export function isGaugeDeployed(blockNumber: BigInt): boolean {
   return blockNumber >= GAUGE_BIP45_BLOCK;

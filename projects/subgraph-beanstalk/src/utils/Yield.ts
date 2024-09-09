@@ -18,6 +18,7 @@ import { REPLANT_SEASON } from "../../../subgraph-core/constants/raw/BeanstalkEt
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { getProtocolFertilizer } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -99,7 +100,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
   let gaugeSettings: Array<WhitelistTokenSetting | null> = [];
   let isGaugeLive = false;
   for (let i = 0; i < siloYield.whitelistedTokens.length; ++i) {
-    let token = Address.fromString(siloYield.whitelistedTokens[i]);
+    let token = toAddress(siloYield.whitelistedTokens[i]);
     let tokenSetting = loadWhitelistTokenSetting(token);
 
     whitelistSettings.push(tokenSetting);
@@ -115,7 +116,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
   // Chooses which apy calculation to use
   if (!isGaugeLive) {
-    const beanGrownStalk = loadWhitelistTokenSetting(Address.fromString(beanstalk.token)).stalkEarnedPerSeason;
+    const beanGrownStalk = loadWhitelistTokenSetting(toAddress(beanstalk.token)).stalkEarnedPerSeason;
     for (let i = 0; i < whitelistSettings.length; ++i) {
       const tokenAPY = calculateAPYPreGauge(
         currentEMA,
@@ -149,7 +150,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     const siloTokens = siloYield.whitelistedTokens.concat(silo.dewhitelistedTokens);
     const depositedAssets: SiloAsset[] = [];
     for (let i = 0; i < siloTokens.length; ++i) {
-      depositedAssets.push(loadSiloAsset(protocol, Address.fromString(siloTokens[i])));
+      depositedAssets.push(loadSiloAsset(protocol, toAddress(siloTokens[i])));
     }
 
     // .load() is not supported on graph-node v0.30.0. Instead the above derivation of depositedAssets is used
@@ -157,7 +158,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
     for (let i = 0; i < whitelistSettings.length; ++i) {
       // Get the total deposited bdv of this asset. Remove whitelsited assets from the list as they are encountered
-      const depositedIndex = SiloAsset_findIndex_token(depositedAssets, whitelistSettings[i].id.toHexString());
+      const depositedIndex = SiloAsset_findIndex_token(depositedAssets, toAddress(whitelistSettings[i].id));
       const depositedAsset = depositedAssets.splice(depositedIndex, 1)[0];
       const depositedBdv = toDecimal(depositedAsset.depositedBDV);
 
@@ -171,7 +172,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
         germinatingGaugeLpBdv.push(germinating);
         staticSeeds.push(null);
       } else {
-        if (whitelistSettings[i].id == Address.fromString(beanstalk.token)) {
+        if (whitelistSettings[i].id == toAddress(beanstalk.token)) {
           tokens.push(-1);
           depositedBeanBdv = depositedBdv;
           germinatingBeanBdv = germinating;

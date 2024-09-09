@@ -2,6 +2,7 @@ import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { PodFill, PodListing, PodMarketplace, PodOrder } from "../../generated/schema";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getCurrentSeason } from "./Beanstalk";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
 export function loadPodMarketplace(): PodMarketplace {
   let marketplace = PodMarketplace.load("0");
@@ -34,8 +35,8 @@ export function loadPodFill(protocol: Address, index: BigInt, hash: String): Pod
     fill = new PodFill(id);
     fill.podMarketplace = "0";
     fill.createdAt = ZERO_BI;
-    fill.fromFarmer = "";
-    fill.toFarmer = "";
+    fill.fromFarmer = ADDRESS_ZERO;
+    fill.toFarmer = ADDRESS_ZERO;
     fill.placeInLine = ZERO_BI;
     fill.amount = ZERO_BI;
     fill.index = ZERO_BI;
@@ -54,7 +55,7 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
     listing.podMarketplace = "0";
     listing.historyID = "";
     listing.plot = index.toString();
-    listing.farmer = account.toHexString();
+    listing.farmer = account;
     listing.index = index;
     listing.start = ZERO_BI;
     listing.mode = 0;
@@ -117,7 +118,7 @@ export function loadPodOrder(orderID: Bytes): PodOrder {
     order = new PodOrder(orderID.toHexString());
     order.podMarketplace = "0";
     order.historyID = "";
-    order.farmer = "";
+    order.farmer = ADDRESS_ZERO;
     order.createdAt = ZERO_BI;
     order.updatedAt = ZERO_BI;
     order.status = "";

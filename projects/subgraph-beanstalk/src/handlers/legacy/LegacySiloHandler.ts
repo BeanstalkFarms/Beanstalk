@@ -70,7 +70,7 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
   withdraw.createdAt = withdraw.createdAt == ZERO_BI ? event.block.timestamp : withdraw.createdAt;
   withdraw.save();
 
-  addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block.timestamp);
+  addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block);
 }
 
 // Note: Legacy removals are still possible today, and are therefore not Legacy handlers.
@@ -79,11 +79,11 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
 export function handleTransferDepositCall(call: TransferDepositCall): void {
   let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
-  if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
-    updateFarmers.push(call.from.toHexString());
+  if (updateFarmers.indexOf(call.from) == -1) {
+    updateFarmers.push(call.from);
   }
-  if (updateFarmers.indexOf(call.inputs.recipient.toHexString()) == -1) {
-    updateFarmers.push(call.inputs.recipient.toHexString());
+  if (updateFarmers.indexOf(call.inputs.recipient) == -1) {
+    updateFarmers.push(call.inputs.recipient);
   }
   beanstalk.farmersToUpdate = updateFarmers;
   beanstalk.save();
@@ -93,11 +93,11 @@ export function handleTransferDepositCall(call: TransferDepositCall): void {
 export function handleTransferDepositsCall(call: TransferDepositsCall): void {
   let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
-  if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
-    updateFarmers.push(call.from.toHexString());
+  if (updateFarmers.indexOf(call.from) == -1) {
+    updateFarmers.push(call.from);
   }
-  if (updateFarmers.indexOf(call.inputs.recipient.toHexString()) == -1) {
-    updateFarmers.push(call.inputs.recipient.toHexString());
+  if (updateFarmers.indexOf(call.inputs.recipient) == -1) {
+    updateFarmers.push(call.inputs.recipient);
   }
   beanstalk.farmersToUpdate = updateFarmers;
   beanstalk.save();

@@ -14,6 +14,7 @@ import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateUnripeStats } from "./Barn";
 import { isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block): void {
   let currentSeason = season.toI32();
@@ -29,31 +30,31 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
   field.season = currentSeason;
   field.podRate = seasonEntity.beans == ZERO_BI ? ZERO_BD : toDecimal(field.unharvestablePods, 6).div(toDecimal(seasonEntity.beans, 6));
 
-  takeFieldSnapshots(field, protocol, block.timestamp, block.number);
+  takeFieldSnapshots(field, block);
   field.save();
 
   // Marketplace Season Update
-  let market = loadPodMarketplace(protocol);
+  let market = loadPodMarketplace();
   market.season = currentSeason;
-  takeMarketSnapshots(market, protocol, block.timestamp);
+  takeMarketSnapshots(market, block);
   market.save();
 
   // Create silo entities for the protocol
   let silo = loadSilo(protocol);
-  takeSiloSnapshots(silo, protocol, block.timestamp);
+  takeSiloSnapshots(silo, block);
   silo.save();
 
   // Update all whitelisted/dewhitelisted token info
   const siloTokens = silo.whitelistedTokens.concat(silo.dewhitelistedTokens);
   for (let i = 0; i < siloTokens.length; i++) {
-    const token = Address.fromString(siloTokens[i]);
+    const token = toAddress(siloTokens[i]);
 
     let siloAsset = loadSiloAsset(protocol, token);
-    takeSiloAssetSnapshots(siloAsset, protocol, block.timestamp);
+    takeSiloAssetSnapshots(siloAsset, block);
     siloAsset.save();
 
     let whitelistTokenSetting = loadWhitelistTokenSetting(token);
-    takeWhitelistTokenSettingSnapshots(whitelistTokenSetting, protocol, block.timestamp);
+    takeWhitelistTokenSettingSnapshots(whitelistTokenSetting, block);
     whitelistTokenSetting.save();
     setTokenBdv(token, protocol, whitelistTokenSetting);
 

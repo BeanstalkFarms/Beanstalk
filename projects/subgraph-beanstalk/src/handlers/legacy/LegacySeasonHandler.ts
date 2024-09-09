@@ -13,7 +13,7 @@ import { sunrise } from "../../utils/Season";
 export function handleReplantSunrise(event: Sunrise): void {
   // Update any farmers that had silo transfers from the prior season.
   // This is intentionally done before beanstalk.lastSeason gets updated
-  updateStalkWithCalls(event.address, event.block.timestamp);
+  updateStalkWithCalls(event.address, event.block);
 
   // Replant oracle initialization
   if (event.params.season == REPLANT_SEASON) {

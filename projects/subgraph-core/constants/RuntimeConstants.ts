@@ -55,6 +55,13 @@ export function getTokenDecimals(v: VersionDto, token: Address): i32 {
 
 /// MILESTONE ///
 
+export function isReplanted(v: VersionDto, blockNumber: BigInt): boolean {
+  if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
+    return BeanstalkEth.isReplanted(blockNumber);
+  }
+  throw new Error("Unsupported protocol");
+}
+
 export function isGaugeDeployed(v: VersionDto, blockNumber: BigInt): boolean {
   if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
     return BeanstalkEth.isGaugeDeployed(blockNumber);

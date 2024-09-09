@@ -26,6 +26,7 @@ import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 import { getCurrentSeason } from "../entities/Beanstalk";
 import { updateStalkBalances } from "../utils/Silo";
+import { legacyInitGauge } from "../utils/legacy/LegacyWhitelist";
 
 // SEED GAUGE SEASONAL ADJUSTMENTS //
 
@@ -196,13 +197,7 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
-  // On initial gauge deployment, there was no GaugePointChange event emitted. Need to initialize BEANETH here
-  if (
-    event.params.token == BEAN_WETH_CP2_WELL &&
-    event.transaction.hash.toHexString().toLowerCase() == "0x299a4b93b8d19f8587b648ce04e3f5e618ea461426bb2b2337993b5d6677f6a7"
-  ) {
-    siloSettings.gaugePoints = BI_10.pow(20);
-  }
+  legacyInitGauge(event, siloSettings);
 
   takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();

@@ -2,10 +2,10 @@ import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
-import { stemFromSeason } from "./contracts/SiloCalculations";
 import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
+import { stemFromSeason } from "./legacy/LegacySilo";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -159,10 +159,10 @@ export function updateStalkBalances(
   // Add account to active list if needed
   if (account !== protocol) {
     let beanstalk = loadBeanstalk();
-    let farmerIndex = beanstalk.activeFarmers.indexOf(account.toHexString());
+    let farmerIndex = beanstalk.activeFarmers.indexOf(account);
     if (farmerIndex == -1) {
       let newFarmers = beanstalk.activeFarmers;
-      newFarmers.push(account.toHexString());
+      newFarmers.push(account);
       beanstalk.activeFarmers = newFarmers;
       beanstalk.save();
       silo.activeFarmers += 1;

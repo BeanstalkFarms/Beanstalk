@@ -37,9 +37,9 @@ type Beanstalk @entity {
   "'beanstalk'"
   id: ID!
   "Bean token address of the protocol"
-  token: String!
+  token: Bytes!
   "Address of the fertilizer contract"
-  fertilizer1155: String
+  fertilizer1155: Bytes
   "Season specific data"
   seasons: [Season!]! @derivedFrom(field: "beanstalk")
   "Silo level data"
@@ -49,15 +49,15 @@ type Beanstalk @entity {
   "Last season called"
   lastSeason: Int!
   "Array of the addresses for all active farmers in the silo"
-  activeFarmers: [String!]!
+  activeFarmers: [Bytes!]!
   "Array of the addresses for all farmers that had silo transfers and need stalk/seeds/roots updated"
-  farmersToUpdate: [String!]!
+  farmersToUpdate: [Bytes!]!
 }
 
 type Season @entity {
   "Season Number"
   id: ID!
-  "Beanstalk Contract Address"
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Season number in Int form for sorting"
   season: Int!
@@ -84,16 +84,16 @@ type Season @entity {
 }
 
 type Silo @entity {
-  "Address for the farmer or Beanstalk"
-  id: ID!
-  "Beanstalk diamond address"
+  "Address for the farmer or Beanstalk contract"
+  id: Bytes!
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Farmer address if applicable"
   farmer: Farmer
   "Tokens whitelisted for deposit within the silo"
-  whitelistedTokens: [String!]!
+  whitelistedTokens: [Bytes!]!
   "Tokens that have been removed from the silo deposit whitelist"
-  dewhitelistedTokens: [String!]!
+  dewhitelistedTokens: [Bytes!]!
   "Link to all silo assets currently associated with this silo"
   assets: [SiloAsset!]! @derivedFrom(field: "silo")
   "Current BDV of all deposited assets"
@@ -222,7 +222,7 @@ type SiloAsset @entity {
   "Silo for this asset"
   silo: Silo!
   "Token address for this asset"
-  token: String!
+  token: Bytes!
   "Current Token amount of deposits"
   depositedAmount: BigInt!
   "Current BDV of deposits"
@@ -309,7 +309,7 @@ type SiloYield @entity {
   "Bean EMA for season"
   beansPerSeasonEMA: BigDecimal!
   "Current whitelisted silo tokens"
-  whitelistedTokens: [String!]!
+  whitelistedTokens: [Bytes!]!
   "Current Bean (0) and Stalk (1) APY for each token."
   tokenAPYS: [TokenYield!]! @derivedFrom(field: "siloYield")
   "Unix timestamp of update"
@@ -452,8 +452,8 @@ type WhitelistTokenDailySnapshot @entity {
 
 type Field @entity {
   "Contract address for this field or farmer"
-  id: ID!
-  "Contract address of beanstalk"
+  id: Bytes!
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Farmer address if applicable"
   farmer: Farmer
@@ -609,7 +609,7 @@ type FieldDailySnapshot @entity {
 
 type Farmer @entity {
   "Address for the farmer"
-  id: ID!
+  id: Bytes!
   silo: Silo @derivedFrom(field: "farmer")
   deposits: [SiloDeposit!]! @derivedFrom(field: "farmer")
   withdraws: [SiloWithdraw!]! @derivedFrom(field: "farmer")
@@ -629,7 +629,7 @@ type SiloDeposit @entity {
   "Farmer address"
   farmer: Farmer!
   "Token Address"
-  token: String!
+  token: Bytes!
   "Version of deposit. Options are season, v3, v3.1. `season` type includes those deposits which are calculated according to their silo v1 deposits pre-explout"
   depositVersion: String!
   "Season of deposit"
@@ -660,7 +660,7 @@ type SiloWithdraw @entity {
   "Farmer address"
   farmer: Farmer!
   "Token address"
-  token: String!
+  token: Bytes!
   "Season withdrawal initiated"
   withdrawSeason: Int!
   "Season when withdrawal can be claimed"
@@ -1146,7 +1146,7 @@ type PodFill @entity {
   "Associated order, if any"
   order: PodOrder
   "Account that is sending pods"
-  fromFarmer: String! # These are already referenced via the listing and order entities.
+  fromFarmer: Bytes! # These are already referenced via the listing and order entities.
   "Account that is receiving pods"
   toFarmer: Farmer!
   "Number of pods filled"
@@ -1168,7 +1168,7 @@ type PodFill @entity {
 # Global Fertilizer state for tracking
 type Fertilizer @entity {
   "Token address for fert"
-  id: ID!
+  id: Bytes!
   "Address of parent beanstalk"
   beanstalk: String!
   "Total overall suppy of fert tokens"
@@ -1321,9 +1321,9 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
-  fromFarmer: String!
+  fromFarmer: Bytes!
   "Account buying pods"
-  toFarmer: String!
+  toFarmer: Bytes!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"
@@ -1352,7 +1352,7 @@ type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
-  account: String!
+  account: Bytes!
   "Where these pods were in line when cancelled"
   placeInLine: BigInt!
   "Index of plot listing being cancelled"
@@ -1375,7 +1375,7 @@ type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   "Historical ID for joins"
   historyID: String!
   "Account creating the listing"
-  account: String!
+  account: Bytes!
   "ID of the pod order"
   orderId: String!
   """
@@ -1410,9 +1410,9 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
-  fromFarmer: String!
+  fromFarmer: Bytes!
   "Account buying pods"
-  toFarmer: String!
+  toFarmer: Bytes!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"
@@ -1441,7 +1441,7 @@ type PodOrderCancelled implements MarketplaceEvent @entity(immutable: true) {
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
-  account: String!
+  account: Bytes!
   "ID of order cancelled"
   orderId: String!
   "Block number of this event"
@@ -1455,7 +1455,7 @@ type Germinating @entity {
   "Address-(EVEN|ODD)"
   id: ID!
   "Address of the token or account which is germinating"
-  address: String!
+  address: Bytes!
   "EVEN or ODD"
   type: String!
   "True when the address is a farmer account"

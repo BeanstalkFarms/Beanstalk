@@ -5,10 +5,10 @@ import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { v } from "../utils/constants/Version";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
-  let fertilizer = Fertilizer.load(fertilizerAddress.toHexString());
+  let fertilizer = Fertilizer.load(fertilizerAddress);
   if (fertilizer == null) {
-    fertilizer = new Fertilizer(fertilizerAddress.toHexString());
-    fertilizer.beanstalk = v().protocolAddress.toHexString();
+    fertilizer = new Fertilizer(fertilizerAddress);
+    fertilizer.beanstalk = "beanstalk";
     fertilizer.supply = ZERO_BI;
     fertilizer.save();
   }
@@ -18,7 +18,7 @@ export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
 export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNumber: BigInt): FertilizerToken {
   let fertilizerToken = FertilizerToken.load(id.toString());
   if (fertilizerToken == null) {
-    const beanstalkContract = SeedGauge.bind(Address.fromString(fertilizer.beanstalk));
+    const beanstalkContract = SeedGauge.bind(v().protocolAddress);
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
     if (blockNumber.gt(BigInt.fromString("15278963"))) {

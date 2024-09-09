@@ -152,13 +152,8 @@ describe("APY Calculations", () => {
       let silo = loadSilo(BEANSTALK);
       silo.stalk = BigInt.fromString("1615408790000000000");
       silo.beanToMaxLpGpPerBdvRatio = BigInt.fromString("33000000000000000000");
-      silo.whitelistedTokens = [
-        BEAN_ERC20.toHexString(),
-        BEAN_WETH_CP2_WELL.toHexString(),
-        UNRIPE_BEAN.toHexString(),
-        UNRIPE_LP.toHexString()
-      ];
-      silo.dewhitelistedTokens = [BEAN_3CRV.toHexString()];
+      silo.whitelistedTokens = [BEAN_ERC20, BEAN_WETH_CP2_WELL, UNRIPE_BEAN, UNRIPE_LP];
+      silo.dewhitelistedTokens = [BEAN_3CRV];
       silo.save();
 
       setSeason(20000);

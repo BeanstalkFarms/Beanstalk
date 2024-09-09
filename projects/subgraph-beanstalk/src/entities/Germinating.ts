@@ -8,7 +8,7 @@ export function loadOrCreateGerminating(address: Address, season: i32, isFarmer:
   let germinating = Germinating.load(id);
   if (germinating == null) {
     germinating = new Germinating(id);
-    germinating.address = address.toHexString();
+    germinating.address = address;
     germinating.type = type;
     germinating.isFarmer = isFarmer;
     germinating.season = season;

@@ -142,7 +142,7 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentWhitelist = silo.whitelistedTokens;
   let currentDewhitelist = silo.dewhitelistedTokens;
-  let index = currentWhitelist.indexOf(event.params.token.toHexString());
+  let index = currentWhitelist.indexOf(event.params.token);
   if (index >= 0) {
     currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
     silo.whitelistedTokens = currentWhitelist;
@@ -163,11 +163,11 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 
 // Withdrawal is a legacy feature from replant, but these events are still present
 export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block);
+  updateClaimedWithdraw(event.params.account, event.params.token, event.params.season, event.block);
 }
 
 export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
   for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block);
+    updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i], event.block);
   }
 }

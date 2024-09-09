@@ -30,8 +30,8 @@ import {
   handleWhitelistToken_v3
 } from "../src/handlers/legacy/LegacySiloHandler";
 import { handleAddDeposit, handleDewhitelistToken, handleRemoveDeposit } from "../src/handlers/SiloHandler";
-import { stemFromSeason } from "../src/utils/contracts/SiloCalculations";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { stemFromSeason } from "../src/utils/legacy/LegacySilo";
 
 describe("Silo Events", () => {
   beforeEach(() => {

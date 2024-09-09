@@ -1,6 +1,5 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { BigInt } from "@graphprotocol/graph-ts";
 import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { REPLANT_SEASON } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
@@ -14,7 +13,7 @@ import { updateBeanEMA } from "../utils/Yield";
 import { updateExpiredPlots } from "../utils/Marketplace";
 import { updateHarvestablePlots } from "../utils/Field";
 import { sunrise } from "../utils/Season";
-import { getProtocolToken, isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
+import { getProtocolToken, isGaugeDeployed, isReplanted } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 
 export function handleSunrise(event: Sunrise): void {
@@ -65,9 +64,6 @@ export function handleWellOracle(event: WellOracle): void {
 }
 
 export function handleSoil(event: Soil): void {
-  // Replant sets the soil to the amount every season instead of adding new soil
-  // to an existing amount.
-
   let field = loadField(event.address);
   field.season = event.params.season.toI32();
   field.soil = event.params.soil;
@@ -75,7 +71,7 @@ export function handleSoil(event: Soil): void {
   takeFieldSnapshots(field, event.block);
   field.save();
 
-  if (event.params.season >= REPLANT_SEASON) {
+  if (isReplanted(v(), event.params.season)) {
     updateBeanEMA(event.address, event.block.timestamp);
   }
 }

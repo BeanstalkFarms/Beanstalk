@@ -11,11 +11,8 @@ export function loadBeanstalk(): Beanstalk {
   if (beanstalk == null) {
     beanstalk = new Beanstalk("beanstalk");
     // Pre-replant token currently would not be set
-    beanstalk.token = getProtocolToken(v(), BI_MAX).toHexString();
-    const fert = getProtocolFertilizer(v());
-    if (fert !== null) {
-      beanstalk.fertilizer1155 = fert.toHexString();
-    }
+    beanstalk.token = getProtocolToken(v(), BI_MAX);
+    beanstalk.fertilizer1155 = getProtocolFertilizer(v());
     beanstalk.lastSeason = 1;
     beanstalk.activeFarmers = [];
     beanstalk.farmersToUpdate = [];
@@ -25,9 +22,9 @@ export function loadBeanstalk(): Beanstalk {
 }
 
 export function loadFarmer(account: Address): Farmer {
-  let farmer = Farmer.load(account.toHexString());
+  let farmer = Farmer.load(account);
   if (farmer == null) {
-    farmer = new Farmer(account.toHexString());
+    farmer = new Farmer(account);
     farmer.save();
   }
   return farmer;

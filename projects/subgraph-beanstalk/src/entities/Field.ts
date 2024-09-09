@@ -1,16 +1,16 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Field, Plot } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
+import { v } from "../utils/constants/Version";
 
 export function loadField(account: Address): Field {
-  let field = Field.load(account.toHexString());
+  let field = Field.load(account);
   if (field == null) {
-    field = new Field(account.toHexString());
-    field.beanstalk = BEANSTALK.toHexString();
-    if (account !== BEANSTALK) {
-      field.farmer = account.toHexString();
+    field = new Field(account);
+    field.beanstalk = "beanstalk";
+    if (account !== v().protocolAddress) {
+      field.farmer = account;
     }
     field.season = 1;
     field.temperature = 1;
@@ -34,8 +34,8 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
   let plot = Plot.load(index.toString());
   if (plot == null) {
     plot = new Plot(index.toString());
-    plot.field = diamondAddress.toHexString();
-    plot.farmer = ADDRESS_ZERO.toHexString();
+    plot.field = diamondAddress;
+    plot.farmer = ADDRESS_ZERO;
     plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
     plot.sourceHash = "";
     plot.season = 0;

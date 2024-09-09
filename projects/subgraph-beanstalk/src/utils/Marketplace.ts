@@ -17,6 +17,7 @@ import {
 } from "../../generated/schema";
 import { getHarvestableIndex, loadFarmer } from "../entities/Beanstalk";
 import { takeMarketSnapshots } from "../entities/snapshots/Marketplace";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 export enum MarketplaceAction {
   CREATED,
@@ -169,7 +170,7 @@ export function podListingFilled(params: MarketFillParams): void {
   } else {
     listing.status = "FILLED_PARTIAL";
 
-    let remainingListing = loadPodListing(Address.fromString(listing.farmer), listing.index.plus(params.amount).plus(listing.start));
+    let remainingListing = loadPodListing(toAddress(listing.farmer), listing.index.plus(params.amount).plus(listing.start));
     remainingListing.historyID =
       remainingListing.id + "-" + params.event.block.timestamp.toString() + "-" + params.event.logIndex.toString();
     remainingListing.plot = listing.index.plus(params.amount).plus(listing.start).toString();
@@ -201,8 +202,8 @@ export function podListingFilled(params: MarketFillParams): void {
   let fill = loadPodFill(params.event.address, params.index, params.event.transaction.hash.toHexString());
   fill.createdAt = params.event.block.timestamp;
   fill.listing = listing.id;
-  fill.fromFarmer = params.from.toHexString();
-  fill.toFarmer = params.to.toHexString();
+  fill.fromFarmer = params.from;
+  fill.toFarmer = params.to;
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex());
   fill.index = params.index;
@@ -222,8 +223,8 @@ export function podListingFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = originalHistoryID;
-  rawEvent.fromFarmer = params.from.toHexString();
-  rawEvent.toFarmer = params.to.toHexString();
+  rawEvent.fromFarmer = params.from;
+  rawEvent.toFarmer = params.to;
   rawEvent.placeInLine = fill.placeInLine;
   rawEvent.index = params.index;
   rawEvent.start = params.start;
@@ -251,7 +252,7 @@ export function podListingCancelled(params: PodListingCancelledParams): void {
     rawEvent.logIndex = params.event.logIndex.toI32();
     rawEvent.protocol = params.event.address.toHexString();
     rawEvent.historyID = listing.historyID;
-    rawEvent.account = params.account.toHexString();
+    rawEvent.account = params.account;
     rawEvent.placeInLine = params.index.plus(listing.start).minus(getHarvestableIndex());
     rawEvent.index = params.index;
     rawEvent.blockNumber = params.event.block.number;
@@ -269,7 +270,7 @@ export function podOrderCreated(params: PodOrderCreatedParams): void {
   }
 
   order.historyID = order.id + "-" + params.event.block.timestamp.toString() + "-" + params.event.logIndex.toString();
-  order.farmer = params.account.toHexString();
+  order.farmer = params.account;
   order.createdAt = params.event.block.timestamp;
   order.updatedAt = params.event.block.timestamp;
   order.status = "ACTIVE";
@@ -295,7 +296,7 @@ export function podOrderCreated(params: PodOrderCreatedParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
-  rawEvent.account = params.account.toHexString();
+  rawEvent.account = params.account;
   rawEvent.orderId = params.id.toHexString();
   rawEvent.amount = params.beanAmount;
   rawEvent.pricePerPod = params.pricePerPod;
@@ -322,8 +323,8 @@ export function podOrderFilled(params: MarketFillParams): void {
 
   fill.createdAt = params.event.block.timestamp;
   fill.order = order.id;
-  fill.fromFarmer = params.from.toHexString();
-  fill.toFarmer = params.to.toHexString();
+  fill.fromFarmer = params.from;
+  fill.toFarmer = params.to;
   fill.amount = params.amount;
   fill.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex());
   fill.index = params.index;
@@ -346,8 +347,8 @@ export function podOrderFilled(params: MarketFillParams): void {
   rawEvent.logIndex = params.event.logIndex.toI32();
   rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
-  rawEvent.fromFarmer = params.from.toHexString();
-  rawEvent.toFarmer = params.to.toHexString();
+  rawEvent.fromFarmer = params.from;
+  rawEvent.toFarmer = params.to;
   rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex());
   rawEvent.index = params.index;
   rawEvent.start = params.start;
@@ -375,7 +376,7 @@ export function podOrderCancelled(params: PodOrderCancelledParams): void {
     rawEvent.logIndex = params.event.logIndex.toI32();
     rawEvent.protocol = params.event.address.toHexString();
     rawEvent.historyID = order.historyID;
-    rawEvent.account = params.account.toHexString();
+    rawEvent.account = params.account;
     rawEvent.orderId = params.id.toHexString();
     rawEvent.blockNumber = params.event.block.number;
     rawEvent.createdAt = params.event.block.timestamp;
@@ -438,7 +439,7 @@ export function updateExpiredPlots(harvestableIndex: BigInt, block: ethereum.Blo
     const maxHarvestableIndex = BigInt.fromString(destructured[2]);
     if (harvestableIndex > maxHarvestableIndex) {
       // This method updates the marketplace entity, so it will perform the splice.
-      expirePodListingIfExists(destructured[0], BigInt.fromString(destructured[1]), block, i);
+      expirePodListingIfExists(Address.fromString(destructured[0]), BigInt.fromString(destructured[1]), block, i);
       // A similar splice is done here also to track the updated index on the underlying array.
       remainingListings.splice(i--, 1);
     }
@@ -468,12 +469,12 @@ function setBeansPerPodAfterFill(event: ethereum.Event, plotIndex: BigInt, start
 }
 
 export function expirePodListingIfExists(
-  farmer: string,
+  farmer: Address,
   listedPlotIndex: BigInt,
   block: ethereum.Block,
   activeListingIndex: i32 = -1 // If provided, avoids having to lookup the index
 ): void {
-  let listing = PodListing.load(farmer + "-" + listedPlotIndex.toString());
+  let listing = PodListing.load(farmer.toHexString() + "-" + listedPlotIndex.toString());
   if (listing == null || listing.status != "ACTIVE") {
     return;
   }

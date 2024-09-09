@@ -10,15 +10,15 @@ export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
   const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
-  const hourlyId = silo.id + "-" + currentSeason.toString();
-  const dailyId = silo.id + "-" + day.toString();
+  const hourlyId = silo.id.toHexString() + "-" + currentSeason.toString();
+  const dailyId = silo.id.toHexString() + "-" + day.toString();
   let baseHourly = SiloHourlySnapshot.load(hourlyId);
   let baseDaily = SiloDailySnapshot.load(dailyId);
   if (baseHourly == null && silo.lastHourlySnapshotSeason !== 0) {
-    baseHourly = SiloHourlySnapshot.load(silo.id + "-" + silo.lastHourlySnapshotSeason.toString());
+    baseHourly = SiloHourlySnapshot.load(silo.id.toHexString() + "-" + silo.lastHourlySnapshotSeason.toString());
   }
   if (baseDaily == null && silo.lastDailySnapshotDay !== null) {
-    baseDaily = SiloDailySnapshot.load(silo.id + "-" + silo.lastDailySnapshotDay!.toString());
+    baseDaily = SiloDailySnapshot.load(silo.id.toHexString() + "-" + silo.lastDailySnapshotDay!.toString());
   }
   const hourly = new SiloHourlySnapshot(hourlyId);
   const daily = new SiloDailySnapshot(dailyId);
@@ -135,7 +135,7 @@ export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
 
 // Set case id on hourly snapshot. Snapshot must have already been created.
 export function setSiloHourlyCaseId(caseId: BigInt, silo: Silo): void {
-  const hourly = SiloHourlySnapshot.load(silo.id + "-" + silo.lastHourlySnapshotSeason.toString())!;
+  const hourly = SiloHourlySnapshot.load(silo.id.toHexString() + "-" + silo.lastHourlySnapshotSeason.toString())!;
   hourly.caseId = caseId;
   hourly.save();
 }
