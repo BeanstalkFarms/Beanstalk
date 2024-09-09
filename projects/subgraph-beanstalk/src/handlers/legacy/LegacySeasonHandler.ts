@@ -17,7 +17,7 @@ export function handleReplantSunrise(event: Sunrise): void {
 
   // Replant oracle initialization
   if (event.params.season == REPLANT_SEASON) {
-    let seasonEntity = loadSeason(event.address, event.params.season);
+    let seasonEntity = loadSeason(event.params.season);
     seasonEntity.price = BigDecimal.fromString("1.07");
     seasonEntity.save();
   }
@@ -27,14 +27,14 @@ export function handleReplantSunrise(event: Sunrise): void {
 
 // PreReplant -> Replanted
 export function handleSeasonSnapshot(event: SeasonSnapshot): void {
-  let season = loadSeason(event.address, event.params.season);
+  let season = loadSeason(event.params.season);
   season.price = toDecimal(event.params.price, 18);
   season.save();
 }
 
 // Replanted -> SeedGauge
 export function handleMetapoolOracle(event: MetapoolOracle): void {
-  let season = loadSeason(event.address, event.params.season);
+  let season = loadSeason(event.params.season);
   // Attempt to pull from Beanstalk Price contract first
   let beanstalkQuery = BeanstalkPrice_try_price(event.address, event.block.number);
   if (beanstalkQuery.reverted) {

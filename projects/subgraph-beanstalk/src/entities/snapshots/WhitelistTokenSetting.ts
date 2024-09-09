@@ -1,17 +1,13 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { WhitelistTokenSetting, WhitelistTokenHourlySnapshot, WhitelistTokenDailySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
-export function takeWhitelistTokenSettingSnapshots(
-  whitelistTokenSetting: WhitelistTokenSetting,
-  protocol: Address,
-  timestamp: BigInt
-): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: WhitelistTokenSetting, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = whitelistTokenSetting.id.toHexString() + "-" + currentSeason.toString();
@@ -83,7 +79,7 @@ export function takeWhitelistTokenSettingSnapshots(
     hourly.deltaOptimalPercentDepositedBdv = hourly.optimalPercentDepositedBdv;
   }
   hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -138,7 +134,7 @@ export function takeWhitelistTokenSettingSnapshots(
     daily.deltaOptimalPercentDepositedBdv = daily.optimalPercentDepositedBdv;
   }
   daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   whitelistTokenSetting.lastHourlySnapshotSeason = currentSeason;

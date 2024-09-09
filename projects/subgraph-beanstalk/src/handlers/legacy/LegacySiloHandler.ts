@@ -77,7 +77,7 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
 
 // Replant -> SiloV3
 export function handleTransferDepositCall(call: TransferDepositCall): void {
-  let beanstalk = loadBeanstalk(call.to);
+  let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
   if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
     updateFarmers.push(call.from.toHexString());
@@ -91,7 +91,7 @@ export function handleTransferDepositCall(call: TransferDepositCall): void {
 
 // Replant -> SiloV3
 export function handleTransferDepositsCall(call: TransferDepositsCall): void {
-  let beanstalk = loadBeanstalk(call.to);
+  let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
   if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
     updateFarmers.push(call.from.toHexString());
@@ -112,7 +112,7 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
 
-  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();
 }
 
@@ -125,6 +125,6 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
 
-  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();
 }

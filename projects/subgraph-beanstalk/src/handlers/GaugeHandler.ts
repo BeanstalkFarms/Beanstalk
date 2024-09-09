@@ -37,7 +37,7 @@ export function handleBeanToMaxLpGpPerBdvRatioChange(event: BeanToMaxLpGpPerBdvR
   } else {
     silo.beanToMaxLpGpPerBdvRatio = silo.beanToMaxLpGpPerBdvRatio!.plus(event.params.absChange);
   }
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.block);
   setSiloHourlyCaseId(event.params.caseId, silo);
   silo.save();
 }
@@ -47,7 +47,7 @@ export function handleGaugePointChange(event: GaugePointChange): void {
   siloSettings.gaugePoints = event.params.gaugePoints;
   siloSettings.updatedAt = event.block.timestamp;
 
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }
 
@@ -58,7 +58,7 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   // In practice, seed values for non-gauge assets are negligible.
   // The correct approach is iterating whitelisted assets each season, multipying bdv and seeds
   silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.block);
   silo.save();
 
   // Individual asset grown stalk is set by the UpdatedStalkPerBdvPerSeason event.
@@ -72,7 +72,7 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
     return;
   }
 
-  const currentSeason = getCurrentSeason(event.address);
+  const currentSeason = getCurrentSeason();
 
   if (event.params.deltaGerminatingStalk > ZERO_BI) {
     // Germinating stalk is added. It is possible to begin germination in the prior season rather than the
@@ -105,7 +105,7 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
       // into system stalk upon sunrise for season - 2.
       let systemSilo = loadSilo(event.address);
       systemSilo.stalk = systemSilo.stalk.plus(actualDeltaGerminatingStalk);
-      takeSiloSnapshots(systemSilo, event.address, event.block.timestamp);
+      takeSiloSnapshots(systemSilo, event.block);
       systemSilo.save();
     }
 
@@ -115,7 +115,7 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
 
   let farmerSilo = loadSilo(event.params.account);
   farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.deltaGerminatingStalk);
-  takeSiloSnapshots(farmerSilo, event.address, event.block.timestamp);
+  takeSiloSnapshots(farmerSilo, event.block);
   farmerSilo.save();
 }
 
@@ -177,14 +177,14 @@ export function handleTotalGerminatingStalkChanged(event: TotalGerminatingStalkC
 
   let silo = loadSilo(event.address);
   silo.germinatingStalk = silo.germinatingStalk.plus(event.params.deltaGerminatingStalk);
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.block);
   silo.save();
 }
 
 // Germination completes, germinating stalk turns into stalk.
 // The removal of Germinating stalk would have already been handled from a separate emission
 export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedFromGermination): void {
-  updateStalkBalances(event.address, event.address, event.params.deltaStalk, event.params.deltaRoots, event.block.timestamp);
+  updateStalkBalances(event.address, event.address, event.params.deltaStalk, event.params.deltaRoots, event.block);
 }
 
 // GAUGE CONFIGURATION SETTINGS //
@@ -204,6 +204,6 @@ export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
     siloSettings.gaugePoints = BI_10.pow(20);
   }
 
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }

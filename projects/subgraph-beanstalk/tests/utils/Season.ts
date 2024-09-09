@@ -1,8 +1,7 @@
-import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { loadBeanstalk } from "../../src/entities/Beanstalk";
 
 export function setSeason(season: u32): void {
-  let beanstalk = loadBeanstalk(BEANSTALK);
+  let beanstalk = loadBeanstalk();
   beanstalk.lastSeason = season;
   beanstalk.save();
 }

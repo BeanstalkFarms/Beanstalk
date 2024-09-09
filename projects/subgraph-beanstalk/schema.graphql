@@ -34,10 +34,8 @@ enum EmaWindow {
 }
 
 type Beanstalk @entity {
-  "Smart contract address of the protocol's main contract (Factory, Registry, etc) "
+  "'beanstalk'"
   id: ID!
-  "Name of the protocol, including version. e.g. Uniswap v3"
-  name: String!
   "Bean token address of the protocol"
   token: String!
   "Address of the fertilizer contract"
@@ -713,7 +711,7 @@ type Plot @entity {
 }
 
 type PodMarketplace @entity {
-  "Contract address of beanstalk"
+  "Field id"
   id: ID!
   "Current season of the marketplace"
   season: Int!

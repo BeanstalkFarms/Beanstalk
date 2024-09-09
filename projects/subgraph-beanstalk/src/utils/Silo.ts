@@ -44,14 +44,7 @@ export function addDeposits(params: AddRemoveDepositsParams): void {
     // Ensure that a Farmer entity is set up for this account.
     loadFarmer(params.account);
 
-    updateDepositInSilo(
-      params.event.address,
-      params.account,
-      params.token,
-      params.amounts[i],
-      params.bdvs![i],
-      params.event.block.timestamp
-    );
+    updateDepositInSilo(params.event.address, params.account, params.token, params.amounts[i], params.bdvs![i], params.event.block);
   }
 }
 
@@ -75,14 +68,7 @@ export function removeDeposits(params: AddRemoveDepositsParams): void {
     }
 
     // Update protocol totals
-    updateDepositInSilo(
-      params.event.address,
-      params.account,
-      params.token,
-      params.amounts[i].neg(),
-      removedBdv.neg(),
-      params.event.block.timestamp
-    );
+    updateDepositInSilo(params.event.address, params.account, params.token, params.amounts[i].neg(), removedBdv.neg(), params.event.block);
   }
 }
 
@@ -92,21 +78,21 @@ export function updateDepositInSilo(
   token: Address,
   deltaAmount: BigInt,
   deltaBdv: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, block);
   }
   let silo = loadSilo(account);
   silo.depositedBDV = silo.depositedBDV.plus(deltaBdv);
 
-  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, timestamp, false);
+  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, block, false);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
   if (account == protocol) {
     silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(newSeedStalk);
   }
-  takeSiloSnapshots(silo, protocol, timestamp);
+  takeSiloSnapshots(silo, block);
   silo.save();
 }
 
@@ -116,11 +102,11 @@ export function updateDepositInSiloAsset(
   token: Address,
   deltaAmount: BigInt,
   deltaBdv: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): BigInt {
   if (recurs && account != protocol) {
-    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, block);
   }
   let asset = loadSiloAsset(account, token);
 
@@ -130,7 +116,7 @@ export function updateDepositInSiloAsset(
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
   asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);
 
-  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  takeSiloAssetSnapshots(asset, block);
   asset.save();
 
   return newGrownStalk;
@@ -141,15 +127,15 @@ export function addWithdrawToSiloAsset(
   account: Address,
   token: Address,
   deltaAmount: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, timestamp);
+    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, block);
   }
   let asset = loadSiloAsset(account, token);
   asset.withdrawnAmount = asset.withdrawnAmount.plus(deltaAmount);
-  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  takeSiloAssetSnapshots(asset, block);
   asset.save();
 }
 
@@ -158,21 +144,21 @@ export function updateStalkBalances(
   account: Address,
   deltaStalk: BigInt,
   deltaRoots: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, timestamp);
+    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, block);
   }
   let silo = loadSilo(account);
   silo.stalk = silo.stalk.plus(deltaStalk);
   silo.roots = silo.roots.plus(deltaRoots);
 
-  takeSiloSnapshots(silo, protocol, timestamp);
+  takeSiloSnapshots(silo, block);
 
   // Add account to active list if needed
   if (account !== protocol) {
-    let beanstalk = loadBeanstalk(protocol);
+    let beanstalk = loadBeanstalk();
     let farmerIndex = beanstalk.activeFarmers.indexOf(account.toHexString());
     if (farmerIndex == -1) {
       let newFarmers = beanstalk.activeFarmers;
@@ -191,12 +177,18 @@ export function updateStalkBalances(
   silo.save();
 }
 
-export function updateSeedsBalances(protocol: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: boolean = true): void {
+export function updateSeedsBalances(
+  protocol: Address,
+  account: Address,
+  seeds: BigInt,
+  block: ethereum.Block,
+  recurs: boolean = true
+): void {
   if (recurs && account != protocol) {
-    updateSeedsBalances(protocol, protocol, seeds, timestamp);
+    updateSeedsBalances(protocol, protocol, seeds, block);
   }
   let silo = loadSilo(account);
   silo.seeds = silo.seeds.plus(seeds);
-  takeSiloSnapshots(silo, protocol, timestamp);
+  takeSiloSnapshots(silo, block);
   silo.save();
 }

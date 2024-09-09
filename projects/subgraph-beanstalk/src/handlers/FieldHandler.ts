@@ -1,16 +1,9 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_FARMS } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
-import { loadField } from "../entities/Field";
 import { harvest, plotTransfer, sow, temperatureChanged } from "../utils/Field";
 import { Sow, Harvest, PlotTransfer, TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { legacySowAmount } from "../utils/legacy/LegacyField";
 
-// TODO: add legacy field for the part using beanstalk farms address
 export function handleSow(event: Sow): void {
-  let sownOverride: BigInt | null = null;
-  if (event.params.account == BEANSTALK_FARMS) {
-    let startingField = loadField(event.address);
-    sownOverride = startingField.soil;
-  }
+  let sownOverride = legacySowAmount(event.address, event.params.account);
   sow({
     event,
     account: event.params.account,

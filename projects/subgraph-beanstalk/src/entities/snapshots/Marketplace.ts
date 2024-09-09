@@ -1,13 +1,13 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { PodMarketplace, PodMarketplaceDailySnapshot, PodMarketplaceHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
-export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeMarketSnapshots(market: PodMarketplace, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = market.id + "-" + currentSeason.toString();
@@ -84,7 +84,7 @@ export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, t
     hourly.deltaBeanVolume = hourly.beanVolume;
   }
   hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -148,7 +148,7 @@ export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, t
     daily.deltaBeanVolume = daily.beanVolume;
   }
   daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   market.lastHourlySnapshotSeason = currentSeason;

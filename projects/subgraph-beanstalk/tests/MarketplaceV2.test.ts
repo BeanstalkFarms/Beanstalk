@@ -2,7 +2,6 @@ import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { beans_BI, podlineMil_BI } from "../../subgraph-core/tests/Values";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import {
   assertMarketListingsState,
   assertMarketOrdersState,
@@ -48,7 +47,7 @@ describe("Marketplace", () => {
     test("Create a pod listing - full plot", () => {
       const event = createListing_v2(account, listingIndex, sowedPods, ZERO_BI, maxHarvestableIndex);
       assertMarketListingsState(
-        BEANSTALK.toHexString(),
+        "0",
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
         sowedPods,
         sowedPods,
@@ -64,7 +63,7 @@ describe("Marketplace", () => {
       sow(account, listing2Index, sowedBeans, sowedPods);
       const event2 = createListing_v2(account, listing2Index, sowedPods, ZERO_BI, maxHarvestableIndex);
       assertMarketListingsState(
-        BEANSTALK.toHexString(),
+        "0",
         [
           account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString(),
           account + "-" + listing2Index.toString() + "-" + maxHarvestableIndex.toString()
@@ -83,7 +82,7 @@ describe("Marketplace", () => {
       const listedPods = sowedPods.minus(listingStart);
       const event = createListing_v2(account, listingIndex, listedPods, listingStart, maxHarvestableIndex);
       assertMarketListingsState(
-        BEANSTALK.toHexString(),
+        "0",
         [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
         listedPods,
         listedPods,
@@ -98,7 +97,7 @@ describe("Marketplace", () => {
     test("Create a pod order", () => {
       const event = createOrder_v2(account, orderId, orderBeans, orderPricePerPod, maxHarvestableIndex);
       assertMarketOrdersState(
-        BEANSTALK.toHexString(),
+        "0",
         [event.params.id.toHexString() + "-" + maxHarvestableIndex.toString()],
         orderBeans,
         orderBeans,
@@ -165,7 +164,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "filled", listedPods.toString());
         assert.entityCount("PodListing", 1);
 
-        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, ZERO_BI, listedPods, listedPods, filledBeans);
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, ZERO_BI, ZERO_BI, listedPods, listedPods, filledBeans);
       });
 
       test("Fill listing - partial, then full", () => {
@@ -192,7 +191,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", derivedListingID, "filled", filledPods.toString());
 
         assertMarketListingsState(
-          BEANSTALK.toHexString(),
+          "0",
           [account + "-" + newListingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods,
           remaining,
@@ -216,17 +215,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "FILLED_PARTIAL");
         assert.fieldEquals("PodListing", listingID, "filled", filledPods.toString());
 
-        assertMarketListingsState(
-          BEANSTALK.toHexString(),
-          [],
-          listedPods,
-          ZERO_BI,
-          ZERO_BI,
-          ZERO_BI,
-          listedPods,
-          listedPods,
-          filledBeans.plus(newFilledBeans)
-        );
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, ZERO_BI, ZERO_BI, listedPods, listedPods, filledBeans.plus(newFilledBeans));
       });
 
       test("Cancel listing - partial", () => {
@@ -244,17 +233,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", newListingID, "status", "CANCELLED_PARTIAL");
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", remaining.toString());
 
-        assertMarketListingsState(
-          BEANSTALK.toHexString(),
-          [],
-          listedPods,
-          ZERO_BI,
-          remaining,
-          ZERO_BI,
-          filledPods,
-          filledPods,
-          filledBeans
-        );
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, remaining, ZERO_BI, filledPods, filledPods, filledBeans);
       });
 
       test("Recreate listing", () => {
@@ -268,7 +247,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID + "-0", "filled", "0");
 
         assertMarketListingsState(
-          BEANSTALK.toHexString(),
+          "0",
           [account + "-" + listingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods.times(BigInt.fromU32(2)),
           listedPods,
@@ -300,7 +279,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", newListingAmount.toString());
 
         assertMarketListingsState(
-          BEANSTALK.toHexString(),
+          "0",
           [account + "-" + newListingIndex.toString() + "-" + maxHarvestableIndex.toString()],
           listedPods.times(BigInt.fromU32(2)).plus(newListingAmount),
           newListingAmount,
@@ -325,7 +304,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", listingID, "remainingAmount", listedPods.toString());
 
-        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
 
         // Test expiration after a partial sale
         setHarvestable(maxHarvestableIndex);
@@ -347,7 +326,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", newListingID, "remainingAmount", listedPods.minus(filledPods).toString());
 
         assertMarketListingsState(
-          BEANSTALK.toHexString(),
+          "0",
           [],
           listedPods.times(BigInt.fromU32(2)),
           ZERO_BI,
@@ -372,7 +351,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
         assert.fieldEquals("PodListing", listingID, "remainingAmount", listedPods.toString());
 
-        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
       });
 
       test("Cancel expired/nonexistent listing", () => {
@@ -385,7 +364,7 @@ describe("Marketplace", () => {
         cancelListing(account, listingIndex);
 
         assert.fieldEquals("PodListing", listingID, "status", "EXPIRED");
-        assertMarketListingsState(BEANSTALK.toHexString(), [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
+        assertMarketListingsState("0", [], listedPods, ZERO_BI, ZERO_BI, listedPods, ZERO_BI, ZERO_BI, ZERO_BI);
       });
     });
 
@@ -405,17 +384,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString(), "podAmountFilled", orderedPods.toString());
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, event) + "]");
 
-        assertMarketOrdersState(
-          BEANSTALK.toHexString(),
-          [],
-          orderBeans,
-          ZERO_BI,
-          orderBeans,
-          orderedPods,
-          ZERO_BI,
-          orderedPods,
-          orderBeans
-        );
+        assertMarketOrdersState("0", [], orderBeans, ZERO_BI, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
       });
 
       test("Fill order - partial", () => {
@@ -432,7 +401,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, event) + "]");
 
         assertMarketOrdersState(
-          BEANSTALK.toHexString(),
+          "0",
           [event.params.id.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans,
           orderBeans.minus(orderBeans1),
@@ -459,17 +428,7 @@ describe("Marketplace", () => {
           "[" + getPodFillId(orderPlotIndex, event) + ", " + getPodFillId(newOrderPlotIndex, event2) + "]"
         );
 
-        assertMarketOrdersState(
-          BEANSTALK.toHexString(),
-          [],
-          orderBeans,
-          ZERO_BI,
-          orderBeans,
-          orderedPods,
-          ZERO_BI,
-          orderedPods,
-          orderBeans
-        );
+        assertMarketOrdersState("0", [], orderBeans, ZERO_BI, orderBeans, orderedPods, ZERO_BI, orderedPods, orderBeans);
       });
 
       test("Cancel order - partial", () => {
@@ -488,7 +447,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString(), "fills", "[" + getPodFillId(orderPlotIndex, fillEvent) + "]");
 
         assertMarketOrdersState(
-          BEANSTALK.toHexString(),
+          "0",
           [],
           orderBeans,
           ZERO_BI,
@@ -507,7 +466,7 @@ describe("Marketplace", () => {
         assert.fieldEquals("PodOrder", orderId.toHexString() + "-0", "fills", "[]");
 
         assertMarketOrdersState(
-          BEANSTALK.toHexString(),
+          "0",
           [orderId.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans.times(BigInt.fromU32(2)),
           orderBeans,
@@ -536,7 +495,7 @@ describe("Marketplace", () => {
 
         // The same amount of beans were re-ordered, but fewer were cancelled
         assertMarketOrdersState(
-          BEANSTALK.toHexString(),
+          "0",
           [orderId.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans.times(BigInt.fromU32(3)),
           orderBeans,
@@ -553,7 +512,7 @@ describe("Marketplace", () => {
         cancelOrder(account, nonexistent);
         assert.notInStore("PodOrder", nonexistent.toHexString());
         assertMarketOrdersState(
-          BEANSTALK.toHexString(),
+          "0",
           [orderId.toHexString() + "-" + maxHarvestableIndex.toString()],
           orderBeans,
           orderBeans,

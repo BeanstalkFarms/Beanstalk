@@ -29,7 +29,7 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
   updateWindowEMA(protocol, timestamp, ROLLING_7_DAY_WINDOW);
   updateWindowEMA(protocol, timestamp, ROLLING_30_DAY_WINDOW);
 
-  if (getCurrentSeason(protocol) > 20_000) {
+  if (getCurrentSeason() > 20_000) {
     // Earlier values were set by cache
     updateSiloVAPYs(protocol, timestamp, ROLLING_24_WINDOW);
     updateSiloVAPYs(protocol, timestamp, ROLLING_7_DAY_WINDOW);
@@ -42,7 +42,7 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
 }
 
 function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): void {
-  const t = getCurrentSeason(protocol);
+  const t = getCurrentSeason();
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
 
@@ -87,7 +87,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 }
 
 export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i32): void {
-  const beanstalk = loadBeanstalk(protocol);
+  const beanstalk = loadBeanstalk();
   const t = beanstalk.lastSeason;
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
@@ -202,7 +202,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
       depositedBeanBdv,
       siloStalk,
       CATCH_UP_RATE,
-      BigInt.fromU32(getCurrentSeason(protocol)),
+      BigInt.fromU32(getCurrentSeason()),
       germinatingBeanBdv,
       germinatingGaugeLpBdv,
       germinatingNonGaugeBdv,
@@ -420,7 +420,7 @@ function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void 
     return;
   }
 
-  const beanstalk = loadBeanstalk(protocol);
+  const beanstalk = loadBeanstalk();
   const t = beanstalk.lastSeason;
   let siloYield = loadSiloYield(t, window);
   let fertilizerYield = loadFertilizerYield(t, window);

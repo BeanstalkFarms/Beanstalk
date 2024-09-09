@@ -17,7 +17,7 @@ import { v } from "./constants/Version";
 
 export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block): void {
   let currentSeason = season.toI32();
-  let seasonEntity = loadSeason(protocol, season);
+  let seasonEntity = loadSeason(season);
   seasonEntity.sunriseBlock = block.number;
   seasonEntity.createdAt = block.timestamp;
   seasonEntity.save();

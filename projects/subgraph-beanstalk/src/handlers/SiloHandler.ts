@@ -105,7 +105,7 @@ export function handlePlant(event: Plant): void {
   silo.plantableStalk = silo.plantableStalk.minus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.minus(event.params.beans);
 
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.block);
   silo.save();
 
   // Remove the asset-only amount that got added in Reward event handler.
@@ -116,7 +116,7 @@ export function handlePlant(event: Plant): void {
     getProtocolToken(v(), event.block.number),
     event.params.beans,
     event.params.beans,
-    event.block.timestamp
+    event.block
   );
 }
 
@@ -134,7 +134,7 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }
 
@@ -157,17 +157,17 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.updatedAt = event.block.timestamp;
 
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }
 
 // Withdrawal is a legacy feature from replant, but these events are still present
 export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block.timestamp);
+  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block);
 }
 
 export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
   for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block.timestamp);
+    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block);
   }
 }

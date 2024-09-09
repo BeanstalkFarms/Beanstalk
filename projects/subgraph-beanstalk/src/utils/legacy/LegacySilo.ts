@@ -1,4 +1,4 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { loadSilo, loadSiloAsset, loadSiloWithdraw } from "../../entities/Silo";
 import { takeSiloAssetSnapshots } from "../../entities/snapshots/SiloAsset";
 import { loadBeanstalk } from "../../entities/Beanstalk";
@@ -10,7 +10,7 @@ export function updateClaimedWithdraw(
   account: Address,
   token: Address,
   withdrawSeason: BigInt,
-  timestamp: BigInt
+  block: ethereum.Block
 ): void {
   let withdraw = loadSiloWithdraw(account, token, withdrawSeason.toI32());
   withdraw.claimed = true;
@@ -18,14 +18,14 @@ export function updateClaimedWithdraw(
 
   let asset = loadSiloAsset(account, token);
   asset.withdrawnAmount = asset.withdrawnAmount.minus(withdraw.amount);
-  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  takeSiloAssetSnapshots(asset, block);
   asset.save();
 }
 
 // Replanted -> SiloV3
 // This should be run at sunrise for the previous season to update any farmers stalk/seed/roots balances from silo transfers.
-export function updateStalkWithCalls(protocol: Address, timestamp: BigInt): void {
-  let beanstalk = loadBeanstalk(protocol);
+export function updateStalkWithCalls(protocol: Address, block: ethereum.Block): void {
+  let beanstalk = loadBeanstalk();
   let beanstalk_call = Replanted.bind(protocol);
 
   for (let i = 0; i < beanstalk.farmersToUpdate.length; i++) {
@@ -36,10 +36,10 @@ export function updateStalkWithCalls(protocol: Address, timestamp: BigInt): void
       account,
       beanstalk_call.balanceOfStalk(account).minus(silo.stalk),
       beanstalk_call.balanceOfRoots(account).minus(silo.roots),
-      timestamp,
+      block,
       false
     );
-    updateSeedsBalances(protocol, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), timestamp, false);
+    updateSeedsBalances(protocol, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), block, false);
   }
   beanstalk.farmersToUpdate = [];
   beanstalk.save();

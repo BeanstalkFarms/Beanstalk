@@ -1,13 +1,13 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { SiloAsset, SiloAssetDailySnapshot, SiloAssetHourlySnapshot } from "../../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 import { getCurrentSeason } from "../Beanstalk";
 
-export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeSiloAssetSnapshots(siloAsset: SiloAsset, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = siloAsset.id + "-" + currentSeason.toString();
@@ -52,7 +52,7 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, 
     hourly.deltaFarmAmount = hourly.farmAmount;
   }
   hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -84,7 +84,7 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, 
     daily.deltaFarmAmount = daily.farmAmount;
   }
   daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   siloAsset.lastHourlySnapshotSeason = currentSeason;

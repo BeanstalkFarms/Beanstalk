@@ -6,11 +6,10 @@ import { BI_MAX, ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/D
 import { getProtocolFertilizer, getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 
-export function loadBeanstalk(protocol: Address): Beanstalk {
-  let beanstalk = Beanstalk.load(protocol.toHexString());
+export function loadBeanstalk(): Beanstalk {
+  let beanstalk = Beanstalk.load("beanstalk");
   if (beanstalk == null) {
-    beanstalk = new Beanstalk(protocol.toHexString());
-    beanstalk.name = "Beanstalk";
+    beanstalk = new Beanstalk("beanstalk");
     // Pre-replant token currently would not be set
     beanstalk.token = getProtocolToken(v(), BI_MAX).toHexString();
     const fert = getProtocolFertilizer(v());
@@ -34,11 +33,11 @@ export function loadFarmer(account: Address): Farmer {
   return farmer;
 }
 
-export function loadSeason(diamondAddress: Address, id: BigInt): Season {
+export function loadSeason(id: BigInt): Season {
   let season = Season.load(id.toString());
   if (season == null) {
     season = new Season(id.toString());
-    season.beanstalk = diamondAddress.toHexString();
+    season.beanstalk = "beanstalk";
     season.season = id.toI32();
     season.sunriseBlock = ZERO_BI;
     season.createdAt = ZERO_BI;
@@ -52,27 +51,22 @@ export function loadSeason(diamondAddress: Address, id: BigInt): Season {
     season.harvestableIndex = ZERO_BI;
     season.save();
     if (id > ZERO_BI) {
-      let lastSeason = loadSeason(diamondAddress, id.minus(ONE_BI));
+      let lastSeason = loadSeason(id.minus(ONE_BI));
       season.beans = lastSeason.beans;
       season.harvestableIndex = lastSeason.harvestableIndex;
       season.save();
     }
 
     // Update beanstalk season
-    let beanstalk = loadBeanstalk(diamondAddress);
+    let beanstalk = loadBeanstalk();
     beanstalk.lastSeason = season.season;
     beanstalk.save();
   }
   return season;
 }
 
-export function getBeanstalkToken(protocol: Address): Address {
-  let beanstalkEntity = loadBeanstalk(protocol);
-  return Address.fromString(beanstalkEntity.token);
-}
-
-export function getCurrentSeason(protocol: Address): i32 {
-  let beanstalkEntity = loadBeanstalk(protocol);
+export function getCurrentSeason(): i32 {
+  let beanstalkEntity = loadBeanstalk();
   return beanstalkEntity.lastSeason;
 }
 
@@ -85,8 +79,8 @@ export function getRewardMinted(season: i32): BigInt {
   return snapshot.rewardBeans;
 }
 
-export function getHarvestableIndex(protocol: Address): BigInt {
-  let bs = loadBeanstalk(protocol);
-  let season = loadSeason(protocol, BigInt.fromI32(bs.lastSeason));
+export function getHarvestableIndex(): BigInt {
+  let bs = loadBeanstalk();
+  let season = loadSeason(BigInt.fromI32(bs.lastSeason));
   return season.harvestableIndex;
 }

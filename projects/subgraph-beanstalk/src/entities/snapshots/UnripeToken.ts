@@ -1,13 +1,13 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { UnripeToken, UnripeTokenDailySnapshot, UnripeTokenHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
-export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, protocol: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = unripeToken.id.toHexString() + "-" + currentSeason.toString();
@@ -80,7 +80,7 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, protocol: Add
     hourly.deltaTotalChoppedBdvReceived = hourly.totalChoppedBdvReceived;
   }
   hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -140,7 +140,7 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, protocol: Add
     daily.deltaTotalChoppedBdvReceived = daily.totalChoppedBdvReceived;
   }
   daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   unripeToken.lastHourlySnapshotSeason = currentSeason;

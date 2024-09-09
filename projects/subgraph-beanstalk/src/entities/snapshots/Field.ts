@@ -1,13 +1,13 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 
-export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: BigInt, blockNumber: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = field.id + "-" + currentSeason.toString();
@@ -78,7 +78,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
       // Sets initial creation values
       hourly.issuedSoil = field.soil;
       hourly.deltaIssuedSoil = field.soil.minus(baseHourly.issuedSoil);
-      hourly.seasonBlock = blockNumber;
+      hourly.seasonBlock = block.number;
       hourly.soilSoldOut = false;
     }
   } else {
@@ -97,11 +97,11 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     // Sets initial creation values
     hourly.issuedSoil = field.soil;
     hourly.deltaIssuedSoil = field.soil;
-    hourly.seasonBlock = blockNumber;
+    hourly.seasonBlock = block.number;
     hourly.soilSoldOut = false;
   }
   hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -174,7 +174,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     daily.deltaIssuedSoil = field.soil;
   }
   daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   field.lastHourlySnapshotSeason = currentSeason;
