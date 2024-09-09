@@ -328,27 +328,27 @@ contract ReseedStateTest is TestHelper {
     function test_fertilizerProperties() public {
         uint256 activeFertilizerJson = getGlobalPropertyUint("fert.activeFertilizer");
         uint256 activeFertilizer = l2Beanstalk.getActiveFertilizer();
-        assertEq(activeFertilizer, activeFertilizerJson);
+        assertEq(activeFertilizer, activeFertilizerJson, "active fertilizer");
 
         uint256 fertilizedIndexJson = getGlobalPropertyUint("fert.fertilizedIndex");
         uint256 fertilizedIndex = l2Beanstalk.totalFertilizedBeans();
-        assertEq(fertilizedIndex, fertilizedIndexJson);
+        assertEq(fertilizedIndex, fertilizedIndexJson, "fertilized index");
 
         uint256 unfertilizedIndexJson = getGlobalPropertyUint("fert.unfertilizedIndex");
-        uint256 unfertilizedIndex = l2Beanstalk.totalUnfertilizedBeans();
-        assertEq(unfertilizedIndex, unfertilizedIndexJson);
+        uint256 unfertilizedIndex = l2Beanstalk.totalFertilizerBeans();
+        assertEq(unfertilizedIndex, unfertilizedIndexJson, "unfertilized index");
 
         uint256 fertilizedPaidIndexJson = getGlobalPropertyUint("fert.fertilizedPaidIndex");
         uint256 fertilizedPaidIndex = l2Beanstalk.rinsedSprouts();
-        assertEq(fertilizedPaidIndex, fertilizedPaidIndexJson);
+        assertEq(fertilizedPaidIndex, fertilizedPaidIndexJson, "fertilized paid index");
 
         uint256 fertFirstJson = getGlobalPropertyUint("fert.fertFirst");
         uint256 fertFirst = l2Beanstalk.getFirst();
-        assertEq(fertFirst, fertFirstJson);
+        assertEq(fertFirst, fertFirstJson, "fert first");
 
         uint256 fertLastJson = getGlobalPropertyUint("fert.fertLast");
         uint256 fertLast = l2Beanstalk.getLast();
-        assertEq(fertLast, fertLastJson);
+        assertEq(fertLast, fertLastJson, "fert last");
     }
 
     //////////////////// Helpers ////////////////////
