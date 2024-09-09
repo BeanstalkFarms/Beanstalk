@@ -32,7 +32,7 @@ export class WellsSDK {
   constructor(config?: SDKConfig) {
     this.handleConfig(config);
 
-    this.chainId = enumFromValue(this.provider?.network?.chainId ?? 1, ChainId);
+    this.chainId = this.deriveChainId(config?.provider);
 
     // Globals
     this.addresses = addresses;
@@ -94,6 +94,13 @@ export class WellsSDK {
     }
 
     throw new Error("Invalid rpcUrl");
+  }
+
+  private deriveChainId(provider?: SDKConfig["provider"]) {
+    const providerChainId =
+      provider?.network?.chainId || provider?._network?.chainId || Address.defaultChainId;
+
+    return enumFromValue(providerChainId, ChainId);
   }
 
   async getAccount(_account?: string): Promise<string> {

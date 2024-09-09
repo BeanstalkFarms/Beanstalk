@@ -9,14 +9,13 @@ import { Silo } from "./silo";
 import { Sun } from "./sun";
 import { Farm } from "./farm/farm";
 import { Permit } from "./permit";
-import { Root } from "./root";
 import { Sdk as Queries, getSdk as getQueries } from "../constants/generated-gql/graphql";
 import { Swap } from "src/lib/swap/Swap";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/sdk-wells";
-import { ChainId } from "@beanstalk/sdk-core";
+import { Address, ChainId } from "@beanstalk/sdk-core";
 import { Field } from "./field";
 
 export type Provider = ethers.providers.JsonRpcProvider;
@@ -70,7 +69,7 @@ export class BeanstalkSDK {
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
 
-    this.chainId = enumFromValue(this.provider?.network?.chainId ?? 42161, ChainId);
+    this.chainId = this.deriveChainId(config?.provider);
     this.source = config?.source || DataSource.SUBGRAPH;
 
     // Beanstalk
@@ -123,7 +122,7 @@ export class BeanstalkSDK {
 
   handleConfig(config: BeanstalkConfig = {}) {
     if (config.rpcUrl) {
-      config.provider = this.getProviderFromUrl(config.rpcUrl);
+      config.provider = this.getProviderFromUrl(config.rpcUrl, config.provider);
     }
 
     this.signer = config.signer;
@@ -156,15 +155,27 @@ export class BeanstalkSDK {
 
   ////// Private
 
-  private getProviderFromUrl(url: string): Provider {
+  private getProviderFromUrl(url: string, _provider: BeanstalkConfig["provider"]): Provider {
+    const networkish = _provider?.network || _provider?._network || Address.defaultChainId;
+    console.log("\tSDK: getProviderFromUrl: ", {
+      url,
+      networkish
+    });
     if (url.startsWith("ws")) {
-      return new ethers.providers.WebSocketProvider(url);
+      return new ethers.providers.WebSocketProvider(url, networkish);
     }
     if (url.startsWith("http")) {
-      return new ethers.providers.JsonRpcProvider(url);
+      return new ethers.providers.JsonRpcProvider(url, networkish);
     }
 
     throw new Error("Invalid rpcUrl");
+  }
+
+  private deriveChainId(provider?: BeanstalkConfig["provider"]) {
+    const providerChainId =
+      provider?.network?.chainId || provider?._network?.chainId || Address.defaultChainId;
+
+    return enumFromValue(providerChainId, ChainId);
   }
 
   async getAccount(_account?: string): Promise<string> {
