@@ -183,14 +183,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the bean denominated value ("bdv") of a set of tokens and amounts.
+     * @notice returns the bean denominated values ("bdv") of an array of tokens and amounts.
      */
     function bdvs(
         address[] calldata tokens,
         uint256[] calldata amounts
-    ) external view returns (uint256 _bdv) {
+    ) external view returns (uint256[] memory _bdvs) {
+        _bdvs = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
-            _bdv += bdv(tokens[i], amounts[i]);
+            _bdvs[i] = bdv(tokens[i], amounts[i]);
         }
     }
 

@@ -200,7 +200,8 @@ library LibGauge {
                 selector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
-                percentDepositedBdv
+                percentDepositedBdv,
+                ss.gaugePointImplementation.data
             )
         );
 

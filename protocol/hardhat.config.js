@@ -33,10 +33,16 @@ const {
 const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
-const { reseed } = require("./reseed/reseed.js");
+const { reseedL2 } = require("./reseed/reseedL2.js");
+const { reseedL1 } = require("./reseed/reseedL1.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
-const { bipNewSilo, bipMorningAuction, bipSeedGauge, bipMiscellaneousImprovements } = require("./scripts/bips.js");
+const {
+  bipNewSilo,
+  bipMorningAuction,
+  bipSeedGauge,
+  bipMiscellaneousImprovements
+} = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -96,20 +102,23 @@ task("getTime", async function () {
   await replant(account)
 })*/
 
-task("reseed", async () => {
-  // mint more eth to the bcm to cover gas costs
+task("reseedL1", async () => {
+  // mint more eth to the bcm to cover gas costs.
   let bcm = await impersonateSigner(BCM);
+  await mintEth(bcm.address);
+  await reseedL1(bcm);
+});
+
+task("reseedL2", async () => {
+  // the account that deploys the new diamond address at nonce 0.
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
   // todo: get l2bcm once deployed.
   let l2bcm = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f8");
-  await mintEth(bcm.address);
   await mintEth(beanstalkDeployer.address);
   await mintEth(l2bcm.address);
-  await reseed({
-    owner: bcm,
+  await reseedL2({
     beanstalkDeployer: beanstalkDeployer,
     l2owner: l2bcm,
-    deployL1: false,
     setState: true
   });
 });
@@ -119,7 +128,17 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
+  const modules = [
+    "barn",
+    "diamond",
+    "farm",
+    "field",
+    "market",
+    "silo",
+    "sun",
+    "metadata",
+    "migration"
+  ];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -190,7 +209,17 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
   const modulesDir = path.join("contracts", "beanstalk");
 
   // The list of modules to combine into a single ABI. All facets (and facet dependencies) will be aggregated.
-  const modules = ["barn", "diamond", "farm", "field", "market", "silo", "sun", "metadata"];
+  const modules = [
+    "barn",
+    "diamond",
+    "farm",
+    "field",
+    "market",
+    "silo",
+    "sun",
+    "metadata",
+    "migration"
+  ];
 
   // The glob returns the full file path like this:
   // contracts/beanstalk/barn/UnripeFacet.sol
@@ -391,7 +420,13 @@ module.exports = {
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545/",
-      timeout: 100000,
+      timeout: 1000000000,
+      accounts: "remote"
+    },
+    localhostL1: {
+      chainId: 1338,
+      url: "http://127.0.0.1:9545/",
+      timeout: 1000000000,
       accounts: "remote"
     },
     mainnet: {
