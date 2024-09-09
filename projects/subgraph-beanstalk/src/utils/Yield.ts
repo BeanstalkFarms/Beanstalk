@@ -14,9 +14,8 @@ import { calculateAPYPreGauge } from "./legacy/LegacyYield";
 import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
-import { REPLANT_SEASON } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { getProtocolFertilizer } from "../../../subgraph-core/constants/RuntimeConstants";
+import { getProtocolFertilizer, minEMASeason } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
@@ -43,6 +42,8 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
 }
 
 function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): void {
+  const minStartSeason = minEMASeason(v());
+
   const t = getCurrentSeason();
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
@@ -56,7 +57,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   // When less then window data points are available,
   // smooth over whatever is available. Otherwise use the full window.
-  siloYield.u = t - 6074 < window ? t - 6074 : window;
+  siloYield.u = t - (minStartSeason - 1) < window ? t - (minStartSeason - 1) : window;
   siloYield.whitelistedTokens = silo.whitelistedTokens;
 
   // Calculate the current beta value
@@ -68,7 +69,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
-    for (let i = REPLANT_SEASON.toI32(); i <= t; i++) {
+    for (let i = minStartSeason; i <= t; i++) {
       let rewardMint = getRewardMinted(i);
       currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;

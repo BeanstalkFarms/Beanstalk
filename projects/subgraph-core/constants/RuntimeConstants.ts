@@ -82,3 +82,10 @@ export function getBeanstalkPriceAddress(v: VersionDto, blockNumber: BigInt): Ad
   }
   throw new Error("Unsupported protocol");
 }
+
+export function minEMASeason(v: VersionDto): i32 {
+  if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
+    return BeanstalkEth.minEMASeason();
+  }
+  throw new Error("Unsupported protocol");
+}

@@ -1,10 +1,9 @@
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
-import { CURVE_PRICE, REPLANT_SEASON } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { REPLANT_SEASON } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal } from "../../../../subgraph-core/utils/Decimals";
-import { CurvePrice } from "../../../generated/Beanstalk-ABIs/CurvePrice";
 import { SeasonSnapshot, Sunrise } from "../../../generated/Beanstalk-ABIs/PreReplant";
 import { MetapoolOracle } from "../../../generated/Beanstalk-ABIs/Replanted";
-import { BeanstalkPrice_try_price } from "../../utils/contracts/BeanstalkPrice";
+import { BeanstalkPrice_priceOnly } from "../../utils/contracts/BeanstalkPrice";
 import { loadSeason } from "../../entities/Beanstalk";
 import { updateStalkWithCalls } from "../../utils/legacy/LegacySilo";
 import { sunrise } from "../../utils/Season";
@@ -35,14 +34,7 @@ export function handleSeasonSnapshot(event: SeasonSnapshot): void {
 // Replanted -> SeedGauge
 export function handleMetapoolOracle(event: MetapoolOracle): void {
   let season = loadSeason(event.params.season);
-  // Attempt to pull from Beanstalk Price contract first
-  let beanstalkQuery = BeanstalkPrice_try_price(event.block.number);
-  if (beanstalkQuery.reverted) {
-    let curvePrice = CurvePrice.bind(CURVE_PRICE);
-    season.price = toDecimal(curvePrice.getCurve().price);
-  } else {
-    season.price = toDecimal(beanstalkQuery.value.price);
-  }
+  season.price = toDecimal(BeanstalkPrice_priceOnly(event.block.number));
   season.deltaB = event.params.deltaB;
   season.save();
 }

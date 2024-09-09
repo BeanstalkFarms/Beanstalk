@@ -1,7 +1,5 @@
 import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
-import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
-import { BeanstalkPrice_try_price } from "./contracts/BeanstalkPrice";
-import { CURVE_PRICE } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { BeanstalkPrice_priceOnly } from "./contracts/BeanstalkPrice";
 import { BI_10, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { setFieldHourlyCaseId, setHourlySoilSoldOut, takeFieldSnapshots } from "../entities/snapshots/Field";
 import { getCurrentSeason, getHarvestableIndex, loadBeanstalk, loadFarmer, loadSeason } from "../entities/Beanstalk";
@@ -358,14 +356,7 @@ export function temperatureChanged(params: TemperatureChangedParams): void {
   if (seasonEntity.price != ZERO_BD) {
     currentPrice = seasonEntity.price;
   } else {
-    // Attempt to pull from Beanstalk Price contract first
-    let beanstalkQuery = BeanstalkPrice_try_price(params.event.block.number);
-    if (beanstalkQuery.reverted) {
-      let curvePrice = CurvePrice.bind(CURVE_PRICE);
-      currentPrice = toDecimal(curvePrice.getCurve().price);
-    } else {
-      currentPrice = toDecimal(beanstalkQuery.value.price);
-    }
+    currentPrice = toDecimal(BeanstalkPrice_priceOnly(params.event.block.number));
   }
 
   field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);

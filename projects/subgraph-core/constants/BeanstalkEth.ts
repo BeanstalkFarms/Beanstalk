@@ -10,7 +10,6 @@ import {
   BEAN_WETH_V1,
   BEAN_WSTETH_CP2_WELL,
   BEAN_WSTETH_UNRIPE_MIGRATION_BLOCK,
-  BEANSTALK,
   BEANSTALK_PRICE_1,
   BEANSTALK_PRICE_2,
   FERTILIZER,
@@ -110,4 +109,8 @@ export function getBeanstalkPriceAddress(blockNumber: BigInt): Address {
   } else {
     return BEANSTALK_PRICE_2;
   }
+}
+
+export function minEMASeason(): i32 {
+  return REPLANT_SEASON.toI32();
 }

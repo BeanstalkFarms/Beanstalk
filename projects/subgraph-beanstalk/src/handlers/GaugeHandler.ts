@@ -18,8 +18,7 @@ import {
   loadOrCreateGerminating,
   savePrevFarmerGerminatingEvent
 } from "../entities/Germinating";
-import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEAN_WETH_CP2_WELL } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
 import { setSiloHourlyCaseId, takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";

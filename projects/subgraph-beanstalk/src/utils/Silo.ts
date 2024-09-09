@@ -2,10 +2,11 @@ import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
-import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
 import { stemFromSeason } from "./legacy/LegacySilo";
+import { isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -34,8 +35,8 @@ export function addDeposits(params: AddRemoveDepositsParams): void {
       // Fill stem according to legacy conversion
       deposit.stemV31 = stemFromSeason(params.seasons![i].toI32(), params.token);
     } else {
-      deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
-      deposit.stemV31 = params.event.block.number > GAUGE_BIP45_BLOCK ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
+      deposit.depositVersion = isGaugeDeployed(v(), params.event.block.number) ? "v3.1" : "v3";
+      deposit.stemV31 = isGaugeDeployed(v(), params.event.block.number) ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
     }
 
     deposit = updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event)!;
