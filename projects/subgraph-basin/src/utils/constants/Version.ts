@@ -1,10 +1,12 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Version } from "../../generated/schema";
-import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { Version } from "../../../generated/schema";
+import { BEANSTALK } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { VersionDto } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
-  versionEntity.versionNumber = "1.0.2";
+  versionEntity.versionNumber = "2.2.2";
   versionEntity.subgraphName = subgraphNameForBlockNumber(block.number);
   versionEntity.protocolAddress = protocolForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);
@@ -12,8 +14,8 @@ export function handleInitVersion(block: ethereum.Block): void {
 }
 
 function subgraphNameForBlockNumber(blockNumber: BigInt): string {
-  if (blockNumber == BigInt.fromU32(13323594)) {
-    return "beanft";
+  if (blockNumber == BigInt.fromU32(17977922)) {
+    return "basin";
   }
   throw new Error("Unable to initialize subgraph name for this block number");
 }
@@ -26,8 +28,18 @@ function protocolForBlockNumber(blockNumber: BigInt): Address {
 }
 
 function chainForBlockNumber(blockNumber: BigInt): string {
-  if (blockNumber == BigInt.fromU32(13323594)) {
+  if (blockNumber == BigInt.fromU32(17977922)) {
     return "ethereum";
   }
   throw new Error("Unable to initialize chain for this block number");
+}
+
+export function v(): VersionDto {
+  const versionEntity = Version.load("subgraph")!;
+  return {
+    subgraphName: versionEntity.subgraphName,
+    versionNumber: versionEntity.versionNumber,
+    protocolAddress: toAddress(versionEntity.protocolAddress),
+    chain: versionEntity.chain
+  };
 }

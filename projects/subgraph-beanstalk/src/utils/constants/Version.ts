@@ -1,6 +1,8 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Version } from "../../generated/schema";
-import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { Version } from "../../../generated/schema";
+import { BEANSTALK } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { VersionDto } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
@@ -30,4 +32,14 @@ function chainForBlockNumber(blockNumber: BigInt): string {
     return "ethereum";
   }
   throw new Error("Unable to initialize chain for this block number");
+}
+
+export function v(): VersionDto {
+  const versionEntity = Version.load("subgraph")!;
+  return {
+    subgraphName: versionEntity.subgraphName,
+    versionNumber: versionEntity.versionNumber,
+    protocolAddress: toAddress(versionEntity.protocolAddress),
+    chain: versionEntity.chain
+  };
 }

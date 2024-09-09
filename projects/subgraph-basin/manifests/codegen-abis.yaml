@@ -37,7 +37,7 @@ dataSources:
         - handler: handleInitVersion
           filter:
             kind: once
-      file: ../src/utils/Init.ts
+      file: ../src/utils/constants/Version.ts
 templates:
   - kind: ethereum/contract
     name: Well
