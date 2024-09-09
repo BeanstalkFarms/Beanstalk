@@ -11,6 +11,15 @@ const WellAddresses = [
   "0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b" // BEAN/USDT
 ];
 
+const WellNames = [
+  "BEAN/WETH",
+  "BEAN/WstETH",
+  "BEAN/WEETH",
+  "BEAN/WBTC",
+  "BEAN/USDC",
+  "BEAN/USDT"
+];
+
 const NonBeanToken = [
   L2_WETH, // WETH
   L2_WSTETH, // WstETH
@@ -63,11 +72,17 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
-    console.log(`Adding liquidity to ${WellAddresses[i]} and performing a swap to update the well pump.`);
+    console.log(`Adding liquidity to ${WellNames[i]} and updating the well pump.`);
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
     // perform a swap to update the well pumps and avoid "NotInitialized" error.
+    await well.connect(account).swapFrom(bean.address, token.address, to6("1"), 0, account.address, MAX_UINT256);
+    // go forward 10 blocks to avoid "NoTimePassed" error.
+    for (let j = 0; j < 10; j++) {
+      await ethers.provider.send("evm_mine");
+    }
+    // reupdate the well pump 
     await well.connect(account).swapFrom(bean.address, token.address, to6("1"), 0, account.address, MAX_UINT256);
   }
 }

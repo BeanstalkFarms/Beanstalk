@@ -47,7 +47,6 @@ async function reseed2(account, L2Beanstalk, deployBasin = true, fertilizerImple
     await wsteth.mint(account.address, wstEthInBeanWstEthWell[0]);
     await stable.mint(account.address, stableInBeanStableWell[0]);
   } else {
-    // TODO: Replace with actual token addresses on the L2
     weth = await ethers.getContractAt("IERC20", L2_WETH);
     wsteth = await ethers.getContractAt("IERC20", L2_WEETH);
     stable = await ethers.getContractAt("IERC20", L2_WBTC);

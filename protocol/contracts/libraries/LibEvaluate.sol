@@ -14,6 +14,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {Implementation} from "contracts/beanstalk/storage/System.sol";
 import {System, EvaluationParameters, Weather} from "contracts/beanstalk/storage/System.sol";
+import "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -202,6 +203,8 @@ library LibEvaluate {
         view
         returns (Decimal.D256 memory lpToSupplyRatio, address largestLiqWell, bool oracleFailure)
     {
+        console.log("Inside calcLPToSupplyRatio()");
+        console.log("beanSupply: %s", beanSupply);
         // prevent infinite L2SR
         if (beanSupply == 0) return (Decimal.zero(), address(0), true);
 
@@ -212,7 +215,11 @@ library LibEvaluate {
         uint256 wellLiquidity;
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
+            console.log("checking pool: %s", pools[i]);
+            console.log("Calling getTwaReservesFromStorageOrBeanstalkPump()");
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
+
+            console.log("back in calcLPToSupplyRatio()");
 
             // calculate the non-bean usd liquidity value.
             uint256 usdLiquidity = LibWell.getWellTwaUsdLiquidityFromReserves(
@@ -220,12 +227,16 @@ library LibEvaluate {
                 twaReserves
             );
 
+            console.log("back in calcLPToSupplyRatio()");
+            console.log("usdLiquidity: %s", usdLiquidity);
+
             // if the usdLiquidty is 0, beanstalk assumes oracle failure.
             if (usdLiquidity == 0) {
                 oracleFailure = true;
             }
 
             // calculate the scaled, non-bean liquidity in the pool.
+            console.log("Calling getLiquidityWeight()");
             wellLiquidity = getLiquidityWeight(pools[i]).mul(usdLiquidity).div(1e18);
 
             // if the liquidity is the largest, update `largestLiqWell`,
@@ -312,12 +323,16 @@ library LibEvaluate {
      */
     function getLiquidityWeight(address pool) internal view returns (uint256 liquidityWeight) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("Inside getLiquidityWeight()");
         Implementation memory lw = s.sys.silo.assetSettings[pool].liquidityWeightImplementation;
-
+        console.log("liquidityWeightImplementation.target: %s", lw.target);
+        console.log("liquidityWeightImplementation.selector:");
+        console.logBytes4(lw.selector);
         // if the target is 0, use address(this).
         address target = lw.target;
         if (target == address(0)) target = address(this);
 
+        console.log("performing staticcall to liquidityWeightImplementation selector");
         (bool success, bytes memory data) = target.staticcall(
             abi.encodeWithSelector(lw.selector, lw.data)
         );

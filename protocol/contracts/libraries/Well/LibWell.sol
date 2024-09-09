@@ -15,6 +15,7 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {IMultiFlowPumpWellFunction} from "contracts/interfaces/basin/pumps/IMultiFlowPumpWellFunction.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import "forge-std/console.sol";
 
 interface IERC20Decimals {
     function decimals() external view returns (uint8);
@@ -147,7 +148,9 @@ library LibWell {
         address well,
         uint256[] memory twaReserves
     ) internal view returns (uint256 usdLiquidity) {
+        console.log("inside getWellTwaUsdLiquidityFromReserves");
         uint256 tokenUsd = getUsdTokenPriceForWell(well);
+        console.log("tokenUsd value: ", tokenUsd);
         (address token, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
         if (tokenUsd > 1) {
             return twaReserves[j].mul(1e18).div(tokenUsd);
@@ -305,8 +308,11 @@ library LibWell {
     function getTwaReservesFromStorageOrBeanstalkPump(
         address well
     ) internal view returns (uint256[] memory twaReserves) {
+        console.log("inside getTwaReservesFromStorageOrBeanstalkPump");
+        console.log("getting twa reserves from storage");
         twaReserves = getTwaReservesForWell(well);
         if (twaReserves[0] == 1) {
+            console.log("getting twa reserves from pump");
             twaReserves = getTwaReservesFromPump(well);
         }
     }
@@ -318,13 +324,18 @@ library LibWell {
      * of the last season. wrapped in try/catch to return gracefully.
      */
     function getTwaReservesFromPump(address well) internal view returns (uint256[] memory) {
+        console.log("inside getTwaReservesFromPump");
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("using last season timestamp:", s.sys.season.timestamp);
+        console.log("current timestamp:", uint40(block.timestamp));
+        console.log("time delta:", uint40(block.timestamp) - s.sys.season.timestamp);
         Call[] memory pumps = IWell(well).pumps();
         try
             ICumulativePump(pumps[0].target).readTwaReserves(
                 well,
                 s.sys.wellOracleSnapshots[well],
-                uint40(s.sys.season.timestamp),
+                uint40(s.sys.season.timestamp), // The timestamp to start the TWA from 
+                // this is the timestamp of the last season.
                 pumps[0].data
             )
         returns (uint[] memory twaReserves, bytes memory) {

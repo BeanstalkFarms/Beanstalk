@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {WellPrice, P, C} from "./WellPrice.sol";
+import "forge-std/console.sol";
 
 contract BeanstalkPrice is WellPrice {
     using LibRedundantMath256 for uint256;
@@ -35,5 +36,6 @@ contract BeanstalkPrice is WellPrice {
             p.deltaB += p.ps[i].deltaB;
         }
         p.price = p.price.div(p.liquidity);
+        console.log("retuned");
     }
 }

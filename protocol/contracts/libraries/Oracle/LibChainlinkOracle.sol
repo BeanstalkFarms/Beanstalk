@@ -7,6 +7,7 @@ pragma solidity ^0.8.20;
 import {C} from "contracts/C.sol";
 import {IChainlinkAggregator} from "contracts/interfaces/chainlink/IChainlinkAggregator.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import "forge-std/console.sol";
 
 /**
  * @title Chainlink Oracle Library
@@ -83,6 +84,7 @@ library LibChainlinkOracle {
             // Check for an invalid roundId that is 0
             if (roundId == 0) return 0;
             if (checkForInvalidTimestampOrAnswer(timestamp, answer, block.timestamp, maxTimeout)) {
+                console.log("HIT INVALID TIMESTAMP OR ANSWER, RETURNING 0 FOR PRICE");
                 return 0;
             }
 
@@ -213,10 +215,15 @@ library LibChainlinkOracle {
         int256 answer,
         uint256 currentTimestamp,
         uint256 maxTimeout
-    ) private pure returns (bool) {
+    ) private view returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
         if (timestamp == 0 || timestamp > currentTimestamp) return true;
         // Check if Chainlink's price feed has timed out
+        console.log("INSIDE CHECK FOR INVALID TIMESTAMP OR ANSWER IN LIBCHAINLINKORACLE");
+        console.log("currentTimestamp", currentTimestamp);
+        console.log("timestamp", timestamp);
+        console.log("is invalid timeout:");
+        console.log(currentTimestamp.sub(timestamp) > maxTimeout);
         if (currentTimestamp.sub(timestamp) > maxTimeout) return true;
         // Check for non-positive price
         if (answer <= 0) return true;

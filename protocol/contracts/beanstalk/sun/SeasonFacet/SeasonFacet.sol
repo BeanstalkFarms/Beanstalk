@@ -49,7 +49,7 @@ contract SeasonFacet is Invariable, Weather {
     function gm(
         address account,
         LibTransfer.To mode
-    ) public payable fundsSafu noOutFlow nonReentrant returns (uint256) {
+    ) public payable returns (uint256) {
         return _gm(account, mode);
     }
 

@@ -13,6 +13,7 @@ import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import "forge-std/StdUtils.sol";
 import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
 import {P} from "contracts/ecosystem/price/P.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
 
 interface IBeanstalkPrice {
     function price() external view returns (P.Prices memory p);
@@ -24,6 +25,7 @@ interface IBeanstalkPrice {
 contract ReseedStateTest is TestHelper {
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
+    address constant L2_DEPLOYER = address(0xE26367ca850DA09A478076481535D7c1C67d62F8);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
     address constant BEANSTALK_PRICE = address(0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56);
 
@@ -34,24 +36,24 @@ contract ReseedStateTest is TestHelper {
     address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
 
     address[] whiteListedWellTokens = [
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     address[] whitelistedTokens = [
         L2BEAN,
         L2URBEAN,
         L2URLP,
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     IMockFBeanstalk l2Beanstalk;
@@ -72,14 +74,54 @@ contract ReseedStateTest is TestHelper {
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // skip(100_000_000);
+        // console.log("Current timestamp before sunrise: ", block.timestamp);
         // l2Beanstalk.gm(address(this), 1);
+        // console.log("Current timestamp after sunrise: ", block.timestamp);
+
+        // swapInWell(whiteListedWellTokens[0], address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1));
+        // swapInWell(whiteListedWellTokens[0], address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1));
+        // console.log("Current timestamp: ", block.timestamp);
+        // skip(1000);
+        // l2Beanstalk.gm(address(this), 1);
+        // skip(1000);
+    }
+
+    function test_gm() public {
+        // perform a gm
+        skip(100_000_000);
+        l2Beanstalk.gm(address(this), 1);
+        skip(1000);
+        l2Beanstalk.gm(address(this), 1);
     }
 
     // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
-    function test_beanstalkPrice() public {
-        // Get beanstalk price
-        IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
-        P.Prices memory prices = beanstalkPrice.price();
+    // function test_beanstalkPrice() public {
+    //     // Get beanstalk price
+    //     IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
+    //     P.Prices memory prices = beanstalkPrice.price();
+    // }
+
+    function test_bdvs() public {
+        // get the bdv for all whitelisted tokens
+        for (uint256 i = 0; i < whitelistedTokens.length; i++) {
+            uint256 bdv = l2Beanstalk.bdv(whitelistedTokens[i], 1e18);
+            console.log("BDV for token: ", whitelistedTokens[i], " is: ", bdv);
+        }
+    }
+
+    function test_largestLiqWell() public {
+        // get the largest liquidity well
+        console.log("//////////////////////////////////////////////////////");
+        console.log("Current timestamp before largest liq well: ", block.timestamp);
+        skip(1000);
+        address largestLiqWell = l2Beanstalk.getLargestLiqWell();
+        console.log("Largest liquidity well: ", largestLiqWell);
+    }
+
+    function test_getL2SR() public {
+        // get the largest liquidity well
+        uint256 l2sr = l2Beanstalk.getLiquidityToSupplyRatio();
+        console.log("L2SR: ", l2sr);
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -380,5 +422,16 @@ contract ReseedStateTest is TestHelper {
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
+    }
+
+    function swapInWell(address well, address nonBeantoken) public {
+        // perform a swap on bean eth well
+        IWell well = IWell(well);
+        IERC20 bean = IERC20(L2BEAN);
+        // weth
+        IERC20 token = IERC20(nonBeantoken);
+        vm.startPrank(L2_DEPLOYER);
+        well.swapFrom(bean, token, 1e6, 0, L2_DEPLOYER, type(uint256).max);
+        vm.stopPrank();
     }
 }
