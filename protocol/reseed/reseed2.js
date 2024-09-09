@@ -14,9 +14,10 @@ const {
 const { deployBasinV1_2Components, deployUpgradeableWell } = require("../scripts/basinV1_2.js");
 
 // Files
-const INIT_SUPPLY = "./reseed/data/mocks/r3/L2_initial_supply.json";
-const INIT_WELL_BALANCES = "./reseed/data/mocks/r3/L2_well_balances.json";
-const EXTERNAL_UNRIPE = "./reseed/data/mocks/r3/L2_external_unripe_balances.json";
+const INIT_SUPPLY = "./reseed/data/r2/L2_initial_supply.json";
+const INIT_WELL_BALANCES = "./reseed/data/r2/L2_well_balances.json";
+const EXTERNAL_UNRIPE_BEAN = "./reseed/data/r2/L2_external_unripe_balances.json";
+const EXTERNAL_UNRIPE_BEAN_LP = "./reseed/data/r2/L2_external_unripe_lp_balances.json";
 
 /**
  * reseed8 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,
@@ -31,7 +32,8 @@ async function reseed2(account, L2Beanstalk, deployBasin = true, fertilizerImple
   [ethInBeanEthWell, wstEthInBeanWstEthWell, stableInBeanStableWell] = JSON.parse(
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
-  [urBean, urBeanLP] = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE));
+  externalUrBean = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE_BEAN));
+  externalUrBeanLP = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE_BEAN_LP));
 
   // mint:
   let weth, wsteth, stable, owner;
@@ -68,8 +70,8 @@ async function reseed2(account, L2Beanstalk, deployBasin = true, fertilizerImple
       beanSupply,
       unripeBeanSupply,
       unripeLpSupply,
-      urBean,
-      urBeanLP,
+      externalUrBean,
+      externalUrBeanLP,
       fertilizerImplementation
     ],
     bip: false,

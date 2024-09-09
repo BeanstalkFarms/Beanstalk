@@ -5,6 +5,7 @@ const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
+const { parseExternalHolders } = require("./dataConverts/convertExternalHolders.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
@@ -147,6 +148,8 @@ function parseBeanstalkData() {
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
   const marketPath = "./reseed/data/exports/market-info20330000.json";
+  const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
+  const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
   parseInternalBalances(
@@ -159,8 +162,18 @@ function parseBeanstalkData() {
   parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);
   parsePodMarketplace(
     marketPath,
-    "./reseed/data/r2/pod-listings.json",
-    "./reseed/data/r2/pod-orders.json"
+    "./reseed/data/r3/pod-listings.json",
+    "./reseed/data/r3/pod-orders.json"
+  );
+  parseExternalHolders(
+    externalUnripeHoldersPath,
+    "./reseed/data/r2/L2_external_unripe_balances.json",
+    contractAccounts
+  );
+  parseExternalHolders(
+    externalUnripeLpHoldersPath,
+    "./reseed/data/r2/L2_external_unripe_lp_balances.json",
+    contractAccounts
   );
 }
 
