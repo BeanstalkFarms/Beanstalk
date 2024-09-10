@@ -20,7 +20,7 @@ export const addresses = {
   // Ecosystem Contracts
   // ----------------------------------------
   BEANSTALK_PRICE: Address.make({
-    [ChainId.ETH_MAINNET]: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A",
+    [ChainId.ETH_MAINNET]: "0x4BEd6cb142b7d474242d87F4796387DEB9E1E1B4",
     [ChainId.ARBITRUM_MAINNET]: "0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56"
   }),
   JUNCTION: Address.make({
@@ -42,7 +42,7 @@ export const addresses = {
 
   /** @deprecated */
   USD_ORACLE: Address.make({
-    [ChainId.ETH_MAINNET]: "0x1aa19ed7DfC555E4644c9353Ad383c33024855F7"
+    [ChainId.ETH_MAINNET]: "0xb24a70b71e4cca41eb114c2f61346982aa774180"
   }),
   /** @deprecated */
   ROOT: Address.make({
@@ -109,7 +109,7 @@ export const addresses = {
     [ChainId.ARBITRUM_MAINNET]: "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB"
   }),
   BEANWSTETH_WELL: Address.make({
-    [ChainId.ETH_MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    [ChainId.ETH_MAINNET]: "0xBeA0000113B0d182f4064C86B71c315389E4715D",
     [ChainId.ARBITRUM_MAINNET]: "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8"
   }),
   BEANWEETH_WELL: Address.make({

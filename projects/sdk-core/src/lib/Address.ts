@@ -15,7 +15,7 @@ export class Address {
 
   constructor(addresses: AddressDefinition) {
     this.addresses = Object.fromEntries(
-      Object.entries(addresses).map(([key, value]) => [Number(key), value.toLowerCase()])
+      Object.entries(addresses).map(([key, value]) => [Number(key), (value || "").toLowerCase()])
     );
   }
 
@@ -29,10 +29,10 @@ export class Address {
       }
 
       // return the address for this chainId's mainnet counterpart.
-      return this.addresses[ChainResolver.resolveToMainnetChainId(chainId)];
+      return this.addresses[ChainResolver.resolveToMainnetChainId(chainId)] || "";
     }
 
-    return this.addresses[chainId];
+    return this.addresses[chainId] || "";
   }
 
   set<T extends string | AddressDefinition>(input: T) {
