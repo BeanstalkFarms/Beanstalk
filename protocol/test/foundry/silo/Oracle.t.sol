@@ -8,6 +8,9 @@ import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAg
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -296,6 +299,62 @@ contract OracleTest is TestHelper {
         uint256 priceWSTETH = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
         assertEq(priceWSTETH, 334243752683826);
     }
+
+    function testForkMainnetWBTCDeltaB() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapWBTCOracleImplementation();
+
+        console.log("deploy well");
+
+        // deploy a wbtc:bean well
+        deployWBTCWellOnFork(true, true);
+        console.log("deployed well");
+
+        address WBTC_WHALE = 0x28C6c06298d514Db089934071355E5743bf21d60;
+        // deal didn't seem to work with wbtc, so instead, transfer from a wbtc whale
+
+        vm.prank(WBTC_WHALE);
+        IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8);
+
+        deal(address(BEAN), BEAN_WBTC_WELL, 100_000e6, true);
+
+        uint256 beanWellBalance = IERC20(BEAN).balanceOf(BEAN_WBTC_WELL);
+        console.log("bean well balance", beanWellBalance);
+        uint256 wbtcWellBalance = IERC20(WBTC).balanceOf(BEAN_WBTC_WELL);
+        console.log("wbtc well balance", wbtcWellBalance);
+
+        // add liquidity failed because it uses deal, didn't want to have wtbtc-specific stuff in that code
+        // addLiquidityToWell(
+        //     BEAN_WBTC_WELL,
+        //     100_000e6, // 100,000 Beans
+        //     0 // 0 WBTC, deal didn't work
+        // );
+
+        uint256 lpOut = IWell(BEAN_WBTC_WELL).sync(users[0], 0);
+        console.log("lp out", lpOut);
+
+        // address well = BEAN_WBTC_WELL;
+
+        // vm.prank(BEANSTALK);
+        // bs.whitelistToken(
+        //     well,
+        //     WBTC,
+        //     0,
+        //     0,
+        //     bytes1(0x01),
+        //     0,
+        //     0,
+        //     IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01), new bytes(0))
+        // );
+
+        int256 deltaB = IMockFBeanstalk(BEANSTALK).poolCurrentDeltaB(BEAN_WBTC_WELL);
+        console.log("deltaB wbtc:");
+        console.logInt(deltaB);
+        assertEq(deltaB, 0.0001e18);
+    }
+
+    //////////// Helper Functions ////////////
 
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(BEANSTALK);

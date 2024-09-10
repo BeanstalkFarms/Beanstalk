@@ -45,6 +45,7 @@ contract BasinDeployer is Utils {
     // addresses were randomly generated and are not on-chain.
     address constant BEAN_USDC_WELL = address(0x4444F7394455A8d1af37E8BEa52F2FCf6D39f158);
     address constant BEAN_USDT_WELL = address(0x55554AF7c7CEe28994c7484C364768620C726D68);
+    address constant BEAN_WBTC_WELL = address(0x7777F3d631f856b4738Da79E0f4c10EE25C75B31);
 
     string constant BEAN_WETH_WELL_NAME = "BEAN:WETH Constant Product 2 Well";
     string constant BEAN_WETH_WELL_SYMBOL = "BEANWETHCP2w";
@@ -204,6 +205,38 @@ contract BasinDeployer is Utils {
         wells.push(deployBeanCp2Well([BEAN_USDT_WELL, USDT], _pump));
         if (verbose) console.log("Bean USDT well deployed at:", wells[1]);
         vm.label(BEAN_USDT_WELL, "BEAN/USDT Well");
+    }
+
+    function deployWBTCWellOnFork(bool mock, bool verbose) internal {
+        address _pump;
+
+        if (mock) {
+            // mock pump.
+            _pump = pumps[1];
+        } else {
+            // multi flow pump.
+            _pump = pumps[0];
+        }
+
+        console.log("deploying wbtc well");
+
+        console.log("wellImplementations[0]:", wellImplementations[0]);
+
+        // deploy Bean WBTC well:
+        // wells.push(deployBeanCp2Well([BEAN_WBTC_WELL, WBTC], _pump));
+
+        deployWellAtAddressNoData(
+            BEAN_WBTC_WELL,
+            BEAN,
+            WBTC,
+            wellFunctions[0],
+            _pump,
+            wellImplementations[0]
+        );
+
+        console.log("deployed wbtc well");
+        if (verbose) console.log("Bean WBTC well deployed at:", wells[0]);
+        vm.label(BEAN_WBTC_WELL, "BEAN/WBTC Well");
     }
 
     /**
