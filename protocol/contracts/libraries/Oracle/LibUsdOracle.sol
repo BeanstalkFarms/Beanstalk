@@ -151,9 +151,9 @@ library LibUsdOracle {
                 // `tokenPrice` has 6 decimal precision (see {LibUniswapOracle.getTwap}).
                 // `tokenPrice` is scaled up to 1 million units, if the `isMillion` flag is enabled.
                 if (isMillion) {
-                    tokenPrice = 1e18 / tokenPrice;
+                    tokenPrice = (1e12 * (10 ** tokenDecimals)) / tokenPrice;
                 } else {
-                    tokenPrice = 1e12 / tokenPrice;
+                    tokenPrice = (1e6 * (10 ** tokenDecimals)) / tokenPrice;
                 }
                 // return the USD/TOKEN price.
                 // 1e6 * 1e`n` / 1e`n` = 1e6
