@@ -176,7 +176,7 @@ const MigrationPreview: FC<{}> = () => {
             </Button>
             <Dialog onClose={() => setOpenDialog(false)} open={openDialog}>
               <StyledDialogTitle onClose={() => setOpenDialog(false)}>
-                Verify BIP-50 Migrated Balances
+                BIP-50 Balance Migration
               </StyledDialogTitle>
               <StyledDialogContent
                 sx={{
