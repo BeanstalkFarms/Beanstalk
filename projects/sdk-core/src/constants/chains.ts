@@ -10,13 +10,37 @@ export enum ChainId {
   TESTNET = 31337
 }
 
+export type TestnetChainId =
+  | ChainId.ANVIL1
+  | ChainId.LOCALHOST
+  | ChainId.TESTNET
+  | ChainId.LOCALHOST_ETH;
+
+export type MainnetChainId = ChainId.ETH_MAINNET | ChainId.ARBITRUM_MAINNET;
+
 /**
  * These chains are forks of mainnet,
  * therefore they use the same token addresses as mainnet.
+ *
+ * - ANVIL1
+ * - LOCALHOST
+ * - TESTNET
+ * - LOCALHOST_ETH
  */
-export const TESTNET_CHAINS = new Set([
+export const TESTNET_CHAINS: Readonly<Set<ChainId>> = new Set([
   ChainId.ANVIL1,
   ChainId.LOCALHOST,
   ChainId.TESTNET,
   ChainId.LOCALHOST_ETH
+]);
+
+/**
+ * Mainnet chains
+ *
+ * - ETH_MAINNET
+ * - ARBITRUM_MAINNET
+ */
+export const MAINNET_CHAINS: Readonly<Set<ChainId>> = new Set([
+  ChainId.ETH_MAINNET,
+  ChainId.ARBITRUM_MAINNET
 ]);
