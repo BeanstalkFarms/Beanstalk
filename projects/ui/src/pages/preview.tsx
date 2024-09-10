@@ -96,13 +96,6 @@ const MigrationPreview: FC<{}> = () => {
         <PageHeader
           title="Migration Preview"
           description="Preview an account's assets after migration"
-          href="https://docs.bean.money/almanac/governance/beanfts"
-          control={
-            <GuideButton
-              title="The Farmers' Almanac: BeaNFT Guides"
-              guides={[HOW_TO_MINT_BEANFTS]}
-            />
-          }
         />
         <Card sx={{ p: 2 }}>
           <Stack gap={1.5}>
