@@ -80,7 +80,7 @@ const MigrationPreview: FC<{}> = () => {
     if (!_account || !_isValid) return;
     try {
       const migrationData = await fetch(
-        `https://api.bean.money/dev/migration?account=${_account}`
+        `https://api.bean.money/migration?account=${_account}`
       ).then((response) => response.json());
       if (migrationData) {
         setData(migrationData);
