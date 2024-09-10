@@ -42,7 +42,6 @@ function BeanstalkSdkSetter({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const _sdk = getSDK(provider as JsonRpcProvider, signer, chainId);
-
     setSdk(_sdk);
   }, [provider, signer, chainId, setSdk]);
 

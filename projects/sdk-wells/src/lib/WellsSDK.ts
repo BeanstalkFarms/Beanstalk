@@ -1,4 +1,4 @@
-import { Address, ChainId } from "@beanstalk/sdk-core";
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { addresses } from "src/constants/addresses";
 import { enumFromValue } from "src/utils";
@@ -85,7 +85,7 @@ export class WellsSDK {
   }
 
   private getProviderFromUrl(url: string, _provider: SDKConfig["provider"]): Provider {
-    const networkish = _provider?.network || _provider?._network || Address.defaultChainId;
+    const networkish = _provider?.network || _provider?._network || ChainResolver.defaultChainId;
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
@@ -98,7 +98,7 @@ export class WellsSDK {
 
   private deriveChainId(provider?: SDKConfig["provider"]) {
     const providerChainId =
-      provider?.network?.chainId || provider?._network?.chainId || Address.defaultChainId;
+      provider?.network?.chainId || provider?._network?.chainId || ChainResolver.defaultChainId;
 
     return enumFromValue(providerChainId, ChainId);
   }

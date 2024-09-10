@@ -15,7 +15,7 @@ import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/sdk-wells";
-import { Address, ChainId } from "@beanstalk/sdk-core";
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 import { Field } from "./field";
 
 export type Provider = ethers.providers.JsonRpcProvider;
@@ -156,7 +156,7 @@ export class BeanstalkSDK {
   ////// Private
 
   private getProviderFromUrl(url: string, _provider: BeanstalkConfig["provider"]): Provider {
-    const networkish = _provider?.network || _provider?._network || Address.defaultChainId;
+    const networkish = _provider?.network || _provider?._network || ChainResolver.defaultChainId;
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
@@ -169,7 +169,7 @@ export class BeanstalkSDK {
 
   private deriveChainId(provider?: BeanstalkConfig["provider"]) {
     const providerChainId =
-      provider?.network?.chainId || provider?._network?.chainId || Address.defaultChainId;
+      provider?.network?.chainId || provider?._network?.chainId || ChainResolver.defaultChainId;
 
     return enumFromValue(providerChainId, ChainId);
   }

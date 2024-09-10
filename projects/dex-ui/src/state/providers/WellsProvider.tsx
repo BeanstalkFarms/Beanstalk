@@ -16,7 +16,9 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
 import { fetchWellsWithAddresses, findWells } from "src/wells/wellLoader";
 
-export const clearWellsCache = () => findWells.cache.clear?.();
+export const clearWellsCache = () => {
+  // findWells.cache.clear?.();
+};
 
 export const useWellsQuery = () => {
   const sdk = useSdk();
@@ -27,8 +29,9 @@ export const useWellsQuery = () => {
   const query = useChainScopedQuery({
     queryKey: queryKeys.wells(sdk),
     queryFn: async () => {
+      const wellAddresses = await findWells(sdk, aquifer);
+      // console.log("finding wells...");
       try {
-        const wellAddresses = await findWells(sdk, aquifer);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
         const wells = await fetchWellsWithAddresses(sdk, wellAddresses);
         Log.module("wells").debug("Wells response: ", wells);
@@ -40,10 +43,12 @@ export const useWellsQuery = () => {
         return [];
       }
     },
-    enabled: !!sdk && !!aquifer,
+    enabled: !!sdk && !!aquifer && !!sdk.wells,
     retry: false,
     staleTime: Infinity
   });
+
+  // console.log("enabled: ", !!sdk && !!aquifer && !!sdk.wells);
 
   useEffect(() => {
     setWells({ data: query.data || [], error: query.error, isLoading: query.isLoading });
@@ -54,8 +59,8 @@ export const useWellsQuery = () => {
 
 const WellsProvider = React.memo(({ children }: { children: React.ReactNode }) => {
   const query = useWellsQuery();
-
   if (!query.data?.length) {
+    // console.log("nowells...");
     return null;
   }
 

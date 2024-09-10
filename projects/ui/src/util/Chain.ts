@@ -1,4 +1,4 @@
-import { Address } from '@beanstalk/sdk-core';
+import { ChainResolver } from '@beanstalk/sdk-core';
 import { TESTNET_CHAINS, SupportedChainId } from '~/constants';
 
 /// Convention:
@@ -21,15 +21,17 @@ export function getChainConstant<T extends ChainConstant>(
   // wallet isn't connected (and thus there is no chainId).
   // Default chainId is currently set to arbitrum.
   if (!chainId || !SupportedChainId[chainId]) {
-    return map[Address.defaultChainId];
+    return map[ChainResolver.defaultChainId];
   }
   // Use TESTNET-specific value if available, otherwise
   // fall back to arbitrum / default chainId. This allows for forking.
   // Example: if we fork arbitrum mainnet but don't change any
   // token addresses, this falls back to arbitrum mainnet addresses.
   if (TESTNET_CHAINS.has(chainId)) {
-    const fallbackChainId = Address.getFallbackChainId(chainId);
-    return map[chainId] || map[fallbackChainId] || map[Address.defaultChainId];
+    const fallbackChainId = ChainResolver.resolveToMainnetChainId(chainId);
+    return (
+      map[chainId] || map[fallbackChainId] || map[ChainResolver.defaultChainId]
+    );
   }
   // Return value for the active chainId.
   return map[chainId];

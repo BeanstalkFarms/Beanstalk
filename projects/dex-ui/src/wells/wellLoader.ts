@@ -4,13 +4,12 @@ import memoize from "lodash/memoize";
 import { ContractFunctionParameters, erc20Abi } from "viem";
 
 import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
-import { ERC20Token } from "@beanstalk/sdk-core";
-import { Aquifer, Well, WellsSDK } from "@beanstalk/sdk-wells";
+import { ChainResolver, ERC20Token } from "@beanstalk/sdk-core";
+import { Aquifer, Well } from "@beanstalk/sdk-wells";
 
 import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 import { Settings } from "src/settings";
 import { chunkArray } from "src/utils/array";
-import { getChainIdOrFallbackChainId } from "src/utils/chain";
 import { Log } from "src/utils/logger";
 import { config } from "src/utils/wagmi/config";
 
@@ -37,32 +36,36 @@ const WELL_BLACKLIST: Record<number, WellAddresses> = {
 };
 
 const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellAddresses> => {
-  const chainId = getChainIdOrFallbackChainId(sdk.chainId);
+  try {
+    const chainId = ChainResolver.resolveToMainnetChainId(sdk.chainId);
 
-  const contract = aquifer.contract;
-  const eventFilter = contract.filters.BoreWell();
+    const contract = aquifer.contract;
+    const eventFilter = contract.filters.BoreWell();
 
-  const fromBlock = Number(Settings.WELLS_ORIGIN_BLOCK);
-  const toBlock = "latest";
-  const events = await contract.queryFilter(eventFilter, fromBlock, toBlock);
+    const fromBlock = Number(Settings.WELLS_ORIGIN_BLOCK);
+    const toBlock = "latest";
+    const events = await contract.queryFilter(eventFilter, fromBlock, toBlock);
+    const blacklist = WELL_BLACKLIST[chainId];
 
-  const blacklist = WELL_BLACKLIST[chainId];
+    const addresses = events
+      .map((e) => {
+        const data = e.decode?.(e.data);
+        return data.well;
+      })
+      .filter((addr) => !blacklist.includes(addr.toLowerCase()));
 
-  const addresses = events
-    .map((e) => {
-      const data = e.decode?.(e.data);
-      return data.well;
-    })
-    .filter((addr) => !blacklist.includes(addr.toLowerCase()));
-
-  return addresses;
+    return addresses;
+  } catch (e) {
+    console.error("error loading wells from chain: ", e);
+    return [];
+  }
 };
 
 const loadFromGraph = async (_chainId: ChainId): Promise<WellAddresses> => {
   const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined);
   const results = await data();
 
-  const chainId = getChainIdOrFallbackChainId(_chainId);
+  const chainId = ChainResolver.resolveToMainnetChainId(_chainId);
   const blacklist = WELL_BLACKLIST[chainId];
 
   return results.wells.map((w) => w.id).filter((addr) => !blacklist.includes(addr.toLowerCase()));
@@ -103,6 +106,8 @@ export const findWells = memoize(
       throw new Error("No deployed wells found");
     }
 
+    console.log("addresses: ", addresses);
+
     return [...addresses];
   },
   // Override the default memoize caching with just a '1'
@@ -131,7 +136,10 @@ type WellCallResult = [
 
 type TokenCallResult = [name: string, symbol: string, decimals: number];
 
-const fetchWells = async ({ wells: sdk }: BeanstalkSDK, addresses: string[]) => {
+export const fetchWellsWithAddresses = async (
+  { wells: sdk }: BeanstalkSDK,
+  addresses: string[]
+) => {
   const toLower = addresses.map((a) => a.toLowerCase());
   const wellAddresses = new Set([...toLower]);
   const tokenSet = new Set<string>([...toLower]);
@@ -140,22 +148,42 @@ const fetchWells = async ({ wells: sdk }: BeanstalkSDK, addresses: string[]) => 
 
   const wellResults = await Promise.all(
     wellCalls.contractCalls.map((contracts) =>
-      multicall(config, { contracts: contracts, allowFailure: false })
+      multicall(config, { contracts: contracts, allowFailure: true })
     )
   ).then((results) => {
-    const chunked = chunkArray(results.flat(), wellCalls.chunkSize) as WellsMultiCallResult[];
+    const chunked = chunkArray(results.flat(), wellCalls.chunkSize).map((chunk, i) => {
+      const [name, wellData, reserves] = chunk;
+      if (name.error || wellData.error || reserves.error)
+        return {
+          data: null,
+          address: addresses[i].toLowerCase()
+        };
+      return {
+        data: [name.result, wellData.result, reserves.result] as WellsMultiCallResult,
+        address: addresses[i].toLowerCase()
+      };
+    });
+
+    // const chunked = chunkArray(results.flat(), wellCalls.chunkSize) as WellsMultiCallResult[];
+    // console.log("chunked: ", chunked);
     Log.module("wells").debug("Well Multicall : ", chunked);
 
-    chunked.forEach(([_, wellTokens]) => {
-      // If token is not defined in WellsSDK. We need to fetch it from on Chain.
-      for (const token of wellTokens[0]) {
-        if (sdk.tokens.findByAddress(token)) continue;
-        tokenSet.add(token.toLowerCase());
+    chunked.forEach(({ data }) => {
+      if (data) {
+        const wellDatas = data[1];
+        // If token is not defined in WellsSDK. We need to fetch it from on Chain.
+        for (const token of wellDatas[0]) {
+          if (sdk.tokens.findByAddress(token)) continue;
+          tokenSet.add(token.toLowerCase());
+        }
       }
     });
 
     return chunked;
   });
+
+  console.log("wellResults: ", wellResults);
+  console.log("tokenset: ", tokenSet);
 
   const tokenAddresses = [...tokenSet];
   const tokensCalls = makeTokensContractCall(tokenAddresses);
@@ -164,28 +192,39 @@ const fetchWells = async ({ wells: sdk }: BeanstalkSDK, addresses: string[]) => 
     tokensCalls.contractCalls.map((contracts) =>
       multicall(config, { contracts: contracts, allowFailure: false })
     )
-  ).then((r) => {
-    const chunked = chunkArray(r.flat(), tokensCalls.chunkSize) as TokenCallResult[];
-    Log.module("wells").debug("Tokens Multicall : ", chunked);
+  )
+    .then((r) => {
+      console.log("r: ", r);
+      const chunked = chunkArray(r.flat(), tokensCalls.chunkSize) as TokenCallResult[];
+      Log.module("wells").debug("Tokens Multicall : ", chunked);
 
-    return chunked.reduce<Record<string, ERC20Token>>((prev, [name, symbol, decimals], i) => {
-      const tokenAddress = tokenAddresses[i]?.toLowerCase();
-      if (!tokenAddress) return prev;
+      return chunked.reduce<Record<string, ERC20Token>>((prev, [name, symbol, decimals], i) => {
+        const tokenAddress = tokenAddresses[i]?.toLowerCase();
+        if (!tokenAddress) return prev;
 
-      prev[tokenAddress] = new ERC20Token(
-        sdk.chainId,
-        tokenAddress,
-        decimals,
-        symbol,
-        { name: name, displayDecimals: 2, isLP: wellAddresses.has(tokenAddress) },
-        sdk.providerOrSigner
-      );
-      return prev;
-    }, {});
-  });
+        prev[tokenAddress] = new ERC20Token(
+          sdk.chainId,
+          tokenAddress,
+          decimals,
+          symbol,
+          { name: name, displayDecimals: 2, isLP: wellAddresses.has(tokenAddress) },
+          sdk.providerOrSigner
+        );
+        return prev;
+      }, {});
+    })
+    .catch((t) => {
+      console.log("t: ", t);
+      return {};
+    });
 
-  const wells = toLower.map((address, i) => {
-    const [name, wellResult, reserves] = wellResults[i];
+  console.log("tokenMap: ", tokenMap);
+
+  const wells: Well[] = [];
+
+  wellResults.forEach(({ data, address }) => {
+    if (!data) return;
+    const [name, wellResult, reserves] = data;
     const [tokens, wellFunction, pumps, wellData, aquifer] = wellResult;
 
     const wellTokens = tokens.map((t) => {
@@ -195,7 +234,7 @@ const fetchWells = async ({ wells: sdk }: BeanstalkSDK, addresses: string[]) => 
     const wellReserves = reserves.map(BigNumber.from);
     const wellLPToken = sdk.tokens.erc20Tokens.get(address) || tokenMap[address];
 
-    return Well.createWithParams(sdk, {
+    const well = Well.createWithParams(sdk, {
       address: address,
       name,
       wellFunction,
@@ -206,15 +245,12 @@ const fetchWells = async ({ wells: sdk }: BeanstalkSDK, addresses: string[]) => 
       tokens: wellTokens,
       reserves: wellReserves
     });
+
+    wells.push(well);
   });
 
   return wells;
 };
-
-export const fetchWellsWithAddresses = memoize(
-  fetchWells,
-  (sdk) => sdk.chainId?.toString() || "no-chain-id"
-);
 
 type WellContractCall = ContractFunctionParameters<typeof wellsABI>;
 type ERC20ContractCall = ContractFunctionParameters<typeof erc20Abi>;

@@ -1,9 +1,9 @@
 import { BeanstalkSDK, ChainId, TokenValue } from "@beanstalk/sdk";
+import { ChainResolver } from "@beanstalk/sdk-core";
 
 import { PriceContract__factory } from "src/generated/types";
 import { memoize } from "src/utils/memoize";
 
-import { getChainIdOrFallbackChainId, isEthMainnet } from "../chain";
 import { Log } from "../logger";
 
 /*
@@ -56,7 +56,7 @@ const FEEDS: Record<number, Record<string, string>> = {
 type FeedId = keyof (typeof FEEDS)[keyof typeof FEEDS];
 
 const chainlinkLookup = (feed: FeedId) => async (sdk: BeanstalkSDK) => {
-  const chainId = getChainIdOrFallbackChainId(sdk.chainId);
+  const chainId = ChainResolver.resolveToMainnetChainId(sdk.chainId);
   const chainFeed = FEEDS[chainId];
   const address = chainFeed[feed as unknown as keyof typeof chainFeed];
   if (!chainFeed || !address) {
@@ -121,16 +121,16 @@ const BEAN = async (sdk: BeanstalkSDK) => {
 };
 
 const WSTETH = async (sdk: BeanstalkSDK) => {
-  const chainId = getChainIdOrFallbackChainId(sdk.chainId);
-  if (isEthMainnet(chainId)) {
+  const chainId = ChainResolver.resolveToMainnetChainId(sdk.chainId);
+  if (ChainResolver.isL1Chain(chainId)) {
     return chainLinkWithCallback("STETH_USD", getWstETHWithSteth)(sdk);
   }
   return multiChainlinkLookup("wstETH_ETH", "ETH_USD")(sdk);
 };
 
 const WBTC = async (sdk: BeanstalkSDK) => {
-  const chainId = getChainIdOrFallbackChainId(sdk.chainId);
-  if (isEthMainnet(chainId)) {
+  const chainId = ChainResolver.resolveToMainnetChainId(sdk.chainId);
+  if (ChainResolver.isL1Chain(chainId)) {
     return multiChainlinkLookup("WBTC_BTC", "BTC_USD")(sdk);
   }
 

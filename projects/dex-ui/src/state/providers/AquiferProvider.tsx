@@ -3,9 +3,9 @@ import React, { useEffect } from "react";
 import { useAtom } from "jotai";
 import { useChainId } from "wagmi";
 
+import { ChainResolver } from "@beanstalk/sdk-core";
 import { Aquifer } from "@beanstalk/sdk-wells";
 
-import { isArbitrum } from "src/utils/chain";
 import useSdk from "src/utils/sdk/useSdk";
 
 import { aquiferAtom } from "../atoms";
@@ -22,7 +22,7 @@ if (!ethereumAquiferAddress) {
 }
 
 export const getAquiferAddress = (chainId: number) => {
-  return isArbitrum(chainId) ? arbitrumAquiferAddress : ethereumAquiferAddress;
+  return ChainResolver.isL2Chain(chainId) ? arbitrumAquiferAddress : ethereumAquiferAddress;
 };
 
 const useSetAquifer = () => {
