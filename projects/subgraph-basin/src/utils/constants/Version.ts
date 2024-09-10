@@ -6,7 +6,7 @@ import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
-  versionEntity.versionNumber = "2.2.2";
+  versionEntity.versionNumber = "3.0.0";
   versionEntity.subgraphName = subgraphNameForBlockNumber(block.number);
   versionEntity.protocolAddress = protocolForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);
