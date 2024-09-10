@@ -191,7 +191,9 @@ library LibWell {
 
     /**
      * @dev Sets the price in {AppStorage.usdTokenPrice} given a set of ratios.
-     * It assumes that the ratios correspond to the Constant Product Well indexes.
+     * Assumes
+     * 1) Ratios correspond to the Constant Product Well indexes.
+     * 2) the Well is a 2 token Well.
      */
     function setUsdTokenPriceForWell(address well, uint256[] memory ratios) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -203,7 +205,12 @@ library LibWell {
             s.sys.usdTokenPrice[well] = 0;
         } else {
             (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-            s.sys.usdTokenPrice[well] = ratios[j];
+            uint256 i = j == 0 ? 1 : 0;
+            // usdTokenPrice is scaled down to USD/TOKEN, in the cases where
+            // Beanstalk calculated the MILLION_USD/TOKEN price instead of USD/TOKEN price.
+            // Beanstalk accepts the loss of precision here, as `usdTokenPrice[well]` is used for
+            // calculating the liquidity and excessive price.
+            s.sys.usdTokenPrice[well] = (ratios[j] * 1e6) / ratios[i];
         }
     }
 
