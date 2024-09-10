@@ -1,6 +1,7 @@
 import { useAccount } from "wagmi";
 
-import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
+import { Token, TokenValue } from "@beanstalk/sdk";
+import { ChainResolver } from "@beanstalk/sdk-core";
 
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";
@@ -39,12 +40,15 @@ export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
-  const wellTokens = Array.from(sdk.tokens.wellLP);
-  const addresses = wellTokens.map((token) => token.address);
+  const wellTokens = Array.from(sdk.tokens.wellLP).map((t) => t.address);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalancesAll(addresses),
+    queryKey: queryKeys.siloBalancesAll(wellTokens),
     queryFn: async () => {
+      // Silo balances are not available on L1
+      if (ChainResolver.isL1Chain(sdk.chainId)) {
+        return {};
+      }
       try {
         const resultMap: Record<string, TokenValue> = {};
         if (!address) return resultMap;
@@ -58,7 +62,7 @@ export const useFarmerWellsSiloBalances = () => {
 
         return resultMap;
       } catch (e) {
-        console.log("e: ", e);
+        console.error("Error fetching silo balances: ", e);
         return {};
       }
     },

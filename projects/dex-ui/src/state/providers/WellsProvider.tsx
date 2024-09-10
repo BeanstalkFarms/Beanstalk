@@ -16,9 +16,7 @@ import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
 import { fetchWellsWithAddresses, findWells } from "src/wells/wellLoader";
 
-export const clearWellsCache = () => {
-  // findWells.cache.clear?.();
-};
+export const clearWellsCache = () => findWells.cache.clear?.();
 
 export const useWellsQuery = () => {
   const sdk = useSdk();
@@ -30,7 +28,6 @@ export const useWellsQuery = () => {
     queryKey: queryKeys.wells(sdk),
     queryFn: async () => {
       const wellAddresses = await findWells(sdk, aquifer);
-      // console.log("finding wells...");
       try {
         Log.module("wells").debug("Well addresses: ", wellAddresses);
         const wells = await fetchWellsWithAddresses(sdk, wellAddresses);
@@ -48,8 +45,6 @@ export const useWellsQuery = () => {
     staleTime: Infinity
   });
 
-  // console.log("enabled: ", !!sdk && !!aquifer && !!sdk.wells);
-
   useEffect(() => {
     setWells({ data: query.data || [], error: query.error, isLoading: query.isLoading });
   }, [query.data, query.error, query.isLoading, setWells]);
@@ -60,7 +55,6 @@ export const useWellsQuery = () => {
 const WellsProvider = React.memo(({ children }: { children: React.ReactNode }) => {
   const query = useWellsQuery();
   if (!query.data?.length) {
-    // console.log("nowells...");
     return null;
   }
 

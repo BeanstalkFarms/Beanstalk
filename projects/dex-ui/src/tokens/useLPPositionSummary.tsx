@@ -79,8 +79,6 @@ export const useLPPositionSummary = () => {
    */
   const { data: siloBalances, ...siloBalanceRest } = useFarmerWellsSiloBalances();
 
-  // const { data: siloBalances, ...siloBalancesRest } = useSiloBal
-
   /**
    * Fetch external & internal balances
    */
@@ -98,7 +96,6 @@ export const useLPPositionSummary = () => {
         contracts: makeMultiCall(sdk, lpTokens, address),
         allowFailure: false
       })) as unknown[] as BigNumber[];
-      console.log("res: ", res);
 
       for (let i = 0; i < res.length; i++) {
         // divide by 2 to get the index of the lp token b/c we have 2 calls per token
