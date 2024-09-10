@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   Container,
+  Dialog,
   Divider,
   InputAdornment,
   Stack,
@@ -35,6 +36,10 @@ import { ethers } from 'ethers';
 import { TokenValue } from '@beanstalk/sdk-core';
 import useSdk from '~/hooks/sdk';
 import { BeanstalkPalette, IconSize } from '~/components/App/muiTheme';
+import {
+  StyledDialogContent,
+  StyledDialogTitle,
+} from '~/components/Common/Dialog';
 
 const MigrationPreview: FC<{}> = () => {
   const connectedAccount = useAccount();
@@ -43,6 +48,7 @@ const MigrationPreview: FC<{}> = () => {
   const [isAccountValid, setIsAccountValid] = useState(false);
   const [account, setAccount] = useState<string | undefined>();
   const [data, setData] = useState<any>();
+  const [openDialog, setOpenDialog] = useState(false);
 
   const sdk = useSdk();
 
@@ -165,6 +171,63 @@ const MigrationPreview: FC<{}> = () => {
         </Card>
         {data && (
           <>
+            <Button color="info" onClick={() => setOpenDialog(true)}>
+              About this page, BIP-50, the Migration process and your Balances
+            </Button>
+            <Dialog onClose={() => setOpenDialog(false)} open={openDialog}>
+              <StyledDialogTitle onClose={() => setOpenDialog(false)}>
+                Verify BIP-50 Migrated Balances
+              </StyledDialogTitle>
+              <StyledDialogContent
+                sx={{
+                  pb: 2,
+                  px: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
+                <div>
+                  BIP-50 proposes to migrate Beanstalk state to Arbitrum. In
+                  doing so, all Deposits, Plots, Fertilizer and
+                  Beanstalk-related Farm Balances (Beans, BEANWETH, BEAN3CRV
+                  (migrated to BEANUSDC), BEANwstETH, urBEAN and urBEANwstETH)
+                  are migrated.
+                </div>
+                <div>
+                  As part of the migration process:
+                  <ul>
+                    <li>Grown Stalk is Mown;</li>
+                    <li>Earned Beans are Planted; and</li>
+                    <li>
+                      Rinsable Sprouts, Unpicked Unripe assets and unclaimed
+                      Silo V2 Withdrawals are put into the respective accounts'
+                      Farm Balances.
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  The following balances show the state of the selected Farmer
+                  as a result of the migration, assuming the migration was
+                  executed based on balances at block {data.meta.block} (i.e.,
+                  roughly
+                  {` ${new Date(data.meta.timestamp * 1000).toLocaleString()}`}
+                  ). You should cross reference this with your balances in the
+                  rest of the Beanstalk UI (assuming your balances haven't
+                  changed since block {data.meta.block}).
+                </div>
+                <div>
+                  Note that Circulating Balances and smart contract account
+                  balances are not migrated automatically. See{' '}
+                  <a href="https://discord.gg/beanstalk">Discord</a>
+                  &nbsp;and{' '}
+                  <a href="https://github.com/BeanstalkFarms/Beanstalk/pull/909">
+                    BIP-50
+                  </a>{' '}
+                  for more information.
+                </div>
+              </StyledDialogContent>
+            </Dialog>
             <Card sx={{ p: 2 }}>
               <Typography variant="h2">Silo</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
