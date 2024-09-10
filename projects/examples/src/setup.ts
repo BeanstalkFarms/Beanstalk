@@ -15,6 +15,8 @@ export const { signer, account } = TestUtils.setupConnection(provider);
 
 export const sdk = new BeanstalkSDK({
   signer,
+  rpcUrl: RPC_URL,
+  provider: provider,
   source: DataSource.LEDGER,
   DEBUG: true
 });
