@@ -11,6 +11,7 @@ import disclosuresIcon from '~/img/beanstalk/interface/nav/disclosures.svg';
 import analyticsIcon from '~/img/beanstalk/interface/nav/stats.svg';
 import basinIcon from '~/img/beanstalk/interface/nav/basin.svg';
 import pipelineIcon from '~/img/beanstalk/interface/nav/pipeline.svg';
+import migrationIcon from '~/img/beanstalk/interface/nav/migration.svg';
 
 export type RouteData = {
   /** Nav item title */
@@ -81,6 +82,12 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
       path: '/governance',
       title: 'Governance',
       icon: governanceIcon,
+      small: true,
+    },
+    {
+      path: '/preview',
+      title: 'Migration Preview',
+      icon: migrationIcon,
       small: true,
     },
     {
