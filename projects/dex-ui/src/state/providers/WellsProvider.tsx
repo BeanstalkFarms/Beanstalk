@@ -6,7 +6,7 @@ import { Well } from "@beanstalk/sdk-wells";
 
 import { images } from "src/assets/images/tokens";
 import { Error } from "src/components/Error";
-import { setWellsLoadingAtom, wellsAtom } from "src/state/atoms";
+import { wellsAtom } from "src/state/atoms";
 import tokenMetadataJson from "src/token-metadata.json";
 import { TokenMetadataMap } from "src/types";
 import { Log } from "src/utils/logger";
@@ -14,7 +14,7 @@ import { queryKeys } from "src/utils/query/queryKeys";
 import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
-import { findWells } from "src/wells/wellLoader";
+import { fetchWellsWithAddresses, findWells } from "src/wells/wellLoader";
 
 export const clearWellsCache = () => findWells.cache.clear?.();
 
@@ -23,43 +23,18 @@ export const useWellsQuery = () => {
 
   const aquifer = useAquifer();
   const setWells = useSetAtom(wellsAtom);
-  const setWellsLoading = useSetAtom(setWellsLoadingAtom);
 
   const query = useChainScopedQuery({
     queryKey: queryKeys.wells(sdk),
     queryFn: async () => {
-      const wellAddresses = await findWells(sdk, aquifer);
-
       try {
-        setWellsLoading(true);
+        const wellAddresses = await findWells(sdk, aquifer);
         Log.module("wells").debug("Well addresses: ", wellAddresses);
+        const wells = await fetchWellsWithAddresses(sdk, wellAddresses);
+        Log.module("wells").debug("Wells response: ", wells);
+        setTokenMetadatas(wells);
 
-        // TODO: convert this to a multicall at some point
-        const res = await Promise.allSettled(
-          wellAddresses.map((address) =>
-            sdk.wells
-              .getWell(address, {
-                name: true,
-                tokens: true,
-                wellFunction: true,
-                pumps: true,
-                reserves: true,
-                lpToken: true
-              })
-              .catch((err) => {
-                Log.module("wells").log(`Failed to load Well [${address}]: ${err.message}`);
-              })
-          )
-        );
-
-        // filter out errored calls
-        const wellsResult = res
-          .map((promise) => (promise.status === "fulfilled" ? promise.value : null))
-          .filter<Well>((p): p is Well => !!p);
-        // set token metadatas
-        setTokenMetadatas(wellsResult);
-
-        return wellsResult;
+        return wells;
       } catch (err: any) {
         Log.module("useWells").debug(`Error during findWells(): ${(err as Error).message}`);
         return [];
@@ -118,3 +93,21 @@ const setTokenMetadatas = (wells: Well[]) => {
 };
 
 export default WellsProvider;
+
+// function compareWells(_a: Well[], b: Well[]) {
+//   const aMap = Object.fromEntries(_a.map((well) => [well.address.toLowerCase(), well]));
+
+//   b.forEach((well) => {
+//     const match = aMap[well.address.toLowerCase()];
+//     if (!match) {
+//       console.log("b WELL NOT FOUND in a", well.address.toLowerCase());
+//       return;
+//     }
+
+//     if (well.toJSON() !== match.toJSON()) {
+//       console.log("WELLS DO NOT MATCH", well.address.toLowerCase());
+//       console.log("A:", well.toJSON());
+//       console.log("B:", match.toJSON());
+//     }
+//   });
+// }

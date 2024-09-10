@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 
 import { BeanstalkSDK, ChainId, DataSource } from "@beanstalk/sdk";
 
@@ -11,13 +11,13 @@ import { Log } from "src/utils/logger";
 import { useEthersProvider, useEthersSigner } from "src/utils/wagmi/ethersAdapter";
 import { getRpcUrl } from "src/utils/wagmi/urls";
 
-import { sdkAtom } from "../atoms";
+import { aquiferAtom, sdkAtom } from "../atoms";
 
 const getSDK = (provider?: JsonRpcProvider, signer?: Signer, chainId?: number) => {
   const sdk = new BeanstalkSDK({
     rpcUrl: getRpcUrl(chainId as ChainId),
     signer: signer,
-    source: DataSource.SUBGRAPH,
+    source: DataSource.LEDGER,
     provider: provider,
     DEBUG: isDEV
   });
@@ -27,17 +27,23 @@ const getSDK = (provider?: JsonRpcProvider, signer?: Signer, chainId?: number) =
 };
 
 function BeanstalkSdkSetter({ children }: { children: React.ReactNode }) {
-  const [sdk, setSdk] = useAtom(sdkAtom);
   const signer = useEthersSigner();
   const provider = useEthersProvider();
   const chainId = provider.network.chainId;
 
+  const [sdk, setSdk] = useAtom(sdkAtom);
+  const setAquifer = useSetAtom(aquiferAtom);
+
   useEffect(() => {
+    setAquifer(null);
     setSdk(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainId]);
 
   useEffect(() => {
-    setSdk(getSDK(provider as JsonRpcProvider, signer, chainId));
+    const _sdk = getSDK(provider as JsonRpcProvider, signer, chainId);
+
+    setSdk(_sdk);
   }, [provider, signer, chainId, setSdk]);
 
   if (!sdk || !chainId || !provider) return null;

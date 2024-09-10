@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-import { NativeToken, Token } from "@beanstalk/sdk";
+import { ERC20Token, NativeToken, Token } from "@beanstalk/sdk";
 
 import { isDEV } from "src/settings";
 import { wellsAtom, sdkAtom } from "src/state/atoms";
@@ -33,6 +33,12 @@ export const underlyingTokenMapAtom = atom<TokenSymbolMap<Token>>((get) => {
   );
 
   return tokenMap;
+});
+
+export const wellLpTokensAtom = atom<ERC20Token[]>((get) => {
+  const wells = get(wellsAtom);
+
+  return wells.data.map((well) => well.lpToken).filter(Boolean) as ERC20Token[];
 });
 
 if (isDEV) {

@@ -1,5 +1,7 @@
 import { Address, ChainId } from "@beanstalk/sdk-core";
 
+import useSdk from "./sdk/useSdk";
+
 const NON_DEV_CHAIN_IDS = new Set<ChainId>([ChainId.ARBITRUM_MAINNET, ChainId.ETH_MAINNET]);
 
 /**
@@ -29,4 +31,14 @@ export function isArbitrum(_chainId: ChainId): boolean {
 export function isEthMainnet(_chainId: ChainId): boolean {
   const chainId = getChainIdOrFallbackChainId(_chainId);
   return chainId === ChainId.ETH_MAINNET;
+}
+
+/**
+ * Returns the current chainId.
+ *
+ * We want to use the chainId to prevent the possibility of a race condition where we are using an outdated sdk to fetch data.
+ *
+ */
+export function useSdkChainId() {
+  return useSdk().chainId;
 }
