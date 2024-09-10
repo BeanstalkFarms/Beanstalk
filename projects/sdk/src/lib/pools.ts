@@ -20,13 +20,13 @@ export class Pools {
   private lpAddressMap = new Map<string, Pool>();
   private wellAddressMap = new Map<string, BasinWell>();
 
-  private l1Pools: Set<Pool> = new Set();
-  private l2Pools: Set<Pool> = new Set();
-
   constructor(sdk: BeanstalkSDK) {
     Pools.sdk = sdk;
     this.whitelistedPools = new Map();
     this.lpAddressMap = new Map();
+
+    const l1Pools = new Set<Pool>();
+    const l2Pools = new Set<Pool>();
 
     ////// Basin Wells
     this.BEAN_ETH_WELL = new BasinWell(
@@ -41,8 +41,8 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l1Pools.add(this.BEAN_ETH_WELL);
-    this.l2Pools.add(this.BEAN_ETH_WELL);
+    l1Pools.add(this.BEAN_ETH_WELL);
+    l2Pools.add(this.BEAN_ETH_WELL);
 
     this.BEAN_WSTETH_WELL = new BasinWell(
       sdk,
@@ -56,8 +56,8 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l1Pools.add(this.BEAN_WSTETH_WELL);
-    this.l2Pools.add(this.BEAN_WSTETH_WELL);
+    l1Pools.add(this.BEAN_WSTETH_WELL);
+    l2Pools.add(this.BEAN_WSTETH_WELL);
 
     this.BEAN_WEETH_WELL = new BasinWell(
       sdk,
@@ -71,7 +71,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l2Pools.add(this.BEAN_WEETH_WELL);
+    l2Pools.add(this.BEAN_WEETH_WELL);
 
     this.BEAN_WBTC_WELL = new BasinWell(
       sdk,
@@ -85,7 +85,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l2Pools.add(this.BEAN_WBTC_WELL);
+    l2Pools.add(this.BEAN_WBTC_WELL);
 
     this.BEAN_USDC_WELL = new BasinWell(
       sdk,
@@ -99,7 +99,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l2Pools.add(this.BEAN_USDC_WELL);
+    l2Pools.add(this.BEAN_USDC_WELL);
 
     this.BEAN_USDT_WELL = new BasinWell(
       sdk,
@@ -113,14 +113,14 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.l2Pools.add(this.BEAN_USDT_WELL);
+    l2Pools.add(this.BEAN_USDT_WELL);
 
-    this.pools = ChainResolver.isL1Chain(sdk.chainId) ? this.l1Pools : this.l2Pools;
+    this.pools = ChainResolver.isL1Chain(sdk.chainId) ? l1Pools : l2Pools;
 
     this.pools.forEach((pool) => {
       this.lpAddressMap.set(pool.address, pool);
 
-      if (sdk.tokens.siloWhitelist.has(pool.lpToken)) {
+      if (sdk.tokens.isWhitelisted(pool.lpToken)) {
         this.whitelistedPools.set(pool.address, pool);
       }
 

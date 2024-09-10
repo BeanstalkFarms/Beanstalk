@@ -47,7 +47,7 @@ export class Tokens {
     // BEAN
     this.BEAN = new ERC20Token(
       cid,
-      sdk.addresses.BEAN.get(Tokens.sdk.chainId),
+      sdk.addresses.BEAN.get(cid),
       6,
       "BEAN",
       {
