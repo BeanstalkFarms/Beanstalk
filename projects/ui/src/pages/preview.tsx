@@ -515,7 +515,7 @@ const MigrationPreview: FC<{}> = () => {
                       {TokenValue.fromBlockchain(
                         data.barn.totalFert,
                         0
-                      ).toHuman()}
+                      ).toHuman('short')}
                     </Typography>
                   </Box>
                   <Box>
