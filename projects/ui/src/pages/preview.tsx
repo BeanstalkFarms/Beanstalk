@@ -229,7 +229,20 @@ const MigrationPreview: FC<{}> = () => {
               </StyledDialogContent>
             </Dialog>
             <Card sx={{ p: 2 }}>
-              <Typography variant="h2">Silo</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="h2">Silo</Typography>
+                <Typography
+                  variant="h4"
+                  fontSize={16}
+                >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
+              </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box
                   sx={{
@@ -404,7 +417,20 @@ const MigrationPreview: FC<{}> = () => {
               </Box>
             </Card>
             <Card sx={{ p: 2 }}>
-              <Typography variant="h2">Field</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="h2">Field</Typography>
+                <Typography
+                  variant="h4"
+                  fontSize={16}
+                >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
+              </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box
                   sx={{
@@ -499,7 +525,20 @@ const MigrationPreview: FC<{}> = () => {
               </Box>
             </Card>
             <Card sx={{ p: 2 }}>
-              <Typography variant="h2">Barn</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="h2">Barn</Typography>
+                <Typography
+                  variant="h4"
+                  fontSize={16}
+                >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
+              </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box
                   sx={{
@@ -647,7 +686,20 @@ const MigrationPreview: FC<{}> = () => {
               </Box>
             </Card>
             <Card sx={{ p: 2 }}>
-              <Typography variant="h2">Farm</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="h2">Farm</Typography>
+                <Typography
+                  variant="h4"
+                  fontSize={16}
+                >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
+              </Box>
               <Box sx={{ marginTop: 2 }}>
                 {data.farm.length > 0 ? (
                   <TableContainer component={Card}>
