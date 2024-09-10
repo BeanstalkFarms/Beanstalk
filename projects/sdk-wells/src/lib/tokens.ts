@@ -10,6 +10,10 @@ export class Tokens {
 
   private tokens = new Set<Token>();
 
+  private tokenMap = new Map<string, Token>();
+
+  readonly erc20Tokens = new Map<string, ERC20Token>();
+
   ETH: NativeToken;
   WETH: ERC20Token;
   BEAN: ERC20Token;
@@ -157,16 +161,23 @@ export class Tokens {
     );
 
     this.tokens.add(this.DAI);
+
+    this.tokenMap = new Map();
+    this.erc20Tokens = new Map();
+
+    this.tokens.forEach((token) => {
+      this.tokenMap.set(token.address.toLowerCase(), token);
+      if (token instanceof ERC20Token) {
+        this.erc20Tokens.set(token.address.toLowerCase(), token);
+      }
+    });
   }
 
   /**
    * Find a token by address
    */
   findByAddress(address: string): Token | undefined {
-    for (const token of this.tokens) {
-      if (token.address === address.toLowerCase()) return token;
-    }
-    return;
+    return this.tokenMap.get(address.toLowerCase());
   }
 
   /**
