@@ -4,7 +4,7 @@ import { bigNumberResult } from '~/util/Ledger';
 import { erc20TokenContract } from '~/util/Contracts';
 import client from '~/util/wagmi/Client';
 import { toStringBaseUnitBN } from '~/util/Tokens';
-import { Address } from '@beanstalk/sdk-core';
+import { ChainResolver } from '@beanstalk/sdk-core';
 
 export type LegacyTokenMetadata = {
   name: string;
@@ -107,7 +107,7 @@ export default abstract class Token {
     } else if (address[chainId]) {
       this.address = address[chainId].toLowerCase();
     } else {
-      const fallbackChainId = Address.getFallbackChainId(chainId);
+      const fallbackChainId = ChainResolver.resolveToMainnetChainId(chainId);
       if (address[fallbackChainId]) {
         this.address = address[fallbackChainId].toLowerCase();
       } else {
