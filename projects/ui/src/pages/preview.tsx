@@ -18,7 +18,6 @@ import {
   TableRow,
   TextField,
   Typography,
-  useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CheckIcon from '@mui/icons-material/Check';
@@ -27,8 +26,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import useAccount from '../hooks/ledger/useAccount';
 import PageHeader from '~/components/Common/PageHeader';
-import GuideButton from '~/components/Common/Guide/GuideButton';
-import { HOW_TO_MINT_BEANFTS } from '~/util/Guides';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { useParams } from 'react-router-dom';
