@@ -31,7 +31,7 @@ library LibUsdOracle {
     }
 
     /**
-     * @dev Returns the price of a given token in in USD with the option of using a lookback. (Usd:token Price)
+     * @dev Returns the price of 1 USD in terms of `token` with the option of using a lookback. (Usd:token Price)
      * `lookback` should be 0 if the instantaneous price is desired. Otherwise, it should be the
      * TWAP lookback in seconds.
      * If using a non-zero lookback, it is recommended to use a substantially large `lookback`
@@ -68,23 +68,44 @@ library LibUsdOracle {
         uint256 tokenDecimals,
         uint256 lookback
     ) internal view returns (uint256 tokenPrice) {
+        return getTokenPriceFromExternal(token, tokenDecimals, lookback, false);
+    }
+
+    /**
+     * @notice returns the price of 1 Million USD in terms of `token` with the option of using a lookback.
+     * @dev `LibWell.getRatiosAndBeanIndex` attempts to calculate the target ratios by fetching the usdPrice of each token.
+     * For tokens with low decimal precision and high prices (ex. WBTC), using the usd:token price would result in a
+     * large amount of precision loss. For this reason, tokens with less than 8 decimals use the 1 Million USD price instead..
+     */
+    function getMillionUsdPrice(address token, uint256 lookback) internal view returns (uint256) {
+        return getTokenPriceFromExternal(token, IERC20Decimals(token).decimals(), lookback, true);
+    }
+
+    /**
+     * @notice internal helper function for `getTokenPriceFromExternal`.
+     * @dev the `isMillion` flag is used in `LibChainlinkOracle.getTokenPrice` to
+     * return the MILLION_TOKEN2/TOKEN1 price, in cases where the price of TOKEN1 is extremely high (relative to token 2),
+     * and when the decimals is very low.
+     */
+    function getTokenPriceFromExternal(
+        address token,
+        uint256 tokenDecimals,
+        uint256 lookback,
+        bool isMillion
+    ) private view returns (uint256 tokenPrice) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 
         // If the encode type is type 1, use the default chainlink implementation instead.
         // `target` refers to the address of the price aggergator implmenation
         if (oracleImpl.encodeType == bytes1(0x01)) {
-            // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
-            address chainlinkOraclePriceAddress = oracleImpl.target;
-
-            // decode data timeout to uint256
-            uint256 timeout = abi.decode(oracleImpl.data, (uint256));
             return
                 LibChainlinkOracle.getTokenPrice(
-                    chainlinkOraclePriceAddress,
-                    timeout,
-                    tokenDecimals,
-                    lookback
+                    oracleImpl.target, // chainlink Aggergator Address
+                    abi.decode(oracleImpl.data, (uint256)), // timeout
+                    tokenDecimals, // token decimals
+                    lookback,
+                    isMillion
                 );
         } else if (oracleImpl.encodeType == bytes1(0x02)) {
             // if the encodeType is type 2, use a uniswap oracle implementation.
@@ -119,7 +140,8 @@ library LibUsdOracle {
                 chainlinkOracle.target,
                 abi.decode(chainlinkOracle.data, (uint256)), // timeout
                 tokenDecimals == 0 ? tokenDecimals : chainlinkTokenDecimals,
-                lookback
+                lookback,
+                false
             );
 
             // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
@@ -127,7 +149,12 @@ library LibUsdOracle {
             if (tokenDecimals != 0) {
                 // invert tokenPrice (to get CL_TOKEN/TOKEN).
                 // `tokenPrice` has 6 decimal precision (see {LibUniswapOracle.getTwap}).
-                tokenPrice = 1e12 / tokenPrice;
+                // `tokenPrice` is scaled up to 1 million units, if the `isMillion` flag is enabled.
+                if (isMillion) {
+                    tokenPrice = 1e18 / tokenPrice;
+                } else {
+                    tokenPrice = 1e12 / tokenPrice;
+                }
                 // return the USD/TOKEN price.
                 // 1e6 * 1e`n` / 1e`n` = 1e6
                 return (tokenPrice * chainlinkTokenPrice) / (10 ** chainlinkTokenDecimals);

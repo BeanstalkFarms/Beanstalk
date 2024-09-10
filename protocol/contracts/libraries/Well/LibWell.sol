@@ -51,17 +51,40 @@ library LibWell {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
+        bool isMillion;
+        address bean = s.sys.tokens.bean;
+
+        // fetch the bean index and check whether the ratios precision needs to be increased.
         for (uint i; i < tokens.length; ++i) {
-            if (s.sys.tokens.bean == address(tokens[i])) {
+            if (address(tokens[i]) == bean) {
                 beanIndex = i;
-                ratios[i] = 1e6;
+            } else if (IERC20Decimals(address(tokens[i])).decimals() < 8) {
+                // if the nonBean token in the well has a low decimal precision,
+                // set `isMillion` such that the ratio is set to be on a million basis.
+                isMillion = true;
+            }
+        }
+
+        // get the target ratios.
+        for (uint i; i < tokens.length; ++i) {
+            if (address(tokens[i]) == bean) {
+                if (isMillion) {
+                    ratios[i] = 1e12;
+                } else {
+                    ratios[i] = 1e6;
+                }
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                if (isMillion) {
+                    ratios[i] = LibUsdOracle.getMillionUsdPrice(address(tokens[i]), lookback);
+                } else {
+                    ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                }
                 if (ratios[i] == 0) {
                     success = false;
                 }
             }
         }
+
         require(beanIndex != type(uint256).max, "Bean not in Well.");
     }
 
