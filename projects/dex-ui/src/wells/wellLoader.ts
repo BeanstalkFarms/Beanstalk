@@ -1,7 +1,7 @@
 import { multicall } from "@wagmi/core";
 import { BigNumber } from "ethers";
 import memoize from "lodash/memoize";
-import { ContractFunctionParameters, erc20Abi } from "viem";
+import { Abi, ContractFunctionParameters, erc20Abi } from "viem";
 
 import { BeanstalkSDK, ChainId } from "@beanstalk/sdk";
 import { ChainResolver, ERC20Token } from "@beanstalk/sdk-core";
@@ -10,6 +10,7 @@ import { Aquifer, Well } from "@beanstalk/sdk-wells";
 import { GetWellAddressesDocument } from "src/generated/graph/graphql";
 import { Settings } from "src/settings";
 import { chunkArray } from "src/utils/array";
+import { convertBytes32ToString } from "src/utils/bytes";
 import { Log } from "src/utils/logger";
 import { config } from "src/utils/wagmi/config";
 
@@ -102,11 +103,12 @@ export const findWells = memoize(
     const resultAddresses = result.map((r) => r.toLowerCase());
     const addresses = new Set([...wellLPAddresses, ...resultAddresses]);
 
+    // Remove empty string
+    addresses.delete("");
+
     if (!addresses.size) {
       throw new Error("No deployed wells found");
     }
-
-    console.log("addresses: ", addresses);
 
     return [...addresses];
   },
@@ -119,106 +121,14 @@ export const findWells = memoize(
 
 const MAX_PER_CALL = 21;
 
-type CallResult = {
-  target: string;
-  data: string;
-};
-
-type WellsMultiCallResult = [name: string, well: WellCallResult, reserves: bigint[]];
-
-type WellCallResult = [
-  tokens: string[],
-  wellFunction: CallResult,
-  pumps: CallResult[],
-  wellData: string,
-  aquifer: string
-];
-
-type TokenCallResult = [name: string, symbol: string, decimals: number];
-
-export const fetchWellsWithAddresses = async (
-  { wells: sdk }: BeanstalkSDK,
-  addresses: string[]
-) => {
+export const fetchWellsWithAddresses = async (_sdk: BeanstalkSDK, addresses: string[]) => {
+  const sdk = _sdk.wells;
   const toLower = addresses.map((a) => a.toLowerCase());
   const wellAddresses = new Set([...toLower]);
-  const tokenSet = new Set<string>([...toLower]);
 
-  const wellCalls = makeWellContractCalls(addresses);
+  const { wellResults, tokenSet } = await fetchWellsWithMulticall(_sdk, toLower);
 
-  const wellResults = await Promise.all(
-    wellCalls.contractCalls.map((contracts) =>
-      multicall(config, { contracts: contracts, allowFailure: true })
-    )
-  ).then((results) => {
-    const chunked = chunkArray(results.flat(), wellCalls.chunkSize).map((chunk, i) => {
-      const [name, wellData, reserves] = chunk;
-      if (name.error || wellData.error || reserves.error)
-        return {
-          data: null,
-          address: addresses[i].toLowerCase()
-        };
-      return {
-        data: [name.result, wellData.result, reserves.result] as WellsMultiCallResult,
-        address: addresses[i].toLowerCase()
-      };
-    });
-
-    // const chunked = chunkArray(results.flat(), wellCalls.chunkSize) as WellsMultiCallResult[];
-    // console.log("chunked: ", chunked);
-    Log.module("wells").debug("Well Multicall : ", chunked);
-
-    chunked.forEach(({ data }) => {
-      if (data) {
-        const wellDatas = data[1];
-        // If token is not defined in WellsSDK. We need to fetch it from on Chain.
-        for (const token of wellDatas[0]) {
-          if (sdk.tokens.findByAddress(token)) continue;
-          tokenSet.add(token.toLowerCase());
-        }
-      }
-    });
-
-    return chunked;
-  });
-
-  console.log("wellResults: ", wellResults);
-  console.log("tokenset: ", tokenSet);
-
-  const tokenAddresses = [...tokenSet];
-  const tokensCalls = makeTokensContractCall(tokenAddresses);
-
-  const tokenMap = await Promise.all(
-    tokensCalls.contractCalls.map((contracts) =>
-      multicall(config, { contracts: contracts, allowFailure: false })
-    )
-  )
-    .then((r) => {
-      console.log("r: ", r);
-      const chunked = chunkArray(r.flat(), tokensCalls.chunkSize) as TokenCallResult[];
-      Log.module("wells").debug("Tokens Multicall : ", chunked);
-
-      return chunked.reduce<Record<string, ERC20Token>>((prev, [name, symbol, decimals], i) => {
-        const tokenAddress = tokenAddresses[i]?.toLowerCase();
-        if (!tokenAddress) return prev;
-
-        prev[tokenAddress] = new ERC20Token(
-          sdk.chainId,
-          tokenAddress,
-          decimals,
-          symbol,
-          { name: name, displayDecimals: 2, isLP: wellAddresses.has(tokenAddress) },
-          sdk.providerOrSigner
-        );
-        return prev;
-      }, {});
-    })
-    .catch((t) => {
-      console.log("t: ", t);
-      return {};
-    });
-
-  console.log("tokenMap: ", tokenMap);
+  const tokenMap = await fetchTokensWithMulticall(_sdk, [...tokenSet], wellAddresses);
 
   const wells: Well[] = [];
 
@@ -233,6 +143,10 @@ export const fetchWellsWithAddresses = async (
     });
     const wellReserves = reserves.map(BigNumber.from);
     const wellLPToken = sdk.tokens.erc20Tokens.get(address) || tokenMap[address];
+
+    if (!wellTokens.every((t) => !!t) || !wellLPToken) {
+      return;
+    }
 
     const well = Well.createWithParams(sdk, {
       address: address,
@@ -252,53 +166,66 @@ export const fetchWellsWithAddresses = async (
   return wells;
 };
 
+// ------------- MultiCall Utils -------------
+
+type MulticallResult<T extends ContractFunctionParameters> = Awaited<
+  ReturnType<typeof multicall<typeof config, ContractFunctionParameters[]>>
+>[number];
+
+const extractArrayResult = <T extends ContractFunctionParameters, K>(
+  data: MulticallResult<T>[]
+): K | null => {
+  if (data.some((d) => d.error)) return null;
+  return data.map((d) => d.result) as unknown as K;
+};
+
+// ---------- Fetch Wells Data ----------
+
+type Call = {
+  target: string;
+  data: string;
+};
+
+type WellsMultiCallResult = [
+  name: string,
+  well: [tokens: string[], wellFunction: Call, pumps: Call[], wellData: string, aquifer: string],
+  reserves: bigint[]
+];
+
 type WellContractCall = ContractFunctionParameters<typeof wellsABI>;
-type ERC20ContractCall = ContractFunctionParameters<typeof erc20Abi>;
 
-const makeTokensContractCall = (addresses: string[]) => {
-  const contractCalls: ERC20ContractCall[][] = [];
+const fetchWellsWithMulticall = async (sdk: BeanstalkSDK, wellAddresses: string[]) => {
+  const tokensToFetch = new Set([...wellAddresses]);
+  const wellCalls = makeWellContractCalls(wellAddresses);
 
-  // calls per well address
-  const chunkSize = 3;
+  const wellResults = await Promise.all(
+    wellCalls.contractCalls.map((contracts) =>
+      multicall(config, { contracts: contracts, allowFailure: true })
+    )
+  ).then((results) => {
+    const chunked = chunkArray(results.flat(), wellCalls.chunkSize).map((chunk, i) => ({
+      data: extractArrayResult<WellContractCall, WellsMultiCallResult>(chunk),
+      address: wellAddresses[i].toLowerCase()
+    }));
+    Log.module("wells").debug("Well Multicall : ", chunked);
 
-  let callBucket: ERC20ContractCall[] = [];
-  addresses.forEach((address) => {
-    const contract = {
-      address: address as `0x{string}`,
-      abi: erc20Abi
-    };
+    chunked.forEach((data) => {
+      if (!data?.data) return;
 
-    const nameCall: ERC20ContractCall = {
-      ...contract,
-      functionName: "name",
-      args: []
-    };
-    const symbolCall: ERC20ContractCall = {
-      ...contract,
-      functionName: "symbol",
-      args: []
-    };
-    const decimalsCall: ERC20ContractCall = {
-      ...contract,
-      functionName: "decimals",
-      args: []
-    };
+      const wellDatas = data.data[1];
+      // If token is not defined in WellsSDK. We need to fetch it from on Chain.
+      for (const token of wellDatas[0]) {
+        if (sdk.wells.tokens.erc20Tokens.has(token.toLowerCase())) continue;
+        tokensToFetch.add(token.toLowerCase());
+      }
+    });
 
-    callBucket.push(nameCall, symbolCall, decimalsCall);
-
-    if (callBucket.length === MAX_PER_CALL) {
-      contractCalls.push([...callBucket]);
-      callBucket = [];
-    }
+    return chunked;
   });
 
-  if (callBucket.length) {
-    contractCalls.push(callBucket);
-  }
-
   return {
-    contractCalls,
-    chunkSize
+    wellResults,
+    tokenSet: tokensToFetch
   };
 };
 
@@ -313,21 +240,9 @@ const makeWellContractCalls = (addresses: string[]) => {
       address: _address as `0x{string}`,
       abi: wellsABI
     };
-    const nameCall: WellContractCall = {
-      ...contract,
-      functionName: "name",
-      args: []
-    };
-    const wellCall: WellContractCall = {
-      ...contract,
-      functionName: "well",
-      args: []
-    };
-    const reservesCall: WellContractCall = {
-      ...contract,
-      functionName: "getReserves",
-      args: []
-    };
+    const nameCall: WellContractCall = { ...contract, functionName: "name", args: [] };
+    const wellCall: WellContractCall = { ...contract, functionName: "well", args: [] };
+    const reservesCall: WellContractCall = { ...contract, functionName: "getReserves", args: [] };
 
     callBucket.push(nameCall, wellCall, reservesCall);
 
@@ -347,17 +262,115 @@ const makeWellContractCalls = (addresses: string[]) => {
   };
 };
 
+// ---------- Fetch Tokens Data ----------
+
+type TokenCallResult = [name: string, symbol: string, decimals: number];
+
+type StandardERC20Call = ContractFunctionParameters<typeof standardErc20Abi>;
+type NonStandardERC20Call = ContractFunctionParameters<typeof nonStandardERC20ABI>;
+
+const fetchTokensWithMulticall = async (
+  sdk: BeanstalkSDK,
+  tokenAddresses: string[],
+  wellAddresses: Set<string>,
+  refetchFailed: boolean = false
+): Promise<Record<string, ERC20Token>> => {
+  const tokensCalls = makeTokensContractCall(tokenAddresses, erc20Abi);
+
+  const tokenResults = await Promise.all(
+    tokensCalls.contractCalls.map((contracts) =>
+      multicall(config, { contracts: contracts, allowFailure: true })
+    )
+  ).then((r) =>
+    chunkArray(r.flat(), tokensCalls.chunkSize).map((chunk, i) => ({
+      data: extractArrayResult<StandardERC20Call, TokenCallResult>(chunk),
+      address: tokenAddresses[i].toLowerCase()
+    }))
+  );
+
+  if (refetchFailed) {
+    const failedTokens = tokenResults.filter((r) => !r.data).map((data) => data.address);
+    const failedTokensCalls = makeTokensContractCall(failedTokens, nonStandardERC20ABI);
+
+    await Promise.all(
+      failedTokensCalls.contractCalls.map((contracts) =>
+        multicall(config, { contracts: contracts, allowFailure: true })
+      )
+    ).then((r) => {
+      chunkArray(r.flat(), failedTokensCalls.chunkSize).forEach((chunk, i) => {
+        let extractedResult = extractArrayResult<NonStandardERC20Call, TokenCallResult>(chunk);
+        const tokenAddress = failedTokens[i].toLowerCase();
+
+        if (extractedResult) {
+          extractedResult = [
+            convertBytes32ToString(extractedResult[0]), // name
+            convertBytes32ToString(extractedResult[1]), // symbol
+            Number(extractedResult[2].toString()) // decimals
+          ];
+        }
+        tokenResults.push({
+          data: extractedResult,
+          address: tokenAddress
+        });
+      });
+    });
+  }
+
+  return tokenResults.reduce<Record<string, ERC20Token>>((prev, datum) => {
+    const { data, address: tokenAddress } = datum;
+    if (!tokenAddress || !data) return prev;
+    const [name, symbol, decimals] = data;
+    prev[tokenAddress] = new ERC20Token(
+      sdk.chainId,
+      tokenAddress,
+      decimals,
+      symbol,
+      { name: name, displayDecimals: 2, isLP: wellAddresses.has(tokenAddress) },
+      sdk.providerOrSigner
+    );
+
+    return prev;
+  }, {});
+};
+
+const makeTokensContractCall = <T extends Abi>(addresses: string[], abi: T) => {
+  const contractCalls: ContractFunctionParameters[][] = [];
+
+  // calls per well address
+  const chunkSize = 3;
+
+  let callBucket: ContractFunctionParameters[] = [];
+  addresses.forEach((address) => {
+    const contract = { address: address as `0x{string}`, abi: abi };
+    const nameCall = { ...contract, functionName: "name", args: [] };
+    const symbolCall = { ...contract, functionName: "symbol", args: [] };
+    const decimalsCall = { ...contract, functionName: "decimals", args: [] };
+
+    callBucket.push(nameCall, symbolCall, decimalsCall);
+
+    if (callBucket.length === MAX_PER_CALL) {
+      contractCalls.push([...callBucket]);
+      callBucket = [];
+    }
+  });
+
+  if (callBucket.length) {
+    contractCalls.push(callBucket);
+  }
+
+  return {
+    contractCalls,
+    chunkSize
+  };
+};
+
+// ---------- ABI ----------
+
 const wellsABI = [
   {
     inputs: [],
     name: "name",
-    outputs: [
-      {
-        internalType: "string",
-        name: "",
-        type: "string"
-      }
-    ],
+    outputs: [{ internalType: "string", name: "", type: "string" }],
     stateMutability: "view",
     type: "function"
   },
@@ -365,23 +378,11 @@ const wellsABI = [
     inputs: [],
     name: "well",
     outputs: [
-      {
-        internalType: "contract IERC20[]",
-        name: "_tokens",
-        type: "address[]"
-      },
+      { internalType: "contract IERC20[]", name: "_tokens", type: "address[]" },
       {
         components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address"
-          },
-          {
-            internalType: "bytes",
-            name: "data",
-            type: "bytes"
-          }
+          { internalType: "address", name: "target", type: "address" },
+          { internalType: "bytes", name: "data", type: "bytes" }
         ],
         internalType: "struct Call",
         name: "_wellFunction",
@@ -389,31 +390,15 @@ const wellsABI = [
       },
       {
         components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address"
-          },
-          {
-            internalType: "bytes",
-            name: "data",
-            type: "bytes"
-          }
+          { internalType: "address", name: "target", type: "address" },
+          { internalType: "bytes", name: "data", type: "bytes" }
         ],
         internalType: "struct Call[]",
         name: "_pumps",
         type: "tuple[]"
       },
-      {
-        internalType: "bytes",
-        name: "_wellData",
-        type: "bytes"
-      },
-      {
-        internalType: "address",
-        name: "_aquifer",
-        type: "address"
-      }
+      { internalType: "bytes", name: "_wellData", type: "bytes" },
+      { internalType: "address", name: "_aquifer", type: "address" }
     ],
     stateMutability: "pure",
     type: "function"
@@ -421,13 +406,62 @@ const wellsABI = [
   {
     inputs: [],
     name: "getReserves",
-    outputs: [
-      {
-        internalType: "uint256[]",
-        name: "reserves",
-        type: "uint256[]"
-      }
-    ],
+    outputs: [{ internalType: "uint256[]", name: "reserves", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function"
+  }
+] as const;
+
+export const standardErc20Abi = [
+  {
+    type: "function",
+    name: "decimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint8" }]
+  },
+  {
+    type: "function",
+    name: "name",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "string" }]
+  },
+  {
+    type: "function",
+    name: "symbol",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "string" }]
+  }
+] as const;
+
+// -- Non-standard ERC20 ABI w/ bytes32 return type
+const nonStandardERC20ABI = [
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint256" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "bytes32" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "bytes32" }],
+    payable: false,
     stateMutability: "view",
     type: "function"
   }
