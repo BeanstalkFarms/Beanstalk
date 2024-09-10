@@ -17,11 +17,13 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import useAccount from '../hooks/ledger/useAccount';
@@ -91,7 +93,7 @@ const MigrationPreview: FC<{}> = () => {
     <Container maxWidth="lg">
       <Stack spacing={2}>
         <PageHeader
-          title="Migration Preview"
+          title="Verify BIP-50 Migrated Balances"
           description="Preview an account's assets after migration"
         />
         <Card sx={{ p: 2 }}>
@@ -175,7 +177,24 @@ const MigrationPreview: FC<{}> = () => {
                   }}
                 >
                   <Box>
-                    <Typography fontSize={18}>Earned Beans</Typography>
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'row', gap: 0.25 }}
+                    >
+                      <Typography fontSize={18}>Earned Beans</Typography>
+                      <Tooltip
+                        title={'Earned Beans will be automatically Planted.'}
+                        placement={'right'}
+                      >
+                        <HelpOutlineIcon
+                          sx={{
+                            color: 'text.secondary',
+                            display: 'inline',
+                            mb: 0.5,
+                            fontSize: '11px',
+                          }}
+                        />
+                      </Tooltip>
+                    </Box>
                     <Typography fontSize={20} variant="h4">
                       {TokenValue.fromBlockchain(
                         data.silo.earnedBeans,
@@ -437,7 +456,25 @@ const MigrationPreview: FC<{}> = () => {
                     </Typography>
                   </Box>
                   <Box>
-                    <Typography fontSize={18}>Rinsable Sprouts</Typography>
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'row', gap: 0.25 }}
+                    >
+                      <Typography fontSize={18}>Rinsable Sprouts</Typography>
+                      <Tooltip
+                        title={'Rinsable Sprouts will be sent to Farm Balance.'}
+                        placement={'right'}
+                      >
+                        <HelpOutlineIcon
+                          sx={{
+                            color: 'text.secondary',
+                            display: 'inline',
+                            mb: 0.5,
+                            fontSize: '11px',
+                          }}
+                        />
+                      </Tooltip>
+                    </Box>
+                    <Typography fontSize={18}></Typography>
                     <Typography fontSize={20} variant="h4">
                       {TokenValue.fromBlockchain(
                         data.barn.totalRinsable,
