@@ -21,6 +21,7 @@ import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @author Brean
@@ -462,6 +463,9 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated internal balances to the account.
+     * Since global internal balances set in ReseedGlobal also reflect smart contract balances,
+     * we do not need to update global internal balances here, 
+     * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
         address reciever,
@@ -469,7 +473,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts
     ) internal {
         for (uint i; i < tokens.length; i++) {
-            LibBalance.increaseInternalBalance(reciever, IERC20(tokens[i]), amounts[i]);
+            IERC20 token = IERC20(tokens[i]);
+            s.accts[reciever].internalTokenBalance[token] += amounts[i];
+            emit LibBalance.InternalBalanceChanged(reciever, token, SafeCast.toInt256(amounts[i]));
         }
     }
 
