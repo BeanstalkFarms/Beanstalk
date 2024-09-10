@@ -282,10 +282,12 @@ contract OracleTest is TestHelper {
         setupUniswapWBTCOracleImplementation();
 
         uint256 priceWBTCmillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
-        assertEq(priceWBTCmillion, 16844541);
+        // 1e(8+6)/1684341342 = 59370.3885943091
+        assertEq(priceWBTCmillion, 1684454192); // $1,000,000 buys 1684341342 at BTC price of 6148186669379 per USDC and USDC 99993272.
 
+        // 1e8/1684 = 59382.4228028504
         uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
-        assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272, but 16 is 6 decimal precision
+        assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272.
     }
 
     function testForkMainnetAAVEOracle() public {
