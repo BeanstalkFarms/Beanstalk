@@ -1530,6 +1530,8 @@ interface IMockFBeanstalk {
         GerminationSide side
     ) external;
 
+    function mockInitState() external;
+
     function mockLiquidityWeight() external pure returns (uint256);
 
     function mockSetAverageGrownStalkPerBdvPerSeason(
@@ -1714,6 +1716,8 @@ interface IMockFBeanstalk {
     function podIndex(uint256 fieldId) external view returns (uint256);
 
     function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
+
+    function poolCurrentDeltaBMock(address pool) external view returns (int256 deltaB);
 
     function poolDeltaB(address pool) external view returns (int256);
 

@@ -49,7 +49,6 @@ contract BeanstalkDeployer is Utils {
         "SiloGettersFacet",
         "ConvertGettersFacet",
         "MetadataFacet",
-        "SeasonGettersFacet",
         "DepotFacet",
         "MarketplaceFacet",
         "ClaimFacet",
@@ -66,7 +65,8 @@ contract BeanstalkDeployer is Utils {
         "UnripeFacet", // MockUnripeFacet
         "ConvertFacet", // MockConvertFacet
         "SeasonFacet", // MockSeasonFacet
-        "PipelineConvertFacet" // MockPipelineConvertFacet
+        "PipelineConvertFacet", // MockPipelineConvertFacet
+        "SeasonGettersFacet" // MockSeasonGettersFacet
     ];
     address[] initialDeployFacetAddresses;
     string[] initialDeploFacetNames;
