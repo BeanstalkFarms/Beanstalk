@@ -636,7 +636,7 @@ const MigrationPreview: FC<{}> = () => {
                     </Table>
                   </TableContainer>
                 ) : (
-                  <Box>This Farm is empty.</Box>
+                  <Box>This account has no Farm Balances.</Box>
                 )}
               </Box>
             </Card>
