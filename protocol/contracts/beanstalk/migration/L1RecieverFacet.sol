@@ -464,7 +464,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     /**
      * @notice adds the migrated internal balances to the account.
      * Since global internal balances set in ReseedGlobal also reflect smart contract balances,
-     * we do not need to update global internal balances here, 
+     * we do not need to update global internal balances here,
      * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
