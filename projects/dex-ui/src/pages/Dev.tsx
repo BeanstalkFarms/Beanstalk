@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
@@ -27,11 +27,11 @@ export const Dev = () => {
   const [amounts, setAmounts] = useState<Map<string, TokenValue>>(new Map());
   const { refetch: refetchTokenBalances } = useAllTokensBalance();
   const sdk = new BeanstalkSDK({ provider: provider as ethers.providers.JsonRpcProvider });
+  const [tokens, setTokens] = useState<Set<Token>>(new Set(data || []));
 
-  const tokens = new Set<Token>();
-  for (const token of data || []) {
-    tokens.add(token);
-  }
+  useEffect(() => {
+    setTokens(new Set(data || []));
+  }, [data]);
 
   const rows = [];
 
@@ -66,6 +66,9 @@ export const Dev = () => {
   };
 
   for (let token of tokens) {
+    if (!sdk.wells.tokens.findByAddress(token.address)) {
+      continue;
+    }
     rows.push(
       <Row key={token.symbol}>
         <TokenInput

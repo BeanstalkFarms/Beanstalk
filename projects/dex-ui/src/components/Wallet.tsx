@@ -22,7 +22,7 @@ export const WalletButton = () => {
 
   return (
     <ConnectKitButton.Custom>
-      {({ isConnected, show, truncatedAddress, ensName, chain }) => {
+      {({ isConnected, show, truncatedAddress, ensName }) => {
         return (
           <>
             <StyledConnectButton onClick={show}>
