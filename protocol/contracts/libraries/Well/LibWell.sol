@@ -165,7 +165,7 @@ library LibWell {
         // should not impact gas. 
         // LibUsdOracle returns the price with 6 decimal precision.
         // This is canceled out by dividing by 1e6.
-        // This block is then used in calcLPToSupplyRatio that assumes 18 decimal precision,
+        // This return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
         // so we need to account for whitelisted tokens that have less than 18 decimals by multiplying the 
         // precision difference.
 
