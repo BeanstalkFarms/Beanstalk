@@ -45,22 +45,22 @@ export const useFarmerWellsSiloBalances = () => {
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: queryKeys.siloBalancesAll(addresses),
     queryFn: async () => {
-      const resultMap: Record<string, TokenValue> = {};
-      if (!address) return resultMap;
+      try {
+        const resultMap: Record<string, TokenValue> = {};
+        if (!address) return resultMap;
 
-      const results = await Promise.all(
-        wellTokens.map((token) => sdk.silo.getBalance(token, address))
-      );
+        const results = await sdk.silo.getBalances(address);
 
-      results.forEach((val, i) => {
-        const token = wellTokens[i];
-        resultMap[token.address] = val.amount;
-        setQueryData(queryKeys.siloBalance(token.address), () => {
-          return val.amount;
+        results.forEach((val, token) => {
+          resultMap[token.address] = val.amount;
+          setQueryData(queryKeys.siloBalance(token.address), () => val.amount);
         });
-      });
 
-      return resultMap;
+        return resultMap;
+      } catch (e) {
+        console.log("e: ", e);
+        return {};
+      }
     },
     enabled: getIsValidEthereumAddress(address) && !!wellTokens.length,
     retry: false

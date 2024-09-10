@@ -3,7 +3,7 @@ import React from "react";
 import { createStore, Provider } from "jotai";
 
 import { aquiferAtom, wellsAtom, sdkAtom } from "./atoms";
-import AquiferProvider from "./providers/AquiverProvider";
+import AquiferProvider from "./providers/AquiferProvider";
 import { SdkProvider } from "./providers/SdkProvider";
 import WellsProvider from "./providers/WellsProvider";
 

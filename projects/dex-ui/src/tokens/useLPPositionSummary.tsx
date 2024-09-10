@@ -14,9 +14,9 @@ import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { config } from "src/utils/wagmi/config";
-import { useWells } from "src/wells/useWells";
 
 import { useFarmerWellsSiloBalances } from "./useSiloBalance";
+import { useWellLPTokens } from "./useWellLPTokens";
 
 type TokenBalanceCache = undefined | void | Record<string, TokenValue>;
 
@@ -66,17 +66,13 @@ const CALLS_PER_TOKEN = 2;
 
 export const useLPPositionSummary = () => {
   const setQueryData = useSetScopedQueryData();
-  const { data: wells } = useWells();
+  const lpTokens = useWellLPTokens();
   const { address } = useAccount();
   const sdk = useSdk();
 
   const [positions, setPositions] = useState<TokenMap<LPBalanceSummary>>({});
 
   // Array of LP tokens for each well
-  const lpTokens = useMemo(
-    () => (wells || []).map((w) => w.lpToken).filter(Boolean) as Token[],
-    [wells]
-  );
 
   /**
    * Silo Balances
@@ -102,6 +98,7 @@ export const useLPPositionSummary = () => {
         contracts: makeMultiCall(sdk, lpTokens, address),
         allowFailure: false
       })) as unknown[] as BigNumber[];
+      console.log("res: ", res);
 
       for (let i = 0; i < res.length; i++) {
         // divide by 2 to get the index of the lp token b/c we have 2 calls per token

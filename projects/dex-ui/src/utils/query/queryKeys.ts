@@ -2,7 +2,7 @@ import { BeanstalkSDK } from "@beanstalk/sdk";
 
 export const queryKeys = {
   // wells
-  wells: (sdk: BeanstalkSDK) => ["wells", sdk],
+  wells: (sdk: BeanstalkSDK) => ["wells", sdk.chainId.toString()],
   wellTokens: ["wells", "tokens"],
 
   erc20TokenWithAddress: (address: string) => ["token", "erc20", address],
