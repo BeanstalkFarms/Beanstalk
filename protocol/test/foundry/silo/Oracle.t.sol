@@ -316,45 +316,71 @@ contract OracleTest is TestHelper {
 
         vm.prank(WBTC_WHALE);
         IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8);
-
         deal(address(BEAN), BEAN_WBTC_WELL, 100_000e6, true);
+        IWell(BEAN_WBTC_WELL).sync(users[0], 0);
 
-        uint256 beanWellBalance = IERC20(BEAN).balanceOf(BEAN_WBTC_WELL);
-        console.log("bean well balance", beanWellBalance);
-        uint256 wbtcWellBalance = IERC20(WBTC).balanceOf(BEAN_WBTC_WELL);
-        console.log("wbtc well balance", wbtcWellBalance);
-
-        // add liquidity failed because it uses deal, didn't want to have wtbtc-specific stuff in that code
-        // addLiquidityToWell(
-        //     BEAN_WBTC_WELL,
-        //     100_000e6, // 100,000 Beans
-        //     0 // 0 WBTC, deal didn't work
-        // );
-
-        uint256 lpOut = IWell(BEAN_WBTC_WELL).sync(users[0], 0);
-        console.log("lp out", lpOut);
-
-        // address well = BEAN_WBTC_WELL;
-
-        // vm.prank(BEANSTALK);
-        // bs.whitelistToken(
-        //     well,
-        //     WBTC,
-        //     0,
-        //     0,
-        //     bytes1(0x01),
-        //     0,
-        //     0,
-        //     IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01), new bytes(0))
-        // );
+        whitelistWBTC(); // comment this line out and the test doesn't get stuck
 
         int256 deltaB = IMockFBeanstalk(BEANSTALK).poolCurrentDeltaB(BEAN_WBTC_WELL);
         console.log("deltaB wbtc:");
         console.logInt(deltaB);
-        assertEq(deltaB, 0.0001e18);
+        assertEq(deltaB, 1);
     }
 
     //////////// Helper Functions ////////////
+
+    function whitelistWBTC() public {
+        // IMockFBeanstalk.Implementation memory oracleImplementation = IMockFBeanstalk.Implementation(
+        //     address(WBTC_USD_CHAINLINK_PRICE_AGGREGATOR),
+        //     bytes4(0),
+        //     bytes1(0),
+        //     new bytes(0)
+        // );
+
+        // IMockFBeanstalk.Implementation memory gaugePointImpl = IMockFBeanstalk.Implementation(
+        //     address(0),
+        //     IMockFBeanstalk.defaultGaugePointFunction.selector,
+        //     bytes1(0),
+        //     new bytes(0)
+        // );
+
+        // IMockFBeanstalk.Implementation memory liquidityWeightImpl = IMockFBeanstalk.Implementation(
+        //     address(0),
+        //     IMockFBeanstalk.maxWeight.selector,
+        //     bytes1(0),
+        //     new bytes(0)
+        // );
+
+        vm.prank(BEANSTALK);
+        bs.whitelistToken(
+            BEAN_WBTC_WELL,
+            IMockFBeanstalk.beanToBDV.selector,
+            1e10,
+            2e6,
+            bytes1(0),
+            0,
+            0,
+            IMockFBeanstalk.Implementation(
+                // address(WBTC_USD_CHAINLINK_PRICE_AGGREGATOR),
+                address(0),
+                bytes4(0),
+                bytes1(0),
+                new bytes(0)
+            ),
+            IMockFBeanstalk.Implementation(
+                address(0),
+                IMockFBeanstalk.defaultGaugePointFunction.selector,
+                bytes1(0),
+                new bytes(0)
+            ),
+            IMockFBeanstalk.Implementation(
+                address(0),
+                IMockFBeanstalk.maxWeight.selector,
+                bytes1(0),
+                new bytes(0)
+            )
+        );
+    }
 
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(BEANSTALK);

@@ -208,16 +208,6 @@ contract BasinDeployer is Utils {
     }
 
     function deployWBTCWellOnFork(bool mock, bool verbose) internal {
-        address _pump;
-
-        if (mock) {
-            // mock pump.
-            _pump = pumps[1];
-        } else {
-            // multi flow pump.
-            _pump = pumps[0];
-        }
-
         console.log("deploying wbtc well");
 
         console.log("wellImplementations[0]:", wellImplementations[0]);
@@ -230,7 +220,7 @@ contract BasinDeployer is Utils {
             BEAN,
             WBTC,
             wellFunctions[0],
-            _pump,
+            pumps[0], // multi flow pump
             wellImplementations[0]
         );
 
