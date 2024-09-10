@@ -188,37 +188,37 @@ const MigrationPreview: FC<{}> = () => {
                 }}
               >
                 <div>
-                  BIP-50 proposes to migrate Beanstalk state to Arbitrum. In
-                  doing so, all Deposits, Plots, Fertilizer and
-                  Beanstalk-related Farm Balances (Beans, BEANWETH, BEAN3CRV
+                  BIP-50 proposes to <b>migrate Beanstalk state to Arbitrum.</b> In
+                  doing so, <b>all Deposits, Plots, Fertilizer and
+                  Beanstalk-related Farm Balances</b> (Beans, BEANWETH, BEAN3CRV
                   (migrated to BEANUSDC), BEANwstETH, urBEAN and urBEANwstETH)
-                  are migrated.
+                  {' '}<b>are migrated.</b>
                 </div>
                 <div>
-                  As part of the migration process:
+                  <b>As part of the migration process:</b>
                   <ul>
-                    <li>Grown Stalk is Mown;</li>
-                    <li>Earned Beans are Planted; and</li>
+                    <li><b>Grown Stalk is Mown;</b></li>
+                    <li><b>Earned Beans are Planted;</b> and</li>
                     <li>
-                      Rinsable Sprouts, Unpicked Unripe assets and unclaimed
-                      Silo V2 Withdrawals are put into the respective accounts'
-                      Farm Balances.
+                      <b>Rinsable Sprouts, Unpicked Unripe assets and unclaimed
+                      Silo V2 Withdrawals</b> are put into the respective <b>accounts'
+                      Farm Balances.</b>
                     </li>
                   </ul>
                 </div>
                 <div>
                   The following balances show the state of the selected Farmer
-                  as a result of the migration, assuming the migration was
+                  as a result of the migration, <b>assuming the migration was
                   executed based on balances at block {data.meta.block} (i.e.,
                   roughly
                   {` ${new Date(data.meta.timestamp * 1000).toLocaleString()}`}
-                  ). You should cross reference this with your balances in the
+                  ). </b>You should cross reference this with your balances in the
                   rest of the Beanstalk UI (assuming your balances haven't
                   changed since block {data.meta.block}).
                 </div>
                 <div>
-                  Note that Circulating Balances and smart contract account
-                  balances are not migrated automatically. See{' '}
+                  Note that <b>Circulating Balances and smart contract account
+                  balances are not migrated automatically.</b> See{' '}
                   <a href="https://discord.gg/beanstalk">Discord</a>
                   &nbsp;and{' '}
                   <a href="https://github.com/BeanstalkFarms/Beanstalk/pull/909">
