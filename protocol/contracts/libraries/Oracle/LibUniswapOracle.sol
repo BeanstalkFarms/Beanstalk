@@ -15,9 +15,6 @@ interface IERC20Decimals {
 /**
  * @title Uniswap Oracle Library
  * @notice Contains functionalty to read prices from Uniswap V3 pools.
- * @dev currently supports:
- * - ETH:USDC price from the ETH:USDC 0.05% pool
- * - ETH:USDT price from the ETH:USDT 0.05% pool
  **/
 library LibUniswapOracle {
     // All instantaneous queries of Uniswap Oracles should use a 15 minute lookback.

@@ -224,13 +224,12 @@ contract L1RecieverFacetTest is Order, TestHelper {
     }
 
     function test_L2MigrateInvalidPodOrder() public {
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
-
         (
             address owner,
             L1RecieverFacet.L1PodOrder[] memory podOrders,
             bytes32[] memory proof
         ) = getMockPodOrder();
+        bs.setRecieverForL1Migration(owner, RECIEVER);
 
         // update pod orderer
         podOrders[0].podOrder.orderer = RECIEVER;
@@ -244,6 +243,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
     // test helpers
     function getMockDepositData()
         internal
+        pure
         returns (address, uint256[] memory, uint256[] memory, uint256[] memory, bytes32[] memory)
     {
         address account = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);

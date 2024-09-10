@@ -151,8 +151,6 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].stalkIssuedPerBdv = stalkIssuedPerBdv;
         s.sys.silo.assetSettings[token].milestoneSeason = uint32(s.sys.season.current);
         s.sys.silo.assetSettings[token].encodeType = encodeType;
-        s.sys.silo.assetSettings[token].gaugePointImplementation.selector = bytes4(0);
-        s.sys.silo.assetSettings[token].liquidityWeightImplementation.selector = bytes4(0);
         s.sys.silo.assetSettings[token].gaugePoints = gaugePoints;
         s.sys.silo.assetSettings[token].optimalPercentDepositedBdv = optimalPercentDepositedBdv;
         s.sys.silo.assetSettings[token].gaugePointImplementation = gpImplementation;

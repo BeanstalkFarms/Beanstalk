@@ -87,7 +87,16 @@ contract OracleFacet is Invariable, ReentrancyGuard {
     function getRatiosAndBeanIndex(
         IERC20[] memory tokens,
         uint256 lookback
-    ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
+    ) external view returns (uint[] memory ratios, uint beanIndex, bool success) {
         (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens, lookback);
+    }
+
+    /**
+     * @notice Fetches the amount of tokens equal to 1 Million USD for a given token.
+     * @param token address of the token to get the amount for.
+     * @param lookback the amount of time to look back in seconds.
+     */
+    function getMillionUsdPrice(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getMillionUsdPrice(token, lookback);
     }
 }
