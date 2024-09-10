@@ -156,6 +156,27 @@ contract WhitelistTest is TestHelper {
             bytes1(0x01),
             0,
             0,
+            IMockFBeanstalk.Implementation(BEANSTALK, oSelector, bytes1(0), new bytes(0)),
+            IMockFBeanstalk.Implementation(BEANSTALK, gpSelector, bytes1(0), new bytes(0)),
+            IMockFBeanstalk.Implementation(BEANSTALK, lwSelector, bytes1(0), new bytes(0))
+        );
+    }
+
+    function test_whitelistRevertZeroTargetOracleImplementation(uint i) public prank(BEANSTALK) {
+        address token = address(new MockWellToken());
+        bytes4 gpSelector = IMockFBeanstalk.defaultGaugePointFunction.selector;
+        bytes4 lwSelector = IMockFBeanstalk.maxWeight.selector;
+        bytes4 oSelector = bytes4(keccak256(abi.encode(i)));
+
+        vm.expectRevert("Whitelist: Invalid Target Address");
+        bs.whitelistToken(
+            token,
+            IMockFBeanstalk.wellBdv.selector,
+            0,
+            0,
+            bytes1(0x01),
+            0,
+            0,
             IMockFBeanstalk.Implementation(address(0), oSelector, bytes1(0), new bytes(0)),
             IMockFBeanstalk.Implementation(address(0), gpSelector, bytes1(0), new bytes(0)),
             IMockFBeanstalk.Implementation(address(0), lwSelector, bytes1(0), new bytes(0))
@@ -175,9 +196,9 @@ contract WhitelistTest is TestHelper {
             bytes1(0),
             0,
             0,
-            IMockFBeanstalk.Implementation(address(0), bytes4(0), bytes1(0x01), new bytes(0)),
-            IMockFBeanstalk.Implementation(address(0), gpSelector, bytes1(0), new bytes(0)),
-            IMockFBeanstalk.Implementation(address(0), lwSelector, bytes1(0), new bytes(0))
+            IMockFBeanstalk.Implementation(BEANSTALK, bytes4(0), bytes1(0x01), new bytes(0)),
+            IMockFBeanstalk.Implementation(BEANSTALK, gpSelector, bytes1(0x01), new bytes(0)),
+            IMockFBeanstalk.Implementation(BEANSTALK, lwSelector, bytes1(0x01), new bytes(0))
         );
     }
 

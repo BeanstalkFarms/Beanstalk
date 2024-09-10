@@ -158,17 +158,15 @@ library LibUsdOracle {
                 // return the USD/TOKEN price.
                 // 1e6 * 1e`n` / 1e`n` = 1e6
                 return (tokenPrice * chainlinkTokenPrice) / (10 ** chainlinkTokenDecimals);
-            } else {
-                // return the TOKEN/USD price.
-                return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
             }
+
+            return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
-        // If the oracle implementation address is not set, use the current contract.
-        address target = oracleImpl.target;
-        if (target == address(0)) target = address(this);
+        // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
+        if (oracleImpl.target == address(0)) return 0;
 
-        (bool success, bytes memory data) = target.staticcall(
+        (bool success, bytes memory data) = oracleImpl.target.staticcall(
             abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
         );
 
