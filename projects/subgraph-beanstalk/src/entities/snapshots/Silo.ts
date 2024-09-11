@@ -2,6 +2,7 @@ import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Silo, SiloDailySnapshot, SiloHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
@@ -131,6 +132,35 @@ export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
 
   silo.lastHourlySnapshotSeason = currentSeason;
   silo.lastDailySnapshotDay = day;
+}
+
+export function clearSiloDeltas(silo: Silo, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = SiloHourlySnapshot.load(silo.id.toHexString() + "-" + currentSeason.toString());
+  const daily = SiloDailySnapshot.load(silo.id.toHexString() + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaDepositedBDV = ZERO_BI;
+    hourly.deltaStalk = ZERO_BI;
+    hourly.deltaPlantableStalk = ZERO_BI;
+    hourly.deltaSeeds = ZERO_BI;
+    hourly.deltaRoots = ZERO_BI;
+    hourly.deltaGerminatingStalk = ZERO_BI;
+    hourly.deltaBeanMints = ZERO_BI;
+    hourly.deltaActiveFarmers = 0;
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaDepositedBDV = ZERO_BI;
+    daily.deltaStalk = ZERO_BI;
+    daily.deltaPlantableStalk = ZERO_BI;
+    daily.deltaSeeds = ZERO_BI;
+    daily.deltaRoots = ZERO_BI;
+    daily.deltaGerminatingStalk = ZERO_BI;
+    daily.deltaBeanMints = ZERO_BI;
+    daily.deltaActiveFarmers = 0;
+    daily.save();
+  }
 }
 
 // Set case id on hourly snapshot. Snapshot must have already been created.

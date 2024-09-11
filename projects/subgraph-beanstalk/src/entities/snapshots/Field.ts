@@ -2,6 +2,7 @@ import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
@@ -179,6 +180,43 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
 
   field.lastHourlySnapshotSeason = currentSeason;
   field.lastDailySnapshotDay = day;
+}
+
+export function clearFieldDeltas(field: Field, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = FieldHourlySnapshot.load(field.id.toHexString() + "-" + currentSeason.toString());
+  const daily = FieldDailySnapshot.load(field.id.toHexString() + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaTemperature = 0;
+    hourly.deltaRealRateOfReturn = ZERO_BD;
+    hourly.deltaNumberOfSowers = 0;
+    hourly.deltaNumberOfSows = 0;
+    hourly.deltaSownBeans = ZERO_BI;
+    hourly.deltaUnharvestablePods = ZERO_BI;
+    hourly.deltaHarvestablePods = ZERO_BI;
+    hourly.deltaHarvestedPods = ZERO_BI;
+    hourly.deltaSoil = ZERO_BI;
+    hourly.deltaPodIndex = ZERO_BI;
+    hourly.deltaPodRate = ZERO_BD;
+    hourly.deltaIssuedSoil = ZERO_BI;
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaTemperature = 0;
+    daily.deltaRealRateOfReturn = ZERO_BD;
+    daily.deltaNumberOfSowers = 0;
+    daily.deltaNumberOfSows = 0;
+    daily.deltaSownBeans = ZERO_BI;
+    daily.deltaUnharvestablePods = ZERO_BI;
+    daily.deltaHarvestablePods = ZERO_BI;
+    daily.deltaHarvestedPods = ZERO_BI;
+    daily.deltaSoil = ZERO_BI;
+    daily.deltaPodIndex = ZERO_BI;
+    daily.deltaPodRate = ZERO_BD;
+    daily.deltaIssuedSoil = ZERO_BI;
+    daily.save();
+  }
 }
 
 // Set case id on hourly. Snapshot must have already been created.

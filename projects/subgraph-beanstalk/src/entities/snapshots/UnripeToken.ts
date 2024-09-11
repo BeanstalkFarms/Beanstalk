@@ -2,6 +2,7 @@ import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { UnripeToken, UnripeTokenDailySnapshot, UnripeTokenHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
@@ -145,4 +146,39 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, block: ethere
 
   unripeToken.lastHourlySnapshotSeason = currentSeason;
   unripeToken.lastDailySnapshotDay = day;
+}
+
+export function clearUnripeTokenDeltas(unripeToken: UnripeToken, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = UnripeTokenHourlySnapshot.load(unripeToken.id.toHexString() + "-" + currentSeason.toString());
+  const daily = UnripeTokenDailySnapshot.load(unripeToken.id.toHexString() + "-" + day.toString());
+  if (hourly) {
+    hourly.deltaUnderlyingToken = false;
+    hourly.deltaTotalUnderlying = ZERO_BI;
+    hourly.deltaAmountUnderlyingOne = ZERO_BI;
+    hourly.deltaBdvUnderlyingOne = ZERO_BI;
+    hourly.deltaChoppableAmountOne = ZERO_BI;
+    hourly.deltaChoppableBdvOne = ZERO_BI;
+    hourly.deltaChopRate = ZERO_BD;
+    hourly.deltaRecapPercent = ZERO_BD;
+    hourly.deltaTotalChoppedAmount = ZERO_BI;
+    hourly.deltaTotalChoppedBdv = ZERO_BI;
+    hourly.deltaTotalChoppedBdvReceived = ZERO_BI;
+    hourly.save();
+  }
+  if (daily) {
+    daily.deltaUnderlyingToken = false;
+    daily.deltaTotalUnderlying = ZERO_BI;
+    daily.deltaAmountUnderlyingOne = ZERO_BI;
+    daily.deltaBdvUnderlyingOne = ZERO_BI;
+    daily.deltaChoppableAmountOne = ZERO_BI;
+    daily.deltaChoppableBdvOne = ZERO_BI;
+    daily.deltaChopRate = ZERO_BD;
+    daily.deltaRecapPercent = ZERO_BD;
+    daily.deltaTotalChoppedAmount = ZERO_BI;
+    daily.deltaTotalChoppedBdv = ZERO_BI;
+    daily.deltaTotalChoppedBdvReceived = ZERO_BI;
+    daily.save();
+  }
 }

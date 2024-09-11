@@ -7,13 +7,17 @@ import {
   SEASON_INITIAL,
   UNRIPE_TOKENS_INITIAL_VALUES
 } from "../../../cache-builder/results/B3Migration_arb";
-import { takeFieldSnapshots } from "../../entities/snapshots/Field";
+import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
 import { loadPodMarketplace } from "../../entities/PodMarketplace";
-import { takeMarketSnapshots } from "../../entities/snapshots/Marketplace";
-import { loadUnripeToken } from "../../entities/Silo";
-import { getUnripeBeanAddr, getUnripeLpAddr } from "../../../../subgraph-core/constants/RuntimeConstants";
-import { takeUnripeTokenSnapshots } from "../../entities/snapshots/UnripeToken";
+import { clearMarketDeltas, takeMarketSnapshots } from "../../entities/snapshots/Marketplace";
+import { loadSilo, loadSiloAsset, loadUnripeToken, loadWhitelistTokenSetting } from "../../entities/Silo";
+import { getUnripeBeanAddr, getUnripeLpAddr, isUnripe } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { clearUnripeTokenDeltas, takeUnripeTokenSnapshots } from "../../entities/snapshots/UnripeToken";
 import { loadBeanstalk } from "../../entities/Beanstalk";
+import { clearSiloDeltas } from "../../entities/snapshots/Silo";
+import { clearSiloAssetDeltas } from "../../entities/snapshots/SiloAsset";
+import { clearWhitelistTokenSettingDeltas } from "../../entities/snapshots/WhitelistTokenSetting";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 export function init(block: ethereum.Block): void {
   let beanstalk = loadBeanstalk();
@@ -53,7 +57,14 @@ export function preUnpause(block: ethereum.Block): void {
     unripe.totalChoppedBdvReceived = UNRIPE_TOKENS_INITIAL_VALUES[i].totalChoppedBdvReceived;
     takeUnripeTokenSnapshots(unripe, block);
     unripe.save();
+
+    clearUnripeTokenDeltas(unripe, block);
   }
 
-  // Zero out all deltas for all snapshots
+  // Zero out all deltas for all snapshots. Unripe cleared above
+  clearFieldDeltas(field, block);
+  clearMarketDeltas(podMarketplace, block);
+  const silo = loadSilo(v().protocolAddress);
+  clearSiloDeltas(silo, block);
+  // No need to clear silo assets/whitelisted tokens, since all of these are technically new to the silo
 }

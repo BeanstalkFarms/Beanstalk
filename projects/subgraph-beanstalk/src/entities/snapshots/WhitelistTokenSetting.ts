@@ -2,6 +2,7 @@ import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { WhitelistTokenSetting, WhitelistTokenHourlySnapshot, WhitelistTokenDailySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: WhitelistTokenSetting, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
@@ -139,6 +140,33 @@ export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: Whitel
 
   whitelistTokenSetting.lastHourlySnapshotSeason = currentSeason;
   whitelistTokenSetting.lastDailySnapshotDay = day;
+}
+
+export function clearWhitelistTokenSettingDeltas(whitelistTokenSetting: WhitelistTokenSetting, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = WhitelistTokenHourlySnapshot.load(whitelistTokenSetting.id.toHexString() + "-" + currentSeason.toString());
+  const daily = WhitelistTokenDailySnapshot.load(whitelistTokenSetting.id.toHexString() + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaStalkEarnedPerSeason = ZERO_BI;
+    hourly.deltaStalkIssuedPerBdv = ZERO_BI;
+    hourly.deltaMilestoneSeason = 0;
+    hourly.deltaGaugePoints = ZERO_BI;
+    if (hourly.deltaOptimalPercentDepositedBdv != null) {
+      hourly.deltaOptimalPercentDepositedBdv = ZERO_BI;
+    }
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaStalkEarnedPerSeason = ZERO_BI;
+    daily.deltaStalkIssuedPerBdv = ZERO_BI;
+    daily.deltaMilestoneSeason = 0;
+    daily.deltaGaugePoints = ZERO_BI;
+    if (daily.deltaOptimalPercentDepositedBdv != null) {
+      daily.deltaOptimalPercentDepositedBdv = ZERO_BI;
+    }
+    daily.save();
+  }
 }
 
 // Set bdv on hourly and daily. Snapshots must have already been created.
