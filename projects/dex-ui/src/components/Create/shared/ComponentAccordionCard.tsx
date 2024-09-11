@@ -3,12 +3,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 
+import { ChainExplorerIcon, Github } from "src/components/Icons";
 import { Box, Flex } from "src/components/Layout";
+import { AccordionSelectCard } from "src/components/Selectable";
 import { Text } from "src/components/Typography";
 import { theme } from "src/utils/ui/theme";
 
-import { Etherscan, Github } from "../../Icons";
-import { AccordionSelectCard } from "../../Selectable";
 import { WellComponentInfo } from "../useWhitelistedWellComponents";
 
 export type WellComponentAccordionCardProps = {
@@ -97,9 +97,9 @@ export const WellComponentAccordionCard = ({
           </Flex>
           <Flex $justifyContent="space-between" $alignItems="flex-end">
             <Flex $direction="row" $gap={0.5}>
-              {links.etherscan && (
-                <MayLink url={links.etherscan}>
-                  <Etherscan width={20} height={20} color={theme.colors.lightGray} />
+              {links.explorer && (
+                <MayLink url={links.explorer}>
+                  <ChainExplorerIcon width={20} height={20} color={theme.colors.lightGray} />
                 </MayLink>
               )}
               {links.github && (

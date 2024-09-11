@@ -62,6 +62,7 @@ const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellA
   }
 };
 
+// BS3TODO: Fix me when subgraph endpoints are updated
 const loadFromGraph = async (_chainId: ChainId): Promise<WellAddresses> => {
   const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined);
   const results = await data();
