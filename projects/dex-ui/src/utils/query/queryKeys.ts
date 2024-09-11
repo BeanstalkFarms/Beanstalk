@@ -19,6 +19,7 @@ export const queryKeys = {
   wellImplementations: (addresses: string[]) => ["wells", "implementations", addresses],
 
   // well Function
+  wellFunctions: (addresses: string[]) => ["wellFunctions", addresses],
   wellFunctionValid: (address: string, data: string) => ["wellFunction", "isValid", address, data],
   wellFunctionNames: (addresses: string[] | undefined) => ["wellFunctions", "names", addresses],
 

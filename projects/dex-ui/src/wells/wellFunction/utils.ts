@@ -1,15 +1,28 @@
+import { useMemo } from "react";
+
 import { Well, WellFunction } from "@beanstalk/sdk-wells";
-import { CONSTANT_PRODUCT_2_ADDRESS, CONSTANT_PRODUCT_2_V2_ADDRESS } from "src/utils/addresses";
 
-const cp2Addresses = [CONSTANT_PRODUCT_2_V2_ADDRESS, CONSTANT_PRODUCT_2_ADDRESS];
+import useSdk from "src/utils/sdk/useSdk";
 
-export const isConstantProduct2 = (param: Well | WellFunction | undefined | null) => {
-  if (!param) return false;
+export const useIsConstantProduct2 = (param: Well | WellFunction | undefined | null) => {
+  const sdk = useSdk();
 
-  if (param instanceof Well) {
-    const wf = param.wellFunction?.address;
-    return Boolean(wf && cp2Addresses.includes(wf.toLowerCase()));
-  }
+  return useMemo(() => {
+    const addresses = sdk.wells.addresses;
+    const cp2V1 = addresses.CONSTANT_PRODUCT_2_V1;
+    const cp2V2 = addresses.CONSTANT_PRODUCT_2_V2;
+    const cp2 = [cp2V1, cp2V2];
 
-  return cp2Addresses.includes(param.address.toLowerCase());
+    if (!param) return false;
+
+    const wf = param instanceof Well ? param.wellFunction : param;
+
+    return (
+      wf &&
+      cp2.some((_address) => {
+        const address = _address.get(sdk.chainId) || "";
+        return address.toLowerCase() === wf.address.toLowerCase();
+      })
+    );
+  }, [param, sdk.chainId, sdk.wells.addresses]);
 };

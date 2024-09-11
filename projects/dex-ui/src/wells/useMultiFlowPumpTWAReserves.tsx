@@ -10,7 +10,7 @@ import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { config } from "src/utils/wagmi/config";
 
-import { getIsMultiPumpWell } from "./pump/utils";
+import { useIsMultiFlowPump } from "./pump/utils";
 import { useBeanstalkSiloWhitelist } from "./useBeanstalkSiloWhitelist";
 import { useWells } from "./useWells";
 
@@ -18,13 +18,14 @@ export const useMultiFlowPumpTWAReserves = () => {
   const { data: wells } = useWells();
   const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
   const sdk = useSdk();
+  const { getIsMultiFlow } = useIsMultiFlowPump();
 
   const query = useChainScopedQuery({
     queryKey: ["wells", "multiFlowPumpTWAReserves"],
 
     queryFn: async () => {
       const whitelistedWells = (wells || []).filter(
-        (well) => getIsMultiPumpWell(well).isMultiFlow && getIsWhitelisted(well)
+        (well) => getIsMultiFlow(well).isMultiFlow && getIsWhitelisted(well)
       );
 
       const [{ timestamp: seasonTimestamp }, ...wellOracleSnapshots] = await Promise.all([
