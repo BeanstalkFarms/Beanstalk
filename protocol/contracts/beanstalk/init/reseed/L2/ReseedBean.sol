@@ -120,7 +120,12 @@ contract ReseedBean {
     bytes32 internal constant FERTILIZER_PROXY_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
 
+<<<<<<< reseed-mint-l2-bcm-beans
+    // BCM (TODO: Replace with actual L2 address)
+    address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+=======
     address beanWstethLP;
+>>>>>>> dr-t-remediations
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
@@ -132,6 +137,9 @@ contract ReseedBean {
         uint256 beanSupply,
         uint256 internalUrBeanSupply,
         uint256 internalUnripeLpSupply,
+        uint256 wethBeans,
+        uint256 wstEthBeans,
+        uint256 stableBeans,
         ExternalUnripeHolders[] calldata urBean,
         ExternalUnripeHolders[] calldata urBeanLP,
         address fertImplementation
@@ -145,6 +153,10 @@ contract ReseedBean {
         BeanstalkERC20 unripeLP = deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
+<<<<<<< reseed-mint-l2-bcm-beans
+        // mint beans to the bcm according to the amounts in the l1 wells.
+        mintBeansToBCM(bean, wethBeans, wstEthBeans, stableBeans);
+=======
         // set unripe to underlying tokens.
         setUnripeToUnderlyingTokens(address(unripeBean), address(bean), address(unripeLP));
     }
@@ -159,6 +171,7 @@ contract ReseedBean {
         s.sys.silo.unripeSettings[unripeBean].underlyingToken = bean;
         // set the underlying token of the unripe lp to BeanWstethLP.
         s.sys.silo.unripeSettings[unripeLP].underlyingToken = beanWstethLP;
+>>>>>>> dr-t-remediations
     }
 
     function deployFertilizerProxy(address fertImplementation) internal {
@@ -174,6 +187,18 @@ contract ReseedBean {
         s.sys.tokens.fertilizer = address(fertilizerProxy);
         console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
         console.log("Fertilizer Proxy implementation: ", fertImplementation);
+    }
+
+    function mintBeansToBCM(
+        BeanstalkERC20 bean,
+        uint256 wethBeans,
+        uint256 wstEthBeans,
+        uint256 stableBeans
+    ) internal {
+        // total beans is the sum of the bean sided liquidity in the wells.
+        // Needed for bcm to add liquidity to the L2 wells after the migration.
+        uint256 totalBeans = wethBeans + wstEthBeans + stableBeans;
+        bean.mint(L2_BCM, totalBeans);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
