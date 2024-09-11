@@ -12,8 +12,8 @@ async function reseed3(account, L2Beanstalk, mock) {
     podListingsPath = "./reseed/data/mocks/r3/pod-listings-mock.json";
     podOrdersPath = "./reseed/data/mocks/r3/pod-orders-mock.json";
   } else {
-    podListingsPath = "./reseed/data/r2/pod-listings.json";
-    podOrdersPath = "./reseed/data/r2/pod-orders.json";
+    podListingsPath = "./reseed/data/r3/pod-listings.json";
+    podOrdersPath = "./reseed/data/r3/pod-orders.json";
   }
   const podListings = JSON.parse(await fs.readFileSync(podListingsPath));
   const podOrders = JSON.parse(await fs.readFileSync(podOrdersPath));

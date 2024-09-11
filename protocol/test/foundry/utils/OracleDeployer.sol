@@ -65,7 +65,7 @@ contract OracleDeployer is Utils {
     address constant WBTC_USDC_03_POOL = address(0x99ac8cA7087fA4A2A1FB6357269965A2014ABc35);
     address constant AAVE_ETH_03_POOL = address(0x5aB53EE1d50eeF2C1DD3d5402789cd27bB52c1bB);
     address constant WSTETH_ETH_001_POOL = address(0x109830a1AAaD605BbF02a9dFA7B0B92EC2FB7dAa);
-    address constant WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+    // address constant WBTC = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     address constant AAVE = address(0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9);
 
     // new uniswap pools should be appended here.
