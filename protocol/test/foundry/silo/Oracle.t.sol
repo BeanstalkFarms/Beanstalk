@@ -439,9 +439,6 @@ contract ExternalOracleTester {
         bool isMillion = false;
 
         if (data.length > 32) {
-            // timeout and isMillion supplied
-            // (timeout, isMillion) = abi.decode(data, (uint256, bool));
-
             assembly {
                 timeout := mload(add(data, 32))
                 isMillion := byte(0, mload(add(data, 64)))
