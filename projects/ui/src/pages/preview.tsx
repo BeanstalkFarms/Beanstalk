@@ -152,6 +152,22 @@ const MigrationPreview: FC<{}> = () => {
           16
         );
         migrationData.silo.totalPerToken = totalPerToken;
+        migrationData.field.totalPods = TokenValue.fromBlockchain(
+          migrationData.field.totalPods,
+          BEAN.decimals
+        );
+        migrationData.barn.totalFert = TokenValue.fromBlockchain(
+          migrationData.barn.totalFert,
+          0
+        );
+        migrationData.barn.totalRinsable = TokenValue.fromBlockchain(
+          migrationData.barn.totalRinsable,
+          BEAN.decimals
+        );
+        migrationData.barn.totalUnrinsable = TokenValue.fromBlockchain(
+          migrationData.barn.totalUnrinsable,
+          BEAN.decimals
+        );
         migrationData.farm.forEach((token: any, index: number, farm: any[]) => {
           const _token = Array.from(
             sdk.tokens.getMap(),
@@ -206,7 +222,7 @@ const MigrationPreview: FC<{}> = () => {
         />
         <Card sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'center' }}>
-            <Stack gap={1.5} maxWidth={540} flexGrow={1}>
+            <Stack gap={1.5} maxWidth={640} flexGrow={1}>
               <Row
                 justifyContent="center"
                 alignItems="center"
@@ -361,213 +377,236 @@ const MigrationPreview: FC<{}> = () => {
                   fontSize={16}
                 >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 2,
-                    marginTop: 2,
-                  }}
-                >
-                  <Box>
-                    <Box
-                      sx={{ display: 'flex', flexDirection: 'row', gap: 0.25 }}
-                    >
-                      <Typography fontSize={18}>Earned Beans</Typography>
-                      <Tooltip
-                        title={'Earned Beans will be automatically Planted.'}
-                        placement={'right'}
-                      >
-                        <HelpOutlineIcon
-                          sx={{
-                            color: 'text.secondary',
-                            display: 'inline',
-                            mb: 0.5,
-                            fontSize: '11px',
-                          }}
-                        />
-                      </Tooltip>
-                    </Box>
-                    <Typography fontSize={20} variant="h4">
-                      {data.silo.earnedBeans.toHuman('short')}
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <Box>
-                    <Typography fontSize={18}>Current Stalk</Typography>
-                    <Typography fontSize={20} variant="h4">
-                      {data.silo.currentStalk.toHuman('short')}
-                    </Typography>
-                  </Box>
-                  <ArrowForwardIcon sx={{ marginTop: 0.75 }} />
-                  <Box>
-                    <Typography fontSize={18}>Stalk After Mow</Typography>
-                    <Typography
-                      fontSize={20}
-                      variant="h4"
-                      color={
-                        data.silo.stalkAfterMow.gt(data.silo.currentStalk)
-                          ? 'primary'
-                          : undefined
-                      }
-                    >
-                      {data.silo.stalkAfterMow.toHuman('short')}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 2,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography fontSize={18} fontWeight={700}>
-                      Deposited Tokens
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: 2,
-                        marginTop: 1,
-                      }}
-                    >
-                      {data.silo.totalPerToken &&
-                        data.silo.totalPerToken.map(
-                          (tokenData: any, index: number, array: any[]) => (
-                            <>
-                              <Box>
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    gap: 0.75,
-                                  }}
-                                >
-                                  <TokenIcon token={tokenData.token} />
-                                  <Typography fontSize={18}>
-                                    {tokenData.token.displayName}
-                                  </Typography>
-                                </Box>
-                                <Typography fontSize={20} variant={'h4'}>
-                                  {tokenData.amount.toHuman('short')}
-                                </Typography>
-                              </Box>
-                              {index !== array.length - 1 && <Divider />}
-                            </>
-                          )
-                        )}
-                    </Box>
-                  </Box>
-                </Box>
-                {data.silo.deposits.length > 0 && (
-                  <Accordion
-                    variant="elevation"
-                    key={'siloMigration'}
+              {data.silo.earnedBeans.gt(0) ||
+              data.silo.currentStalk.gt(0) ||
+              data.silo.stalkAfterMow.gt(0) ||
+              (data.silo.totalPerToken &&
+                data.silo.totalPerToken.length > 0) ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
                     sx={{
-                      '::before': { display: 'none' },
-                      border: `1px solid ${BeanstalkPalette.blue}`,
-                      borderRadius: 1,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                      marginTop: 2,
                     }}
                   >
-                    <AccordionSummary
-                      expandIcon={
-                        <ExpandMoreIcon
-                          sx={{
-                            color: 'primary.main',
-                            fontSize: IconSize.xs,
-                          }}
-                        />
-                      }
-                    >
-                      View Deposits
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
-                      <TableContainer component={Card}>
-                        <Table size="small" aria-label="simple table">
-                          <TableHead>
-                            <TableRow
-                              sx={{
-                                th: {
-                                  borderBottom: 0.5,
-                                  borderColor: BeanstalkPalette.blue,
-                                },
-                              }}
-                            >
-                              <TableCell>Token</TableCell>
-                              <TableCell align="right">Amount</TableCell>
-                              <TableCell align="right">Recorded BDV</TableCell>
-                              <TableCell align="right">Current Stalk</TableCell>
-                              <TableCell align="right">
-                                Stalk After Mow
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {data.silo.deposits.map(
-                              (deposit: any, i: number) => {
-                                const stalkIncrease = deposit.stalkAfterMow.gt(
-                                  deposit.currentStalk
-                                );
-                                return (
-                                  <TableRow
-                                    key={`deposit-${i}`}
+                    <Box>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: 0.25,
+                        }}
+                      >
+                        <Typography fontSize={18}>Earned Beans</Typography>
+                        <Tooltip
+                          title={'Earned Beans will be automatically Planted.'}
+                          placement={'right'}
+                        >
+                          <HelpOutlineIcon
+                            sx={{
+                              color: 'text.secondary',
+                              display: 'inline',
+                              mb: 0.5,
+                              fontSize: '11px',
+                            }}
+                          />
+                        </Tooltip>
+                      </Box>
+                      <Typography fontSize={20} variant="h4">
+                        {data.silo.earnedBeans.toHuman('short')}
+                      </Typography>
+                    </Box>
+                    <Divider />
+                    <Box>
+                      <Typography fontSize={18}>Current Stalk</Typography>
+                      <Typography fontSize={20} variant="h4">
+                        {data.silo.currentStalk.toHuman('short')}
+                      </Typography>
+                    </Box>
+                    <ArrowForwardIcon sx={{ marginTop: 0.75 }} />
+                    <Box>
+                      <Typography fontSize={18}>Stalk After Mow</Typography>
+                      <Typography
+                        fontSize={20}
+                        variant="h4"
+                        color={
+                          data.silo.stalkAfterMow.gt(data.silo.currentStalk)
+                            ? 'primary'
+                            : undefined
+                        }
+                      >
+                        {data.silo.stalkAfterMow.toHuman('short')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Typography fontSize={18} fontWeight={700}>
+                        Deposited Tokens
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: 2,
+                          marginTop: 1,
+                        }}
+                      >
+                        {data.silo.totalPerToken &&
+                          data.silo.totalPerToken.map(
+                            (tokenData: any, index: number, array: any[]) => (
+                              <>
+                                <Box>
+                                  <Box
                                     sx={{
-                                      'td, th': {
-                                        borderBottom: 0.5,
-                                        borderColor: BeanstalkPalette.blue,
-                                      },
-                                      '&:last-child td, &:last-child th': {
-                                        border: 0,
-                                      },
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      gap: 0.75,
                                     }}
                                   >
-                                    <TableCell
-                                      component="th"
-                                      scope="row"
+                                    <TokenIcon token={tokenData.token} />
+                                    <Typography fontSize={18}>
+                                      {tokenData.token.displayName}
+                                    </Typography>
+                                  </Box>
+                                  <Typography fontSize={20} variant={'h4'}>
+                                    {tokenData.amount.toHuman('short')}
+                                  </Typography>
+                                </Box>
+                                {index !== array.length - 1 && <Divider />}
+                              </>
+                            )
+                          )}
+                      </Box>
+                    </Box>
+                  </Box>
+                  {data.silo.deposits.length > 0 && (
+                    <Accordion
+                      variant="elevation"
+                      key={'siloMigration'}
+                      sx={{
+                        '::before': { display: 'none' },
+                        border: `1px solid ${BeanstalkPalette.blue}`,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={
+                          <ExpandMoreIcon
+                            sx={{
+                              color: 'primary.main',
+                              fontSize: IconSize.xs,
+                            }}
+                          />
+                        }
+                      >
+                        View Deposits
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
+                        <TableContainer component={Card}>
+                          <Table size="small" aria-label="simple table">
+                            <TableHead>
+                              <TableRow
+                                sx={{
+                                  th: {
+                                    borderBottom: 0.5,
+                                    borderColor: BeanstalkPalette.blue,
+                                  },
+                                }}
+                              >
+                                <TableCell>Token</TableCell>
+                                <TableCell align="right">Amount</TableCell>
+                                <TableCell align="right">
+                                  Recorded BDV
+                                </TableCell>
+                                <TableCell align="right">
+                                  Current Stalk
+                                </TableCell>
+                                <TableCell align="right">
+                                  Stalk After Mow
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {data.silo.deposits.map(
+                                (deposit: any, i: number) => {
+                                  const stalkIncrease =
+                                    deposit.stalkAfterMow.gt(
+                                      deposit.currentStalk
+                                    );
+                                  return (
+                                    <TableRow
+                                      key={`deposit-${i}`}
                                       sx={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: 0.75,
+                                        'td, th': {
+                                          borderBottom: 0.5,
+                                          borderColor: BeanstalkPalette.blue,
+                                        },
+                                        '&:last-child td, &:last-child th': {
+                                          border: 0,
+                                        },
                                       }}
                                     >
-                                      <TokenIcon token={deposit.token} />
-                                      <div>{deposit.token.displayName}</div>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                      {deposit.amount.toHuman('short')}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                      {deposit.recordedBdv.toHuman('short')}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                      {deposit.currentStalk.toHuman('short')}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                      <Typography
-                                        color={
-                                          stalkIncrease ? 'primary' : undefined
-                                        }
+                                      <TableCell
+                                        component="th"
+                                        scope="row"
+                                        sx={{
+                                          display: 'flex',
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          gap: 0.75,
+                                        }}
                                       >
-                                        {deposit.stalkAfterMow.toHuman('short')}
-                                      </Typography>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              }
-                            )}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-              </Box>
+                                        <TokenIcon token={deposit.token} />
+                                        <div>{deposit.token.displayName}</div>
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        {deposit.amount.toHuman('short')}
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        {deposit.recordedBdv.toHuman('short')}
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        {deposit.currentStalk.toHuman('short')}
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        <Typography
+                                          color={
+                                            stalkIncrease
+                                              ? 'primary'
+                                              : undefined
+                                          }
+                                        >
+                                          {deposit.stalkAfterMow.toHuman(
+                                            'short'
+                                          )}
+                                        </Typography>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                }
+                              )}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ marginTop: 2 }}>
+                  This account has no assets in the Silo.
+                </Box>
+              )}
             </Card>
             <Card sx={{ p: 2 }}>
               <Box
@@ -584,98 +623,102 @@ const MigrationPreview: FC<{}> = () => {
                   fontSize={16}
                 >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 2,
-                    marginTop: 2,
-                  }}
-                >
-                  <Box>
-                    <Typography fontSize={18}>Total Pods</Typography>
-                    <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.field.totalPods,
-                        BEAN.decimals
-                      ).toHuman('short')}
-                    </Typography>
-                  </Box>
-                </Box>
-                {data.field.plots.length > 0 && (
-                  <Accordion
-                    variant="elevation"
-                    key={'fieldMigration'}
+              {data.field.totalPods.gt(0) ||
+              (data.field.plots && data.field.plots.length > 0) ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
                     sx={{
-                      '::before': { display: 'none' },
-                      border: `1px solid ${BeanstalkPalette.blue}`,
-                      borderRadius: 1,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                      marginTop: 2,
                     }}
                   >
-                    <AccordionSummary
-                      expandIcon={
-                        <ExpandMoreIcon
-                          sx={{
-                            color: 'primary.main',
-                            fontSize: IconSize.xs,
-                          }}
-                        />
-                      }
+                    <Box>
+                      <Typography fontSize={18}>Total Pods</Typography>
+                      <Typography fontSize={20} variant="h4">
+                        {data.field.totalPods.toHuman('short')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  {data.field.plots.length > 0 && (
+                    <Accordion
+                      variant="elevation"
+                      key={'fieldMigration'}
+                      sx={{
+                        '::before': { display: 'none' },
+                        border: `1px solid ${BeanstalkPalette.blue}`,
+                        borderRadius: 1,
+                      }}
                     >
-                      View Plots
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
-                      <TableContainer component={Card}>
-                        <Table size="small" aria-label="simple table">
-                          <TableHead>
-                            <TableRow
-                              sx={{
-                                th: {
-                                  borderBottom: 0.5,
-                                  borderColor: BeanstalkPalette.blue,
-                                },
-                              }}
-                            >
-                              <TableCell>Index</TableCell>
-                              <TableCell align="right">Amount</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {data.field.plots.map((plot: any, i: number) => (
+                      <AccordionSummary
+                        expandIcon={
+                          <ExpandMoreIcon
+                            sx={{
+                              color: 'primary.main',
+                              fontSize: IconSize.xs,
+                            }}
+                          />
+                        }
+                      >
+                        View Plots
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
+                        <TableContainer component={Card}>
+                          <Table size="small" aria-label="simple table">
+                            <TableHead>
                               <TableRow
-                                key={`plot-${i}`}
                                 sx={{
-                                  'td, th': {
+                                  th: {
                                     borderBottom: 0.5,
                                     borderColor: BeanstalkPalette.blue,
                                   },
-                                  '&:last-child td, &:last-child th': {
-                                    border: 0,
-                                  },
                                 }}
                               >
-                                <TableCell component="th" scope="row">
-                                  {TokenValue.fromBlockchain(
-                                    plot.index,
-                                    6
-                                  ).toHuman('short')}
-                                </TableCell>
-                                <TableCell align="right">
-                                  {TokenValue.fromBlockchain(
-                                    plot.amount,
-                                    6
-                                  ).toHuman('short')}
-                                </TableCell>
+                                <TableCell>Index</TableCell>
+                                <TableCell align="right">Amount</TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-              </Box>
+                            </TableHead>
+                            <TableBody>
+                              {data.field.plots.map((plot: any, i: number) => (
+                                <TableRow
+                                  key={`plot-${i}`}
+                                  sx={{
+                                    'td, th': {
+                                      borderBottom: 0.5,
+                                      borderColor: BeanstalkPalette.blue,
+                                    },
+                                    '&:last-child td, &:last-child th': {
+                                      border: 0,
+                                    },
+                                  }}
+                                >
+                                  <TableCell component="th" scope="row">
+                                    {TokenValue.fromBlockchain(
+                                      plot.index,
+                                      6
+                                    ).toHuman('short')}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {TokenValue.fromBlockchain(
+                                      plot.amount,
+                                      6
+                                    ).toHuman('short')}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ marginTop: 2 }}>
+                  This account has no assets in the Field.
+                </Box>
+              )}
             </Card>
             <Card sx={{ p: 2 }}>
               <Box
@@ -692,151 +735,157 @@ const MigrationPreview: FC<{}> = () => {
                   fontSize={16}
                 >{`(as of ${new Date(data.meta.timestamp * 1000).toLocaleString()})`}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 2,
-                    marginTop: 2,
-                  }}
-                >
-                  <Box>
-                    <Typography fontSize={18}>Total Fertilizer</Typography>
-                    <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.barn.totalFert,
-                        0
-                      ).toHuman('short')}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Box
-                      sx={{ display: 'flex', flexDirection: 'row', gap: 0.25 }}
-                    >
-                      <Typography fontSize={18}>Rinsable Sprouts</Typography>
-                      <Tooltip
-                        title={'Rinsable Sprouts will be sent to Farm Balance.'}
-                        placement={'right'}
-                      >
-                        <HelpOutlineIcon
-                          sx={{
-                            color: 'text.secondary',
-                            display: 'inline',
-                            mb: 0.5,
-                            fontSize: '11px',
-                          }}
-                        />
-                      </Tooltip>
-                    </Box>
-                    <Typography fontSize={18}></Typography>
-                    <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.barn.totalRinsable,
-                        BEAN.decimals
-                      ).toHuman('short')}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography fontSize={18}>Unrinsable Sprouts</Typography>
-                    <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.barn.totalUnrinsable,
-                        BEAN.decimals
-                      ).toHuman('short')}
-                    </Typography>
-                  </Box>
-                </Box>
-                {data.barn.fert.length > 0 && (
-                  <Accordion
-                    variant="elevation"
-                    key={'barnMigration'}
+              {data.barn.totalFert.gt(0) ||
+              data.barn.totalRinsable.gt(0) ||
+              data.barn.totalUnrinsable.gt(0) ||
+              (data.barn.fert && data.barn.fert.length > 0) ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
                     sx={{
-                      '::before': { display: 'none' },
-                      border: `1px solid ${BeanstalkPalette.blue}`,
-                      borderRadius: 1,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                      marginTop: 2,
                     }}
                   >
-                    <AccordionSummary
-                      expandIcon={
-                        <ExpandMoreIcon
-                          sx={{
-                            color: 'primary.main',
-                            fontSize: IconSize.xs,
-                          }}
-                        />
-                      }
+                    <Box>
+                      <Typography fontSize={18}>Total Fertilizer</Typography>
+                      <Typography fontSize={20} variant="h4">
+                        {data.barn.totalFert.toHuman('short')}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: 0.25,
+                        }}
+                      >
+                        <Typography fontSize={18}>Rinsable Sprouts</Typography>
+                        <Tooltip
+                          title={
+                            'Rinsable Sprouts will be sent to Farm Balance.'
+                          }
+                          placement={'right'}
+                        >
+                          <HelpOutlineIcon
+                            sx={{
+                              color: 'text.secondary',
+                              display: 'inline',
+                              mb: 0.5,
+                              fontSize: '11px',
+                            }}
+                          />
+                        </Tooltip>
+                      </Box>
+                      <Typography fontSize={18}></Typography>
+                      <Typography fontSize={20} variant="h4">
+                        {data.barn.totalRinsable.toHuman('short')}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography fontSize={18}>Unrinsable Sprouts</Typography>
+                      <Typography fontSize={20} variant="h4">
+                        {data.barn.totalUnrinsable.toHuman('short')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  {data.barn.fert.length > 0 && (
+                    <Accordion
+                      variant="elevation"
+                      key={'barnMigration'}
+                      sx={{
+                        '::before': { display: 'none' },
+                        border: `1px solid ${BeanstalkPalette.blue}`,
+                        borderRadius: 1,
+                      }}
                     >
-                      View Fertilizer
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
-                      <TableContainer component={Card}>
-                        <Table size="small" aria-label="simple table">
-                          <TableHead>
-                            <TableRow
-                              sx={{
-                                th: {
-                                  borderBottom: 0.5,
-                                  borderColor: BeanstalkPalette.blue,
-                                },
-                              }}
-                            >
-                              <TableCell>ID</TableCell>
-                              <TableCell align="right">Amount</TableCell>
-                              <TableCell align="right">
-                                Rinsable Sprouts
-                              </TableCell>
-                              <TableCell align="right">
-                                Unrinsable Sprouts
-                              </TableCell>
-                              <TableCell align="right">Humidity</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {data.barn.fert.map((fert: any, i: number) => (
+                      <AccordionSummary
+                        expandIcon={
+                          <ExpandMoreIcon
+                            sx={{
+                              color: 'primary.main',
+                              fontSize: IconSize.xs,
+                            }}
+                          />
+                        }
+                      >
+                        View Fertilizer
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ py: 0, px: 2, pb: 2 }}>
+                        <TableContainer component={Card}>
+                          <Table size="small" aria-label="simple table">
+                            <TableHead>
                               <TableRow
-                                key={`fert-${i}`}
                                 sx={{
-                                  'td, th': {
+                                  th: {
                                     borderBottom: 0.5,
                                     borderColor: BeanstalkPalette.blue,
                                   },
-                                  '&:last-child td, &:last-child th': {
-                                    border: 0,
-                                  },
                                 }}
                               >
-                                <TableCell component="th" scope="row">
-                                  {Number(fert.fertilizerId)}
+                                <TableCell>ID</TableCell>
+                                <TableCell align="right">Amount</TableCell>
+                                <TableCell align="right">
+                                  Rinsable Sprouts
                                 </TableCell>
                                 <TableCell align="right">
-                                  {TokenValue.fromBlockchain(
-                                    fert.amount,
-                                    0
-                                  ).toHuman('short')}
+                                  Unrinsable Sprouts
                                 </TableCell>
-                                <TableCell align="right">
-                                  {TokenValue.fromBlockchain(
-                                    fert.rinsableSprouts,
-                                    6
-                                  ).toHuman('short')}
-                                </TableCell>
-                                <TableCell align="right">
-                                  {TokenValue.fromBlockchain(
-                                    fert.unrinsableSprouts,
-                                    6
-                                  ).toHuman('short')}
-                                </TableCell>
-                                <TableCell align="right">{`${fert.humidity * 100}%`}</TableCell>
+                                <TableCell align="right">Humidity</TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-              </Box>
+                            </TableHead>
+                            <TableBody>
+                              {data.barn.fert.map((fert: any, i: number) => (
+                                <TableRow
+                                  key={`fert-${i}`}
+                                  sx={{
+                                    'td, th': {
+                                      borderBottom: 0.5,
+                                      borderColor: BeanstalkPalette.blue,
+                                    },
+                                    '&:last-child td, &:last-child th': {
+                                      border: 0,
+                                    },
+                                  }}
+                                >
+                                  <TableCell component="th" scope="row">
+                                    {Number(fert.fertilizerId)}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {TokenValue.fromBlockchain(
+                                      fert.amount,
+                                      0
+                                    ).toHuman('short')}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {TokenValue.fromBlockchain(
+                                      fert.rinsableSprouts,
+                                      6
+                                    ).toHuman('short')}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {TokenValue.fromBlockchain(
+                                      fert.unrinsableSprouts,
+                                      6
+                                    ).toHuman('short')}
+                                  </TableCell>
+                                  <TableCell align="right">{`${fert.humidity * 100}%`}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ marginTop: 2 }}>
+                  This account has no assets in the Barn.
+                </Box>
+              )}
             </Card>
             <Card sx={{ p: 2 }}>
               <Box
