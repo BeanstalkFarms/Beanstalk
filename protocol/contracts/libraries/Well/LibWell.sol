@@ -51,17 +51,40 @@ library LibWell {
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
+        bool isMillion;
+        address bean = s.sys.tokens.bean;
+
+        // fetch the bean index and check whether the ratios precision needs to be increased.
         for (uint i; i < tokens.length; ++i) {
-            if (s.sys.tokens.bean == address(tokens[i])) {
+            if (address(tokens[i]) == bean) {
                 beanIndex = i;
-                ratios[i] = 1e6;
+            } else if (IERC20Decimals(address(tokens[i])).decimals() < 8) {
+                // if the nonBean token in the well has a low decimal precision,
+                // set `isMillion` such that the ratio is set to be on a million basis.
+                isMillion = true;
+            }
+        }
+
+        // get the target ratios.
+        for (uint i; i < tokens.length; ++i) {
+            if (address(tokens[i]) == bean) {
+                if (isMillion) {
+                    ratios[i] = 1e12;
+                } else {
+                    ratios[i] = 1e6;
+                }
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                if (isMillion) {
+                    ratios[i] = LibUsdOracle.getMillionUsdPrice(address(tokens[i]), lookback);
+                } else {
+                    ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                }
                 if (ratios[i] == 0) {
                     success = false;
                 }
             }
         }
+
         require(beanIndex != type(uint256).max, "Bean not in Well.");
     }
 
@@ -163,12 +186,25 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        // LibUsdOracle returns the price with 1e6 precision.
+        // twaReserves has the same decimal precision as the token.
+        // The return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
+        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the
+        // precision by the token decimals.
+        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18.
+
+        uint8 tokenDecimals = IERC20Decimals(token).decimals();
+        return
+            LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(
+                10 ** tokenDecimals
+            );
     }
 
     /**
      * @dev Sets the price in {AppStorage.usdTokenPrice} given a set of ratios.
-     * It assumes that the ratios correspond to the Constant Product Well indexes.
+     * Assumes
+     * 1) Ratios correspond to the Constant Product Well indexes.
+     * 2) the Well is a 2 token Well.
      */
     function setUsdTokenPriceForWell(address well, uint256[] memory ratios) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -180,7 +216,12 @@ library LibWell {
             s.sys.usdTokenPrice[well] = 0;
         } else {
             (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-            s.sys.usdTokenPrice[well] = ratios[j];
+            uint256 i = j == 0 ? 1 : 0;
+            // usdTokenPrice is scaled down to USD/TOKEN, in the cases where
+            // Beanstalk calculated the MILLION_USD/TOKEN price instead of USD/TOKEN price.
+            // Beanstalk accepts the loss of precision here, as `usdTokenPrice[well]` is used for
+            // calculating the liquidity and excessive price.
+            s.sys.usdTokenPrice[well] = (ratios[j] * 1e6) / ratios[i];
         }
     }
 
@@ -272,6 +313,12 @@ library LibWell {
         }
     }
 
+    /**
+     * @notice Calculates the token price in terms of Bean by increasing
+     * the bean reserves of the given well by 1 and recaclulating the new reserves,
+     * while maintaining the same liquidity levels.
+     * This essentially simulates a swap of 1 Bean for the non bean token and quotes the price.
+     */
     function calculateTokenBeanPriceFromReserves(
         address well,
         uint256 beanIndex,
@@ -293,12 +340,9 @@ library LibWell {
             lpTokenSupply,
             wellFunction.data
         );
-        uint256 delta;
-        if (nonBeanIndex == 1) {
-            delta = oldReserve - newReserve;
-        } else {
-            delta = newReserve - oldReserve;
-        }
+        // Measure the delta of the non bean reserve.
+        // Due to the invariant of the well function, old reserve > new reserve.
+        uint256 delta = oldReserve - newReserve;
         price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
     }
 

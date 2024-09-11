@@ -8,6 +8,10 @@ import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAg
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -63,7 +67,7 @@ contract OracleTest is TestHelper {
             WBTC,
             0
         );
-        assertEq(usdTokenPriceFromExternal, 0.00002e6, "usdTokenPriceFromExternal");
+        assertEq(usdTokenPriceFromExternal, 0.00002e8, "usdTokenPriceFromExternal"); // e8 because wbtc has 8 decimals
     }
 
     /**
@@ -208,6 +212,21 @@ contract OracleTest is TestHelper {
         assertEq(oracleImplementation.target, WBTC_USD_CHAINLINK_PRICE_AGGREGATOR);
     }
 
+    function testZeroAddressOracleImplementationTarget() public {
+        vm.prank(BEANSTALK);
+        // exersizes address 0 and bytes 0x00, although there's no current way to whitelist something with these values.
+        vm.expectRevert("Whitelist: Invalid Target Address");
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                address(0),
+                IMockFBeanstalk.getUsdTokenPriceFromExternal.selector,
+                bytes1(0x00),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+    }
+
     function testGetTokenPrice() public {
         // change encode type to 0x02 for wbtc:
         vm.prank(BEANSTALK);
@@ -260,6 +279,71 @@ contract OracleTest is TestHelper {
         assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
     }
 
+    function testForkMainnetWBTCOracle() public {
+        forkMainnetAndUpgradeAllFacets(20641000);
+
+        setupUniswapWBTCOracleImplementation();
+
+        uint256 priceWBTCmillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        // 1e(8+6)/1684341342 = 59370.3885943091
+        assertEq(priceWBTCmillion, 1684454192); // $1,000,000 buys 1684341342 at BTC price of 6148186669379 per USDC and USDC 99993272.
+
+        // 1e8/1684 = 59382.4228028504
+        uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
+        assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272.
+    }
+
+    function testForkMainnetAAVEOracle() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapAaveOracleImplementation();
+
+        uint256 priceAAVE = OracleFacet(BEANSTALK).getUsdTokenPrice(AAVE);
+        assertEq(priceAAVE, 7478751606516229);
+        // chainlink price: 2541090000 (2541 usd per weth at 6 decimals)
+        // uniswap price: 52620 (0.052620 WETH per AAVE at 6 decimals)
+        // these multiplied together: 133712155800000 (12 decimal precision)
+        // but inverse is needed, so 1e12/133712155800000 = 0.007478751607
+        // and 0.007478751607 at 6 decimal precision is 7479
+    }
+
+    function testForkMainnetWSTETHOracle() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapWstethOracleImplementation();
+
+        uint256 priceWSTETH = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
+        assertEq(priceWSTETH, 334243752683826);
+    }
+
+    function testForkMainnetWBTCDeltaB() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapWBTCOracleImplementation();
+
+        console.log("deploy well");
+
+        // deploy a wbtc:bean well
+        deployWBTCWellOnFork(true, true);
+        console.log("deployed well");
+
+        address WBTC_WHALE = 0x5Ee5bf7ae06D1Be5997A1A72006FE6C607eC6DE8;
+        // deal didn't seem to work with wbtc, so instead, transfer from a wbtc whale
+
+        vm.prank(WBTC_WHALE);
+        IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
+        deal(address(BEAN), BEAN_WBTC_WELL, 118063754426, true); // approx 2 btc worth of beans
+        IWell(BEAN_WBTC_WELL).sync(users[0], 0);
+
+        // mock init state so that the bean token is defined
+        IMockFBeanstalk(BEANSTALK).mockInitState();
+
+        int256 deltaB = IMockFBeanstalk(BEANSTALK).poolCurrentDeltaBMock(BEAN_WBTC_WELL);
+        assertEq(deltaB, 0);
+    }
+
+    //////////// Helper Functions ////////////
+
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
@@ -268,7 +352,7 @@ contract OracleTest is TestHelper {
                 WBTC_USDC_03_POOL,
                 bytes4(0),
                 bytes1(0x02),
-                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
             )
         );
 
@@ -278,6 +362,59 @@ contract OracleTest is TestHelper {
             USDC,
             IMockFBeanstalk.Implementation(
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+    }
+
+    // AAVE:WETH is the highest volume non-memcoin/non-stablecoin pair on uniswap as of the time of writing
+    function setupUniswapAaveOracleImplementation() internal {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            AAVE,
+            IMockFBeanstalk.Implementation(
+                AAVE_ETH_03_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+
+        // also uniswap relies on having a chainlink oracle for the token that's trading against the uniswap target token
+        // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WETH,
+            IMockFBeanstalk.Implementation(
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
+                bytes4(0),
+                bytes1(0x01),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+    }
+
+    function setupUniswapWstethOracleImplementation() internal {
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WSTETH,
+            IMockFBeanstalk.Implementation(
+                WSTETH_ETH_001_POOL,
+                bytes4(0),
+                bytes1(0x02),
+                abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
+            )
+        );
+
+        // also uniswap relies on having a chainlink oracle for the token that's trading against the uniswap target token
+        // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WETH,
+            IMockFBeanstalk.Implementation(
+                ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
                 bytes4(0),
                 bytes1(0x01),
                 abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)

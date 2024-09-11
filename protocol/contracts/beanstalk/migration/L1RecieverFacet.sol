@@ -4,7 +4,6 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {Field} from "contracts/beanstalk/storage/Account.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
@@ -20,6 +19,9 @@ import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
+import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
+import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @author Brean
@@ -45,8 +47,15 @@ contract L1RecieverFacet is ReentrancyGuard {
         0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
+    bytes32 internal constant POD_ORDER_MERKLE_ROOT =
+        0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
+
+    struct L1PodOrder {
+        Order.PodOrder podOrder;
+        uint256 beanAmount;
+    }
 
     /**
      * @notice emitted when L1 Beans are migrated to L2.
@@ -95,6 +104,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint128 lastBpf
     );
 
+    event L1OrdersMigrated(address indexed owner, address indexed receiver, L1PodOrder[] orders);
+
     /**
      * @notice emitted when an account approves a reciever to recieve their assets.
      */
@@ -104,7 +115,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev Claims the Grown Stalk for user.
      */
     modifier mowAll() {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i; i < tokens.length; i++) {
             LibSilo._mow(LibTractor._user(), tokens[i]);
         }
@@ -288,6 +299,37 @@ contract L1RecieverFacet is ReentrancyGuard {
         emit L1FertilizerMigrated(owner, reciever, fertIds, amounts, lastBpf);
     }
 
+    /**
+     * @notice Recreates the PodOrders for contract addresses.
+     * @dev Listings are not migrated from contracts (as no bean is
+     * locked, and that the listed plot may have been already filled),
+     * and will need to be recreated.
+     */
+    function issuePodOrders(
+        address owner,
+        L1PodOrder[] memory orders,
+        bytes32[] calldata proof
+    ) external nonReentrant {
+        MigrationData storage account = s.sys.l2Migration.account[owner];
+        address reciever = LibTractor._user();
+        require(
+            account.reciever != address(0) && account.reciever == reciever,
+            "L2Migration: Invalid Reciever"
+        );
+        require(!account.migratedPodOrders, "L2Migration: Orders have been migrated");
+
+        // verify order validity:
+        require(verifyOrderProof(owner, orders, proof), "L2Migration: Invalid Order");
+
+        // add migrated orders to account.
+        addPodOrders(reciever, orders);
+
+        // set migrated order to true.
+        account.migratedPodOrders = true;
+
+        emit L1OrdersMigrated(owner, reciever, orders);
+    }
+
     //////////// MERKLE PROOF VERIFICATION ////////////
 
     /**
@@ -362,6 +404,17 @@ contract L1RecieverFacet is ReentrancyGuard {
         return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
     }
 
+    function verifyOrderProof(
+        address owner,
+        L1PodOrder[] memory orders,
+        bytes32[] calldata proof
+    ) public pure returns (bool) {
+        bytes32 leaf = keccak256(
+            bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
+        );
+        return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
+    }
+
     //////////// MIGRATION HELPERS ////////////
 
     /**
@@ -392,14 +445,15 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice adds the migrated deposits to the account.
+     * @notice adds the migrated plots to the account.
+     * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
         address reciever,
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
-        uint256 activeField = s.sys.activeField;
+        uint256 activeField = 0;
         Field storage field = s.accts[reciever].fields[activeField];
         for (uint i; i < index.length; i++) {
             field.plots[index[i]] = pods[i];
@@ -410,6 +464,9 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated internal balances to the account.
+     * Since global internal balances set in ReseedGlobal also reflect smart contract balances,
+     * we do not need to update global internal balances here,
+     * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
         address reciever,
@@ -417,7 +474,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts
     ) internal {
         for (uint i; i < tokens.length; i++) {
-            LibBalance.increaseInternalBalance(reciever, IERC20(tokens[i]), amounts[i]);
+            IERC20 token = IERC20(tokens[i]);
+            s.accts[reciever].internalTokenBalance[token] += amounts[i];
+            emit LibBalance.InternalBalanceChanged(reciever, token, SafeCast.toInt256(amounts[i]));
         }
     }
 
@@ -437,6 +496,35 @@ contract L1RecieverFacet is ReentrancyGuard {
                 amounts[i],
                 lastBpf
             );
+        }
+    }
+
+    /**
+     * @notice adds the migrated pod orders to the account.
+     * @dev `orderer` is updated to the reciever.
+     */
+    function addPodOrders(address reciever, L1PodOrder[] memory orders) internal {
+        for (uint i; i < orders.length; i++) {
+            // change orders[i].podOrder.orderer to the reciever.
+            orders[i].podOrder.orderer = reciever;
+
+            // calculate new order id from new receiver, and set mapping.
+            bytes32 id = _getOrderId(orders[i].podOrder);
+            s.sys.podOrders[id] = orders[i].beanAmount;
+
+            emit Order.PodOrderCreated(
+                orders[i].podOrder.orderer,
+                id,
+                orders[i].beanAmount,
+                orders[i].podOrder.fieldId,
+                orders[i].podOrder.pricePerPod,
+                orders[i].podOrder.maxPlaceInLine,
+                orders[i].podOrder.minFillAmount
+            );
+
+            // note: s.sys.orderLockedBeans is not updated, unlike in `_createPodOrder`,
+            // as the reseed has already included these beans in orderLockedBeans.
+            // (see {ReseedGlobal.setSilo()})
         }
     }
 
@@ -482,5 +570,21 @@ contract L1RecieverFacet is ReentrancyGuard {
         unchecked {
             l2Address = address(uint160(l1Address) + OFFSET);
         }
+    }
+
+    /*
+     * @notice internal orderId
+     */
+    function _getOrderId(Order.PodOrder memory podOrder) internal pure returns (bytes32 id) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    podOrder.orderer,
+                    podOrder.fieldId,
+                    podOrder.pricePerPod,
+                    podOrder.maxPlaceInLine,
+                    podOrder.minFillAmount
+                )
+            );
     }
 }

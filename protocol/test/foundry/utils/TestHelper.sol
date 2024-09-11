@@ -210,14 +210,37 @@ contract TestHelper is
     ) internal returns (uint256 lpOut) {
         (address nonBeanToken, ) = bs.getNonBeanTokenAndIndexFromWell(well);
 
-        // mint and sync.
-        MockToken(BEAN).mint(well, beanAmount);
-        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        if (runningOnFork()) {
+            console.log("dealing tokens on fork");
+            deal(address(BEAN), well, beanAmount, true);
+            deal(address(nonBeanToken), well, nonBeanTokenAmount, true);
+        } else {
+            // mint and sync.
+            MockToken(BEAN).mint(well, beanAmount);
+            MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        }
 
+        uint256 beanWellBalance = IERC20(BEAN).balanceOf(well);
+        console.log("bean well balance", beanWellBalance);
+        uint256 wbtcWellBalance = IERC20(WBTC).balanceOf(well);
+        console.log("wbtc well balance", wbtcWellBalance);
+
+        console.log("syncing");
         lpOut = IWell(well).sync(user, 0);
-
+        console.log("syncing again");
         // sync again to update reserves.
         IWell(well).sync(user, 0);
+    }
+
+    function runningOnFork() public view returns (bool) {
+        bool isForked;
+
+        try vm.activeFork() returns (uint256) {
+            isForked = true;
+        } catch {
+            isForked = false;
+        }
+        return isForked;
     }
 
     /**

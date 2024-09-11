@@ -40,7 +40,7 @@ library LibGauge {
 
     // 24 * 30 * 6
     // uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320; //state
-    uint256 internal constant STALK_BDV_PRECISION = 1e4;
+    uint256 internal constant STALK_BDV_PRECISION = 1e10;
 
     /**
      * @notice Emitted when the AverageGrownStalkPerBdvPerSeason Updates.

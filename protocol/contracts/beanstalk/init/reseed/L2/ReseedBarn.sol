@@ -53,9 +53,6 @@ contract ReseedBarn {
             Fertilizers memory f = fertilizerIds[i];
             // set s.firstFid, s.nextFid, s.lastFid
             uint128 fid = f.fertilizerId;
-            if (i == 0) s.sys.fert.fertFirst = fid;
-            if (i != 0) s.sys.fert.nextFid[fertilizerIds[i - 1].fertilizerId] = fid;
-            if (i == fertilizerIds.length - 1) s.sys.fert.fertLast = fid;
 
             // reissue fertilizer to each holder.
             for (uint j; j < f.accountData.length; j++) {
