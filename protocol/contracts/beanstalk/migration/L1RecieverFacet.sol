@@ -47,7 +47,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
         0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
-    bytes32 internal constant PODLISTING_ORDER_MERKLE_ROOT =
+    bytes32 internal constant POD_ORDER_MERKLE_ROOT =
         0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
@@ -115,7 +115,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev Claims the Grown Stalk for user.
      */
     modifier mowAll() {
-        address[] memory tokens = LibWhitelistedTokens.getWhitelistedTokens();
+        address[] memory tokens = LibWhitelistedTokens.getSiloTokens();
         for (uint256 i; i < tokens.length; i++) {
             LibSilo._mow(LibTractor._user(), tokens[i]);
         }
@@ -412,7 +412,7 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
-        return MerkleProof.verify(proof, PODLISTING_ORDER_MERKLE_ROOT, leaf);
+        return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
     }
 
     //////////// MIGRATION HELPERS ////////////

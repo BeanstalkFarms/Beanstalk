@@ -9,6 +9,9 @@ import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the Oracles.
@@ -281,8 +284,14 @@ contract OracleTest is TestHelper {
 
         setupUniswapWBTCOracleImplementation();
 
+
+        uint256 priceWBTCmillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        // 1e(8+6)/1684341342 = 59370.3885943091
+        assertEq(priceWBTCmillion, 1684454192); // $1,000,000 buys 1684341342 at BTC price of 6148186669379 per USDC and USDC 99993272.
+
+        // 1e8/1684 = 59382.4228028504
         uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
-        assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272, but 16 is 6 decimal precision
+        assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272.
     }
 
     function testForkMainnetAAVEOracle() public {
@@ -307,6 +316,34 @@ contract OracleTest is TestHelper {
         uint256 priceWSTETH = OracleFacet(BEANSTALK).getUsdTokenPrice(WSTETH);
         assertEq(priceWSTETH, 334243752683826);
     }
+
+    function testForkMainnetWBTCDeltaB() public {
+        forkMainnetAndUpgradeAllFacets(20666000);
+
+        setupUniswapWBTCOracleImplementation();
+
+        console.log("deploy well");
+
+        // deploy a wbtc:bean well
+        deployWBTCWellOnFork(true, true);
+        console.log("deployed well");
+
+        address WBTC_WHALE = 0x5Ee5bf7ae06D1Be5997A1A72006FE6C607eC6DE8;
+        // deal didn't seem to work with wbtc, so instead, transfer from a wbtc whale
+
+        vm.prank(WBTC_WHALE);
+        IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
+        deal(address(BEAN), BEAN_WBTC_WELL, 118063754426, true); // approx 2 btc worth of beans
+        IWell(BEAN_WBTC_WELL).sync(users[0], 0);
+
+        // mock init state so that the bean token is defined
+        IMockFBeanstalk(BEANSTALK).mockInitState();
+
+        int256 deltaB = IMockFBeanstalk(BEANSTALK).poolCurrentDeltaBMock(BEAN_WBTC_WELL);
+        assertEq(deltaB, 0);
+    }
+
+    //////////// Helper Functions ////////////
 
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(BEANSTALK);
