@@ -120,12 +120,9 @@ contract ReseedBean {
     bytes32 internal constant FERTILIZER_PROXY_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
 
-<<<<<<< reseed-mint-l2-bcm-beans
     // BCM (TODO: Replace with actual L2 address)
     address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
-=======
     address beanWstethLP;
->>>>>>> dr-t-remediations
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
@@ -153,10 +150,8 @@ contract ReseedBean {
         BeanstalkERC20 unripeLP = deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
-<<<<<<< reseed-mint-l2-bcm-beans
         // mint beans to the bcm according to the amounts in the l1 wells.
         mintBeansToBCM(bean, wethBeans, wstEthBeans, stableBeans);
-=======
         // set unripe to underlying tokens.
         setUnripeToUnderlyingTokens(address(unripeBean), address(bean), address(unripeLP));
     }
@@ -171,7 +166,6 @@ contract ReseedBean {
         s.sys.silo.unripeSettings[unripeBean].underlyingToken = bean;
         // set the underlying token of the unripe lp to BeanWstethLP.
         s.sys.silo.unripeSettings[unripeLP].underlyingToken = beanWstethLP;
->>>>>>> dr-t-remediations
     }
 
     function deployFertilizerProxy(address fertImplementation) internal {
