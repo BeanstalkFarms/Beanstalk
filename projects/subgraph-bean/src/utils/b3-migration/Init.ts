@@ -1,10 +1,10 @@
 import { ethereum } from "@graphprotocol/graph-ts";
-import { BEAN_INITIAL_VALUES } from "../../../cache-builder/results/BeanInit_arb";
+import { BEAN_INITIAL_VALUES } from "../../../cache-builder/results/B3Migration_arb";
 import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "../../entities/Bean";
 import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../constants/Version";
 
-export function handleInitBeanEntity(block: ethereum.Block): void {
+export function handleMigration(block: ethereum.Block): void {
   const token = getProtocolToken(v(), block.number);
   const bean = loadBean(token);
 

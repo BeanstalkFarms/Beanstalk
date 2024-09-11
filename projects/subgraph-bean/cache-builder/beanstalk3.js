@@ -17,7 +17,7 @@ const subgraph = new GraphQLClient(url);
     }
   `);
 
-  const outFile = `${__dirname}/results/BeanInit_arb.ts`;
+  const outFile = `${__dirname}/results/B3Migration_arb.ts`;
   await fs.promises.writeFile(
     outFile,
     `/* This is a generated file */
