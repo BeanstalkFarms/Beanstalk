@@ -40,6 +40,7 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
+import TokenIcon from '~/components/Common/TokenIcon';
 
 const MigrationPreview: FC<{}> = () => {
   const connectedAccount = useAccount();
@@ -88,10 +89,83 @@ const MigrationPreview: FC<{}> = () => {
         `https://api.bean.money/migration?account=${_account}`
       ).then((response) => response.json());
       if (migrationData) {
+        migrationData.silo.deposits.forEach(
+          (deposit: any, index: number, deposits: any[]) => {
+            const _token = Array.from(
+              sdk.tokens.getMap(),
+              ([key, value]) => value
+            ).find(
+              (token) =>
+                token.displayName.toLowerCase() === deposit.token.toLowerCase()
+            );
+            const _amount = TokenValue.fromBlockchain(
+              deposit.amount,
+              _token?.decimals || 6
+            );
+            const _recordedBdv = TokenValue.fromBlockchain(
+              deposit.recordedBdv,
+              BEAN.decimals
+            );
+            const _currentStalk = TokenValue.fromBlockchain(
+              deposit.currentStalk,
+              16
+            );
+            const _stalkAfterMow = TokenValue.fromBlockchain(
+              deposit.stalkAfterMow,
+              16
+            );
+            const _deposit = {
+              token: _token,
+              amount: _amount,
+              recordedBdv: _recordedBdv,
+              currentStalk: _currentStalk,
+              stalkAfterMow: _stalkAfterMow,
+            };
+            deposits[index] = _deposit;
+          }
+        );
+        migrationData.farm.forEach((token: any, index: number, farm: any[]) => {
+          const _token = Array.from(
+            sdk.tokens.getMap(),
+            ([key, value]) => value
+          ).find(
+            (tokenMap) =>
+              tokenMap.displayName.toLowerCase() === token.token.toLowerCase()
+          );
+          const _currentInternal = TokenValue.fromBlockchain(
+            token.currentInternal,
+            _token?.decimals || 6
+          );
+          const _withdrawn = TokenValue.fromBlockchain(
+            token.withdrawn,
+            _token?.decimals || 6
+          );
+          const _unpicked = TokenValue.fromBlockchain(
+            token.unpicked,
+            _token?.decimals || 6
+          );
+          const _rinsable = TokenValue.fromBlockchain(
+            token.rinsable,
+            _token?.decimals || 6
+          );
+          const _total = TokenValue.fromBlockchain(
+            token.total,
+            _token?.decimals || 6
+          );
+          const farmData = {
+            token: _token,
+            currentInternal: _currentInternal,
+            withdrawn: _withdrawn,
+            unpicked: _unpicked,
+            rinsable: _rinsable,
+            total: _total,
+          };
+          farm[index] = farmData;
+        });
         setData(migrationData);
       }
     } catch (e) {
-      console.log('Migration Preview - Error Fetching Data');
+      console.error('Migration Preview - Error Fetching Data');
     }
   }
 
@@ -188,38 +262,54 @@ const MigrationPreview: FC<{}> = () => {
                 }}
               >
                 <div>
-                  BIP-50 proposes to <b>migrate Beanstalk state to Arbitrum.</b> In
-                  doing so, <b>all Deposits, Plots, Fertilizer and
-                  Beanstalk-related Farm Balances</b> (Beans, BEANWETH, BEAN3CRV
-                  (migrated to BEANUSDC), BEANwstETH, urBEAN and urBEANwstETH)
-                  {' '}<b>are migrated.</b>
+                  BIP-50 proposes to <b>migrate Beanstalk state to Arbitrum.</b>{' '}
+                  In doing so,{' '}
+                  <b>
+                    all Deposits, Plots, Fertilizer and Beanstalk-related Farm
+                    Balances
+                  </b>{' '}
+                  (Beans, BEANWETH, BEAN3CRV (migrated to BEANUSDC), BEANwstETH,
+                  urBEAN and urBEANwstETH) <b>are migrated.</b>
                 </div>
                 <div>
                   <b>As part of the migration process:</b>
                   <ul>
-                    <li><b>Grown Stalk is Mown;</b></li>
-                    <li><b>Earned Beans are Planted;</b> and</li>
                     <li>
-                      <b>Rinsable Sprouts, Unpicked Unripe assets and unclaimed
-                      Silo V2 Withdrawals</b> are put into the respective <b>accounts'
-                      Farm Balances.</b>
+                      <b>Grown Stalk is Mown;</b>
+                    </li>
+                    <li>
+                      <b>Earned Beans are Planted;</b> and
+                    </li>
+                    <li>
+                      <b>
+                        Rinsable Sprouts, Unpicked Unripe assets and unclaimed
+                        Silo V2 Withdrawals
+                      </b>{' '}
+                      are put into the respective{' '}
+                      <b>accounts' Farm Balances.</b>
                     </li>
                   </ul>
                 </div>
                 <div>
                   The following balances show the state of the selected Farmer
-                  as a result of the migration, <b>assuming the migration was
-                  executed based on balances at block {data.meta.block} (i.e.,
-                  roughly
-                  {` ${new Date(data.meta.timestamp * 1000).toLocaleString()}`}
-                  ). </b>You should cross reference this with your balances in the
-                  rest of the Beanstalk UI (assuming your balances haven't
-                  changed since block {data.meta.block}).
+                  as a result of the migration,{' '}
+                  <b>
+                    assuming the migration was executed based on balances at
+                    block {data.meta.block} (i.e., roughly
+                    {` ${new Date(data.meta.timestamp * 1000).toLocaleString()}`}
+                    ).{' '}
+                  </b>
+                  You should cross reference this with your balances in the rest
+                  of the Beanstalk UI (assuming your balances haven't changed
+                  since block {data.meta.block}).
                 </div>
                 <div>
-                  Note that <b>Circulating Balances and smart contract account
-                  balances are not migrated automatically.</b> See{' '}
-                  <a href="https://discord.gg/beanstalk">Discord</a>
+                  Note that{' '}
+                  <b>
+                    Circulating Balances and smart contract account balances are
+                    not migrated automatically.
+                  </b>{' '}
+                  See <a href="https://discord.gg/beanstalk">Discord</a>
                   &nbsp;and{' '}
                   <a href="https://github.com/BeanstalkFarms/Beanstalk/pull/909">
                     BIP-50
@@ -345,24 +435,8 @@ const MigrationPreview: FC<{}> = () => {
                           <TableBody>
                             {data.silo.deposits.map(
                               (deposit: any, i: number) => {
-                                const _currStalk = TokenValue.fromBlockchain(
-                                  deposit.currentStalk,
-                                  16
-                                );
-                                const _stalkAfterMow =
-                                  TokenValue.fromBlockchain(
-                                    deposit.stalkAfterMow,
-                                    16
-                                  );
-                                const stalkIncrease =
-                                  _stalkAfterMow.gt(_currStalk);
-                                const token = Array.from(
-                                  sdk.tokens.getMap(),
-                                  ([key, value]) => value
-                                ).find(
-                                  (token) =>
-                                    token.displayName.toLowerCase() ===
-                                    deposit.token.toLowerCase()
+                                const stalkIncrease = deposit.stalkAfterMow.gt(
+                                  deposit.currentStalk
                                 );
                                 return (
                                   <TableRow
@@ -377,23 +451,27 @@ const MigrationPreview: FC<{}> = () => {
                                       },
                                     }}
                                   >
-                                    <TableCell component="th" scope="row">
-                                      {deposit.token}
+                                    <TableCell
+                                      component="th"
+                                      scope="row"
+                                      sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 0.75,
+                                      }}
+                                    >
+                                      <TokenIcon token={deposit.token} />
+                                      <div>{deposit.token.displayName}</div>
                                     </TableCell>
                                     <TableCell align="right">
-                                      {TokenValue.fromBlockchain(
-                                        deposit.amount,
-                                        token?.decimals || 6
-                                      ).toHuman('short')}
+                                      {deposit.amount.toHuman('short')}
                                     </TableCell>
                                     <TableCell align="right">
-                                      {TokenValue.fromBlockchain(
-                                        deposit.recordedBdv,
-                                        token?.decimals || 6
-                                      ).toHuman('short')}
+                                      {deposit.recordedBdv.toHuman('short')}
                                     </TableCell>
                                     <TableCell align="right">
-                                      {_currStalk.toHuman('short')}
+                                      {deposit.currentStalk.toHuman('short')}
                                     </TableCell>
                                     <TableCell align="right">
                                       <Typography
@@ -401,7 +479,7 @@ const MigrationPreview: FC<{}> = () => {
                                           stalkIncrease ? 'primary' : undefined
                                         }
                                       >
-                                        {_stalkAfterMow.toHuman('short')}
+                                        {deposit.stalkAfterMow.toHuman('short')}
                                       </Typography>
                                     </TableCell>
                                   </TableRow>
@@ -722,16 +800,7 @@ const MigrationPreview: FC<{}> = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {data.farm.map((token: any, i: number) => {
-                          const _token = Array.from(
-                            sdk.tokens.getMap(),
-                            ([key, value]) => value
-                          ).find(
-                            (tokenData) =>
-                              tokenData.displayName.toLowerCase() ===
-                              token.token.toLowerCase()
-                          );
-
+                        {data.farm.map((farmData: any, i: number) => {
                           return (
                             <TableRow
                               key={`fert-${i}`}
@@ -745,38 +814,33 @@ const MigrationPreview: FC<{}> = () => {
                                 },
                               }}
                             >
-                              <TableCell component="th" scope="row">
-                                {token.token}
+                              <TableCell
+                                component="th"
+                                scope="row"
+                                sx={{
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 0.75,
+                                }}
+                              >
+                                <TokenIcon token={farmData.token} />
+                                <div>{farmData.token.displayName}</div>
                               </TableCell>
                               <TableCell align="right">
-                                {TokenValue.fromBlockchain(
-                                  token.currentInternal,
-                                  _token?.decimals || 6
-                                ).toHuman('short')}
+                                {farmData.currentInternal.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {TokenValue.fromBlockchain(
-                                  token.withdrawn,
-                                  _token?.decimals || 6
-                                ).toHuman('short')}
+                                {farmData.withdrawn.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {TokenValue.fromBlockchain(
-                                  token.unpicked,
-                                  _token?.decimals || 6
-                                ).toHuman('short')}
+                                {farmData.unpicked.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {TokenValue.fromBlockchain(
-                                  token.rinsable,
-                                  _token?.decimals || 6
-                                ).toHuman('short')}
+                                {farmData.rinsable.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {TokenValue.fromBlockchain(
-                                  token.total,
-                                  _token?.decimals || 6
-                                ).toHuman('short')}
+                                {farmData.total.toHuman('short')}
                               </TableCell>
                             </TableRow>
                           );
