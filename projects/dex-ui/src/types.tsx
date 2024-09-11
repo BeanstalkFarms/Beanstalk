@@ -22,8 +22,10 @@ export type BasinAPIResponse = {
 // Primitives
 export type MayArray<T> = T | T[];
 
-// Objects
+// Hash Maps
 export type AddressMap<T> = Record<string, T>;
+
+export type TokenSymbolMap<T> = Record<string, T>;
 
 /// JSON objects
 export type TokenMetadataMap = AddressMap<{
@@ -35,4 +37,3 @@ export type TokenMetadataMap = AddressMap<{
   displayName?: string;
   displayDecimals?: number;
 }>;
-

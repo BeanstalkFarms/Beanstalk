@@ -37,7 +37,7 @@ export const tokenResult = (
   // ASSUMPTION: the number of decimals are the same across all chains.
   const token = (_token as Token).decimals
     ? (_token as Token)
-    : (_token as ChainConstant<Token>)[SupportedChainId.MAINNET];
+    : (_token as ChainConstant<Token>)[SupportedChainId.ARBITRUM_MAINNET];
   return (result: any) =>
     toTokenUnitsBN(bigNumberResult(result), token.decimals);
 };

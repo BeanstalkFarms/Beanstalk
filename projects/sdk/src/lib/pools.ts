@@ -2,6 +2,8 @@ import Pool from "src/classes/Pool/Pool";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { Address, ChainId, ChainResolver } from "@beanstalk/sdk-core";
+import { pool } from "src/constants/generated/projects/sdk/src/constants/abi/Curve";
 
 export class Pools {
   static sdk: BeanstalkSDK;
@@ -12,20 +14,21 @@ export class Pools {
   public readonly BEAN_USDC_WELL: BasinWell;
   public readonly BEAN_USDT_WELL: BasinWell;
 
-  public readonly pools: Set<Pool>;
   public readonly whitelistedPools: Map<string, Pool>;
+  public readonly pools: Set<Pool>;
 
   private lpAddressMap = new Map<string, Pool>();
   private wellAddressMap = new Map<string, BasinWell>();
 
   constructor(sdk: BeanstalkSDK) {
     Pools.sdk = sdk;
-    this.pools = new Set<Pool>();
-    this.lpAddressMap = new Map();
     this.whitelistedPools = new Map();
+    this.lpAddressMap = new Map();
 
-    ////// Basin Well
+    const l1Pools = new Set<Pool>();
+    const l2Pools = new Set<Pool>();
 
+    ////// Basin Wells
     this.BEAN_ETH_WELL = new BasinWell(
       sdk,
       sdk.addresses.BEANWETH_WELL.get(sdk.chainId),
@@ -38,8 +41,8 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_ETH_WELL);
-    this.lpAddressMap.set(this.BEAN_ETH_WELL.address, this.BEAN_ETH_WELL);
+    l1Pools.add(this.BEAN_ETH_WELL);
+    l2Pools.add(this.BEAN_ETH_WELL);
 
     this.BEAN_WSTETH_WELL = new BasinWell(
       sdk,
@@ -53,8 +56,8 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_WSTETH_WELL);
-    this.lpAddressMap.set(sdk.tokens.BEAN_WSTETH_WELL_LP.address, this.BEAN_WSTETH_WELL);
+    l1Pools.add(this.BEAN_WSTETH_WELL);
+    l2Pools.add(this.BEAN_WSTETH_WELL);
 
     this.BEAN_WEETH_WELL = new BasinWell(
       sdk,
@@ -68,8 +71,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_WEETH_WELL);
-    this.lpAddressMap.set(sdk.tokens.BEAN_WEETH_WELL_LP.address, this.BEAN_WEETH_WELL);
+    l2Pools.add(this.BEAN_WEETH_WELL);
 
     this.BEAN_WBTC_WELL = new BasinWell(
       sdk,
@@ -83,8 +85,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_WBTC_WELL);
-    this.lpAddressMap.set(sdk.tokens.BEAN_WBTC_WELL_LP.address, this.BEAN_WBTC_WELL);
+    l2Pools.add(this.BEAN_WBTC_WELL);
 
     this.BEAN_USDC_WELL = new BasinWell(
       sdk,
@@ -98,8 +99,7 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_USDC_WELL);
-    this.lpAddressMap.set(sdk.tokens.BEAN_USDC_WELL_LP.address, this.BEAN_USDC_WELL);
+    l2Pools.add(this.BEAN_USDC_WELL);
 
     this.BEAN_USDT_WELL = new BasinWell(
       sdk,
@@ -113,11 +113,14 @@ export class Pools {
         color: "#ed9f9c"
       }
     );
-    this.pools.add(this.BEAN_USDT_WELL);
-    this.lpAddressMap.set(sdk.tokens.BEAN_USDT_WELL_LP.address, this.BEAN_USDT_WELL);
+    l2Pools.add(this.BEAN_USDT_WELL);
 
-    this.lpAddressMap.forEach((pool) => {
-      if (Pools.sdk.tokens.siloWhitelist.has(pool.lpToken)) {
+    this.pools = ChainResolver.isL1Chain(sdk.chainId) ? l1Pools : l2Pools;
+
+    this.pools.forEach((pool) => {
+      this.lpAddressMap.set(pool.address, pool);
+
+      if (sdk.tokens.isWhitelisted(pool.lpToken)) {
         this.whitelistedPools.set(pool.address, pool);
       }
 

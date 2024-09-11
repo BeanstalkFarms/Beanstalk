@@ -18,14 +18,14 @@ export type ChainInfoMap = {
  * FIXME: this was forked from Uniswap's UI but we only use `explorer` here.
  */
 export const CHAIN_INFO: ChainInfoMap = {
-  [SupportedChainId.MAINNET]: {
+  [SupportedChainId.ETH_MAINNET]: {
     networkType: NetworkType.L1,
     explorer: 'https://etherscan.io',
     label: 'Ethereum',
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   },
-  [SupportedChainId.LOCALHOST_MAINNET]: {
+  [SupportedChainId.LOCALHOST_ETH]: {
     networkType: NetworkType.L1,
     explorer: 'https://etherscan.io',
     label: 'Localhost',
@@ -48,7 +48,7 @@ export const CHAIN_INFO: ChainInfoMap = {
     statusPage: 'https://status.arbitrum.io/',
     bridge: 'https://bridge.arbitrum.io',
   },
-  [SupportedChainId.ARBITRUM]: {
+  [SupportedChainId.ARBITRUM_MAINNET]: {
     networkType: NetworkType.L2,
     explorer: 'https://arbiscan.io',
     label: 'Arbitrum',

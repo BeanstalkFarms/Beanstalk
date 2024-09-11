@@ -3,18 +3,42 @@ import { Provider } from "@beanstalk/sdk/dist/types/lib/BeanstalkSDK";
 import { ethers } from "ethers";
 
 const RPC_URL = "http://127.0.0.1:8545";
+const LOCALHOST_ETH_RPC_URL = "http://127.0.0.1:9545";
 
 const network = {
   name: "local",
   chainId: ChainId.LOCALHOST,
   _defaultProvider: () => new ethers.providers.JsonRpcProvider(RPC_URL)
 };
-// const RPC_URL = "https://anvil1.bean.money:443"
+
+const ethMainnetNetwork = {
+  name: "local-eth-mainnet",
+  chainId: ChainId.LOCALHOST_ETH,
+  _defaultProvider: () => new ethers.providers.JsonRpcProvider(LOCALHOST_ETH_RPC_URL)
+};
+
 export const provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL, network);
 export const { signer, account } = TestUtils.setupConnection(provider);
 
+export const localhostEthProvider = new ethers.providers.JsonRpcProvider(
+  LOCALHOST_ETH_RPC_URL,
+  ethMainnetNetwork
+);
+export const { signer: localhostEthSigner, account: localhostEthAccount } =
+  TestUtils.setupConnection(localhostEthProvider);
+
 export const sdk = new BeanstalkSDK({
   signer,
+  rpcUrl: RPC_URL,
+  provider: provider,
+  source: DataSource.LEDGER,
+  DEBUG: true
+});
+
+export const ethSdk = new BeanstalkSDK({
+  signer: localhostEthSigner,
+  rpcUrl: LOCALHOST_ETH_RPC_URL,
+  provider: localhostEthProvider,
   source: DataSource.LEDGER,
   DEBUG: true
 });

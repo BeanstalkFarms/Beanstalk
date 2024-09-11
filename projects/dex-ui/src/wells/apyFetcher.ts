@@ -1,6 +1,8 @@
 import { TokenValue } from "@beanstalk/sdk";
-import { Log } from "src/utils/logger";
+
 import { BeanstalkSiloLatestApyDocument } from "src/generated/graph/graphql";
+import { Log } from "src/utils/logger";
+
 import { fetchFromSubgraphRequest } from "./subgraphFetch";
 
 export type SiloAPYResult = {
@@ -21,9 +23,12 @@ const normalise = (data: string | number) => {
   return TokenValue.ZERO.add(parseFloat(typeof data === "string" ? data : data.toString()));
 };
 
+// BS3TODO: use correct subgraph
 const fetchAPYFromSubgraph = async () => {
   Log.module("SiloAPYData").debug("Loading APY data from Graph");
-  const fetch = await fetchFromSubgraphRequest(BeanstalkSiloLatestApyDocument, undefined, { useBeanstalkSubgraph: true });
+  const fetch = await fetchFromSubgraphRequest(BeanstalkSiloLatestApyDocument, undefined, {
+    useBeanstalkSubgraph: true
+  });
 
   const result = await fetch()
     .then((response) => {

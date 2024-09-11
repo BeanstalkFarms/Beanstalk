@@ -1,7 +1,9 @@
 import * as React from "react";
 import { MouseEventHandler } from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
+
+import { FC } from "src/types";
 
 type ArrowButtonType = {
   onClick: MouseEventHandler<HTMLButtonElement>;

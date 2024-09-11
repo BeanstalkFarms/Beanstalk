@@ -2,12 +2,21 @@
   "settings": {
     "react": {
       "version": "detect"
+    },
+    "import/resolver": {
+      "typescript": {},
+      "node": {
+        "paths": ["src"],
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
     }
   },
   "extends": [
     "plugin:react/recommended",
     "plugin:jsx-a11y/recommended",
     // "plugin:@typescript-eslint/recommended",
+    // "plugin:import/errors",
+    // "plugin:import/warnings",
     "plugin:import/typescript"
   ],
   "parser": "@typescript-eslint/parser",
@@ -18,13 +27,7 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": [
-    "react",
-    "react-hooks",
-    "@typescript-eslint",
-    "import",
-    "jsx-a11y"
-  ],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "import", "jsx-a11y"],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
@@ -39,6 +42,41 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/prop-types": 0,
-    "react/display-name": 0
+    "react/display-name": 0,
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          ["parent", "sibling", "index"],
+          "object",
+          "type"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "@beanstalk/sdk*",
+            "group": "external",
+            "position": "after"
+          },
+          {
+            "pattern": "src/**",
+            "group": "internal"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react", "@beanstalk/sdk*"],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        },
+        "newlines-between": "always"
+      }
+    ]
   }
 }

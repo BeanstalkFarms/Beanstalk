@@ -1,7 +1,9 @@
-import { providers } from "ethers";
 import { useMemo } from "react";
-import type { Account, Chain, Client, Transport } from "viem";
+
+import { providers } from "ethers";
 import { Config, useClient, useConnectorClient } from "wagmi";
+
+import type { Account, Chain, Client, Transport } from "viem";
 
 function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client;
@@ -12,7 +14,9 @@ function clientToProvider(client: Client<Transport, Chain>) {
   };
   if (transport.type === "fallback")
     return new providers.FallbackProvider(
-      (transport.transports as ReturnType<Transport>[]).map(({ value }) => new providers.JsonRpcProvider(value?.url, network))
+      (transport.transports as ReturnType<Transport>[]).map(
+        ({ value }) => new providers.JsonRpcProvider(value?.url, network)
+      )
     );
   return new providers.JsonRpcProvider(transport.url, network);
 }
@@ -36,11 +40,21 @@ export function useEthersProvider({ chainId }: { chainId?: number | undefined } 
   if (!client) {
     throw new Error("No client to create Ethers Adapter");
   }
-  return useMemo(() => clientToProvider(client), [client]);
+
+  return useMemo(
+    () => clientToProvider(client),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [client, chainId]
+  );
 }
 
 /** Hook to convert a Viem Client to an ethers.js Signer. */
 export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
   const { data: client } = useConnectorClient<Config>({ chainId });
-  return useMemo(() => (client ? clientToSigner(client) : undefined), [client]);
+
+  return useMemo(
+    () => (client ? clientToSigner(client) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [client, chainId]
+  );
 }

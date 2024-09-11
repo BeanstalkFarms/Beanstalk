@@ -1,21 +1,20 @@
 import { useMemo } from "react";
+
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
+
 import BeanstalkFarmsLogo from "src/assets/images/beanstalk-farms.png";
-import HalbornLogo from "src/assets/images/halborn-logo.png";
-import {
-  WELL_DOT_SOL_ADDRESS,
-  toAddressMap,
-  MULTI_FLOW_PUMP_V_1PT1_ADDRESS,
-  CONSTANT_PRODUCT_2_V2_ADDRESS
-} from "src/utils/addresses";
 import BrendanTwitterPFP from "src/assets/images/brendan-twitter-pfp.png";
-import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
-import Code4renaLogo from "src/assets/images/code4rena-logo.png";
 import ClockIcon from "src/assets/images/clock-icon.svg";
-import { useWells } from "src/wells/useWells";
-import { useWellImplementations } from "src/wells/useWellImplementations";
-import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
-import { usePumps } from "src/wells/pump/usePumps";
+import Code4renaLogo from "src/assets/images/code4rena-logo.png";
+import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
+import HalbornLogo from "src/assets/images/halborn-logo.png";
 import { AddressMap } from "src/types";
+import { toAddressMap } from "src/utils/addresses";
+import useSdk from "src/utils/sdk/useSdk";
+import { usePumps } from "src/wells/pump/usePumps";
+import { useWellImplementations } from "src/wells/useWellImplementations";
+import { useWells } from "src/wells/useWells";
+import { useWellFunctions } from "src/wells/wellFunction/useWellFunctions";
 
 export enum WellComponentType {
   WellImplementation = "WellImplementation",
@@ -51,7 +50,9 @@ export type WellComponentInfo = {
   };
   info: ComponentInfo[];
   links: {
-    etherscan?: string;
+    explorer?: string;
+    // arbiscan?: string;
+    // etherscan?: string;
     github?: string;
     learnMore?: string;
   };
@@ -82,7 +83,7 @@ const basinAuditInfo = [
 ];
 
 const WellDotSol: WellComponentInfo = {
-  address: WELL_DOT_SOL_ADDRESS,
+  address: "",
   component: {
     name: "Well.sol",
     summary: "A standard Well implementation that prioritizes flexibility and composability.",
@@ -103,14 +104,13 @@ const WellDotSol: WellComponentInfo = {
     { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: `https://etherscan.io/address/${WELL_DOT_SOL_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol",
     learnMore: "https://github.com/BeanstalkFarms/Basin/blob/master/src/Well.sol"
   }
 };
 
 const MultiFlowPump: WellComponentInfo = {
-  address: MULTI_FLOW_PUMP_V_1PT1_ADDRESS,
+  address: "",
   component: {
     name: "Multi Flow",
     fullName: "Multi Flow Pump V1.1",
@@ -136,14 +136,13 @@ const MultiFlowPump: WellComponentInfo = {
     { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: `https://etherscan.io/address/${MULTI_FLOW_PUMP_V_1PT1_ADDRESS}`,
     github: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol",
     learnMore: "https://github.com/BeanstalkFarms/Basin/blob/master/src/pumps/MultiFlowPump.sol"
   }
 };
 
 const ConstantProduct2: WellComponentInfo = {
-  address: CONSTANT_PRODUCT_2_V2_ADDRESS,
+  address: "",
   component: {
     name: "Constant Product 2",
     summary: "A standard x*y = k token pricing function for two tokens.",
@@ -162,7 +161,6 @@ const ConstantProduct2: WellComponentInfo = {
     { label: "Audited by", value: basinAuditInfo }
   ],
   links: {
-    etherscan: `https://etherscan.io/address/${CONSTANT_PRODUCT_2_V2_ADDRESS}`,
     github:
       "https://github.com/BeanstalkFarms/Basin/blob/master/src/functions/ConstantProduct2.sol",
     learnMore:
@@ -176,16 +174,21 @@ type WellComponentMap<T> = {
   wellFunctions: T;
 };
 
-const ComponentWhiteList: WellComponentMap<AddressMap<WellComponentInfo>> = {
-  wellImplementations: {
-    [WellDotSol.address]: WellDotSol
-  },
-  pumps: {
-    [MultiFlowPump.address]: MultiFlowPump
-  },
-  wellFunctions: {
-    [ConstantProduct2.address]: ConstantProduct2
-  }
+const getComponentWithUpdateLinks = (
+  wellComponent: WellComponentInfo,
+  chainId: ChainId,
+  address: string
+) => {
+  const explorer = `https://${ChainResolver.isL2Chain(chainId) ? "arbiscan" : "etherscan"}.io/address/${address}`;
+
+  return {
+    ...wellComponent,
+    address,
+    links: {
+      ...wellComponent.links,
+      explorer
+    }
+  };
 };
 
 export const useWhitelistedWellComponents = () => {
@@ -193,10 +196,42 @@ export const useWhitelistedWellComponents = () => {
   const { data: implementations } = useWellImplementations();
   const wellFunctions = useWellFunctions();
   const pumps = usePumps();
+  const sdk = useSdk();
+
+  const whitelist = useMemo(() => {
+    // set Addresses
+    const wellDotSol = getComponentWithUpdateLinks(
+      WellDotSol,
+      sdk.chainId,
+      sdk.wells.addresses.WELL_DOT_SOL.get(sdk.chainId)
+    );
+    const multiFlow = getComponentWithUpdateLinks(
+      MultiFlowPump,
+      sdk.chainId,
+      sdk.wells.addresses.MULTI_FLOW_PUMP_V1_1.get(sdk.chainId)
+    );
+    const cp2 = getComponentWithUpdateLinks(
+      ConstantProduct2,
+      sdk.chainId,
+      sdk.wells.addresses.CONSTANT_PRODUCT_2_V2.get(sdk.chainId)
+    );
+
+    return {
+      wellImplementations: {
+        [wellDotSol.address]: wellDotSol
+      },
+      pumps: {
+        [multiFlow.address]: multiFlow
+      },
+      wellFunctions: {
+        [cp2.address]: cp2
+      }
+    };
+  }, [sdk]);
 
   return useMemo(() => {
     // make deep copy of ComponentWhiteList
-    const map = JSON.parse(JSON.stringify(ComponentWhiteList)) as WellComponentMap<
+    const map = JSON.parse(JSON.stringify(whitelist)) as WellComponentMap<
       AddressMap<WellComponentInfo>
     >;
 
@@ -237,5 +272,5 @@ export const useWhitelistedWellComponents = () => {
       components,
       lookup: map
     };
-  }, [implementations, pumps, wellFunctions, wells]);
+  }, [whitelist, implementations, pumps, wellFunctions, wells]);
 };

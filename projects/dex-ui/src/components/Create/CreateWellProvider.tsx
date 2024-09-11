@@ -1,14 +1,19 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
-import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+
 import { DeepRequired } from "react-hook-form";
-import useSdk from "src/utils/sdk/useSdk";
-import { Log } from "src/utils/logger";
-import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 import { useAccount } from "wagmi";
-import { usePumps } from "src/wells/pump/usePumps";
+
+import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+import { Pump, WellFunction } from "@beanstalk/sdk-wells";
+
+import { clearWellsCache } from "src/state/providers/WellsProvider";
+import { Log } from "src/utils/logger";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useFetchChainScopedQueryData } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
+import { useAquifer } from "src/wells/aquifer/aquifer";
 import BoreWellUtils from "src/wells/boreWell";
-import { clearWellsCache } from "src/wells/useWells";
-import { useQueryClient } from "@tanstack/react-query";
+import { usePumps } from "src/wells/pump/usePumps";
 
 /**
  * Architecture notes: @Space-Bean
@@ -123,7 +128,8 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
   const { address: walletAddress } = useAccount();
   const sdk = useSdk();
   const pumps = usePumps();
-  const queryClient = useQueryClient();
+  const aquifer = useAquifer();
+  const fetchScopedQueryData = useFetchChainScopedQueryData();
 
   /// ----- Local State -----
   const [deploying, setDeploying] = useState(false);
@@ -242,6 +248,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
 
         const { wellAddress } = await BoreWellUtils.boreWell(
           sdk,
+          aquifer,
           walletAddress,
           wellImplementation,
           wellFunction,
@@ -255,7 +262,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         );
 
         clearWellsCache();
-        queryClient.fetchQuery({ queryKey: ["wells", sdk] });
+        fetchScopedQueryData(queryKeys.wells(sdk));
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
         setDeploying(false);
@@ -268,7 +275,6 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
     },
     [
       pumpAddress,
-      queryClient,
       walletAddress,
       wellImplementation,
       wellFunction,
@@ -277,7 +283,9 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
       wellTokens.token2,
       wellDetails.name,
       wellDetails.symbol,
-      sdk
+      sdk,
+      aquifer,
+      fetchScopedQueryData
     ]
   );
 

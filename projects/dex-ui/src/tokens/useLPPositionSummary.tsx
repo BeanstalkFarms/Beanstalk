@@ -1,19 +1,22 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
+import { multicall } from "@wagmi/core";
+import { BigNumber } from "ethers";
+import { ContractFunctionParameters, erc20Abi } from "viem";
+import { useAccount } from "wagmi";
+
 import { BeanstalkSDK, Token, TokenValue } from "@beanstalk/sdk";
 import { Well } from "@beanstalk/sdk-wells";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAccount } from "wagmi";
-import { ContractFunctionParameters, erc20Abi } from "viem";
 
-import useSdk from "src/utils/sdk/useSdk";
 import { Log } from "src/utils/logger";
-import { BigNumber } from "ethers";
-import { multicall } from "@wagmi/core";
-import BEANSTALK_ABI from "@beanstalk/protocol/abi/Beanstalk.json";
-import { useFarmerWellsSiloBalances } from "./useSiloBalance";
-import { useWells } from "src/wells/useWells";
-import { config } from "src/utils/wagmi/config";
-import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
+import { config } from "src/utils/wagmi/config";
+
+import { useFarmerWellsSiloBalances } from "./useSiloBalance";
+import { useWellLPTokens } from "./useWellLPTokens";
 
 type TokenBalanceCache = undefined | void | Record<string, TokenValue>;
 
@@ -63,24 +66,18 @@ const CALLS_PER_TOKEN = 2;
 
 export const useLPPositionSummary = () => {
   const setQueryData = useSetScopedQueryData();
-  const { data: wells } = useWells();
+  const lpTokens = useWellLPTokens();
   const { address } = useAccount();
   const sdk = useSdk();
 
   const [positions, setPositions] = useState<TokenMap<LPBalanceSummary>>({});
 
   // Array of LP tokens for each well
-  const lpTokens = useMemo(
-    () => (wells || []).map((w) => w.lpToken).filter(Boolean) as Token[],
-    [wells]
-  );
 
   /**
    * Silo Balances
    */
   const { data: siloBalances, ...siloBalanceRest } = useFarmerWellsSiloBalances();
-
-  // const { data: siloBalances, ...siloBalancesRest } = useSiloBal
 
   /**
    * Fetch external & internal balances
@@ -149,7 +146,7 @@ export const useLPPositionSummary = () => {
      * when the window gains focus, force a refresh even if cache is not stale     *
      */
     staleTime: 1000 * 30,
-
+    retry: false,
     refetchInterval: 1000 * 30,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: "always"

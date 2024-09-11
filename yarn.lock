@@ -21233,6 +21233,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:4.6.0"
     ethers: "npm:^5.7.2"
     graphql-request: "npm:5.2.0"
+    jotai: "npm:2.9.3"
     lightweight-charts: "npm:4.1.3"
     prettier: "npm:3.2.5"
     react: "npm:^18.2.0"
@@ -29679,6 +29680,21 @@ __metadata:
   version: 5.7.0
   resolution: "jose@npm:5.7.0"
   checksum: 10/8eeca706ef50e2fd2e5b97563b6cbc0a8a91038c3bb34186c1761a4737b942e314d453cff8bf28aab790e53433d33ffa296a748908f9c095bcf73b1b17c21544
+  languageName: node
+  linkType: hard
+
+"jotai@npm:2.9.3":
+  version: 2.9.3
+  resolution: "jotai@npm:2.9.3"
+  peerDependencies:
+    "@types/react": ">=17.0.0"
+    react: ">=17.0.0"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    react:
+      optional: true
+  checksum: 10/4366a50be8edd39f1430ac655677e559cfbb253101e4f2e750bca8ebd81e75ea09ea3828bce727482b15305ffe924dda75bd9a055e903e0cc804b6600478dc36
   languageName: node
   linkType: hard
 

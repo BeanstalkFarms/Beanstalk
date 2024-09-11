@@ -14,7 +14,7 @@ import { SWITCH_NETWORK_ERRORS } from '~/constants/wallets';
 import { SupportedChainId, TESTNET_RPC_ADDRESSES } from '~/constants';
 import Row from '~/components/Common/Row';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
-import { Address } from '@beanstalk/sdk-core';
+import { ChainResolver } from '@beanstalk/sdk-core';
 import { StyledDialogContent, StyledDialogTitle } from '../Dialog';
 
 const useChainIdToLogo = () => {
@@ -22,14 +22,8 @@ const useChainIdToLogo = () => {
 
   return useCallback(
     (_chainId: SupportedChainId | undefined) => {
-      const chainId = _chainId || Address.defaultChainId;
-      if (
-        chainId === SupportedChainId.LOCALHOST_MAINNET ||
-        chainId === SupportedChainId.MAINNET
-      ) {
-        return ETH.logo;
-      }
-      return ARB.logo;
+      const chainId = _chainId || ChainResolver.defaultChainId;
+      return ChainResolver.isL1Chain(chainId) ? ETH.logo : ARB.logo;
     },
     [ETH, ARB]
   );

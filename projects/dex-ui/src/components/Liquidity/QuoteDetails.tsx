@@ -1,16 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
+
 import styled from "styled-components";
+
 import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
-import useSdk from "src/utils/sdk/useSdk";
-import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
+
+import { size } from "src/breakpoints";
+import { displayTokenSymbol } from "src/utils/format";
 import { getGasInUsd } from "src/utils/gasprice";
+import useSdk from "src/utils/sdk/useSdk";
+
 import SlippagePanel from "./SlippagePanel";
+import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
 import { ChevronDown, Info } from "../Icons";
 import { ImageButton } from "../ImageButton";
 import { Tooltip } from "../Tooltip";
 import { BodyS } from "../Typography";
-import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
 
 type QuoteDetailsProps = {
   type: LIQUIDITY_OPERATION_TYPE | "FORWARD_SWAP" | "REVERSE_SWAP";
@@ -139,8 +143,11 @@ const QuoteDetails = ({
           let totalUSDValue = TokenValue.ZERO;
           let valueInUSD;
           if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
-            const price = selectedTokenIndex && tokenPrices?.[selectedTokenIndex] || TokenValue.ZERO;
-            const quoteAmt = !Array.isArray(quote.quote) ? quote.quote || TokenValue.ZERO : TokenValue.ZERO;
+            const price =
+              (selectedTokenIndex && tokenPrices?.[selectedTokenIndex]) || TokenValue.ZERO;
+            const quoteAmt = !Array.isArray(quote.quote)
+              ? quote.quote || TokenValue.ZERO
+              : TokenValue.ZERO;
             valueInUSD = price.mul(quoteAmt);
             totalUSDValue = totalUSDValue.add(valueInUSD || TokenValue.ZERO);
           } else {
@@ -150,7 +157,8 @@ const QuoteDetails = ({
                 valueInUSD = TokenValue.ZERO;
               } else {
                 valueInUSD = tokenPrice.mul(
-                  removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote.quote)
+                  removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced &&
+                    Array.isArray(quote.quote)
                     ? quote.quote?.[i] || TokenValue.ZERO
                     : inputs?.[i] || TokenValue.ZERO
                 );
@@ -161,7 +169,7 @@ const QuoteDetails = ({
           setTokenUSDValue(totalUSDValue);
         } else if (type === LIQUIDITY_OPERATION_TYPE.ADD) {
           let totalReservesUSDValue: TokenValue | null = TokenValue.ZERO;
-          
+
           for (let i = 0; i < tokenPrices.length; i++) {
             const price = tokenPrices[i];
             const reserve = tokenReserves[i];
@@ -170,18 +178,25 @@ const QuoteDetails = ({
               totalReservesUSDValue = null;
               continue;
             }
-            const reserveValueInUSD = price && reserve ? price.mul(reserve.add(inputs?.[i] || TokenValue.ZERO)) : TokenValue.ZERO;
+            const reserveValueInUSD =
+              price && reserve
+                ? price.mul(reserve.add(inputs?.[i] || TokenValue.ZERO))
+                : TokenValue.ZERO;
             totalReservesUSDValue = totalReservesUSDValue.add(reserveValueInUSD);
           }
-          
+
           const lpTokenSupply = await wellLpToken?.getTotalSupply();
           if (!lpTokenSupply || lpTokenSupply.eq(TokenValue.ZERO)) {
             setTokenUSDValue(totalReservesUSDValue || TokenValue.ZERO);
             return;
           }
           const newDenominator = lpTokenSupply.add(quote?.quote as TokenValue);
-          const lpTokenUSDValue = newDenominator.gt(0) ? (totalReservesUSDValue || TokenValue.ZERO).div(newDenominator) : TokenValue.ZERO;
-          const finalUSDValue = !Array.isArray(quote.quote) ? lpTokenUSDValue.mul(quote.quote) : TokenValue.ZERO;
+          const lpTokenUSDValue = newDenominator.gt(0)
+            ? (totalReservesUSDValue || TokenValue.ZERO).div(newDenominator)
+            : TokenValue.ZERO;
+          const finalUSDValue = !Array.isArray(quote.quote)
+            ? lpTokenUSDValue.mul(quote.quote)
+            : TokenValue.ZERO;
           setTokenUSDValue(finalUSDValue);
         }
       } else if (type === "FORWARD_SWAP") {
@@ -192,7 +207,16 @@ const QuoteDetails = ({
     };
 
     run();
-  }, [tokenPrices, tokenReserves, quote, type, selectedTokenIndex, inputs, removeLiquidityMode, wellLpToken]);
+  }, [
+    tokenPrices,
+    tokenReserves,
+    quote,
+    type,
+    selectedTokenIndex,
+    inputs,
+    removeLiquidityMode,
+    wellLpToken
+  ]);
 
   const priceImpact = useMemo(() => {
     if (!tokenReserves || !inputs || !tokenPrices) return TokenValue.ZERO;
@@ -213,16 +237,28 @@ const QuoteDetails = ({
       if (!quote) return TokenValue.ZERO;
       if (type === LIQUIDITY_OPERATION_TYPE.REMOVE) {
         if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom) {
-          return tokenReserves[index]?.sub(inputs![index] || TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
-        } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && !Array.isArray(quote!.quote)) {
-          return tokenReserves[index]?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
-        } else if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced && Array.isArray(quote!.quote)) {
+          return tokenReserves[index]
+            ?.sub(inputs![index] || TokenValue.ZERO)
+            .mul(tokenPrices?.[index] || 0);
+        } else if (
+          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken &&
+          !Array.isArray(quote!.quote)
+        ) {
+          return tokenReserves[index]
+            ?.sub(index === selectedTokenIndex ? quote!.quote : TokenValue.ZERO)
+            .mul(tokenPrices?.[index] || 0);
+        } else if (
+          removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced &&
+          Array.isArray(quote!.quote)
+        ) {
           return tokenReserves[index]?.sub(quote!.quote[index]).mul(tokenPrices?.[index] || 0);
         } else {
           return TokenValue.ZERO;
         }
       } else {
-        return tokenReserves[index]?.add(inputs![index] || TokenValue.ZERO).mul(tokenPrices?.[index] || 0);
+        return tokenReserves[index]
+          ?.add(inputs![index] || TokenValue.ZERO)
+          .mul(tokenPrices?.[index] || 0);
       }
     });
 
@@ -248,7 +284,11 @@ const QuoteDetails = ({
     <QuoteContainer>
       <QuoteDetailLine onClick={() => setAccordionOpen(!accordionOpen)} cursor="pointer">
         <QuoteDetailLabel bold color={"black"} cursor={"pointer"}>
-          {type === "FORWARD_SWAP" ? "Minimum Output" : type === "REVERSE_SWAP" ? "Maximum Input" : "Expected Output"}
+          {type === "FORWARD_SWAP"
+            ? "Minimum Output"
+            : type === "REVERSE_SWAP"
+              ? "Maximum Input"
+              : "Expected Output"}
         </QuoteDetailLabel>
         <QuoteDetailValue bold color={"black"} cursor={"pointer"}>
           {quoteValue}
@@ -263,10 +303,13 @@ const QuoteDetails = ({
           alt="Click to view more information about this transaction"
         />
       </QuoteDetailLine>
-      <AccordionContainer open={accordionOpen} isShort={type === "FORWARD_SWAP" || type === "REVERSE_SWAP"}>
+      <AccordionContainer
+        open={accordionOpen}
+        isShort={type === "FORWARD_SWAP" || type === "REVERSE_SWAP"}
+      >
         <QuoteDetailLine>
           <QuoteDetailLabel>USD Value</QuoteDetailLabel>
-          <QuoteDetailValue>{`$${tokenUSDValue.lte(0) ? '--' : tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
+          <QuoteDetailValue>{`$${tokenUSDValue.lte(0) ? "--" : tokenUSDValue.toHuman("short")}`}</QuoteDetailValue>
         </QuoteDetailLine>
         {type !== "FORWARD_SWAP" && type !== "REVERSE_SWAP" && (
           <QuoteDetailLine>
@@ -295,7 +338,10 @@ const QuoteDetails = ({
         <QuoteDetailLine>
           <QuoteDetailLabel id={"slippage"}>Slippage Tolerance</QuoteDetailLabel>
           <QuoteDetailValue>{`${slippage}%`}</QuoteDetailValue>
-          <SlippagePanel slippageValue={slippage} handleSlippageValueChange={handleSlippageValueChange} />
+          <SlippagePanel
+            slippageValue={slippage}
+            handleSlippageValueChange={handleSlippageValueChange}
+          />
         </QuoteDetailLine>
         <QuoteDetailLine>
           <QuoteDetailLabel>Estimated Gas Fee</QuoteDetailLabel>

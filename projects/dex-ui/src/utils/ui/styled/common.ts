@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
+
 import { ThemedStyledProps, css } from "styled-components";
+
 import { BoxModelBase, BoxModelProps } from "./box-model";
 
 const CSS_PROP_MAP = {

@@ -1,8 +1,9 @@
 import React from "react";
+
 import styled from "styled-components";
 
-import { FC } from "src/types";
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
 
 export const Page: FC<{}> = ({ children }) => {
   return <PageContainer id="page">{children}</PageContainer>;

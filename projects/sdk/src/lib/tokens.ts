@@ -2,7 +2,7 @@ import { addresses, ZERO_BN } from "src/constants";
 import { Token, BeanstalkToken, ERC20Token, NativeToken } from "src/classes/Token";
 import { BeanstalkSDK } from "./BeanstalkSDK";
 import { EIP2612PermitMessage, EIP712Domain, EIP712TypedData, Permit } from "./permit";
-import { TokenValue } from "@beanstalk/sdk-core";
+import { ChainResolver, TokenValue } from "@beanstalk/sdk-core";
 import { BigNumber } from "ethers";
 
 export type TokenBalance = {
@@ -24,13 +24,11 @@ export class Tokens {
   public readonly DAI: ERC20Token;
   public readonly USDC: ERC20Token;
   public readonly USDT: ERC20Token;
-  public readonly LUSD: ERC20Token;
-  public readonly CRV3: ERC20Token;
-  public readonly ROOT: ERC20Token;
   public readonly ARB: ERC20Token;
 
   public readonly UNRIPE_BEAN: ERC20Token;
   public readonly UNRIPE_BEAN_WSTETH: ERC20Token;
+
   public readonly BEAN_ETH_WELL_LP: ERC20Token;
   public readonly BEAN_WSTETH_WELL_LP: ERC20Token;
   public readonly BEAN_WEETH_WELL_LP: ERC20Token;
@@ -38,25 +36,30 @@ export class Tokens {
   public readonly BEAN_USDC_WELL_LP: ERC20Token;
   public readonly BEAN_USDT_WELL_LP: ERC20Token;
 
-  /** @deprecated */
-  public readonly BEAN_ETH_UNIV2_LP: ERC20Token;
-  /** @deprecated */
-  public readonly BEAN_CRV3_LP: ERC20Token;
-
   public readonly STALK: BeanstalkToken;
   public readonly SEEDS: BeanstalkToken;
   public readonly PODS: BeanstalkToken;
   public readonly SPROUTS: BeanstalkToken;
   public readonly RINSABLE_SPROUTS: BeanstalkToken;
 
+  /** @deprecated */
+  public readonly LUSD: ERC20Token;
+  /** @deprecated */
+  public readonly CRV3: ERC20Token;
+  /** @deprecated */
+  public readonly ROOT: ERC20Token;
+  /** @deprecated */
+  public readonly BEAN_ETH_UNIV2_LP: ERC20Token;
+  /** @deprecated */
+  public readonly BEAN_CRV3_LP: ERC20Token;
+
   public unripeTokens: Set<Token>;
   public unripeUnderlyingTokens: Set<Token>;
+
   public erc20Tokens: Set<Token>;
   public balanceTokens: Set<Token>;
 
-  /**
-   * @deprecated
-   */
+  /** @deprecated */
   public crv3Underlying: Set<Token>;
 
   public wellLP: Set<Token>;
@@ -69,6 +72,8 @@ export class Tokens {
   constructor(sdk: BeanstalkSDK) {
     this.sdk = sdk;
     this.map = new Map();
+
+    const isL2 = ChainResolver.isL2Chain(this.sdk.chainId);
 
     ////////// Ethereum //////////
     const chainId = this.sdk.chainId;
@@ -86,47 +91,9 @@ export class Tokens {
       providerOrSigner
     );
 
-    this.WETH = new ERC20Token(
-      chainId,
-      addresses.WETH.get(chainId),
-      18,
-      "WETH",
-      {
-        name: "Wrapped Ether",
-        displayDecimals: 4
-      },
-      providerOrSigner
-    );
-
     this.map.set("eth", this.ETH);
-    this.map.set(addresses.WETH.get(chainId), this.WETH);
 
-    ////////// Lido //////////
-    this.STETH = new ERC20Token(
-      chainId,
-      addresses.STETH.get(chainId),
-      18,
-      "stETH",
-      {
-        name: "Liquid staked Ether 2.0",
-        displayDecimals: 4
-      },
-      providerOrSigner
-    );
-
-    this.WSTETH = new ERC20Token(
-      chainId,
-      addresses.WSTETH.get(chainId),
-      18,
-      "wstETH",
-      {
-        name: "Wrapped liquid staked Ether 2.0",
-        displayDecimals: 4
-      },
-      providerOrSigner
-    );
-
-    ////////// Beanstalk //////////
+    ////////// Beanstalk "Tokens" (non ERC-20) //////////
 
     this.STALK = new BeanstalkToken(
       chainId,
@@ -149,6 +116,45 @@ export class Tokens {
       },
       providerOrSigner
     );
+
+    this.PODS = new BeanstalkToken(
+      chainId,
+      null,
+      6,
+      "PODS",
+      {
+        name: "Pods"
+      },
+      providerOrSigner
+    );
+
+    this.SPROUTS = new BeanstalkToken(
+      chainId,
+      null,
+      6,
+      "SPROUT",
+      {
+        name: "Sprouts"
+      },
+      providerOrSigner
+    );
+
+    this.RINSABLE_SPROUTS = new BeanstalkToken(
+      chainId,
+      null,
+      6,
+      "rSPROUT",
+      {
+        name: "Rinsable Sprouts"
+      },
+      providerOrSigner
+    );
+
+    this.map.set("STALK", this.STALK);
+    this.map.set("SEED", this.SEEDS);
+    this.map.set("PODS", this.PODS);
+    this.map.set("SPROUT", this.SPROUTS);
+    this.map.set("rSPROUT", this.RINSABLE_SPROUTS);
 
     // ---------- BEAN ----------
     this.BEAN = new ERC20Token(
@@ -285,10 +291,14 @@ export class Tokens {
     this.map.set(addresses.BEAN.get(chainId), this.BEAN);
     this.map.set(addresses.BEANWETH_WELL.get(chainId), this.BEAN_ETH_WELL_LP);
     this.map.set(addresses.BEANWSTETH_WELL.get(chainId), this.BEAN_WSTETH_WELL_LP);
-    this.map.set(addresses.BEANWEETH_WELL.get(chainId), this.BEAN_WEETH_WELL_LP);
-    this.map.set(addresses.BEANWBTC_WELL.get(chainId), this.BEAN_WBTC_WELL_LP);
-    this.map.set(addresses.BEANUSDC_WELL.get(chainId), this.BEAN_USDC_WELL_LP);
-    this.map.set(addresses.BEANUSDT_WELL.get(chainId), this.BEAN_USDT_WELL_LP);
+
+    // These are only set on L2
+    if (isL2) {
+      this.map.set(addresses.BEANWEETH_WELL.get(chainId), this.BEAN_WEETH_WELL_LP);
+      this.map.set(addresses.BEANWBTC_WELL.get(chainId), this.BEAN_WBTC_WELL_LP);
+      this.map.set(addresses.BEANUSDC_WELL.get(chainId), this.BEAN_USDC_WELL_LP);
+      this.map.set(addresses.BEANUSDT_WELL.get(chainId), this.BEAN_USDT_WELL_LP);
+    }
 
     // ---------- UNRIPE ----------
     this.UNRIPE_BEAN = new ERC20Token(
@@ -330,48 +340,31 @@ export class Tokens {
     this.map.set(addresses.UNRIPE_BEAN.get(chainId), this.UNRIPE_BEAN);
     this.map.set(addresses.UNRIPE_BEAN_WSTETH.get(chainId), this.UNRIPE_BEAN_WSTETH);
 
-    ////////// Beanstalk "Tokens" (non ERC-20) //////////
-
-    this.PODS = new BeanstalkToken(
-      chainId,
-      null,
-      6,
-      "PODS",
-      {
-        name: "Pods"
-      },
-      providerOrSigner
-    );
-
-    this.SPROUTS = new BeanstalkToken(
-      chainId,
-      null,
-      6,
-      "SPROUT",
-      {
-        name: "Sprouts"
-      },
-      providerOrSigner
-    );
-
-    this.RINSABLE_SPROUTS = new BeanstalkToken(
-      chainId,
-      null,
-      6,
-      "rSPROUT",
-      {
-        name: "Rinsable Sprouts"
-      },
-      providerOrSigner
-    );
-
-    this.map.set("STALK", this.STALK);
-    this.map.set("SEED", this.SEEDS);
-    this.map.set("PODS", this.PODS);
-    this.map.set("SPROUT", this.SPROUTS);
-    this.map.set("rSPROUT", this.RINSABLE_SPROUTS);
-
     ////////// Common ERC-20 Tokens //////////
+
+    this.WETH = new ERC20Token(
+      chainId,
+      addresses.WETH.get(chainId),
+      18,
+      "WETH",
+      {
+        name: "Wrapped Ether",
+        displayDecimals: 4
+      },
+      providerOrSigner
+    );
+
+    this.STETH = new ERC20Token(
+      chainId,
+      addresses.STETH.get(chainId),
+      18,
+      "stETH",
+      {
+        name: "Liquid staked Ether 2.0",
+        displayDecimals: 4
+      },
+      providerOrSigner
+    );
 
     this.WSTETH = new ERC20Token(
       chainId,
@@ -405,19 +398,6 @@ export class Tokens {
       {
         name: "Wrapped BTC",
         displayDecimals: 6
-      },
-      providerOrSigner
-    );
-
-    /** @deprecated */
-    this.CRV3 = new ERC20Token(
-      chainId,
-      addresses.CRV3.get(chainId),
-      18,
-      "3CRV",
-      {
-        name: "3CRV",
-        isLP: true
       },
       providerOrSigner
     );
@@ -469,6 +449,18 @@ export class Tokens {
       providerOrSigner
     );
 
+    this.CRV3 = new ERC20Token(
+      chainId,
+      addresses.CRV3.get(chainId),
+      18,
+      "3CRV",
+      {
+        name: "3CRV",
+        isLP: true
+      },
+      providerOrSigner
+    );
+
     this.LUSD = new ERC20Token(
       chainId,
       addresses.LUSD.get(chainId),
@@ -481,15 +473,21 @@ export class Tokens {
       providerOrSigner
     );
 
+    this.map.set(addresses.WETH.get(chainId), this.WETH);
+    this.map.set(addresses.STETH.get(chainId), this.STETH);
     this.map.set(addresses.WSTETH.get(chainId), this.WSTETH);
     this.map.set(addresses.WEETH.get(chainId), this.WEETH);
     this.map.set(addresses.WBTC.get(chainId), this.WBTC);
-    this.map.set(addresses.CRV3.get(chainId), this.CRV3);
     this.map.set(addresses.DAI.get(chainId), this.DAI);
     this.map.set(addresses.USDC.get(chainId), this.USDC);
     this.map.set(addresses.USDT.get(chainId), this.USDT);
-    this.map.set(addresses.LUSD.get(chainId), this.LUSD);
+    this.map.set(addresses.ARB.get(chainId), this.ARB);
 
+    // L1 only
+    if (!isL2) {
+      this.map.set(addresses.LUSD.get(chainId), this.LUSD);
+      this.map.set(addresses.CRV3.get(chainId), this.CRV3);
+    }
     ////////// Legacy //////////
 
     /**
@@ -515,9 +513,6 @@ export class Tokens {
       seeds: this.SEEDS.amount(0)
     };
 
-    /**
-     * @deprecated
-     */
     this.BEAN_CRV3_LP = new ERC20Token(
       chainId,
       addresses.BEAN_CRV3.get(chainId),
@@ -536,9 +531,6 @@ export class Tokens {
       seeds: this.SEEDS.amount(0)
     };
 
-    /**
-     * @deprecated
-     */
     this.ROOT = new ERC20Token(
       chainId,
       addresses.ROOT.get(chainId),
@@ -550,25 +542,30 @@ export class Tokens {
       providerOrSigner
     );
 
-    this.map.set(addresses.ROOT.get(chainId) ?? this.ROOT.symbol.toLowerCase(), this.ROOT);
-    this.map.set(
-      addresses.BEAN_CRV3.get(chainId) ?? this.BEAN_CRV3_LP.symbol.toLowerCase(),
-      this.BEAN_CRV3_LP
-    );
-    this.map.set(
-      addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? this.BEAN_ETH_UNIV2_LP.symbol.toLowerCase(),
-      this.BEAN_ETH_UNIV2_LP
-    );
+    // L1 only
+    if (!isL2) {
+      this.map.set(addresses.ROOT.get(chainId) ?? this.ROOT.symbol.toLowerCase(), this.ROOT);
+      this.map.set(
+        addresses.BEAN_CRV3.get(chainId) ?? this.BEAN_CRV3_LP.symbol.toLowerCase(),
+        this.BEAN_CRV3_LP
+      );
+      this.map.set(
+        addresses.BEAN_ETH_UNIV2_LP.get(chainId) ?? this.BEAN_ETH_UNIV2_LP.symbol.toLowerCase(),
+        this.BEAN_ETH_UNIV2_LP
+      );
+    }
     ////////// Groups //////////
 
-    const wellLP = [
-      this.BEAN_ETH_WELL_LP,
-      this.BEAN_WSTETH_WELL_LP,
-      this.BEAN_WEETH_WELL_LP,
-      this.BEAN_WBTC_WELL_LP,
-      this.BEAN_USDC_WELL_LP,
-      this.BEAN_USDT_WELL_LP
-    ];
+    const wellLP = [this.BEAN_ETH_WELL_LP, this.BEAN_WSTETH_WELL_LP];
+
+    if (isL2) {
+      wellLP.push(
+        this.BEAN_WEETH_WELL_LP,
+        this.BEAN_WBTC_WELL_LP,
+        this.BEAN_USDC_WELL_LP,
+        this.BEAN_USDT_WELL_LP
+      );
+    }
 
     const unripeTokens = [this.UNRIPE_BEAN, this.UNRIPE_BEAN_WSTETH];
 
@@ -587,11 +584,14 @@ export class Tokens {
       this.WSTETH,
       this.WEETH,
       this.WBTC,
-      // this.CRV3,
       this.DAI,
       this.USDC,
       this.USDT
     ]);
+    if (ChainResolver.isL1Chain(chainId)) {
+      this.erc20Tokens.add(this.CRV3);
+    }
+
     this.balanceTokens = new Set([this.ETH, ...this.erc20Tokens]);
     this.crv3Underlying = new Set([this.DAI, this.USDC, this.USDT]);
   }

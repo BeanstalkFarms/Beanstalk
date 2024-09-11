@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React from "react";
-import { mediaQuery } from "src/breakpoints";
 
 import styled from "styled-components";
+
 import shapesIcons from "src/assets/images/home-banner.svg";
-import { BodyL } from "src/components/Typography";
+import { mediaQuery } from "src/breakpoints";
 import { ContractInfoMarquee } from "src/components/Frame/ContractInfoMarquee";
+import { BodyL } from "src/components/Typography";
 
 const copy = {
   build:

@@ -208,7 +208,7 @@ export class Silo {
   }
 
   /**
-   * @deprecated
+   *
    * Return the Farmer's balance of a single whitelisted token.
    */
   public async getBalance(

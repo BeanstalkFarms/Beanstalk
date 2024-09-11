@@ -1,7 +1,10 @@
 import React, { useCallback } from "react";
+
 import toast from "react-hot-toast";
 import styled from "styled-components";
+
 import { ImageButton } from "src/components/ImageButton";
+
 import { Copy, X } from "../Icons";
 import { BodyCaps, BodyS, LinksTextLink } from "../Typography";
 
@@ -13,7 +16,19 @@ function dismissErrors(id?: any) {
   }
 }
 
-export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string; hash?: string; msg?: string; rawError?: string; id?: any }) {
+export function ToastAlert({
+  desc,
+  hash,
+  msg,
+  rawError,
+  id
+}: {
+  desc?: string;
+  hash?: string;
+  msg?: string;
+  rawError?: string;
+  id?: any;
+}) {
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
 
   return (
@@ -38,7 +53,14 @@ export function ToastAlert({ desc, hash, msg, rawError, id }: { desc?: string; h
           }}
         />
       )}
-      {msg && <ImageButton component={X} alt="Close token selector modal" size={24} onClick={handleClick} />}
+      {msg && (
+        <ImageButton
+          component={X}
+          alt="Close token selector modal"
+          size={24}
+          onClick={handleClick}
+        />
+      )}
     </Container>
   );
 }

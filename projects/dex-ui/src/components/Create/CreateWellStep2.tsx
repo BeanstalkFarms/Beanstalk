@@ -1,24 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
+
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form";
-import { getIsValidEthereumAddress } from "src/utils/addresses";
-import { theme } from "src/utils/ui/theme";
-import { Divider, Flex, FlexCard } from "src/components/Layout";
-import { Text } from "src/components/Typography";
-import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import styled from "styled-components";
+
+import { ERC20Token } from "@beanstalk/sdk";
+
+import { images } from "src/assets/images/tokens";
+import { Dropdown } from "src/components/Dropdown";
 import { StyledForm, TextInputField } from "src/components/Form";
 import { XIcon } from "src/components/Icons";
-import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
-import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
-import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
+import { Divider, Flex, FlexCard } from "src/components/Layout";
+import { Text } from "src/components/Typography";
 import { useERC20TokenWithAddress } from "src/tokens/useERC20Token";
-import { ERC20Token } from "@beanstalk/sdk";
+import { getIsValidEthereumAddress } from "src/utils/addresses";
 import useSdk from "src/utils/sdk/useSdk";
+import { theme } from "src/utils/ui/theme";
+import { useBoolean } from "src/utils/ui/useBoolean";
 import BoreWellUtils from "src/wells/boreWell";
 import { useValidateWellFunction } from "src/wells/wellFunction/useValidateWellFunction";
-import { useBoolean } from "src/utils/ui/useBoolean";
-import { Dropdown } from "src/components/Dropdown";
-import { images } from "src/assets/images/tokens";
+
+import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
+import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
+import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 
 const additionalOptions = [
   {

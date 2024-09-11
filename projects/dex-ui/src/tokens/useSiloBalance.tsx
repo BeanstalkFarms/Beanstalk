@@ -1,9 +1,12 @@
-import { DataSource, Token, TokenValue } from "@beanstalk/sdk";
+import { useAccount } from "wagmi";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+import { ChainResolver } from "@beanstalk/sdk-core";
+
 import { getIsValidEthereumAddress } from "src/utils/addresses";
 import { queryKeys } from "src/utils/query/queryKeys";
 import { useScopedQuery, useSetScopedQueryData } from "src/utils/query/useScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
-import { useAccount } from "wagmi";
 
 export const useSiloBalance = (token: Token) => {
   const { address } = useAccount();
@@ -18,9 +21,7 @@ export const useSiloBalance = (token: Token) => {
         balance = TokenValue.ZERO;
       } else {
         const sdkLPToken = sdk.tokens.findByAddress(token.address);
-        const result = await sdk.silo.getBalance(sdkLPToken!, address, {
-          source: DataSource.LEDGER
-        });
+        const result = await sdk.silo.getBalance(sdkLPToken!, address);
         balance = result.amount;
       }
       return balance;
@@ -39,29 +40,31 @@ export const useFarmerWellsSiloBalances = () => {
   const { address } = useAccount();
   const sdk = useSdk();
   const setQueryData = useSetScopedQueryData();
-  const wellTokens = Array.from(sdk.tokens.siloWhitelistedWellLP);
+  const wellTokens = Array.from(sdk.tokens.wellLP).map((t) => t.address);
 
   const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
-    queryKey: queryKeys.siloBalancesAll,
+    queryKey: queryKeys.siloBalancesAll(wellTokens),
     queryFn: async () => {
-      const resultMap: Record<string, TokenValue> = {};
-      if (!address) return resultMap;
+      // Silo balances are not available on L1
+      if (ChainResolver.isL1Chain(sdk.chainId)) {
+        return {};
+      }
+      try {
+        const resultMap: Record<string, TokenValue> = {};
+        if (!address) return resultMap;
 
-      const results = await Promise.all(
-        wellTokens.map((token) =>
-          sdk.silo.getBalance(token, address, { source: DataSource.LEDGER })
-        )
-      );
+        const results = await sdk.silo.getBalances(address);
 
-      results.forEach((val, i) => {
-        const token = wellTokens[i];
-        resultMap[token.address] = val.amount;
-        setQueryData(queryKeys.siloBalance(token.address), () => {
-          return val.amount;
+        results.forEach((val, token) => {
+          resultMap[token.address] = val.amount;
+          setQueryData(queryKeys.siloBalance(token.address), () => val.amount);
         });
-      });
 
-      return resultMap;
+        return resultMap;
+      } catch (e) {
+        console.error("Error fetching silo balances: ", e);
+        return {};
+      }
     },
     enabled: getIsValidEthereumAddress(address) && !!wellTokens.length,
     retry: false

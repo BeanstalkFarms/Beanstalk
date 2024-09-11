@@ -1,8 +1,14 @@
 import { RefObject } from "react";
+
 import throttle from "lodash/throttle";
+
 import { liangBarsky } from "./lineIntersect";
 
-export const debugPoint = (point: DOMPoint, id: string = "debugpoint", svgRef: RefObject<SVGSVGElement>) => {
+export const debugPoint = (
+  point: DOMPoint,
+  id: string = "debugpoint",
+  svgRef: RefObject<SVGSVGElement>
+) => {
   const el = svgRef.current?.getElementById(id);
   el?.setAttribute("cx", point.x.toString());
   el?.setAttribute("cy", point.y.toString());
@@ -79,9 +85,11 @@ export const pointsEq = (p1: DOMPoint, p2: DOMPoint) => {
   return p1.x === p2.x && p1.y === p2.y;
 };
 
-export const isPointInBox = (p: DOMPoint, b: DOMRect) => p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
+export const isPointInBox = (p: DOMPoint, b: DOMRect) =>
+  p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
 
-export const isPointOnBox = (p: DOMPoint, b: DOMRect) => p.x === b.left || p.x === b.right || p.y === b.top || p.y === b.bottom;
+export const isPointOnBox = (p: DOMPoint, b: DOMRect) =>
+  p.x === b.left || p.x === b.right || p.y === b.top || p.y === b.bottom;
 
 /**
  * Moves a point to the nearest spot on the grid

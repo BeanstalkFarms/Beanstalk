@@ -1,12 +1,12 @@
-import useSdk from "src/utils/sdk/useSdk";
-import { useQuery } from "@tanstack/react-query";
-import { TokenValue } from "@beanstalk/sdk";
 import { ERC20Token } from "@beanstalk/sdk-core";
+
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
 
 export const useTokenSupply = (address: ERC20Token) => {
   const sdk = useSdk();
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useChainScopedQuery({
     queryKey: ["well", sdk, address, "totalSupply"],
 
     queryFn: async () => {
@@ -25,7 +25,7 @@ export const useTokenSupply = (address: ERC20Token) => {
 export const useTokenSupplyMany = (tokens: ERC20Token[]) => {
   const sdk = useSdk();
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useChainScopedQuery({
     queryKey: ["well", sdk, tokens, "totalSupply"],
 
     queryFn: async () => {

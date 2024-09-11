@@ -116,43 +116,52 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.rain?.roots ? convertToBigNum(data.rain.roots) : "0",
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
-    // EvaluationParameters
+    // seedGaugeSettings
     [
-      data.evaluationParameters?.maxBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.maxBeanMaxLpGpPerBdvRatio)
+      data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
+        ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
         : "0",
-      data.evaluationParameters?.minBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.minBeanMaxLpGpPerBdvRatio)
+      data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
+        ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
         : "0",
-      data.evaluationParameters?.targetSeasonsToCatchUp
-        ? convertToBigNum(data.evaluationParameters.targetSeasonsToCatchUp)
+      data.seedGaugeSettings?.targetSeasonsToCatchUp
+        ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
         : "0",
-      data.evaluationParameters?.podRateLowerBound
-        ? convertToBigNum(data.evaluationParameters.podRateLowerBound)
+      data.seedGaugeSettings?.podRateLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
         : "0",
-      data.evaluationParameters?.podRateOptimal
-        ? convertToBigNum(data.evaluationParameters.podRateOptimal)
+      data.seedGaugeSettings?.podRateOptimal
+        ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
         : "0",
-      data.evaluationParameters?.podRateUpperBound
-        ? convertToBigNum(data.evaluationParameters.podRateUpperBound)
+      data.seedGaugeSettings?.podRateUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
         : "0",
-      data.evaluationParameters?.deltaPodDemandLowerBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandLowerBound)
+      data.seedGaugeSettings?.deltaPodDemandLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
         : "0",
-      data.evaluationParameters?.deltaPodDemandUpperBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandUpperBound)
+      data.seedGaugeSettings?.deltaPodDemandUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioUpperBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioUpperBound)
+      data.seedGaugeSettings?.lpToSupplyRatioUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioOptimal
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioOptimal)
+      data.seedGaugeSettings?.lpToSupplyRatioOptimal
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioLowerBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioLowerBound)
+      data.seedGaugeSettings?.lpToSupplyRatioLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
         : "0",
-      data.evaluationParameters?.excessivePriceThreshold
-        ? convertToBigNum(data.evaluationParameters.excessivePriceThreshold)
+      data.seedGaugeSettings?.excessivePriceThreshold
+        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+        : "0",
+      data.seedGaugeSettings?.soilCoefficientHigh
+        ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
+        : "0",
+      data.seedGaugeSettings?.baseReward
+        ? convertToBigNum(data.seedGaugeSettings.baseReward)
+        : "0",
+      data.seedGaugeSettings?.excessivePriceThreshold
+        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
         : "0"
     ],
     // ShipmentRoute

@@ -1,15 +1,19 @@
-import { TokenValue } from "@beanstalk/sdk";
-import React, { FC, ReactNode } from "react";
+import React, { FC } from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
+import { TokenValue } from "@beanstalk/sdk";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { Item } from "src/components/Layout";
+import { Skeleton } from "src/components/Skeleton";
 import { Row, Td } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
-import styled from "styled-components";
-import { mediaQuery, size } from "src/breakpoints";
 import { formatNum } from "src/utils/format";
-import { Well } from "@beanstalk/sdk/Wells";
-import { Skeleton } from "src/components/Skeleton";
+
 import { WellYieldWithTooltip } from "../WellYieldWithTooltip";
-import { Item } from "src/components/Layout";
 
 /// format value with 2 decimals, if value is less than 1M, otherwise use short format
 const formatMayDecimals = (tv: TokenValue | undefined) => {
@@ -29,27 +33,33 @@ export const WellDetailRow: FC<{
   volume: TokenValue | undefined;
 }> = ({ well, liquidity, functionName, price, volume }) => {
   const navigate = useNavigate();
-
-  if (!well) return null;
-
   const tokens = well?.tokens || [];
-  const logos: ReactNode[] = [];
-  const smallLogos: ReactNode[] = [];
-  const symbols: string[] = [];
+
   const gotoWell = () => navigate(`/wells/${well?.address}`);
 
-  tokens.map((token: any) => {
-    logos.push(<TokenLogo token={token} size={25} key={token.symbol} />);
-    smallLogos.push(<TokenLogo token={token} size={16} key={token.symbol} />);
-    symbols.push(token.symbol);
-  });
+  const renderTokenSymbols = () => {
+    return tokens
+      .map((token) => token.symbol)
+      .join("/")
+      .toString();
+  };
+
+  if (!well) return null;
 
   return (
     <TableRow onClick={gotoWell}>
       <DesktopContainer>
         <WellDetail>
-          <TokenLogos>{logos}</TokenLogos>
-          <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          <TokenLogos>
+            {tokens.map((token, i) => (
+              <TokenLogo
+                token={token}
+                size={25}
+                key={`desktop-logos-${well.address}-${token.address}-${i}`}
+              />
+            ))}
+          </TokenLogos>
+          <TokenSymbols>{renderTokenSymbols()}</TokenSymbols>
         </WellDetail>
       </DesktopContainer>
       <DesktopContainer>
@@ -73,20 +83,32 @@ export const WellDetailRow: FC<{
         <Amount>${volume ? volume.toHuman("short") : "-.--"}</Amount>
       </DesktopContainer>
       <DesktopContainer align="right">
-        <Reserves>
-          {<TokenLogoWrapper>{smallLogos[0]}</TokenLogoWrapper>}
-          {formatMayDecimals(well.reserves?.[0])}
-        </Reserves>
-        <Reserves>
-          {<TokenLogoWrapper>{smallLogos[1]}</TokenLogoWrapper>}
-          {formatMayDecimals(well.reserves?.[1])}
-        </Reserves>
-        {well.reserves && well.reserves.length > 2 ? <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves> : null}
+        {tokens.map((token, i) => {
+          return (
+            <Reserves key={`reserves-${well.address}-${token.address}-${i}`}>
+              <TokenLogoWrapper>
+                <TokenLogo token={token} size={16} />
+              </TokenLogoWrapper>
+              {formatMayDecimals(well.reserves?.[i])}
+            </Reserves>
+          );
+        })}
+        {well.reserves && well.reserves.length > 2 ? (
+          <MoreReserves>{`+ ${well.reserves.length - 2} MORE`}</MoreReserves>
+        ) : null}
       </DesktopContainer>
       <MobileContainer>
         <WellDetail>
-          <TokenLogos>{logos}</TokenLogos>
-          <TokenSymbols>{symbols.join("/")}</TokenSymbols>
+          <TokenLogos>
+            {tokens.map((token, i) => (
+              <TokenLogo
+                token={token}
+                size={25}
+                key={`mobile-logos-${well.address}-${token.address}-${i}`}
+              />
+            ))}
+          </TokenLogos>
+          <TokenSymbols>{renderTokenSymbols()}</TokenSymbols>
         </WellDetail>
         <Amount>${formatNum(liquidity, { minDecimals: 2 })}</Amount>
       </MobileContainer>

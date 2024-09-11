@@ -116,7 +116,9 @@ library LibTokenSilo {
 
         // emit event.
         emit LibGerminate.TotalGerminatingBalanceChanged(
-            s.sys.season.current,
+            LibGerminate.getSeasonGerminationSide() == side
+                ? s.sys.season.current
+                : s.sys.season.current - 1,
             token,
             int256(amount),
             int256(bdv)
@@ -369,7 +371,7 @@ library LibTokenSilo {
         if (amount < crateAmount) {
             // round up removal of BDV. (x - 1)/y + 1
             // https://stackoverflow.com/questions/17944
-            uint256 removedBDV = amount.sub(1).mul(crateBDV).div(crateAmount).add(1);
+            uint256 removedBDV = amount.mul(crateBDV).sub(1).div(crateAmount).add(1);
             uint256 updatedBDV = crateBDV.sub(removedBDV);
             uint256 updatedAmount = crateAmount.sub(amount);
 

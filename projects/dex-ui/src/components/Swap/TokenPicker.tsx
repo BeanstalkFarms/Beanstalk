@@ -1,19 +1,23 @@
-import { Token } from "@beanstalk/sdk";
 import React, { useCallback, useEffect, useState } from "react";
-import { FC } from "src/types";
-import { useTokens } from "src/tokens/TokenProvider";
+
 import styled, { keyframes } from "styled-components";
-import { TokenLogo } from "src/components/TokenLogo";
+
+import { Token } from "@beanstalk/sdk";
+
 import x from "src/assets/images/x.svg";
-import { ImageButton } from "../ImageButton";
-import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
-import { Spinner } from "../Spinner";
-import { ChevronDown } from "../Icons";
-import { BottomDrawer } from "../BottomDrawer";
-import { BodyS } from "../Typography";
 import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
+import { TokenLogo } from "src/components/TokenLogo";
+import { useAllTokensBalance } from "src/tokens/useAllTokenBalance";
+import { useTokens } from "src/tokens/useTokens";
 import { displayTokenName, getTokenIndex } from "src/tokens/utils";
+import { FC } from "src/types";
+import { displayTokenSymbol } from "src/utils/format";
+
+import { BottomDrawer } from "../BottomDrawer";
+import { ChevronDown } from "../Icons";
+import { ImageButton } from "../ImageButton";
+import { Spinner } from "../Spinner";
+import { BodyS } from "../Typography";
 
 export type TokenPickerProps = {
   token: Token;
@@ -28,12 +32,25 @@ type ContainerProps = {
   editable?: Boolean;
 };
 
-export const TokenPicker: FC<TokenPickerProps> = ({ token, tokenOptions, excludeToken, editable = true, onChange, connectorFor }) => {
+export const TokenPicker: FC<TokenPickerProps> = ({
+  token,
+  tokenOptions,
+  excludeToken,
+  editable = true,
+  onChange,
+  connectorFor
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const _tokens = useTokens();
   const tokens = tokenOptions || _tokens;
   const [list, setList] = useState<Token[]>([]);
-  const { data: balances, isLoading: balancesLoading, error: balancesError, refetch, isFetching } = useAllTokensBalance();
+  const {
+    data: balances,
+    isLoading: balancesLoading,
+    error: balancesError,
+    refetch,
+    isFetching
+  } = useAllTokensBalance();
 
   useEffect(() => {
     let list = Object.values(tokens).filter((t: Token) => t.symbol !== excludeToken?.symbol);
@@ -101,9 +118,7 @@ export const TokenPicker: FC<TokenPickerProps> = ({ token, tokenOptions, exclude
                     <TokenLogo token={token} size={25} />
                     <Details>
                       <Symbol>{token.symbol}</Symbol>
-                      <Name>
-                        {displayTokenName(token)}
-                      </Name>
+                      <Name>{displayTokenName(token)}</Name>
                     </Details>
                     {balancesLoading || isFetching ? (
                       <Spinner size={14} />

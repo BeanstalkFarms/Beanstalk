@@ -32,7 +32,8 @@ async function reseedL2({
   start = 0,
   end = 11,
   setState = true,
-  deployBasin = true
+  deployBasin = false,
+  addLiquidity = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -117,7 +118,7 @@ async function reseedL2({
     }
   }
   // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
-  await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
+  if (addLiquidity) await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
   console.log("Reseed successful.");
 }
 

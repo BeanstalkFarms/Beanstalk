@@ -38,8 +38,8 @@ import {
 } from '../Dialog';
 
 const CONTRACT_NAMES: { [address: string]: string } = {
-  [BEANSTALK_ADDRESSES[SupportedChainId.MAINNET]]: 'Beanstalk',
-  [BEANSTALK_FERTILIZER_ADDRESSES[SupportedChainId.MAINNET]]:
+  [BEANSTALK_ADDRESSES[SupportedChainId.ETH_MAINNET]]: 'Beanstalk',
+  [BEANSTALK_FERTILIZER_ADDRESSES[SupportedChainId.ETH_MAINNET]]:
     'Beanstalk Fertilizer',
 };
 

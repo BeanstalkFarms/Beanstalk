@@ -5700,37 +5700,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "gpSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "lwSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      }
-    ],
-    "name": "UpdateGaugeSettings",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "address",
         "name": "token",
@@ -5768,6 +5737,96 @@
       }
     ],
     "name": "UpdateWhitelistStatus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSeasonsToCatchUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "excessivePriceThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientHigh",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientLow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseReward",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EvaluationParameters",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatedEvaluationParameters",
     "type": "event"
   },
   {
@@ -5862,6 +5921,25 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "optimalPercentDepositedBdv",
+        "type": "uint64"
+      }
+    ],
+    "name": "UpdatedOptimalPercentDepositedBdvForToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
         "components": [
           {
             "internalType": "address",
@@ -5891,81 +5969,6 @@
       }
     ],
     "name": "UpdatedOracleImplementationForToken",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "maxBeanMaxLpGpPerBdvRatio",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minBeanMaxLpGpPerBdvRatio",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetSeasonsToCatchUp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateOptimal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deltaPodDemandLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deltaPodDemandUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioOptimal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "excessivePriceThreshold",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EvaluationParameters",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "name": "UpdatedSeedGaugeSettings",
     "type": "event"
   },
   {
@@ -6022,18 +6025,6 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes4",
-        "name": "gpSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "lwSelector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
         "internalType": "uint128",
         "name": "gaugePoints",
         "type": "uint128"
@@ -6052,32 +6043,10 @@
     "anonymous": false,
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "target",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "selector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "bytes1",
-            "name": "encodeType",
-            "type": "bytes1"
-          },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct Implementation",
-        "name": "oracleImplementation",
-        "type": "tuple"
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
       },
       {
         "components": [
@@ -6136,7 +6105,7 @@
         "type": "tuple"
       }
     ],
-    "name": "WhitelistTokenWithExternalImplementation",
+    "name": "WhitelistTokenImplementations",
     "type": "event"
   },
   {
@@ -6150,6 +6119,88 @@
     "name": "dewhitelistToken",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getGaugePointImplementationForToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "getLiquidityWeightImplementationForToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -6339,19 +6390,63 @@
         "type": "address"
       },
       {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
         "internalType": "uint64",
         "name": "optimalPercentDepositedBdv",
         "type": "uint64"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "gpImplementation",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "selector",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes1",
+            "name": "encodeType",
+            "type": "bytes1"
+          },
+          {
+            "internalType": "bytes",
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Implementation",
+        "name": "lwImplementation",
+        "type": "tuple"
       }
     ],
     "name": "updateGaugeForToken",
@@ -6542,6 +6637,21 @@
             "internalType": "uint256",
             "name": "excessivePriceThreshold",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientHigh",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientLow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseReward",
+            "type": "uint256"
           }
         ],
         "internalType": "struct EvaluationParameters",
@@ -6568,161 +6678,6 @@
       }
     ],
     "name": "updateStalkPerBdvPerSeasonForToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint48",
-        "name": "stalkIssuedPerBdv",
-        "type": "uint48"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "target",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "selector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "bytes1",
-            "name": "encodeType",
-            "type": "bytes1"
-          },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct Implementation",
-        "name": "oracleImplementation",
-        "type": "tuple"
-      }
-    ],
-    "name": "whitelistToken",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint48",
-        "name": "stalkIssuedPerBdv",
-        "type": "uint48"
-      },
-      {
-        "internalType": "uint32",
-        "name": "stalkEarnedPerSeason",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes1",
-        "name": "encodeType",
-        "type": "bytes1"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "gaugePointSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "liquidityWeightSelector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint128",
-        "name": "gaugePoints",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint64",
-        "name": "optimalPercentDepositedBdv",
-        "type": "uint64"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "target",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes4",
-            "name": "selector",
-            "type": "bytes4"
-          },
-          {
-            "internalType": "bytes1",
-            "name": "encodeType",
-            "type": "bytes1"
-          },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct Implementation",
-        "name": "oracleImplementation",
-        "type": "tuple"
-      }
-    ],
-    "name": "whitelistTokenWithEncodeType",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -6846,7 +6801,7 @@
         "type": "tuple"
       }
     ],
-    "name": "whitelistTokenWithExternalImplementation",
+    "name": "whitelistToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -8697,7 +8652,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -9103,7 +9058,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
     "name": "maxWeight",
     "outputs": [
       {
@@ -9116,7 +9077,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
     "name": "noWeight",
     "outputs": [
       {
@@ -9905,6 +9872,21 @@
             "internalType": "uint256",
             "name": "excessivePriceThreshold",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientHigh",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientLow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseReward",
+            "type": "uint256"
           }
         ],
         "internalType": "struct EvaluationParameters",
@@ -10641,6 +10623,11 @@
         "internalType": "uint256",
         "name": "percentOfDepositedBdv",
         "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
       }
     ],
     "name": "defaultGaugePointFunction",
@@ -10837,6 +10824,667 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "ticketId",
+        "type": "uint256"
+      }
+    ],
+    "name": "RetryableTicketCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "L2Beanstalk",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSubmissionCost",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxGas",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "gasPriceBid",
+        "type": "uint256"
+      }
+    ],
+    "name": "approveL2Reciever",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "ticketID",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "L2Beanstalk",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum LibTransfer.To",
+        "name": "toMode",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxSubmissionCost",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxGas",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "gasPriceBid",
+        "type": "uint256"
+      }
+    ],
+    "name": "migrateL2Beans",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "ticketID",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum LibTransfer.To",
+        "name": "toMode",
+        "type": "uint8"
+      }
+    ],
+    "name": "L1BeansMigrated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "depositIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "bdvs",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "L1DepositsMigrated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "fertIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "amounts",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "lastBpf",
+        "type": "uint128"
+      }
+    ],
+    "name": "L1FertilizerMigrated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "L1InternalBalancesMigrated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "index",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "pods",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "L1PlotsMigrated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      }
+    ],
+    "name": "RecieverApproved",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      }
+    ],
+    "name": "approveReciever",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDepositMerkleRoot",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getFertilizerMerkleRoot",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getInternalBalanceMerkleRoot",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPlotMerkleRoot",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "getReciever",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "depositIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "bdvs",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "issueDeposits",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "fertIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint128[]",
+        "name": "amounts",
+        "type": "uint128[]"
+      },
+      {
+        "internalType": "uint128",
+        "name": "lastBpf",
+        "type": "uint128"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "issueFertilizer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "issueInternalBalances",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "index",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "pods",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "issuePlots",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "reciever",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum LibTransfer.To",
+        "name": "toMode",
+        "type": "uint8"
+      }
+    ],
+    "name": "recieveL1Beans",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "depositIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "bdvs",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "verifyDepositMerkleProof",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "fertIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint128[]",
+        "name": "amounts",
+        "type": "uint128[]"
+      },
+      {
+        "internalType": "uint128",
+        "name": "lastBpf",
+        "type": "uint128"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "verifyFertilizerMerkleProof",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "verifyInternalBalanceMerkleProof",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "index",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "proof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "verifyPlotMerkleProof",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

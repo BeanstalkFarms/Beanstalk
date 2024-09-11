@@ -22,7 +22,7 @@ const BarnraiseAnalytics: FC<{}> = () => {
   const chainId = useChainId();
   const [tab, handleChangeTab] = useTabs();
 
-  if (chainId === SupportedChainId.MAINNET) {
+  if (chainId === SupportedChainId.ETH_MAINNET) {
     return (
       <Container maxWidth="lg">
         <ComingSoonCard title="Barn Raise Analytics" />

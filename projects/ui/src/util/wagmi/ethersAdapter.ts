@@ -7,7 +7,7 @@ import { Config, useClient, useConnectorClient } from 'wagmi';
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
 const fallbackChain = {
-  chainId: IS_DEVELOPMENT_ENV ? ChainId.LOCALHOST : ChainId.ARBITRUM,
+  chainId: IS_DEVELOPMENT_ENV ? ChainId.LOCALHOST : ChainId.ARBITRUM_MAINNET,
   name: IS_DEVELOPMENT_ENV ? 'locahost:8545' : 'arbitrum',
 } as const;
 

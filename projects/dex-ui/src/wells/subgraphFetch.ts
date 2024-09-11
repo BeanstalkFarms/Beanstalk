@@ -1,5 +1,6 @@
-import request from "graphql-request";
 import { type TypedDocumentNode } from "@graphql-typed-document-node/core";
+import request from "graphql-request";
+
 import { Settings } from "src/settings";
 
 type AdditionalSubgraphFetchOptions = {

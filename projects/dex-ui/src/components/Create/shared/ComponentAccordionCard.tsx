@@ -1,12 +1,15 @@
 import React from "react";
-import styled from "styled-components";
+
 import { Link } from "react-router-dom";
-import { theme } from "src/utils/ui/theme";
+import styled from "styled-components";
+
+import { ChainExplorerIcon, Github } from "src/components/Icons";
 import { Box, Flex } from "src/components/Layout";
+import { AccordionSelectCard } from "src/components/Selectable";
 import { Text } from "src/components/Typography";
+import { theme } from "src/utils/ui/theme";
+
 import { WellComponentInfo } from "../useWhitelistedWellComponents";
-import { AccordionSelectCard } from "../../Selectable";
-import { Etherscan, Github } from "../../Icons";
 
 export type WellComponentAccordionCardProps = {
   selected: boolean;
@@ -94,9 +97,9 @@ export const WellComponentAccordionCard = ({
           </Flex>
           <Flex $justifyContent="space-between" $alignItems="flex-end">
             <Flex $direction="row" $gap={0.5}>
-              {links.etherscan && (
-                <MayLink url={links.etherscan}>
-                  <Etherscan width={20} height={20} color={theme.colors.lightGray} />
+              {links.explorer && (
+                <MayLink url={links.explorer}>
+                  <ChainExplorerIcon width={20} height={20} color={theme.colors.lightGray} />
                 </MayLink>
               )}
               {links.github && (

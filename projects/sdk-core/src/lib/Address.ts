@@ -1,101 +1,61 @@
-import { ChainId, TESTNET_CHAINS } from "src/constants/chains";
+import { ChainId } from "src/constants/chains";
+import { ChainResolver } from "src/lib/ChainResolver";
 
-export type AddressDefinition = {
-  [id: number]: string;
-};
+export type AddressDefinition = Record<number, string>;
 
 export class Address {
   private addresses: AddressDefinition;
-  public ARBITRUM: string;
-  public MAINNET: string;
-  public LOCALHOST: string;
-  public LOCALHOST_MAINNET: string;
-  public ANVIL1: string;
-  public TESTNET: string;
-
-  static defaultChainId = ChainId.ARBITRUM;
-
-  private static fallbackChainIds = {
-    [ChainId.LOCALHOST_MAINNET]: ChainId.MAINNET,
-    [ChainId.LOCALHOST]: ChainId.ARBITRUM,
-    [ChainId.TESTNET]: Address.defaultChainId,
-    [ChainId.ANVIL1]: Address.defaultChainId
-  };
-
-  static setDefaultChainId = (chainId: ChainId) => {
-    Address.defaultChainId = chainId;
-  };
-
-  static getFallbackChainId(chainId: ChainId) {
-    return Address.fallbackChainIds[chainId as keyof typeof Address.fallbackChainIds];
-  }
 
   static make<T extends string | AddressDefinition>(input: T): Address {
-    const addresses: AddressDefinition = {};
-    if (typeof input == "string") {
-      addresses[Address.defaultChainId] = input.toLowerCase();
-    } else {
-      Object.assign(addresses, input);
-    }
+    const addresses: AddressDefinition =
+      typeof input === "string" ? { [ChainResolver.defaultChainId]: input } : input;
 
-    // Make address values lowercase
-    const lowerCaseAddresses: AddressDefinition = {};
-    for (const key in addresses) {
-      lowerCaseAddresses[key] = addresses[key].toLowerCase();
-    }
-
-    return new Address(lowerCaseAddresses);
+    return new Address(addresses);
   }
 
   constructor(addresses: AddressDefinition) {
-    this.addresses = addresses;
-
-    this.ARBITRUM = this.addresses[ChainId.ARBITRUM];
-    this.LOCALHOST =
-      this.addresses[ChainId.LOCALHOST] ||
-      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST)];
-
-    this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST_MAINNET =
-      this.addresses[ChainId.LOCALHOST_MAINNET] ||
-      this.addresses[Address.getFallbackChainId(ChainId.LOCALHOST_MAINNET)];
-
-    this.TESTNET =
-      this.addresses[ChainId.TESTNET] ||
-      this.addresses[Address.getFallbackChainId(ChainId.TESTNET)];
-    this.ANVIL1 =
-      this.addresses[ChainId.ANVIL1] || this.addresses[Address.getFallbackChainId(ChainId.ANVIL1)];
+    this.addresses = Object.fromEntries(
+      Object.entries(addresses).map(([key, value]) => [Number(key), (value || "").toLowerCase()])
+    );
   }
 
-  get(chainId?: number) {
-    const defaultAddress = this.addresses[Address.defaultChainId] || "";
+  get(chainId: number = ChainResolver.defaultChainId) {
+    ChainResolver.validateChainId(chainId);
 
-    let address = defaultAddress;
+    if (ChainResolver.isTestnet(chainId)) {
+      // return the address for the chainId if it exists.
+      if (this.addresses[chainId]) {
+        return this.addresses[chainId];
+      }
 
-    // Default to Address.defaultChainId if no chain is specified
-    if (!chainId) {
-      return address;
+      // return the address for this chainId's mainnet counterpart.
+      return this.addresses[ChainResolver.resolveToMainnetChainId(chainId)] || "";
     }
 
-    // Throw if user wants a specific chain which we don't support
-    if (!ChainId[chainId]) {
-      throw new Error(`Chain ID ${chainId} is not supported`);
-    }
-
-    // If user wants an address on a TESTNET chain
-    // return ARBITRUM one if it's not found
-    const fallbackChainId = Address.getFallbackChainId(chainId);
-    if (TESTNET_CHAINS.has(chainId)) {
-      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
-    } else {
-      address = this.addresses[chainId] || this.addresses[fallbackChainId] || defaultAddress;
-    }
-
-    return address;
+    return this.addresses[chainId] || "";
   }
 
   set<T extends string | AddressDefinition>(input: T) {
     const newAddress = Address.make(input);
-    Object.assign(this, newAddress);
+    Object.assign(this.addresses, newAddress.addresses);
+  }
+
+  get ARBITRUM_MAINNET(): string {
+    return this.get(ChainId.ARBITRUM_MAINNET);
+  }
+  get ETH_MAINNET(): string {
+    return this.get(ChainId.ETH_MAINNET);
+  }
+  get LOCALHOST(): string {
+    return this.get(ChainId.LOCALHOST);
+  }
+  get LOCALHOST_ETH(): string {
+    return this.get(ChainId.LOCALHOST_ETH);
+  }
+  get TESTNET(): string {
+    return this.get(ChainId.TESTNET);
+  }
+  get ANVIL1(): string {
+    return this.get(ChainId.ANVIL1);
   }
 }

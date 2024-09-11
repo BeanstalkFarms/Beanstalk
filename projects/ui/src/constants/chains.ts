@@ -31,13 +31,13 @@ export enum NetworkType {
 }
 
 export const L1_CHAIN_IDS = [
-  SupportedChainId.MAINNET,
-  SupportedChainId.LOCALHOST_MAINNET,
+  SupportedChainId.ETH_MAINNET,
+  SupportedChainId.LOCALHOST_ETH,
   SupportedChainId.ANVIL1,
 ] as const;
 
 export const L2_CHAIN_IDS = [
-  SupportedChainId.ARBITRUM,
+  SupportedChainId.ARBITRUM_MAINNET,
   SupportedChainId.TESTNET,
   SupportedChainId.LOCALHOST,
 ] as const;

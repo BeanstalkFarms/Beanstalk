@@ -14,12 +14,12 @@ export const MIN_HUMIDITY = new BigNumber(0.2);
 export const HUMIDITY_DECREASE_AT_REPLANT = new BigNumber(2.5);
 export const HUMIDITY_DECREASE_PER_SEASON = new BigNumber(0.005);
 export const REPLANT_SEASON: { [key: number]: BigNumber } = {
-  [SupportedChainId.MAINNET]: new BigNumber(6074),
-  [SupportedChainId.ARBITRUM]: new BigNumber(6074),
+  [SupportedChainId.ETH_MAINNET]: new BigNumber(6074),
+  [SupportedChainId.ARBITRUM_MAINNET]: new BigNumber(6074),
 };
 export const REPLANT_INITIAL_ID: { [key: number]: BigNumber } = {
-  [SupportedChainId.MAINNET]: new BigNumber(6_000_000),
-  [SupportedChainId.ARBITRUM]: new BigNumber(6_000_000),
+  [SupportedChainId.ETH_MAINNET]: new BigNumber(6_000_000),
+  [SupportedChainId.ARBITRUM_MAINNET]: new BigNumber(6_000_000),
 };
 
 // ----------------------------------------s

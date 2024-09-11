@@ -11,6 +11,12 @@ import {Deposit} from "contracts/beanstalk/storage/Account.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import "forge-std/StdUtils.sol";
+import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
+import {P} from "contracts/ecosystem/price/P.sol";
+
+interface IBeanstalkPrice {
+    function price() external view returns (P.Prices memory p);
+}
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
@@ -19,6 +25,7 @@ contract ReseedStateTest is TestHelper {
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address constant BEANSTALK_PRICE = address(0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56);
 
     uint256 constant FIELD_ID = 0;
 
@@ -60,11 +67,19 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
-        uint256 numAccounts = 110;
+        uint256 numAccounts = 10;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+        // skip(100_000_000);
         // l2Beanstalk.gm(address(this), 1);
+    }
+
+    // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
+    function test_beanstalkPrice() public {
+        // Get beanstalk price
+        IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
+        P.Prices memory prices = beanstalkPrice.price();
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -281,18 +296,45 @@ contract ReseedStateTest is TestHelper {
 
     //////////////////// Account Deposits ////////////////////
 
-    function test_getDepositsForAccount() public {
-        // test the L2 Beanstalk
-        IMockFBeanstalk.TokenDepositId[] memory tokenDeposits = l2Beanstalk.getDepositsForAccount(
-            address(DEFAULT_ACCOUNT)
-        );
-        console.log("Checking account: ", address(DEFAULT_ACCOUNT));
-        console.log("token deposits count: ", tokenDeposits.length);
-        for (uint256 i = 0; i < tokenDeposits.length; i++) {
-            console.log("token: ", tokenDeposits[i].token);
-            console.log("depositIds count: ", tokenDeposits[i].depositIds.length);
-            for (uint256 j = 0; j < tokenDeposits[i].depositIds.length; j++) {
-                console.log("depositId: ", tokenDeposits[i].depositIds[j]);
+    function test_AccountDeposits() public {
+        address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
+
+        // for every account
+        for (uint256 i = 0; i < accountNumber; i++) {
+            address account = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
+            // get all deposits of all tokens --> order of whitelist
+            IMockFBeanstalk.TokenDepositId[] memory accountDepositsStorage = l2Beanstalk
+                .getDepositsForAccount(account);
+
+            bytes memory depositDataJson = searchAccountDeposits(account);
+            // decode the deposit data from json
+            IMockFBeanstalk.TokenDepositId[] memory accountDepositsJson = abi.decode(
+                depositDataJson,
+                (IMockFBeanstalk.TokenDepositId[])
+            );
+
+            // for all tokens
+            for (uint256 j = 0; j < accountDepositsStorage.length; j++) {
+                // for all deposits --> if no deposits of a particular token, the for loop is skipped
+                for (uint256 k = 0; k < accountDepositsStorage[j].depositIds.length; k++) {
+                    // assert the token
+                    assertEq(accountDepositsStorage[j].token, accountDepositsJson[j].token);
+                    // assert the deposit id
+                    assertEq(
+                        accountDepositsStorage[j].depositIds[k],
+                        accountDepositsJson[j].depositIds[k]
+                    );
+                    // assert the amount
+                    assertEq(
+                        accountDepositsStorage[j].tokenDeposits[k].amount,
+                        accountDepositsJson[j].tokenDeposits[k].amount
+                    );
+                    // assert the bdv
+                    assertEq(
+                        accountDepositsStorage[j].tokenDeposits[k].bdv,
+                        accountDepositsJson[j].tokenDeposits[k].bdv
+                    );
+                }
             }
         }
     }
@@ -302,7 +344,7 @@ contract ReseedStateTest is TestHelper {
     function parseAccounts(uint256 numAccounts) public returns (uint256) {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/data/getAccounts.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/getAccounts.js"; // script
         inputs[2] = vm.toString(numAccounts);
         bytes memory res = vm.ffi(inputs);
         // decode the number of accounts
@@ -313,7 +355,7 @@ contract ReseedStateTest is TestHelper {
     function searchGlobalPropertyData(string memory property) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-system20577510.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
@@ -323,7 +365,7 @@ contract ReseedStateTest is TestHelper {
     function searchAccountPropertyData(string memory property) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
@@ -333,7 +375,7 @@ contract ReseedStateTest is TestHelper {
     function searchAccountPlots(string memory account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "./test/foundry/Migration/finderScripts/finder.js"; // script
+        inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
         inputs[3] = account;
         bytes memory accountPlots = vm.ffi(inputs);
