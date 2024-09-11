@@ -89,6 +89,7 @@ const MigrationPreview: FC<{}> = () => {
         `https://api.bean.money/migration?account=${_account}`
       ).then((response) => response.json());
       if (migrationData) {
+        const totalPerToken: any[] = [];
         migrationData.silo.deposits.forEach(
           (deposit: any, index: number, deposits: any[]) => {
             const _token = Array.from(
@@ -122,8 +123,35 @@ const MigrationPreview: FC<{}> = () => {
               stalkAfterMow: _stalkAfterMow,
             };
             deposits[index] = _deposit;
+            const totalIndex = totalPerToken.findIndex(
+              (token) => token.token.displayName === _token?.displayName
+            );
+            if (totalIndex === -1) {
+              const total = {
+                token: _token,
+                amount: _amount,
+              };
+              totalPerToken.push(total);
+            } else {
+              totalPerToken[totalIndex].amount = _amount.add(
+                totalPerToken[totalIndex].amount
+              );
+            }
           }
         );
+        migrationData.silo.currentStalk = TokenValue.fromBlockchain(
+          migrationData.silo.currentStalk,
+          16
+        );
+        migrationData.silo.earnedBeans = TokenValue.fromBlockchain(
+          migrationData.silo.earnedBeans,
+          BEAN.decimals
+        );
+        migrationData.silo.stalkAfterMow = TokenValue.fromBlockchain(
+          migrationData.silo.stalkAfterMow,
+          16
+        );
+        migrationData.silo.totalPerToken = totalPerToken;
         migrationData.farm.forEach((token: any, index: number, farm: any[]) => {
           const _token = Array.from(
             sdk.tokens.getMap(),
@@ -362,31 +390,78 @@ const MigrationPreview: FC<{}> = () => {
                       </Tooltip>
                     </Box>
                     <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.silo.earnedBeans,
-                        BEAN.decimals
-                      ).toHuman('short')}
+                      {data.silo.earnedBeans.toHuman('short')}
                     </Typography>
                   </Box>
                   <Divider />
                   <Box>
                     <Typography fontSize={18}>Current Stalk</Typography>
                     <Typography fontSize={20} variant="h4">
-                      {TokenValue.fromBlockchain(
-                        data.silo.currentStalk,
-                        16
-                      ).toHuman('short')}
+                      {data.silo.currentStalk.toHuman('short')}
                     </Typography>
                   </Box>
                   <ArrowForwardIcon sx={{ marginTop: 0.75 }} />
                   <Box>
                     <Typography fontSize={18}>Stalk After Mow</Typography>
-                    <Typography fontSize={20} variant="h4" color={'primary'}>
-                      {TokenValue.fromBlockchain(
-                        data.silo.stalkAfterMow,
-                        16
-                      ).toHuman('short')}
+                    <Typography
+                      fontSize={20}
+                      variant="h4"
+                      color={
+                        data.silo.stalkAfterMow.gt(data.silo.currentStalk)
+                          ? 'primary'
+                          : undefined
+                      }
+                    >
+                      {data.silo.stalkAfterMow.toHuman('short')}
                     </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Typography fontSize={18} fontWeight={700}>
+                      Deposited Tokens
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: 2,
+                        marginTop: 1,
+                      }}
+                    >
+                      {data.silo.totalPerToken &&
+                        data.silo.totalPerToken.map(
+                          (tokenData: any, index: number, array: any[]) => (
+                            <>
+                              <Box>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 0.75,
+                                  }}
+                                >
+                                  <TokenIcon token={tokenData.token} />
+                                  <Typography fontSize={18}>
+                                    {tokenData.token.displayName}
+                                  </Typography>
+                                </Box>
+                                <Typography fontSize={20} variant={'h4'}>
+                                  {tokenData.amount.toHuman('short')}
+                                </Typography>
+                              </Box>
+                              {index !== array.length - 1 && <Divider />}
+                            </>
+                          )
+                        )}
+                    </Box>
                   </Box>
                 </Box>
                 {data.silo.deposits.length > 0 && (
