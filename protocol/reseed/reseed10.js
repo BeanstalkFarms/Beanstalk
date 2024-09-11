@@ -16,6 +16,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "WhitelistFacet",
     "ApprovalFacet",
     "BDVFacet",
+    "OracleFacet",
     "ConvertFacet", // CONVERT
     "ConvertGettersFacet",
     "MetadataFacet", // METADATA
@@ -29,7 +30,8 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "FertilizerFacet", // BARN
     "UnripeFacet",
     "EnrootFacet",
-    "PauseFacet" // DIAMOND
+    "PauseFacet", // DIAMOND
+    "L1RecieverFacet" // MIGRATION
   ];
 
   // A list of public libraries that need to be deployed separately.
@@ -43,7 +45,10 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "LibShipping",
     "LibFlood",
     "LibSilo",
-    "LibPipelineConvert"
+    "LibPipelineConvert",
+    "LibUsdOracle",
+    "LibChainlinkOracle",
+    "LibWell"
   ];
 
   // A mapping of facet to public library names that will be linked to it.

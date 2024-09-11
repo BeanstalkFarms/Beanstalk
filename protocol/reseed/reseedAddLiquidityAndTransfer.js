@@ -1,14 +1,14 @@
 const { MAX_UINT256, L2_WETH, L2_WSTETH, L2_WEETH, L2_WBTC, L2_USDC, L2_USDT } = require("../test/hardhat/utils/constants.js");
 const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
-// TODO: Replace with L2 well addresses.
+
 const WellAddresses = [
-  "0x8cDa74f4e430e3AD0Da6Ab2721E74164DcE981fd", // BEAN/WETH
-  "0xF95f4cEe40313dBF19F6Cc53203940A17598B3a9", // BEAN/WstETH
-  "0x9b0909E4Eff268570e767405CA4F89fA1f42385c", // BEAN/WEETH
-  "0xf9Aaa4eE845B2dC4A02692b757e7038bB8220AAF", // BEAN/WBTC
-  "0x2FBa48E34376536fC1c14AacD49e4683Bd2055a1", // BEAN/USDC
-  "0xEd7dDFD1a400AAdC2C4b2629026D886B40B4b87A" // BEAN/USDT
+  "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB", // BEAN/WETH
+  "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8", // BEAN/WstETH
+  "0xBEA00865405A02215B44eaADB853d0d2192Fc29D", // BEAN/WEETH
+  "0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA", // BEAN/WBTC
+  "0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279", // BEAN/USDC
+  "0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b" // BEAN/USDT
 ];
 
 const NonBeanToken = [
@@ -39,16 +39,14 @@ const beanAmounts = [
   to6("1000000") // BEAN/USDT
 ];
 
-// TODO: uncomment once addresses are finalized.
 async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, verbose = true) {
   console.log("-----------------------------------");
-  console.log("adds liquidity to wells and transfers to l2 beanstalk.\n");
+  console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
 
-  // todo: update bean address once finalized.
-  await impersonateToken("0xe64718A6d44406dE942d3d0f591E370B22263382", 6);
+  await impersonateToken("0xBEA0005B8599265D41256905A9B3073D397812E4", 6);
   const bean = await ethers.getContractAt(
     "MockToken",
-    "0xe64718a6d44406de942d3d0f591e370b22263382"
+    "0xBEA0005B8599265D41256905A9B3073D397812E4"
   );
   // add liquidity and transfer to L2 Beanstalk:
   for (let i = 0; i < WellAddresses.length; i++) {
@@ -60,14 +58,17 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     if (mock) {
       // mint tokens to add liquidity:
       await token.mint(account.address, nonBeanAmounts[i]);
-      await bean.mint(account.address, beanAmounts[i]);
+      await bean.mint(account.address, beanAmounts[i] + to6("1000000"));
     }
-    await token.approve(well.address, nonBeanAmounts[i]);
-    await bean.approve(well.address, beanAmounts[i]);
+    await token.connect(account).approve(well.address, MAX_UINT256);
+    await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
+    console.log(`Adding liquidity to ${WellAddresses[i]} and performing an update to the well pump.`);
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
+    // perform a 0 liq addition to update the well pumps and avoid "NotInitialized" error.
+    await well.connect(account).addLiquidity([0, 0], 0, L2Beanstalk, MAX_UINT256);
   }
 }
 

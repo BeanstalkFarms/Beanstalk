@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {LibEthUsdOracle} from "./LibEthUsdOracle.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -66,6 +65,7 @@ library LibUsdOracle {
      * @dev if address is 0, use the current contract.
      * If encodeType is 0x01, use the default chainlink implementation.
      * Returns 0 rather than reverting if the call fails.
+     * Note: token here refers to the non bean token when quoting for a well price.
      */
     function getTokenPriceFromExternal(
         address token,
@@ -76,7 +76,7 @@ library LibUsdOracle {
         Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 
         // If the encode type is type 1, use the default chainlink implementation instead.
-        // `target` refers to the address of the price aggergator implmenation
+        // `target` refers to the address of the price aggergator implmentation
         if (oracleImpl.encodeType == bytes1(0x01)) {
             // if the address in the oracle implementation is 0, use the chainlink registry to lookup address
             address chainlinkOraclePriceAddress = oracleImpl.target;
@@ -129,23 +129,18 @@ library LibUsdOracle {
             // if token decimals != 0, Beanstalk is attempting to query the USD/TOKEN price, and
             // thus the price needs to be inverted.
             if (tokenDecimals != 0) {
-                // invert tokenPrice (to get CL_TOKEN/TOKEN).
-                // `tokenPrice` has 6 decimal precision (see {LibUniswapOracle.getTwap}).
-                tokenPrice = 1e12 / tokenPrice;
-                // return the USD/TOKEN price.
-                // 1e6 * 1e`n` / 1e`n` = 1e6
+                // invert tokenPrice, taking tokenDecimals into account.
+                tokenPrice = (1e6 * (10 ** tokenDecimals)) / tokenPrice;
                 return (tokenPrice * chainlinkTokenPrice) / (10 ** chainlinkTokenDecimals);
-            } else {
-                // return the TOKEN/USD price.
-                return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
             }
+
+            return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
-        // If the oracle implementation address is not set, use the current contract.
-        address target = oracleImpl.target;
-        if (target == address(0)) target = address(this);
+        // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
+        if (oracleImpl.target == address(0)) return 0;
 
-        (bool success, bytes memory data) = target.staticcall(
+        (bool success, bytes memory data) = oracleImpl.target.staticcall(
             abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
         );
 
