@@ -166,12 +166,15 @@ library LibWell {
         // LibUsdOracle returns the price with 1e6 precision.
         // twaReserves has the same decimal precision as the token.
         // The return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
-        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the 
-        // precision by the token decimals. 
-        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18. 
+        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the
+        // precision by the token decimals.
+        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18.
 
         uint8 tokenDecimals = IERC20Decimals(token).decimals();
-        return  LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(10 ** tokenDecimals);
+        return
+            LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(
+                10 ** tokenDecimals
+            );
     }
 
     /**
