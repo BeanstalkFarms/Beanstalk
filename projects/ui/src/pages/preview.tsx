@@ -958,10 +958,10 @@ const MigrationPreview: FC<{}> = () => {
                                 {farmData.withdrawn.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {farmData.unpicked.toHuman('short')}
+                                {farmData.token.isUnripe ? farmData.unpicked.toHuman('short') : '-'}
                               </TableCell>
                               <TableCell align="right">
-                                {farmData.rinsable.toHuman('short')}
+                                {farmData.token.displayName === "Bean" ? farmData.rinsable.toHuman('short') : '-'}
                               </TableCell>
                               <TableCell align="right">
                                 {farmData.total.toHuman('short')}
