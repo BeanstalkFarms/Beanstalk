@@ -8,6 +8,7 @@ import { Pump, WellFunction } from "@beanstalk/sdk-wells";
 
 import { clearWellsCache } from "src/state/providers/WellsProvider";
 import { Log } from "src/utils/logger";
+import { queryKeys } from "src/utils/query/queryKeys";
 import { useFetchChainScopedQueryData } from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { useAquifer } from "src/wells/aquifer/aquifer";
@@ -261,7 +262,7 @@ export const CreateWellProvider = ({ children }: { children: React.ReactNode }) 
         );
 
         clearWellsCache();
-        fetchScopedQueryData(["wells", sdk]);
+        fetchScopedQueryData(queryKeys.wells(sdk));
 
         Log.module("wellDeployer").debug("Well deployed at address: ", wellAddress || "");
         setDeploying(false);
