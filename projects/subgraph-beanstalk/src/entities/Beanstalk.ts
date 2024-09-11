@@ -63,8 +63,7 @@ export function loadSeason(id: BigInt): Season {
 }
 
 export function getCurrentSeason(): i32 {
-  let beanstalkEntity = loadBeanstalk();
-  return beanstalkEntity.lastSeason;
+  return loadBeanstalk().lastSeason;
 }
 
 // Returns the number of reward beans minted for the requested season

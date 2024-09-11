@@ -1,6 +1,6 @@
 /* This is a generated file */
 
-import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { BigInt } from "@graphprotocol/graph-ts";
 
 class FieldInitialValues {
   numberOfSowers: i32;
@@ -21,18 +21,18 @@ class PodMarketplaceInitialValues {
 }
 
 class UnripeTokenInitialValues {
-  token: Address;
+  tokenType: string;
   totalChoppedAmount: BigInt;
   totalChoppedBdv: BigInt;
   totalChoppedBdvReceived: BigInt;
 }
 
-export const SEASON_INITIAL = 24472;
+export const SEASON_INITIAL = 24484;
 
 export const FIELD_INITIAL_VALUES: FieldInitialValues = {
   numberOfSowers: 0,
-  numberOfSows: 19160,
-  sownBeans: BigInt.fromString("33592460691690"),
+  numberOfSows: 19172,
+  sownBeans: BigInt.fromString("33592460721984"),
   harvestedPods: BigInt.fromString("61126608133951")
 };
 
@@ -49,13 +49,13 @@ export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {
 
 export const UNRIPE_TOKENS_INITIAL_VALUES: UnripeTokenInitialValues[] = [
   {
-    token: Address.fromString("0x1bea0050e63e05fbb5d8ba2f10cf5800b6224449"),
+    tokenType: "urbean",
     totalChoppedAmount: BigInt.fromString("24665725897573"),
     totalChoppedBdv: BigInt.fromString("5882168812974"),
     totalChoppedBdvReceived: BigInt.fromString("1334001323440")
   },
   {
-    token: Address.fromString("0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d"),
+    tokenType: "urlp",
     totalChoppedAmount: BigInt.fromString("7250545162321"),
     totalChoppedBdv: BigInt.fromString("2529372423798"),
     totalChoppedBdvReceived: BigInt.fromString("508153566375")

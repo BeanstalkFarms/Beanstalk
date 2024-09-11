@@ -4,7 +4,8 @@ import { loadBean, loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot
 import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../constants/Version";
 
-export function handleMigration(block: ethereum.Block): void {
+// Carries over cumulative data from L1 -> L2 subgraph. See cache-builder/beanstalk3.js for the input source.
+export function init(block: ethereum.Block): void {
   const token = getProtocolToken(v(), block.number);
   const bean = loadBean(token);
 
@@ -16,7 +17,7 @@ export function handleMigration(block: ethereum.Block): void {
   bean.save();
   // No need to initialize supply/price etc as those will be initialized when liquidity is added.
 
-  // Direct assignment for snapshots is preferable as to avoid large deltas
+  // Direct assignment for snapshots is required as to avoid large deltas
   const beanHourly = loadOrCreateBeanHourlySnapshot(token, block.timestamp, bean.lastSeason);
   beanHourly.volume = bean.volume;
   beanHourly.volumeUSD = bean.volumeUSD;
