@@ -163,17 +163,15 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        // LibUsdOracle returns the price with 6 decimal precision.
-        // This is canceled out by dividing by 1e6.
-        // This return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
-        // so we need to account for whitelisted tokens that have less than 18 decimals by multiplying the
-        // precision difference.
+        // LibUsdOracle returns the price with 1e6 precision.
+        // twaReserves has the same decimal precision as the token.
+        // The return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
+        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the 
+        // precision by the token decimals. 
+        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18. 
 
         uint8 tokenDecimals = IERC20Decimals(token).decimals();
-        return
-            LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6).mul(
-                10 ** (18 - tokenDecimals)
-            );
+        return  LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(10 ** tokenDecimals);
     }
 
     /**
