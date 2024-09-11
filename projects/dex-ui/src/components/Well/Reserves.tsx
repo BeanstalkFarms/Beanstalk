@@ -9,7 +9,7 @@ import { size } from "src/breakpoints";
 import { FC } from "src/types";
 import { formatNum, formatPercent } from "src/utils/format";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
-import { getIsMultiPumpWell } from "src/wells/pump/utils";
+import { useIsMultiFlowPump } from "src/wells/pump/utils";
 
 import { MultiFlowPumpTooltip } from "./MultiFlowPumpTooltip";
 import { Item, Row } from "../Layout";
@@ -30,6 +30,7 @@ export type ReservesProps = {
 
 export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => {
   const isMobile = useIsMobile();
+  const { isMultiFlow } = useIsMultiFlowPump(well);
 
   if (!well) return null;
 
@@ -39,7 +40,7 @@ export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => 
     <Item key={i} column>
       <Symbol>
         {r.token?.symbol}
-        {getIsMultiPumpWell(well).isMultiFlow && (
+        {isMultiFlow && (
           <div className="info-icon">
             <MultiFlowPumpTooltip
               well={well}

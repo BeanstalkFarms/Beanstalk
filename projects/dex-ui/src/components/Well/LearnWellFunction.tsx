@@ -7,7 +7,7 @@ import { Well } from "@beanstalk/sdk-wells";
 import { ExpandBox } from "src/components/ExpandBox";
 import { FC } from "src/types";
 import { formatWellTokenSymbols } from "src/wells/utils";
-import { isConstantProduct2 } from "src/wells/wellFunction/utils";
+import { useIsConstantProduct2 } from "src/wells/wellFunction/utils";
 
 import { WellFunction as WellFunctionIcon } from "../Icons";
 import { TextNudge } from "../Typography";
@@ -17,6 +17,7 @@ type Props = {
 };
 
 function WellFunctionDetails({ well, functionName }: Props & { functionName?: string }) {
+  const isCP2 = useIsConstantProduct2(well);
   if (functionName === "Constant Product") {
     return (
       <TextContainer>
@@ -34,7 +35,7 @@ function WellFunctionDetails({ well, functionName }: Props & { functionName?: st
         </div>
       </TextContainer>
     );
-  } else if (isConstantProduct2(well)) {
+  } else if (isCP2) {
     return (
       <TextContainer>
         <div>

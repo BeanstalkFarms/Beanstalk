@@ -8,7 +8,7 @@ import { Token } from "@beanstalk/sdk";
 import { size } from "src/breakpoints";
 import { FC } from "src/types";
 import { displayTokenSymbol } from "src/utils/format";
-import { getIsMultiPumpWell } from "src/wells/pump/utils";
+import { useIsMultiFlowPump } from "src/wells/pump/utils";
 import { useWellImplementations } from "src/wells/useWellImplementations";
 
 import { Row, TBody, THead, Table, Td, Th } from "./Table";
@@ -22,6 +22,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
   const {
     lookup: { pumps: pumpLookup }
   } = useWhitelistedWellComponents();
+  const { isMultiFlow } = useIsMultiFlowPump(well);
 
   const [items, setItems] = useState<{ name: string; address: string }[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string>("");
@@ -52,7 +53,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
           name: pumpInfo?.fullName || pumpInfo.name,
           address: pump.address
         });
-      } else if (getIsMultiPumpWell(well).isV1) {
+      } else if (isMultiFlow) {
         data.push({
           name: "Multi Flow Pump",
           address: pump.address
@@ -78,7 +79,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
     });
 
     setItems(data);
-  }, [implementationAddress, pumpLookup, well, wellFunctionName]);
+  }, [implementationAddress, pumpLookup, well, wellFunctionName, isMultiFlow]);
 
   return (
     <div>

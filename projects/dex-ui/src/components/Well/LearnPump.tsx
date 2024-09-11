@@ -6,7 +6,7 @@ import { Well } from "@beanstalk/sdk-wells";
 
 import { ExpandBox } from "src/components/ExpandBox";
 import { FC } from "src/types";
-import { getIsMultiPumpWell } from "src/wells/pump/utils";
+import { useIsMultiFlowPump } from "src/wells/pump/utils";
 import { formatWellTokenSymbols } from "src/wells/utils";
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 };
 
 function PumpDetails({ well }: Props) {
-  const { isMultiFlow, isV1_1 } = getIsMultiPumpWell(well);
+  const { isMultiFlow, isV1_1 } = useIsMultiFlowPump(well);
 
   return (
     <TextContainer>

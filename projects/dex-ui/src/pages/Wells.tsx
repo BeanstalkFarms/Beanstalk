@@ -192,10 +192,10 @@ const makeTableData = (
       const reserve1USD = reserve1?.mul(basePrice);
       const reserve2USD = reserve2?.mul(targetPrice);
 
-      if (reserve2USD && reserve1 && reserve1.gt(0)) {
+      if (reserve2USD && reserve1?.gt(0)) {
         baseTokenPrice = reserve2USD.div(reserve1);
       }
-      if (reserve1USD && reserve2USD && reserve2USD.gt(0)) {
+      if (reserve1USD && reserve2USD?.gt(0)) {
         liquidityUSD = reserve1USD.add(reserve2USD);
       }
 
@@ -228,7 +228,6 @@ const makeTableData = (
     };
   });
 
-  // console.log("data: ", data);
   const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
 
   whitelistedSort.sort((a, b) => {
