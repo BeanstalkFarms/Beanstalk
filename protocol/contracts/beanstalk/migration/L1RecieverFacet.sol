@@ -445,14 +445,15 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice adds the migrated deposits to the account.
+     * @notice adds the migrated plots to the account.
+     * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
         address reciever,
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
-        uint256 activeField = s.sys.activeField;
+        uint256 activeField = 0;
         Field storage field = s.accts[reciever].fields[activeField];
         for (uint i; i < index.length; i++) {
             field.plots[index[i]] = pods[i];
