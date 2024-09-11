@@ -57,9 +57,9 @@ export function sow(params: SowParams): void {
 
   plot.farmer = params.account;
   plot.source = "SOW";
-  plot.sourceHash = params.event.transaction.hash.toHexString();
+  plot.sourceHash = params.event.transaction.hash;
   plot.season = field.season;
-  plot.creationHash = params.event.transaction.hash.toHexString();
+  plot.creationHash = params.event.transaction.hash;
   plot.createdAt = params.event.block.timestamp;
   plot.updatedAt = params.event.block.timestamp;
   plot.updatedAtBlock = params.event.block.number;
@@ -103,7 +103,7 @@ export function harvest(params: HarvestParams): void {
       remainingPlot.source = plot.source;
       remainingPlot.sourceHash = plot.sourceHash;
       remainingPlot.season = beanstalk.lastSeason;
-      remainingPlot.creationHash = params.event.transaction.hash.toHexString();
+      remainingPlot.creationHash = params.event.transaction.hash;
       remainingPlot.createdAt = params.event.block.timestamp;
       remainingPlot.updatedAt = params.event.block.timestamp;
       remainingPlot.updatedAtBlock = params.event.block.number;
@@ -202,10 +202,10 @@ export function plotTransfer(params: PlotTransferParams): void {
   // Actually transfer the plots
   if (sourcePlot.pods == params.amount) {
     // Sending full plot
-    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       sourcePlot.source = "TRANSFER";
-      sourcePlot.sourceHash = params.event.transaction.hash.toHexString();
+      sourcePlot.sourceHash = params.event.transaction.hash;
       sourcePlot.beansPerPod = sourcePlot.beansPerPod;
     }
     sourcePlot.farmer = params.to;
@@ -219,7 +219,7 @@ export function plotTransfer(params: PlotTransferParams): void {
     let remainderPlot = loadPlot(protocol, remainderIndex);
     sortedPlots.push(remainderIndex);
 
-    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       // When sending the start of the plot via market, these cannot be derived from sourcePlot.
       remainderPlot.source = sourcePlot.source;
@@ -227,7 +227,7 @@ export function plotTransfer(params: PlotTransferParams): void {
       remainderPlot.beansPerPod = sourcePlot.beansPerPod;
 
       sourcePlot.source = "TRANSFER";
-      sourcePlot.sourceHash = params.event.transaction.hash.toHexString();
+      sourcePlot.sourceHash = params.event.transaction.hash;
       sourcePlot.beansPerPod = sourcePlot.beansPerPod;
     }
     sourcePlot.farmer = params.to;
@@ -239,7 +239,7 @@ export function plotTransfer(params: PlotTransferParams): void {
 
     remainderPlot.farmer = params.from;
     remainderPlot.season = field.season;
-    remainderPlot.creationHash = params.event.transaction.hash.toHexString();
+    remainderPlot.creationHash = params.event.transaction.hash;
     remainderPlot.createdAt = params.event.block.timestamp;
     remainderPlot.updatedAt = params.event.block.timestamp;
     remainderPlot.updatedAtBlock = params.event.block.number;
@@ -259,15 +259,15 @@ export function plotTransfer(params: PlotTransferParams): void {
     sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, currentHarvestable);
     sourcePlot.save();
 
-    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       toPlot.source = "TRANSFER";
-      toPlot.sourceHash = params.event.transaction.hash.toHexString();
+      toPlot.sourceHash = params.event.transaction.hash;
       toPlot.beansPerPod = sourcePlot.beansPerPod;
     }
     toPlot.farmer = params.to;
     toPlot.season = field.season;
-    toPlot.creationHash = params.event.transaction.hash.toHexString();
+    toPlot.creationHash = params.event.transaction.hash;
     toPlot.createdAt = params.event.block.timestamp;
     toPlot.updatedAt = params.event.block.timestamp;
     toPlot.updatedAtBlock = params.event.block.number;
@@ -290,15 +290,15 @@ export function plotTransfer(params: PlotTransferParams): void {
     sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, currentHarvestable);
     sourcePlot.save();
 
-    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       toPlot.source = "TRANSFER";
-      toPlot.sourceHash = params.event.transaction.hash.toHexString();
+      toPlot.sourceHash = params.event.transaction.hash;
       toPlot.beansPerPod = sourcePlot.beansPerPod;
     }
     toPlot.farmer = params.to;
     toPlot.season = field.season;
-    toPlot.creationHash = params.event.transaction.hash.toHexString();
+    toPlot.creationHash = params.event.transaction.hash;
     toPlot.createdAt = params.event.block.timestamp;
     toPlot.updatedAt = params.event.block.timestamp;
     toPlot.updatedAtBlock = params.event.block.number;
@@ -311,7 +311,7 @@ export function plotTransfer(params: PlotTransferParams): void {
     remainderPlot.source = sourcePlot.source;
     remainderPlot.sourceHash = sourcePlot.sourceHash;
     remainderPlot.season = field.season;
-    remainderPlot.creationHash = params.event.transaction.hash.toHexString();
+    remainderPlot.creationHash = params.event.transaction.hash;
     remainderPlot.createdAt = params.event.block.timestamp;
     remainderPlot.updatedAt = params.event.block.timestamp;
     remainderPlot.updatedAtBlock = params.event.block.number;

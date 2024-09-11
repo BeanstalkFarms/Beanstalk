@@ -70,7 +70,7 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
     listing.filledAmount = ZERO_BI;
     listing.status = "ACTIVE";
     listing.createdAt = ZERO_BI;
-    listing.creationHash = "";
+    listing.creationHash = ADDRESS_ZERO;
     listing.updatedAt = ZERO_BI;
     listing.save();
   }
@@ -128,7 +128,7 @@ export function loadPodOrder(orderID: Bytes): PodOrder {
     order.minFillAmount = ZERO_BI;
     order.maxPlaceInLine = ZERO_BI;
     order.pricePerPod = 0;
-    order.creationHash = "";
+    order.creationHash = ADDRESS_ZERO;
     order.fills = [];
     order.save();
   }

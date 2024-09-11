@@ -154,7 +154,7 @@ export function updateDeposit(deposit: SiloDeposit, deltaAmount: BigInt, deltaBd
   }
   deposit.depositedBDV = deposit.depositedBDV.plus(deltaBdv);
   let depositHashes = deposit.hashes;
-  depositHashes.push(event.transaction.hash.toHexString());
+  depositHashes.push(event.transaction.hash);
   deposit.hashes = depositHashes;
   deposit.createdBlock = deposit.createdBlock == ZERO_BI ? event.block.number : deposit.createdBlock;
   deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;

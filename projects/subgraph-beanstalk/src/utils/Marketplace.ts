@@ -118,7 +118,7 @@ export function podListingCreated(params: PodListingCreatedParams): void {
   listing.status = "ACTIVE";
   listing.createdAt = params.event.block.timestamp;
   listing.updatedAt = params.event.block.timestamp;
-  listing.creationHash = params.event.transaction.hash.toHexString();
+  listing.creationHash = params.event.transaction.hash;
 
   listing.save();
 
@@ -133,11 +133,10 @@ export function podListingCreated(params: PodListingCreatedParams): void {
   /// Save  raw event data
   let id = "podListingCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
   let rawEvent = new PodListingCreatedEvent(id);
-  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.hash = params.event.transaction.hash;
   rawEvent.logIndex = params.event.logIndex.toI32();
-  rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = listing.historyID;
-  rawEvent.account = params.account.toHexString();
+  rawEvent.account = params.account;
   rawEvent.placeInLine = params.index.plus(params.start).minus(getHarvestableIndex());
   rawEvent.index = params.index;
   rawEvent.start = params.start;
@@ -185,7 +184,7 @@ export function podListingFilled(params: MarketFillParams): void {
     remainingListing.pricePerPod = listing.pricePerPod;
     remainingListing.maxHarvestableIndex = listing.maxHarvestableIndex;
     remainingListing.mode = listing.mode;
-    remainingListing.creationHash = params.event.transaction.hash.toHexString();
+    remainingListing.creationHash = params.event.transaction.hash;
     remainingListing.minFillAmount = listing.minFillAmount;
     remainingListing.save();
 
@@ -219,9 +218,8 @@ export function podListingFilled(params: MarketFillParams): void {
   // Save the raw event data
   let id = "podListingFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
   let rawEvent = new PodListingFilledEvent(id);
-  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.hash = params.event.transaction.hash;
   rawEvent.logIndex = params.event.logIndex.toI32();
-  rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = originalHistoryID;
   rawEvent.fromFarmer = params.from;
   rawEvent.toFarmer = params.to;
@@ -248,9 +246,8 @@ export function podListingCancelled(params: PodListingCancelledParams): void {
     // Save the raw event data
     let id = "podListingCancelled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
     let rawEvent = new PodListingCancelledEvent(id);
-    rawEvent.hash = params.event.transaction.hash.toHexString();
+    rawEvent.hash = params.event.transaction.hash;
     rawEvent.logIndex = params.event.logIndex.toI32();
-    rawEvent.protocol = params.event.address.toHexString();
     rawEvent.historyID = listing.historyID;
     rawEvent.account = params.account;
     rawEvent.placeInLine = params.index.plus(listing.start).minus(getHarvestableIndex());
@@ -282,7 +279,7 @@ export function podOrderCreated(params: PodOrderCreatedParams): void {
   order.pricePerPod = params.pricePerPod;
   order.pricingFunction = params.pricingFunction;
   order.pricingType = params.pricingType;
-  order.creationHash = params.event.transaction.hash.toHexString();
+  order.creationHash = params.event.transaction.hash;
   order.fills = [];
   order.save();
 
@@ -292,9 +289,8 @@ export function podOrderCreated(params: PodOrderCreatedParams): void {
   // Save the raw event data
   let id = "podOrderCreated-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
   let rawEvent = new PodOrderCreatedEvent(id);
-  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.hash = params.event.transaction.hash;
   rawEvent.logIndex = params.event.logIndex.toI32();
-  rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
   rawEvent.account = params.account;
   rawEvent.orderId = params.id.toHexString();
@@ -343,9 +339,8 @@ export function podOrderFilled(params: MarketFillParams): void {
   // Save the raw event data
   let id = "podOrderFilled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
   let rawEvent = new PodOrderFilledEvent(id);
-  rawEvent.hash = params.event.transaction.hash.toHexString();
+  rawEvent.hash = params.event.transaction.hash;
   rawEvent.logIndex = params.event.logIndex.toI32();
-  rawEvent.protocol = params.event.address.toHexString();
   rawEvent.historyID = order.historyID;
   rawEvent.fromFarmer = params.from;
   rawEvent.toFarmer = params.to;
@@ -372,9 +367,8 @@ export function podOrderCancelled(params: PodOrderCancelledParams): void {
     // Save the raw event data
     let id = "podOrderCancelled-" + params.event.transaction.hash.toHexString() + "-" + params.event.logIndex.toString();
     let rawEvent = new PodOrderCancelledEvent(id);
-    rawEvent.hash = params.event.transaction.hash.toHexString();
+    rawEvent.hash = params.event.transaction.hash;
     rawEvent.logIndex = params.event.logIndex.toI32();
-    rawEvent.protocol = params.event.address.toHexString();
     rawEvent.historyID = order.historyID;
     rawEvent.account = params.account;
     rawEvent.orderId = params.id.toHexString();
@@ -464,7 +458,7 @@ function setBeansPerPodAfterFill(event: ethereum.Event, plotIndex: BigInt, start
   // Update source/cost per pod of the sold plot
   fillPlot.beansPerPod = costInBeans.times(BI_10.pow(6)).div(length);
   fillPlot.source = "MARKET";
-  fillPlot.sourceHash = event.transaction.hash.toHexString();
+  fillPlot.sourceHash = event.transaction.hash;
   fillPlot.save();
 }
 

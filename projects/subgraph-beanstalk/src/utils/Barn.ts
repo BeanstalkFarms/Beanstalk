@@ -58,7 +58,7 @@ export function unripeChopped(params: ChopParams): void {
   chop.underlyingAmount = params.underlyingAmount;
   chop.underlyingBdv = params.underlyingAmount.times(underlyingBdvOne).div(BI_10.pow(<u8>underlyingWhitelist.decimals));
   chop.chopRate = unripe.chopRate;
-  chop.hash = params.event.transaction.hash.toHexString();
+  chop.hash = params.event.transaction.hash;
   chop.blockNumber = params.event.block.number;
   chop.createdAt = params.event.block.timestamp;
   chop.save();

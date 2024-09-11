@@ -37,9 +37,9 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot.field = diamondAddress;
     plot.farmer = ADDRESS_ZERO;
     plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
-    plot.sourceHash = "";
+    plot.sourceHash = ADDRESS_ZERO;
     plot.season = 0;
-    plot.creationHash = "";
+    plot.creationHash = ADDRESS_ZERO;
     plot.createdAt = ZERO_BI;
     plot.updatedAt = ZERO_BI;
     plot.updatedAtBlock = ZERO_BI;

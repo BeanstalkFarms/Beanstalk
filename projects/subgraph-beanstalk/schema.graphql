@@ -643,7 +643,7 @@ type SiloDeposit @entity {
   "Original deposited BDV"
   depositedBDV: BigInt!
   "Transaction hashes pertaining to this deposit"
-  hashes: [String!]!
+  hashes: [Bytes!]!
   "Block of first deposit"
   createdBlock: BigInt!
   "Block when last updated"
@@ -683,13 +683,13 @@ type Plot @entity {
   "Transaction source for this plot. Not the same as creationHash which can include plots splitting from transfer or harvest without the owner changing"
   source: PlotSource!
   "Transaction hash corresponding to source"
-  sourceHash: String!
+  sourceHash: Bytes!
   "Associated plot listing"
   listing: PodListing
   "Season when created"
   season: Int!
   "Transaction hash of when this plot entity was created"
-  creationHash: String!
+  creationHash: Bytes!
   "Timestamp of creation"
   createdAt: BigInt!
   "Timestamp when updated"
@@ -1013,7 +1013,7 @@ type PodListing @entity {
   updatedAt: BigInt!
 
   "Transaction hash when this PodListing entity was created."
-  creationHash: String!
+  creationHash: Bytes!
 }
 
 type PodOrder @entity {
@@ -1131,7 +1131,7 @@ type PodOrder @entity {
   updatedAt: BigInt!
 
   "Transaction hash when this PodOrder entity was created."
-  creationHash: String!
+  creationHash: Bytes!
 }
 
 type PodFill @entity {
@@ -1169,7 +1169,7 @@ type PodFill @entity {
 type Fertilizer @entity {
   "Token address for fert"
   id: Bytes!
-  "Address of parent beanstalk"
+  "'beanstalk'"
   beanstalk: String!
   "Total overall suppy of fert tokens"
   supply: BigInt!
@@ -1232,11 +1232,9 @@ interface MarketplaceEvent {
   "{ Event type }-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Block number of this event"
   blockNumber: BigInt!
   "Timestamp of this event"
@@ -1263,7 +1261,7 @@ type Chop @entity(immutable: true) {
   "The effective chop rate for this chop"
   chopRate: BigDecimal!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "The block number of this event"
   blockNumber: BigInt!
   "Timestamp of this chop"
@@ -1274,15 +1272,13 @@ type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   "podListingCreated-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account creating the listing"
-  account: String!
+  account: Bytes!
   "Where these pods were in line when listed"
   placeInLine: BigInt!
   "Index of the plot listed"
@@ -1313,11 +1309,9 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   "podListingFilled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
@@ -1344,11 +1338,9 @@ type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   "seedChange-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
@@ -1367,11 +1359,9 @@ type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCreated-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account creating the listing"
@@ -1402,11 +1392,9 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderFilled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
@@ -1433,11 +1421,9 @@ type PodOrderCancelled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCancelled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
