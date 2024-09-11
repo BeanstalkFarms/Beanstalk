@@ -205,71 +205,71 @@ const MigrationPreview: FC<{}> = () => {
           description="Preview an account's assets after migration"
         />
         <Card sx={{ p: 2 }}>
-          <Stack gap={1.5}>
-            <Row
-              justifyContent="center"
-              alignItems="center"
-              gap={2}
-              sx={{ px: 0.5 }}
-            >
-              <Typography fontSize={20}>Enter Address</Typography>
-              <TextField
-                sx={{ width: 540 }}
-                placeholder="0x0000"
-                size="medium"
-                color="primary"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment
-                      position="start"
-                      sx={{ ml: account ? -1 : 0, mr: 0 }}
-                    >
-                      {account && !isAccountValid && (
-                        <CloseIcon
-                          sx={{ height: 40, width: 40, fontSize: '100%' }}
-                          color="warning"
-                        />
-                      )}
-                      {account && isAccountValid && (
-                        <CheckIcon
-                          sx={{ height: 40, width: 40, fontSize: '100%' }}
-                          color="primary"
-                        />
-                      )}
-                    </InputAdornment>
-                  ),
-                }}
-                value={account}
-                onChange={(e) => {
-                  validateAddress(e.target.value);
-                }}
-              />
-            </Row>
-            <Row
-              justifyContent="center"
-              alignItems="center"
-              gap={2}
-              sx={{ px: 0.5 }}
-            >
-              <Button
-                size="large"
-                fullWidth
-                sx={{ maxWidth: 300 }}
-                onClick={() => getMigrationData()}
+          <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'center' }}>
+            <Stack gap={1.5} maxWidth={540} flexGrow={1}>
+              <Row
+                justifyContent="center"
+                alignItems="center"
+                gap={2}
+                sx={{ px: 0.5 }}
               >
-                Submit
-              </Button>
-              <Button
-                size="large"
-                fullWidth
-                disabled={!connectedAccount}
-                sx={{ maxWidth: 300 }}
-                onClick={() => useConnectedWallet()}
+                <Typography fontSize={20}>Enter Address</Typography>
+                <TextField
+                  sx={{ flexGrow: 1 }}
+                  placeholder="0x0000"
+                  size="medium"
+                  color="primary"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ ml: account ? -1 : 0, mr: 0 }}
+                      >
+                        {account && !isAccountValid && (
+                          <CloseIcon
+                            sx={{ height: 40, width: 40, fontSize: '100%' }}
+                            color="warning"
+                          />
+                        )}
+                        {account && isAccountValid && (
+                          <CheckIcon
+                            sx={{ height: 40, width: 40, fontSize: '100%' }}
+                            color="primary"
+                          />
+                        )}
+                      </InputAdornment>
+                    ),
+                  }}
+                  value={account}
+                  onChange={(e) => {
+                    validateAddress(e.target.value);
+                  }}
+                />
+              </Row>
+              <Row
+                justifyContent="center"
+                alignItems="center"
+                gap={2}
+                sx={{ px: 0.5 }}
               >
-                Use Connected Wallet
-              </Button>
-            </Row>
-          </Stack>
+                <Button
+                  size="large"
+                  fullWidth
+                  onClick={() => getMigrationData()}
+                >
+                  Submit
+                </Button>
+                <Button
+                  size="large"
+                  fullWidth
+                  disabled={!connectedAccount}
+                  onClick={() => useConnectedWallet()}
+                >
+                  Use Connected Wallet
+                </Button>
+              </Row>
+            </Stack>
+          </Box>
         </Card>
         {data && (
           <>
