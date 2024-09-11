@@ -163,12 +163,15 @@ library LibUsdOracle {
             return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
-        // If the oracle implementation address is not set, use the current contract.
-        address target = oracleImpl.target;
-        if (target == address(0)) target = address(this);
+        // if `isMillion` is enabled, append the boolean into the oracleImpl,
+        // such that the oracle implementation can use the data.
+        bytes memory oracleImplData = oracleImpl.data;
+        if (isMillion) {
+            oracleImplData = abi.encodePacked(oracleImpl.data, isMillion);
+        }
 
-        (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
+        (bool success, bytes memory data) = oracleImpl.target.staticcall(
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImplData)
         );
 
         if (!success) return 0;

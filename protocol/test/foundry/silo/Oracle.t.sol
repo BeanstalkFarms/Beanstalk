@@ -210,6 +210,10 @@ contract OracleTest is TestHelper {
 
         uint256 tokenPriceWBTC = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC); // should be 50000e6
         assertEq(tokenPriceWBTC, 50000e6, "getTokenUsdPrice wbtc");
+
+        // also exercise getMillionUsdPrice
+        uint256 tokenPriceWBTCMillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        assertEq(tokenPriceWBTCMillion, 50000e12, "getMillionUsdPrice wbtc");
     }
 
     function testGetOracleImplementationForToken() public {
@@ -431,6 +435,25 @@ contract ExternalOracleTester {
         uint256 lookback,
         bytes memory data
     ) external view returns (uint256) {
+        uint256 timeout;
+        bool isMillion = false;
+
+        if (data.length > 32) {
+            // timeout and isMillion supplied
+            // (timeout, isMillion) = abi.decode(data, (uint256, bool));
+
+            assembly {
+                timeout := mload(add(data, 32))
+                isMillion := byte(0, mload(add(data, 64)))
+            }
+        } else if (data.length == 32) {
+            // only timeout supplied
+            (timeout) = abi.decode(data, (uint256));
+        }
+
+        if (isMillion) {
+            return 50000e12;
+        }
         return 50000e6;
     }
 }
