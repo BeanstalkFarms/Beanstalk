@@ -2,13 +2,13 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
 
-async function reseed9(account, L2Beanstalk, mock = false) {
+async function reseed9(account, L2Beanstalk, mock = true) {
   console.log("-----------------------------------");
   console.log("reseed9: whitelist tokens.\n");
 
   // Files
   let whitelistSettingsPath;
-  if (mock) {
+  if (true) {
     whitelistSettingsPath = "./reseed/data/mocks/r9-whitelist-mock.json";
   } else {
     whitelistSettingsPath = "./reseed/data/r9-whitelist.json";

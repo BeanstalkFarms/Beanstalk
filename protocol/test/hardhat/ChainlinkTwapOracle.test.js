@@ -17,13 +17,6 @@ async function setToSecondsAfterHour(seconds = 0) {
   await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
 }
 
-async function checkPriceWithError(price, error = "1000000") {
-  expect(await mockBeanstalk.getEthUsdPrice()).to.be.within(
-    to6(price).sub(toBN(error).div("2")),
-    to6(price).add(toBN(error).div("2"))
-  ); // Expected Rounding error
-}
-
 describe("TWAP Chainlink Oracle", function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();

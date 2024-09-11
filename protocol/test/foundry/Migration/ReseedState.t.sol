@@ -12,6 +12,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import "forge-std/StdUtils.sol";
+import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
+import {P} from "contracts/ecosystem/price/P.sol";
+
+interface IBeanstalkPrice {
+    function price() external view returns (P.Prices memory p);
+}
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
@@ -26,6 +32,7 @@ contract ReseedStateTest is TestHelper {
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address constant BEANSTALK_PRICE = address(0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56);
 
     uint256 constant FIELD_ID = 0;
 
@@ -72,7 +79,15 @@ contract ReseedStateTest is TestHelper {
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+        // skip(100_000_000);
         // l2Beanstalk.gm(address(this), 1);
+    }
+
+    // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
+    function test_beanstalkPrice() public {
+        // Get beanstalk price
+        IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
+        P.Prices memory prices = beanstalkPrice.price();
     }
 
     ////////////////// WhiteListed Tokens //////////////////

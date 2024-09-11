@@ -48,7 +48,6 @@ struct System {
     uint256 reentrantStatus;
     uint256 farmingStatus;
     address ownerCandidate;
-    uint256 plenty;
     uint128 soil;
     uint128 beanSown;
     uint256 activeField;
@@ -61,7 +60,6 @@ struct System {
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-    mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
     mapping(address => Implementation) oracleImplementation;
@@ -410,6 +408,7 @@ struct MigrationData {
     bool migratedPlots;
     bool migratedFert;
     bool migratedInternalBalances;
+    bool migratedPodOrders;
 }
 
 /**

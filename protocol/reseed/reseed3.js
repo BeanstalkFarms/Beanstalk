@@ -9,8 +9,8 @@ async function reseed3(account, L2Beanstalk, mock) {
   let podListingsPath;
   let podOrdersPath;
   if (mock) {
-    podListingsPath = "./reseed/data/mocks/r2/pod-listings-mock.json";
-    podOrdersPath = "./reseed/data/mocks/r2/pod-orders-mock.json";
+    podListingsPath = "./reseed/data/mocks/r3/pod-listings-mock.json";
+    podOrdersPath = "./reseed/data/mocks/r3/pod-orders-mock.json";
   } else {
     podListingsPath = "./reseed/data/r2/pod-listings.json";
     podOrdersPath = "./reseed/data/r2/pod-orders.json";

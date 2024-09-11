@@ -123,6 +123,34 @@ task("reseedL2", async () => {
   });
 });
 
+// example usage:
+// npx hardhat measureGasUsed --start 244125439 --end 244125766 --network localhost
+// currently reseed uses 3381686192 gas on Arbitrum
+task("measureGasUsed")
+  .addParam("start", "The start block to measure gas used from")
+  .addParam("end", "The end block to measure gas used to")
+  .setAction(async (args, hre) => {
+    const provider = hre.ethers.provider;
+    // Convert string inputs to numbers
+    const startBlock = parseInt(args.start, 10);
+    const endBlock = parseInt(args.end, 10);
+    if (isNaN(startBlock) || isNaN(endBlock)) {
+      throw new Error("Invalid block numbers provided. Please ensure they are valid integers.");
+    }
+
+    let totalGasUsed = hre.ethers.BigNumber.from(0);
+
+    // Iterate through all blocks and sum up the gas used
+    for (let i = startBlock; i <= endBlock; i++) {
+      const block = await provider.getBlock(i);
+      totalGasUsed = totalGasUsed.add(block.gasUsed);
+    }
+
+    console.log(
+      `Total gas used between blocks ${startBlock} and ${endBlock}: ${totalGasUsed.toString()}`
+    );
+  });
+
 task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets", async () => {
   // The path (relative to the root of `protocol` directory) where all modules sit.
   const modulesDir = path.join("contracts", "beanstalk");

@@ -43,7 +43,6 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   console.log("-----------------------------------");
   console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
 
-  // todo: update bean address once finalized.
   await impersonateToken("0xBEA0005B8599265D41256905A9B3073D397812E4", 6);
   const bean = await ethers.getContractAt(
     "MockToken",
@@ -64,12 +63,12 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
-    console.log(`Adding liquidity to ${WellAddresses[i]} and performing a swap to update the well pump.`);
+    console.log(`Adding liquidity to ${WellAddresses[i]} and performing an update to the well pump.`);
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
-    // perform a swap to update the well pumps and avoid "NotInitialized" error.
-    await well.connect(account).swapFrom(bean.address, token.address, to6("1"), 0, account.address, MAX_UINT256);
+    // perform a 0 liq addition to update the well pumps and avoid "NotInitialized" error.
+    await well.connect(account).addLiquidity([0, 0], 0, L2Beanstalk, MAX_UINT256);
   }
 }
 

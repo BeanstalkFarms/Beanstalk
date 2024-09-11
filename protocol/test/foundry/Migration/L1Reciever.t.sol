@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
+import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
 
 /**
@@ -14,7 +15,7 @@ interface IERC1555 {
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract L1RecieverFacetTest is TestHelper {
+contract L1RecieverFacetTest is Order, TestHelper {
     // contracts for testing:
     address constant OWNER = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
     address constant RECIEVER = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
@@ -117,6 +118,35 @@ contract L1RecieverFacetTest is TestHelper {
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
+    function test_L2MigratePodOrder() public {
+        bs.setRecieverForL1Migration(address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4), RECIEVER);
+
+        (
+            address owner,
+            L1RecieverFacet.L1PodOrder[] memory podOrders,
+            bytes32[] memory proof
+        ) = getMockPodOrder();
+
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issuePodOrders(
+            address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4),
+            podOrders,
+            proof
+        );
+
+        // update pod order with reciever to verify id:
+        podOrders[0].podOrder.orderer = RECIEVER;
+
+        bytes32 id = _getOrderId(podOrders[0].podOrder);
+
+        assertEq(bs.getPodOrder(id), podOrders[0].beanAmount);
+
+        // verify user cannot migrate afterwords.
+        vm.expectRevert("L2Migration: Orders have been migrated");
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
+    }
+
     /**
      * @notice verifies only the owner or bridge can call the migration functions.
      */
@@ -174,7 +204,7 @@ contract L1RecieverFacetTest is TestHelper {
         L1RecieverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
     }
 
-    function test_L2MigrateInvalidInternalFert() public {
+    function test_L2MigrateInvalidFert() public {
         bs.setRecieverForL1Migration(OWNER, RECIEVER);
 
         (
@@ -191,6 +221,24 @@ contract L1RecieverFacetTest is TestHelper {
         vm.expectRevert("L2Migration: Invalid Fertilizer");
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+    }
+
+    function test_L2MigrateInvalidPodOrder() public {
+        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+
+        (
+            address owner,
+            L1RecieverFacet.L1PodOrder[] memory podOrders,
+            bytes32[] memory proof
+        ) = getMockPodOrder();
+
+        // update pod orderer
+        podOrders[0].podOrder.orderer = RECIEVER;
+
+        // verify user cannot migrate afterwords.
+        vm.expectRevert("L2Migration: Invalid Order");
+        vm.prank(RECIEVER);
+        L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
     }
 
     // test helpers
@@ -276,6 +324,26 @@ contract L1RecieverFacetTest is TestHelper {
         proof[2] = bytes32(0x0a2ec57dfd306a0e6b245cde079298f849cda3a3ba90016fa3216aac66a9ede3);
 
         return (account, ids, amounts, lastBpf, proof);
+    }
+
+    function getMockPodOrder()
+        internal
+        returns (address, L1RecieverFacet.L1PodOrder[] memory, bytes32[] memory)
+    {
+        address account = address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4);
+
+        L1RecieverFacet.L1PodOrder[] memory podOrders = new L1RecieverFacet.L1PodOrder[](1);
+        podOrders[0] = L1RecieverFacet.L1PodOrder(
+            Order.PodOrder(account, 1, 100000, 1000000000000, 1000000),
+            1000000
+        );
+
+        bytes32[] memory proof = new bytes32[](3);
+        proof[0] = bytes32(0x9887e2354e3cdb5d01aff524d71607cfdf3c4293c6f5711c806277fee5ad2063);
+        proof[1] = bytes32(0xe7d5a9eada9ddd23ca981cb62c1c0668339becddfdd69c463ae63ee3ebbdf50f);
+        proof[2] = bytes32(0x9dc791f184484213529aa44fad0074c356eb252777a3c9b0516efaf0fd740650);
+
+        return (account, podOrders, proof);
     }
 
     /**
