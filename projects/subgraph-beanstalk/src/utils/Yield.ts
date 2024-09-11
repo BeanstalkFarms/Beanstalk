@@ -15,7 +15,7 @@ import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { getProtocolFertilizer, minEMASeason } from "../../../subgraph-core/constants/RuntimeConstants";
+import { getProtocolFertilizer, minEMASeason, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
@@ -138,8 +138,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     let depositedBeanBdv = ZERO_BD;
 
     let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 20);
-    // Stalk has 10 decimals
-    let siloStalk = toDecimal(silo.stalk, 10);
+    let siloStalk = toDecimal(silo.stalk, stalkDecimals(v()));
 
     let germinatingBeanBdv: BigDecimal[] = [];
     let germinatingGaugeLpBdv: BigDecimal[][] = [];

@@ -28,7 +28,7 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
 
   // -- Field level totals
   field.season = currentSeason;
-  field.podRate = seasonEntity.beans == ZERO_BI ? ZERO_BD : toDecimal(field.unharvestablePods, 6).div(toDecimal(seasonEntity.beans, 6));
+  field.podRate = seasonEntity.beans == ZERO_BI ? ZERO_BD : toDecimal(field.unharvestablePods).div(toDecimal(seasonEntity.beans));
 
   takeFieldSnapshots(field, block);
   field.save();

@@ -114,3 +114,7 @@ export function getBeanstalkPriceAddress(blockNumber: BigInt): Address {
 export function minEMASeason(): i32 {
   return REPLANT_SEASON.toI32();
 }
+
+export function stalkDecimals(): i32 {
+  return 10;
+}

@@ -89,3 +89,10 @@ export function minEMASeason(v: VersionDto): i32 {
   }
   throw new Error("Unsupported protocol");
 }
+
+export function stalkDecimals(v: VersionDto): i32 {
+  if (v.chain == "ethereum" && v.protocolAddress == BEANSTALK) {
+    return BeanstalkEth.stalkDecimals();
+  }
+  throw new Error("Unsupported protocol");
+}
