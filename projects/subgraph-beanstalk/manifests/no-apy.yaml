@@ -29,6 +29,31 @@ dataSources:
             kind: once
       file: ../src/utils/constants/Version.ts
   ###
+  # EXPLOIT
+  ###
+  - kind: ethereum/contract
+    name: Exploit
+    network: mainnet
+    source:
+      address: "0xDC59ac4FeFa32293A95889Dc396682858d52e5Db"
+      abi: ERC20
+      startBlock: 14602789 # Exploit
+      endBlock: 14602789 # Exploit
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      blockHandlers:
+        - handler: handleExploit
+          filter:
+            kind: once
+      file: ../src/handlers/BeanHandler.ts
+  ###
   # SILO
   ###
   - kind: ethereum/contract
@@ -58,20 +83,12 @@ dataSources:
           handler: handleConvert
         - event: StalkBalanceChanged(indexed address,int256,int256)
           handler: handleStalkBalanceChanged
-        - event: SeedsBalanceChanged(indexed address,int256)
-          handler: handleSeedsBalanceChanged
         - event: Plant(indexed address,uint256)
           handler: handlePlant
-        - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
-          handler: handleWhitelistToken
         - event: DewhitelistToken(indexed address)
           handler: handleDewhitelistToken
         - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
           handler: handleUpdatedStalkPerBdvPerSeason
-        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
-          handler: handleRemoveWithdrawal
-        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
-          handler: handleRemoveWithdrawals
       file: ../src/handlers/SiloHandler.ts
   - kind: ethereum/contract
     name: LegacySilo-Replanted-SeedGauge
@@ -146,6 +163,32 @@ dataSources:
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256)
           handler: handleWhitelistToken_v3
       file: ../src/handlers/legacy/LegacySiloHandler.ts
+  - kind: ethereum/contract
+    name: LegacySilo-SeedGauge-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 19927634 # SeedGauge
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: SeedsBalanceChanged(indexed address,int256)
+          handler: handleSeedsBalanceChanged
+        - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
+          handler: handleWhitelistToken
+        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveWithdrawal
+        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
+          handler: handleRemoveWithdrawals
+      file: ../src/handlers/legacy/LegacySiloHandler.ts
   ###
   # SEED GAUGE
   ###
@@ -182,9 +225,29 @@ dataSources:
           handler: handleTotalGerminatingStalkChanged
         - event: TotalStalkChangedFromGermination(int256,int256)
           handler: handleTotalStalkChangedFromGermination
+      file: ../src/handlers/GaugeHandler.ts
+  - kind: ethereum/contract
+    name: LegacySeedGauge-SeedGauge-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 19628074
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - SeedGauge
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+      eventHandlers:
         - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
           handler: handleUpdateGaugeSettings
-      file: ../src/handlers/GaugeHandler.ts
+      file: ../src/handlers/legacy/LegacyGaugeHandler.ts
   ###
   # FIELD
   ###
@@ -210,14 +273,14 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
         - event: Sow(indexed address,uint256,uint256,uint256)
-          handler: handleSow
+          handler: handleSow_v1
         - event: Harvest(indexed address,uint256[],uint256)
-          handler: handleHarvest
+          handler: handleHarvest_v1
         - event: PlotTransfer(indexed address,indexed address,indexed uint256,uint256)
-          handler: handlePlotTransfer
+          handler: handlePlotTransfer_v1
         - event: TemperatureChange(indexed uint256,uint256,int8)
-          handler: handleTemperatureChange
-      file: ../src/handlers/FieldHandler.ts
+          handler: handleTemperatureChange_v1
+      file: ../src/handlers/legacy/LegacyFieldHandler.ts
   - kind: ethereum/contract
     name: LegacyField-PreReplant-SeedGauge
     network: mainnet
@@ -271,21 +334,37 @@ dataSources:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
-        - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint256,bytes,uint8,uint8)
-          handler: handlePodListingCreated
-        - event: PodListingFilled(indexed address,indexed address,uint256,uint256,uint256,uint256)
-          handler: handlePodListingFilled
-        - event: PodOrderCreated(indexed address,bytes32,uint256,uint24,uint256,uint256,bytes,uint8)
-          handler: handlePodOrderCreated
-        - event: PodOrderFilled(indexed address,indexed address,bytes32,uint256,uint256,uint256,uint256)
-          handler: handlePodOrderFilled
-        # NOT a duplicate, this signature does not have an indexed uint256.
-        # Both signatures are required to recognize all events.
-        - event: PodListingCancelled(indexed address,uint256)
-          handler: handlePodListingCancelled
         - event: PodOrderCancelled(indexed address,bytes32)
           handler: handlePodOrderCancelled
       file: ../src/handlers/MarketplaceHandler.ts
+  - kind: ethereum/contract
+    name: LegacyMarketplace-PreReplant-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 14148509 # BIP-11 Pod Marketplace
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - PodMarketplace
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint256,bytes,uint8,uint8)
+          handler: handlePodListingCreated_v2
+        - event: PodListingFilled(indexed address,indexed address,uint256,uint256,uint256,uint256)
+          handler: handlePodListingFilled_v2
+        - event: PodOrderCreated(indexed address,bytes32,uint256,uint24,uint256,uint256,bytes,uint8)
+          handler: handlePodOrderCreated_v2
+        - event: PodOrderFilled(indexed address,indexed address,bytes32,uint256,uint256,uint256,uint256)
+          handler: handlePodOrderFilled_v2
+        - event: PodListingCancelled(indexed address,uint256)
+          handler: handlePodListingCancelled_v2
+      file: ../src/handlers/legacy/LegacyMarketplaceV2Handler.ts
   - kind: ethereum/contract
     name: LegacyMarketplace-PreReplant-SeedGauge
     network: mainnet
@@ -409,8 +488,6 @@ dataSources:
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
-        - event: Reward(indexed uint32,uint256,uint256,uint256)
-          handler: handleReward
         - event: WellOracle(indexed uint32,address,int256,bytes)
           handler: handleWellOracle
         - event: Soil(indexed uint32,uint256)
@@ -469,7 +546,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: PreReplant
+      abi: SeedGauge
       startBlock: 12974075
       endBlock: 15277986 # Replanted
     mapping:
@@ -479,8 +556,8 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
@@ -502,6 +579,8 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleReplantSunrise
@@ -526,6 +605,26 @@ dataSources:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
       file: ../src/handlers/SeasonHandler.ts
+  - kind: ethereum/contract
+    name: LegacySeason-PreReplant-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 12974075
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: Reward(indexed uint32,uint256,uint256,uint256)
+          handler: handleReward
+      file: ../src/handlers/legacy/LegacySeasonHandler.ts
   ###
   # BEAN ERC20
   ###
@@ -593,3 +692,8 @@ dataSources:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged
       file: ../src/handlers/FarmHandler.ts
+# features:
+#   - grafting
+# graft:
+#   base: QmUqT47H7o3gcZ2mHRJf2J5hpitWDYxsMmacGeuvo1wKU7
+#   block: 19927630
