@@ -168,8 +168,15 @@ library LibUsdOracle {
         // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
         if (oracleImpl.target == address(0)) return 0;
 
+        // if `isMillion` is enabled, append the boolean into the oracleImpl,
+        // such that the oracle implementation can use the data.
+        bytes memory oracleImplData = oracleImpl.data;
+        if (isMillion) {
+            oracleImplData = abi.encodePacked(oracleImpl.data, isMillion);
+        }
+
         (bool success, bytes memory data) = oracleImpl.target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImplData)
         );
 
         if (!success) return 0;
