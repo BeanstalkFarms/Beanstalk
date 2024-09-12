@@ -1,6 +1,7 @@
 const { parseAccountStatus } = require("./dataConverts/convertAccountStatuses.js");
 const { parseInternalBalances } = require("./dataConverts/convertInternalBalances.js");
 const { parseField } = require("./dataConverts/convertField.js");
+const { parseWhitelist } = require("./dataConverts/convertWhitelist.js");
 const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
@@ -176,6 +177,7 @@ function parseBeanstalkData() {
     "./reseed/data/r2/L2_external_unripe_lp_balances.json",
     contractAccounts
   );
+  parseWhitelist(storageSystemPath, "./reseed/data/r9-whitelist-test.json");
 }
 
 async function printBeanstalk() {
