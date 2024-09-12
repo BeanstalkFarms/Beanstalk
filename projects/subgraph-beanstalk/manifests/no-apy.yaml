@@ -61,7 +61,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 15277986 # Replanted (Silo currently has no support for pre-exploit)
     mapping:
       kind: ethereum/events
@@ -70,8 +70,8 @@ dataSources:
       entities:
         - Silo
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: AddDeposit(indexed address,indexed address,int96,uint256,uint256)
           handler: handleAddDeposit
@@ -197,7 +197,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 19628074
     mapping:
       kind: ethereum/events
@@ -206,8 +206,8 @@ dataSources:
       entities:
         - SeedGauge
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
@@ -256,7 +256,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 12974075 # Field has all-time support
     mapping:
       kind: ethereum/events
@@ -265,8 +265,8 @@ dataSources:
       entities:
         - Field
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: CurvePrice
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
@@ -322,7 +322,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 14148509 # BIP-11 Pod Marketplace
     mapping:
       kind: ethereum/events
@@ -331,9 +331,10 @@ dataSources:
       entities:
         - PodMarketplace
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
+        # The address field did get renamed in the reseed but this will still work
         - event: PodOrderCancelled(indexed address,bytes32)
           handler: handlePodOrderCancelled
       file: ../src/handlers/MarketplaceHandler.ts
@@ -449,7 +450,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 15277986
     mapping:
       kind: ethereum/events
@@ -458,8 +459,8 @@ dataSources:
       entities:
         - Chop
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
@@ -474,7 +475,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 12974075
     mapping:
       kind: ethereum/events
@@ -483,8 +484,8 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
@@ -677,7 +678,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: Reseed
       startBlock: 15277986 # Replanted
     mapping:
       kind: ethereum/events
@@ -686,8 +687,8 @@ dataSources:
       entities:
         - SiloAsset
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged

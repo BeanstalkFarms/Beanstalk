@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
