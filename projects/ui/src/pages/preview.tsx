@@ -41,6 +41,7 @@ import {
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
 import TokenIcon from '~/components/Common/TokenIcon';
+import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 
 const MigrationPreview: FC<{}> = () => {
   const connectedAccount = useAccount();
@@ -54,6 +55,9 @@ const MigrationPreview: FC<{}> = () => {
   const sdk = useSdk();
 
   const BEAN = sdk.tokens.BEAN;
+  const PODS = sdk.tokens.PODS;
+
+  const harvestableIndex = TokenValue.fromHuman(useHarvestableIndex().toString(), PODS.decimals);
 
   useEffect(() => {
     if (accountUrl) {
@@ -675,7 +679,7 @@ const MigrationPreview: FC<{}> = () => {
                                   },
                                 }}
                               >
-                                <TableCell>Index</TableCell>
+                                <TableCell>Place In Line</TableCell>
                                 <TableCell align="right">Amount</TableCell>
                               </TableRow>
                             </TableHead>
@@ -694,10 +698,10 @@ const MigrationPreview: FC<{}> = () => {
                                   }}
                                 >
                                   <TableCell component="th" scope="row">
-                                    {TokenValue.fromBlockchain(
+                                    {(TokenValue.fromBlockchain(
                                       plot.index,
                                       6
-                                    ).toHuman('short')}
+                                    )).sub(harvestableIndex).toHuman('short')}
                                   </TableCell>
                                   <TableCell align="right">
                                     {TokenValue.fromBlockchain(
@@ -973,7 +977,7 @@ const MigrationPreview: FC<{}> = () => {
                     </Table>
                   </TableContainer>
                 ) : (
-                  <Box>This account has no Farm Balances.</Box>
+                  <Box>This account has no Farm Balances to be migrated.</Box>
                 )}
               </Box>
             </Card>
