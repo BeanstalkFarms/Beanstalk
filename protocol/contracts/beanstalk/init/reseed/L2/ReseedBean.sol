@@ -153,7 +153,6 @@ contract ReseedBean {
         mintBeansToBCM(bean, wethBeans, wstEthBeans, stableBeans);
     }
 
-
     function deployFertilizerProxy(address fertImplementation) internal {
         // deploy fertilizer proxy. Set owner to beanstalk.
         TransparentUpgradeableProxy fertilizerProxy = new TransparentUpgradeableProxy{
