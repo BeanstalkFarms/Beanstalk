@@ -16,8 +16,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
-      endBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
+      endBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -41,7 +41,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -80,7 +80,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -119,7 +119,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -150,7 +150,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -183,7 +183,7 @@ dataSources:
     source:
       address: "0x2D5E484Dd7D43dFE32BF1Ed9fE6517b64F13Ea51"
       abi: Fertilizer
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -207,7 +207,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -232,7 +232,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -265,7 +265,7 @@ dataSources:
     source:
       address: "0xBEA0005B8599265D41256905A9B3073D397812E4"
       abi: ERC20
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -288,7 +288,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 1 # TODO: set this to the contract deployment block
+      startBlock: 585858585858
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
