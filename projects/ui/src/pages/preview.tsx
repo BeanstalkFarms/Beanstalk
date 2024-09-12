@@ -160,6 +160,7 @@ const MigrationPreview: FC<{}> = () => {
           migrationData.field.totalPods,
           BEAN.decimals
         );
+        migrationData.field.plots.sort((a: any, b: any) => Number(a.index) - Number(b.index));
         migrationData.barn.totalFert = TokenValue.fromBlockchain(
           migrationData.barn.totalFert,
           0
@@ -213,7 +214,7 @@ const MigrationPreview: FC<{}> = () => {
         setData(migrationData);
       }
     } catch (e) {
-      console.error('Migration Preview - Error Fetching Data');
+      console.error('Migration Preview - Error Fetching Data', e);
     }
   }
 
