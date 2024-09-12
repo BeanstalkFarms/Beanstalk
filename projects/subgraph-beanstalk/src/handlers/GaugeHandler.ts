@@ -64,6 +64,7 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 
 // GERMINATING STALK //
 
+// TODO: this one must be legacy due to event param names changing anyway
 // TODO: extract legacy logic for the event bug
 // Tracks germinating balances for individual famers
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {

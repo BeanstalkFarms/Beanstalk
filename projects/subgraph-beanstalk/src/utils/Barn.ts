@@ -2,7 +2,7 @@ import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Chop as ChopEntity } from "../../generated/schema";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
 import { loadFarmer } from "../entities/Beanstalk";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Reseed } from "../../generated/Beanstalk-ABIs/Reseed";
 import { loadUnripeToken, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeUnripeTokenSnapshots } from "../entities/snapshots/UnripeToken";
 import { BI_10, toDecimal } from "../../../subgraph-core/utils/Decimals";
@@ -73,7 +73,7 @@ export function unripeChopped(params: ChopParams): void {
 
 // Update the status for this unripe token using protocol getters. These values fluctuate without related events.
 export function updateUnripeStats(unripe: Address, protocol: Address, block: ethereum.Block): void {
-  const beanstalk_call = SeedGauge.bind(protocol);
+  const beanstalk_call = Reseed.bind(protocol);
   let unripeToken = loadUnripeToken(unripe);
 
   // Contract values

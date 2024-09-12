@@ -14,7 +14,7 @@ import { calculateAPYPreGauge } from "./legacy/LegacyYield";
 import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Reseed } from "../../generated/Beanstalk-ABIs/Reseed";
 import { getProtocolFertilizer, minEMASeason, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
@@ -426,7 +426,7 @@ function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void 
   let siloYield = loadSiloYield(t, window);
   let fertilizerYield = loadFertilizerYield(t, window);
   let fertilizer = loadFertilizer(fertAddress);
-  let contract = SeedGauge.bind(protocol);
+  let contract = Reseed.bind(protocol);
   if (t < 6534) {
     let currentFertHumidity = contract.try_getCurrentHumidity();
     fertilizerYield.humidity = BigDecimal.fromString(currentFertHumidity.reverted ? "500" : currentFertHumidity.value.toString()).div(

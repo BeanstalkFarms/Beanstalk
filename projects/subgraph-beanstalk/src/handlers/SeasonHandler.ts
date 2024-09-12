@@ -69,6 +69,7 @@ export function handleIncentive(event: Incentivization): void {
 
   season.marketCap = season.price.times(toDecimal(season.beans));
   season.incentiveBeans = event.params.beans;
+  // TODO: need legacy extraction here for providing no field id
   season.harvestableIndex = beanstalk_contract.harvestableIndex();
   season.save();
 

@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Reseed } from "../../generated/Beanstalk-ABIs/Reseed";
 import { v } from "../utils/constants/Version";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
@@ -18,7 +18,7 @@ export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
 export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNumber: BigInt): FertilizerToken {
   let fertilizerToken = FertilizerToken.load(id.toString());
   if (fertilizerToken == null) {
-    const beanstalkContract = SeedGauge.bind(v().protocolAddress);
+    const beanstalkContract = Reseed.bind(v().protocolAddress);
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
     if (blockNumber.gt(BigInt.fromString("15278963"))) {

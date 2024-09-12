@@ -1,5 +1,5 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { InternalBalanceChanged } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { InternalBalanceChanged } from "../../generated/Beanstalk-ABIs/Reseed";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
 import { loadSiloAsset } from "../entities/Silo";
 import { loadFarmer } from "../entities/Beanstalk";

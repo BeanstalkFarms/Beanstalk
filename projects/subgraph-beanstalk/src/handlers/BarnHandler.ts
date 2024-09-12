@@ -1,5 +1,5 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import { ChangeUnderlying, Chop } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Address, log } from "@graphprotocol/graph-ts";
+import { ChangeUnderlying, Chop } from "../../generated/Beanstalk-ABIs/Reseed";
 import { TransferSingle, TransferBatch } from "../../generated/Beanstalk-ABIs/Fertilizer";
 import { loadUnripeToken } from "../entities/Silo";
 import { transfer, unripeChopped, updateUnripeStats } from "../utils/Barn";

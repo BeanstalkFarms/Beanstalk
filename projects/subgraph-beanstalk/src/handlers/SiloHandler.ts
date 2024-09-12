@@ -12,7 +12,7 @@ import {
   RemoveDeposits,
   StalkBalanceChanged,
   UpdatedStalkPerBdvPerSeason
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+} from "../../generated/Beanstalk-ABIs/Reseed";
 import { unripeChopped } from "../utils/Barn";
 import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
