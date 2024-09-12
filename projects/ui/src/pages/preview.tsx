@@ -57,7 +57,7 @@ const MigrationPreview: FC<{}> = () => {
   const BEAN = sdk.tokens.BEAN;
   const PODS = sdk.tokens.PODS;
 
-  const harvestableIndex = TokenValue.fromHuman(useHarvestableIndex().toString(), PODS.decimals);
+  const harvestableIndex = TokenValue.fromHuman(useHarvestableIndex()?.toString() || "0", PODS.decimals);
 
   useEffect(() => {
     if (accountUrl) {
