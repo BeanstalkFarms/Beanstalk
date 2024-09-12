@@ -14,9 +14,10 @@ import {
   UpdatedStalkPerBdvPerSeason
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { unripeChopped } from "../utils/Barn";
-import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
+import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 import { WhitelistToken } from "../../generated/Beanstalk-ABIs/Reseed";
+import { BI_10 } from "../../../subgraph-core/utils/Decimals";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -84,8 +85,7 @@ export function handlePlant(event: Plant): void {
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
   let silo = loadSilo(event.address);
-  // FIXME stalk decimals
-  let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
+  let newPlantableStalk = event.params.beans.times(BI_10.pow(stalkDecimals(v()) - beanDecimals()));
 
   // Subtract stalk since it was already added in Reward, and is about to get re-added in StalkBalanceChanged.
   silo.stalk = silo.stalk.minus(newPlantableStalk);

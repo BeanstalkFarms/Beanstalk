@@ -12,7 +12,7 @@ import { setBdv, takeWhitelistTokenSettingSnapshots } from "../entities/snapshot
 import { WhitelistTokenSetting } from "../../generated/schema";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateUnripeStats } from "./Barn";
-import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
+import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 import { updateDepositInSiloAsset } from "./Silo";
@@ -67,8 +67,7 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
 
 export function siloReceipt(amount: BigInt, block: ethereum.Block): void {
   let silo = loadSilo(v().protocolAddress);
-  // FIXME stalk decimals
-  let newPlantableStalk = amount.times(BigInt.fromI32(10000)); // Stalk has 10 decimals
+  let newPlantableStalk = amount.times(BI_10.pow(stalkDecimals(v()) - beanDecimals()));
 
   silo.beanMints = silo.beanMints.plus(amount);
   silo.stalk = silo.stalk.plus(newPlantableStalk);

@@ -112,7 +112,6 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
-  // FIXME stalk decimals
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
 
@@ -126,7 +125,6 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
-  // FIXME stalk decimals
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
 

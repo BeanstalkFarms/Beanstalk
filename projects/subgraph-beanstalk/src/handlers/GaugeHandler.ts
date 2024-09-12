@@ -64,6 +64,7 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 
 // GERMINATING STALK //
 
+// TODO: extract legacy logic for the event bug
 // Tracks germinating balances for individual famers
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
   if (event.params.deltaGerminatingStalk == ZERO_BI) {

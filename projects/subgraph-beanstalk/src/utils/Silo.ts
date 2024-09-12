@@ -5,7 +5,7 @@ import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
 import { stemFromSeason } from "./legacy/LegacySilo";
-import { isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
+import { beanDecimals, isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 
 class AddRemoveDepositsParams {
@@ -112,8 +112,7 @@ export function updateDepositInSiloAsset(
   let asset = loadSiloAsset(account, token);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  // FIXME stalk decimals
-  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
+  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BI_10.pow(beanDecimals()));
 
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
   asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);

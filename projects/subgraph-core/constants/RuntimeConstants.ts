@@ -96,3 +96,7 @@ export function stalkDecimals(v: VersionDto): i32 {
   }
   throw new Error("Unsupported protocol");
 }
+
+export function beanDecimals(): i32 {
+  return 6;
+}
