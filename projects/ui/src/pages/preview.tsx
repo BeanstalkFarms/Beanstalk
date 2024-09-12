@@ -41,6 +41,7 @@ import {
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
 import TokenIcon from '~/components/Common/TokenIcon';
+import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 
 const MigrationPreview: FC<{}> = () => {
   const connectedAccount = useAccount();
@@ -54,6 +55,12 @@ const MigrationPreview: FC<{}> = () => {
   const sdk = useSdk();
 
   const BEAN = sdk.tokens.BEAN;
+  const PODS = sdk.tokens.PODS;
+
+  const harvestableIndex = TokenValue.fromHuman(
+    useHarvestableIndex()?.toString() || '0',
+    PODS.decimals
+  );
 
   useEffect(() => {
     if (accountUrl) {
@@ -156,6 +163,11 @@ const MigrationPreview: FC<{}> = () => {
           migrationData.field.totalPods,
           BEAN.decimals
         );
+        if (migrationData.field.plots.length > 1) {
+          migrationData.field.plots.sort(
+            (a: any, b: any) => Number(a.index) - Number(b.index)
+          );
+        }
         migrationData.barn.totalFert = TokenValue.fromBlockchain(
           migrationData.barn.totalFert,
           0
@@ -209,7 +221,7 @@ const MigrationPreview: FC<{}> = () => {
         setData(migrationData);
       }
     } catch (e) {
-      console.error('Migration Preview - Error Fetching Data');
+      console.error('Migration Preview - Error Fetching Data', e);
     }
   }
 
@@ -675,7 +687,7 @@ const MigrationPreview: FC<{}> = () => {
                                   },
                                 }}
                               >
-                                <TableCell>Index</TableCell>
+                                <TableCell>Place In Line</TableCell>
                                 <TableCell align="right">Amount</TableCell>
                               </TableRow>
                             </TableHead>
@@ -694,10 +706,9 @@ const MigrationPreview: FC<{}> = () => {
                                   }}
                                 >
                                   <TableCell component="th" scope="row">
-                                    {TokenValue.fromBlockchain(
-                                      plot.index,
-                                      6
-                                    ).toHuman('short')}
+                                    {TokenValue.fromBlockchain(plot.index, 6)
+                                      .sub(harvestableIndex)
+                                      .toHuman('short')}
                                   </TableCell>
                                   <TableCell align="right">
                                     {TokenValue.fromBlockchain(
@@ -958,10 +969,14 @@ const MigrationPreview: FC<{}> = () => {
                                 {farmData.withdrawn.toHuman('short')}
                               </TableCell>
                               <TableCell align="right">
-                                {farmData.token.isUnripe ? farmData.unpicked.toHuman('short') : '-'}
+                                {farmData.token.isUnripe
+                                  ? farmData.unpicked.toHuman('short')
+                                  : '-'}
                               </TableCell>
                               <TableCell align="right">
-                                {farmData.token.displayName === "Bean" ? farmData.rinsable.toHuman('short') : '-'}
+                                {farmData.token.displayName === 'Bean'
+                                  ? farmData.rinsable.toHuman('short')
+                                  : '-'}
                               </TableCell>
                               <TableCell align="right">
                                 {farmData.total.toHuman('short')}
@@ -973,7 +988,7 @@ const MigrationPreview: FC<{}> = () => {
                     </Table>
                   </TableContainer>
                 ) : (
-                  <Box>This account has no Farm Balances.</Box>
+                  <Box>This account has no Farm Balances to be migrated.</Box>
                 )}
               </Box>
             </Card>
