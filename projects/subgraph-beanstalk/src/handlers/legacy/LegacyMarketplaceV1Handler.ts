@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigInt, log } from "@graphprotocol/graph-ts";
 import {
   PodListingCreated as PodListingCreated_v1,
   PodListingFilled as PodListingFilled_v1,

@@ -177,19 +177,3 @@ export function updateStalkBalances(
   }
   silo.save();
 }
-
-export function updateSeedsBalances(
-  protocol: Address,
-  account: Address,
-  seeds: BigInt,
-  block: ethereum.Block,
-  recurs: boolean = true
-): void {
-  if (recurs && account != protocol) {
-    updateSeedsBalances(protocol, protocol, seeds, block);
-  }
-  let silo = loadSilo(account);
-  silo.seeds = silo.seeds.plus(seeds);
-  takeSiloSnapshots(silo, block);
-  silo.save();
-}

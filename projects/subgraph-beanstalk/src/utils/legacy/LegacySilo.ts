@@ -2,11 +2,12 @@ import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { loadSilo, loadSiloAsset, loadSiloWithdraw } from "../../entities/Silo";
 import { takeSiloAssetSnapshots } from "../../entities/snapshots/SiloAsset";
 import { loadBeanstalk } from "../../entities/Beanstalk";
-import { updateSeedsBalances, updateStalkBalances } from "../Silo";
+import { updateStalkBalances } from "../Silo";
 import { Replanted } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_LP } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10 } from "../../../../subgraph-core/utils/Decimals";
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
+import { takeSiloSnapshots } from "../../entities/snapshots/Silo";
 
 export function updateClaimedWithdraw(account: Address, token: Address, withdrawSeason: BigInt, block: ethereum.Block): void {
   let withdraw = loadSiloWithdraw(account, token, withdrawSeason.toI32());
@@ -40,6 +41,22 @@ export function updateStalkWithCalls(protocol: Address, block: ethereum.Block): 
   }
   beanstalk.farmersToUpdate = [];
   beanstalk.save();
+}
+
+export function updateSeedsBalances(
+  protocol: Address,
+  account: Address,
+  seeds: BigInt,
+  block: ethereum.Block,
+  recurs: boolean = true
+): void {
+  if (recurs && account != protocol) {
+    updateSeedsBalances(protocol, protocol, seeds, block);
+  }
+  let silo = loadSilo(account);
+  silo.seeds = silo.seeds.plus(seeds);
+  takeSiloSnapshots(silo, block);
+  silo.save();
 }
 
 const STEM_START_SEASON = 14210;

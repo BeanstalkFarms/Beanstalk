@@ -39,7 +39,7 @@ class PodListingCreatedParams {
   // v2
   minFillAmount: BigInt; // for v1, always 0
   pricingFunction: Bytes | null;
-  pricingType: i32; // for v1, always 0
+  pricingType: i32; // for v1 or v3, always 0
 }
 
 class PodListingCancelledParams {
@@ -58,7 +58,7 @@ class PodOrderCreatedParams {
   // v2
   minFillAmount: BigInt; // for v1, always 0
   pricingFunction: Bytes | null;
-  pricingType: i32; // for v1, always 0
+  pricingType: i32; // for v1 or v3, always 0
 }
 
 class PodOrderCancelledParams {

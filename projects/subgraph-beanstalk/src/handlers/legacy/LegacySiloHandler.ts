@@ -14,6 +14,8 @@ import { addToSiloWhitelist, loadSiloWithdraw, loadWhitelistTokenSetting } from 
 import { addDeposits, addWithdrawToSiloAsset, removeDeposits } from "../../utils/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../../entities/snapshots/WhitelistTokenSetting";
 import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstalk-ABIs/SiloV3";
+import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged } from "../../../generated/Beanstalk-ABIs/SeedGauge";
+import { updateClaimedWithdraw, updateSeedsBalances } from "../../utils/legacy/LegacySilo";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
@@ -127,4 +129,30 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
 
   takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();
+}
+
+// TODO: whitelist v4
+
+// Replanted -> Reseed
+// Legacy feature since silo v3, but the event was still present until the reseed //
+export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
+  // Exclude BIP-24 emission of missed past events
+  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") {
+    return;
+  }
+
+  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block);
+}
+
+/// Withdrawal is a legacy feature from replant, but these events were still present until the reseed ///
+// Replanted -> Reseed
+export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
+  updateClaimedWithdraw(event.params.account, event.params.token, event.params.season, event.block);
+}
+
+// Replanted -> Reseed
+export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
+  for (let i = 0; i < event.params.seasons.length; i++) {
+    updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i], event.block);
+  }
 }

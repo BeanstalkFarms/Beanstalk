@@ -84,15 +84,6 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
   updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block);
 }
 
-export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
-  // Exclude BIP-24 emission of missed past events
-  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") {
-    return;
-  }
-
-  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block);
-}
-
 export function handlePlant(event: Plant): void {
   // This removes the plantable stalk for planted beans.
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
@@ -159,15 +150,4 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
 
   takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
-}
-
-// Withdrawal is a legacy feature from replant, but these events are still present
-export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.params.account, event.params.token, event.params.season, event.block);
-}
-
-export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
-  for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i], event.block);
-  }
 }
