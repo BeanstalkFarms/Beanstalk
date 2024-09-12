@@ -32,4 +32,5 @@ export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E
 ////// TODO: Set this upon deployment
 export const RESEED_SEASON = BigInt.fromU32(30000);
 export const RESEED_BLOCK = BigInt.fromU32(585858585858);
+export const BASIN_BLOCK = BigInt.fromU32(585858585858);
 //////

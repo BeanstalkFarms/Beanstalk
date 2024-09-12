@@ -7,7 +7,11 @@ import {
   BEAN_WETH,
   BEAN_WSTETH,
   BEANSTALK_PRICE,
-  RESEED_SEASON
+  RESEED_SEASON,
+  BEAN_WEETH,
+  BEAN_WBTC,
+  BEAN_USDC,
+  BEAN_USDT
 } from "./raw/BeanstalkArbConstants";
 
 /// ADDRESSES ///
@@ -49,8 +53,15 @@ export function getTokenDecimals(token: Address): i32 {
     return 18;
   } else if (token == BEAN_WSTETH) {
     return 18;
+  } else if (token == BEAN_WEETH) {
+    return 18;
+  } else if (token == BEAN_WBTC) {
+    return 18;
+  } else if (token == BEAN_USDC) {
+    return 18;
+  } else if (token == BEAN_USDT) {
+    return 18;
   }
-  // TODO: need to add the rest of token decimals here
   throw new Error("Unsupported token");
 }
 

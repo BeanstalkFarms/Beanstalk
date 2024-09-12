@@ -21,7 +21,7 @@ function subgraphNameForBlockNumber(blockNumber: BigInt): string {
 }
 
 function protocolForBlockNumber(blockNumber: BigInt): Address {
-  if (blockNumber == BigInt.fromU32(12974075)) {
+  if (blockNumber == BigInt.fromU32(13323594)) {
     return BEANSTALK;
   }
   throw new Error("Unable to initialize protocol address for this block number");

@@ -1,8 +1,9 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Version } from "../../../generated/schema";
-import { BEANSTALK } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { VersionDto } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
+import * as BeanstalkEth from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import * as BeanstalkArb from "../../../../subgraph-core/constants/raw/BeanstalkArbConstants";
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
@@ -14,22 +15,28 @@ export function handleInitVersion(block: ethereum.Block): void {
 }
 
 function subgraphNameForBlockNumber(blockNumber: BigInt): string {
-  if (blockNumber == BigInt.fromU32(17977922)) {
+  if (blockNumber == BeanstalkEth.BASIN_BLOCK) {
+    return "basin";
+  } else if (blockNumber == BeanstalkArb.BASIN_BLOCK) {
     return "basin";
   }
   throw new Error("Unable to initialize subgraph name for this block number");
 }
 
 function protocolForBlockNumber(blockNumber: BigInt): Address {
-  if (blockNumber == BigInt.fromU32(12974075)) {
-    return BEANSTALK;
+  if (blockNumber == BeanstalkEth.BASIN_BLOCK) {
+    return BeanstalkEth.BEANSTALK;
+  } else if (blockNumber == BeanstalkArb.BASIN_BLOCK) {
+    return BeanstalkArb.BEANSTALK;
   }
   throw new Error("Unable to initialize protocol address for this block number");
 }
 
 function chainForBlockNumber(blockNumber: BigInt): string {
-  if (blockNumber == BigInt.fromU32(17977922)) {
+  if (blockNumber == BeanstalkEth.BASIN_BLOCK) {
     return "ethereum";
+  } else if (blockNumber == BeanstalkArb.BASIN_BLOCK) {
+    return "arbitrum";
   }
   throw new Error("Unable to initialize chain for this block number");
 }

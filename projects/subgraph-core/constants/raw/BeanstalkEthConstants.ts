@@ -39,6 +39,7 @@ export const BEANSTALK_BLOCK = BigInt.fromU32(12974075);
 export const EXPLOIT_BLOCK = BigInt.fromU32(14602790);
 export const NEW_BEAN_TOKEN_BLOCK = BigInt.fromU32(15278082);
 export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
+export const BASIN_BLOCK = BigInt.fromU32(17977922);
 export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
 
 export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
