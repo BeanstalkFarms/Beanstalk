@@ -122,7 +122,6 @@ contract ReseedBean {
 
     // BCM (TODO: Replace with actual L2 address)
     address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
-    address beanWstethLP;
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
@@ -152,21 +151,8 @@ contract ReseedBean {
         deployUpgradableWells(address(bean));
         // mint beans to the bcm according to the amounts in the l1 wells.
         mintBeansToBCM(bean, wethBeans, wstEthBeans, stableBeans);
-        // set unripe to underlying tokens.
-        setUnripeToUnderlyingTokens(address(unripeBean), address(bean), address(unripeLP));
     }
 
-    function setUnripeToUnderlyingTokens(
-        address unripeBean,
-        address bean,
-        address unripeLP
-    ) internal {
-        // add unripe tokens
-        // set the underlying token of the unripe bean to bean.
-        s.sys.silo.unripeSettings[unripeBean].underlyingToken = bean;
-        // set the underlying token of the unripe lp to BeanWstethLP.
-        s.sys.silo.unripeSettings[unripeLP].underlyingToken = beanWstethLP;
-    }
 
     function deployFertilizerProxy(address fertImplementation) internal {
         // deploy fertilizer proxy. Set owner to beanstalk.
@@ -277,8 +263,6 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
-
-        if (tokens[1] == IERC20(WSTETH)) beanWstethLP = wellProxy;
 
         console.log("Well Proxy for token pair %s deployed at: %s", name, wellProxy);
     }
