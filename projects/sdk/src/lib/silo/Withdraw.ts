@@ -36,36 +36,36 @@ export class Withdraw {
     const withdrawData = this.calculateWithdraw(token, amount, balance.deposits, season);
     Withdraw.sdk.debug("silo.withdraw(): withdrawData", { withdrawData });
 
-    const seasons = withdrawData.crates.map((crate) => crate.stem.toString());
+    const stems = withdrawData.crates.map((crate) => crate.stem.toString());
     const amounts = withdrawData.crates.map((crate) => crate.amount.toBlockchain());
 
     let contractCall;
 
-    if (seasons.length === 0) {
+    if (stems.length === 0) {
       throw new Error("Malformatted crates");
     }
 
-    if (seasons.length === 1) {
+    if (stems.length === 1) {
       Withdraw.sdk.debug("silo.withdraw(): withdrawDeposit()", {
         address: token.address,
-        season: seasons[0],
+        stem: stems[0],
         amount: amounts[0]
       });
       contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposit(
         token.address,
-        seasons[0],
+        stems[0],
         amounts[0],
         toMode
       );
     } else {
       Withdraw.sdk.debug("silo.withdraw(): withdrawDeposits()", {
         address: token.address,
-        seasons: seasons,
+        stems: stems,
         amounts: amounts
       });
       contractCall = Withdraw.sdk.contracts.beanstalk.withdrawDeposits(
         token.address,
-        seasons,
+        stems,
         amounts,
         toMode
       );
