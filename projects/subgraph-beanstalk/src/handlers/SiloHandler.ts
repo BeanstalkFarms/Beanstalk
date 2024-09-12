@@ -1,6 +1,6 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
 import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
-import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
+import { addToSiloWhitelist, loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 import {
@@ -16,6 +16,7 @@ import {
 import { unripeChopped } from "../utils/Barn";
 import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
+import { WhitelistToken } from "../../generated/Beanstalk-ABIs/Reseed";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -104,6 +105,22 @@ export function handlePlant(event: Plant): void {
     event.params.beans,
     event.block
   );
+}
+
+export function handleWhitelistToken(event: WhitelistToken): void {
+  addToSiloWhitelist(event.address, event.params.token);
+
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+
+  siloSettings.selector = event.params.selector;
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
+  siloSettings.gaugePoints = event.params.gaugePoints;
+  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = event.block.timestamp;
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
+  siloSettings.save();
 }
 
 export function handleDewhitelistToken(event: DewhitelistToken): void {

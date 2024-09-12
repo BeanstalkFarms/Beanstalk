@@ -3,6 +3,11 @@ schema:
   file: ../schema.graphql
 dataSources:
   ###
+  # L1 -> L2 MIGRATION
+  ###
+  # (TODO)
+
+  ###
   # INITIALIZATION
   ###
   - kind: ethereum/contract
@@ -102,7 +107,8 @@ dataSources:
           handler: handleTotalGerminatingStalkChanged
         - event: TotalStalkChangedFromGermination(int256,int256)
           handler: handleTotalStalkChangedFromGermination
-        # TODO: need replacement for UpdateGaugeSettings, which was deleted in BIP50
+        - event: UpdatedOptimalPercentDepositedBdvForToken(indexed address,uint64)
+          handler: handleUpdatedOptimalPercentDepositedBdvForToken
       file: ../src/handlers/GaugeHandler.ts
   ###
   # FIELD
@@ -123,7 +129,6 @@ dataSources:
       abis:
         - name: Reseed
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
-        # TODO: see if this can be removed
         - name: CurvePrice
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
@@ -242,7 +247,10 @@ dataSources:
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
-        # TODO: need replacement for Reward, which was deleted in BIP50
+        - event: Shipped(indexed uint32,uint256)
+          handler: handleShipped
+        - event: Receipt(indexed uint8,uint256,bytes)
+          handler: handleReceipt
         - event: WellOracle(indexed uint32,address,int256,bytes)
           handler: handleWellOracle
         - event: Soil(indexed uint32,uint256)

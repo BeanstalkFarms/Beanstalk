@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigInt, log } from "@graphprotocol/graph-ts";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddWithdrawal,
