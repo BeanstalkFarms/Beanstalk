@@ -10,15 +10,29 @@ import "forge-std/console.sol";
 import {Deposit} from "contracts/beanstalk/storage/Account.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import "forge-std/StdUtils.sol";
+import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
+import {P} from "contracts/ecosystem/price/P.sol";
+
+interface IBeanstalkPrice {
+    function price() external view returns (P.Prices memory p);
+}
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
  */
 contract ReseedStateTest is TestHelper {
+    struct FertDepositData {
+        uint256 fertId;
+        uint256 amount;
+        uint256 lastBpf;
+    }
+
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address constant BEANSTALK_PRICE = address(0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56);
 
     uint256 constant FIELD_ID = 0;
 
@@ -52,6 +66,7 @@ contract ReseedStateTest is TestHelper {
     string constant HEX_PREFIX = "0x";
 
     string constant ACCOUNTS_PATH = "./test/foundry/Migration/data/accounts.txt";
+    string constant FERT_ACCOUNTS_PATH = "./test/foundry/Migration/data/fert_accounts.txt";
 
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
@@ -64,7 +79,15 @@ contract ReseedStateTest is TestHelper {
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+        // skip(100_000_000);
         // l2Beanstalk.gm(address(this), 1);
+    }
+
+    // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
+    function test_beanstalkPrice() public {
+        // Get beanstalk price
+        IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
+        P.Prices memory prices = beanstalkPrice.price();
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -324,7 +347,70 @@ contract ReseedStateTest is TestHelper {
         }
     }
 
+    //////////////////// Fertilizer ////////////////////
+    function test_fertilizerProperties() public {
+        uint256 activeFertilizerJson = getGlobalPropertyUint("fert.activeFertilizer");
+        uint256 activeFertilizer = l2Beanstalk.getActiveFertilizer();
+        assertEq(activeFertilizer, activeFertilizerJson, "active fertilizer");
+
+        uint256 fertilizedIndexJson = getGlobalPropertyUint("fert.fertilizedIndex");
+        uint256 fertilizedIndex = l2Beanstalk.totalFertilizedBeans();
+        assertEq(fertilizedIndex, fertilizedIndexJson, "fertilized index");
+
+        uint256 unfertilizedIndexJson = getGlobalPropertyUint("fert.unfertilizedIndex");
+        uint256 unfertilizedIndex = l2Beanstalk.totalFertilizerBeans();
+        assertEq(unfertilizedIndex, unfertilizedIndexJson, "unfertilized index");
+
+        uint256 fertilizedPaidIndexJson = getGlobalPropertyUint("fert.fertilizedPaidIndex");
+        uint256 fertilizedPaidIndex = l2Beanstalk.rinsedSprouts();
+        assertEq(fertilizedPaidIndex, fertilizedPaidIndexJson, "fertilized paid index");
+
+        uint256 fertFirstJson = getGlobalPropertyUint("fert.fertFirst");
+        uint256 fertFirst = l2Beanstalk.getFirst();
+        assertEq(fertFirst, fertFirstJson, "fert first");
+
+        uint256 fertLastJson = getGlobalPropertyUint("fert.fertLast");
+        uint256 fertLast = l2Beanstalk.getLast();
+        assertEq(fertLast, fertLastJson, "fert last");
+    }
+
+    function test_AccountFertilizer() public {
+        // for every account
+        for (uint256 i = 0; i < accountNumber; i++) {
+            address account = vm.parseAddress(vm.readLine(FERT_ACCOUNTS_PATH));
+
+            // get fert id
+            // loop through storage-fertilizer json, parse into FertDepositData
+            FertDepositData[] memory jsonBalances = abi.decode(
+                searchAccountFertilizer(account),
+                (FertDepositData[])
+            );
+
+            // loop through jsonBalances' fertIds and compare to balanceOfFertilizer
+            for (uint256 j = 0; j < jsonBalances.length; j++) {
+                uint256 fertId = jsonBalances[j].fertId;
+                uint256 amount = jsonBalances[j].amount;
+                uint256 lastBpf = jsonBalances[j].lastBpf;
+
+                // get balanceOfFertilizer
+                IMockFBeanstalk.Balance memory balance = l2Beanstalk.balanceOfFertilizer(
+                    account,
+                    fertId
+                );
+
+                // compare balanceOfFertilizer to jsonBalances
+                assertEq(balance.amount, amount, "amount");
+                assertEq(balance.lastBpf, lastBpf, "lastBpf");
+            }
+        }
+    }
+
     //////////////////// Helpers ////////////////////
+
+    function getGlobalPropertyUint(string memory property) public returns (uint256) {
+        bytes memory globalPropertyJson = searchGlobalPropertyData(property);
+        return vm.parseUint(vm.toString(globalPropertyJson));
+    }
 
     function parseAccounts(uint256 numAccounts) public returns (uint256) {
         string[] memory inputs = new string[](3);
@@ -365,5 +451,15 @@ contract ReseedStateTest is TestHelper {
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
+    }
+
+    function searchAccountFertilizer(address account) public returns (bytes memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./scripts/migrationFinderScripts/fertilizerFinder.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-fertilizer20577510.json"; // json file
+        inputs[3] = vm.toString(account);
+        bytes memory accountFertilizer = vm.ffi(inputs);
+        return accountFertilizer;
     }
 }

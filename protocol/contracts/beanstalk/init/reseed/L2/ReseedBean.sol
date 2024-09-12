@@ -69,51 +69,49 @@ contract ReseedBean {
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
     address internal constant CONSTANT_PRODUCT_2 =
         address(0xBA5104f2df98974A83CD10d16E24282ce6Bb647f);
-    // TODO: Replace with actual address.
-    address internal constant STABLE_2 = address(0xd771D7C0e1EBE89C9E9F663824851BB89b926d1a);
-    // TODO: Replace with actual address.
+    address internal constant STABLE_2 = address(0xBA51055Ac3068Ffd884B495BF58314493cde9653);
     address internal constant UPGRADEABLE_WELL_IMPLEMENTATION =
-        address(0x2706A171ECb68E0038378D40Dd1d136361d0cB7d);
+        address(0xBA510995783111be5301d93CCfD5dE4e3B28e50B);
     address internal constant MULTIFLOW_PUMP = address(0xBA510482E3e6B96C88A1fe34Ce58385fB554C9a9);
 
     // BEAN_ETH parameters.
     bytes32 internal constant BEAN_ETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70a730b1101631795f48768830;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70cf610e2f8ba3a784783d50c7;
     string internal constant BEAN_ETH_NAME = "BEAN:WETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_ETH_SYMBOL = "U-BEANWETHCP2w";
     address internal constant WETH = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
     // BEAN_WSTETH parameters.
     bytes32 internal constant BEAN_WSTETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70d1f6ffabd835875bcb0f750d;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb702dd812d82cc04280f90dac20;
     string internal constant BEAN_WSTETH_NAME = "BEAN:WSTETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WSTETH_SYMBOL = "U-BEANWSTETHCP2w";
     address internal constant WSTETH = address(0x5979D7b546E38E414F7E9822514be443A4800529);
 
     // BEAN_WEETH parameters.
     bytes32 internal constant BEAN_WEETH_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70282162c4d51072ae5848bcab;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7076e0c3991a85b21f3c6d2327;
     string internal constant BEAN_WEETH_NAME = "BEAN:WEETH Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WEETH_SYMBOL = "U-BEANWEETHCCP2w";
     address internal constant WEETH = address(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe);
 
     // BEAN_WBTC parameters.
     bytes32 internal constant BEAN_WBTC_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70680eb1a5a9088f3a5adde7cf;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7031803f7cfbaef420a33da4e2;
     string internal constant BEAN_WBTC_NAME = "BEAN:WBTC Constant Product 2 Upgradeable Well";
     string internal constant BEAN_WBTC_SYMBOL = "U-BEANWBTCCP2w";
     address internal constant WBTC = address(0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f);
 
     // BEAN_USDC parameters.
     bytes32 internal constant BEAN_USDC_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70e8dd58a81854e1c93f594f45;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7029aa50efeb2cc4e37ef5b62c;
     string internal constant BEAN_USDC_NAME = "BEAN:USDC Stable 2 Upgradeable Well";
     string internal constant BEAN_USDC_SYMBOL = "U-BEANUSDCS2w";
     address internal constant USDC = address(0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
 
     // BEAN_USDT parameters.
     bytes32 internal constant BEAN_USDT_SALT =
-        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb703042ef0b0e0e77d3a3e484ae;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb7082e11ce3f89b8cd399ffa9ee;
     string internal constant BEAN_USDT_NAME = "BEAN:USDT Stable 2 Upgradeable Well";
     string internal constant BEAN_USDT_SYMBOL = "U-BEANUSDTS2w";
     address internal constant USDT = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
@@ -122,7 +120,8 @@ contract ReseedBean {
     bytes32 internal constant FERTILIZER_PROXY_SALT =
         0x0000000000000000000000000000000000000000000000000000000000000000;
 
-    address beanWstethLP;
+    // BCM (TODO: Replace with actual L2 address)
+    address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
@@ -134,6 +133,9 @@ contract ReseedBean {
         uint256 beanSupply,
         uint256 internalUrBeanSupply,
         uint256 internalUnripeLpSupply,
+        uint256 wethBeans,
+        uint256 wstEthBeans,
+        uint256 stableBeans,
         ExternalUnripeHolders[] calldata urBean,
         ExternalUnripeHolders[] calldata urBeanLP,
         address fertImplementation
@@ -147,20 +149,8 @@ contract ReseedBean {
         BeanstalkERC20 unripeLP = deployUnripeLP(internalUnripeLpSupply, urBeanLP);
         // wells are deployed as ERC1967Proxies in order to allow for future upgrades.
         deployUpgradableWells(address(bean));
-        // set unripe to underlying tokens.
-        setUnripeToUnderlyingTokens(address(unripeBean), address(bean), address(unripeLP));
-    }
-
-    function setUnripeToUnderlyingTokens(
-        address unripeBean,
-        address bean,
-        address unripeLP
-    ) internal {
-        // add unripe tokens
-        // set the underlying token of the unripe bean to bean.
-        s.sys.silo.unripeSettings[unripeBean].underlyingToken = bean;
-        // set the underlying token of the unripe lp to BeanWstethLP.
-        s.sys.silo.unripeSettings[unripeLP].underlyingToken = beanWstethLP;
+        // mint beans to the bcm according to the amounts in the l1 wells.
+        mintBeansToBCM(bean, wethBeans, wstEthBeans, stableBeans);
     }
 
     function deployFertilizerProxy(address fertImplementation) internal {
@@ -176,6 +166,18 @@ contract ReseedBean {
         s.sys.tokens.fertilizer = address(fertilizerProxy);
         console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
         console.log("Fertilizer Proxy implementation: ", fertImplementation);
+    }
+
+    function mintBeansToBCM(
+        BeanstalkERC20 bean,
+        uint256 wethBeans,
+        uint256 wstEthBeans,
+        uint256 stableBeans
+    ) internal {
+        // total beans is the sum of the bean sided liquidity in the wells.
+        // Needed for bcm to add liquidity to the L2 wells after the migration.
+        uint256 totalBeans = wethBeans + wstEthBeans + stableBeans;
+        bean.mint(L2_BCM, totalBeans);
     }
 
     function deployBean(uint256 supply) internal returns (BeanstalkERC20) {
@@ -260,8 +262,6 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
-
-        if (tokens[1] == IERC20(WSTETH)) beanWstethLP = wellProxy;
 
         console.log("Well Proxy for token pair %s deployed at: %s", name, wellProxy);
     }

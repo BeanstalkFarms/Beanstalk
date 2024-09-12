@@ -186,7 +186,18 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        // LibUsdOracle returns the price with 1e6 precision.
+        // twaReserves has the same decimal precision as the token.
+        // The return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
+        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the
+        // precision by the token decimals.
+        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18.
+
+        uint8 tokenDecimals = IERC20Decimals(token).decimals();
+        return
+            LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(
+                10 ** tokenDecimals
+            );
     }
 
     /**
@@ -302,6 +313,12 @@ library LibWell {
         }
     }
 
+    /**
+     * @notice Calculates the token price in terms of Bean by increasing
+     * the bean reserves of the given well by 1 and recaclulating the new reserves,
+     * while maintaining the same liquidity levels.
+     * This essentially simulates a swap of 1 Bean for the non bean token and quotes the price.
+     */
     function calculateTokenBeanPriceFromReserves(
         address well,
         uint256 beanIndex,
@@ -323,12 +340,9 @@ library LibWell {
             lpTokenSupply,
             wellFunction.data
         );
-        uint256 delta;
-        if (nonBeanIndex == 1) {
-            delta = oldReserve - newReserve;
-        } else {
-            delta = newReserve - oldReserve;
-        }
+        // Measure the delta of the non bean reserve.
+        // Due to the invariant of the well function, old reserve > new reserve.
+        uint256 delta = oldReserve - newReserve;
         price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
     }
 

@@ -2082,7 +2082,7 @@ __metadata:
   resolution: "@beanstalk/protocol@workspace:protocol"
   dependencies:
     "@beanstalk/wells": "npm:0.4.1"
-    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0-prerelease3"
+    "@beanstalk/wells1.2": "npm:@beanstalk/wells@1.2.0"
     "@ethereum-waffle/chai": "npm:4.0.10"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.10"
     "@nomiclabs/hardhat-ethers": "npm:^2.2.1"
@@ -2245,10 +2245,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@beanstalk/wells1.2@npm:@beanstalk/wells@1.2.0-prerelease3":
-  version: 1.2.0-prerelease3
-  resolution: "@beanstalk/wells@npm:1.2.0-prerelease3"
-  checksum: 10/b824397cbaa938f1526047965f921008f565bb8832011bf9768b69b378dd012529a2c621f537de84bd6a14791b8f675f388094b409185e87f010a8fc54cc06a0
+"@beanstalk/wells1.2@npm:@beanstalk/wells@1.2.0":
+  version: 1.2.0
+  resolution: "@beanstalk/wells@npm:1.2.0"
+  checksum: 10/670516484f77de10e45ed30ebbbd8b076eeb70dd8a5e26950d3547bf7b2cd43713baa90fab44c7ac56d1f9e9be77d38883901d3aa1e34830eb6e1119ad3ba56f
   languageName: node
   linkType: hard
 

@@ -512,6 +512,34 @@
       }
     },
     "assetSettings": {
+      "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
+        "selector": "0xc8cda2a0",
+        "stalkEarnedPerSeason": "0xf4240",
+        "stalkIssuedPerBdv": "0x2540be400",
+        "milestoneSeason": "0x5525",
+        "milestoneStem": "0x0",
+        "encodeType": "0x00",
+        "deltaStalkEarnedPerSeason": "0xf4240",
+        "gaugePoints": "0x0",
+        "optimalPercentDepositedBdv": "0x0",
+        "gaugePointImplementation": null,
+        "liquidityWeightImplementation": null,
+        "oracleImplementation": null
+      },
+      "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
+        "selector": "0xb0c22bb1",
+        "stalkEarnedPerSeason": "0xf4240",
+        "stalkIssuedPerBdv": "0x2540be400",
+        "milestoneSeason": "0x5525",
+        "milestoneStem": "0x0",
+        "encodeType": "0x00",
+        "deltaStalkEarnedPerSeason": "0xf4240",
+        "gaugePoints": "0x0",
+        "optimalPercentDepositedBdv": "0x0",
+        "gaugePointImplementation": null,
+        "liquidityWeightImplementation": null,
+        "oracleImplementation": null
+      },
       "0xBEA0005B8599265D41256905A9B3073D397812E4": {
         "selector": "0x5a049a47",
         "stalkEarnedPerSeason": "0x51c2819c280",
@@ -567,34 +595,6 @@
         "gaugePointImplementation": null,
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
-      },
-      "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
-        "selector": "0xc8cda2a0",
-        "stalkEarnedPerSeason": "0xf4240",
-        "stalkIssuedPerBdv": "0x2540be400",
-        "milestoneSeason": "0x5525",
-        "milestoneStem": "0x0",
-        "encodeType": "0x00",
-        "deltaStalkEarnedPerSeason": "0xf4240",
-        "gaugePoints": "0x0",
-        "optimalPercentDepositedBdv": "0x0",
-        "gaugePointImplementation": null,
-        "liquidityWeightImplementation": null,
-        "oracleImplementation": null
-      },
-      "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
-        "selector": "0xb0c22bb1",
-        "stalkEarnedPerSeason": "0xf4240",
-        "stalkIssuedPerBdv": "0x2540be400",
-        "milestoneSeason": "0x5525",
-        "milestoneStem": "0x0",
-        "encodeType": "0x00",
-        "deltaStalkEarnedPerSeason": "0xf4240",
-        "gaugePoints": "0x0",
-        "optimalPercentDepositedBdv": "0x0",
-        "gaugePointImplementation": null,
-        "liquidityWeightImplementation": null,
-        "oracleImplementation": null
       }
     },
     "unripeSettings": {
@@ -603,7 +603,7 @@
         "balanceOfUnderlying": "0x19ca007134db"
       },
       "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
-        "underlyingToken": "0xBEA0039bC614D95B65AB843C4482a1A5D2214396",
+        "underlyingToken": "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8",
         "balanceOfUnderlying": "0x27e9022aa01c49f8b12e"
       }
     },

@@ -20,6 +20,8 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
+import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @author Brean
@@ -443,14 +445,15 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice adds the migrated deposits to the account.
+     * @notice adds the migrated plots to the account.
+     * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
         address reciever,
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
-        uint256 activeField = s.sys.activeField;
+        uint256 activeField = 0;
         Field storage field = s.accts[reciever].fields[activeField];
         for (uint i; i < index.length; i++) {
             field.plots[index[i]] = pods[i];
@@ -461,6 +464,9 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated internal balances to the account.
+     * Since global internal balances set in ReseedGlobal also reflect smart contract balances,
+     * we do not need to update global internal balances here,
+     * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
         address reciever,
@@ -468,7 +474,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts
     ) internal {
         for (uint i; i < tokens.length; i++) {
-            LibBalance.increaseInternalBalance(reciever, IERC20(tokens[i]), amounts[i]);
+            IERC20 token = IERC20(tokens[i]);
+            s.accts[reciever].internalTokenBalance[token] += amounts[i];
+            emit LibBalance.InternalBalanceChanged(reciever, token, SafeCast.toInt256(amounts[i]));
         }
     }
 

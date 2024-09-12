@@ -345,6 +345,9 @@ library LibWhitelist {
                 abi.encodeWithSelector(0x0dfe1681)
             );
         } else {
+            // external oracles must have a target address
+            require(oracleImplementation.target != address(0), "Whitelist: Invalid Target Address");
+
             // verify you passed in a callable oracle selector
             (success, returnData) = oracleImplementation.target.call(
                 abi.encodeWithSelector(

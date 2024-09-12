@@ -34,7 +34,12 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.silo?.roots ? convertToBigNum(data.silo.roots) : "0",
       data.silo?.earnedBeans ? convertToBigNum(data.silo.earnedBeans) : "0",
       data.orderLockedBeans ? convertToBigNum(data.orderLockedBeans) : "0",
-      Object.keys(data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }),
+      // all silo tokens
+      Object.keys(
+        data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }
+      ).sort(), // Sort alphabetically so that the 2 Unripe tokens that start with 0x1BEA appear first
+      // This is assumed in ReseedGlobal.sol
+      // all silo balances
       Object.values(
         data.silo?.balances || {
           "0x0000000000000000000000000000000000000000": { deposited: "0", depositedBdv: "0" }
@@ -43,13 +48,17 @@ function parseGlobals(inputFilePath, outputFilePath) {
         convertToBigNum(balance.deposited),
         convertToBigNum(balance.depositedBdv)
       ]),
+      // unripeSettings
       Object.entries(
         data.silo?.unripeSettings || {
-          "0x0000000000000000000000000000000000000000": { balanceOfUnderlying: "0" }
+          "0x0000000000000000000000000000000000000000": {
+            underlyingToken: "0x0000000000000000000000000000000000000000",
+            balanceOfUnderlying: "0"
+          }
         }
       ).map(([token, settings]) => [
-        token,
-        settings.balanceOfUnderlying ? convertToBigNum(settings.balanceOfUnderlying) : "0"
+        settings.underlyingToken, // Extract the underlying token
+        settings.balanceOfUnderlying ? convertToBigNum(settings.balanceOfUnderlying) : "0" // Extract and convert balanceOfUnderlying
       ]),
       Object.entries(data.silo?.germinating?.["0"] || {}).map(([_, { amount, bdv }]) => [
         convertToBigNum(amount),
@@ -116,43 +125,50 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.rain?.roots ? convertToBigNum(data.rain.roots) : "0",
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
-    // EvaluationParameters
+    // seedGaugeSettings
     [
-      data.evaluationParameters?.maxBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.maxBeanMaxLpGpPerBdvRatio)
+      data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
+        ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
         : "0",
-      data.evaluationParameters?.minBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.minBeanMaxLpGpPerBdvRatio)
+      data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
+        ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
         : "0",
-      data.evaluationParameters?.targetSeasonsToCatchUp
-        ? convertToBigNum(data.evaluationParameters.targetSeasonsToCatchUp)
+      data.seedGaugeSettings?.targetSeasonsToCatchUp
+        ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
         : "0",
-      data.evaluationParameters?.podRateLowerBound
-        ? convertToBigNum(data.evaluationParameters.podRateLowerBound)
+      data.seedGaugeSettings?.podRateLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
         : "0",
-      data.evaluationParameters?.podRateOptimal
-        ? convertToBigNum(data.evaluationParameters.podRateOptimal)
+      data.seedGaugeSettings?.podRateOptimal
+        ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
         : "0",
-      data.evaluationParameters?.podRateUpperBound
-        ? convertToBigNum(data.evaluationParameters.podRateUpperBound)
+      data.seedGaugeSettings?.podRateUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
         : "0",
-      data.evaluationParameters?.deltaPodDemandLowerBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandLowerBound)
+      data.seedGaugeSettings?.deltaPodDemandLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
         : "0",
-      data.evaluationParameters?.deltaPodDemandUpperBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandUpperBound)
+      data.seedGaugeSettings?.deltaPodDemandUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioUpperBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioUpperBound)
+      data.seedGaugeSettings?.lpToSupplyRatioUpperBound
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioOptimal
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioOptimal)
+      data.seedGaugeSettings?.lpToSupplyRatioOptimal
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
         : "0",
-      data.evaluationParameters?.lpToSupplyRatioLowerBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioLowerBound)
+      data.seedGaugeSettings?.lpToSupplyRatioLowerBound
+        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
         : "0",
-      data.evaluationParameters?.excessivePriceThreshold
-        ? convertToBigNum(data.evaluationParameters.excessivePriceThreshold)
+      data.seedGaugeSettings?.excessivePriceThreshold
+        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+        : "0",
+      data.seedGaugeSettings?.soilCoefficientHigh
+        ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
+        : "0",
+      data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
+      data.seedGaugeSettings?.excessivePriceThreshold
+        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
         : "0"
     ],
     // ShipmentRoute
@@ -167,7 +183,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
   ];
 
   fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
-  console.log("JSON has been written successfully");
+  console.log("Globals JSON has been written successfully");
 }
 
 exports.parseGlobals = parseGlobals;

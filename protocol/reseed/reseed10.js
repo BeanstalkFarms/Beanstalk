@@ -30,7 +30,8 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "FertilizerFacet", // BARN
     "UnripeFacet",
     "EnrootFacet",
-    "PauseFacet" // DIAMOND
+    "PauseFacet", // DIAMOND
+    "L1RecieverFacet" // MIGRATION
   ];
 
   // A list of public libraries that need to be deployed separately.
@@ -45,7 +46,9 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "LibFlood",
     "LibSilo",
     "LibPipelineConvert",
-    "LibUsdOracle"
+    "LibUsdOracle",
+    "LibChainlinkOracle",
+    "LibWell"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -64,7 +67,8 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
     SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"]
+    EnrootFacet: ["LibSilo"],
+    L1RecieverFacet: ["LibSilo"]
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
