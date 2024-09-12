@@ -27,7 +27,6 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setSeason } from "./utils/Season";
 import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { loadSilo } from "../src/entities/Silo";
-import { handleWhitelistToken } from "../src/handlers/SiloHandler";
 import { handleTemperatureChange } from "../src/handlers/FieldHandler";
 import { initL1Version } from "./entity-mocking/MockVersion";
 

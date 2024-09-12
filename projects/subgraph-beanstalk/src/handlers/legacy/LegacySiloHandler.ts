@@ -135,7 +135,7 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
 }
 
 // SeedGauge -> Reseed
-export function handleWhitelistToken(event: WhitelistToken): void {
+export function handleWhitelistToken_v4(event: WhitelistToken): void {
   addToSiloWhitelist(event.address, event.params.token);
 
   let siloSettings = loadWhitelistTokenSetting(event.params.token);

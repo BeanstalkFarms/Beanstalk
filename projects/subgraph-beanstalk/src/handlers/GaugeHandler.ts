@@ -4,7 +4,6 @@ import {
   UpdateAverageStalkPerBdvPerSeason,
   FarmerGerminatingStalkBalanceChanged,
   TotalGerminatingBalanceChanged,
-  UpdateGaugeSettings,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination,
   SeedGauge
@@ -19,13 +18,12 @@ import {
   savePrevFarmerGerminatingEvent
 } from "../entities/Germinating";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
 import { setSiloHourlyCaseId, takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 import { getCurrentSeason } from "../entities/Beanstalk";
 import { updateStalkBalances } from "../utils/Silo";
-import { legacyInitGauge } from "../utils/legacy/LegacyWhitelist";
+import { UpdatedOptimalPercentDepositedBdvForToken } from "../../generated/Beanstalk-ABIs/Reseed";
 
 // SEED GAUGE SEASONAL ADJUSTMENTS //
 
@@ -189,15 +187,10 @@ export function handleTotalStalkChangedFromGermination(event: TotalStalkChangedF
 
 // GAUGE CONFIGURATION SETTINGS //
 
-export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
+export function handleUpdatedOptimalPercentDepositedBdvForToken(event: UpdatedOptimalPercentDepositedBdvForToken): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
-  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
-
-  legacyInitGauge(event, siloSettings);
-
   takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }
