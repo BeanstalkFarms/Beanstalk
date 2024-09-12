@@ -14,14 +14,7 @@ import {
   createPodOrderFilledEvent_v2
 } from "../event-mocking/Marketplace";
 import { BI_10, ONE_BI, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import {
-  PodListingCreated,
-  PodListingFilled,
-  PodOrderCreated,
-  PodOrderFilled,
-  PodOrderCancelled,
-  PodListingCancelled
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { PodOrderCancelled } from "../../generated/Beanstalk-ABIs/Reseed";
 import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { transferPlot } from "./Field";
 import {
@@ -39,13 +32,20 @@ import {
   handlePodOrderFilled_v1
 } from "../../src/handlers/legacy/LegacyMarketplaceV1Handler";
 import {
-  handlePodListingCancelled,
-  handlePodListingCreated,
-  handlePodListingFilled,
-  handlePodOrderCancelled,
-  handlePodOrderCreated,
-  handlePodOrderFilled
-} from "../../src/handlers/MarketplaceHandler";
+  handlePodListingCancelled_v2,
+  handlePodListingCreated_v2,
+  handlePodListingFilled_v2,
+  handlePodOrderCreated_v2,
+  handlePodOrderFilled_v2
+} from "../../src/handlers/legacy/LegacyMarketplaceV2Handler";
+import { handlePodOrderCancelled } from "../../src/handlers/MarketplaceHandler";
+import {
+  PodListingCancelled as PodListingCancelled_v2,
+  PodListingCreated as PodListingCreated_v2,
+  PodListingFilled as PodListingFilled_v2,
+  PodOrderCreated as PodOrderCreated_v2,
+  PodOrderFilled as PodOrderFilled_v2
+} from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 const pricingFunction = Bytes.fromHexString(
   "0x0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000000c8000000000000000000000000000000000000000000000000000000000000012c000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101010101010000"
@@ -89,9 +89,9 @@ export function fillListing_v2(
   listingStart: BigInt,
   podAmount: BigInt,
   costInBeans: BigInt
-): PodListingFilled {
+): PodListingFilled_v2 {
   const event = createPodListingFilledEvent_v2(from, to, listingIndex, listingStart, podAmount, costInBeans);
-  handlePodListingFilled(event);
+  handlePodListingFilled_v2(event);
 
   // Perform plot transfer
   transferPlot(from, to, listingIndex.plus(listingStart), podAmount);
@@ -145,9 +145,9 @@ export function fillOrder_v2(
   start: BigInt,
   podAmount: BigInt,
   costInBeans: BigInt
-): PodOrderFilled {
+): PodOrderFilled_v2 {
   const event = createPodOrderFilledEvent_v2(from, to, orderId, index, start, podAmount, costInBeans);
-  handlePodOrderFilled(event);
+  handlePodOrderFilled_v2(event);
 
   // Perform plot transfer
   transferPlot(from, to, index.plus(start), podAmount);
@@ -165,9 +165,9 @@ export function fillOrder_v2(
   return event;
 }
 
-export function cancelListing(account: string, listingIndex: BigInt): PodListingCancelled {
+export function cancelListing(account: string, listingIndex: BigInt): PodListingCancelled_v2 {
   const event = createPodListingCancelledEvent(account, listingIndex);
-  handlePodListingCancelled(event);
+  handlePodListingCancelled_v2(event);
   return event;
 }
 
@@ -209,7 +209,7 @@ function assertListingCreated_v1_1(event: PodListingCreated_v1_1): void {
   assert.fieldEquals("PodListing", listingID, "mode", event.params.mode.toString());
 }
 
-function assertListingCreated_v2(event: PodListingCreated): void {
+function assertListingCreated_v2(event: PodListingCreated_v2): void {
   let listingID = event.params.account.toHexString() + "-" + event.params.index.toString();
   assert.fieldEquals("PodListing", listingID, "plot", event.params.index.toString());
   assert.fieldEquals("PodListing", listingID, "farmer", event.params.account.toHexString());
@@ -244,7 +244,7 @@ function assertOrderCreated_v1(account: string, event: PodOrderCreated_v1): void
   assert.fieldEquals("PodOrder", orderID, "pricePerPod", event.params.pricePerPod.toString());
 }
 
-function assertOrderCreated_v2(account: string, event: PodOrderCreated): void {
+function assertOrderCreated_v2(account: string, event: PodOrderCreated_v2): void {
   let orderID = event.params.id.toHexString();
   assert.fieldEquals("PodOrder", orderID, "historyID", orderID + "-" + event.block.timestamp.toString() + "-" + event.logIndex.toString());
   assert.fieldEquals("PodOrder", orderID, "farmer", account);
@@ -292,7 +292,7 @@ export function createListing_v2(
   listedPods: BigInt,
   start: BigInt,
   maxHarvestableIndex: BigInt
-): PodListingCreated {
+): PodListingCreated_v2 {
   const event = createPodListingCreatedEvent_v2(
     account,
     index,
@@ -305,7 +305,7 @@ export function createListing_v2(
     BigInt.fromI32(0),
     BigInt.fromI32(1)
   );
-  handlePodListingCreated(event);
+  handlePodListingCreated_v2(event);
   assertListingCreated_v2(event);
   return event;
 }
@@ -317,9 +317,9 @@ export function createOrder_v1(account: string, id: Bytes, beans: BigInt, priceP
   return event;
 }
 
-export function createOrder_v2(account: string, id: Bytes, beans: BigInt, pricePerPod: BigInt, maxPlaceInLine: BigInt): PodOrderCreated {
+export function createOrder_v2(account: string, id: Bytes, beans: BigInt, pricePerPod: BigInt, maxPlaceInLine: BigInt): PodOrderCreated_v2 {
   const event = createPodOrderCreatedEvent_v2(account, id, beans, pricePerPod, maxPlaceInLine, ONE_BI, pricingFunction, ZERO_BI);
-  handlePodOrderCreated(event);
+  handlePodOrderCreated_v2(event);
   assertOrderCreated_v2(account, event);
   return event;
 }

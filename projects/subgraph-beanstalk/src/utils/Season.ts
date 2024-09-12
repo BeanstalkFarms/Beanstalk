@@ -67,7 +67,7 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
 
 export function siloReceipt(amount: BigInt, block: ethereum.Block): void {
   let silo = loadSilo(v().protocolAddress);
-  let newPlantableStalk = amount.times(BI_10.pow(stalkDecimals(v()) - beanDecimals()));
+  let newPlantableStalk = amount.times(BI_10.pow(<u8>(stalkDecimals(v()) - beanDecimals())));
 
   silo.beanMints = silo.beanMints.plus(amount);
   silo.stalk = silo.stalk.plus(newPlantableStalk);

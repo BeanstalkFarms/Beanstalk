@@ -112,7 +112,7 @@ export function updateDepositInSiloAsset(
   let asset = loadSiloAsset(account, token);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BI_10.pow(beanDecimals()));
+  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BI_10.pow(<u8>beanDecimals()));
 
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
   asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);

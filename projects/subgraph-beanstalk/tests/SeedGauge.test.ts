@@ -6,7 +6,6 @@ import {
   handleGaugePointChange,
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
-  handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
 } from "../src/handlers/GaugeHandler";
@@ -27,8 +26,10 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setSeason } from "./utils/Season";
 import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { loadSilo } from "../src/entities/Silo";
-import { handleTemperatureChange } from "../src/handlers/FieldHandler";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { handleTemperatureChange_v1 } from "../src/handlers/legacy/LegacyFieldHandler";
+import { handleWhitelistToken_v4 } from "../src/handlers/legacy/LegacySiloHandler";
+import { handleUpdateGaugeSettings } from "../src/handlers/legacy/LegacyGaugeHandler";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
@@ -48,10 +49,10 @@ describe("Seed Gauge", () => {
       simpleMockPrice(1, 1);
 
       // Temperature inits to 1
-      handleTemperatureChange(createTemperatureChangeEvent(BigInt.fromU32(1), BigInt.fromU32(15), 5));
+      handleTemperatureChange_v1(createTemperatureChangeEvent(BigInt.fromU32(1), BigInt.fromU32(15), 5));
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "temperature", "6");
       assert.fieldEquals("FieldHourlySnapshot", BEANSTALK.toHexString() + "-1", "caseId", "15");
-      handleTemperatureChange(createTemperatureChangeEvent(BigInt.fromU32(2), BigInt.fromU32(25), 2));
+      handleTemperatureChange_v1(createTemperatureChangeEvent(BigInt.fromU32(2), BigInt.fromU32(25), 2));
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "temperature", "8");
       assert.fieldEquals("FieldHourlySnapshot", BEANSTALK.toHexString() + "-2", "caseId", "25");
     });
@@ -176,7 +177,7 @@ describe("Seed Gauge", () => {
 
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
-      handleWhitelistToken(
+      handleWhitelistToken_v4(
         createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",

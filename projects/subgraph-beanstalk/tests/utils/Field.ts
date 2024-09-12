@@ -1,24 +1,24 @@
 import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { assert, createMockedFunction } from "matchstick-as/assembly/index";
 import { createHarvestEvent, createPlotTransferEvent, createSowEvent } from "../event-mocking/Field";
-import { handleHarvest, handlePlotTransfer, handleSow } from "../../src/handlers/FieldHandler";
 import { createIncentivizationEvent } from "../event-mocking/Season";
 import { handleIncentive } from "../../src/handlers/SeasonHandler";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { handleHarvest_v1, handlePlotTransfer_v1, handleSow_v1 } from "../../src/handlers/legacy/LegacyFieldHandler";
 
 const account = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
 export function sow(account: string, index: BigInt, beans: BigInt, pods: BigInt): void {
-  handleSow(createSowEvent(account, index, beans, pods));
+  handleSow_v1(createSowEvent(account, index, beans, pods));
 }
 
 export function harvest(account: string, plotIndexex: BigInt[], beans: BigInt): void {
-  handleHarvest(createHarvestEvent(account, plotIndexex, beans));
+  handleHarvest_v1(createHarvestEvent(account, plotIndexex, beans));
 }
 
 export function transferPlot(from: string, to: string, id: BigInt, amount: BigInt): void {
-  handlePlotTransfer(createPlotTransferEvent(from, to, id, amount));
+  handlePlotTransfer_v1(createPlotTransferEvent(from, to, id, amount));
 }
 
 export function setHarvestable(harvestableIndex: BigInt): BigInt {

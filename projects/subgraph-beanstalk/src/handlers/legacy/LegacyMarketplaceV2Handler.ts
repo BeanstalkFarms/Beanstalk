@@ -4,7 +4,7 @@ import {
   PodOrderCreated as PodOrderCreated_v2,
   PodOrderFilled as PodOrderFilled_v2,
   PodListingCancelled as PodListingCancelled_v2
-} from "../../../generated/Beanstalk-ABIs/MarketV2";
+} from "../../../generated/Beanstalk-ABIs/SeedGauge";
 import { podListingCancelled, podListingCreated, podListingFilled, podOrderCreated, podOrderFilled } from "../../utils/Marketplace";
 
 // MarketV2 -> Reseed

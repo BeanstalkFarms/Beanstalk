@@ -8,14 +8,14 @@ import {
 } from "../../generated/Beanstalk-ABIs/PreReplant";
 import { PodListingCreated as PodListingCreated_v1_1 } from "../../generated/Beanstalk-ABIs/Replanted";
 import {
-  PodListingCreated,
-  PodListingFilled,
-  PodOrderCreated,
-  PodOrderFilled,
-  PodOrderCancelled,
-  PodListingCancelled
+  PodListingCreated as PodListingCreated_v2,
+  PodListingFilled as PodListingFilled_v2,
+  PodOrderCreated as PodOrderCreated_v2,
+  PodOrderFilled as PodOrderFilled_v2,
+  PodListingCancelled as PodListingCancelled_v2
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import { PodOrderCancelled } from "../../generated/Beanstalk-ABIs/Reseed";
 
 /** ===== Marketplace V1 Events ===== */
 export function createPodListingCreatedEvent(
@@ -165,8 +165,8 @@ export function createPodListingCreatedEvent_v2(
   pricingFunction: Bytes,
   mode: BigInt,
   pricingType: BigInt
-): PodListingCreated {
-  let event = changetype<PodListingCreated>(mockBeanstalkEvent());
+): PodListingCreated_v2 {
+  let event = changetype<PodListingCreated_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
@@ -191,7 +191,7 @@ export function createPodListingCreatedEvent_v2(
   event.parameters.push(param9);
   event.parameters.push(param10);
 
-  return event as PodListingCreated;
+  return event as PodListingCreated_v2;
 }
 
 export function createPodListingFilledEvent_v2(
@@ -201,8 +201,8 @@ export function createPodListingFilledEvent_v2(
   start: BigInt,
   amount: BigInt,
   costInBeans: BigInt
-): PodListingFilled {
-  let event = changetype<PodListingFilled>(mockBeanstalkEvent());
+): PodListingFilled_v2 {
+  let event = changetype<PodListingFilled_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString(from)));
@@ -219,7 +219,7 @@ export function createPodListingFilledEvent_v2(
   event.parameters.push(param5);
   event.parameters.push(param6);
 
-  return event as PodListingFilled;
+  return event as PodListingFilled_v2;
 }
 
 export function createPodOrderCreatedEvent_v2(
@@ -231,8 +231,8 @@ export function createPodOrderCreatedEvent_v2(
   minFillAmount: BigInt,
   pricingFunction: Bytes,
   pricingType: BigInt
-): PodOrderCreated {
-  let event = changetype<PodOrderCreated>(mockBeanstalkEvent());
+): PodOrderCreated_v2 {
+  let event = changetype<PodOrderCreated_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
@@ -253,7 +253,7 @@ export function createPodOrderCreatedEvent_v2(
   event.parameters.push(param7);
   event.parameters.push(param8);
 
-  return event as PodOrderCreated;
+  return event as PodOrderCreated_v2;
 }
 
 export function createPodOrderFilledEvent_v2(
@@ -264,8 +264,8 @@ export function createPodOrderFilledEvent_v2(
   start: BigInt,
   amount: BigInt,
   costInBeans: BigInt
-): PodOrderFilled {
-  let event = changetype<PodOrderFilled>(mockBeanstalkEvent());
+): PodOrderFilled_v2 {
+  let event = changetype<PodOrderFilled_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("from", ethereum.Value.fromAddress(Address.fromString(from)));
@@ -284,7 +284,7 @@ export function createPodOrderFilledEvent_v2(
   event.parameters.push(param6);
   event.parameters.push(param7);
 
-  return event as PodOrderFilled;
+  return event as PodOrderFilled_v2;
 }
 
 /* Cancellation events */
@@ -301,8 +301,8 @@ export function createPodOrderCancelledEvent(account: string, id: Bytes): PodOrd
   return event as PodOrderCancelled;
 }
 
-export function createPodListingCancelledEvent(account: string, index: BigInt): PodListingCancelled {
-  let event = changetype<PodListingCancelled>(mockBeanstalkEvent());
+export function createPodListingCancelledEvent(account: string, index: BigInt): PodListingCancelled_v2 {
+  let event = changetype<PodListingCancelled_v2>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(Address.fromString(account)));
@@ -311,5 +311,5 @@ export function createPodListingCancelledEvent(account: string, index: BigInt): 
   event.parameters.push(param1);
   event.parameters.push(param2);
 
-  return event as PodListingCancelled;
+  return event as PodListingCancelled_v2;
 }
