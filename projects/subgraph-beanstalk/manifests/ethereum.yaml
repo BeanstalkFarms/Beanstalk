@@ -1014,7 +1014,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Reseed
+      abi: SeedGauge
       startBlock: 15277986 # Replanted
     mapping:
       kind: ethereum/events
@@ -1023,12 +1023,12 @@ dataSources:
       entities:
         - SiloAsset
       abis:
-        - name: Reseed
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: InternalBalanceChanged(indexed address,indexed address,int256)
           handler: handleInternalBalanceChanged
-      file: ../src/handlers/FarmHandler.ts
+      file: ../src/handlers/legacy/LegacyFarmHandler.ts
 # features:
 #   - grafting
 # graft:
