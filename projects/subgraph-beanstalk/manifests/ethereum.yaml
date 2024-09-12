@@ -674,7 +674,7 @@ dataSources:
         # Both signatures are required to recognize all events.
         - event: PodListingCancelled(indexed address,indexed uint256)
           handler: handlePodListingCancelled_indexed
-      file: ../src/handlers/legacy/LegacyMarketplaceHandler.ts
+      file: ../src/handlers/legacy/LegacyMarketplaceV1Handler.ts
   - kind: ethereum/contract
     name: LegacyMarketplace-Replanted-SeedGauge
     network: mainnet
@@ -695,7 +695,7 @@ dataSources:
       eventHandlers:
         - event: PodListingCreated(indexed address,uint256,uint256,uint256,uint24,uint256,uint8)
           handler: handlePodListingCreated_v1_1
-      file: ../src/handlers/legacy/LegacyMarketplaceHandler.ts
+      file: ../src/handlers/legacy/LegacyMarketplaceV1Handler.ts
   ###
   # FERTILIZER
   ###

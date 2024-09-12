@@ -1,9 +1,8 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
-import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateSeedsBalances, updateStalkBalances } from "../utils/Silo";
-import { addToSiloWhitelist, loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
+import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
+import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
-import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
 import {
   AddDeposit,
   Convert,
@@ -11,14 +10,9 @@ import {
   Plant,
   RemoveDeposit,
   RemoveDeposits,
-  RemoveWithdrawal,
-  RemoveWithdrawals,
-  SeedsBalanceChanged,
   StalkBalanceChanged,
-  UpdatedStalkPerBdvPerSeason,
-  WhitelistToken
+  UpdatedStalkPerBdvPerSeason
 } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
 import { unripeChopped } from "../utils/Barn";
 import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
@@ -89,6 +83,7 @@ export function handlePlant(event: Plant): void {
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
   let silo = loadSilo(event.address);
+  // FIXME stalk decimals
   let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
 
   // Subtract stalk since it was already added in Reward, and is about to get re-added in StalkBalanceChanged.
@@ -109,24 +104,6 @@ export function handlePlant(event: Plant): void {
     event.params.beans,
     event.block
   );
-}
-
-export function handleWhitelistToken(event: WhitelistToken): void {
-  addToSiloWhitelist(event.address, event.params.token);
-
-  let siloSettings = loadWhitelistTokenSetting(event.params.token);
-
-  siloSettings.selector = event.params.selector;
-  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
-  siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
-  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
-  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
-  siloSettings.updatedAt = event.block.timestamp;
-
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
-  siloSettings.save();
 }
 
 export function handleDewhitelistToken(event: DewhitelistToken): void {

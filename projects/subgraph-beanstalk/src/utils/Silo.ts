@@ -112,6 +112,7 @@ export function updateDepositInSiloAsset(
   let asset = loadSiloAsset(account, token);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
+  // FIXME stalk decimals
   let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
 
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);

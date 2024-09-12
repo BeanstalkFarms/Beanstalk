@@ -37,7 +37,7 @@ import {
   handlePodListingFilled_v1,
   handlePodOrderCreated_v1,
   handlePodOrderFilled_v1
-} from "../../src/handlers/legacy/LegacyMarketplaceHandler";
+} from "../../src/handlers/legacy/LegacyMarketplaceV1Handler";
 import {
   handlePodListingCancelled,
   handlePodListingCreated,

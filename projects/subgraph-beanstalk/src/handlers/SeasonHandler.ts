@@ -3,18 +3,16 @@ import { Reward, Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from ".
 import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
-import { loadSilo } from "../entities/Silo";
-import { takeSiloSnapshots } from "../entities/snapshots/Silo";
-import { updateDepositInSiloAsset } from "../utils/Silo";
 import { getBeanstalkPrice } from "../utils/contracts/BeanstalkPrice";
 import { takeFieldSnapshots } from "../entities/snapshots/Field";
 import { loadField } from "../entities/Field";
 import { updateBeanEMA } from "../utils/Yield";
 import { updateExpiredPlots } from "../utils/Marketplace";
 import { updateHarvestablePlots } from "../utils/Field";
-import { sunrise } from "../utils/Season";
-import { getProtocolToken, isGaugeDeployed, isReplanted } from "../../../subgraph-core/constants/RuntimeConstants";
+import { siloReceipt, sunrise } from "../utils/Season";
+import { isGaugeDeployed, isReplanted } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
+import { Receipt, Shipped } from "../../generated/Beanstalk-ABIs/Reseed";
 
 export function handleSunrise(event: Sunrise): void {
   // (Legacy) Update any farmers that had silo transfers from the prior season.
@@ -24,32 +22,18 @@ export function handleSunrise(event: Sunrise): void {
   sunrise(event.address, event.params.season, event.block);
 }
 
-export function handleReward(event: Reward): void {
+// Overall reward mint
+export function handleShipped(event: Shipped): void {
   let season = loadSeason(event.params.season);
-  season.rewardBeans = event.params.toField.plus(event.params.toSilo).plus(event.params.toFertilizer);
+  season.rewardBeans = event.params.shipmentAmount;
   season.save();
+}
 
-  // Add to total Silo Bean mints
-
-  let silo = loadSilo(event.address);
-  let newPlantableStalk = event.params.toSilo.times(BigInt.fromI32(10000)); // Stalk has 10 decimals
-
-  silo.beanMints = silo.beanMints.plus(event.params.toSilo);
-  silo.stalk = silo.stalk.plus(newPlantableStalk);
-  silo.plantableStalk = silo.plantableStalk.plus(newPlantableStalk);
-  silo.depositedBDV = silo.depositedBDV.plus(event.params.toSilo);
-
-  takeSiloSnapshots(silo, event.block);
-  silo.save();
-
-  updateDepositInSiloAsset(
-    event.address,
-    event.address,
-    getProtocolToken(v(), event.block.number),
-    event.params.toSilo,
-    event.params.toSilo,
-    event.block
-  );
+// Reward mint to each shipment
+export function handleReceipt(event: Receipt): void {
+  if (event.params.recipient == 1) {
+    siloReceipt(event.params.receivedAmount, event.block);
+  }
 }
 
 export function handleWellOracle(event: WellOracle): void {

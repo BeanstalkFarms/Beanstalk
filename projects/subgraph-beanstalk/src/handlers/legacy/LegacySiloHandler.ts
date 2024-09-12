@@ -14,8 +14,9 @@ import { addToSiloWhitelist, loadSiloWithdraw, loadWhitelistTokenSetting } from 
 import { addDeposits, addWithdrawToSiloAsset, removeDeposits } from "../../utils/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../../entities/snapshots/WhitelistTokenSetting";
 import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstalk-ABIs/SiloV3";
-import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged } from "../../../generated/Beanstalk-ABIs/SeedGauge";
+import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged, WhitelistToken } from "../../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw, updateSeedsBalances } from "../../utils/legacy/LegacySilo";
+import { Bytes4_emptyToNull } from "../../../../subgraph-core/utils/Bytes";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
@@ -111,6 +112,7 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
+  // FIXME stalk decimals
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
 
@@ -124,6 +126,7 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
 
   let setting = loadWhitelistTokenSetting(event.params.token);
   setting.selector = event.params.selector;
+  // FIXME stalk decimals
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
 
@@ -131,7 +134,24 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
   setting.save();
 }
 
-// TODO: whitelist v4
+// SeedGauge -> Reseed
+export function handleWhitelistToken(event: WhitelistToken): void {
+  addToSiloWhitelist(event.address, event.params.token);
+
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+
+  siloSettings.selector = event.params.selector;
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
+  siloSettings.gaugePoints = event.params.gaugePoints;
+  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
+  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
+  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = event.block.timestamp;
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
+  siloSettings.save();
+}
 
 // Replanted -> Reseed
 // Legacy feature since silo v3, but the event was still present until the reseed //

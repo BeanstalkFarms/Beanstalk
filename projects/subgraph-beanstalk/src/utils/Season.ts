@@ -12,9 +12,10 @@ import { setBdv, takeWhitelistTokenSettingSnapshots } from "../entities/snapshot
 import { WhitelistTokenSetting } from "../../generated/schema";
 import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateUnripeStats } from "./Barn";
-import { isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
+import { getProtocolToken, isUnripe } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
+import { updateDepositInSiloAsset } from "./Silo";
 
 export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block): void {
   let currentSeason = season.toI32();
@@ -62,6 +63,22 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
       updateUnripeStats(token, protocol, block);
     }
   }
+}
+
+export function siloReceipt(amount: BigInt, block: ethereum.Block): void {
+  let silo = loadSilo(v().protocolAddress);
+  // FIXME stalk decimals
+  let newPlantableStalk = amount.times(BigInt.fromI32(10000)); // Stalk has 10 decimals
+
+  silo.beanMints = silo.beanMints.plus(amount);
+  silo.stalk = silo.stalk.plus(newPlantableStalk);
+  silo.plantableStalk = silo.plantableStalk.plus(newPlantableStalk);
+  silo.depositedBDV = silo.depositedBDV.plus(amount);
+
+  takeSiloSnapshots(silo, block);
+  silo.save();
+
+  updateDepositInSiloAsset(v().protocolAddress, v().protocolAddress, getProtocolToken(v(), block.number), amount, amount, block);
 }
 
 function setTokenBdv(token: Address, protocol: Address, whitelistTokenSetting: WhitelistTokenSetting): void {

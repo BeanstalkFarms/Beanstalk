@@ -67,6 +67,7 @@ export function stemFromSeason(season: i32, token: Address): BigInt {
 
 // Equivalent to LibLegacyTokenSilo.seasonToStem
 function seasonToV3Stem(season: i32, stemStartSeason: i32, seedsPerBdv: i32): BigInt {
+  // FIXME stalk decimals
   return BigInt.fromI32(season - stemStartSeason).times(BigInt.fromI32(seedsPerBdv).times(BI_10.pow(6)));
 }
 

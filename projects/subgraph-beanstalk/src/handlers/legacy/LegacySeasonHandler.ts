@@ -6,7 +6,8 @@ import { MetapoolOracle } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { BeanstalkPrice_priceOnly } from "../../utils/contracts/BeanstalkPrice";
 import { loadSeason } from "../../entities/Beanstalk";
 import { updateStalkWithCalls } from "../../utils/legacy/LegacySilo";
-import { sunrise } from "../../utils/Season";
+import { siloReceipt, sunrise } from "../../utils/Season";
+import { Reward } from "../../../generated/Beanstalk-ABIs/SeedGauge";
 
 // Replanted -> SiloV3
 export function handleReplantSunrise(event: Sunrise): void {
@@ -37,4 +38,13 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
   season.price = toDecimal(BeanstalkPrice_priceOnly(event.block.number));
   season.deltaB = event.params.deltaB;
   season.save();
+}
+
+// Replanted -> SeedGauge
+export function handleReward(event: Reward): void {
+  let season = loadSeason(event.params.season);
+  season.rewardBeans = event.params.toField.plus(event.params.toSilo).plus(event.params.toFertilizer);
+  season.save();
+
+  siloReceipt(event.params.toSilo, event.block);
 }
