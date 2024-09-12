@@ -1,16 +1,25 @@
-import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigDecimal } from "@graphprotocol/graph-ts";
 import { REPLANT_SEASON } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal } from "../../../../subgraph-core/utils/Decimals";
-import { SeasonSnapshot, Sunrise } from "../../../generated/Beanstalk-ABIs/PreReplant";
-import { MetapoolOracle } from "../../../generated/Beanstalk-ABIs/Replanted";
+import { SeasonSnapshot, Sunrise as Sunrise_PreReplant } from "../../../generated/Beanstalk-ABIs/PreReplant";
+import { MetapoolOracle, Sunrise as Sunrise_Replanted } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { BeanstalkPrice_priceOnly } from "../../utils/contracts/BeanstalkPrice";
 import { loadSeason } from "../../entities/Beanstalk";
 import { updateStalkWithCalls } from "../../utils/legacy/LegacySilo";
 import { siloReceipt, sunrise } from "../../utils/Season";
 import { Reward } from "../../../generated/Beanstalk-ABIs/SeedGauge";
 
+// PreReplant -> Replanted
+export function handleSunrise_v1(event: Sunrise_PreReplant): void {
+  // (Legacy) Update any farmers that had silo transfers from the prior season.
+  // This is intentionally done before beanstalk.lastSeason gets updated
+  updateStalkWithCalls(event.address, event.block);
+
+  sunrise(event.address, event.params.season, event.block);
+}
+
 // Replanted -> SiloV3
-export function handleReplantSunrise(event: Sunrise): void {
+export function handleReplantSunrise(event: Sunrise_Replanted): void {
   // Update any farmers that had silo transfers from the prior season.
   // This is intentionally done before beanstalk.lastSeason gets updated
   updateStalkWithCalls(event.address, event.block);

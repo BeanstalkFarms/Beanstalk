@@ -1,4 +1,3 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
 import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
 import { addToSiloWhitelist, loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
@@ -85,7 +84,7 @@ export function handlePlant(event: Plant): void {
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
   let silo = loadSilo(event.address);
-  let newPlantableStalk = event.params.beans.times(BI_10.pow(stalkDecimals(v()) - <u8>beanDecimals()));
+  let newPlantableStalk = event.params.beans.times(BI_10.pow(<u8>(stalkDecimals(v()) - beanDecimals())));
 
   // Subtract stalk since it was already added in Reward, and is about to get re-added in StalkBalanceChanged.
   silo.stalk = silo.stalk.minus(newPlantableStalk);

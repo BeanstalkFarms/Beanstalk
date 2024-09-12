@@ -129,8 +129,6 @@ dataSources:
       abis:
         - name: Reseed
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
-        - name: CurvePrice
-          file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:

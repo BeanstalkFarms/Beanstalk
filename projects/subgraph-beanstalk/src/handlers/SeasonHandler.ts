@@ -1,7 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Soil, WellOracle, Sunrise, Incentivization, SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { toDecimal, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
-import { updateStalkWithCalls } from "../utils/legacy/LegacySilo";
+import { Soil, WellOracle, Sunrise, Incentivization } from "../../generated/Beanstalk-ABIs/Reseed";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadSeason } from "../entities/Beanstalk";
 import { getBeanstalkPrice } from "../utils/contracts/BeanstalkPrice";
 import { takeFieldSnapshots } from "../entities/snapshots/Field";
@@ -13,12 +12,9 @@ import { siloReceipt, sunrise } from "../utils/Season";
 import { isGaugeDeployed, isReplanted } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 import { Receipt, Shipped } from "../../generated/Beanstalk-ABIs/Reseed";
+import { Beanstalk_harvestableIndex } from "../utils/contracts/Beanstalk";
 
 export function handleSunrise(event: Sunrise): void {
-  // (Legacy) Update any farmers that had silo transfers from the prior season.
-  // This is intentionally done before beanstalk.lastSeason gets updated
-  updateStalkWithCalls(event.address, event.block);
-
   sunrise(event.address, event.params.season, event.block);
 }
 
@@ -64,13 +60,11 @@ export function handleSoil(event: Soil): void {
 export function handleIncentive(event: Incentivization): void {
   // Update market cap for season
   let beanstalk = loadBeanstalk();
-  let beanstalk_contract = SeedGauge.bind(event.address);
   let season = loadSeason(BigInt.fromI32(beanstalk.lastSeason));
 
   season.marketCap = season.price.times(toDecimal(season.beans));
   season.incentiveBeans = event.params.beans;
-  // TODO: need legacy extraction here for providing no field id
-  season.harvestableIndex = beanstalk_contract.harvestableIndex();
+  season.harvestableIndex = Beanstalk_harvestableIndex(ZERO_BI);
   season.save();
 
   updateExpiredPlots(season.harvestableIndex, event.block);

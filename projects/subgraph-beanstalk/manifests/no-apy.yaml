@@ -255,11 +255,11 @@ dataSources:
   # FIELD
   ###
   - kind: ethereum/contract
-    name: Field
+    name: LegacyField-PreReplant-Reseed
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Reseed
+      abi: SeedGauge
       startBlock: 12974075 # Field has all-time support
     mapping:
       kind: ethereum/events
@@ -268,8 +268,8 @@ dataSources:
       entities:
         - Field
       abis:
-        - name: Reseed
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
         - name: CurvePrice
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
@@ -489,6 +489,8 @@ dataSources:
       abis:
         - name: Reseed
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+        - name: SeedGauge # Needed for call to get harvestable index
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
@@ -498,6 +500,26 @@ dataSources:
           handler: handleSoil
         - event: Incentivization(indexed address,uint256)
           handler: handleIncentive
+      file: ../src/handlers/SeasonHandler.ts
+  - kind: ethereum/contract
+    name: Season-SiloV3-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Reseed
+      startBlock: 17671557 # SiloV3
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Season
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
       file: ../src/handlers/SeasonHandler.ts
   - kind: ethereum/contract
     name: LegacySeason-PreReplant-SeedGauge
@@ -550,7 +572,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
+      abi: PreReplant
       startBlock: 12974075
       endBlock: 15277986 # Replanted
     mapping:
@@ -560,12 +582,12 @@ dataSources:
       entities:
         - Season
       abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: PreReplant
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
-          handler: handleSunrise
-      file: ../src/handlers/SeasonHandler.ts
+          handler: handleSunrise_v1
+      file: ../src/handlers/legacy/LegacySeasonHandler.ts
   - kind: ethereum/contract
     name: LegacySeason-Replanted-SiloV3
     network: mainnet
@@ -583,32 +605,10 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleReplantSunrise
       file: ../src/handlers/legacy/LegacySeasonHandler.ts
-  - kind: ethereum/contract
-    name: Season-SiloV3-
-    network: mainnet
-    source:
-      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: SeedGauge
-      startBlock: 17671557 # SiloV3
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      entities:
-        - Season
-      abis:
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-      eventHandlers:
-        - event: Sunrise(indexed uint256)
-          handler: handleSunrise
-      file: ../src/handlers/SeasonHandler.ts
   - kind: ethereum/contract
     name: LegacySeason-PreReplant-Reseed
     network: mainnet
