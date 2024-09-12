@@ -354,7 +354,7 @@ contract OracleTest is TestHelper {
 
         vm.prank(WBTC_WHALE);
         IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
-        deal(address(BEAN), BEAN_WBTC_WELL, 118063754426, true); // approx 2 btc worth of beans
+        deal(address(BEAN), BEAN_WBTC_WELL, 117989199462, true); // approx 2 btc worth of beans
         IWell(BEAN_WBTC_WELL).sync(users[0], 0);
 
         // mock init state so that the bean token is defined

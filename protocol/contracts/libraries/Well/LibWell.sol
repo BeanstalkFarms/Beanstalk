@@ -58,7 +58,7 @@ library LibWell {
         for (uint i; i < tokens.length; ++i) {
             if (address(tokens[i]) == bean) {
                 beanIndex = i;
-            } else if (IERC20Decimals(address(tokens[i])).decimals() < 8) {
+            } else if (IERC20Decimals(address(tokens[i])).decimals() <= 8) {
                 // if the nonBean token in the well has a low decimal precision,
                 // set `isMillion` such that the ratio is set to be on a million basis.
                 isMillion = true;
