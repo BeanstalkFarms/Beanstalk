@@ -3,6 +3,7 @@ import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Reseed } from "../../generated/Beanstalk-ABIs/Reseed";
 import { v } from "../utils/constants/Version";
+import { isReplanted } from "../../../subgraph-core/constants/RuntimeConstants";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
   let fertilizer = Fertilizer.load(fertilizerAddress);
@@ -21,8 +22,7 @@ export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNum
     const beanstalkContract = Reseed.bind(v().protocolAddress);
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
-    // TODO: extract legacy logic
-    if (blockNumber.gt(BigInt.fromString("15278963"))) {
+    if (isReplanted(v(), blockNumber)) {
       fertilizerToken.humidity = BigDecimal.fromString(beanstalkContract.getCurrentHumidity().toString()).div(BigDecimal.fromString("10"));
       fertilizerToken.season = beanstalkContract.season().toI32();
       fertilizerToken.startBpf = beanstalkContract.beansPerFertilizer();

@@ -51,7 +51,7 @@ export function handleSoil(event: Soil): void {
   takeFieldSnapshots(field, event.block);
   field.save();
 
-  if (isReplanted(v(), event.params.season)) {
+  if (isReplanted(v(), event.block.number)) {
     updateBeanEMA(event.address, event.block.timestamp);
   }
 }
