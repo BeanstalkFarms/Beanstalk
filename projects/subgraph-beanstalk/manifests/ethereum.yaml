@@ -550,14 +550,13 @@ dataSources:
           handler: handleGaugePointChange
         - event: UpdateAverageStalkPerBdvPerSeason(uint256)
           handler: handleUpdateAverageStalkPerBdvPerSeason
-        - event: FarmerGerminatingStalkBalanceChanged(indexed address,int256,uint8)
-          handler: handleFarmerGerminatingStalkBalanceChanged
-        - event: TotalGerminatingBalanceChanged(uint256,indexed address,int256,int256)
-          handler: handleTotalGerminatingBalanceChanged
         - event: TotalGerminatingStalkChanged(uint256,int256)
           handler: handleTotalGerminatingStalkChanged
         - event: TotalStalkChangedFromGermination(int256,int256)
           handler: handleTotalStalkChangedFromGermination
+        # events were bugged and resolved on Reseed, they are handled in legacy:
+        # FarmerGerminatingStalkBalanceChanged
+        # TotalGerminatingBalanceChanged
       file: ../src/handlers/GaugeHandler.ts
   - kind: ethereum/contract
     name: LegacySeedGauge-SeedGauge-Reseed
@@ -578,6 +577,10 @@ dataSources:
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
+        - event: FarmerGerminatingStalkBalanceChanged(indexed address,int256,uint8)
+          handler: handleFarmerGerminatingStalkBalanceChanged_bugged
+        - event: TotalGerminatingBalanceChanged(uint256,indexed address,int256,int256)
+          handler: handleTotalGerminatingBalanceChanged_bugged
         - event: UpdateGaugeSettings(indexed address,bytes4,bytes4,uint64)
           handler: handleUpdateGaugeSettings
       file: ../src/handlers/legacy/LegacyGaugeHandler.ts

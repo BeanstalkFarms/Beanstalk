@@ -5,17 +5,14 @@ import {
   FarmerGerminatingStalkBalanceChanged,
   TotalGerminatingBalanceChanged,
   TotalGerminatingStalkChanged,
-  TotalStalkChangedFromGermination,
-  SeedGauge
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+  TotalStalkChangedFromGermination
+} from "../../generated/Beanstalk-ABIs/Reseed";
 import {
   deleteGerminating,
   germinationEnumCategory,
   germinationSeasonCategory,
-  getFarmerGerminatingBugOffset,
   loadGerminating,
-  loadOrCreateGerminating,
-  savePrevFarmerGerminatingEvent
+  loadOrCreateGerminating
 } from "../entities/Germinating";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { setSiloHourlyCaseId, takeSiloSnapshots } from "../entities/snapshots/Silo";
@@ -64,36 +61,28 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
 
 // GERMINATING STALK //
 
-// TODO: this one must be legacy due to event param names changing anyway
-// TODO: extract legacy logic for the event bug
 // Tracks germinating balances for individual famers
 export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminatingStalkBalanceChanged): void {
-  if (event.params.deltaGerminatingStalk == ZERO_BI) {
+  if (event.params.delta == ZERO_BI) {
     return;
   }
 
   const currentSeason = getCurrentSeason();
 
-  if (event.params.deltaGerminatingStalk > ZERO_BI) {
+  if (event.params.delta > ZERO_BI) {
     // Germinating stalk is added. It is possible to begin germination in the prior season rather than the
     // current season when converting. See ConvertFacet._depositTokensForConvert for more information.
     // If the event's germinationState doesnt match with the current season, use the prior season.
     const germinatingSeason =
-      germinationSeasonCategory(currentSeason) === germinationEnumCategory(event.params.germinationState)
-        ? currentSeason
-        : currentSeason - 1;
+      germinationSeasonCategory(currentSeason) === germinationEnumCategory(event.params.germ) ? currentSeason : currentSeason - 1;
 
     let farmerGerminating = loadOrCreateGerminating(event.params.account, germinatingSeason, true);
-    farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.deltaGerminatingStalk);
+    farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.delta);
     farmerGerminating.save();
   } else {
-    // Adjusts for the event's inherent bug when both even/odd germination complete in the same txn
-    const bugfixStalkOffset = getFarmerGerminatingBugOffset(event.params.account, event);
-    const actualDeltaGerminatingStalk = event.params.deltaGerminatingStalk.plus(bugfixStalkOffset);
-
     // Germinating stalk is being removed. It therefore must have created the entity already
-    let farmerGerminating = loadGerminating(event.params.account, event.params.germinationState);
-    farmerGerminating.stalk = farmerGerminating.stalk.plus(actualDeltaGerminatingStalk);
+    let farmerGerminating = loadGerminating(event.params.account, event.params.germ);
+    farmerGerminating.stalk = farmerGerminating.stalk.plus(event.params.delta);
     if (farmerGerminating.stalk == ZERO_BI) {
       deleteGerminating(farmerGerminating);
     } else {
@@ -104,17 +93,14 @@ export function handleFarmerGerminatingStalkBalanceChanged(event: FarmerGerminat
       // If germination finished, need to subtract stalk from system silo. This stalk was already added
       // into system stalk upon sunrise for season - 2.
       let systemSilo = loadSilo(event.address);
-      systemSilo.stalk = systemSilo.stalk.plus(actualDeltaGerminatingStalk);
+      systemSilo.stalk = systemSilo.stalk.plus(event.params.delta);
       takeSiloSnapshots(systemSilo, event.block);
       systemSilo.save();
     }
-
-    // Also for the event bug adjustment
-    savePrevFarmerGerminatingEvent(event.params.account, event, event.params.deltaGerminatingStalk);
   }
 
   let farmerSilo = loadSilo(event.params.account);
-  farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.deltaGerminatingStalk);
+  farmerSilo.germinatingStalk = farmerSilo.germinatingStalk.plus(event.params.delta);
   takeSiloSnapshots(farmerSilo, event.block);
   farmerSilo.save();
 }
@@ -125,41 +111,15 @@ export function handleTotalGerminatingBalanceChanged(event: TotalGerminatingBala
     return;
   }
 
-  // SeedGauge: there is a bug where the germinating season number here can be incorrect/incongruent
-  // with the values set at s.(odd|even)Germinating.deposited[token].bdv.
-  // Best solution is to use view functions to determine what the correct amount should be for each.
-  const beanstalk_call = SeedGauge.bind(event.address);
-
-  const evenGerminating = beanstalk_call.getEvenGerminating(event.params.token);
-  let tokenGerminatingEven = loadOrCreateGerminating(event.params.token, 0, false);
-  tokenGerminatingEven.tokenAmount = evenGerminating.getValue0();
-  tokenGerminatingEven.bdv = evenGerminating.getValue1();
-  if (tokenGerminatingEven.tokenAmount == ZERO_BI) {
-    deleteGerminating(tokenGerminatingEven);
+  let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32(), false);
+  tokenGerminating.season = event.params.germinationSeason.toU32();
+  tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
+  tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
+  if (tokenGerminating.tokenAmount == ZERO_BI) {
+    deleteGerminating(tokenGerminating);
   } else {
-    tokenGerminatingEven.save();
+    tokenGerminating.save();
   }
-
-  const oddGerminating = beanstalk_call.getOddGerminating(event.params.token);
-  let tokenGerminatingOdd = loadOrCreateGerminating(event.params.token, 1, false);
-  tokenGerminatingOdd.tokenAmount = oddGerminating.getValue0();
-  tokenGerminatingOdd.bdv = oddGerminating.getValue1();
-  if (tokenGerminatingOdd.tokenAmount == ZERO_BI) {
-    deleteGerminating(tokenGerminatingOdd);
-  } else {
-    tokenGerminatingOdd.save();
-  }
-
-  /** This is the correct implementation, but can't be used due to the bug in contracts described above. **/
-  // let tokenGerminating = loadOrCreateGerminating(event.params.token, event.params.germinationSeason.toU32(), false);
-  // tokenGerminating.season = event.params.germinationSeason.toU32();
-  // tokenGerminating.tokenAmount = tokenGerminating.tokenAmount.plus(event.params.deltaAmount);
-  // tokenGerminating.bdv = tokenGerminating.bdv.plus(event.params.deltaBdv);
-  // if (tokenGerminating.tokenAmount == ZERO_BI) {
-  //   deleteGerminating(tokenGerminating);
-  // } else {
-  //   tokenGerminating.save();
-  // }
 }
 
 // This occurs at the beanstalk level regardless of whether users mow their own germinating stalk into regular stalk.

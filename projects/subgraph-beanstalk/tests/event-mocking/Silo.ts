@@ -8,14 +8,8 @@ import {
   RemoveWithdrawals
 } from "../../generated/Beanstalk-ABIs/Replanted";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import {
-  AddDeposit,
-  RemoveDeposits,
-  RemoveDeposit,
-  SeedsBalanceChanged,
-  StalkBalanceChanged,
-  Plant
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { AddDeposit, RemoveDeposits, RemoveDeposit, StalkBalanceChanged, Plant } from "../../generated/Beanstalk-ABIs/Reseed";
+import { SeedsBalanceChanged } from "../../generated/Beanstalk-ABIs/SeedGauge";
 export function createAddDepositV2Event(
   account: string,
   token: string,
