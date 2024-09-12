@@ -102,6 +102,7 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
 function Mainnet() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
+  const { isArbitrum } = useChainState();
   return (
     <>
       <NavBar>{null}</NavBar>
@@ -125,7 +126,7 @@ function Mainnet() {
             justifyContent: 'center',
           }}
         >
-          <EthMainnet />
+          <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
           {/* <Routes>
             <Route path="/*" element={<EthMainnet />} />
           </Routes> */}
@@ -150,8 +151,8 @@ function Arbitrum() {
        * Bean Updaters
        * ----------------------- */}
       {/* price contract not working */}
-      {false && <PoolsUpdater />}
-      {false && <UnripeUpdater />}
+      <PoolsUpdater />
+      <UnripeUpdater />
 
       {/* -----------------------
        * Beanstalk Updaters
@@ -265,9 +266,12 @@ function Arbitrum() {
 }
 
 export default function App() {
-  const { isArbitrum } = useChainState();
+  const { isArbitrum, isDev: isTestnet } = useChainState();
 
-  if (!isArbitrum) {
+  console.log('isArbitrum: ', isArbitrum);
+  console.log('isTestnet: ', isTestnet);
+
+  if (!isArbitrum || (isArbitrum && !isTestnet)) {
     return <Mainnet />;
   }
 

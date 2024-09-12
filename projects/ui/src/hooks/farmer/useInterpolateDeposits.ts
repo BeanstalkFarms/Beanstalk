@@ -9,8 +9,8 @@ import {
   interpolateFarmerDepositedValue,
   SnapshotBeanstalk,
 } from '~/util/Interpolate';
-import { ZERO_BN } from '~/constants';
-import useSdk from '../sdk';
+import { SupportedChainId, ZERO_BN } from '~/constants';
+import { UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
 import useUnripeUnderlyingMap from '../beanstalk/useUnripeUnderlying';
 
 const useInterpolateDeposits = (
@@ -22,8 +22,9 @@ const useInterpolateDeposits = (
   const beanPools = useAppSelector((state) => state._bean.pools);
   const underlyingMap = useUnripeUnderlyingMap();
 
-  const sdk = useSdk();
-  const urBeanLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
+  // const sdk = useSdk();
+  // BS3TODO: fix me
+  const urBeanLP = UNRIPE_BEAN_WSTETH[SupportedChainId.ETH_MAINNET];
 
   return useMemo(() => {
     if (

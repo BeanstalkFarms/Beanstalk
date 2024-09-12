@@ -135,8 +135,8 @@ const useSeedGauge = () => {
     let totalRelevantBdv = ZERO_BN;
 
     Object.entries(tokenSettingMap).forEach(([address, values]) => {
-      const bdvPerToken = siloBals[address].bdvPerToken || ZERO_BN;
-      const totalDeposited = siloBals[address].deposited.amount || ZERO_BN;
+      const bdvPerToken = siloBals[address]?.bdvPerToken || ZERO_BN;
+      const totalDeposited = siloBals[address]?.deposited.amount || ZERO_BN;
       const tokenTotalBdv = bdvPerToken.times(totalDeposited);
 
       if (values.isAllocatedGP) {

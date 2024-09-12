@@ -23,7 +23,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const { data, loading } = useFarmerSiloHistory(account, true, false);
 
   const formatValue = (value: number) =>
-    `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    `$${value?.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
   const getStatValue = <T extends BaseDataPoint>(v?: T[]) => {
     if (!v?.length) return 0;

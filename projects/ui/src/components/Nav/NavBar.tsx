@@ -18,6 +18,7 @@ import ROUTES from './routes';
 import HoverMenu from './HoverMenu';
 
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 const L1NavBar = () => (
   <>
@@ -31,21 +32,31 @@ const L1NavBar = () => (
       }}
     >
       {/* Desktop: Right Side */}
-      <Row justifyContent="flex-end" gap={1} px={1} height={`${NAV_HEIGHT}px`}>
-        <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
-          <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />
+      <Row
+        justifyContent="space-between"
+        gap={1}
+        px={1}
+        height={`${NAV_HEIGHT}px`}
+      >
+        <Box px={2} py={1}>
+          <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
         </Box>
-        <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />
-        <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />
+        <Row gap={1}>
+          <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
+            <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          </Box>
+          <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />
+        </Row>
       </Row>
     </AppBar>
   </>
 );
 
 const NavBar: FC<{}> = ({ children }) => {
-  const { isEthereum } = useChainState();
+  const { isArbitrum, isDev } = useChainState();
 
-  if (isEthereum) {
+  if (!isArbitrum || (isArbitrum && !isDev)) {
     return <L1NavBar />;
   }
 

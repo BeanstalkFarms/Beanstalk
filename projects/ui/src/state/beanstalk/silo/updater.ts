@@ -6,6 +6,7 @@ import { Token } from '@beanstalk/sdk';
 import { ContractFunctionParameters } from 'viem';
 import { multicall } from '@wagmi/core';
 import { config } from '~/util/wagmi/config';
+import BNJS from 'bignumber.js';
 import {
   ABISnippets,
   BEAN_TO_SEEDS,
@@ -39,7 +40,10 @@ export const useFetchBeanstalkSilo = () => {
       const BEAN = sdk.tokens.BEAN;
       const STALK = sdk.tokens.STALK;
 
-      const whitelist = [...sdk.tokens.siloWhitelist];
+      const wl = await sdk.contracts.beanstalk.getWhitelistedTokens();
+      const whitelist = wl
+        .map((t) => sdk.tokens.findByAddress(t))
+        .filter(Boolean) as Token[];
 
       const wlContractCalls = buildWhitelistMultiCall(beanstalk, whitelist);
       const siloCalls = buildBeanstalkSiloMultiCall(beanstalk.address);
@@ -61,19 +65,25 @@ export const useFetchBeanstalkSilo = () => {
       const bdvTotal = ZERO_BN;
 
       const chunked = chunkArray(wlResults.flat(), QUERIES_PER_TK);
-      const whitelistedAssetTotals = chunked.map((chunk, i) => {
+      const whitelistedAssetTotals: ({
+        address: string;
+        deposited: BNJS;
+        depositedBdv: BNJS;
+        totalGerminating: BNJS;
+        bdvPerToken: BNJS;
+        stemTip: ethers.BigNumber;
+      } | null)[] = [];
+
+      chunked.forEach((chunk, i) => {
         const token = whitelist[i];
         const data = chunk.map((d) => parseCallResult(d));
 
         const stemTip = stemTips.get(token.address);
-
         if (!stemTip) {
-          throw new Error(
-            `[beanstalk/silo/useFetchBeanstalkSilo]: Stem Tip not found for: ${token.symbol}`
-          );
+          whitelistedAssetTotals.push(null);
         }
 
-        return {
+        whitelistedAssetTotals.push({
           address: token.address,
           deposited: transform(data[0], 'bnjs', token),
           depositedBdv: tokenIshEqual(token, sdk.tokens.BEAN)
@@ -82,14 +92,38 @@ export const useFetchBeanstalkSilo = () => {
           totalGerminating: transform(data[2], 'bnjs', token),
           bdvPerToken: transform(data[3], 'bnjs', token),
           stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
-        };
+        });
       });
+
+      // const whitelistedAssetTotals = chunked.map((chunk, i) => {
+      //   const token = whitelist[i];
+      //   const data = chunk.map((d) => parseCallResult(d));
+
+      //   const stemTip = stemTips.get(token.address);
+
+      //   if (!stemTip) {
+      //     throw new Error(
+      //       `[beanstalk/silo/useFetchBeanstalkSilo]: Stem Tip not found for: ${token.symbol}`
+      //     );
+      //   }
+
+      //   return {
+      //     address: token.address,
+      //     deposited: transform(data[0], 'bnjs', token),
+      //     depositedBdv: tokenIshEqual(token, sdk.tokens.BEAN)
+      //       ? ONE_BN
+      //       : transform(data[1], 'bnjs', token),
+      //     totalGerminating: transform(data[2], 'bnjs', token),
+      //     bdvPerToken: transform(data[3], 'bnjs', token),
+      //     stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
+      //   };
+      // });
 
       console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
         stalkTotal,
         bdvTotal,
         whitelistedAssetTotals[0],
-        whitelistedAssetTotals[0].deposited.toString(),
+        whitelistedAssetTotals[0]?.deposited.toString(),
       ]);
 
       // farmableStalk and farmableSeed are derived from farmableBeans
@@ -100,12 +134,14 @@ export const useFetchBeanstalkSilo = () => {
 
       /// Aggregate balances
       const balances = whitelistedAssetTotals.reduce((agg, curr) => {
+        if (!curr) return agg;
         const token = sdk.tokens.findByAddress(curr.address);
         if (!token) throw new Error(`Token not found in SDK: ${curr.address}`);
 
         const stemTip = stemTips.get(token.address);
-        if (!stemTip)
-          throw new Error(`Stem Tip not found in SDK: ${curr.address}`);
+        if (!stemTip) {
+          return agg;
+        }
 
         agg[curr.address] = {
           stemTip,
