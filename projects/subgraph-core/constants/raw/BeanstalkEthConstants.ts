@@ -19,6 +19,7 @@ export const AQUIFER = Address.fromString("0xBA51AAAA95aeEFc1292515b36D86C51dC78
 export const CURVE_PRICE = Address.fromString("0xA57289161FF18D67A68841922264B317170b0b81");
 export const BEANSTALK_PRICE_1 = Address.fromString("0xb01CE0008CaD90104651d6A84b6B11e182a9B62A");
 export const BEANSTALK_PRICE_2 = Address.fromString("0x4bed6cb142b7d474242d87f4796387deb9e1e1b4");
+export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
 
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
@@ -30,8 +31,6 @@ export const BEAN_LUSD_V1 = Address.fromString("0xD652c40fBb3f06d6B58Cb9aa9CFF06
 export const LUSD_3POOL = Address.fromString("0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA");
 export const BEAN_WETH_CP2_WELL = Address.fromString("0xBEA0e11282e2bB5893bEcE110cF199501e872bAd");
 export const BEAN_WSTETH_CP2_WELL = Address.fromString("0xBeA0000113B0d182f4064C86B71c315389E4715D");
-
-export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
 
 export const REPLANT_SEASON = BigInt.fromU32(6075);
 
