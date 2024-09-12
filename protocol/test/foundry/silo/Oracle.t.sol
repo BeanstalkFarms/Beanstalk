@@ -195,6 +195,28 @@ contract OracleTest is TestHelper {
         assertEq(xEthTimeout, _xEthTimeout);
     }
 
+    function testExternalOracleImplementation() public {
+        // setup oracle implementation
+        address oracle = address(new ExternalOracleTester());
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                oracle,
+                ExternalOracleTester.getPrice.selector,
+                bytes1(0x00), // 0x00 is external
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+
+        uint256 tokenPriceWBTC = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC); // should be 50000e6
+        assertEq(tokenPriceWBTC, 50000e6, "getTokenUsdPrice wbtc");
+
+        // also exercise getMillionUsdPrice
+        uint256 tokenPriceWBTCMillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        assertEq(tokenPriceWBTCMillion, 50000e12, "getMillionUsdPrice wbtc");
+    }
+
     function testGetOracleImplementationForToken() public {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
@@ -420,5 +442,31 @@ contract OracleTest is TestHelper {
                 abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
             )
         );
+    }
+}
+
+contract ExternalOracleTester {
+    function getPrice(
+        uint256 tokenDecimals,
+        uint256 lookback,
+        bytes memory data
+    ) external view returns (uint256) {
+        uint256 timeout;
+        bool isMillion = false;
+
+        if (data.length > 32) {
+            assembly {
+                timeout := mload(add(data, 32))
+                isMillion := byte(0, mload(add(data, 64)))
+            }
+        } else if (data.length == 32) {
+            // only timeout supplied
+            (timeout) = abi.decode(data, (uint256));
+        }
+
+        if (isMillion) {
+            return 50000e12;
+        }
+        return 50000e6;
     }
 }
