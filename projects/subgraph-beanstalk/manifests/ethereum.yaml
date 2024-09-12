@@ -575,6 +575,7 @@ dataSources:
           handler: handlePlotTransfer
         - event: TemperatureChange(indexed uint256,uint256,int8)
           handler: handleTemperatureChange
+      # TODO: point to legacy
       file: ../src/handlers/FieldHandler.ts
   - kind: ethereum/contract
     name: LegacyField-PreReplant-SeedGauge
