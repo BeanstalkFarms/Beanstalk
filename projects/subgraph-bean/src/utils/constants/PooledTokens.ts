@@ -1,18 +1,6 @@
 import { BigInt, Address, log } from "@graphprotocol/graph-ts";
-import {
-  BEAN_ERC20,
-  BEAN_ERC20_V1,
-  WETH,
-  CRV3_TOKEN,
-  LUSD,
-  BEAN_WETH_V1,
-  BEAN_3CRV_V1,
-  BEAN_LUSD_V1,
-  BEAN_3CRV,
-  BEAN_WETH_CP2_WELL,
-  BEAN_WSTETH_CP2_WELL,
-  WSTETH
-} from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import * as BeanstalkEth from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import * as BeanstalkArb from "../../../../subgraph-core/constants/raw/BeanstalkArbConstants";
 
 // Use this mapping to determine which tokens are in each pool. Pools may each follow a distinct interface,
 // so a view function shouldn't be used, and a new subgraph build is already required to track a newly whitelisted asset.
@@ -41,29 +29,55 @@ class PoolTokens {
 }
 // WHITELIST: Add new pools here
 const poolTokens: PoolTokens[] = [
+  // ethereum
   {
-    pool: BEAN_WETH_V1,
-    tokens: [BEAN_ERC20_V1, WETH]
+    pool: BeanstalkEth.BEAN_WETH_V1,
+    tokens: [BeanstalkEth.BEAN_ERC20_V1, BeanstalkEth.WETH]
   },
   {
-    pool: BEAN_3CRV_V1,
-    tokens: [BEAN_ERC20_V1, CRV3_TOKEN]
+    pool: BeanstalkEth.BEAN_3CRV_V1,
+    tokens: [BeanstalkEth.BEAN_ERC20_V1, BeanstalkEth.CRV3_TOKEN]
   },
   {
-    pool: BEAN_LUSD_V1,
-    tokens: [BEAN_ERC20_V1, LUSD]
+    pool: BeanstalkEth.BEAN_LUSD_V1,
+    tokens: [BeanstalkEth.BEAN_ERC20_V1, BeanstalkEth.LUSD]
   },
   {
-    pool: BEAN_3CRV,
-    tokens: [BEAN_ERC20, CRV3_TOKEN]
+    pool: BeanstalkEth.BEAN_3CRV,
+    tokens: [BeanstalkEth.BEAN_ERC20, BeanstalkEth.CRV3_TOKEN]
   },
   {
-    pool: BEAN_WETH_CP2_WELL,
-    tokens: [BEAN_ERC20, WETH]
+    pool: BeanstalkEth.BEAN_WETH_CP2_WELL,
+    tokens: [BeanstalkEth.BEAN_ERC20, BeanstalkEth.WETH]
   },
   {
-    pool: BEAN_WSTETH_CP2_WELL,
-    tokens: [BEAN_ERC20, WSTETH]
+    pool: BeanstalkEth.BEAN_WSTETH_CP2_WELL,
+    tokens: [BeanstalkEth.BEAN_ERC20, BeanstalkEth.WSTETH]
+  },
+  // arbitrum
+  {
+    pool: BeanstalkArb.BEAN_WETH,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WETH]
+  },
+  {
+    pool: BeanstalkArb.BEAN_WSTETH,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WSTETH]
+  },
+  {
+    pool: BeanstalkArb.BEAN_WEETH,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WEETH]
+  },
+  {
+    pool: BeanstalkArb.BEAN_WBTC,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WBTC]
+  },
+  {
+    pool: BeanstalkArb.BEAN_USDC,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.USDC]
+  },
+  {
+    pool: BeanstalkArb.BEAN_USDT,
+    tokens: [BeanstalkArb.BEAN_ERC20, BeanstalkArb.USDT]
   }
 ];
 
@@ -79,28 +93,58 @@ class TokenInfo {
 
 // WHITELIST: Add new tokens here
 const tokens: Token[] = [
+  // ethereum
   {
-    address: BEAN_ERC20_V1,
+    address: BeanstalkEth.BEAN_ERC20_V1,
     info: { name: "BEAN", decimals: BigInt.fromU32(6) }
   },
   {
-    address: BEAN_ERC20,
+    address: BeanstalkEth.BEAN_ERC20,
     info: { name: "BEAN", decimals: BigInt.fromU32(6) }
   },
   {
-    address: WETH,
+    address: BeanstalkEth.WETH,
     info: { name: "WETH", decimals: BigInt.fromU32(18) }
   },
   {
-    address: CRV3_TOKEN,
+    address: BeanstalkEth.CRV3_TOKEN,
     info: { name: "3CRV", decimals: BigInt.fromU32(18) }
   },
   {
-    address: LUSD,
+    address: BeanstalkEth.LUSD,
     info: { name: "LUSD", decimals: BigInt.fromU32(18) }
   },
   {
-    address: WSTETH,
+    address: BeanstalkEth.WSTETH,
     info: { name: "wstETH", decimals: BigInt.fromU32(18) }
+  },
+  // arbitrum
+  {
+    address: BeanstalkArb.BEAN_ERC20,
+    info: { name: "BEAN", decimals: BigInt.fromU32(6) }
+  },
+  {
+    address: BeanstalkArb.WETH,
+    info: { name: "WETH", decimals: BigInt.fromU32(18) }
+  },
+  {
+    address: BeanstalkArb.WSTETH,
+    info: { name: "wstETH", decimals: BigInt.fromU32(18) }
+  },
+  {
+    address: BeanstalkArb.WEETH,
+    info: { name: "weETH", decimals: BigInt.fromU32(18) }
+  },
+  {
+    address: BeanstalkArb.WBTC,
+    info: { name: "WBTC", decimals: BigInt.fromU32(18) }
+  },
+  {
+    address: BeanstalkArb.USDC,
+    info: { name: "USDC", decimals: BigInt.fromU32(6) }
+  },
+  {
+    address: BeanstalkArb.USDT,
+    info: { name: "USDT", decimals: BigInt.fromU32(6) }
   }
 ];
