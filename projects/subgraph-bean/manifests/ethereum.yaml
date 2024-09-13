@@ -66,8 +66,8 @@ dataSources:
       abis:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -89,12 +89,8 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
@@ -206,7 +202,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: BasinBip
+      abi: Reseed
       startBlock: 15277988
     mapping:
       kind: ethereum/events
@@ -215,8 +211,8 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: BasinBip
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: Well
           file: ../../subgraph-core/abis/Well.json
       eventHandlers:
@@ -276,10 +272,6 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -317,10 +309,6 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -357,10 +345,8 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: TokenExchange(indexed address,int128,uint256,int128,uint256)
           handler: handleTokenExchange
@@ -395,10 +381,8 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256,address)
           handler: handleAddLiquidity
@@ -433,10 +417,8 @@ dataSources:
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
-        - name: Replanted
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: AddLiquidity(uint256[],uint256,address)
           handler: handleAddLiquidity
