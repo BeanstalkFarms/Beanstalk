@@ -19,7 +19,7 @@ else
 fi
 
 # Determine which chain ID to use. Defaults to arbitrum local host
-if [ "$chainIdType" = "mainnet-local" ]; then
+if [ "$chainIdType" = "eth-mainnet" ]; then
     chainId=$mainnet_local_chain_id
     prefix="eth"
     port=9545
