@@ -1,8 +1,9 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 pragma solidity ^0.8.20;
+
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @title LSDChainlinkOracle
