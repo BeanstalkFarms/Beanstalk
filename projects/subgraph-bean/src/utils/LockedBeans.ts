@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, Address, log } from "@graphprotocol/graph-ts";
-import { SeedGauge } from "../../generated/Bean-ABIs/SeedGauge";
+import { Reseed } from "../../generated/Bean-ABIs/Reseed";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { ERC20 } from "../../generated/Bean-ABIs/ERC20";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
@@ -28,15 +28,15 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
         ? twaOracle.cumulativeWellReservesPrevTime
         : twaOracle.cumulativeWellReservesTime;
 
-    let beanstalkBIP45 = SeedGauge.bind(protocol);
-    let lockedBeans = beanstalkBIP45.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
+    let beanstalk = Reseed.bind(protocol);
+    let lockedBeans = beanstalk.try_getLockedBeansFromTwaReserves(twaReserves, twaTime);
     if (!lockedBeans.reverted) {
       return lockedBeans.value;
     }
   }
 
   // Pre-gauge there was no lockedBeans contract function, instead we recreate the same calculation.
-  let beanstalk = SeedGauge.bind(protocol);
+  let beanstalk = Reseed.bind(protocol);
   const recapPercentResult = beanstalk.try_getRecapPaidPercent();
   if (recapPercentResult.reverted) {
     // This function was made available later in the Replant process, for a few hundred blocks it is unavailable
@@ -56,7 +56,7 @@ export function calcLockedBeans(blockNumber: BigInt): BigInt {
 }
 
 export function LibLockedUnderlying_getLockedUnderlying(protocol: Address, unripeToken: Address, recapPercentPaid: BigDecimal): BigInt {
-  const balanceOfUnderlying = SeedGauge.bind(protocol).getTotalUnderlying(unripeToken);
+  const balanceOfUnderlying = Reseed.bind(protocol).getTotalUnderlying(unripeToken);
   const percentLocked = LibLockedUnderlying_getPercentLockedUnderlying(unripeToken, recapPercentPaid);
   return BigInt.fromString(new BigDecimal(balanceOfUnderlying).times(percentLocked).truncate(0).toString());
 }

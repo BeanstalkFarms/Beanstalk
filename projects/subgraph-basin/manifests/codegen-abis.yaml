@@ -26,7 +26,7 @@ dataSources:
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
         - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: Well
           file: ../../subgraph-core/abis/Well.json
         - name: CurvePrice
@@ -57,4 +57,4 @@ templates:
         - handler: handleInitVersion
           filter:
             kind: once
-      file: ../src/utils/Init.ts
+      file: ../src/utils/constants/Version.ts

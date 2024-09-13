@@ -5,7 +5,7 @@ import { WETH_USDC_PAIR } from "../../../../subgraph-core/constants/raw/Beanstal
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
 import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";
-import { WellOracle } from "../../../generated/Bean-ABIs/BasinBip";
+import { WellOracle } from "../../../generated/Bean-ABIs/Reseed";
 import { loadOrCreateTwaOracle } from "../../entities/TwaOracle";
 
 export function manualTwa(poolAddress: Address, newReserves: BigInt[], timestamp: BigInt): void {

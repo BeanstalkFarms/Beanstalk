@@ -1,7 +1,7 @@
 import { BigInt, ethereum, Address, Bytes } from "@graphprotocol/graph-ts";
-import { WellOracle } from "../../generated/Bean-ABIs/BasinBip";
+import { WellOracle, Convert, DewhitelistToken } from "../../generated/Bean-ABIs/Reseed";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import { Convert, DewhitelistToken, MetapoolOracle } from "../../generated/Bean-ABIs/Replanted";
+import { MetapoolOracle } from "../../generated/Bean-ABIs/Replanted";
 
 export function createMetapoolOracleEvent(
   season: BigInt,

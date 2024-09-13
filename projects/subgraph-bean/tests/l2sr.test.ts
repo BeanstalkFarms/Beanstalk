@@ -18,7 +18,7 @@ import {
   mockSeedGaugeLockedBeansReverts
 } from "./call-mocking/Beanstalk";
 import { mockBeanstalkEvent } from "../../subgraph-core/tests/event-mocking/Util";
-import { Chop, Convert } from "../generated/Bean-ABIs/Replanted";
+import { Chop } from "../generated/Bean-ABIs/Reseed";
 import { calcLockedBeans, LibLockedUnderlying_getPercentLockedUnderlying } from "../src/utils/LockedBeans";
 import { mockERC20TokenSupply } from "../../subgraph-core/tests/event-mocking/Tokens";
 import { TwaOracle } from "../generated/schema";

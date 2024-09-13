@@ -1,8 +1,6 @@
-import { BigInt } from "@graphprotocol/graph-ts";
 import { updateBeanSupplyPegPercent, updateBeanTwa } from "../utils/Bean";
-import { Chop, Convert, DewhitelistToken, Reward, Sunrise } from "../../generated/Bean-ABIs/Replanted";
+import { Chop, Convert, DewhitelistToken, Shipped, Sunrise, WellOracle } from "../../generated/Bean-ABIs/Reseed";
 import { loadBean } from "../entities/Bean";
-import { WellOracle } from "../../generated/Bean-ABIs/BasinBip";
 import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
 import { updateSeason } from "../utils/legacy/Beanstalk";
@@ -61,7 +59,8 @@ export function handleConvert(event: Convert): void {
   }
 }
 
-export function handleRewardMint(event: Reward): void {
+// Overall reward mint
+export function handleShipped(event: Shipped): void {
   let beanToken = getProtocolToken(v(), event.block.number);
   updateBeanSupplyPegPercent(beanToken, event.block.number);
 }

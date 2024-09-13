@@ -64,7 +64,7 @@ dataSources:
         - Beanstalk
       abis:
         - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise

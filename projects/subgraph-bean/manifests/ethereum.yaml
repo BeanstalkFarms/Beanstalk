@@ -110,8 +110,6 @@ dataSources:
       eventHandlers:
         - event: DewhitelistToken(indexed address)
           handler: handleDewhitelistToken
-        - event: Reward(indexed uint32,uint256,uint256,uint256)
-          handler: handleRewardMint
         - event: Chop(indexed address,indexed address,uint256,uint256)
           handler: handleChop
         - event: Convert(indexed address,address,address,uint256,uint256)
@@ -153,7 +151,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: PreReplant
+      abi: Replanted
       startBlock: 15277986 # Replanted
     mapping:
       kind: ethereum/events
@@ -162,8 +160,8 @@ dataSources:
       entities:
         - Bean
       abis:
-        - name: PreReplant
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
@@ -177,6 +175,8 @@ dataSources:
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise_v2
+        - event: Reward(indexed uint32,uint256,uint256,uint256)
+          handler: handleRewardMint
       file: ../src/handlers/legacy/LegacyBeanstalkHandler.ts
   - kind: ethereum/contract
     name: LegacyCurveTWAP

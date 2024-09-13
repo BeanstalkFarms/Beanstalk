@@ -1,0 +1,178 @@
+specVersion: 0.0.9
+schema:
+  file: ../schema.graphql
+dataSources:
+  ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+      endBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/constants/Version.ts
+  ###
+  # BEAN TOKEN
+  ###
+  - kind: ethereum/contract
+    name: BeanToken
+    network: arbitrum-one
+    source:
+      address: "0xBEA0005B8599265D41256905A9B3073D397812E4"
+      abi: ERC20
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ../src/handlers/BeanHandler.ts
+  ###
+  # BEANSTALK PROTOCOL
+  ###
+  - kind: ethereum/contract
+    name: Beanstalk
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: DewhitelistToken(indexed address)
+          handler: handleDewhitelistToken
+        - event: Chop(indexed address,indexed address,uint256,uint256)
+          handler: handleChop
+        - event: Convert(indexed address,address,address,uint256,uint256)
+          handler: handleConvert
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+        - event: Shipped(indexed uint32,uint256)
+          handler: handleShipped
+      file: ../src/handlers/BeanstalkHandler.ts
+  - kind: ethereum/contract
+    name: WellTWAP
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Bean
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+        - name: Well
+          file: ../../subgraph-core/abis/Well.json
+      eventHandlers:
+        - event: WellOracle(indexed uint32,address,int256,bytes)
+          handler: handleWellOracle
+      file: ../src/handlers/BeanstalkHandler.ts
+  ###
+  # POOLS
+  ###
+  - kind: ethereum/contract
+    name: BeanWETHCP2w-V2
+    network: arbitrum-one
+    source:
+      address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"
+      abi: Well
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+      abis:
+        - name: Well
+          file: ../../subgraph-core/abis/Well.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: AddLiquidity(uint256[],uint256,address)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(uint256,uint256[],address)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
+          handler: handleRemoveLiquidityOneToken
+        - event: Swap(address,address,uint256,uint256,address)
+          handler: handleSwap
+        - event: Shift(uint256[],address,uint256,address)
+          handler: handleShift
+        - event: Sync(uint256[],uint256,address)
+          handler: handleSync
+      file: ../src/handlers/BeanWellHandler.ts
+      #TODO: other pools go here
+  ###
+  # PEG CROSS CHECK PER BLOCK
+  ###
+  - kind: ethereum/contract
+    name: CrossCheck
+    network: arbitrum-one
+    source:
+      address: "0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56"
+      abi: BeanstalkPrice
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BeanCross
+      abis:
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+      blockHandlers:
+        - handler: handleBlock
+      file: ../src/handlers/CrossHandler.ts
+# features:
+#   - grafting
+# graft:
+#   base: QmYnY2GzZbwTqot3H4jAV83mPbGTnBavdbB8bVXYxJzLUd
+#   block: 20291520

@@ -37,6 +37,8 @@ dataSources:
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice

@@ -2,11 +2,10 @@ import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 import { BEAN_3CRV, BEAN_WETH_V1, CURVE_PRICE } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { CurvePrice } from "../../../generated/Bean-ABIs/CurvePrice";
-import { Sunrise } from "../../../generated/Bean-ABIs/PreReplant";
-import { MetapoolOracle } from "../../../generated/Bean-ABIs/Replanted";
+import { MetapoolOracle, Reward, Sunrise } from "../../../generated/Bean-ABIs/Replanted";
 import { loadBean } from "../../entities/Bean";
 import { loadOrCreatePool } from "../../entities/Pool";
-import { updateBeanTwa, updateBeanValues } from "../../utils/Bean";
+import { updateBeanSupplyPegPercent, updateBeanTwa, updateBeanValues } from "../../utils/Bean";
 import { checkBeanCross, updatePoolPricesOnCross } from "../../utils/Cross";
 import { updateSeason } from "../../utils/legacy/Beanstalk";
 import { updatePoolPrice, updatePoolValues } from "../../utils/Pool";
@@ -52,6 +51,7 @@ export function handleSunrise_v1(event: Sunrise): void {
   updateBeanTwa(event.block);
 }
 
+// Replanted -> Reseed
 export function handleSunrise_v2(event: Sunrise): void {
   updateSeason(event.params.season.toI32(), event.block);
 
@@ -85,6 +85,12 @@ export function handleSunrise_v2(event: Sunrise): void {
       checkBeanCross(beanToken, oldBeanPrice, toDecimal(curve.value.price), event.block);
     }
   }
+}
+
+// Replanted -> Reseed
+export function handleRewardMint(event: Reward): void {
+  let beanToken = getProtocolToken(v(), event.block.number);
+  updateBeanSupplyPegPercent(beanToken, event.block.number);
 }
 
 // POST REPLANT TWA DELTAB //
