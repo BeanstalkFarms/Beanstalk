@@ -21,7 +21,7 @@ export function calcPostSwapValues(poolAddress: Address, block: ethereum.Block):
   let newPoolPrice = ZERO_BD;
   let reserveBalances: BigInt[] = [];
   let deltaLiquidityUSD = ZERO_BD;
-  if (poolAddress === BEAN_3CRV_V1) {
+  if (poolAddress == BEAN_3CRV_V1) {
     let pool = loadOrCreatePool(poolAddress, block.number);
 
     let priceAndLp = curvePriceAndLp(poolAddress);

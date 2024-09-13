@@ -103,7 +103,7 @@ export function calcLiquidityWeightedBeanPrice(token: Address): BigDecimal {
 }
 
 export function updateBeanSupplyPegPercent(beanToken: Address, blockNumber: BigInt): void {
-  if (beanToken === BEAN_ERC20_V1) {
+  if (beanToken == BEAN_ERC20_V1) {
     updateBeanSupplyPegPercent_v1(beanToken, blockNumber);
     return;
   }
@@ -142,7 +142,7 @@ export function updateBeanAfterPoolSwap(
       univ2_externalUpdatePoolPrice(BEAN_WETH_V1, block);
       beanPrice = calcLiquidityWeightedBeanPrice(beanAddr);
     } else {
-      if (priceContractResult === null) {
+      if (priceContractResult == null) {
         priceContractResult = BeanstalkPrice_try_price(block.number);
       }
       if (!priceContractResult.reverted) {

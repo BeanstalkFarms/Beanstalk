@@ -605,6 +605,8 @@ dataSources:
       abis:
         - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleReplantSunrise
