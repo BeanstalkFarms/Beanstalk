@@ -171,6 +171,18 @@ const tokenToWhitelistMapping = {
   ]
 };
 
+const tokenToGpAndOptimalPercentDepositedBdvMapping = {
+  "0xBEA0005B8599265D41256905A9B3073D397812E4": ["0", "0"],
+  "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": ["0", "0"],
+  "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": ["0", "0"],
+  "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB": ["160000000000000000000", "16000000"],
+  "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8": ["260000000000000000000", "26000000"],
+  "0xBEA00865405A02215B44eaADB853d0d2192Fc29D": ["140000000000000000000", "14000000"],
+  "0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA": ["200000000000000000000", "20000000"],
+  "0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279": ["120000000000000000000", "12000000"],
+  "0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b": ["120000000000000000000", "12000000"]
+};
+
 function parseWhitelist(inputFilePath, outputFilePath) {
   try {
     const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
@@ -236,6 +248,9 @@ function parseWhitelist(inputFilePath, outputFilePath) {
         tokenAssetSettings = assetSettings[token];
       }
 
+      var tokenToGpAndOptimalPercentDepositedBdv =
+        tokenToGpAndOptimalPercentDepositedBdvMapping[token];
+
       output[token] = [
         token,
         // non-bean token, this is used for Oracle settings
@@ -249,8 +264,8 @@ function parseWhitelist(inputFilePath, outputFilePath) {
           tokenAssetSettings.milestoneStem,
           tokenAssetSettings.encodeType,
           tokenAssetSettings.deltaStalkEarnedPerSeason,
-          tokenAssetSettings.gaugePoints,
-          tokenAssetSettings.optimalPercentDepositedBdv,
+          tokenToGpAndOptimalPercentDepositedBdv[0],
+          tokenToGpAndOptimalPercentDepositedBdv[1],
           liquidityWeightImpl, // these 2 are new so are set manually
           gaugePointImpl
         ],
