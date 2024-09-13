@@ -187,62 +187,10 @@ function parseWhitelist(inputFilePath, outputFilePath) {
   try {
     const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
     const assetSettings = data.silo.assetSettings;
-
-    const whitelistStatuses = Object.fromEntries(
-      data.silo.whitelistStatuses.map((item) => [item.token, item])
-    );
-
-    console.log("assetSettings:", assetSettings);
-    console.log("whitelistStatuses:", whitelistStatuses);
-
-    /*
-        Implementation memory liquidityWeightImpl = Implementation(
-            address(0),
-            ILiquidityWeightFacet.maxWeight.selector,
-            bytes1(0),
-            new bytes(0)
-        );
-        Implementation memory gaugePointImpl = Implementation(
-            address(0),
-            IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0),
-            new bytes(0)
-        );
-    */
-
     const output = {};
 
     for (const token of tokensToWhitelist) {
-      // each key has 3 values
-      // 0 whitelisted token
-      // 1 non-bean token
-      // 2 silo settings AssetSettings
-      // 3 whitelist status WhitelistStatus
-      // 4 oracles Implementation
-      /*
-        [
-          "0xBEA0005B8599265D41256905A9B3073D397812E4",
-          "0xBEA0005B8599265D41256905A9B3073D397812E4",
-          [ // silo settings
-            "0x5a049a47",
-            "0",
-            "10000",
-            "0",
-            "0",
-            "0x00",
-            "0",
-            "0",
-            "0",
-            ["0x0000000000000000000000000000000000000000", "0x00000000", "0x00", "0x00"],
-            ["0x0000000000000000000000000000000000000000", "0x00000000", "0x00", "0x00"]
-          ],
-          ["0xBEA0005B8599265D41256905A9B3073D397812E4", true, false, false, false], // whitelist status
-          ["0x0000000000000000000000000000000000000000", "0x00000000", "0x00", "0x00"] // oracles
-        ],
-      */
-
       var nonBeanToken = nonBeanTokenMapping[token];
-
       var tokenAssetSettings = defaultAssetSettings;
       if (token in assetSettings) {
         tokenAssetSettings = assetSettings[token];
@@ -275,8 +223,6 @@ function parseWhitelist(inputFilePath, outputFilePath) {
         tokenToOracleMapping[nonBeanToken]
       ];
     }
-
-    console.log("output:", output);
 
     // only order requirement is that unripe tokens should be first
 

@@ -177,7 +177,7 @@ function parseBeanstalkData() {
     "./reseed/data/r2/L2_external_unripe_lp_balances.json",
     contractAccounts
   );
-  parseWhitelist(storageSystemPath, "./reseed/data/r9-whitelist-test.json");
+  parseWhitelist(storageSystemPath, "./reseed/data/r9-whitelist.json");
 }
 
 async function printBeanstalk() {
