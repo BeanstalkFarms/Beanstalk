@@ -460,7 +460,12 @@ module.exports = {
     mainnet: {
       chainId: 1,
       url: process.env.MAINNET_RPC || "",
-      timeout: 100000
+      timeout: 1000000000
+    },
+    arbitrum: {
+      chainId: 42161,
+      url: process.env.ARBITRUM_RPC || "",
+      timeout: 1000000000
     },
     custom: {
       chainId: 133137,
