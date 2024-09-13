@@ -36,29 +36,39 @@ contract ReseedStateTest is TestHelper {
 
     uint256 constant FIELD_ID = 0;
 
+    // bean tokens
     address constant L2BEAN = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
     address constant L2URBEAN = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
     address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
 
+    address[] nonBeanTokens = [
+        address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1), // WETH
+        address(0x5979D7b546E38E414F7E9822514be443A4800529), // WstETH
+        address(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe), // WEETH
+        address(0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f), // WBTC
+        address(0xaf88d065e77c8cC2239327C5EDb3A432268e5831), // USDC
+        address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9) // USDT
+    ];
+
     address[] whiteListedWellTokens = [
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     address[] whitelistedTokens = [
         L2BEAN,
         L2URBEAN,
         L2URLP,
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     IMockFBeanstalk l2Beanstalk;
@@ -427,7 +437,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-system20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-system20736200.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -437,7 +447,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20736200.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -447,7 +457,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20736200.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
@@ -457,7 +467,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/fertilizerFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-fertilizer20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-fertilizer20736200.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountFertilizer = vm.ffi(inputs);
         return accountFertilizer;

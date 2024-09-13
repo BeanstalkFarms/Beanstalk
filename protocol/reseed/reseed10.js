@@ -12,6 +12,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "GaugePointFacet",
     "LiquidityWeightFacet",
     "SiloFacet", // SILO
+    "ClaimFacet",
     "SiloGettersFacet",
     "WhitelistFacet",
     "ApprovalFacet",
@@ -68,7 +69,8 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
     SiloFacet: ["LibSilo"],
     EnrootFacet: ["LibSilo"],
-    L1RecieverFacet: ["LibSilo"]
+    L1RecieverFacet: ["LibSilo"],
+    ClaimFacet: ["LibSilo"],
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
