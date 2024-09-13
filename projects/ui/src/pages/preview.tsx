@@ -230,7 +230,7 @@ const MigrationPreview: FC<{}> = () => {
       <Stack spacing={2}>
         <PageHeader
           title="Verify BIP-50 Migrated Balances"
-          description="Preview an account's assets after migration"
+          description="Preview an account's assets to be migrated"
         />
         <Card sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', flexGrow: 1, justifyContent: 'center' }}>
