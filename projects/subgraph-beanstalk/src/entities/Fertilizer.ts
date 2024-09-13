@@ -23,6 +23,7 @@ export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNum
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
     if (isReplanted(v(), blockNumber)) {
+      // TODO: fix this for migrated fert. Need carry-over for all FertilizerToken.
       fertilizerToken.humidity = BigDecimal.fromString(beanstalkContract.getCurrentHumidity().toString()).div(BigDecimal.fromString("10"));
       fertilizerToken.season = beanstalkContract.season().toI32();
       fertilizerToken.startBpf = beanstalkContract.beansPerFertilizer();

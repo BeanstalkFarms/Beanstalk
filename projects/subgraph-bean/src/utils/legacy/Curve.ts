@@ -25,7 +25,7 @@ export function calcPostSwapValues(poolAddress: Address, block: ethereum.Block):
     let pool = loadOrCreatePool(poolAddress, block.number);
 
     let priceAndLp = curvePriceAndLp(poolAddress);
-    let newPoolPrice = priceAndLp[0];
+    newPoolPrice = priceAndLp[0];
     let lpValue = priceAndLp[1];
 
     let beanContract = ERC20.bind(BEAN_ERC20_V1);
