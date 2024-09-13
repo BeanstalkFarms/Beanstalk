@@ -6,9 +6,11 @@ import { mockShift, mockSwap } from "./helpers/Swap";
 import { mockAddLiquidity } from "./helpers/Liquidity";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { BI_10 } from "../../subgraph-core/utils/Decimals";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Swap Entity", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

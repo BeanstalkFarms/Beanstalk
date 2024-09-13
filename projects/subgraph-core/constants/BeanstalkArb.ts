@@ -11,7 +11,8 @@ import {
   BEAN_WEETH,
   BEAN_WBTC,
   BEAN_USDC,
-  BEAN_USDT
+  BEAN_USDT,
+  AQUIFER
 } from "./raw/BeanstalkArbConstants";
 
 /// ADDRESSES ///
@@ -22,6 +23,10 @@ export function getProtocolToken(): Address {
 
 export function getProtocolFertilizer(): Address {
   return FERTILIZER;
+}
+
+export function getAquifer(): Address {
+  return AQUIFER;
 }
 
 export function getUnripeBeanAddr(): Address {

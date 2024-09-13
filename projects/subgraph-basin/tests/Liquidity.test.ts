@@ -23,6 +23,7 @@ import { BigDecimal_max, BigDecimal_min } from "../../subgraph-core/utils/ArrayM
 import { calcLiquidityVolume } from "../src/utils/VolumeCP";
 import { loadToken } from "../src/utils/Token";
 import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);
@@ -46,6 +47,7 @@ function assignUSD(tokenAmounts: BigInt[]): BigDecimal[] {
 
 describe("Well Entity: Liquidity Event Tests", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

@@ -2,7 +2,6 @@ import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts
 import { BoreWellWellFunctionStruct } from "../../generated/Basin-ABIs/Aquifer";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
-import { BEAN_ERC20 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import {
   deltaBigDecimalArray,
@@ -15,6 +14,8 @@ import {
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, loadToken, updateTokenUSD } from "./Token";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
@@ -135,8 +136,9 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
   let well = loadWell(wellAddress);
 
   // Update the BEAN price first as it is the reference for other USD calculations
-  updateTokenUSD(BEAN_ERC20, blockNumber, BigDecimal.fromString("1"));
-  let beanIndex = well.tokens.indexOf(BEAN_ERC20);
+  const beanToken = getProtocolToken(v(), blockNumber);
+  updateTokenUSD(beanToken, blockNumber, BigDecimal.fromString("1"));
+  let beanIndex = well.tokens.indexOf(beanToken);
   // Curretly only supporting USD values for Wells with BEAN as a token.
   if (beanIndex == -1) {
     return;

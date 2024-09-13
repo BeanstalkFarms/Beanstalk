@@ -1,5 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import {
+  AQUIFER,
   BEAN_3CRV,
   BEAN_3CRV_V1,
   BEAN_ERC20,
@@ -34,6 +35,10 @@ export function getProtocolToken(blockNumber: BigInt): Address {
 
 export function getProtocolFertilizer(): Address {
   return FERTILIZER;
+}
+
+export function getAquifer(): Address {
+  return AQUIFER;
 }
 
 export function getUnripeBeanAddr(): Address {

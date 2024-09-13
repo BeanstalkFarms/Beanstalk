@@ -1,10 +1,10 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { Token } from "../../generated/schema";
-import { CurvePrice } from "../../generated/Basin-ABIs/CurvePrice";
-import { BEAN_ERC20, CURVE_PRICE } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getBeanstalkPrice } from "./BeanstalkPrice";
+import { BI_MAX, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { getBeanPrice } from "./BeanstalkPrice";
+import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
 
 export function loadOrCreateToken(tokenAddress: Address): Token {
   let token = Token.load(tokenAddress);
@@ -45,7 +45,7 @@ export function loadToken(tokenAddress: Address): Token {
 }
 
 export function getBeanPriceUDSC(): BigDecimal {
-  let token = loadToken(BEAN_ERC20);
+  let token = loadToken(getProtocolToken(v(), BI_MAX));
   return token.lastPriceUSD;
 }
 
@@ -56,23 +56,12 @@ export function getTokenDecimals(tokenAddress: Address): i32 {
 
 export function updateTokenUSD(tokenAddress: Address, blockNumber: BigInt, beanPrice: BigDecimal = ZERO_BD): void {
   let token = loadToken(tokenAddress);
-  if (tokenAddress == BEAN_ERC20) {
-    // Attempt to use Beanstalk price contract first
-
-    let beanstalkPrice = getBeanstalkPrice(blockNumber);
-    let price = beanstalkPrice.try_price();
-    if (!price.reverted) {
-      token.lastPriceUSD = toDecimal(price.value.price);
-    } else {
-      // Fetch price on Curve
-      let curvePrice = CurvePrice.bind(CURVE_PRICE);
-      let curve = curvePrice.try_getCurve();
-
-      if (curve.reverted) {
-        return;
-      }
-      token.lastPriceUSD = toDecimal(curve.value.price);
+  if (tokenAddress == getProtocolToken(v(), BI_MAX)) {
+    const beanPrice = getBeanPrice(blockNumber);
+    if (beanPrice === null) {
+      return;
     }
+    token.lastPriceUSD = beanPrice;
   } else {
     token.lastPriceUSD = beanPrice.times(getBeanPriceUDSC());
   }

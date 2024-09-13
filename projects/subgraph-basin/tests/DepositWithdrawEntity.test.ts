@@ -16,9 +16,11 @@ import { boreDefaultWell } from "./helpers/Aquifer";
 import { mockAddLiquidity, mockRemoveLiquidity, mockRemoveLiquidityOneBean, loadWithdraw, mockSync } from "./helpers/Liquidity";
 import { loadDeposit } from "./helpers/Liquidity";
 import { BigInt } from "@graphprotocol/graph-ts";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Deposit/Withdraw Entities", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

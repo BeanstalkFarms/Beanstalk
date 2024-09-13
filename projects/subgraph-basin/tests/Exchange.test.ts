@@ -18,9 +18,11 @@ import { mockAddLiquidity } from "./helpers/Liquidity";
 import { dayFromTimestamp, hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { BEAN_ERC20 } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Well Entity: Exchange Tests", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

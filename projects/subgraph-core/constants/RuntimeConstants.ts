@@ -31,6 +31,15 @@ export function getProtocolFertilizer(v: VersionDto): Address | null {
   throw new Error("Unsupported protocol");
 }
 
+export function getAquifer(v: VersionDto): Address {
+  if (v.chain == "ethereum" && v.protocolAddress == ConstantsEth.BEANSTALK) {
+    return BeanstalkEth.getAquifer();
+  } else if (v.chain == "arbitrum" && v.protocolAddress == ConstantsArb.BEANSTALK) {
+    return BeanstalkEth.getAquifer();
+  }
+  throw new Error("Unsupported protocol");
+}
+
 export function getUnripeBeanAddr(v: VersionDto): Address {
   if (v.chain == "ethereum" && v.protocolAddress == ConstantsEth.BEANSTALK) {
     return BeanstalkEth.getUnripeBeanAddr();
