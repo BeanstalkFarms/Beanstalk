@@ -1,0 +1,109 @@
+specVersion: 0.0.9
+schema:
+  file: ../schema.graphql
+dataSources:
+  ###
+  # INITIALIZATION
+  ###
+  - kind: ethereum/contract
+    name: Version
+    network: arbitrum-one
+    source:
+      address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"
+      abi: Aquifer
+      startBlock: 393939393939
+      endBlock: 393939393939
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: Aquifer
+          file: ../../subgraph-core/abis/Aquifer.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/constants/Version.ts
+  - kind: ethereum/contract
+    name: Aquifer
+    network: arbitrum-one
+    source:
+      address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"
+      abi: Aquifer
+      startBlock: 393939393939
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Aquifer
+      abis:
+        - name: Aquifer
+          file: ../../subgraph-core/abis/Aquifer.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
+          handler: handleBoreWell
+      file: ../src/templates/AquiferHandler.ts
+  - kind: ethereum/contract
+    name: Beanstalk
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Beanstalk
+      startBlock: 393939393939
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Beanstalk
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
+      file: ../src/BeanstalkHandler.ts
+templates:
+  - kind: ethereum/contract
+    name: Well
+    network: arbitrum-one
+    source:
+      abi: Well
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Well
+      abis:
+        - name: Well
+          file: ../../subgraph-core/abis/Well.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+      eventHandlers:
+        - event: AddLiquidity(uint256[],uint256,address)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(uint256,uint256[],address)
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityOneToken(uint256,address,uint256,address)
+          handler: handleRemoveLiquidityOneToken
+        - event: Swap(address,address,uint256,uint256,address)
+          handler: handleSwap
+        - event: Shift(uint256[],address,uint256,address)
+          handler: handleShift
+        - event: Sync(uint256[],uint256,address)
+          handler: handleSync
+      file: ../src/WellHandler.ts
+# features:
+#   - grafting
+# graft:
+#   base: QmWHi6hu2wXnyxBHHmQHwCQLoq5KkoTX2qLm8MdyVXTyTu
+#   block: 20216425
