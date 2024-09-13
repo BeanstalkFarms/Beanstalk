@@ -62,6 +62,7 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+import MigrationPreview from '../../pages/preview';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -203,6 +204,8 @@ export default function App() {
             <Route path="governance/vp/:id" element={<VotingPowerPage />} />
             <Route path="/silo" element={<SiloPage />} />
             <Route path="/silo/:address" element={<SiloTokenPage />} />
+            <Route path="/preview" element={<MigrationPreview />} />
+            <Route path="/preview/:address" element={<MigrationPreview />} />
             <Route path="/swap" element={<SwapPage />} />
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
