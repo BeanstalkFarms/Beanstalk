@@ -12,6 +12,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "GaugePointFacet",
     "LiquidityWeightFacet",
     "SiloFacet", // SILO
+    "ClaimFacet",
     "SiloGettersFacet",
     "WhitelistFacet",
     "ApprovalFacet",
