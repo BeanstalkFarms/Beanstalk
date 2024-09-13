@@ -144,11 +144,11 @@ async function printStage(i, end, mock, log) {
 function parseBeanstalkData() {
   // TODO: Replace with actual smart contract accounts.
   const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
-  const BLOCK_NUMBER = 20577510;
+  const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
-  const marketPath = "./reseed/data/exports/market-info20330000.json";
+  const marketPath = "./reseed/data/exports/market-info20330000.json"; // todo: update to latest block upon migration
   const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
   const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
