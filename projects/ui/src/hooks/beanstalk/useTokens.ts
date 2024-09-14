@@ -6,12 +6,14 @@ import LegacyToken, {
   NativeToken as LegacyNativeToken,
 } from '~/classes/Token';
 import { ChainConstant, SupportedChainId, TokenMap } from '~/constants';
+import * as ADDRESSES from '~/constants/addresses';
 import useSdk from '~/hooks/sdk';
 import { useAppSelector } from '~/state';
 import { BeanPools } from '~/state/bean/pools';
 import * as LegacyTokens from '~/constants/tokens';
 import { getTokenIndex, isSdkToken } from '~/util';
-import useChainState from '../chain/useChainState';
+import useChainState from '~/hooks/chain/useChainState';
+import { useResolvedChainId } from '../chain/useChainId';
 
 // -------------------------
 // Token Instances
@@ -89,7 +91,8 @@ export const useTokens = (): {
     const erc20TokenMap = Object.values(balanceTokens).reduce<
       TokenMap<ERC20Token>
     >((acc, token) => {
-      if (token.equals(tokens.ETH)) return acc;
+      const tokenIndex = getTokenIndex(token);
+      if (tokenIndex === 'eth') return acc;
       acc[getTokenIndex(token)] = token as ERC20Token;
       return acc;
     }, {});
@@ -142,6 +145,31 @@ export const useUnripeTokens = () => {
       tokenMap,
     };
   }, [sdk]);
+};
+
+export const useGetUnripeTokenWithAddress = () => {
+  const urTokens = useUnripeTokens();
+
+  const getUnripeSdkToken = useCallback(
+    (_address: string) => {
+      const address = _address.toLowerCase();
+
+      if (Object.values(ADDRESSES.UNRIPE_BEAN_ADDRESSES).includes(address)) {
+        return urTokens.UNRIPE_BEAN;
+      }
+
+      if (
+        Object.values(ADDRESSES.UNRIPE_BEAN_WSTETH_ADDRESSES).includes(address)
+      ) {
+        return urTokens.UNRIPE_BEAN_WSTETH;
+      }
+    },
+    [urTokens]
+  );
+
+  return {
+    getUnripeSdkToken,
+  };
 };
 
 /**
@@ -245,37 +273,40 @@ function getWhitelistSorted(
   });
 }
 
-const i = SupportedChainId.ARBITRUM_MAINNET;
+const cARB = SupportedChainId.ARBITRUM_MAINNET;
+const cETH = SupportedChainId.ETH_MAINNET;
 
 const oldTokenMap: Record<string, ChainConstant<LegacyToken> | LegacyToken> = {
-  [LegacyTokens.ETH[i].symbol]: LegacyTokens.ETH,
-  [LegacyTokens.BEAN[i].symbol]: LegacyTokens.BEAN,
-  [LegacyTokens.UNRIPE_BEAN[i].symbol]: LegacyTokens.UNRIPE_BEAN,
-  [LegacyTokens.UNRIPE_BEAN_WSTETH[i].symbol]: LegacyTokens.UNRIPE_BEAN_WSTETH,
-  [LegacyTokens.WETH[i].symbol]: LegacyTokens.WETH,
-  [LegacyTokens.DAI[i].symbol]: LegacyTokens.DAI,
-  [LegacyTokens.USDC[i].symbol]: LegacyTokens.USDC,
-  [LegacyTokens.USDT[i].symbol]: LegacyTokens.USDT,
-  [LegacyTokens.WSTETH[i].symbol]: LegacyTokens.WSTETH,
-  [LegacyTokens.WEETH[i].symbol]: LegacyTokens.WEETH,
-  [LegacyTokens.WBTC[i].symbol]: LegacyTokens.WBTC,
-  [LegacyTokens.BEAN_ETH_WELL_LP[i].symbol]: LegacyTokens.BEAN_ETH_WELL_LP,
-  [LegacyTokens.BEAN_WSTETH_WELL_LP[i].symbol]:
+  [LegacyTokens.ETH[cARB].symbol]: LegacyTokens.ETH,
+  [LegacyTokens.BEAN[cARB].symbol]: LegacyTokens.BEAN,
+  [LegacyTokens.UNRIPE_BEAN[cARB].symbol]: LegacyTokens.UNRIPE_BEAN,
+  [LegacyTokens.UNRIPE_BEAN_WSTETH[cARB].symbol]:
+    LegacyTokens.UNRIPE_BEAN_WSTETH,
+  [LegacyTokens.WETH[cARB].symbol]: LegacyTokens.WETH,
+  [LegacyTokens.DAI[cARB].symbol]: LegacyTokens.DAI,
+  [LegacyTokens.USDC[cARB].symbol]: LegacyTokens.USDC,
+  [LegacyTokens.USDT[cARB].symbol]: LegacyTokens.USDT,
+  [LegacyTokens.WSTETH[cARB].symbol]: LegacyTokens.WSTETH,
+  [LegacyTokens.WEETH[cARB].symbol]: LegacyTokens.WEETH,
+  [LegacyTokens.WBTC[cARB].symbol]: LegacyTokens.WBTC,
+  [LegacyTokens.BEAN_ETH_WELL_LP[cARB].symbol]: LegacyTokens.BEAN_ETH_WELL_LP,
+  [LegacyTokens.BEAN_WSTETH_WELL_LP[cARB].symbol]:
     LegacyTokens.BEAN_WSTETH_WELL_LP,
-  [LegacyTokens.BEAN_WEETH_WELL_LP[i].symbol]: LegacyTokens.BEAN_WEETH_WELL_LP,
-  [LegacyTokens.BEAN_WBTC_WELL_LP[i].symbol]: LegacyTokens.BEAN_WBTC_WELL_LP,
-  [LegacyTokens.BEAN_USDC_WELL_LP[i].symbol]: LegacyTokens.BEAN_USDC_WELL_LP,
-  [LegacyTokens.BEAN_USDT_WELL_LP[i].symbol]: LegacyTokens.BEAN_USDT_WELL_LP,
+  [LegacyTokens.BEAN_WEETH_WELL_LP[cARB].symbol]:
+    LegacyTokens.BEAN_WEETH_WELL_LP,
+  [LegacyTokens.BEAN_WBTC_WELL_LP[cARB].symbol]: LegacyTokens.BEAN_WBTC_WELL_LP,
+  [LegacyTokens.BEAN_USDC_WELL_LP[cARB].symbol]: LegacyTokens.BEAN_USDC_WELL_LP,
+  [LegacyTokens.BEAN_USDT_WELL_LP[cARB].symbol]: LegacyTokens.BEAN_USDT_WELL_LP,
   [LegacyTokens.STALK.symbol]: LegacyTokens.STALK,
   [LegacyTokens.SEEDS.symbol]: LegacyTokens.SEEDS,
   [LegacyTokens.PODS.symbol]: LegacyTokens.PODS,
   [LegacyTokens.SPROUTS.symbol]: LegacyTokens.SPROUTS,
   [LegacyTokens.RINSABLE_SPROUTS.symbol]: LegacyTokens.RINSABLE_SPROUTS,
-  [LegacyTokens.BEAN_CRV3_LP[1].symbol]: LegacyTokens.BEAN_CRV3_LP,
-  [LegacyTokens.CRV3[1].symbol]: LegacyTokens.CRV3,
-  [LegacyTokens.BEAN_ETH_UNIV2_LP[1].symbol]: LegacyTokens.BEAN_ETH_UNIV2_LP,
-  [LegacyTokens.BEAN_LUSD_LP[1].symbol]: LegacyTokens.BEAN_LUSD_LP,
-  [LegacyTokens.LUSD[1].symbol]: LegacyTokens.LUSD,
+  [LegacyTokens.BEAN_CRV3_LP[cETH].symbol]: LegacyTokens.BEAN_CRV3_LP,
+  [LegacyTokens.CRV3[cETH].symbol]: LegacyTokens.CRV3,
+  [LegacyTokens.BEAN_ETH_UNIV2_LP[cETH].symbol]: LegacyTokens.BEAN_ETH_UNIV2_LP,
+  [LegacyTokens.BEAN_LUSD_LP[cETH].symbol]: LegacyTokens.BEAN_LUSD_LP,
+  [LegacyTokens.LUSD[cETH].symbol]: LegacyTokens.LUSD,
 } as const;
 
 export const useGetLegacyToken = () => {
@@ -293,4 +324,77 @@ export const useGetLegacyToken = () => {
   );
 
   return getLegacyToken;
+};
+
+const makeEntry = (
+  a: ChainConstant<string>,
+  t: ChainConstant<LegacyToken>
+) => ({
+  ...(a[cARB] && t[cARB] ? { [a[cARB]]: t } : {}),
+  ...(a[cETH] && t[cETH] ? { [a[cETH]]: t } : {}),
+});
+
+const A = ADDRESSES;
+const L = LegacyTokens;
+
+const ADDRESS_TO_CHAIN_CONSTANT: Record<string, ChainConstant<LegacyToken>> = {
+  // BEAN
+  ...makeEntry(A.BEAN_ADDRESSES, L.BEAN),
+
+  // UNRIPE
+
+  ...makeEntry(A.UNRIPE_BEAN_ADDRESSES, L.UNRIPE_BEAN),
+  ...makeEntry(A.UNRIPE_BEAN_WSTETH_ADDRESSES, L.UNRIPE_BEAN_WSTETH),
+
+  // ERC20
+  ...makeEntry(A.WETH_ADDRESSES, L.WETH),
+  ...makeEntry(A.WSTETH_ADDRESSES, L.WSTETH),
+  ...makeEntry(A.WEETH_ADDRESSES, L.WEETH),
+  ...makeEntry(A.WBTC_ADDRESSES, L.WBTC),
+  ...makeEntry(A.DAI_ADDRESSES, L.DAI),
+  ...makeEntry(A.USDC_ADDRESSES, L.USDC),
+  ...makeEntry(A.USDT_ADDRESSES, L.USDT),
+  ...makeEntry(A.ARB_ADDRESSES, L.ARB),
+
+  // LP
+  ...makeEntry(A.BEAN_ETH_WELL_ADDRESSES, L.BEAN_ETH_WELL_LP),
+  ...makeEntry(A.BEAN_WSTETH_ADDRESSS, L.BEAN_WSTETH_WELL_LP),
+  ...makeEntry(A.BEANWEETH_WELL_ADDRESSES, L.BEAN_WEETH_WELL_LP),
+  ...makeEntry(A.BEANWBTC_WELL_ADDRESSES, L.BEAN_WBTC_WELL_LP),
+  ...makeEntry(A.BEANUSDC_WELL_ADDRESSES, L.BEAN_USDC_WELL_LP),
+  ...makeEntry(A.BEANUSDT_WELL_ADDRESSES, L.BEAN_USDT_WELL_LP),
+
+  // Deprecated
+  // ...makeEntry(A.CRV3_ADDRESSES, L.CRV3),
+  // ...makeEntry(A.BEAN_CRV3_ADDRESSES, L.BEAN_CRV3_LP),
+  // ...makeEntry(A.BEAN_LUSD_ADDRESSES, L.BEAN_LUSD_LP),
+  // ...makeEntry(A.LUSD_ADDRESSES, L.LUSD),
+  // ...makeEntry(A.BEAN_ETH_UNIV2_LP_ADDRESSES, L.BEAN_ETH_UNIV2_LP),
+} as const;
+
+/**
+ *
+ * @returns a function that takes an address (chain agnostic) and returns the sdk token instance
+ * for the chain the user is currently on
+ *
+ */
+export const useGetNormaliseChainToken = () => {
+  const { erc20TokenMap } = useTokens();
+  const chainId = useResolvedChainId();
+
+  /**
+   * returns the sdk token instance for the chain the user is currently on if available
+   */
+  const getToken = useCallback(
+    (_address: string) => {
+      const token = ADDRESS_TO_CHAIN_CONSTANT[_address.toLowerCase()];
+
+      return token?.[chainId]
+        ? erc20TokenMap[getTokenIndex(token[chainId])]
+        : undefined;
+    },
+    [erc20TokenMap, chainId]
+  );
+
+  return getToken;
 };

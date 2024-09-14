@@ -296,6 +296,7 @@ type Space {
   categories: [String]
   children: [Space]
   coingecko: String
+  cover: String
   created: Int!
   delegationPortal: DelegationPortal
   domain: String

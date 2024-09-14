@@ -590,6 +590,24 @@ const Deposit: FC<{
 
 export default Deposit;
 
+// leaving as reference for any deposit w/o claim & do x
+// const farmDeposit = sdk.silo.buildDeposit(target, account);
+// farmDeposit.setInputToken(tokenIn);
+// const aFarm = sdk.farm.createAdvancedFarm();
+
+// aFarm.add([...farmDeposit.workflow.generators] as any[]);
+// await aFarm.estimate(amountIn);
+
+// await farmDeposit.estimate(amountIn);
+
+// const farmDepositTx = await aFarm.execute(amountIn, {
+//   slippage: values.settings.slippage,
+// });
+// const farmDepositReceipt = await farmDepositTx.wait();
+
+// txToast.success(farmDepositReceipt);
+// formActions.resetForm();
+
 // const initTokenList = useMemo(() => {
 //   const tokens = sdk.tokens;
 //   if (tokens.BEAN.equals(whitelistedToken)) {

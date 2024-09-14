@@ -33,9 +33,6 @@ const Overview: FC<{
   const { data, loading } = useFarmerSiloHistory(account, false, true);
   //
   const [tab, handleChange] = useTabs(SLUGS, 'view');
-
-  console.log('data', data);
-
   //
   const ownership =
     farmerSilo.stalk.active?.gt(0) && beanstalkSilo.stalk.total?.gt(0)

@@ -32,7 +32,7 @@ import GovernancePage from '~/pages/governance';
 import ProposalPage from '~/pages/governance/proposal';
 import FarmerDelegatePage from '~/pages/governance/delegate';
 import TransactionHistoryPage from '~/pages/history';
-import NFTPage from '~/pages/nft';
+// import NFTPage from '~/pages/nft';
 import SiloPage from '~/pages/silo';
 import SiloTokenPage from '~/pages/silo/token';
 import SwapPage from '~/pages/swap';
@@ -102,6 +102,7 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
 function Mainnet() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
+  const { isArbitrum } = useChainState();
   return (
     <>
       <NavBar>{null}</NavBar>
@@ -125,7 +126,7 @@ function Mainnet() {
             justifyContent: 'center',
           }}
         >
-          <EthMainnet />
+          <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
           {/* <Routes>
             <Route path="/*" element={<EthMainnet />} />
           </Routes> */}
@@ -150,8 +151,8 @@ function Arbitrum() {
        * Bean Updaters
        * ----------------------- */}
       {/* price contract not working */}
-      {false && <PoolsUpdater />}
-      {false && <UnripeUpdater />}
+      <PoolsUpdater />
+      <UnripeUpdater />
 
       {/* -----------------------
        * Beanstalk Updaters
@@ -245,7 +246,7 @@ function Arbitrum() {
                 element={<Navigate to="/market/sell/:orderID" />}
               />
             </Route>
-            <Route path="/nft" element={<NFTPage />} />
+            {/* <Route path="/nft" element={<NFTPage />} /> */}
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route
               path="/governance/delegate/:type"
@@ -265,9 +266,9 @@ function Arbitrum() {
 }
 
 export default function App() {
-  const { isArbitrum } = useChainState();
+  const { isArbitrum, isTestnet } = useChainState();
 
-  if (!isArbitrum) {
+  if (!isArbitrum || (isArbitrum && !isTestnet)) {
     return <Mainnet />;
   }
 

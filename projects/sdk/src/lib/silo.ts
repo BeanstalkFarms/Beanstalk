@@ -194,19 +194,6 @@ export class Silo {
     return this.siloConvert.convertEstimate(fromToken, toToken, fromAmount);
   }
 
-  public async getDeposits(_account: string) {
-    const deposits = await Silo.sdk.contracts.beanstalk.getDepositsForAccount(_account);
-  }
-
-  public async getTokenDeposits(_account: string, token: Token) {
-    const tokenDeposits = Silo.sdk.contracts.beanstalk.getTokenDepositsForAccount(
-      _account,
-      token.address
-    );
-
-    const dict = {};
-  }
-
   /**
    *
    * Return the Farmer's balance of a single whitelisted token.
@@ -236,7 +223,7 @@ export class Silo {
         account,
         _token.address
       );
-      const depositsByToken = utils.parseDepositsByToken(Silo.sdk, farmerDeposits);
+      const depositsByToken = utils.parseDepositsByToken(Silo.sdk, [farmerDeposits]);
 
       // The processor's return schema assumes we might have wanted to grab
       // multiple tokens, so we have to grab the one we want

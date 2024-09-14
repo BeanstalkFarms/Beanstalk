@@ -18,7 +18,7 @@
         "type": "address"
       }
     ],
-    "name": "getConstantProductWell",
+    "name": "getWell",
     "outputs": [
       {
         "components": [

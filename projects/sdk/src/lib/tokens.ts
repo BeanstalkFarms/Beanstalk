@@ -577,6 +577,7 @@ export class Tokens {
     this.siloWhitelistAddresses = siloWhitelist.map((t) => t.address);
 
     this.unripeTokens = new Set(unripeTokens);
+    // make sure the underlying tokens are in the same indexing order as unripeTokens
     this.unripeUnderlyingTokens = new Set([this.BEAN, this.WSTETH]);
     this.erc20Tokens = new Set([
       ...this.siloWhitelist,

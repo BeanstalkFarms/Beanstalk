@@ -6,8 +6,6 @@ import { TokenValue } from "@beanstalk/sdk-core";
 import { TokenSiloBalance, Deposit } from "./types";
 import { assert } from "src/utils";
 import { SiloGettersFacet } from "src/constants/generated/protocol/abi/Beanstalk";
-import { MayArray } from "src/types";
-import { isArray } from "src/utils/common";
 
 export function sortCrates(state: TokenSiloBalance) {
   state.deposits = state.deposits.sort(
@@ -42,8 +40,10 @@ export function sortCratesByBDVRatio(crates: Deposit[], direction: "asc" | "desc
 export function pickCrates(
   deposits: Deposit[],
   amount: TokenValue,
-  token: Token,
-  currentSeason: number
+  // TODO: remove these
+  _token: Token,
+  // TODO: remove these
+  _currentSeason: number
 ) {
   let totalAmount = TokenValue.ZERO;
   let totalBDV = TokenValue.ZERO;
@@ -159,11 +159,10 @@ type TokenDepositsByStem = {
 
 export function parseDepositsByToken(
   sdk: BeanstalkSDK,
-  data: MayArray<SiloGettersFacet.TokenDepositIdStructOutput>
+  data: SiloGettersFacet.TokenDepositIdStructOutput[]
 ) {
   const depositsByToken: Map<Token, TokenDepositsByStem> = new Map();
-  const datas = isArray(data) ? data : [data];
-  datas.forEach(({ token: tokenAddr, depositIds, tokenDeposits }) => {
+  data.forEach(({ token: tokenAddr, depositIds, tokenDeposits }) => {
     const token = sdk.tokens.findByAddress(tokenAddr);
     if (!token) return;
 

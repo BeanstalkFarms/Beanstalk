@@ -15,6 +15,7 @@ import {
 } from '~/lib/Txn/FormTxn/types';
 import { FormTxnBundlerPresets as presets } from '~/lib/Txn/FormTxn/presets';
 import { Token } from '@beanstalk/sdk-core';
+import { FarmWorkflow, AdvancedFarmWorkflow } from '~/types';
 
 type FormTxnFarmStep =
   | MowFarmStep
@@ -130,7 +131,7 @@ export class FormTxnBundler {
     gasMultiplier?: number,
     advancedFarm?: boolean
   ) {
-    let farm: any;
+    let farm: FarmWorkflow | AdvancedFarmWorkflow;
     if (advancedFarm) {
       farm = this._sdk.farm.createAdvancedFarm();
     } else {
