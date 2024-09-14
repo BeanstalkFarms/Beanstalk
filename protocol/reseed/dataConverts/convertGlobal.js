@@ -126,60 +126,87 @@ function parseGlobals(inputFilePath, outputFilePath) {
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
     // seedGaugeSettings
+    // [
+    //   data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
+    //     ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
+    //     : "0",
+    //   data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
+    //     ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
+    //     : "0",
+    //   data.seedGaugeSettings?.targetSeasonsToCatchUp
+    //     ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateOptimal
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.deltaPodDemandLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.deltaPodDemandUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioOptimal
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.excessivePriceThreshold
+    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+    //     : "0",
+    //   data.seedGaugeSettings?.soilCoefficientHigh
+    //     ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
+    //     : "0",
+    //   data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
+    //   data.seedGaugeSettings?.excessivePriceThreshold
+    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+    //     : "0"
+    // ],
     [
-      data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
-        : "0",
-      data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
-        : "0",
-      data.seedGaugeSettings?.targetSeasonsToCatchUp
-        ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
-        : "0",
-      data.seedGaugeSettings?.podRateLowerBound
-        ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
-        : "0",
-      data.seedGaugeSettings?.podRateOptimal
-        ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
-        : "0",
-      data.seedGaugeSettings?.podRateUpperBound
-        ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
-        : "0",
-      data.seedGaugeSettings?.deltaPodDemandLowerBound
-        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
-        : "0",
-      data.seedGaugeSettings?.deltaPodDemandUpperBound
-        ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
-        : "0",
-      data.seedGaugeSettings?.lpToSupplyRatioUpperBound
-        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
-        : "0",
-      data.seedGaugeSettings?.lpToSupplyRatioOptimal
-        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
-        : "0",
-      data.seedGaugeSettings?.lpToSupplyRatioLowerBound
-        ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
-        : "0",
-      data.seedGaugeSettings?.excessivePriceThreshold
-        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-        : "0",
-      data.seedGaugeSettings?.soilCoefficientHigh
-        ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
-        : "0",
-      data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
-      data.seedGaugeSettings?.excessivePriceThreshold
-        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-        : "0"
+      "100000000000000000000",
+      "50000000000000000000",
+      "4320",
+      "50000000000000000",
+      "150000000000000000",
+      "250000000000000000",
+      "950000000000000000",
+      "1050000000000000000",
+      "800000000000000000",
+      "40000000000000000",
+      "12000000000000000",
+      "1050000",
+      "500000000000000000",
+      "1500000000000000000",
+      "5000000"
     ],
     // ShipmentRoute
-    data.shipmentRoutes.length
-      ? data.shipmentRoutes.map((route) => [
-          route.planContract || "0x0000000000000000000000000000000000000000",
-          route.planSelector || "0x00000000",
-          route.recipient ? convertToBigNum(route.recipient) : "0",
-          route.data || "0x"
-        ])
-      : [["0x0000000000000000000000000000000000000000", "0x00000000", "0", "0x"]]
+    // data.shipmentRoutes.length
+    //   ? data.shipmentRoutes.map((route) => [
+    //       route.planContract || "0x0000000000000000000000000000000000000000",
+    //       route.planSelector || "0x00000000",
+    //       route.recipient ? convertToBigNum(route.recipient) : "0",
+    //       route.data || "0x"
+    //     ])
+    //   : [["0x0000000000000000000000000000000000000000", "0x00000000", "0", "0x"]]
+    [
+      ["0x0000000000000000000000000000000000000000", "0x7c655075", "1", "0x"],
+      [
+        "0x0000000000000000000000000000000000000000",
+        "0x12e8d3ed",
+        "2",
+        "0x0000000000000000000000000000000000000000000000000000000000000000"
+      ],
+      ["0x0000000000000000000000000000000000000000", "0x43055ba8", "3", "0x"]
+    ]
   ];
 
   fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
