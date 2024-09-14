@@ -37,6 +37,8 @@ import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useDynamicSeeds } from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
+import { useResolvedChainId } from '~/hooks/chain/useChainId';
+import { ChainResolver } from '@beanstalk/sdk-core';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
@@ -86,12 +88,15 @@ export const BeanstalkSDKContext = createContext<BeanstalkSDK | undefined>(
 const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
   const provider = useEthersProvider();
+  const resolvedChainId = useResolvedChainId();
 
   const [datasource] = useSetting('datasource');
   const [subgraphEnv] = useSetting('subgraphEnv');
 
   const subgraphUrl =
-    SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
+    SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.[
+      ChainResolver.isL2Chain(resolvedChainId) ? 'beanstalk' : 'beanstalk_eth'
+    ];
 
   return useMemo(() => {
     console.debug(`Instantiating BeanstalkSDK`, {

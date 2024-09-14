@@ -168,14 +168,27 @@ try {
   console.warn('Failed to read subgraph env from state, skipping.');
 }
 
-const beanstalkLink = new HttpLink({
-  uri: sgEnv.subgraphs.beanstalk,
-});
+// Beanstalk
+const beanstalkLinks = {
+  eth: new HttpLink({
+    uri: sgEnv.subgraphs.beanstalk_eth,
+  }),
+  arb: new HttpLink({
+    uri: sgEnv.subgraphs.beanstalk,
+  }),
+};
 
-const beanLink = new HttpLink({
-  uri: sgEnv.subgraphs.bean,
-});
+// Bean
+const beanLinks = {
+  eth: new HttpLink({
+    uri: sgEnv.subgraphs.bean_eth,
+  }),
+  arb: new HttpLink({
+    uri: sgEnv.subgraphs.bean,
+  }),
+};
 
+// BS3TODO: Is this dfferent for Arbitrum?
 const snapshotLink = new HttpLink({
   uri: 'https://hub.snapshot.org/graphql',
   headers: {
@@ -183,92 +196,45 @@ const snapshotLink = new HttpLink({
   },
 });
 
+// BS3TODO: Is this dfferent for Arbitrum?
 const snapshotLabsLink = new HttpLink({
   uri: `https://gateway-arbitrum.network.thegraph.com/api/${import.meta.env.VITE_THEGRAPH_API_KEY}/subgraphs/id/5MkoYVE5KREBTe2x45FuPdqWKGc2JgrHDteMzi6irSGD`,
 });
 
+// BS3TODO: Do we need to keep this?
 const beanftLink = new HttpLink({
   uri: sgEnv.subgraphs.beanft,
 });
+
 /// ///////////////////////// Client ////////////////////////////
 
 export const apolloClient = new ApolloClient({
   connectToDevTools: true,
   link: ApolloLink.split(
-    (operation) => operation.getContext().subgraph === 'bean',
-    beanLink, // true
+    ({ getContext }) => getContext().subgraph === 'bean_eth',
+    beanLinks.eth, // true
     ApolloLink.split(
-      (operation) => operation.getContext().subgraph === 'snapshot',
-      snapshotLink, // true
+      ({ getContext }) => getContext().subgraph === 'beanstalk_eth',
+      beanstalkLinks.eth, // true
       ApolloLink.split(
-        (operation) => operation.getContext().subgraph === 'snapshot-labs',
-        snapshotLabsLink, // true
+        ({ getContext }) => getContext().subgraph === 'snapshot',
+        snapshotLink, // true
         ApolloLink.split(
-          (operation) => operation.getContext().subgraph === 'beanft',
-          beanftLink, // true
-          beanstalkLink // false
+          ({ getContext }) => getContext().subgraph === 'snapshot-labs',
+          snapshotLabsLink, // true
+          ApolloLink.split(
+            // BS3TODO: Do we need to keep beaNFT support?
+            ({ getContext }) => getContext().subgraph === 'beanft',
+            beanftLink, // true
+            ApolloLink.split(
+              ({ getContext }) => getContext().subgraph === 'bean',
+              beanLinks.arb, // true
+              beanstalkLinks.eth // false
+            )
+          )
         )
       )
     )
   ),
   cache,
 });
-
-
-
-// // L2 subgraphs
-// const beanstalkLink = new HttpLink({
-//   uri: sgEnv.subgraphs.beanstalk,
-// });
-
-// const beanLink = new HttpLink({
-//   uri: sgEnv.subgraphs.bean,
-// });
-
-// // L1 subgraphs
-// const beanstalkEthLink = new HttpLink({
-//   uri: sgEnv.subgraphs.beanstalk_eth,
-// });
-
-// const beanEthLink = new HttpLink({
-//   uri: sgEnv.subgraphs.bean_eth,
-// });
-
-// const snapshotLink = new HttpLink({
-//   uri: 'https://hub.snapshot.org/graphql',
-//   headers: {
-//     'x-api-key': SNAPSHOT_API_KEY,
-//   },
-// });
-
-// const snapshotLabsLink = new HttpLink({
-//   uri: `https://gateway-arbitrum.network.thegraph.com/api/${import.meta.env.VITE_THEGRAPH_API_KEY}/subgraphs/id/5MkoYVE5KREBTe2x45FuPdqWKGc2JgrHDteMzi6irSGD`,
-// });
-
-// /// ///////////////////////// Client ////////////////////////////
-
-// export const apolloClient = new ApolloClient({
-//   connectToDevTools: true,
-//   link: ApolloLink.split(
-//     (operation) => operation.getContext().subgraph === 'bean_eth',
-//     beanEthLink, // true
-//     ApolloLink.split(
-//       ({ getContext }) => getContext().subgraph === 'beanstalk_eth',
-//       beanstalkEthLink, // true
-//       ApolloLink.split(
-//         ({ getContext }) => getContext().subgraph === 'snapshot',
-//         snapshotLink, // true
-//         ApolloLink.split(
-//           ({ getContext }) => getContext().subgraph === 'snapshot-labs',
-//           snapshotLabsLink, // true
-//           ApolloLink.split(
-//             ({ getContext }) => getContext().subgraph === 'bean',
-//             beanLink, // true
-//             beanstalkLink // false
-//           )
-//         )
-//       )
-//     )
-//   ),
-//   cache,
-// });

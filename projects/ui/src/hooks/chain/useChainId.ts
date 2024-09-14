@@ -19,6 +19,11 @@ export default function useChainId() {
   return useMemo(() => chain?.id || defaultChainId, [chain?.id]);
 }
 
+/**
+ * Returns the chainId mapped to their Mainnet equivalent.
+ *
+ * @returns SupportedChainId as MainnetChainId (ARBITRUM_MAINNET or ETHEREUM_MAINNET)
+ */
 export function useResolvedChainId() {
   const chainId = useChainId();
 
