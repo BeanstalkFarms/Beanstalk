@@ -234,7 +234,7 @@ function parseWhitelist(inputFilePath, outputFilePath) {
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(finalOutput, null, 2));
-    console.log("Field JSON has been written successfully");
+    console.log("Whitelist JSON has been written successfully");
   } catch (err) {
     console.error("Error:", err);
   }
