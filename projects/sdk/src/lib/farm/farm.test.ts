@@ -12,7 +12,7 @@ beforeAll(async () => {
   sdk = new BeanstalkSDK({
     provider: provider,
     signer: signer,
-    subgraphUrl: "https://graph.node.bean.money/subgraphs/name/beanstalk-testing"
+    subgraphUrl: "https://graph.bean.money/beanstalk-testing"
   });
   account = _account;
 });

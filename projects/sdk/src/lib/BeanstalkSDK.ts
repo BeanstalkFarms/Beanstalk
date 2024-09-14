@@ -70,6 +70,7 @@ export class BeanstalkSDK {
     this.handleConfig(config);
 
     this.chainId = this.deriveChainId(config?.provider);
+    this.subgraphUrl = config?.subgraphUrl || this.deriveSubgraphURL(this.chainId);
     this.source = config?.source || DataSource.SUBGRAPH;
 
     // Beanstalk
@@ -138,8 +139,6 @@ export class BeanstalkSDK {
     this.DEBUG = config.DEBUG ?? false;
 
     this.source = DataSource.LEDGER; // FIXME
-
-    this.subgraphUrl = config.subgraphUrl || defaultSettings.subgraphUrl;
   }
 
   deriveSource<T extends { source?: DataSource }>(config?: T): DataSource {
@@ -165,6 +164,13 @@ export class BeanstalkSDK {
     }
 
     throw new Error("Invalid rpcUrl");
+  }
+
+  private deriveSubgraphURL(_chainId: ChainId) {
+    if (ChainResolver.isL1Chain(_chainId)) {
+      return defaultSettings.subgraphUrlEth;
+    }
+    return defaultSettings.subgraphUrl;
   }
 
   private deriveChainId(provider?: BeanstalkConfig["provider"]) {
