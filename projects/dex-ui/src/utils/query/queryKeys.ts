@@ -45,5 +45,7 @@ export const queryKeys = {
 
   siloBalancesAll: (addresses: string[]) => ["silo", "balance", ...addresses],
   siloBalance: (address: string) => ["silo", "balance", address],
-  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses]
+  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses],
+
+  siloWellAPYs: ["silo", "wells", "APYs"]
 } as const;

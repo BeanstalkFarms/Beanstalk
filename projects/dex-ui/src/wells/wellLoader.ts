@@ -62,12 +62,14 @@ const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellA
   }
 };
 
-// BS3TODO: Fix me when subgraph endpoints are updated
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const loadFromGraph = async (_chainId: ChainId): Promise<WellAddresses> => {
-  const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined);
+  const chainId = ChainResolver.resolveToMainnetChainId(_chainId);
+
+  const data = await fetchFromSubgraphRequest(GetWellAddressesDocument, undefined, chainId);
   const results = await data();
 
-  const chainId = ChainResolver.resolveToMainnetChainId(_chainId);
   const blacklist = WELL_BLACKLIST[chainId];
 
   return results.wells.map((w) => w.id).filter((addr) => !blacklist.includes(addr.toLowerCase()));
@@ -88,7 +90,7 @@ export const findWells = memoize(
           throw err;
         })
 
-      // BS3TODO: Fix me when subgraph endpoints are updated
+      // BS3TODO: Fix me when BS3 subgraph is live
       // loadFromGraph(sdk.chainId)
       //   .then((res) => {
       //     Log.module("wells").debug("Used subgraph to load wells");
@@ -169,6 +171,7 @@ export const fetchWellsWithAddresses = async (_sdk: BeanstalkSDK, addresses: str
 
 // ------------- MultiCall Utils -------------
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type MulticallResult<T extends ContractFunctionParameters> = Awaited<
   ReturnType<typeof multicall<typeof config, ContractFunctionParameters[]>>
 >[number];
@@ -182,14 +185,14 @@ const extractArrayResult = <T extends ContractFunctionParameters, K>(
 
 // ---------- Fetch Wells Data ----------
 
-type Call = {
+interface CallStruct {
   target: string;
   data: string;
 };
 
 type WellsMultiCallResult = [
   name: string,
-  well: [tokens: string[], wellFunction: Call, pumps: Call[], wellData: string, aquifer: string],
+  well: [tokens: string[], wellFunction: CallStruct, pumps: CallStruct[], wellData: string, aquifer: string],
   reserves: bigint[]
 ];
 
@@ -290,7 +293,7 @@ const fetchTokensWithMulticall = async (
   );
 
   if (refetchFailed) {
-    const failedTokens = tokenResults.filter((r) => !r.data).map((data) => data.address);
+    const failedTokens = tokenResults.filter((r) => !r.data).map((res) => res.address);
     const failedTokensCalls = makeTokensContractCall(failedTokens, nonStandardERC20ABI);
 
     await Promise.all(

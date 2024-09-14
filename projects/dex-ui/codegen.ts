@@ -5,7 +5,8 @@ const config: CodegenConfig = {
   schema: [
     "graphql.schema.json",
     // beanstalk subgraph
-    "https://graph.node.bean.money/subgraphs/name/beanstalk"
+    "https://graph.bean.money/beanstalk",
+    "https://graph.bean.money/beanstalk_eth"
   ],
   documents: "src/**/*.graphql",
   ignoreNoDocuments: true,

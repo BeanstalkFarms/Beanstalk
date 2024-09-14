@@ -33,11 +33,15 @@ const loadFromGraph = async (
   let skipAmount: number = 0;
 
   do {
-    const data = fetchFromSubgraphRequest(GetWellChartDataDocument, {
-      id: well.address,
-      lastUpdateTimestamp_gte: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP,
-      resultsToSkip: skipAmount
-    });
+    const data = fetchFromSubgraphRequest(
+      GetWellChartDataDocument,
+      {
+        id: well.address,
+        lastUpdateTimestamp_gte: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP,
+        resultsToSkip: skipAmount
+      },
+      sdk.chainId
+    );
 
     const fetchedData = await data();
 

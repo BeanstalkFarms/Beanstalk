@@ -136,10 +136,14 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
 
   if (!well.lpToken) await well.getLPToken();
 
-  const data = await fetchFromSubgraphRequest(GetWellEventsDocument, {
-    id: well.address,
-    searchTimestamp: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP
-  });
+  const data = await fetchFromSubgraphRequest(
+    GetWellEventsDocument,
+    {
+      id: well.address,
+      searchTimestamp: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP
+    },
+    sdk.chainId
+  );
 
   const results = await data();
   Log.module("history").debug("Raw event data from subgraph: ", results);
