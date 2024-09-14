@@ -6,6 +6,7 @@ const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
 const { parseExternalHolders } = require("./dataConverts/convertExternalHolders.js");
+const { parseTokens } = require("./dataConverts/convertTokens.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
@@ -176,6 +177,13 @@ function parseBeanstalkData() {
     "./reseed/data/r2/L2_external_unripe_lp_balances.json",
     contractAccounts
   );
+  // Initial supplies and well balances
+  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`
+  const outputFilePaths = {
+    L2_initial_supply: "./reseed/data/r2/L2_initial_supply.json",
+    L2_well_balances: "./reseed/data/r2/L2_well_balances.json"
+  };
+  parseTokens(reserveSupplyJsonPath, outputFilePaths);
 }
 
 async function printBeanstalk() {
