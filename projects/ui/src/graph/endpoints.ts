@@ -66,3 +66,56 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
     },
   },
 };
+
+
+// export enum SGEnvironments {
+//   BF_PROD = 'bf-prod',
+//   BF_DEV = 'bf-dev',
+//   BF_TEST = 'bf-test',
+// }
+
+// type SGEnvironment = {
+//   name: string;
+//   subgraphs: {
+//     beanstalk: string;
+//     bean: string;
+//     // beanft: string;
+//     beanstalk_eth: string;
+//     bean_eth: string;
+//   };
+// };
+
+// const ENDPOINT = 'https://graph.bean.money';
+
+// export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
+//   [SGEnvironments.BF_PROD]: {
+//     name: 'Beanstalk Farms / Production',
+//     subgraphs: {
+//       beanstalk: `${ENDPOINT}/beanstalk`,
+//       bean: `${ENDPOINT}/bean`,
+//       beanstalk_eth: `${ENDPOINT}/beanstalk_eth`,
+//       bean_eth: `${ENDPOINT}/bean_eth`,
+//     },
+//   },
+//   [SGEnvironments.BF_DEV]: {
+//     name: 'Beanstalk Farms / Development',
+//     subgraphs: {
+//       beanstalk: `${ENDPOINT}/beanstalk-dev`,
+//       bean: `${ENDPOINT}/bean-dev`,
+//       beanstalk_eth: `${ENDPOINT}/beanstalk-dev_eth`,
+//       bean_eth: `${ENDPOINT}/bean-dev_eth`,
+//     },
+//   },
+//   [SGEnvironments.BF_TEST]: {
+//     name: 'Beanstalk Farms / Test',
+//     subgraphs: {
+//       beanstalk: `${ENDPOINT}/beanstalk-testing`,
+//       bean: `${ENDPOINT}/bean-testing`,
+//       beanstalk_eth: `${ENDPOINT}/beanstalk-testing_eth`,
+//       bean_eth: `${ENDPOINT}/bean-testing_eth`,
+//     },
+//   },
+// };
+
+// // keeping as reference
+// // beanft: 'https://graph.node.bean.money/subgraphs/name/beanft',
