@@ -48,6 +48,14 @@ export function handleMigratedPlot(event: MigratedPlot): void {
   let field = loadField(event.address);
   field.unharvestablePods = field.unharvestablePods.plus(unharvestablePods);
   field.harvestablePods = field.harvestablePods.plus(harvestablePods);
+
+  loadFarmer(event.params.account);
+  let plot = loadPlot(event.address, event.params.plotIndex);
+
+  let newIndexes = field.plotIndexes;
+  newIndexes.push(plot.index);
+  field.plotIndexes = newIndexes;
+
   takeFieldSnapshots(field, event.block);
   field.save();
   clearFieldDeltas(field, event.block);
@@ -58,9 +66,6 @@ export function handleMigratedPlot(event: MigratedPlot): void {
   takeFieldSnapshots(accountField, event.block);
   accountField.save();
   clearFieldDeltas(accountField, event.block);
-
-  loadFarmer(event.params.account);
-  let plot = loadPlot(event.address, event.params.plotIndex);
 
   plot.farmer = event.params.account;
   plot.source = "Reseed Migrated";

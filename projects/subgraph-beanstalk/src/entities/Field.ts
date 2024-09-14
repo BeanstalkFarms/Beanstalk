@@ -51,10 +51,6 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot.harvestedPods = ZERO_BI;
     plot.fullyHarvested = false;
     plot.save();
-
-    let field = loadField(diamondAddress);
-    field.plotIndexes.push(plot.index);
-    field.save();
   }
   return plot;
 }

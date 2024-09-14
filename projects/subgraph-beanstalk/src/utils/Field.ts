@@ -49,6 +49,11 @@ export function sow(params: SowParams): void {
   loadFarmer(params.account);
   let plot = loadPlot(protocol, params.index);
 
+  let newIndexes = field.plotIndexes;
+  newIndexes.push(plot.index);
+  field.plotIndexes = newIndexes;
+  field.save();
+
   plot.farmer = params.account;
   plot.source = "SOW";
   plot.sourceHash = params.event.transaction.hash;
@@ -210,6 +215,7 @@ export function plotTransfer(params: PlotTransferParams): void {
     // Start value of zero
     let remainderIndex = sourceIndex.plus(params.amount);
     let remainderPlot = loadPlot(protocol, remainderIndex);
+    sortedPlots.push(remainderIndex);
 
     const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
@@ -243,6 +249,7 @@ export function plotTransfer(params: PlotTransferParams): void {
     // We are only needing to split this plot once to send
     // Non-zero start value. Sending to end of plot
     let toPlot = loadPlot(protocol, params.index);
+    sortedPlots.push(params.index);
 
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
@@ -271,6 +278,9 @@ export function plotTransfer(params: PlotTransferParams): void {
     let remainderIndex = params.index.plus(params.amount);
     let toPlot = loadPlot(protocol, params.index);
     let remainderPlot = loadPlot(protocol, remainderIndex);
+
+    sortedPlots.push(params.index);
+    sortedPlots.push(remainderIndex);
 
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
@@ -309,6 +319,9 @@ export function plotTransfer(params: PlotTransferParams): void {
     remainderPlot.beansPerPod = sourcePlot.beansPerPod;
     remainderPlot.save();
   }
+  sortedPlots.sort();
+  field.plotIndexes = sortedPlots;
+  field.save();
 
   // Update any harvestable pod amounts
   // No need to shift beanstalk field, only the farmer fields.
