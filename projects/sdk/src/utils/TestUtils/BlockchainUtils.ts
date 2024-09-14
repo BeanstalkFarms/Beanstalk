@@ -131,14 +131,14 @@ export class BlockchainUtils {
       this.setUSDTBalance(account, this.sdk.tokens.USDT.amount(amount)),
       this.setWETHBalance(account, this.sdk.tokens.WETH.amount(amount)),
       this.setDAIBalance(account, this.sdk.tokens.DAI.amount(amount)),
-      this.setWSTETHBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
-      this.setWEETHBalance(account, this.sdk.tokens.WEETH.amount(amount)),
+      this.setwstETHBalance(account, this.sdk.tokens.WSTETH.amount(amount)),
+      this.setweETHBalance(account, this.sdk.tokens.WEETH.amount(amount)),
       this.setWBTCBalance(account, this.sdk.tokens.WBTC.amount(amount)),
       this.seturBEANBalance(account, this.sdk.tokens.UNRIPE_BEAN.amount(amount)),
-      this.seturBEANWSTETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
+      this.seturBEANwstETHBalance(account, this.sdk.tokens.UNRIPE_BEAN_WSTETH.amount(amount)),
       this.setBEANWETHBalance(account, this.sdk.tokens.BEAN_ETH_WELL_LP.amount(amount)),
-      this.setBEANWSTETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
-      this.setBEANWEETHBalance(account, this.sdk.tokens.BEAN_WEETH_WELL_LP.amount(amount)),
+      this.setBEANwstETHBalance(account, this.sdk.tokens.BEAN_WSTETH_WELL_LP.amount(amount)),
+      this.setBEANweETHBalance(account, this.sdk.tokens.BEAN_WEETH_WELL_LP.amount(amount)),
       this.setBEANWBTCBalance(account, this.sdk.tokens.BEAN_WBTC_WELL_LP.amount(amount)),
       this.setBEANUSDCBalance(account, this.sdk.tokens.BEAN_USDC_WELL_LP.amount(amount)),
       this.setBEANUSDTBalance(account, this.sdk.tokens.BEAN_USDT_WELL_LP.amount(amount))
@@ -153,10 +153,10 @@ export class BlockchainUtils {
   async setWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WETH, account, balance);
   }
-  async setWSTETHBalance(account: string, balance: TokenValue) {
+  async setwstETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WSTETH, account, balance);
   }
-  async setWEETHBalance(account: string, balance: TokenValue) {
+  async setweETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.WEETH, account, balance);
   }
   async setWBTCBalance(account: string, balance: TokenValue) {
@@ -174,16 +174,16 @@ export class BlockchainUtils {
   async seturBEANBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN, account, balance);
   }
-  async seturBEANWSTETHBalance(account: string, balance: TokenValue) {
+  async seturBEANwstETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.UNRIPE_BEAN_WSTETH, account, balance);
   }
   async setBEANWETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_ETH_WELL_LP, account, balance);
   }
-  async setBEANWSTETHBalance(account: string, balance: TokenValue) {
+  async setBEANwstETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_WSTETH_WELL_LP, account, balance);
   }
-  async setBEANWEETHBalance(account: string, balance: TokenValue) {
+  async setBEANweETHBalance(account: string, balance: TokenValue) {
     this.setBalance(this.sdk.tokens.BEAN_WEETH_WELL_LP, account, balance);
   }
   async setBEANWBTCBalance(account: string, balance: TokenValue) {

@@ -21,11 +21,6 @@ interface ImportMetaEnv {
    * If set, don't add CSP meta tag
    */
   readonly DISABLE_CSP?: any;
-
-  /**
-   * Whether we are before the BS3 deploy
-   */
-  readonly VITE_BS3_DEPLOYED?: boolean;
 }
 
 interface ImportMeta {

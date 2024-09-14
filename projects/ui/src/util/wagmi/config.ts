@@ -24,22 +24,13 @@ if (!WALLET_CONNECT_PROJECT_ID) {
 const SHOW_DEV = import.meta.env.VITE_SHOW_DEV_CHAINS;
 
 const prodChains: readonly [Chain, ...Chain[]] = [mainnet, arbitrum] as const;
-const preBS3DevChains: readonly [Chain, ...Chain[]] = [
-  mainnet,
-  localForkMainnet,
-  localForkArbitrum,
-] as const;
 
-const postBS3DevChains: readonly [Chain, ...Chain[]] = [
+const devChains: readonly [Chain, ...Chain[]] = [
   mainnet,
   localForkMainnet,
   localForkArbitrum,
   arbitrum,
 ] as const;
-
-const devChains = import.meta.env.VITE_BS3_DEPLOYED
-  ? postBS3DevChains
-  : preBS3DevChains;
 
 const chains: readonly [Chain, ...Chain[]] = !SHOW_DEV ? prodChains : devChains;
 
