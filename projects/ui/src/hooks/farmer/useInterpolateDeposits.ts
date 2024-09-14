@@ -9,9 +9,13 @@ import {
   interpolateFarmerDepositedValue,
   SnapshotBeanstalk,
 } from '~/util/Interpolate';
-import { SupportedChainId, ZERO_BN } from '~/constants';
-import { UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
+import { ZERO_BN } from '~/constants';
 import useUnripeUnderlyingMap from '../beanstalk/useUnripeUnderlying';
+import {
+  useGetNormaliseChainToken,
+  useUnripeTokens,
+  useWhitelistedTokens,
+} from '../beanstalk/useTokens';
 
 const useInterpolateDeposits = (
   siloAssetsQuery: ReturnType<typeof useFarmerSiloAssetSnapshotsQuery>,
@@ -20,11 +24,10 @@ const useInterpolateDeposits = (
 ) => {
   const unripe = useAppSelector((state) => state._bean.unripe);
   const beanPools = useAppSelector((state) => state._bean.pools);
+  const { UNRIPE_BEAN_WSTETH: urBeanLP } = useUnripeTokens();
+  const normalizeToken = useGetNormaliseChainToken();
+  const { whitelist } = useWhitelistedTokens();
   const underlyingMap = useUnripeUnderlyingMap();
-
-  // const sdk = useSdk();
-  // BS3TODO: fix me
-  const urBeanLP = UNRIPE_BEAN_WSTETH[SupportedChainId.ETH_MAINNET];
 
   return useMemo(() => {
     if (
@@ -40,15 +43,14 @@ const useInterpolateDeposits = (
     // sorted by Season and normalized based on chop rate.
     const snapshots = siloAssetsQuery.data.farmer.silo.assets
       .reduce((prev, asset) => {
-        const tokenAddress = asset.token.toLowerCase();
+        const tokenAddress = normalizeToken(asset.token)?.address;
+        if (!tokenAddress) return prev;
         prev.push(
           ...asset.hourlySnapshots.map((snapshot) => {
             let hourlyDepositedBDV;
 
             if (tokenAddress in unripe) {
-              if (
-                tokenAddress.toLowerCase() === urBeanLP.address.toLowerCase()
-              ) {
+              if (tokenAddress === urBeanLP.address) {
                 // formula: penalty = amount of BEANwstETH per 1 urBEANwstETH.
                 // bdv of urBEANwstETH = amount * penalty * BDV of 1 BEANwstETH
                 const underlying = underlyingMap[tokenAddress];
@@ -89,9 +91,15 @@ const useInterpolateDeposits = (
     return interpolateFarmerDepositedValue(
       snapshots,
       priceQuery.data.seasons,
-      itemizeByToken
+      itemizeByToken,
+      24,
+      whitelist,
+      normalizeToken,
+
     );
   }, [
+    normalizeToken,
+    whitelist,
     priceQuery.loading,
     priceQuery.data?.seasons,
     siloAssetsQuery.data?.farmer?.silo?.assets,

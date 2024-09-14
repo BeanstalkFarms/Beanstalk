@@ -11,7 +11,7 @@ import {
   SeasonRange,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
-import { L1_SILO_WHITELIST } from '~/constants/tokens';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 import MockPlot from '../Silo/MockPlot';
 import BlurComponent from '../Common/ZeroState/BlurComponent';
 import WalletButton from '../Common/Connection/WalletButton';
@@ -21,6 +21,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const account = useAccount();
   const timeTabParams = useTimeTabState();
   const { data, loading } = useFarmerSiloHistory(account, true, false);
+  const { whitelist } = useWhitelistedTokens();
 
   const formatValue = (value: number) =>
     `$${value?.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
@@ -48,7 +49,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const queryData: QueryData = {
     data: filteredSeries as BaseDataPoint[][],
     loading: loading,
-    keys: L1_SILO_WHITELIST.map((t) => t.address),
+    keys: whitelist.map((t) => t.address),
     error: undefined,
   };
 

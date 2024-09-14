@@ -184,7 +184,10 @@ export function useFarmerBalancesL1Breakdown() {
     addresses.forEach((address) => {
       const token = whitelist[address];
       const siloBalance = siloBalances[address];
-      const tokenBalance = tokenBalances[address] || ZERO_BN;
+      const tokenBalance = tokenBalances[address] || {
+        internal: ZERO_BN,
+        external: ZERO_BN,
+      };
 
       // Ensure we've loaded a Silo Balance for this token.
       if (siloBalance) {
@@ -221,6 +224,8 @@ export function useFarmerBalancesL1Breakdown() {
         });
       }
     });
+
+    console.log('useFarmersBalancesL1Breakdown', prev);
 
     return prev;
   }, [whitelist, addresses, siloBalances, tokenBalances, getUSD]);

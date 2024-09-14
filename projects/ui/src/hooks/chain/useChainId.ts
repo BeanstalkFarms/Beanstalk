@@ -1,3 +1,4 @@
+import { ChainResolver } from '@beanstalk/sdk-core';
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { SupportedChainId } from '~/constants';
@@ -16,4 +17,10 @@ const defaultChainId = import.meta.env.DEV
 export default function useChainId() {
   const { chain } = useAccount();
   return useMemo(() => chain?.id || defaultChainId, [chain?.id]);
+}
+
+export function useResolvedChainId() {
+  const chainId = useChainId();
+
+  return ChainResolver.resolveToMainnetChainId(chainId);
 }
