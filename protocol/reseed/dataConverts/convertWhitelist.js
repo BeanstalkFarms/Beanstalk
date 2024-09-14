@@ -204,6 +204,8 @@ function parseWhitelist(inputFilePath, outputFilePath) {
         // non-bean token, this is used for Oracle settings
         nonBeanToken,
         // silo settings array
+        // the gaugePoint and LiquidityWeight Selectors are now moved due
+        // to the Implementation Update, and thus are set manually.
         [
           tokenAssetSettings.selector,
           tokenAssetSettings.stalkEarnedPerSeason,
@@ -214,8 +216,8 @@ function parseWhitelist(inputFilePath, outputFilePath) {
           tokenAssetSettings.deltaStalkEarnedPerSeason,
           tokenToGpAndOptimalPercentDepositedBdv[0],
           tokenToGpAndOptimalPercentDepositedBdv[1],
-          liquidityWeightImpl, // these 2 are new so are set manually
-          gaugePointImpl
+          gaugePointImpl,
+          liquidityWeightImpl
         ],
         // whitelist status
         tokenToWhitelistMapping[token],
