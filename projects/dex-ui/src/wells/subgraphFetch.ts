@@ -3,12 +3,7 @@ import request from "graphql-request";
 
 import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 
-import { DexSettings, Settings } from "src/settings";
-
-type DexSettingsSubgraphKey = keyof Pick<
-  DexSettings,
-  "SUBGRAPH_URL" | "SUBGRAPH_URL_ETH" | "BEANSTALK_SUBGRAPH_URL" | "BEANSTALK_SUBGRAPH_URL_ETH"
->;
+import { Settings, SubgraphDexSettings } from "src/settings";
 
 interface AdditionalSubgraphFetchOptions {
   useBeanstalkSubgraph?: boolean;
@@ -19,7 +14,7 @@ const getEndpoint = (chainId: ChainId, options?: AdditionalSubgraphFetchOptions)
   const key = `${base}${ChainResolver.isL2Chain(chainId) ? "" : "_ETH"}`;
 
   if (key in Settings) {
-    return Settings[key as DexSettingsSubgraphKey];
+    return Settings[key as keyof SubgraphDexSettings];
   }
 
   throw new Error(`${key} is not a key of DexSettings. Unable to determine the subgraph URL`);
