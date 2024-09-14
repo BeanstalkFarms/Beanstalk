@@ -22,9 +22,9 @@ export const balance = async (sdk, { account, symbol }) => {
         "USDC",
         "USDT",
         "urBEAN",
-        "urBEANwstETH",
+        "urBEANWSTETH",
         "BEANWETH",
-        "BEANWSTETH",
+        "BEANWEETH",
         "BEANWEETH",
         "BEANWBTC",
         "BEANUSDC",
@@ -40,7 +40,7 @@ async function getBal(sdk, symbol: string, account: string) {
   let token = sdk.tokens[symbol];
   if (!token) {
     if (symbol === "urBEAN") token = sdk.tokens.UNRIPE_BEAN;
-    if (symbol === "urBEANwstETH") token = sdk.tokens.UNRIPE_BEAN_WSTETH;
+    if (symbol === "urBEANWSTETH") token = sdk.tokens.UNRIPE_BEAN_WSTETH;
     if (symbol === "BEANWETH") token = sdk.tokens.BEAN_ETH_WELL_LP;
     if (symbol === "BEANWEETH") token = sdk.tokens.BEAN_WEETH_WELL_LP;
     if (symbol === "BEANWSTETH") token = sdk.tokens.BEAN_WSTETH_WELL_LP;
