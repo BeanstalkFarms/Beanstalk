@@ -1,5 +1,5 @@
 import aboutIcon from '~/img/beanstalk/interface/nav/about.svg';
-import beanNFTIcon from '~/img/beanstalk/interface/nav/bean-nft.svg';
+// import beanNFTIcon from '~/img/beanstalk/interface/nav/bean-nft.svg';
 import discordIcon from '~/img/beanstalk/interface/nav/discord.svg';
 import githubIcon from '~/img/beanstalk/interface/nav/github.svg';
 import governanceIcon from '~/img/beanstalk/interface/nav/governance.svg';
@@ -59,12 +59,12 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
   ],
   // More Menu
   more: [
-    {
-      path: 'nft',
-      title: 'BeaNFTs',
-      icon: beanNFTIcon,
-      small: true,
-    },
+    // {
+    //   path: 'nft',
+    //   title: 'BeaNFTs',
+    //   icon: beanNFTIcon,
+    //   small: true,
+    // },
     {
       path: 'swap',
       title: 'Swap',

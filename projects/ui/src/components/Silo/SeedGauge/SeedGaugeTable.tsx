@@ -377,6 +377,8 @@ const SeedGaugeTable = ({
   data: ReturnType<typeof useSeedGauge>['data'];
   onToggleAdvancedMode: (v: boolean) => void;
 }) => {
+
+  console.log('data', data);
   const [isAdvanced, setIsAdvanced] = useState(false);
   const rows = useTableConfig(isAdvanced, data);
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;

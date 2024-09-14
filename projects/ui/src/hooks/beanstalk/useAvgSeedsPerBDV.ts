@@ -55,6 +55,7 @@ const apolloFetch = async (
     notifyOnNetworkStatusChange: true,
   });
 
+// BS3TODO: Fix me to include L1 silo whitelist
 // Main hook with improved error handling and performance
 const useAvgSeedsPerBDV = (
   range: Range<Time> | undefined,

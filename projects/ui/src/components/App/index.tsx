@@ -32,7 +32,7 @@ import GovernancePage from '~/pages/governance';
 import ProposalPage from '~/pages/governance/proposal';
 import FarmerDelegatePage from '~/pages/governance/delegate';
 import TransactionHistoryPage from '~/pages/history';
-import NFTPage from '~/pages/nft';
+// import NFTPage from '~/pages/nft';
 import SiloPage from '~/pages/silo';
 import SiloTokenPage from '~/pages/silo/token';
 import SwapPage from '~/pages/swap';
@@ -246,7 +246,7 @@ function Arbitrum() {
                 element={<Navigate to="/market/sell/:orderID" />}
               />
             </Route>
-            <Route path="/nft" element={<NFTPage />} />
+            {/* <Route path="/nft" element={<NFTPage />} /> */}
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route
               path="/governance/delegate/:type"
