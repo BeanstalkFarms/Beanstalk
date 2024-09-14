@@ -962,7 +962,7 @@
   "seedGaugeSettings": {
     "maxBeanMaxLpGpPerBdvRatio": "0x0",
     "minBeanMaxLpGpPerBdvRatio": "0x0",
-    "targetSeasonsToCatchUp": "0x0",
+    "targetSeasonsToCatchUp": "0x01",
     "podRateLowerBound": "0x0",
     "podRateOptimal": "0x0",
     "podRateUpperBound": "0x0",
@@ -971,7 +971,10 @@
     "lpToSupplyRatioUpperBound": "0x0",
     "lpToSupplyRatioOptimal": "0x0",
     "lpToSupplyRatioLowerBound": "0x0",
-    "excessivePriceThreshold": "0x0"
+    "excessivePriceThreshold": "0x0",
+    "soilCoefficientHigh": "0x0",
+    "soilCoefficientLow": "0x0",
+    "baseReward": "0x0"
   },
   "sop": {}
 }
