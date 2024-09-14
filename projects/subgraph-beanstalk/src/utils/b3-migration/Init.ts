@@ -10,19 +10,20 @@ import {
 import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
 import { loadPodMarketplace } from "../../entities/PodMarketplace";
 import { clearMarketDeltas, takeMarketSnapshots } from "../../entities/snapshots/Marketplace";
-import { loadSilo, loadSiloAsset, loadUnripeToken, loadWhitelistTokenSetting } from "../../entities/Silo";
-import { getUnripeBeanAddr, getUnripeLpAddr, isUnripe } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { loadSilo, loadUnripeToken } from "../../entities/Silo";
+import { getUnripeBeanAddr, getUnripeLpAddr } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { clearUnripeTokenDeltas, takeUnripeTokenSnapshots } from "../../entities/snapshots/UnripeToken";
 import { loadBeanstalk } from "../../entities/Beanstalk";
 import { clearSiloDeltas } from "../../entities/snapshots/Silo";
-import { clearSiloAssetDeltas } from "../../entities/snapshots/SiloAsset";
-import { clearWhitelistTokenSettingDeltas } from "../../entities/snapshots/WhitelistTokenSetting";
-import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 
 export function init(block: ethereum.Block): void {
   let beanstalk = loadBeanstalk();
   beanstalk.lastSeason = SEASON_INITIAL;
   beanstalk.save();
+  let field = loadField(v().protocolAddress);
+  field.podIndex = FIELD_INITIAL_VALUES.podIndex;
+  field.harvestableIndex = FIELD_INITIAL_VALUES.harvestableIndex;
+  field.save();
 }
 
 // Carries over cumulative data from L1 -> L2 subgraph. See cache-builder/beanstalk3.js for the input source.

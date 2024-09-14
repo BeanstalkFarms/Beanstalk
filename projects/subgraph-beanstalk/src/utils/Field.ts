@@ -43,17 +43,11 @@ class TemperatureChangedParams {
 export function sow(params: SowParams): void {
   const protocol = params.event.address;
   let sownBeans = params.beans;
-  // Update Farmer Totals
   updateFieldTotals(protocol, params.account, ZERO_BI, sownBeans, params.pods, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block);
 
   let field = loadField(protocol);
   loadFarmer(params.account);
   let plot = loadPlot(protocol, params.index);
-
-  let newIndexes = field.plotIndexes;
-  newIndexes.push(plot.index);
-  field.plotIndexes = newIndexes;
-  field.save();
 
   plot.farmer = params.account;
   plot.source = "SOW";
@@ -73,7 +67,6 @@ export function sow(params: SowParams): void {
 export function harvest(params: HarvestParams): void {
   const protocol = params.event.address;
   let beanstalk = loadBeanstalk();
-  let season = loadSeason(BigInt.fromI32(beanstalk.lastSeason));
 
   let remainingIndex = ZERO_BI;
   for (let i = 0; i < params.plots.length; i++) {
@@ -82,7 +75,7 @@ export function harvest(params: HarvestParams): void {
 
     expirePodListingIfExists(toAddress(plot.farmer), plot.index, params.event.block);
 
-    let harvestablePods = season.harvestableIndex.minus(plot.index);
+    let harvestablePods = getHarvestableIndex().minus(plot.index);
 
     if (harvestablePods >= plot.pods) {
       // Plot fully harvests
@@ -217,7 +210,6 @@ export function plotTransfer(params: PlotTransferParams): void {
     // Start value of zero
     let remainderIndex = sourceIndex.plus(params.amount);
     let remainderPlot = loadPlot(protocol, remainderIndex);
-    sortedPlots.push(remainderIndex);
 
     const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
@@ -251,7 +243,6 @@ export function plotTransfer(params: PlotTransferParams): void {
     // We are only needing to split this plot once to send
     // Non-zero start value. Sending to end of plot
     let toPlot = loadPlot(protocol, params.index);
-    sortedPlots.push(params.index);
 
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
@@ -280,9 +271,6 @@ export function plotTransfer(params: PlotTransferParams): void {
     let remainderIndex = params.index.plus(params.amount);
     let toPlot = loadPlot(protocol, params.index);
     let remainderPlot = loadPlot(protocol, remainderIndex);
-
-    sortedPlots.push(params.index);
-    sortedPlots.push(remainderIndex);
 
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
@@ -321,9 +309,6 @@ export function plotTransfer(params: PlotTransferParams): void {
     remainderPlot.beansPerPod = sourcePlot.beansPerPod;
     remainderPlot.save();
   }
-  sortedPlots.sort();
-  field.plotIndexes = sortedPlots;
-  field.save();
 
   // Update any harvestable pod amounts
   // No need to shift beanstalk field, only the farmer fields.
@@ -386,18 +371,20 @@ export function updateFieldTotals(
   let field = loadField(account);
 
   field.season = getCurrentSeason();
-  field.soil = field.soil.plus(soil).minus(sownBeans);
   field.sownBeans = field.sownBeans.plus(sownBeans);
   field.unharvestablePods = field.unharvestablePods.plus(sownPods).minus(harvestablePods).plus(transferredPods);
   field.harvestablePods = field.harvestablePods.plus(harvestablePods);
   field.harvestedPods = field.harvestedPods.plus(harvestedPods);
-  field.podIndex = field.podIndex.plus(sownPods);
+  if (account == protocol) {
+    field.soil = field.soil.plus(soil).minus(sownBeans);
+    field.podIndex = field.podIndex.plus(sownPods);
+  }
 
   takeFieldSnapshots(field, block);
   field.save();
 
   // Set extra info on the hourly snapshot
-  if (field.soil == ZERO_BI) {
+  if (account == protocol && field.soil == ZERO_BI) {
     setHourlySoilSoldOut(block.number, field);
   }
 }

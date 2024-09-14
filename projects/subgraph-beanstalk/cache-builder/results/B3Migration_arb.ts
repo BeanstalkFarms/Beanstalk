@@ -7,6 +7,8 @@ class FieldInitialValues {
   numberOfSows: i32;
   sownBeans: BigInt;
   harvestedPods: BigInt;
+  podIndex: BigInt;
+  harvestableIndex: BigInt;
 }
 
 class PodMarketplaceInitialValues {
@@ -33,7 +35,9 @@ export const FIELD_INITIAL_VALUES: FieldInitialValues = {
   numberOfSowers: 0,
   numberOfSows: 19172,
   sownBeans: BigInt.fromString("33592460721984"),
-  harvestedPods: BigInt.fromString("61126608133951")
+  harvestedPods: BigInt.fromString("61126608133951"),
+  podIndex: BigInt.fromString("980532024384892"),
+  harvestableIndex: BigInt.fromString("61128909242563")
 };
 
 export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {

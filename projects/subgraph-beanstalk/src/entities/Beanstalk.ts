@@ -5,6 +5,7 @@ import { Season } from "../../generated/schema";
 import { BI_MAX, ONE_BI, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getProtocolFertilizer, getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
+import { loadField } from "./Field";
 
 export function loadBeanstalk(): Beanstalk {
   let beanstalk = Beanstalk.load("beanstalk");
@@ -45,12 +46,10 @@ export function loadSeason(id: BigInt): Season {
     season.deltaBeans = ZERO_BI;
     season.rewardBeans = ZERO_BI;
     season.incentiveBeans = ZERO_BI;
-    season.harvestableIndex = ZERO_BI;
     season.save();
     if (id > ZERO_BI) {
       let lastSeason = loadSeason(id.minus(ONE_BI));
       season.beans = lastSeason.beans;
-      season.harvestableIndex = lastSeason.harvestableIndex;
       season.save();
     }
 
@@ -76,7 +75,6 @@ export function getRewardMinted(season: i32): BigInt {
 }
 
 export function getHarvestableIndex(): BigInt {
-  let bs = loadBeanstalk();
-  let season = loadSeason(BigInt.fromI32(bs.lastSeason));
-  return season.harvestableIndex;
+  let field = loadField(v().protocolAddress);
+  return field.harvestableIndex;
 }

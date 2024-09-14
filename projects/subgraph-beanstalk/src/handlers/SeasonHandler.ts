@@ -64,9 +64,13 @@ export function handleIncentive(event: Incentivization): void {
 
   season.marketCap = season.price.times(toDecimal(season.beans));
   season.incentiveBeans = event.params.beans;
-  season.harvestableIndex = Beanstalk_harvestableIndex(ZERO_BI);
   season.save();
 
-  updateExpiredPlots(season.harvestableIndex, event.block);
-  updateHarvestablePlots(event.address, season.harvestableIndex, event.block);
+  let field = loadField(v().protocolAddress);
+  field.harvestableIndex = Beanstalk_harvestableIndex(ZERO_BI);
+  takeFieldSnapshots(field, event.block);
+  field.save();
+
+  updateExpiredPlots(field.harvestableIndex, event.block);
+  updateHarvestablePlots(event.address, field.harvestableIndex, event.block);
 }

@@ -24,6 +24,7 @@ export function loadField(account: Address): Field {
     field.harvestedPods = ZERO_BI;
     field.soil = ZERO_BI;
     field.podIndex = ZERO_BI;
+    field.harvestableIndex = ZERO_BI;
     field.podRate = ZERO_BD;
     field.save();
   }

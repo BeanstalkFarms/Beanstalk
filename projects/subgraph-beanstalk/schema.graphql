@@ -79,8 +79,6 @@ type Season @entity {
   rewardBeans: BigInt!
   "Amount of Beans paid to sunrise caller"
   incentiveBeans: BigInt!
-  "New harvestable index for the season"
-  harvestableIndex: BigInt!
 }
 
 type Silo @entity {
@@ -481,6 +479,8 @@ type Field @entity {
   soil: BigInt!
   "Current pod index"
   podIndex: BigInt!
+  "Current harvestable index"
+  harvestableIndex: BigInt!
   "Current pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
   "Season when the previous hourly snapshot was taken/updated"
@@ -522,6 +522,8 @@ type FieldHourlySnapshot @entity {
   issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
+  "Point in time harvestable index"
+  harvestableIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
 
@@ -536,6 +538,7 @@ type FieldHourlySnapshot @entity {
   deltaSoil: BigInt!
   deltaIssuedSoil: BigInt!
   deltaPodIndex: BigInt!
+  deltaHarvestableIndex: BigInt!
   deltaPodRate: BigDecimal!
 
   "Timestamp of initial snapshot creation"
@@ -583,6 +586,8 @@ type FieldDailySnapshot @entity {
   issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
+  "Point in time harvestable index"
+  harvestableIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
 
@@ -597,6 +602,7 @@ type FieldDailySnapshot @entity {
   deltaSoil: BigInt!
   deltaIssuedSoil: BigInt!
   deltaPodIndex: BigInt!
+  deltaHarvestableIndex: BigInt!
   deltaPodRate: BigDecimal!
 
   "Timestamp of initial snapshot creation"

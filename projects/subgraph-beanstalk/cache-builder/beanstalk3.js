@@ -21,6 +21,8 @@ const tokenMap = {
         numberOfSows
         sownBeans
         harvestedPods
+        podIndex
+        harvestableIndex
       }
       podMarketplace(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
         filledListedPods
@@ -53,6 +55,8 @@ const tokenMap = {
       numberOfSows: i32;
       sownBeans: BigInt;
       harvestedPods: BigInt;
+      podIndex: BigInt;
+      harvestableIndex: BigInt;
     }
 
     class PodMarketplaceInitialValues {
@@ -80,6 +84,8 @@ const tokenMap = {
       numberOfSows: ${l1Values.field.numberOfSows},
       sownBeans: BigInt.fromString('${l1Values.field.sownBeans}'),
       harvestedPods: BigInt.fromString('${l1Values.field.harvestedPods}')
+      podIndex: BigInt.fromString('${l1Values.field.podIndex}'),
+      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}'),
     };
 
     export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {

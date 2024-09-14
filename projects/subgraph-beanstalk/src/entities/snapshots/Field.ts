@@ -38,6 +38,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
   hourly.soil = field.soil;
   // issuedSoil set below, on initial snapshot
   hourly.podIndex = field.podIndex;
+  hourly.harvestableIndex = field.harvestableIndex;
   hourly.podRate = field.podRate;
 
   // Set deltas
@@ -53,6 +54,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     hourly.deltaSoil = hourly.soil.minus(baseHourly.soil);
     // deltaIssuedSoil set below, on initial snapshot
     hourly.deltaPodIndex = hourly.podIndex.minus(baseHourly.podIndex);
+    hourly.deltaHarvestableIndex = hourly.harvestableIndex.minus(baseHourly.harvestableIndex);
     hourly.deltaPodRate = hourly.podRate.minus(baseHourly.podRate);
 
     if (hourly.id == baseHourly.id) {
@@ -67,6 +69,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       hourly.deltaHarvestedPods = hourly.deltaHarvestedPods.plus(baseHourly.deltaHarvestedPods);
       hourly.deltaSoil = hourly.deltaSoil.plus(baseHourly.deltaSoil);
       hourly.deltaPodIndex = hourly.deltaPodIndex.plus(baseHourly.deltaPodIndex);
+      hourly.deltaHarvestableIndex = hourly.deltaHarvestableIndex.plus(baseHourly.deltaHarvestableIndex);
       hourly.deltaPodRate = hourly.deltaPodRate.plus(baseHourly.deltaPodRate);
       // Carry over unset values that would otherwise get erased
       hourly.issuedSoil = baseHourly.issuedSoil;
@@ -93,6 +96,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     hourly.deltaHarvestedPods = hourly.harvestedPods;
     hourly.deltaSoil = hourly.soil;
     hourly.deltaPodIndex = hourly.podIndex;
+    hourly.deltaHarvestableIndex = hourly.harvestableIndex;
     hourly.deltaPodRate = hourly.podRate;
 
     // Sets initial creation values
@@ -121,6 +125,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
   daily.soil = field.soil;
   // issuedSoil set below, on initial snapshot
   daily.podIndex = field.podIndex;
+  daily.harvestableIndex = field.harvestableIndex;
   daily.podRate = field.podRate;
   if (baseDaily !== null) {
     daily.deltaTemperature = daily.temperature - baseDaily.temperature;
@@ -134,6 +139,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     daily.deltaSoil = daily.soil.minus(baseDaily.soil);
     // deltaIssuedSoil set below, on initial snapshot
     daily.deltaPodIndex = daily.podIndex.minus(baseDaily.podIndex);
+    daily.deltaHarvestableIndex = daily.harvestableIndex.minus(baseDaily.harvestableIndex);
     daily.deltaPodRate = daily.podRate.minus(baseDaily.podRate);
 
     if (daily.id == baseDaily.id) {
@@ -148,6 +154,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       daily.deltaHarvestedPods = daily.deltaHarvestedPods.plus(baseDaily.deltaHarvestedPods);
       daily.deltaSoil = daily.deltaSoil.plus(baseDaily.deltaSoil);
       daily.deltaPodIndex = daily.deltaPodIndex.plus(baseDaily.deltaPodIndex);
+      daily.deltaHarvestableIndex = daily.deltaHarvestableIndex.plus(baseDaily.deltaHarvestableIndex);
       daily.deltaPodRate = daily.deltaPodRate.plus(baseDaily.deltaPodRate);
       // Carry over existing values
       daily.issuedSoil = baseDaily.issuedSoil;
@@ -168,6 +175,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     daily.deltaHarvestedPods = daily.harvestedPods;
     daily.deltaSoil = daily.soil;
     daily.deltaPodIndex = daily.podIndex;
+    daily.deltaHarvestableIndex = daily.harvestableIndex;
     daily.deltaPodRate = daily.podRate;
 
     // Sets issued soil here since this is the initial creation
@@ -198,6 +206,7 @@ export function clearFieldDeltas(field: Field, block: ethereum.Block): void {
     hourly.deltaHarvestedPods = ZERO_BI;
     hourly.deltaSoil = ZERO_BI;
     hourly.deltaPodIndex = ZERO_BI;
+    hourly.deltaHarvestableIndex = ZERO_BI;
     hourly.deltaPodRate = ZERO_BD;
     hourly.deltaIssuedSoil = ZERO_BI;
     hourly.save();
@@ -213,6 +222,7 @@ export function clearFieldDeltas(field: Field, block: ethereum.Block): void {
     daily.deltaHarvestedPods = ZERO_BI;
     daily.deltaSoil = ZERO_BI;
     daily.deltaPodIndex = ZERO_BI;
+    daily.deltaHarvestableIndex = ZERO_BI;
     daily.deltaPodRate = ZERO_BD;
     daily.deltaIssuedSoil = ZERO_BI;
     daily.save();
