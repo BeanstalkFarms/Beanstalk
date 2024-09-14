@@ -155,6 +155,7 @@ export default function useFarmerBalancesBreakdown() {
   }, [whitelist, addresses, siloBalances, tokenBalances, getUSD]);
 }
 
+// BS3TODO: Fix me to use new whitelist
 export function useFarmerBalancesL1Breakdown() {
   /// Constants
   const whitelist = useTokenMap(L1_SILO_WHITELIST);

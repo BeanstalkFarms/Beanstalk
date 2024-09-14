@@ -268,9 +268,6 @@ function Arbitrum() {
 export default function App() {
   const { isArbitrum, isDev: isTestnet } = useChainState();
 
-  console.log('isArbitrum: ', isArbitrum);
-  console.log('isTestnet: ', isTestnet);
-
   if (!isArbitrum || (isArbitrum && !isTestnet)) {
     return <Mainnet />;
   }

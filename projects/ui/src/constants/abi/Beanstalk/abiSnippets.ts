@@ -61,6 +61,16 @@ const tokenSettings = [
   },
 ] as const;
 
+const totalDeltaB = [
+  {
+    inputs: [],
+    name: 'totalDeltaB',
+    outputs: [{ internalType: 'int256', name: 'deltaB', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 const poolDeltaB = [
   {
     inputs: [{ internalType: 'address', name: 'pool', type: 'address' }],
@@ -203,11 +213,57 @@ const siloGetters = [
   },
 ] as const;
 
+const price = [
+  {
+    inputs: [],
+    name: 'price',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint256', name: 'price', type: 'uint256' },
+          { internalType: 'uint256', name: 'liquidity', type: 'uint256' },
+          { internalType: 'int256', name: 'deltaB', type: 'int256' },
+          {
+            components: [
+              { internalType: 'address', name: 'pool', type: 'address' },
+              {
+                internalType: 'address[2]',
+                name: 'tokens',
+                type: 'address[2]',
+              },
+              {
+                internalType: 'uint256[2]',
+                name: 'balances',
+                type: 'uint256[2]',
+              },
+              { internalType: 'uint256', name: 'price', type: 'uint256' },
+              { internalType: 'uint256', name: 'liquidity', type: 'uint256' },
+              { internalType: 'int256', name: 'deltaB', type: 'int256' },
+              { internalType: 'uint256', name: 'lpUsd', type: 'uint256' },
+              { internalType: 'uint256', name: 'lpBdv', type: 'uint256' },
+            ],
+            internalType: 'struct P.Pool[]',
+            name: 'ps',
+            type: 'tuple[]',
+          },
+        ],
+        internalType: 'struct BeanstalkPrice.Prices',
+        name: 'p',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 const BEANSTALK_ABI_SNIPPETS = {
   getGaugePointsPerBdvForToken: getGaugePointsPerBdvForToken,
   tokenSettings: tokenSettings,
   poolDeltaB: poolDeltaB,
   siloGetters: siloGetters,
+  price: price,
+  totalDeltaB: totalDeltaB,
 } as const;
 
 export default BEANSTALK_ABI_SNIPPETS;

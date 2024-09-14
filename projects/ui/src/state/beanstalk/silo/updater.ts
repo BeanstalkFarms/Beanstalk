@@ -90,34 +90,10 @@ export const useFetchBeanstalkSilo = () => {
             ? ONE_BN
             : transform(data[1], 'bnjs', token),
           totalGerminating: transform(data[2], 'bnjs', token),
-          bdvPerToken: transform(data[3], 'bnjs', token),
+          bdvPerToken: transform(data[3], 'bnjs', BEAN),
           stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
         });
       });
-
-      // const whitelistedAssetTotals = chunked.map((chunk, i) => {
-      //   const token = whitelist[i];
-      //   const data = chunk.map((d) => parseCallResult(d));
-
-      //   const stemTip = stemTips.get(token.address);
-
-      //   if (!stemTip) {
-      //     throw new Error(
-      //       `[beanstalk/silo/useFetchBeanstalkSilo]: Stem Tip not found for: ${token.symbol}`
-      //     );
-      //   }
-
-      //   return {
-      //     address: token.address,
-      //     deposited: transform(data[0], 'bnjs', token),
-      //     depositedBdv: tokenIshEqual(token, sdk.tokens.BEAN)
-      //       ? ONE_BN
-      //       : transform(data[1], 'bnjs', token),
-      //     totalGerminating: transform(data[2], 'bnjs', token),
-      //     bdvPerToken: transform(data[3], 'bnjs', token),
-      //     stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
-      //   };
-      // });
 
       console.debug('[beanstalk/silo/useBeanstalkSilo] RESULT', [
         stalkTotal,

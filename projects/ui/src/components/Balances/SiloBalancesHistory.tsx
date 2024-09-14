@@ -48,7 +48,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const queryData: QueryData = {
     data: filteredSeries as BaseDataPoint[][],
     loading: loading,
-    keys: L1_SILO_WHITELIST.map((t) => t[1].address),
+    keys: L1_SILO_WHITELIST.map((t) => t.address),
     error: undefined,
   };
 
