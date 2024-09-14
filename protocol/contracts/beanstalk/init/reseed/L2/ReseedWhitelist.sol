@@ -36,14 +36,14 @@ contract ReseedWhitelist {
                 s.sys.usdTokenPrice[token] = 1;
                 s.sys.twaReserves[token].reserve0 = 1;
                 s.sys.twaReserves[token].reserve1 = 1;
+                // LP tokens will require an Oracle Implmentation for the non Bean Asset.
+                s.sys.oracleImplementation[nonBeanToken] = oracle[i];
             }
             // add asset settings for the underlying lp token
             s.sys.silo.assetSettings[token] = assets[i];
 
             // add whitelist status
             s.sys.silo.whitelistStatuses.push(whitelistStatus[i]);
-            // the Oracle should return the price for the non-bean asset in USD
-            s.sys.oracleImplementation[nonBeanToken] = oracle[i];
         }
     }
 }
