@@ -118,7 +118,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: PreReplant
       startBlock: 12974075
-      endBlock: 14602789 # Exploit
+      endBlock: 14602789 # Exploit -1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -231,7 +231,7 @@ dataSources:
       address: "0x87898263B6C5BABe34b4ec53F22d98430b91e371"
       abi: UniswapV2Pair
       startBlock: 12974077
-      endBlock: 14602790
+      endBlock: 14602789 # Exploit -1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -256,7 +256,7 @@ dataSources:
       address: "0x3a70DfA7d2262988064A2D051dd47521E43c9BdD"
       abi: Bean3CRV
       startBlock: 13954026
-      endBlock: 14602790
+      endBlock: 14602789 # Exploit -1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -297,7 +297,7 @@ dataSources:
       address: "0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D"
       abi: Bean3CRV
       startBlock: 14450075
-      endBlock: 14602790
+      endBlock: 14602789 # Exploit -1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
