@@ -1,6 +1,15 @@
-const { MAX_UINT256, L2_WETH, L2_WSTETH, L2_WEETH, L2_WBTC, L2_USDC, L2_USDT } = require("../test/hardhat/utils/constants.js");
+const {
+  MAX_UINT256,
+  L2_WETH,
+  L2_WSTETH,
+  L2_WEETH,
+  L2_WBTC,
+  L2_USDC,
+  L2_USDT
+} = require("../test/hardhat/utils/constants.js");
 const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
+const fs = require("fs");
 
 const WellAddresses = [
   "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB", // BEAN/WETH
@@ -20,26 +29,29 @@ const NonBeanToken = [
   L2_USDT // USDT
 ];
 
-// TODO: replace with values.
-const nonBeanAmounts = [
-  to18("1000"), // BEAN/WETH
-  to18("1000"), // BEAN/WstETH
-  to18("1000"), // BEAN/WEEETH
-  to18("10"), // BEAN/WBTC
-  to6("100000"), // BEAN/USDC
-  to6("100000") // BEAN/USDT
-];
-
-const beanAmounts = [
-  to6("1000000"), // BEAN/WETH
-  to6("1000000"), // BEAN/WstETH
-  to6("1000000"), // BEAN/WEEETH
-  to6("1000000"), // BEAN/WBTC
-  to6("1000000"), // BEAN/USDC
-  to6("1000000") // BEAN/USDT
-];
-
 async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, verbose = true) {
+  const INIT_WELL_BALANCES = "./reseed/data/r2/L2_well_balances.json";
+  [balancesInBeanEthWell, balancesInBeanWstEthWell, balancesInBeanStableWell] = JSON.parse(
+    await fs.readFileSync(INIT_WELL_BALANCES)
+  );
+
+  const nonBeanAmounts = [
+    balancesInBeanEthWell[1], // BEAN/WETH
+    balancesInBeanWstEthWell[1], // BEAN/WstETH
+    to18("1000"), // BEAN/WEEETH
+    to18("1"), // BEAN/WBTC
+    balancesInBeanStableWell[1], // BEAN/USDC
+    to6("100000") // BEAN/USDT
+  ];
+
+  const beanAmounts = [
+    balancesInBeanEthWell[0], // BEAN/WETH
+    balancesInBeanWstEthWell[0], // BEAN/WstETH
+    to6("1000000"), // BEAN/WEEETH
+    to6("100000000000000000"), // BEAN/WBTC
+    to6("1000000000000"), // BEAN/USDC
+    to6("1000000") // BEAN/USDT
+  ];
   console.log("-----------------------------------");
   console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
 
@@ -63,7 +75,9 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
-    console.log(`Adding liquidity to ${WellAddresses[i]} and performing an update to the well pump.`);
+    console.log(
+      `Adding liquidity to ${WellAddresses[i]} and performing an update to the well pump.`
+    );
     await well
       .connect(account)
       .addLiquidity([beanAmounts[i], nonBeanAmounts[i]], 0, L2Beanstalk, MAX_UINT256);
