@@ -334,7 +334,26 @@
   },
   "convertCapacity": {},
   "oracleImplementation": {},
-  "shipmentRoutes": [],
+  "shipmentRoutes": [
+    {
+      "planContract": "0x0000000000000000000000000000000000000000",
+      "planSelector": "0x7c655075",
+      "recipient": "0x1",
+      "data": "0x"
+    },
+    {
+      "planContract": "0x0000000000000000000000000000000000000000",
+      "planSelector": "0x12e8d3ed",
+      "recipient": "0x2",
+      "data": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "planContract": "0x0000000000000000000000000000000000000000",
+      "planSelector": "0x43055ba8",
+      "recipient": "0x3",
+      "data": "0x"
+    }
+  ],
   "casesV2": [
     "0x05f5e1000300056bc75e2d63100000fffd4a1c50e94e78000000000000000000",
     "0x05f5e1000300056bc75e2d63100000fffd4a1c50e94e78000000000000000000",
@@ -555,7 +574,7 @@
         "oracleImplementation": null
       },
       "0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279": {
-        "selector": "0x00000000",
+        "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0x1",
         "stalkIssuedPerBdv": "0x2540be400",
         "milestoneSeason": "0x5525",
@@ -959,22 +978,22 @@
   "migration": {
     "migratedL1Beans": "0x27d7ef1258f"
   },
-  "seedGaugeSettings": {
-    "maxBeanMaxLpGpPerBdvRatio": "0x0",
-    "minBeanMaxLpGpPerBdvRatio": "0x0",
-    "targetSeasonsToCatchUp": "0x01",
-    "podRateLowerBound": "0x0",
-    "podRateOptimal": "0x0",
-    "podRateUpperBound": "0x0",
-    "deltaPodDemandLowerBound": "0x0",
-    "deltaPodDemandUpperBound": "0x0",
-    "lpToSupplyRatioUpperBound": "0x0",
-    "lpToSupplyRatioOptimal": "0x0",
-    "lpToSupplyRatioLowerBound": "0x0",
-    "excessivePriceThreshold": "0x0",
-    "soilCoefficientHigh": "0x0",
-    "soilCoefficientLow": "0x0",
-    "baseReward": "0x0"
+  "evaluationParameters": {
+    "maxBeanMaxLpGpPerBdvRatio": "0x56bc75e2d63100000",
+    "minBeanMaxLpGpPerBdvRatio": "0x2b5e3af16b1880000",
+    "targetSeasonsToCatchUp": "0x10e0",
+    "podRateLowerBound": "0xb1a2bc2ec50000",
+    "podRateOptimal": "0x214e8348c4f0000",
+    "podRateUpperBound": "0x3782dace9d90000",
+    "deltaPodDemandLowerBound": "0xd2f13f7789f0000",
+    "deltaPodDemandUpperBound": "0xe92596fd6290000",
+    "lpToSupplyRatioUpperBound": "0xb1a2bc2ec500000",
+    "lpToSupplyRatioOptimal": "0x8e1bc9bf040000",
+    "lpToSupplyRatioLowerBound": "0x2aa1efb94e0000",
+    "excessivePriceThreshold": "0x100590",
+    "soilCoefficientHigh": "0x6f05b59d3b20000",
+    "soilCoefficientLow": "0x14d1120d7b160000",
+    "baseReward": "0x4c4b40"
   },
   "sop": {}
 }
