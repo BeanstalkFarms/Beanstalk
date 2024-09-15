@@ -51,6 +51,8 @@ interface BaseChainInfo {
   readonly docs?: string;
   readonly bridge?: string;
   readonly explorer: string;
+  readonly explorerName: string;
+  readonly explorerLogoUrl?: string;
   readonly infoLink?: string;
   readonly logoUrl: string;
   readonly label: string;
