@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { bigNumberResult, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetBeanstalkField, updateBeanstalkField } from './actions';
 
 export const useFetchBeanstalkField = () => {
@@ -73,7 +74,7 @@ export const useFetchBeanstalkField = () => {
 const FieldUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkField();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [clear, fetch]);

@@ -1,11 +1,11 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import useSdk from '~/hooks/sdk';
 import { transform } from '~/util/BigNumber';
 import useChainState from '~/hooks/chain/useChainState';
 import BigNumber from 'bignumber.js';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import {
   resetFarmerField,
   updateFarmerField,
@@ -60,9 +60,8 @@ const FarmerFieldUpdater = () => {
   const [fetch, clear] = useFetchFarmerField();
   const dispatch = useDispatch();
   const account = useAccount();
-  const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
 
     if (account) {
@@ -84,8 +83,7 @@ const FarmerFieldUpdater = () => {
           dispatch(updateFarmerFieldLoading(false));
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId]);
+  }, [account]);
 
   return null;
 };

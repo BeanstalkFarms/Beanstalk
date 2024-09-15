@@ -13,7 +13,7 @@ import { ABISnippets } from '~/constants';
 import { multicall } from '@wagmi/core';
 import { config } from '~/util/wagmi/config';
 import { ethers } from 'ethers';
-import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import {
   resetFarmerSilo,
   updateLegacyFarmerSiloBalances,
@@ -201,15 +201,14 @@ const FarmerSiloUpdater = () => {
   const account = useAccount();
   const chainId = useChainId();
   const dispatch = useDispatch();
-  const { isEthereum } = useChainState();
 
   useEffect(() => {
     clear(account);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
-  useEffect(() => {
-    if (account && initialized && !isEthereum) {
+  useL2OnlyEffect(() => {
+    if (account && initialized) {
       dispatch(updateFarmerSiloError(undefined));
       fetch()
         .catch((err) => {
@@ -236,9 +235,7 @@ const FarmerSiloUpdater = () => {
           dispatch(updateFarmerSiloRan(true));
         });
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId, initialized, isEthereum]);
+  }, [account, chainId, initialized]);
 
   return null;
 };

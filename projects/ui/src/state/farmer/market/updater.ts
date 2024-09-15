@@ -1,8 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
-import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetFarmerMarket } from './actions';
 
 export const useFetchFarmerMarket = () => {
@@ -24,14 +23,11 @@ export const useFetchFarmerMarket = () => {
 const FarmerMarketUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerMarket();
   const account = useAccount();
-  const chainId = useChainId();
-  const { isEthereum } = useChainState();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
-    if (account && initialized && !isEthereum) fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId, initialized, isEthereum]);
+    if (account && initialized) fetch();
+  }, [account, initialized]);
 
   return null;
 };

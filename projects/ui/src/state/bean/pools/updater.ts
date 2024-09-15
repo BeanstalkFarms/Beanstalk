@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
@@ -13,6 +13,7 @@ import { ERC20Token, Pool } from '@beanstalk/sdk';
 import { chunkArray } from '~/util/UI';
 import { getExtractMulticallResult } from '~/util/Multicall';
 import { transform } from '~/util/BigNumber';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
 
@@ -160,7 +161,7 @@ export const useFetchPools = () => {
 const PoolsUpdater = () => {
   const [fetch, clear] = useFetchPools();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [fetch, clear]);

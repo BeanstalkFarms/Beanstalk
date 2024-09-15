@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
@@ -14,6 +14,7 @@ import {
 import { useAppSelector } from '../../state/index';
 import useSdk from '../sdk';
 import { useTokens } from './useTokens';
+import useL2OnlyEffect from '../chain/useL2OnlyEffect';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -125,7 +126,7 @@ export default function useDataFeedTokenPrices() {
     prices && dispatch(updateTokenPrices(prices));
   }, [dispatch, fetch]);
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     handleUpdatePrices();
   }, [handleUpdatePrices]);
 

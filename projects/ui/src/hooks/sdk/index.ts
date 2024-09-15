@@ -3,6 +3,8 @@ import { BeanstalkSDK } from '@beanstalk/sdk';
 import { BeanstalkSDKContext } from '~/components/App/SdkProvider';
 import { SILO_WHITELIST } from '~/constants/tokens';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
+import { ChainResolver } from '@beanstalk/sdk-core';
+import useChainState from '../chain/useChainState';
 
 export default function useSdk() {
   const sdk = useContext(BeanstalkSDKContext);
@@ -17,6 +19,10 @@ export const useRefreshSeeds = () => {
 
   return useCallback(
     async (sdk: BeanstalkSDK) => {
+      if (ChainResolver.isL1Chain(sdk.chainId)) {
+        return;
+      }
+      console.log('refreshing seeds on arbitrum');
       await sdk.refresh();
       // Copy the seed values from sdk tokens to ui tokens
 
@@ -43,6 +49,7 @@ export const useDynamicSeeds = (
 ) => {
   const [ready, setReady] = useState(false);
   const refreshSeeds = useRefreshSeeds();
+  const { isArbitrum } = useChainState();
 
   useEffect(() => {
     if (!allowRun) return;
@@ -52,7 +59,7 @@ export const useDynamicSeeds = (
     };
 
     load();
-  }, [refreshSeeds, sdk, allowRun]);
+  }, [refreshSeeds, sdk, allowRun, isArbitrum]);
 
   return ready;
 };

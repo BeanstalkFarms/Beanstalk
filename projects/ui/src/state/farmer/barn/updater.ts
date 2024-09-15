@@ -1,9 +1,8 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 
 import { REPLANT_INITIAL_ID } from '~/hooks/beanstalk/useHumidity';
-import useChainId from '~/hooks/chain/useChainId';
 import { tokenResult } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import { castFertilizerBalance } from '~/state/farmer/barn';
@@ -11,6 +10,7 @@ import { SPROUTS } from '~/constants/tokens';
 import { useFertilizerBalancesLazyQuery } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetFarmerBarn, updateFarmerBarn } from './actions';
 
 export const useFetchFarmerBarn = () => {
@@ -83,13 +83,11 @@ export const useFetchFarmerBarn = () => {
 const FarmerBarnUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerBarn();
   const account = useAccount();
-  const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     if (account && initialized) fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId, initialized]);
+  }, [account, initialized]);
 
   return null;
 };

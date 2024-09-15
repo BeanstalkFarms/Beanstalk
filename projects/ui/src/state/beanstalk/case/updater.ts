@@ -1,9 +1,10 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import useSdk from '~/hooks/sdk';
 import { useAppSelector } from '~/state';
 import { ethersBNResult } from '~/util';
 import useSeason from '~/hooks/beanstalk/useSeason';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { updateBeanstalkCaseState } from '.';
 
 const REFETCH_INTERVAL = 1000 * 5; // 5 mins
@@ -54,7 +55,7 @@ export const useUpdateBeanstalkCaseState = () => {
 const BeanstalkCaseUpdater = () => {
   const [fetch] = useUpdateBeanstalkCaseState();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     fetch();
   }, [fetch]);
 

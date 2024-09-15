@@ -37,7 +37,7 @@ import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useDynamicSeeds } from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
-import { useResolvedChainId } from '~/hooks/chain/useChainId';
+import useChainId from '~/hooks/chain/useChainId';
 import { ChainResolver } from '@beanstalk/sdk-core';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
@@ -88,14 +88,14 @@ export const BeanstalkSDKContext = createContext<BeanstalkSDK | undefined>(
 const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
   const provider = useEthersProvider();
-  const resolvedChainId = useResolvedChainId();
+  const chainId = useChainId();
 
   const [datasource] = useSetting('datasource');
   const [subgraphEnv] = useSetting('subgraphEnv');
 
   const subgraphUrl =
     SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.[
-      ChainResolver.isL2Chain(resolvedChainId) ? 'beanstalk' : 'beanstalk_eth'
+      ChainResolver.isL2Chain(chainId) ? 'beanstalk' : 'beanstalk_eth'
     ];
 
   return useMemo(() => {
@@ -103,6 +103,7 @@ const useBeanstalkSdkContext = () => {
       provider,
       signer,
       datasource,
+      chainId,
       subgraphUrl,
     });
 
@@ -117,17 +118,19 @@ const useBeanstalkSdkContext = () => {
 
     setTokenMetadatas(sdk);
     return sdk;
-  }, [datasource, provider, signer, subgraphUrl]);
+  }, [datasource, provider, signer, subgraphUrl, chainId]);
 };
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const sdk = useBeanstalkSdkContext();
   const { isArbitrum, isTestnet } = useChainState();
 
-  // only run this on arbitrum dev
-  const ready = useDynamicSeeds(sdk, !!(isArbitrum && isTestnet));
+  const isArbTestnet = isArbitrum && isTestnet;
 
-  if (isArbitrum && isTestnet && !ready) {
+  // only run this on arbitrum dev
+  const ready = useDynamicSeeds(sdk, isArbTestnet);
+
+  if (isArbTestnet && !ready) {
     return null;
   }
 

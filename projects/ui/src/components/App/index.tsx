@@ -178,9 +178,9 @@ function Arbitrum() {
       <FarmerFieldUpdater />
       <FarmerBarnUpdater />
       <FarmerBalancesUpdater />
+      <FarmerMarketUpdater />
       {false && (
         <>
-          <FarmerMarketUpdater />
           <FarmerDelegationsUpdater />
         </>
       )}

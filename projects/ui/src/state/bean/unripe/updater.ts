@@ -1,6 +1,5 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import useChainId from '~/hooks/chain/useChainId';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { tokenIshEqual, tokenResult } from '~/util';
 import { AddressMap, ONE_BN, ZERO_BN } from '~/constants';
@@ -9,6 +8,7 @@ import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import BigNumber from 'bignumber.js';
 import useSdk from '~/hooks/sdk';
 import { ERC20Token } from '@beanstalk/sdk';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetUnripe, updateUnripe } from './actions';
 
 export const useUnripe = () => {
@@ -87,15 +87,11 @@ export const useUnripe = () => {
 
 const UnripeUpdater = () => {
   const [fetch, clear] = useUnripe();
-  const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
-    // NOTE:
-    // The below requires that useChainId() is called last in the stack of hooks.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId]);
+  }, []);
 
   return null;
 };

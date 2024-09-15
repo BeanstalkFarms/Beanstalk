@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { useProposalsLazyQuery } from '~/generated/graphql';
@@ -7,6 +7,7 @@ import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { tokenResult } from '~/util';
 import { SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import {
   resetBeanstalkGovernance,
   updateActiveProposals,
@@ -99,7 +100,7 @@ export const useFetchBeanstalkGovernance = () => {
 const GovernanceUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkGovernance();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [clear, fetch]);

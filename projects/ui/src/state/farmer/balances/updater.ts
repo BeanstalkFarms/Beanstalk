@@ -1,13 +1,13 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import flatMap from 'lodash/flatMap';
 import { ZERO_BN } from '~/constants';
-import useChainId from '~/hooks/chain/useChainId';
 import { tokenResult } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { clearBalances, updateBalances } from './actions';
 
 export const useFetchFarmerBalances = () => {
@@ -100,13 +100,12 @@ export const useFetchFarmerBalances = () => {
 const FarmerBalancesUpdater = () => {
   const [fetch, clear] = useFetchFarmerBalances();
   const account = useAccount();
-  const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     if (account) fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId]);
+  }, [account]);
 
   return null;
 };

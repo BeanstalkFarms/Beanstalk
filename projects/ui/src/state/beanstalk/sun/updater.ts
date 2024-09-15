@@ -7,6 +7,7 @@ import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
 import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
@@ -129,7 +130,7 @@ const SunUpdater = () => {
   }, [dispatch, awaiting, season, next, fetch, refreshSeeds, sdk]);
 
   // Fetch when chain changes
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [fetch, clear]);

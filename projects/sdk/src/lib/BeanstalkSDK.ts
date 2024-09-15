@@ -69,7 +69,7 @@ export class BeanstalkSDK {
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
 
-    this.chainId = this.deriveChainId(config?.provider);
+    this.chainId = this.deriveChainId();
     this.subgraphUrl = config?.subgraphUrl || this.deriveSubgraphURL(this.chainId);
     this.source = config?.source || DataSource.SUBGRAPH;
 
@@ -123,7 +123,7 @@ export class BeanstalkSDK {
 
   handleConfig(config: BeanstalkConfig = {}) {
     if (config.rpcUrl) {
-      config.provider = this.getProviderFromUrl(config.rpcUrl, config.provider);
+      config.provider = this.getProviderFromUrl(config.rpcUrl, config);
     }
 
     this.signer = config.signer;
@@ -154,8 +154,10 @@ export class BeanstalkSDK {
 
   ////// Private
 
-  private getProviderFromUrl(url: string, _provider: BeanstalkConfig["provider"]): Provider {
-    const networkish = _provider?.network || _provider?._network || ChainResolver.defaultChainId;
+  private getProviderFromUrl(url: string, config: BeanstalkConfig): Provider {
+    const provider = config.signer ? (config.signer.provider as Provider) : config.provider;
+    const networkish = provider?._network || provider?.network || ChainResolver.defaultChainId;
+
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
@@ -173,9 +175,9 @@ export class BeanstalkSDK {
     return defaultSettings.subgraphUrl;
   }
 
-  private deriveChainId(provider?: BeanstalkConfig["provider"]) {
-    const providerChainId =
-      provider?.network?.chainId || provider?._network?.chainId || ChainResolver.defaultChainId;
+  private deriveChainId() {
+    const { _network, network } = this.provider || {};
+    const providerChainId = _network?.chainId || network?.chainId || ChainResolver.defaultChainId;
 
     return enumFromValue(providerChainId, ChainId);
   }

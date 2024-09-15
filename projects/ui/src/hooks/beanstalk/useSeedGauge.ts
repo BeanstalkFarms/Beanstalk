@@ -134,10 +134,6 @@ const useSeedGauge = () => {
 
       whitelist.forEach((token, i) => {
         const { error: err, result } = settings[i];
-        console.log({
-          settings: settings[i],
-          token: token.symbol,
-        });
         const { error: gpErr, result: gpResult } = gaugePointsPerBdvForToken[i];
 
         const baseObj = {
@@ -179,21 +175,21 @@ const useSeedGauge = () => {
         ? toBN(_bean2MaxLPRatio, 18)
         : NEW_BN;
 
-      console.log(
-        'tokenSettings: ',
-        Object.entries(map).reduce<Record<string, any>>((prev, curr) => {
-          const [key, value] = curr;
+      // console.log(
+      //   'tokenSettings: ',
+      //   Object.entries(map).reduce<Record<string, any>>((prev, curr) => {
+      //     const [key, value] = curr;
 
-          prev[key] = {
-            gaugePoints: value.gaugePoints.toNumber(),
-            gaugePointsPerBdv: value.gaugePointsPerBdv.toNumber(),
-            isAllocatedGP: value.isAllocatedGP,
-            optimalPctDepositedBdv: value.optimalPctDepositedBdv.toNumber(),
-          };
+      //     prev[key] = {
+      //       gaugePoints: value.gaugePoints.toNumber(),
+      //       gaugePointsPerBdv: value.gaugePointsPerBdv.toNumber(),
+      //       isAllocatedGP: value.isAllocatedGP,
+      //       optimalPctDepositedBdv: value.optimalPctDepositedBdv.toNumber(),
+      //     };
 
-          return prev;
-        }, {})
-      );
+      //     return prev;
+      //   }, {})
+      // );
 
       return {
         tokenSettings: map,

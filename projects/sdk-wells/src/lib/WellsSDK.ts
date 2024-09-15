@@ -69,7 +69,7 @@ export class WellsSDK {
 
   handleConfig(config: SDKConfig = {}) {
     if (config.rpcUrl) {
-      config.provider = this.getProviderFromUrl(config.rpcUrl, config.provider);
+      config.provider = this.getProviderFromUrl(config.rpcUrl, config);
     }
 
     this.signer = config.signer;
@@ -84,8 +84,10 @@ export class WellsSDK {
     this.DEBUG = config.DEBUG ?? false;
   }
 
-  private getProviderFromUrl(url: string, _provider: SDKConfig["provider"]): Provider {
-    const networkish = _provider?.network || _provider?._network || ChainResolver.defaultChainId;
+  private getProviderFromUrl(url: string, config: SDKConfig): Provider {
+    const provider = config.signer ? (config.signer.provider as Provider) : config.provider;
+    const networkish = provider?._network || provider?.network || ChainResolver.defaultChainId;
+
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
@@ -95,7 +97,6 @@ export class WellsSDK {
 
     throw new Error("Invalid rpcUrl");
   }
-
   private deriveChainId(provider?: SDKConfig["provider"]) {
     const providerChainId =
       provider?.network?.chainId || provider?._network?.chainId || ChainResolver.defaultChainId;

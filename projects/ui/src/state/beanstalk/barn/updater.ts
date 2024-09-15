@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useERC20Contract } from '~/hooks/ledger/useContract';
@@ -6,6 +6,7 @@ import { tokenResult, bigNumberResult } from '~/util';
 import useChainId from '~/hooks/chain/useChainId';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetBarn, updateBarn } from './actions';
 
 // const fetchGlobal = fetch;
@@ -86,13 +87,10 @@ const BarnUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkBarn();
   const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
-    // NOTE:
-    // The below requires that useChainId() is called last in the stack of hooks.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId]);
+  }, []);
 
   return null;
 };

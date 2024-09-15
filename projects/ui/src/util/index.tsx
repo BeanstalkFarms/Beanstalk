@@ -55,3 +55,7 @@ export function isSetObject(obj: unknown): obj is Set<unknown> {
 export function arrayifyIfSet<T>(obj: T[] | Set<T>): T[] {
   return Array.isArray(obj) ? obj : [...obj];
 }
+
+export function isFunction<T extends Function>(value: any): value is T {
+  return typeof value === 'function';
+}

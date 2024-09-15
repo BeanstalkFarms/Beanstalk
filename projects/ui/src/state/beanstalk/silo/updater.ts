@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { tokenIshEqual, transform } from '~/util';
 import useSdk from '~/hooks/sdk';
@@ -17,6 +17,7 @@ import {
 } from '~/constants';
 import { chunkArray } from '~/util/UI';
 import { ethers } from 'ethers';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from '.';
 
@@ -187,7 +188,7 @@ export const useFetchBeanstalkSilo = () => {
 const BeanstalkSiloUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkSilo();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [clear, fetch]);
