@@ -166,10 +166,10 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.seedGaugeSettings?.soilCoefficientHigh
         ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
         : "0",
-      data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
-      data.seedGaugeSettings?.excessivePriceThreshold
-        ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-        : "0"
+      data.seedGaugeSettings?.soilCoefficientLow
+        ? convertToBigNum(data.seedGaugeSettings.soilCoefficientLow)
+        : "0",
+      data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0"
     ],
     // ShipmentRoute
     data.shipmentRoutes.length
