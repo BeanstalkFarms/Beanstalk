@@ -438,7 +438,7 @@ contract SeasonGettersFacet {
         return s.sys.season.timestamp;
     }
 
-    function getSeedGaugeSetting() external view returns (EvaluationParameters memory) {
+    function getEvaluationParameters() external view returns (EvaluationParameters memory) {
         return s.sys.evaluationParameters;
     }
 

@@ -9355,6 +9355,96 @@
   },
   {
     "inputs": [],
+    "name": "getEvaluationParameters",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBeanMaxLpGpPerBdvRatio",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSeasonsToCatchUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "podRateUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deltaPodDemandUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioUpperBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioOptimal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lpToSupplyRatioLowerBound",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "excessivePriceThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientHigh",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "soilCoefficientLow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "baseReward",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct EvaluationParameters",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getExcessivePriceThreshold",
     "outputs": [
       {
@@ -9794,96 +9884,6 @@
           }
         ],
         "internalType": "struct SeedGauge",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getSeedGaugeSetting",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "maxBeanMaxLpGpPerBdvRatio",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "minBeanMaxLpGpPerBdvRatio",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetSeasonsToCatchUp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateOptimal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "podRateUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deltaPodDemandLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "deltaPodDemandUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioUpperBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioOptimal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lpToSupplyRatioLowerBound",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "excessivePriceThreshold",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "soilCoefficientHigh",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "soilCoefficientLow",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "baseReward",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct EvaluationParameters",
         "name": "",
         "type": "tuple"
       }
