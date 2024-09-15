@@ -22,7 +22,6 @@ export const useRefreshSeeds = () => {
       if (ChainResolver.isL1Chain(sdk.chainId)) {
         return;
       }
-      console.log('refreshing seeds on arbitrum');
       await sdk.refresh();
       // Copy the seed values from sdk tokens to ui tokens
 

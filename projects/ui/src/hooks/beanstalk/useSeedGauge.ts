@@ -5,7 +5,7 @@ import { Token } from '@beanstalk/sdk';
 import { BigNumber as BigNumberJS } from 'bignumber.js';
 import { BigNumber as BigNumberEthers } from 'ethers';
 
-import { AddressMap, ZERO_BN, ABISnippets, NEW_BN } from '~/constants';
+import { AddressMap, ZERO_BN, ABISnippets } from '~/constants';
 import { config } from '~/util/wagmi/config';
 import { useAppSelector } from '~/state';
 import { LibCases } from '~/lib/Beanstalk/LibCases';
@@ -67,18 +67,6 @@ const toBN = (
   return toBNWithDecimals(nStr, decimals);
 };
 
-const getTokenSettingsCalls = (address: string, tokens: Token[]) => {
-  const calls: ContractFunctionParameters<typeof ABISnippets.tokenSettings>[] =
-    tokens.map((token) => ({
-      address: address as `0x{string}`,
-      abi: ABISnippets.tokenSettings,
-      functionName: 'tokenSettings',
-      args: [token.address as `0x{string}`],
-    }));
-
-  return calls;
-};
-
 const getGPPerBdvPerTokenCalls = (
   address: string,
   tokens: Token[]
@@ -105,19 +93,20 @@ const useSeedGauge = () => {
 
   const query = useQuery({
     queryKey: [
-      [sdk.toJSON()],
+      [
+        sdk.chainId.toString(),
+        season.toString(),
+        ...whitelist.map((t) => t.address),
+      ],
       'beanstalk',
       'silo',
       'tokenSettings',
-      season.toString(),
     ],
     queryFn: async () => {
       const b = sdk.contracts.beanstalk;
-
-      const calls = getTokenSettingsCalls(b.address, whitelist);
       const gaugeCalls = getGPPerBdvPerTokenCalls(b.address, whitelist);
 
-      const [_bean2MaxLPRatio, settings, gaugePointsPerBdvForToken] =
+      const [_bean2MaxLPRatio, gaugePointsPerBdvForToken, settings] =
         await Promise.all([
           b.getBeanToMaxLpGpPerBdvRatioScaled().catch(() => {
             console.debug(
@@ -125,25 +114,25 @@ const useSeedGauge = () => {
             );
             return null;
           }),
-          // BS3TODO: Fix me. This is for some reason returning 325n for optimalPercentDepositedBdv for every token
-          multicall(config, { contracts: calls, allowFailure: true }),
           multicall(config, { contracts: gaugeCalls, allowFailure: true }),
+          // BS3TODO: Fix me. For some reason utilizing multi call here returns 325n for optimalPercentDepositedBdv for every token
+          Promise.all(whitelist.map((token) => b.tokenSettings(token.address))),
         ]);
 
       const map: AddressMap<BaseTokenSeedGaugeQueryInfo> = {};
 
       whitelist.forEach((token, i) => {
-        const { error: err, result } = settings[i];
+        const result = settings[i];
         const { error: gpErr, result: gpResult } = gaugePointsPerBdvForToken[i];
 
         const baseObj = {
-          optimalPctDepositedBdv: NEW_BN,
+          optimalPctDepositedBdv: ZERO_BN,
           gaugePoints: ZERO_BN,
           gaugePointsPerBdv: ZERO_BN,
           isAllocatedGP: false,
         };
 
-        if (!err && !!result) {
+        if (result) {
           const optimalPct = toBN(result.optimalPercentDepositedBdv, 6);
 
           map[token.address] = {
@@ -173,23 +162,7 @@ const useSeedGauge = () => {
 
       const bean2MaxLPRatio = _bean2MaxLPRatio
         ? toBN(_bean2MaxLPRatio, 18)
-        : NEW_BN;
-
-      // console.log(
-      //   'tokenSettings: ',
-      //   Object.entries(map).reduce<Record<string, any>>((prev, curr) => {
-      //     const [key, value] = curr;
-
-      //     prev[key] = {
-      //       gaugePoints: value.gaugePoints.toNumber(),
-      //       gaugePointsPerBdv: value.gaugePointsPerBdv.toNumber(),
-      //       isAllocatedGP: value.isAllocatedGP,
-      //       optimalPctDepositedBdv: value.optimalPctDepositedBdv.toNumber(),
-      //     };
-
-      //     return prev;
-      //   }, {})
-      // );
+        : ZERO_BN;
 
       return {
         tokenSettings: map,
@@ -257,3 +230,19 @@ const useSeedGauge = () => {
 };
 
 export default useSeedGauge;
+
+// console.log(
+//   'tokenSettings: ',
+//   Object.entries(map).reduce<Record<string, any>>((prev, curr) => {
+//     const [key, value] = curr;
+
+//     prev[key] = {
+//       gaugePoints: value.gaugePoints.toNumber(),
+//       gaugePointsPerBdv: value.gaugePointsPerBdv.toNumber(),
+//       isAllocatedGP: value.isAllocatedGP,
+//       optimalPctDepositedBdv: value.optimalPctDepositedBdv.toNumber(),
+//     };
+
+//     return prev;
+//   }, {})
+// );
