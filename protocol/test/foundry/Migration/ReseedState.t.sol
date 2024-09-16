@@ -100,6 +100,22 @@ contract ReseedStateTest is TestHelper {
         l2Beanstalk.sunrise();
     }
 
+    function test_pipelineConvert() public {
+        int96[] memory stems = new int96[](1);
+        stems[0] = 1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1;
+        // simply verify the function exists
+        vm.expectRevert("Convert: Input token must be Bean or a well");
+        l2Beanstalk.pipelineConvert(
+            address(0),
+            stems,
+            amounts,
+            address(0),
+            new IMockFBeanstalk.AdvancedPipeCall[](0)
+        );
+    }
+
     // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
     function test_beanstalkPrice() public {
         // Get beanstalk price
