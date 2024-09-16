@@ -5,8 +5,35 @@ dataSources:
   ###
   # L1 -> L2 MIGRATION
   ###
-  # (TODO)
-
+  - kind: ethereum/contract
+    name: ReseedMigration
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+      endBlock: 575757575757 # Reseed Completion
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Plot
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: AddMigratedDeposit(indexed address,indexed address,int96,uint256,uint256)
+          handler: handleAddMigratedDeposit
+        - event: MigratedPlot(indexed address,indexed uint256,uint256)
+          handler: handleMigratedPlot
+        - event: MigratedPodListing(indexed address,uint256,uint256,uint256,uint256,uint24,uint256,uint256,uint8)
+          handler: handleMigratedPodListing
+        - event: MigratedPodOrder(indexed address,bytes32,uint256,uint256,uint24,uint256,uint256)
+          handler: handleMigratedPodOrder
+        - event: InternalBalanceMigrated(indexed address,indexed address,int256)
+          handler: handleInternalBalanceMigrated
+      file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
   ###
   # INITIALIZATION
   ###
