@@ -37,7 +37,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
 
   const nonBeanAmounts = [
     to18("100"), // BEAN/WETH
-    to18("100"), // BEAN/WstETH
+    to18("10000"), // BEAN/WstETH
     to18("1500"), // BEAN/WEEETH
     toX("20", 8), // BEAN/WBTC (8 decimals)
     to6("1000000"), // BEAN/USDC
@@ -46,7 +46,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
 
   const beanAmounts = [
     to6("1000000"), // BEAN/WETH
-    to6("1000000"), // BEAN/WstETH
+    to6("100000000"), // BEAN/WstETH
     to6("1000000"), // BEAN/WEEETH
     to6("1000000"), // BEAN/WBTC
     to6("1000000"), // BEAN/USDC
