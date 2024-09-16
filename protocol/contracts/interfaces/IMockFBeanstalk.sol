@@ -55,7 +55,7 @@ interface IMockFBeanstalk {
         uint32 milestoneSeason;
         int96 milestoneStem;
         bytes1 encodeType;
-        int24 deltaStalkEarnedPerSeason;
+        int32 deltaStalkEarnedPerSeason;
         uint128 gaugePoints;
         uint64 optimalPercentDepositedBdv;
         Implementation gaugePointImplementation;
@@ -1692,10 +1692,10 @@ interface IMockFBeanstalk {
 
     function pipelineConvert(
         address inputToken,
-        int96[] memory stems,
-        uint256[] memory amounts,
+        int96[] calldata stems,
+        uint256[] calldata amounts,
         address outputToken,
-        AdvancedFarmCall[] memory advancedFarmCalls
+        AdvancedPipeCall[] memory advancedPipeCalls
     )
         external
         payable

@@ -11,6 +11,7 @@ require("hardhat-tracer");
 require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 const { upgradeWithNewFacets } = require("./scripts/diamond");
 const {
@@ -90,6 +91,35 @@ task("sunrise2", async function () {
 
   season = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   await season.sunrise();
+});
+
+task("sunriseArb", async function () {
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
+
+  season = await ethers.getContractAt("SeasonFacet", "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  await season.sunrise();
+
+  seasonGetters = await ethers.getContractAt(
+    "SeasonGettersFacet",
+    "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+  );
+  const unixTime = await time.latest();
+  const currentTime = new Date(unixTime * 1000).toLocaleString();
+
+  console.log(
+    "sunrise complete!\ncurrent season:",
+    await seasonGetters.season(),
+    "\ncurrent blockchain time:",
+    unixTime,
+    "\nhuman readable time:",
+    currentTime,
+    "\ncurrent block:",
+    (await ethers.provider.getBlock("latest")).number,
+    "\ndeltaB:",
+    (await seasonGetters.totalDeltaB()).toString()
+  );
 });
 
 task("getTime", async function () {

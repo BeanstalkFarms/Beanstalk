@@ -20,6 +20,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "OracleFacet",
     "ConvertFacet", // CONVERT
     "ConvertGettersFacet",
+    "PipelineConvertFacet",
     "MetadataFacet", // METADATA
     "MarketplaceFacet", // MARKET
     "FieldFacet", // FIELD
@@ -65,12 +66,13 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
       "LibFlood"
     ],
     ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
     SiloFacet: ["LibSilo"],
     EnrootFacet: ["LibSilo"],
     L1RecieverFacet: ["LibSilo"],
-    ClaimFacet: ["LibSilo"],
+    ClaimFacet: ["LibSilo"]
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
