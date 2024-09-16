@@ -1,9 +1,16 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { TransferSingle } from "../../generated/Beanstalk-ABIs/Fertilizer";
-import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import { mockContractEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
-export function createTransferSingleEvent(operator: Address, from: Address, to: Address, id: BigInt, value: BigInt): TransferSingle {
-  let event = changetype<TransferSingle>(mockBeanstalkEvent());
+export function createTransferSingleEvent(
+  fertContract: Address,
+  operator: Address,
+  from: Address,
+  to: Address,
+  id: BigInt,
+  value: BigInt
+): TransferSingle {
+  let event = changetype<TransferSingle>(mockContractEvent(fertContract));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("operator", ethereum.Value.fromAddress(operator));

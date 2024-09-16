@@ -1,4 +1,4 @@
-import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, BigDecimal, ethereum, log } from "@graphprotocol/graph-ts";
 import { Chop as ChopEntity } from "../../generated/schema";
 import { loadFertilizer, loadFertilizerBalance, loadFertilizerToken } from "../entities/Fertilizer";
 import { loadFarmer } from "../entities/Beanstalk";
@@ -10,6 +10,7 @@ import { getLatestBdv } from "../entities/snapshots/WhitelistTokenSetting";
 import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 import { getUnripeUnderlying } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
+import { FERT_TOKEN_INFO_CACHED, FertilizerTokenInfo } from "../../cache-builder/results/B3Migration_arb";
 
 class ChopParams {
   event: ethereum.Event;
@@ -20,9 +21,25 @@ class ChopParams {
   underlyingAmount: BigInt;
 }
 
-export function transfer(fertilizer1155: Address, from: Address, to: Address, id: BigInt, amount: BigInt, blockNumber: BigInt): void {
+export function getFertilizerInfo(fertId: BigInt): FertilizerTokenInfo {
+  for (let i = 0; i < FERT_TOKEN_INFO_CACHED.length; ++i) {
+    if (FERT_TOKEN_INFO_CACHED[i].id == fertId) {
+      return FERT_TOKEN_INFO_CACHED[i];
+    }
+  }
+  // If not cached, get on chain
+  const beanstalkContract = Reseed.bind(v().protocolAddress);
+  return {
+    id: fertId,
+    humidity: BigDecimal.fromString(beanstalkContract.getCurrentHumidity().toString()).div(BigDecimal.fromString("10")),
+    season: beanstalkContract.season().toI32(),
+    startBpf: beanstalkContract.beansPerFertilizer()
+  };
+}
+
+export function transfer(fertilizer1155: Address, from: Address, to: Address, id: BigInt, amount: BigInt): void {
   let fertilizer = loadFertilizer(fertilizer1155);
-  let fertilizerToken = loadFertilizerToken(fertilizer, id, blockNumber);
+  let fertilizerToken = loadFertilizerToken(fertilizer, id);
   if (from != ADDRESS_ZERO) {
     let fromFarmer = loadFarmer(from);
     let fromFertilizerBalance = loadFertilizerBalance(fertilizerToken, fromFarmer);

@@ -1,7 +1,7 @@
 const { GraphQLClient, gql } = require("graphql-request");
 const fs = require("fs");
 
-const url = "https://graph.bean.money/beanstalk_eth";
+const url = "https://graph.bean.money/beanstalk-testing_eth";
 const subgraph = new GraphQLClient(url);
 
 const tokenMap = {
@@ -13,7 +13,7 @@ const tokenMap = {
 (async () => {
   const l1Values = await subgraph.request(gql`
     {
-      beanstalk(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
+      beanstalk(id: "beanstalk") {
         lastSeason
       }
       field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
@@ -24,7 +24,7 @@ const tokenMap = {
         podIndex
         harvestableIndex
       }
-      podMarketplace(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
+      podMarketplace(id: "0") {
         filledListedPods
         expiredListedPods
         cancelledListedPods
@@ -33,6 +33,12 @@ const tokenMap = {
         cancelledOrderBeans
         podVolume
         beanVolume
+      }
+      fertilizerTokens(first: 1000) {
+        id
+        humidity
+        season
+        startBpf
       }
       unripeTokens {
         id
@@ -43,12 +49,21 @@ const tokenMap = {
     }
   `);
 
+  const fertTokenInfo = l1Values.fertilizerTokens.map((fertToken) => {
+    return `{
+      id: BigInt.fromString('${fertToken.id}'),
+      humidity: BigDecimal.fromString('${fertToken.humidity}'),
+      season: ${fertToken.season},
+      startBpf: BigInt.fromString('${fertToken.startBpf}')
+    }`;
+  });
+
   const outFile = `${__dirname}/results/B3Migration_arb.ts`;
   await fs.promises.writeFile(
     outFile,
     `/* This is a generated file */
 
-    import { BigInt } from "@graphprotocol/graph-ts";
+    import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
     class FieldInitialValues {
       numberOfSowers: i32;
@@ -70,6 +85,13 @@ const tokenMap = {
       beanVolume: BigInt;
     }
 
+    export class FertilizerTokenInfo {
+      id: BigInt;
+      humidity: BigDecimal;
+      season: i32;
+      startBpf: BigInt;
+    }
+
     class UnripeTokenInitialValues {
       tokenType: string;
       totalChoppedAmount: BigInt;
@@ -83,9 +105,9 @@ const tokenMap = {
       numberOfSowers: ${l1Values.field.numberOfSowers},
       numberOfSows: ${l1Values.field.numberOfSows},
       sownBeans: BigInt.fromString('${l1Values.field.sownBeans}'),
-      harvestedPods: BigInt.fromString('${l1Values.field.harvestedPods}')
+      harvestedPods: BigInt.fromString('${l1Values.field.harvestedPods}'),
       podIndex: BigInt.fromString('${l1Values.field.podIndex}'),
-      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}'),
+      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}')
     };
 
     export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {
@@ -98,6 +120,8 @@ const tokenMap = {
       podVolume: BigInt.fromString('${l1Values.podMarketplace.podVolume}'),
       beanVolume: BigInt.fromString('${l1Values.podMarketplace.beanVolume}')
     };
+
+    export const FERT_TOKEN_INFO_CACHED: FertilizerTokenInfo[] = [${fertTokenInfo.join(",")}];
 
     export const UNRIPE_TOKENS_INITIAL_VALUES: UnripeTokenInitialValues[] = [
       {

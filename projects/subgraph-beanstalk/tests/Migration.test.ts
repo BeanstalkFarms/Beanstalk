@@ -164,7 +164,7 @@ describe("Beanstalk 3 Migration", () => {
   test("Barn - Fertilizer Minted during Reseed (no contract view functions available)", () => {
     const fertId = BigInt.fromU32(6000000);
     const amount = BigInt.fromU32(1500);
-    handleTransferSingle(createTransferSingleEvent(account, ADDRESS_ZERO, account, fertId, amount));
+    handleTransferSingle(createTransferSingleEvent(FERTILIZER, account, ADDRESS_ZERO, account, fertId, amount));
     assert.fieldEquals("Fertilizer", FERTILIZER.toHexString(), "supply", amount.toString());
     assert.fieldEquals("FertilizerToken", fertId.toString(), "supply", amount.toString());
     assert.fieldEquals("FertilizerToken", fertId.toString(), "humidity", "500");
@@ -174,7 +174,7 @@ describe("Beanstalk 3 Migration", () => {
 
     const fertId2 = BigInt.fromU32(2373025);
     const amount2 = BigInt.fromU32(700);
-    handleTransferSingle(createTransferSingleEvent(account, ADDRESS_ZERO, account, fertId2, amount2));
+    handleTransferSingle(createTransferSingleEvent(FERTILIZER, account, ADDRESS_ZERO, account, fertId2, amount2));
     assert.fieldEquals("Fertilizer", FERTILIZER.toHexString(), "supply", amount.plus(amount2).toString());
     assert.fieldEquals("FertilizerToken", fertId2.toString(), "supply", amount2.toString());
     assert.fieldEquals("FertilizerToken", fertId2.toString(), "humidity", "124");
