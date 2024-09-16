@@ -318,6 +318,7 @@ type Space {
   plugins: Any
   private: Boolean
   proposalsCount: Int
+  proposalsCount1d: Int
   proposalsCount7d: Int
   rank: Float
   skin: String

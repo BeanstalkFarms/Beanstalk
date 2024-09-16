@@ -84,22 +84,11 @@ export default function useDataFeedTokenPrices() {
       const token = underlyingTokens[index];
       if (!token) return;
 
-      // BS3TODO: REMOVE ME
-      const decimals = ['wstETH', 'weETH'].includes(token.symbol) ? 40 : 6;
-      // BS3TODO: REMOVE ME
-      const divBy = ['wstETH', 'weETH'].includes(token.symbol) ? 20000 : 1;
-
       if (price) {
-        priceDataCache[getTokenIndex(token)] = getBNResult(
-          price.toString(),
-          decimals
-        ).div(divBy);
+        priceDataCache[getTokenIndex(token)] = getBNResult(price.toString(), 6);
       }
       if (twap) {
-        priceDataCache[`${token.symbol}-TWA`] = getBNResult(
-          twap.toString(),
-          decimals
-        ).div(divBy);
+        priceDataCache[`${token.symbol}-TWA`] = getBNResult(twap.toString(), 6);
       }
 
       // add it for ETH as well
