@@ -137,7 +137,7 @@ const tokens: Token[] = [
   },
   {
     address: BeanstalkArb.WBTC,
-    info: { name: "WBTC", decimals: BigInt.fromU32(18) }
+    info: { name: "WBTC", decimals: BigInt.fromU32(8) }
   },
   {
     address: BeanstalkArb.USDC,
