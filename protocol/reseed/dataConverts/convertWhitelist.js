@@ -178,7 +178,7 @@ function parseWhitelist(inputFilePath, outputFilePath) {
     const defaultAssetSettings = {
       selector: "0xc84c7727",
       stalkEarnedPerSeason: "1",
-      stalkIssuedPerBdv: "10000",
+      stalkIssuedPerBdv: "10000000000",
       milestoneSeason: data.season.current,
       milestoneStem: "0",
       encodeType: "0x01",
