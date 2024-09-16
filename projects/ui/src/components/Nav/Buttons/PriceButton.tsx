@@ -38,41 +38,50 @@ import { Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import FolderMenu from '../FolderMenu';
 
-type PriceEntry = {
+type TokenPriceEntry = {
+  token: Token;
   price: BigNumber;
   twap: BigNumber;
 };
 
-const usePricesByToken = (
-  prices: ReturnType<typeof useDataFeedTokenPrices>
-) => {
+const usePricesAndTWAPByToken = () => {
+  const prices = useDataFeedTokenPrices();
   const { ETH, WSTETH, WBTC, WEETH, USDC, USDT } = useTokens();
 
   return useMemo(() => {
     const tokens = [ETH, WSTETH, WBTC, WEETH, USDC, USDT];
 
-    const entries = tokens.reduce<Record<string, PriceEntry>>((acc, token) => {
-      const price = prices[getTokenIndex(token)] || ZERO_BN;
-      const twap = prices[`${token.symbol}-TWA`] || ZERO_BN;
+    const entries = tokens.reduce<Record<string, TokenPriceEntry>>(
+      (acc, token) => {
+        const price = prices[getTokenIndex(token)] || ZERO_BN;
+        const twap = prices[`${token.symbol}-TWA`] || ZERO_BN;
 
-      acc[token.address] = { price, twap };
-      return acc;
-    }, {});
+        acc[token.address] = { price, twap, token };
+        return acc;
+      },
+      {}
+    );
 
-    return entries;
+    return {
+      underlying: tokens,
+      tokenMap: entries,
+    };
   }, [ETH, WSTETH, WBTC, WEETH, USDC, USDT, prices]);
 };
 
 const UnderlyingPrices: FC<{
   showTWA: boolean;
-  underlying: Token[];
-  pricesByToken: ReturnType<typeof usePricesByToken>;
+  tokenPrices: ReturnType<typeof usePricesAndTWAPByToken>;
   togglePrices: () => void;
-}> = ({ pricesByToken, showTWA = false, togglePrices, underlying }) => {
+}> = ({
+  tokenPrices: { tokenMap, underlying },
+  showTWA = false,
+  togglePrices,
+}) => {
   const [index, setIndex] = useState(0);
 
   const currToken = underlying[index];
-  const prices = pricesByToken[underlying[index]?.address];
+  const prices = tokenMap[underlying[index]?.address];
   const price = showTWA ? prices?.twap : prices?.price;
 
   useEffect(() => {
@@ -128,38 +137,28 @@ const PriceDisplay = ({
 );
 
 const PriceOverlayContent: FC<{
-  tokenPrices: ReturnType<typeof usePricesByToken>;
-  underlying: Token[];
+  tokenPrices: ReturnType<typeof usePricesAndTWAPByToken>;
   togglePrices: () => void;
-}> = ({ tokenPrices, underlying, togglePrices }) => (
-  <Box
+}> = ({ tokenPrices: { tokenMap, underlying }, togglePrices }) => (
+  <Stack
+    p={1}
+    gap={1}
     sx={{
-      display: 'flex',
-      flexDirection: 'column',
       border: '1px solid #ecf7fe',
       borderRadius: '10px',
       alignItems: 'stretch',
       backgroundColor: '#f6fafe',
-      padding: '10px',
-      gap: '10px',
     }}
   >
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
       <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
         Prices of Non-Bean Assets
       </Typography>
       <Close sx={{ fontSize: 14, cursor: 'pointer' }} onClick={togglePrices} />
-    </Box>
+    </Stack>
     <Stack gap={0.5}>
       {underlying.map((token) => {
-        const prices = tokenPrices[token.address];
+        const prices = tokenMap[token.address];
         return (
           <PriceDisplay
             key={`${token.symbol}-price`}
@@ -172,7 +171,7 @@ const PriceOverlayContent: FC<{
         <Divider sx={{ borderWidth: '0.5px', borderBottom: 0 }} />
       </Box>
       {underlying.map((token) => {
-        const prices = tokenPrices[token.address];
+        const prices = tokenMap[token.address];
         return (
           <PriceDisplay
             key={`${token.symbol}-price-TWA`}
@@ -191,38 +190,34 @@ const PriceOverlayContent: FC<{
         according to Beanstalk.
       </Typography>
     </Box>
-  </Box>
+  </Stack>
 );
 
 const PriceButton: FC<ButtonProps> = ({ ...props }) => {
+  //
   const [showTWA, setShowTWA] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
 
+  //
   const beanPools = useAppSelector((state) => state._bean.pools);
   const beanTokenData = useAppSelector((state) => state._bean.token);
-
-  const tokenPrices = useDataFeedTokenPrices();
-  const pricesByToken = usePricesByToken(tokenPrices);
   const beanPrice = usePrice();
   const season = useSeason();
   const pools = usePools();
+
+  const tokenPrices = usePricesAndTWAPByToken();
+  const refetchPools = useThrottledFetchPools();
+  const { data: twaDeltaBs } = useTwaDeltaB();
 
   // Theme
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const isTiny = useMediaQuery('(max-width:350px)');
 
-  const { ETH, WSTETH, WBTC, WEETH, USDC, USDT } = useTokens();
-  const underlying = [ETH, WSTETH, WBTC, WEETH, USDC, USDT];
-  const { data: twaDeltaBs } = useTwaDeltaB();
-
-  const twaDeltaB = twaDeltaBs?.total || ZERO_BN;
-
+  // Callbacks
   const toggleTWA = (v: React.ChangeEvent<HTMLInputElement>) =>
     setShowTWA(v.target.checked);
   const togglePrices = () => setShowPrices(!showPrices);
-
-  const refetchPools = useThrottledFetchPools();
 
   // Content
   const isLoading = beanPrice.eq(NEW_BN);
@@ -230,7 +225,10 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
     <BeanProgressIcon size={25} enabled={isLoading} variant="indeterminate" />
   );
 
-  // calculate based on which pools we're shoing.
+  // Derived
+  const twaDeltaB = twaDeltaBs?.total || ZERO_BN;
+
+  // calculate based on which pools we're showing.
   // This is very weird code here, but we're just working with what we got
   const combinedDeltaB = Object.entries(beanPools)
     .map(([address, value]) => ({ ...value, address }))
@@ -250,8 +248,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         <Stack gap={0.5}>
           <UnderlyingPrices
             showTWA={showTWA}
-            underlying={underlying}
-            pricesByToken={pricesByToken}
+            tokenPrices={tokenPrices}
             togglePrices={togglePrices}
           />
         </Stack>
@@ -379,8 +376,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         <Stack gap={1} p={1}>
           {showPrices ? (
             <PriceOverlayContent
-              tokenPrices={pricesByToken}
-              underlying={underlying}
+              tokenPrices={tokenPrices}
               togglePrices={togglePrices}
             />
           ) : (
@@ -396,29 +392,3 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
 };
 
 export default PriceButton;
-
-/*  
-Leaving here for reference
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-  <div>Cumulative Instantaneous deltaB:</div>
-  <div>
-    {combinedDeltaB.gte(0) && '+'}
-    {displayBN(combinedDeltaB, true)}
-  </div>
-</Box>
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-  <div>Cumulative Time-Weighted deltaB:</div>
-  <div>
-    {beanTokenData.deltaB.gte(0) && '+'}
-    {displayBN(beanTokenData.deltaB, true)}
-  </div>
-</Box>
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-  <div>Instantaneous ETH Price:</div>
-  <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
-</Box>
-<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-  <div>Time-Weighted ETH Price:</div>
-  <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
-</Box> 
-*/
