@@ -24,21 +24,7 @@ import {
   UnwrapAndSendEthJunction,
   UnwrapAndSendEthJunction__factory,
   Junction,
-  Junction__factory,
-  Curve3Pool,
-  CurveCryptoFactory,
-  CurveMetaFactory,
-  CurveMetaPool,
-  CurveRegistry,
-  CurveTriCrypto2Pool,
-  CurveZap,
-  Curve3Pool__factory,
-  CurveCryptoFactory__factory,
-  CurveMetaFactory__factory,
-  CurveMetaPool__factory,
-  CurveRegistry__factory,
-  CurveTriCrypto2Pool__factory,
-  CurveZap__factory
+  Junction__factory
 } from "src/constants/generated";
 
 type LidoContracts = {
@@ -60,30 +46,27 @@ export class Contracts {
   public readonly pipeline: Pipeline;
   public readonly depot: Depot;
   public readonly junction: Junction;
-  public readonly usdOracle: UsdOracle;
   public readonly pipelineJunctions: PipelineJunctions;
 
   public readonly lido: LidoContracts;
 
+  public readonly uniswapV3Router: UniswapV3Router;
+  public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
+
+  /**
+   * @deprecated
+   * @description Not included in Beanstalk3 deployment on Arbitrum.
+   * @note mainnet Beanstalk only
+   */
+  public readonly usdOracle: UsdOracle;
+
   // Deprecated contracts
   /**
    * @deprecated
-   * @description External contract not part of Beanstalk3 L2 migration.
+   * @description Not included in Beanstalk3 deployment on Arbitrum.
    * @note mainnet Beanstalk only
    */
   public readonly root: Root | null = null;
-
-  /**
-   * @deprecated as of Beanstalk 3.0 L2 migration
-   * @description mainnet only
-   */
-  public readonly uniswapV3Router: UniswapV3Router;
-
-  /**
-   * @deprecated as of Beanstalk 3.0 L2 migration
-   * @description mainnet only
-   */
-  public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
 
   constructor(sdk: BeanstalkSDK) {
     Contracts.sdk = sdk;
@@ -137,12 +120,6 @@ export class Contracts {
         )
       };
     }
-    if (rootAddress) {
-      this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
-    }
-    if (usdOracleAddress) {
-      this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
-    }
 
     // Lido
     this.lido = {
@@ -150,18 +127,22 @@ export class Contracts {
     };
 
     // Uniswap
-    if (uniswapV3RouterAddress) {
-      this.uniswapV3Router = UniswapV3Router__factory.connect(
-        uniswapV3RouterAddress,
-        sdk.providerOrSigner
-      );
-    }
 
-    if (uniswapV3QuoterV2Address) {
-      this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
-        uniswapV3QuoterV2Address,
-        sdk.providerOrSigner
-      );
+    this.uniswapV3Router = UniswapV3Router__factory.connect(
+      uniswapV3RouterAddress,
+      sdk.providerOrSigner
+    );
+
+    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
+      uniswapV3QuoterV2Address,
+      sdk.providerOrSigner
+    );
+
+    if (rootAddress) {
+      this.root = Root__factory.connect(rootAddress, sdk.providerOrSigner);
+    }
+    if (usdOracleAddress) {
+      this.usdOracle = UsdOracle__factory.connect(usdOracleAddress, sdk.providerOrSigner);
     }
   }
 }

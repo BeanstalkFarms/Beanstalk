@@ -135,11 +135,19 @@ export class Pools {
     return this.whitelistedPools.has(_pool.address);
   }
 
+  // Do we need this? Maybe we can just have wells only??
   getPoolByLPToken(token: Token | string): Pool | undefined {
     if (typeof token === "string") {
       return this.lpAddressMap.get(token.toLowerCase());
     }
     return this.lpAddressMap.get(token.address);
+  }
+
+  getWellByLPToken(token: Token | string): BasinWell | undefined {
+    if (typeof token === "string") {
+      return this.wellAddressMap.get(token.toLowerCase());
+    }
+    return this.wellAddressMap.get(token.address);
   }
 
   getWells(): readonly BasinWell[] {

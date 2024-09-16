@@ -41,7 +41,11 @@ export class Convert {
     this.paths.set(Convert.sdk.tokens.BEAN, [
       // Convert.sdk.tokens.BEAN_CRV3_LP, // Deprecated.
       Convert.sdk.tokens.BEAN_WSTETH_WELL_LP,
-      Convert.sdk.tokens.BEAN_ETH_WELL_LP
+      Convert.sdk.tokens.BEAN_ETH_WELL_LP,
+      Convert.sdk.tokens.BEAN_WBTC_WELL_LP,
+      Convert.sdk.tokens.BEAN_WEETH_WELL_LP,
+      Convert.sdk.tokens.BEAN_USDC_WELL_LP,
+      Convert.sdk.tokens.BEAN_USDT_WELL_LP
     ]);
     this.paths.set(Convert.sdk.tokens.BEAN_CRV3_LP, [Convert.sdk.tokens.BEAN]);
     this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
@@ -57,6 +61,10 @@ export class Convert {
       Convert.sdk.tokens.UNRIPE_BEAN,
       Convert.sdk.tokens.BEAN_WSTETH_WELL_LP
     ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WBTC_WELL_LP, [Convert.sdk.tokens.BEAN]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDC_WELL_LP, [Convert.sdk.tokens.BEAN]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDT_WELL_LP, [Convert.sdk.tokens.BEAN]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WEETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
   }
 
   async convert(
@@ -168,7 +176,11 @@ export class Convert {
 
     const whitelistedWellLPs = new Set([
       Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase()
+      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_USDC_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_USDT_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_WEETH_WELL_LP.address.toLowerCase(),
+      Convert.sdk.tokens.BEAN_WBTC_WELL_LP.address.toLowerCase()
     ]);
     const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
     const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
@@ -267,5 +279,4 @@ export class Convert {
     const token = Convert.sdk.tokens.findByAddress(fromToken.address);
     return token ? this.paths.get(token) || [] : [];
   }
-
 }

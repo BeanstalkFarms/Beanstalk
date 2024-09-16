@@ -183,6 +183,18 @@ export const addresses = {
   }),
 
   // ----------------------------------------
+  // Uniswap V3
+  UNISWAP_V3_ROUTER: Address.make({
+    [ChainId.ETH_MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+    [ChainId.ARBITRUM_MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+  }),
+
+  UNISWAP_V3_QUOTER_V2: Address.make({
+    [ChainId.ETH_MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+    [ChainId.ARBITRUM_MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
+  }),
+
+  // ----------------------------------------
   // Curve Pools: Other
   // ----------------------------------------
   // --------------------------------------------------
@@ -253,22 +265,6 @@ export const addresses = {
    */
   CURVE_ZAP: Address.make({
     [ChainId.ETH_MAINNET]: "0xA79828DF1850E8a3A3064576f380D90aECDD3359"
-  }),
-
-  /**
-   * @deprecated
-   * Uniswap V3 Router
-   */
-  UNISWAP_V3_ROUTER: Address.make({
-    [ChainId.ETH_MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564"
-  }),
-
-  /**
-   * @deprecated
-   * Uniswap V3 Quoter V2
-   */
-  UNISWAP_V3_QUOTER_V2: Address.make({
-    [ChainId.ETH_MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
   }),
 
   /**

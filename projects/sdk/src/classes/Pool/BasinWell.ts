@@ -1,30 +1,11 @@
-import { BasinWell__factory, BasinWell as BasinWellContract } from "src/constants/generated";
+import { BasinWell__factory } from "src/constants/generated";
 import { TokenValue } from "src/TokenValue";
 import Pool, { Reserves } from "./Pool";
 import { ERC20Token } from "../Token";
-import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 
 export class BasinWell extends Pool {
-  public readonly contract: BasinWellContract;
-
-  constructor(
-    sdk: BeanstalkSDK,
-    address: string,
-    lpToken: ERC20Token,
-    tokens: ERC20Token[],
-    metadata: {
-      name: string;
-      symbol: string;
-      logo: string;
-      color: string;
-    }
-  ) {
-    super(sdk, address, lpToken, tokens, metadata);
-    this.contract = BasinWell__factory.connect(address, sdk.providerOrSigner);
-  }
-
   public getContract() {
-    return this.contract;
+    return BasinWell__factory.connect(this.address, Pool.sdk.providerOrSigner);
   }
 
   public getReserves() {
@@ -44,19 +25,19 @@ export class BasinWell extends Pool {
   }
 
   async getAddLiquidityOut(amounts: TokenValue[]) {
-    return this.contract
+    return this.getContract()
       .getAddLiquidityOut(amounts.map((a) => a.toBigNumber()))
       .then((result) => this.lpToken.fromBlockchain(result));
   }
 
   async getRemoveLiquidityOutEqual(amount: TokenValue) {
-    return this.contract
+    return this.getContract()
       .getRemoveLiquidityOut(amount.toBigNumber())
       .then((result) => this.tokens.map((token, i) => token.fromBlockchain(result[i])));
   }
 
   async getRemoveLiquidityOutOneToken(lpAmountIn: TokenValue, tokenOut: ERC20Token) {
-    return this.contract
+    return this.getContract()
       .getRemoveLiquidityOneTokenOut(lpAmountIn.toBigNumber(), tokenOut.address)
       .then((result) => tokenOut.fromBlockchain(result));
   }
