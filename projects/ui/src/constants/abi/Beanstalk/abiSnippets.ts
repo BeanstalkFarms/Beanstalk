@@ -257,6 +257,26 @@ const price = [
   },
 ] as const;
 
+const oraclePrices = [
+  {
+    inputs: [{ internalType: 'address', name: 'token', type: 'address' }],
+    name: 'getTokenUsdPrice',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'token', type: 'address' },
+      { internalType: 'uint256', name: 'lookback', type: 'uint256' },
+    ],
+    name: 'getTokenUsdTwap',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 const BEANSTALK_ABI_SNIPPETS = {
   getGaugePointsPerBdvForToken: getGaugePointsPerBdvForToken,
   tokenSettings: tokenSettings,
@@ -264,6 +284,7 @@ const BEANSTALK_ABI_SNIPPETS = {
   siloGetters: siloGetters,
   price: price,
   totalDeltaB: totalDeltaB,
+  oraclePrices: oraclePrices,
 } as const;
 
 export default BEANSTALK_ABI_SNIPPETS;

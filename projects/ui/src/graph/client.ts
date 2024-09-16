@@ -229,7 +229,7 @@ export const apolloClient = new ApolloClient({
             ApolloLink.split(
               ({ getContext }) => getContext().subgraph === 'bean',
               beanLinks.arb, // true
-              beanstalkLinks.eth // false
+              beanstalkLinks.arb // false
             )
           )
         )

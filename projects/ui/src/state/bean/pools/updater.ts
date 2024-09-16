@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
 import { multicall } from '@wagmi/core';
 
-import { displayBeanPrice, tokenResult } from '~/util';
+import { displayBeanPrice, tokenResult, exists } from '~/util';
 import useSdk from '~/hooks/sdk';
 import { ContractFunctionParameters, erc20Abi } from 'viem';
 import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
@@ -41,7 +41,7 @@ export const useFetchPools = () => {
           makeTokenTotalSupplyMulticall(BEAN),
           makeTotalDeltaBMulticall(beanstalk.address),
         ];
-        const lpMulticall = makeLPMulticall(poolsArr);
+        const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
 
         const [priceAndBean, _lpResults] = await Promise.all([
           // fetch [price, bean.totalSupply, totalDeltaB]
@@ -91,10 +91,10 @@ export const useFetchPools = () => {
           const poolsPayload = priceResult.ps.reduce<UpdatePoolPayload[]>(
             (acc, poolData) => {
               const address = poolData.pool.toLowerCase();
-              const pool = whitelistedPools.get(address);
+              const pool = sdk.pools.getPoolByLPToken(address);
               const lpResult = lpResults[address];
 
-              if (pool && lpResult.deltaB && lpResult.supply) {
+              if (pool && exists(lpResult.deltaB) && exists(lpResult.supply)) {
                 const payload: UpdatePoolPayload = {
                   address: address,
                   pool: {
@@ -156,6 +156,12 @@ export const useFetchPools = () => {
   return [fetch, clear];
 };
 
+export const useThrottledFetchPools = () => {
+  const [fetch] = useFetchPools();
+
+  return useMemo(() => throttle(fetch, 10_000), [fetch]);
+};
+
 // ------------------------------------------
 
 const PoolsUpdater = () => {
@@ -204,7 +210,7 @@ function makeTokenTotalSupplyMulticall(
   token: ERC20Token
 ): ContractFunctionParameters<typeof erc20Abi> {
   return {
-    address: token.address as `0x{string}`,
+    address: token.address as `0x${string}`,
     abi: erc20Abi,
     functionName: 'totalSupply',
     args: [],
@@ -215,7 +221,7 @@ function makeTotalDeltaBMulticall(
   beanstalkAddress: string
 ): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.totalDeltaB> {
   return {
-    address: beanstalkAddress as `0x{string}`,
+    address: beanstalkAddress as `0x${string}`,
     abi: BEANSTALK_ABI_SNIPPETS.totalDeltaB,
     functionName: 'totalDeltaB',
     args: [],
@@ -226,25 +232,28 @@ function makePriceMulticall(
   address: string
 ): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.price> {
   return {
-    address: address as `0x{string}`,
+    address: address as `0x${string}`,
     abi: BEANSTALK_ABI_SNIPPETS.price,
     functionName: 'price',
     args: [],
   };
 }
 
-function makeLPMulticall(pools: Pool[]): {
+function makeLPMulticall(
+  beanstalkAddress: string,
+  pools: Pool[]
+): {
   calls: ContractFunctionParameters[][];
   chunkSize: number;
 } {
   const calls: ContractFunctionParameters[] = [];
 
   pools.forEach((pool) => {
-    const address = pool.address as `0x{string}`;
+    const address = pool.address as `0x${string}`;
     const deltaBCall: ContractFunctionParameters<
       typeof BEANSTALK_ABI_SNIPPETS.poolDeltaB
     > = {
-      address: address,
+      address: beanstalkAddress as `0x${string}`,
       abi: BEANSTALK_ABI_SNIPPETS.poolDeltaB,
       functionName: 'poolDeltaB',
       args: [address],

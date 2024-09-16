@@ -20,6 +20,7 @@ export * from './Time';
 export * from './Tokens';
 export * from './Environment';
 export * from './TokenValue';
+export * from './UI';
 
 // -----------------
 // Shared Types

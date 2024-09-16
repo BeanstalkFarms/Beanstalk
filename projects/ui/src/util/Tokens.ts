@@ -2,9 +2,9 @@
 import BigNumber from 'bignumber.js';
 import { NativeToken, Token, TokenValue } from '@beanstalk/sdk';
 import LegacyToken, { NativeToken as LegacyNativeToken } from '~/classes/Token';
-import { ZERO_BN } from '~/constants';
 import { STALK } from '~/constants/tokens';
 import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import { ChainResolver } from '@beanstalk/sdk-core';
 import { tokenValueToBN } from './BigNumber';
 import { exists, stringsEqual } from './UI';
 
@@ -187,9 +187,42 @@ export function smallDecimalPercent(bn: BigNumber) {
 /**
  *
  */
-export function displayUSD(bn: BigNumber, allowNegative: boolean = false) {
-  const v = allowNegative === false ? MaxBN(ZERO_BN, bn).abs() : bn;
-  return `$${displayFullBN(v, 2, 2)}`;
+type Numberish = BigNumber | TokenValue | number | string;
+
+function toNumber(value: Numberish) {
+  if (typeof value === 'string') return parseFloat(value);
+  if (typeof value === 'number') return value;
+  return value.toNumber();
+}
+
+const USDFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const USDFormatterCompact = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  compactDisplay: 'short',
+});
+
+export function displayUSD(
+  _value: Numberish,
+  /**
+   * display in shorthand compact notation if above this value
+   * ex: $1.123M     */
+  compact?: number
+) {
+  const value = toNumber(_value);
+
+  if (compact && value > compact) {
+    return USDFormatterCompact.format(value);
+  }
+
+  return USDFormatter.format(value);
 }
 
 /**
@@ -338,7 +371,10 @@ export function tokenIshEqual(
   );
 
   if (isTokenInstance(a) && isTokenInstance(b)) {
-    return a.chainId === b.chainId && addressesEqual;
+    return (
+      ChainResolver.resolveToMainnetChainId(a.chainId) ===
+        ChainResolver.resolveToMainnetChainId(b.chainId) && addressesEqual
+    );
   }
 
   return addressesEqual;
