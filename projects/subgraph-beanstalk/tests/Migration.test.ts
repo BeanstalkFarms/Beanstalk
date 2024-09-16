@@ -123,6 +123,7 @@ describe("Beanstalk 3 Migration", () => {
     test("MigratedPodListing", () => {
       const index = BigInt.fromU32(500).times(BI_10.pow(6));
       const amount = BigInt.fromU32(1500).times(BI_10.pow(6));
+      handleMigratedPlot(createMigratedPlotEvent(account, index, amount));
       handleMigratedPodListing(
         createMigratedPodListingEvent(
           account,
@@ -152,7 +153,7 @@ describe("Beanstalk 3 Migration", () => {
           ONE_BI
         )
       );
-      assert.fieldEquals("PodOrder", orderId.toString(), "beanAmount", beanAmount.toString());
+      assert.fieldEquals("PodOrder", orderId.toHexString(), "beanAmount", beanAmount.toString());
     });
     test("InternalBalanceMigrated", () => {
       const beanAmount = BigInt.fromU32(2500).times(BI_10.pow(6));
