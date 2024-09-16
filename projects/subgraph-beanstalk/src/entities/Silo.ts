@@ -12,7 +12,6 @@ import {
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getTokenDecimals, getUnripeUnderlying } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
-import { initLegacyUnripe } from "../utils/legacy/LegacyWhitelist";
 
 /* ===== Base Silo Entities ===== */
 
@@ -80,7 +79,6 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     setting.isGaugeEnabled = false;
     setting.decimals = getTokenDecimals(v(), token);
     setting.updatedAt = ZERO_BI;
-    initLegacyUnripe(setting);
     setting.save();
   }
   return setting as WhitelistTokenSetting;

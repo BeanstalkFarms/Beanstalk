@@ -10,7 +10,8 @@ import {
   RemoveDeposit,
   RemoveDeposits,
   StalkBalanceChanged,
-  UpdatedStalkPerBdvPerSeason
+  UpdatedStalkPerBdvPerSeason,
+  UpdateWhitelistStatus
 } from "../../generated/Beanstalk-ABIs/Reseed";
 import { unripeChopped } from "../utils/Barn";
 import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
@@ -118,6 +119,13 @@ export function handleWhitelistToken(event: WhitelistToken): void {
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
+  siloSettings.save();
+}
+
+export function handleUpdateWhitelistStatus(event: UpdateWhitelistStatus): void {
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+  siloSettings.isGaugeEnabled = event.params.isWhitelistedWell;
   takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }

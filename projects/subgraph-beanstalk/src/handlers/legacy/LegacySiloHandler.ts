@@ -17,6 +17,7 @@ import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstal
 import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged, WhitelistToken } from "../../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw, updateSeedsBalances } from "../../utils/legacy/LegacySilo";
 import { Bytes4_emptySelector } from "../../../../subgraph-core/utils/Bytes";
+import { initLegacyUnripe } from "../../utils/legacy/LegacyWhitelist";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
@@ -114,6 +115,7 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
   setting.selector = event.params.selector;
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
+  initLegacyUnripe(setting);
 
   takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();

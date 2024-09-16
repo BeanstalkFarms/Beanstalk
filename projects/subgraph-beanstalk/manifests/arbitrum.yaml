@@ -66,6 +66,8 @@ dataSources:
           handler: handlePlant
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,uint128,uint64)
           handler: handleWhitelistToken
+        - event: UpdateWhitelistStatus(address,uint256,bool,bool,bool,bool)
+          handler: handleUpdateWhitelistStatus
         - event: DewhitelistToken(indexed address)
           handler: handleDewhitelistToken
         - event: UpdatedStalkPerBdvPerSeason(indexed address,uint32,uint32)
