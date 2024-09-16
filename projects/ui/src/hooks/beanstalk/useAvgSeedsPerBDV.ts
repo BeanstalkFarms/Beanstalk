@@ -1,14 +1,16 @@
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useState } from 'react';
 import { DocumentNode, gql } from '@apollo/client';
-import { BeanstalkSDK, Token } from '@beanstalk/sdk';
+import { BeanstalkSDK } from '@beanstalk/sdk';
 import { Time, Range } from 'lightweight-charts';
+import * as LegacyToken from '~/constants/tokens';
 
 import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
 import useSdk from '~/hooks/sdk';
 import { apolloClient } from '~/graph/client';
-import { toBNWithDecimals } from '~/util';
+import { toBNWithDecimals, tokenIshEqual } from '~/util';
 import { ZERO_BN } from '~/constants';
+import { TokenInstance } from './useTokens';
 
 type SeasonMap<T> = { [season: number]: T };
 
@@ -53,9 +55,10 @@ const apolloFetch = async (
     variables: { first, season_lte: season },
     fetchPolicy: 'no-cache',
     notifyOnNetworkStatusChange: true,
+    // BS3TODO: Fix me to include L2 silo whitelist
+    context: { subgraph: 'beanstalk_eth' },
   });
 
-// BS3TODO: Fix me to include L1 silo whitelist
 // Main hook with improved error handling and performance
 const useAvgSeedsPerBDV = (
   range: Range<Time> | undefined,
@@ -82,8 +85,12 @@ const useAvgSeedsPerBDV = (
     setError(false);
     setLoading(true);
     console.debug('[useAvgSeedsPerBDV/fetch]: fetching...');
-
-    const tokens = [sdk.tokens.BEAN, ...sdk.tokens.wellLP];
+    const tokens = [
+      LegacyToken.BEAN[1],
+      LegacyToken.BEAN_ETH_WELL_LP[1],
+      LegacyToken.BEAN_WSTETH_WELL_LP[1],
+    ];
+    // const tokens = [sdk.tokens.BEAN, ...sdk.tokens.wellLP];
     const document = createMultiTokenQuery(
       sdk.contracts.beanstalk.address,
       tokens
@@ -107,14 +114,18 @@ const useAvgSeedsPerBDV = (
 
       await fetchData(earliestSeason);
 
+      console.log('output: ', output);
+
       if (numQueries > 1) {
-        const seasons: number[] = [];
+        const _seasons: number[] = [];
         for (let i = 0; i < numQueries - 1; i += 1) {
           const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
           const season_lte = Math.max(0, earliestSeason - offset);
           if (season_lte < SEED_GAUGE_DEPLOYMENT_SEASON) break;
-          seasons.push(season_lte);
+          _seasons.push(season_lte);
         }
+
+        const seasons = _seasons.filter(Boolean);
 
         await Promise.all(seasons.map((season) => fetchData(season)));
       }
@@ -160,7 +171,10 @@ function getNumQueries(range: Range<Time> | undefined): number {
   return Math.ceil(numSeasons / MAX_DATA_PER_QUERY);
 }
 
-function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
+function createMultiTokenQuery(
+  beanstalkAddress: string,
+  tokens: TokenInstance[]
+) {
   const queryParts = tokens.map(
     (token) => `seasonsSA_${token.symbol}: siloAssetHourlySnapshots(
       first: $first
@@ -211,7 +225,7 @@ function createMultiTokenQuery(beanstalkAddress: string, tokens: Token[]) {
 }
 
 function processTokenData(
-  token: Token,
+  token: TokenInstance,
   sData: SiloAssetsReturn | null,
   wData: WhitelistReturn | null,
   output: SiloTokenDataBySeason,
@@ -249,7 +263,7 @@ function processTokenData(
 function parseResult(
   data: any,
   sdk: BeanstalkSDK,
-  tokens: Token[],
+  tokens: TokenInstance[],
   output: SiloTokenDataBySeason
 ) {
   let earliestSeason = Infinity;
@@ -262,7 +276,7 @@ function parseResult(
 
     // Results are sorted in desc order.
     // Find earliest season from the BEAN dataset
-    if (token.equals(sdk.tokens.BEAN)) {
+    if (tokenIshEqual(token, sdk.tokens.BEAN)) {
       earliestSeason = Math.max(
         siloAssets[siloAssets.length - 1].season,
         whitelisted[whitelisted.length - 1].season

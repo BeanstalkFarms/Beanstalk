@@ -64,9 +64,12 @@ import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
 import useChainState from '~/hooks/chain/useChainState';
 import EthMainnet from '~/pages/mainnet';
+import { runOnDev } from '~/util/dev';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
+
+runOnDev();
 
 const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   <Toaster
@@ -150,7 +153,6 @@ function Arbitrum() {
       {/* -----------------------
        * Bean Updaters
        * ----------------------- */}
-      {/* price contract not working */}
       <PoolsUpdater />
       <UnripeUpdater />
 

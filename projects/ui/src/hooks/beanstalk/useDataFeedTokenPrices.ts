@@ -110,16 +110,6 @@ export default function useDataFeedTokenPrices() {
       }
     });
 
-    console.log(
-      'Oracle Result: ',
-      Object.fromEntries(
-        Object.entries(priceDataCache).map(([key, value]) => [
-          key,
-          value.toNumber(),
-        ])
-      )
-    );
-
     console.debug(
       `[beanstalk/tokenPrices/useCrvUnderlyingPrices] RESULT:`,
       priceDataCache
