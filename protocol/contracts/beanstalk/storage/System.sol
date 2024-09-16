@@ -316,7 +316,7 @@ struct AssetSettings {
     int96 milestoneStem; //                 │ 12 (30)
     bytes1 encodeType; //                   │ 1  (31)
     // one byte is left here.             ──┘ 1  (32)
-    int24 deltaStalkEarnedPerSeason; // ────┐ 3
+    int32 deltaStalkEarnedPerSeason; // ────┐ 3
     uint128 gaugePoints; //                 │ 16 (19)
     uint64 optimalPercentDepositedBdv; //   │ 8  (27)
     // 5 bytes are left here.             ──┘ 5  (32)

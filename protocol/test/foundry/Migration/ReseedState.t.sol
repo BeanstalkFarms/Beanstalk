@@ -93,6 +93,13 @@ contract ReseedStateTest is TestHelper {
         // l2Beanstalk.gm(address(this), 1);
     }
 
+    function test_Sunrise() public {
+        // jump forward one hour in vm
+        vm.warp(block.timestamp + 3600);
+        console.log("calling sunrise");
+        l2Beanstalk.sunrise();
+    }
+
     // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
     function test_beanstalkPrice() public {
         // Get beanstalk price
