@@ -105,7 +105,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     let tokenSetting = loadWhitelistTokenSetting(token);
 
     whitelistSettings.push(tokenSetting);
-    if (tokenSetting.gpSelector !== null) {
+    if (tokenSetting.isGaugeEnabled) {
       gaugeSettings.push(tokenSetting);
       isGaugeLive = true;
     } else {

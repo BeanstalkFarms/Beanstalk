@@ -192,8 +192,7 @@ describe("Seed Gauge", () => {
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "selector", "0x12345678");
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkEarnedPerSeason", BigInt.fromU64(35000000000).toString());
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkIssuedPerBdv", BigInt.fromU64(10000000000).toString());
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "0xabcdabcd");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "true");
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gaugePoints", BigInt.fromU32(12345).toString());
       assert.fieldEquals(
         "WhitelistTokenSetting",
@@ -207,8 +206,7 @@ describe("Seed Gauge", () => {
       handleUpdateGaugeSettings(
         createUpdateGaugeSettingsEvent(BEAN_ERC20.toHexString(), "0x12341234", "0xabcabcde", BigInt.fromU32(66).times(ratioDecimals))
       );
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "0x12341234");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "0xabcabcde");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "true");
       assert.fieldEquals(
         "WhitelistTokenSetting",
         BEAN_ERC20.toHexString(),
@@ -220,8 +218,7 @@ describe("Seed Gauge", () => {
       handleUpdateGaugeSettings(
         createUpdateGaugeSettingsEvent(BEAN_ERC20.toHexString(), "0x00000000", "0x00000000", BigInt.fromU32(66).times(ratioDecimals))
       );
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "null");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "false");
     });
 
     test("WhitelistToken Snapshots Get Created", () => {
@@ -239,8 +236,8 @@ describe("Seed Gauge", () => {
       event.block = mockBlock(BigInt.fromU32(19628585), timestamp);
       handleUpdateGaugeSettings(event);
 
-      assert.fieldEquals("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1", "gpSelector", "0x12341234");
-      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString(), "gpSelector", "0x12341234");
+      assert.fieldEquals("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1", "isGaugeEnabled", "true");
+      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString(), "isGaugeEnabled", "true");
     });
   });
 });

@@ -165,8 +165,7 @@ describe("APY Calculations", () => {
 
       let beanEthWhitelistSettings = loadWhitelistTokenSetting(BEAN_WETH_CP2_WELL);
       beanEthWhitelistSettings.gaugePoints = BigInt.fromString("100000000000000000000");
-      beanEthWhitelistSettings.gpSelector = Bytes.fromHexString("0x12345678");
-      beanEthWhitelistSettings.lwSelector = Bytes.fromHexString("0x12345678");
+      beanEthWhitelistSettings.isGaugeEnabled = true;
       beanEthWhitelistSettings.optimalPercentDepositedBdv = BigInt.fromString("100000000");
       beanEthWhitelistSettings.save();
 

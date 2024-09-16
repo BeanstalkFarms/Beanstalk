@@ -1,4 +1,4 @@
-import { Bytes4_emptyToNull } from "../../../../subgraph-core/utils/Bytes";
+import { Bytes4_emptySelector } from "../../../../subgraph-core/utils/Bytes";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   FarmerGerminatingStalkBalanceChanged,
@@ -114,8 +114,7 @@ export function handleTotalGerminatingBalanceChanged_bugged(event: TotalGerminat
 // SeedGauge -> Reseed
 export function handleUpdateGaugeSettings(event: UpdateGaugeSettings): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
-  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
+  siloSettings.isGaugeEnabled = !Bytes4_emptySelector(event.params.gpSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 

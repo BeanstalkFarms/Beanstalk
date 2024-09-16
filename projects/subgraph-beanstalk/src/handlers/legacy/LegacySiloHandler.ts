@@ -16,7 +16,7 @@ import { takeWhitelistTokenSettingSnapshots } from "../../entities/snapshots/Whi
 import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstalk-ABIs/SiloV3";
 import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged, WhitelistToken } from "../../../generated/Beanstalk-ABIs/SeedGauge";
 import { updateClaimedWithdraw, updateSeedsBalances } from "../../utils/legacy/LegacySilo";
-import { Bytes4_emptyToNull } from "../../../../subgraph-core/utils/Bytes";
+import { Bytes4_emptySelector } from "../../../../subgraph-core/utils/Bytes";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
@@ -142,8 +142,7 @@ export function handleWhitelistToken_v4(event: WhitelistToken): void {
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
   siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
-  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
+  siloSettings.isGaugeEnabled = !Bytes4_emptySelector(event.params.gpSelector);
   siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = event.block.timestamp;
 
