@@ -203,8 +203,9 @@ library LibWhitelist {
         s.sys.silo.assetSettings[token].milestoneSeason = s.sys.season.current;
 
         // stalkEarnedPerSeason is set to int32 before casting down.
-        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason = (int32(stalkEarnedPerSeason) -
-            int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason)).toInt32();
+        s.sys.silo.assetSettings[token].deltaStalkEarnedPerSeason =
+            int32(stalkEarnedPerSeason) -
+            int32(s.sys.silo.assetSettings[token].stalkEarnedPerSeason);
         s.sys.silo.assetSettings[token].stalkEarnedPerSeason = stalkEarnedPerSeason;
 
         emit UpdatedStalkPerBdvPerSeason(token, stalkEarnedPerSeason, s.sys.season.current);

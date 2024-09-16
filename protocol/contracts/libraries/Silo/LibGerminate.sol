@@ -459,7 +459,7 @@ library LibGerminate {
         if (s.sys.silo.assetSettings[token].milestoneSeason < s.sys.season.current) {
             prevStalkEarnedPerSeason = s.sys.silo.assetSettings[token].stalkEarnedPerSeason;
         } else {
-            int64 deltaStalkEarnedPerSeason = s
+            int32 deltaStalkEarnedPerSeason = s
                 .sys
                 .silo
                 .assetSettings[token]
@@ -467,11 +467,11 @@ library LibGerminate {
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
                     s.sys.silo.assetSettings[token].stalkEarnedPerSeason -
-                    uint32(uint64(deltaStalkEarnedPerSeason));
+                    uint32(deltaStalkEarnedPerSeason);
             } else {
                 prevStalkEarnedPerSeason =
                     s.sys.silo.assetSettings[token].stalkEarnedPerSeason +
-                    uint32(uint64(-deltaStalkEarnedPerSeason));
+                    uint32(-deltaStalkEarnedPerSeason);
             }
         }
     }
