@@ -22,7 +22,13 @@ async function reseed9(account, L2Beanstalk, mock = false) {
   let oracles = assets.map((asset) => asset[4]);
 
   // deploy LSD chainlink oracle for whitelist:
-  await deployContract("LSDChainlinkOracle", account, true, []);
+  const LSDChainlinkOracle = await deployContract("LSDChainlinkOracle", account, true, []);
+  console.log("LSDChainlinkOracle deployed at:", LSDChainlinkOracle.address);
+
+  // modify oracles for token 4 (WSTETH) and token 5 (WEETH) to use LSDChainlinkOracle address.
+  oracles[4][0] = LSDChainlinkOracle.address;
+  oracles[5][0] = LSDChainlinkOracle.address;
+
 
   await upgradeWithNewFacets({
     diamondAddress: L2Beanstalk,

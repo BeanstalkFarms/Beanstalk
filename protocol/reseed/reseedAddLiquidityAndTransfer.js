@@ -7,7 +7,7 @@ const {
   L2_USDC,
   L2_USDT
 } = require("../test/hardhat/utils/constants.js");
-const { to18, to6 } = require("../test/hardhat/utils/helpers.js");
+const { to18, to6, toX } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
 const fs = require("fs");
 
@@ -36,20 +36,20 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   );
 
   const nonBeanAmounts = [
-    balancesInBeanEthWell[1], // BEAN/WETH
-    balancesInBeanWstEthWell[1], // BEAN/WstETH
-    to18("1000"), // BEAN/WEEETH
-    to18("1"), // BEAN/WBTC
-    balancesInBeanStableWell[1], // BEAN/USDC
-    to6("100000") // BEAN/USDT
+    to18("100"), // BEAN/WETH
+    to18("100"), // BEAN/WstETH
+    to18("1500"), // BEAN/WEEETH
+    toX("20", 8), // BEAN/WBTC (8 decimals)
+    to6("1000000"), // BEAN/USDC
+    to6("1000000") // BEAN/USDT
   ];
 
   const beanAmounts = [
-    balancesInBeanEthWell[0], // BEAN/WETH
-    balancesInBeanWstEthWell[0], // BEAN/WstETH
+    to6("1000000"), // BEAN/WETH
+    to6("1000000"), // BEAN/WstETH
     to6("1000000"), // BEAN/WEEETH
-    to6("100000000000000000"), // BEAN/WBTC
-    to6("1000000000000"), // BEAN/USDC
+    to6("1000000"), // BEAN/WBTC
+    to6("1000000"), // BEAN/USDC
     to6("1000000") // BEAN/USDT
   ];
   console.log("-----------------------------------");

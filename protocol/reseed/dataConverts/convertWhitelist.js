@@ -93,18 +93,6 @@ const tokensToWhitelist = [
   "0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b"
 ];
 
-const defaultAssetSettings = {
-  selector: "0xc84c7727",
-  stalkEarnedPerSeason: "1",
-  stalkIssuedPerBdv: "10000",
-  milestoneSeason: "0",
-  milestoneStem: "0",
-  encodeType: "0x01",
-  deltaStalkEarnedPerSeason: "0",
-  gaugePoints: "0",
-  optimalPercentDepositedBdv: "0"
-};
-
 const tokenToWhitelistMapping = {
   "0xBEA0005B8599265D41256905A9B3073D397812E4": [
     "0xBEA0005B8599265D41256905A9B3073D397812E4",
@@ -186,6 +174,19 @@ const tokenToGpAndOptimalPercentDepositedBdvMapping = {
 function parseWhitelist(inputFilePath, outputFilePath) {
   try {
     const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
+    
+    const defaultAssetSettings = {
+      selector: "0xc84c7727",
+      stalkEarnedPerSeason: "1",
+      stalkIssuedPerBdv: "10000000000",
+      milestoneSeason: data.season.current,
+      milestoneStem: "0",
+      encodeType: "0x01",
+      deltaStalkEarnedPerSeason: "0",
+      gaugePoints: "0",
+      optimalPercentDepositedBdv: "0"
+    };
+
     const assetSettings = data.silo.assetSettings;
     const output = {};
 
