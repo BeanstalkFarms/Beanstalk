@@ -10,6 +10,54 @@ const INTERNAL_BALS = "./scripts/beanstalk-3/data/inputs/InternalBalances.json";
 const FERTILIZERS = "./scripts/beanstalk-3/data/inputs/Fertilizers.json";
 const POD_ORDERS = "./scripts/beanstalk-3/data/inputs/PodOrders.json";
 
+function updateInputJsonData(verbose = false) {
+  // reads ContractAddresses.json, pulls data from protocol/reseed/data/*.json, updates corresponding deposits/plots/internalbals/fertilizers/podorders jsons
+
+  const contractAddresses = JSON.parse(
+    fs.readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.json")
+  );
+
+  // loop through and update contract addresses to be the checksummed address
+  for (const [address, data] of Object.entries(contractAddresses)) {
+    contractAddresses[address] = ethers.utils.getAddress(data);
+  }
+
+  console.log("Contract Addresses:", contractAddresses);
+
+  const BLOCK_NUMBER = 20736200;
+  const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
+
+  // update Deposits.json
+  const allDeposits = JSON.parse(fs.readFileSync(storageAccountsPath));
+  const deposits = restructureDeposits(allDeposits, contractAddresses);
+  fs.writeFileSync(DEPOSITS, JSON.stringify(deposits, null, 2));
+}
+
+function restructureDeposits(inputData, addressesToInclude) {
+  return Object.entries(inputData)
+    .filter(
+      ([address, data]) =>
+        addressesToInclude.includes(address) && Object.keys(data.deposits).length > 0
+    )
+    .map(([address, data]) => {
+      const depositIds = Object.values(data.depositIdList).flat();
+      const amounts = [];
+      const bdvs = [];
+
+      // Convert deposit IDs from uint256 to hex and collect amounts and bdvs
+      Object.entries(data.deposits).forEach(([depositIdUint, deposit]) => {
+        const depositIdHex = "0x" + BigInt(depositIdUint).toString(16).padStart(64, "0");
+        if (!depositIds.includes(depositIdHex)) {
+          depositIds.push(depositIdHex);
+        }
+        amounts.push(BigInt(deposit.amount).toString());
+        bdvs.push(BigInt(deposit.bdv).toString());
+      });
+
+      return [address, depositIds, amounts, bdvs];
+    });
+}
+
 function getDepositMerkleRoot(verbose = false) {
   const accounts = JSON.parse(fs.readFileSync(DEPOSITS));
   data = [];
@@ -217,4 +265,5 @@ function getPodOrderMerkleRoot(verbose = false) {
 // getPlotMerkleRoot(false);
 // getInternalBalMerkleRoot(false);
 // getFertMerkleRoot(false);
-getPodOrderMerkleRoot(false);
+// getPodOrderMerkleRoot(false);
+updateInputJsonData(false);
