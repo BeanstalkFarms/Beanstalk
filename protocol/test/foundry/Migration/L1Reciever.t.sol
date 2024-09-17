@@ -118,6 +118,8 @@ contract L1RecieverFacetTest is Order, TestHelper {
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
+    /*
+    // commented out because no pod orders owned by contracts
     function test_L2MigratePodOrder() public {
         bs.setRecieverForL1Migration(address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4), RECIEVER);
 
@@ -145,7 +147,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         vm.expectRevert("L2Migration: Orders have been migrated");
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
-    }
+    }*/
 
     /**
      * @notice verifies only the owner or bridge can call the migration functions.
@@ -223,6 +225,8 @@ contract L1RecieverFacetTest is Order, TestHelper {
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
+    /*
+    // commented out because no pod orders owned by contracts
     function test_L2MigrateInvalidPodOrder() public {
         (
             address owner,
@@ -238,7 +242,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         vm.expectRevert("L2Migration: Invalid Order");
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
-    }
+    }*/
 
     // test helpers
     function getMockDepositData()

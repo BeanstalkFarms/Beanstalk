@@ -201,6 +201,8 @@ function restructureMarketInfo(inputData, addressesToInclude) {
   });
 }
 
+/////////////////// Merkle Root Generators ////////////////////
+
 function getDepositMerkleRoot(verbose = false) {
   const accounts = JSON.parse(fs.readFileSync(DEPOSITS));
   data = [];
@@ -404,9 +406,13 @@ function getPodOrderMerkleRoot(verbose = false) {
   );
 }
 
-// getDepositMerkleRoot(false);
-// getPlotMerkleRoot(false);
-// getInternalBalMerkleRoot(false);
-// getFertMerkleRoot(false);
-// getPodOrderMerkleRoot(false);
-updateInputJsonData(false);
+function generateAllMerkleRoots(verbose = false) {
+  updateInputJsonData(false);
+  getDepositMerkleRoot(verbose);
+  getPlotMerkleRoot(verbose);
+  getInternalBalMerkleRoot(verbose);
+  getFertMerkleRoot(verbose);
+  // getPodOrderMerkleRoot(verbose); //skipped because now there are no pod orders owned by contracts
+}
+
+generateAllMerkleRoots(false);
