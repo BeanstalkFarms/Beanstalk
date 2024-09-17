@@ -205,6 +205,8 @@ contract SeasonGettersFacet {
         if (LibWell.isWell(well)) {
             uint256 wellGaugePoints = s.sys.silo.assetSettings[well].gaugePoints;
             uint256 wellDepositedBdv = s.sys.silo.balances[well].depositedBdv;
+            // avoid division by zero when no BDV is deposited or initial deposits are still germinating. 
+            if (wellDepositedBdv == 0) return 0;
             return wellGaugePoints.mul(LibGauge.BDV_PRECISION).div(wellDepositedBdv);
         } else {
             revert("Token not supported");
