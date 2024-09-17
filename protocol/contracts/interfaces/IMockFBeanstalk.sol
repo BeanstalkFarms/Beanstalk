@@ -1534,6 +1534,10 @@ interface IMockFBeanstalk {
 
     function mockLiquidityWeight() external pure returns (uint256);
 
+    function mockSetMilestoneStem(address token, int96 stem) external;
+
+    function mockSetMilestoneSeason(address token, uint32 season) external;
+
     function mockSetAverageGrownStalkPerBdvPerSeason(
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external;

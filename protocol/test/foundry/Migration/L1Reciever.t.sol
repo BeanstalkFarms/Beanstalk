@@ -6,6 +6,7 @@ import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/Te
 import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
+import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the L1RecieverFacet.
@@ -16,20 +17,42 @@ interface IERC1555 {
 }
 
 contract L1RecieverFacetTest is Order, TestHelper {
+    // Offset arbitrum uses for corresponding L2 address
+    uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
+
+    address constant L2BEAN = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
+    address constant L2URBEAN = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
+    address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
+
     // contracts for testing:
-    address constant OWNER = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
-    address constant RECIEVER = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
+    // note this is the first address numerically sorted in the merkle tree
+    address constant OWNER = address(0x153072C11d6Dffc0f1e5489bC7C996c219668c67);
+    address RECIEVER;
 
     function setUp() public {
         initializeBeanstalkTestState(true, false);
+
+        RECIEVER = applyL1ToL2Alias(OWNER);
+        console.log("RECIEVER:", RECIEVER);
+
+        // setup basic whitelisting for testing
+        bs.mockWhitelistToken(L2BEAN, IMockFBeanstalk.beanToBDV.selector, 10000000000, 1);
+        bs.mockWhitelistToken(L2URBEAN, IMockFBeanstalk.unripeBeanToBDV.selector, 10000000000, 1);
+        bs.mockWhitelistToken(L2URLP, IMockFBeanstalk.unripeLPToBDV.selector, 10000000000, 1);
+
+        // set the milestone stem for BEAN
+        bs.mockSetMilestoneStem(L2BEAN, 36462179909);
+        bs.mockSetMilestoneSeason(L2BEAN, bs.season());
+        bs.mockSetMilestoneStem(L2URBEAN, 0);
+        bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
+        bs.mockSetMilestoneStem(L2URLP, 0);
+        bs.mockSetMilestoneSeason(L2URLP, bs.season());
     }
 
     /**
      * @notice validates that an account verification works, with the correct data.
      */
     function test_L2MigrateDeposits() public {
-        // skip sunrises such that stemTip > 0:
-        bs.fastForward(100);
         bs.setRecieverForL1Migration(OWNER, RECIEVER);
 
         (
@@ -43,7 +66,10 @@ contract L1RecieverFacetTest is Order, TestHelper {
         vm.prank(RECIEVER);
         L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
 
-        assertEq(bs.balanceOfStalk(RECIEVER), 10199e12);
+        console.log("done issuing deposits");
+
+        assertEq(bs.balanceOfStalk(RECIEVER), 9278633023225688000000);
+        console.log("done checking balance of stalk");
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         (uint256 amount, uint256 bdv) = bs.getDeposit(RECIEVER, token, stem);
         assertEq(amount, depositAmounts[0]);
@@ -250,20 +276,30 @@ contract L1RecieverFacetTest is Order, TestHelper {
         pure
         returns (address, uint256[] memory, uint256[] memory, uint256[] memory, bytes32[] memory)
     {
-        address account = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
-        uint256[] memory depositIds = new uint256[](1);
-        depositIds[0] = uint256(0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab0000000000000000000F4240);
+        address account = address(0x153072C11d6Dffc0f1e5489bC7C996c219668c67);
+        uint256[] memory depositIds = new uint256[](4);
+        depositIds[0] = uint256(0x1bea054dddbca12889e07b3e076f511bf1d27543000000000000000000000000);
+        depositIds[1] = uint256(0x1bea054dddbca12889e07b3e076f511bf1d27543fffffffffffffffc361cfc00);
+        depositIds[2] = uint256(0x1bea054dddbca12889e07b3e076f511bf1d27543fffffffffffffffa3cc8f880);
+        depositIds[3] = uint256(0xbea0005b8599265d41256905a9b3073d397812e400000000000000087d50b645);
 
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = 1000000;
+        uint256[] memory amounts = new uint256[](4);
+        amounts[0] = 2;
+        amounts[1] = 98145025335;
+        amounts[2] = 1112719230995;
+        amounts[3] = 7199435606;
 
-        uint256[] memory bdvs = new uint256[](1);
-        bdvs[0] = 1000000;
+        uint256[] memory bdvs = new uint256[](4);
+        bdvs[0] = 0;
+        bdvs[1] = 21907521429;
+        bdvs[2] = 248376525588;
+        bdvs[3] = 7199435606;
 
-        bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0x8ea415839f1072f235336be93f3642bbb931587b0514414f050ba28e44e863ba);
-        proof[1] = bytes32(0xb6a82bb1dbec8f846d882348c50cdc2f98cc3624f3f644d766aee803f3bf54f9);
-        proof[2] = bytes32(0x6bcf3ec8ed0d7643aa6aa7eb4e6355b359c24df28cfaee3ce85ccfaca5948165);
+        bytes32[] memory proof = new bytes32[](4);
+        proof[0] = bytes32(0x5ef83f1a8578311c39534b42bee1dfeb3615286ea8d88cb8d1049815df6cc280);
+        proof[1] = bytes32(0x707b589c0c392e07b09601c0c055bf263f597daa15a69b2a8081d05430997682);
+        proof[2] = bytes32(0x9e6eb9e0280de48adad93234edbb18284e135a06d7371391a14eed417d833523);
+        proof[3] = bytes32(0x15c9ecf466aefd85d1ced579df7a8fb0219af3d27d3255e808226bbd9e219303);
 
         return (account, depositIds, amounts, bdvs, proof);
     }
