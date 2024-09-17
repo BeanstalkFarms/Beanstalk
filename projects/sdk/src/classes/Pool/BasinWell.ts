@@ -37,9 +37,22 @@ export class BasinWell extends Pool {
   }
 
   async getRemoveLiquidityOutOneToken(lpAmountIn: TokenValue, tokenOut: ERC20Token) {
+    const tokenIndex = this.tokens.findIndex((token) => token.equals(tokenOut));
+    if (tokenIndex < 0) {
+      throw new Error(`Unable to determine token index of ${tokenOut.symbol} in ${this.tokens}`);
+    }
+
     return this.getContract()
       .getRemoveLiquidityOneTokenOut(lpAmountIn.toBigNumber(), tokenOut.address)
-      .then((result) => tokenOut.fromBlockchain(result));
+      .then((result) => {
+        const underlying = [
+          tokenOut.fromBlockchain(result),
+          this.tokens[tokenIndex === 0 ? 1 : 0].fromHuman(0)
+        ];
+        // If the specified token out index === 1, reverse the result
+        if (tokenIndex === 1) return underlying.reverse();
+        return underlying;
+      });
   }
 
   /**
