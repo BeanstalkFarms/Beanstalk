@@ -9,6 +9,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
   let facets = [
     "SeasonFacet", // SUN
     "SeasonGettersFacet",
+    "GaugeGettersFacet",
     "GaugePointFacet",
     "LiquidityWeightFacet",
     "SiloFacet", // SILO
