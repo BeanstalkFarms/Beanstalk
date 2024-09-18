@@ -536,7 +536,7 @@ module.exports = {
       timeout: 100000
     },
     reseedArbitrum: {
-      url: "https://virtual.arbitrum.rpc.tenderly.co/f26e10c8-4f68-47e1-bb3e-b9c955168e5c",
+      url: "https://virtual.arbitrum.rpc.tenderly.co/65fd0946-649e-4927-b8db-9a5ff8afa284",
       chainId: 42161,
       timeout: 10000000000000
     },
