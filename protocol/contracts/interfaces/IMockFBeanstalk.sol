@@ -1282,6 +1282,8 @@ interface IMockFBeanstalk {
 
     function getSeedGaugeSetting() external view returns (EvaluationParameters memory);
 
+    function getEvaluationParameters() external view returns (EvaluationParameters memory);
+
     function getShipmentRoutes() external view returns (ShipmentRoute[] memory);
 
     function getSiloTokens() external view returns (address[] memory tokens);
