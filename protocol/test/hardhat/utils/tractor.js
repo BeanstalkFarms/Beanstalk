@@ -63,7 +63,9 @@ const siloFacetInterface = async () =>
   (
     await ethers.getContractFactory("SiloFacet", {
       libraries: {
-        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address
+        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address,
+        LibTokenSilo: (await (await ethers.getContractFactory("LibTokenSilo")).deploy()).address,
+        LibSiloPermit: (await (await ethers.getContractFactory("LibSiloPermit")).deploy()).address
       }
     })
   ).interface;
@@ -71,7 +73,8 @@ const claimFacetInterface = async () =>
   (
     await ethers.getContractFactory("ClaimFacet", {
       libraries: {
-        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address
+        LibSilo: (await (await ethers.getContractFactory("LibSilo")).deploy()).address,
+        LibTokenSilo: (await (await ethers.getContractFactory("LibTokenSilo")).deploy()).address
       }
     })
   ).interface;
