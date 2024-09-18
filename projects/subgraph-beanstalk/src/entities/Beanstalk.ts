@@ -46,12 +46,12 @@ export function loadSeason(id: BigInt): Season {
     season.deltaBeans = ZERO_BI;
     season.rewardBeans = ZERO_BI;
     season.incentiveBeans = ZERO_BI;
-    season.save();
-    if (id > ZERO_BI) {
-      let lastSeason = loadSeason(id.minus(ONE_BI));
+
+    let lastSeason = Season.load(id.minus(ONE_BI).toString());
+    if (lastSeason != null) {
       season.beans = lastSeason.beans;
-      season.save();
     }
+    season.save();
 
     // Update beanstalk season
     let beanstalk = loadBeanstalk();
