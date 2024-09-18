@@ -38,7 +38,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: arbitrum-one
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
@@ -59,6 +59,51 @@ dataSources:
           filter:
             kind: once
       file: ../src/utils/constants/Version.ts
+  - kind: ethereum/contract
+    name: InitInit
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+      endBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      blockHandlers:
+        - handler: init
+          filter:
+            kind: once
+      file: ../src/utils/b3-migration/Init.ts
+  - kind: ethereum/contract
+    name: InitPreUnpause
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 575757575757 # Reseed Completion
+      endBlock: 575757575757 # Reseed Completion
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Beanstalk
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      blockHandlers:
+        - handler: preUnpause
+          filter:
+            kind: once
+      file: ../src/utils/b3-migration/Init.ts
+
   ###
   # SILO
   ###

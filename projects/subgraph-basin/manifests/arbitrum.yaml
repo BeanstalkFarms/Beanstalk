@@ -6,7 +6,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: arbitrum-one
     source:
       address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"

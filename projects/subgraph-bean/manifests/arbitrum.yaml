@@ -6,7 +6,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: arbitrum-one
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
@@ -27,6 +27,28 @@ dataSources:
           filter:
             kind: once
       file: ../src/utils/constants/Version.ts
+  - kind: ethereum/contract
+    name: InitInit
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+      endBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Version
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      blockHandlers:
+        - handler: init
+          filter:
+            kind: once
+      file: ../src/utils/b3-migration/Init.ts
   ###
   # BEAN TOKEN
   ###
