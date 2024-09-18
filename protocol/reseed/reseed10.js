@@ -51,7 +51,6 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "LibFlood",
     "LibTokenSilo",
     "LibEvaluate",
-    "LibWell",
     "LibSiloPermit"
   ];
 
@@ -65,8 +64,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
       "LibGerminate",
       "LibShipping",
       "LibFlood",
-      "LibEvaluate",
-      "LibWell"
+      "LibEvaluate"
     ],
     ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo", "LibTokenSilo"],
     PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"],
