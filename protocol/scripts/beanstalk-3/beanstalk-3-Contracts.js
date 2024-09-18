@@ -13,9 +13,11 @@ const POD_ORDERS = "./scripts/beanstalk-3/data/inputs/PodOrders.json";
 function updateInputJsonData(verbose = false) {
   // reads ContractAddresses.json, pulls data from protocol/reseed/data/*.json, updates corresponding deposits/plots/internalbals/fertilizers/podorders jsons
 
-  const contractAddresses = JSON.parse(
-    fs.readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.json")
-  );
+  const contractAddresses = fs
+    .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   // loop through and update contract addresses to be the checksummed address
   for (const [address, data] of Object.entries(contractAddresses)) {
