@@ -15,7 +15,7 @@ async function reseed6(account, L2Beanstalk, mock, verbose = false) {
   }
   const beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
 
-  targetEntriesPerChunk = 800;
+  targetEntriesPerChunk = 200;
   depositChunks = await splitEntriesIntoChunksOptimized(beanDeposits, targetEntriesPerChunk);
   const InitFacet = await (await ethers.getContractFactory("ReseedSilo", account)).deploy();
   await InitFacet.deployed();

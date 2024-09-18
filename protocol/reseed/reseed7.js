@@ -15,7 +15,7 @@ async function reseed7(account, L2Beanstalk, mock, verbose = false) {
   }
   const statuses = JSON.parse(await fs.readFileSync(accountStatusesPath));
 
-  targetEntriesPerChunk = 800;
+  targetEntriesPerChunk = 100;
   statusChunks = await splitEntriesIntoChunksOptimized(statuses, targetEntriesPerChunk);
   const InitFacet = await (
     await ethers.getContractFactory("ReseedAccountStatus", account)

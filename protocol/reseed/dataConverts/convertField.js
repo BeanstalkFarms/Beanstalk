@@ -1,6 +1,9 @@
 const fs = require("fs");
 const { convertToBigNum } = require("../../utils/read.js");
 
+// problematic accounts with a lot of plots
+const problematicAccounts = ["0x19A4FE7D0C76490ccA77b45580846CDB38B9A406"];
+
 function parseField(inputFilePath, outputFilePath, contractAccounts) {
   try {
     const data = fs.readFileSync(inputFilePath, "utf8");
@@ -23,9 +26,24 @@ function parseField(inputFilePath, outputFilePath, contractAccounts) {
               const amount = plots[plotKey];
               return [convertToBigNum(index), convertToBigNum(amount)];
             });
+            
+            // Comment our for chinking problematic accounts
+            // if (problematicAccounts.includes(account)) {
+            //   const chunkSize = 50;
+            //   const chunkedArray = [];
+            //   for (let i = 0; i < plotArray.length; i += chunkSize) {
+            //     chunkedArray.push(plotArray.slice(i, i + chunkSize));
+            //   }
+            //   for (const chunk of chunkedArray) {
+            //     result.push([account, chunk]);
+            //   }
 
             // do not include contract accounts
-            if (!contractAccounts.includes(account)) {
+            // do not include problematic accounts
+            if (
+              !contractAccounts.includes(account.toLowerCase()) &&
+              !problematicAccounts.includes(account)
+            ) {
               result.push([account, plotArray]);
             }
           }

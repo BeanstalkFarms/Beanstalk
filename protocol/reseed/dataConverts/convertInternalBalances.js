@@ -14,7 +14,7 @@ function parseInternalBalances(inputFilePath, outputFilePath, contractAccounts) 
           if (internalBalances.hasOwnProperty(tokenAddress)) {
             const balance = internalBalances[tokenAddress];
             // do not include contract accounts
-            if (!contractAccounts.includes(account)) {
+            if (!contractAccounts.includes(account.toLowerCase())) {
               result.push([account, tokenAddress, convertToBigNum(balance)]);
             }
           }
