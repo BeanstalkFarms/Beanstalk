@@ -195,6 +195,13 @@ function parseWhitelist(inputFilePath, outputFilePath) {
       var tokenAssetSettings = defaultAssetSettings;
       if (token in assetSettings) {
         tokenAssetSettings = assetSettings[token];
+
+        // 3crv was not a well and thus had an ecode type of 0x00
+        // BEAN:USDC is now a well and thus has an encode type of 0x01
+        // for more info see System.sol
+        if (token === "0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279") {
+          tokenAssetSettings.encodeType = "0x01";
+        }
       }
 
       var tokenToGpAndOptimalPercentDepositedBdv =
