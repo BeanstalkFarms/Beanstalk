@@ -431,11 +431,13 @@ contract GaugeTest is TestHelper {
         uint256 totalBdv = beanBDV + lpBDV;
         uint256 beanStalk = beanBDV * postBeanSettings.stalkEarnedPerSeason;
         uint256 lpStalk = lpBDV * postLpSettings.stalkEarnedPerSeason;
-        uint256 totalStalk = (beanStalk + lpStalk) * 1e6; // increase total stalk precision to 16 decimals
+        uint256 totalStalk = (beanStalk + lpStalk);
         // precise within 1e-12%.
+        // note: with the stalk Precision update, totalBdv * avgGsPerBdvPerSeason needs to be divided by 1e6,
+        // as `avgGsPerBdvPerSeason` is seeds, but seeds only has 6 decimal precision, whereas Gs/bdv has 12 decimal precision.
         assertApproxEqRel(
             totalStalk,
-            totalBdv * avgGsPerBdvPerSeason,
+            (totalBdv * avgGsPerBdvPerSeason) / 1e6,
             1e12,
             "invalid distrubution"
         );
@@ -455,7 +457,6 @@ contract GaugeTest is TestHelper {
      * note: beanToMaxLPRatio and averageGrownStalkPerBdvPerSeason are kept constant for testing purposes.
      * see {testDistroGaugeBeanToLp} to see how the beanToMaxLPRatio and averageGrownStalkPerBdvPerSeason are adjusted.
      */
-     // FAILS
     function testDistroGaugeLpToLp() public {
         initLpToLpDistro();
         bs.mockStepGauge();

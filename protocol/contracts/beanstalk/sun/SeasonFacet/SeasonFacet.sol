@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {Weather, C} from "./Weather.sol";
+import {Weather} from "./Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
