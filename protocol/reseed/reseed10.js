@@ -38,42 +38,52 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
   ];
 
   // A list of public libraries that need to be deployed separately.
-  let libraryNames = [
+  libraryNames = [
     "LibGauge",
     "LibIncentive",
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
     "LibGerminate",
+    "LibPipelineConvert",
+    "LibSilo",
     "LibShipping",
     "LibFlood",
-    "LibSilo",
-    "LibPipelineConvert",
-    "LibUsdOracle",
-    "LibChainlinkOracle",
-    "LibWell"
+    "LibTokenSilo",
+    "LibEvaluate",
+    "LibWell",
+    "LibSiloPermit"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
   // MockFacets will be deployed with the same public libraries.
-  let facetLibraries = {
+  facetLibraries = {
     SeasonFacet: [
       "LibGauge",
       "LibIncentive",
-      "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
       "LibShipping",
-      "LibFlood"
+      "LibFlood",
+      "LibEvaluate",
+      "LibWell"
     ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
-    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo", "LibTokenSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
-    L1RecieverFacet: ["LibSilo"],
-    ClaimFacet: ["LibSilo"]
+    SiloFacet: ["LibSilo", "LibTokenSilo", "LibSiloPermit"],
+    EnrootFacet: ["LibSilo", "LibTokenSilo"],
+    ClaimFacet: ["LibSilo", "LibTokenSilo"],
+    GaugeGettersFacet: ["LibLockedUnderlying"],
+    L1RecieverFacet: ["LibSilo", "LibTokenSilo"]
+  };
+
+  // A mapping of external libraries to external libraries that need to be linked.
+  // note: if a library depends on another library, the dependency will need to come
+  // before itself in `libraryNames`
+  libraryLinks = {
+    LibEvaluate: ["LibLockedUnderlying"]
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
@@ -82,6 +92,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     facetNames: facets,
     facetLibraries: facetLibraries,
     libraryNames: libraryNames,
+    linkedLibraries: libraryLinks,
     initFacetName: "InitReseed",
     initArgs: [],
     bip: false,

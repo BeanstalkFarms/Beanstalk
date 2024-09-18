@@ -414,6 +414,7 @@ async function upgradeWithNewFacets({
   facetNames = [],
   facetLibraries = {},
   libraryNames = [],
+  linkedLibraries = {},
   selectorsToRemove = [],
   selectorsToAdd = {},
   initFacetName = undefined,
@@ -446,9 +447,25 @@ async function upgradeWithNewFacets({
   const deployed = [];
   if (verbose && libraryNames.length > 0) console.log("Deploying Libraries");
   for (const name of libraryNames) {
-    if (!Object.keys(libraries).includes(name)) {
+    if (!Object.keys(libraryNames).includes(name)) {
       if (verbose) console.log(`Deploying: ${name}`);
-      let libraryFactory = await ethers.getContractFactory(name, account);
+      // if the library also has an external library, link them as well.
+      let libraryFactory;
+      if (linkedLibraries[name]) {
+        let linkedLibrary = Object.keys(libraries).reduce((acc, val) => {
+          if (linkedLibraries[name].includes(val)) acc[val] = libraries[val];
+          return acc;
+        }, {});
+        libraryFactory = await ethers.getContractFactory(
+          name,
+          {
+            libraries: linkedLibrary
+          },
+          account
+        );
+      } else {
+        libraryFactory = await ethers.getContractFactory(name, account);
+      }
       libraryFactory = await libraryFactory.deploy();
       await libraryFactory.deployed();
       if (verify) {

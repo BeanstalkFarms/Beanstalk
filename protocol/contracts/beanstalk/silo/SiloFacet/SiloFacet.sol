@@ -6,9 +6,7 @@ pragma solidity ^0.8.20;
 pragma abicoder v2;
 
 import "./TokenSilo.sol";
-import "contracts/libraries/Silo/LibSiloPermit.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
-import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @title SiloFacet
