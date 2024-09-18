@@ -108,6 +108,12 @@ task("sunriseArb", async function () {
   const unixTime = await time.latest();
   const currentTime = new Date(unixTime * 1000).toLocaleString();
 
+  // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
+  const afterSunriseTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const additionalSeconds = 12;
+  await network.provider.send("evm_setNextBlockTimestamp", [afterSunriseTimestamp + additionalSeconds]);
+  await network.provider.send("evm_mine");
+
   console.log(
     "sunrise complete!\ncurrent season:",
     await seasonGetters.season(),
@@ -142,8 +148,8 @@ task("reseedL1", async () => {
 task("reseedL2", async () => {
   // the account that deploys the new diamond address at nonce 0.
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
-  // todo: get l2bcm once deployed.
-  let l2bcm = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f8");
+  // the l2 bcm safe account address.
+  let l2bcm = await impersonateSigner("0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69");
   await mintEth(beanstalkDeployer.address);
   await mintEth(l2bcm.address);
   await reseedL2({
