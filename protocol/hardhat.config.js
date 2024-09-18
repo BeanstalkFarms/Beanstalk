@@ -540,6 +540,11 @@ module.exports = {
       chainId: 42161,
       timeout: 10000000000000
     },
+    reseedArbitrumSync: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/af868e07-a45a-41e7-b05f-c272e8d42cdd",
+      chainId: 42161,
+      timeout: 10000000000000
+    },
     goerli: {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
