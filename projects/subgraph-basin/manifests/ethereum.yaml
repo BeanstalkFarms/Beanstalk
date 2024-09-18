@@ -6,7 +6,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: mainnet
     source:
       address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
