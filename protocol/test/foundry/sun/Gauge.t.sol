@@ -437,7 +437,7 @@ contract GaugeTest is TestHelper {
         // as `avgGsPerBdvPerSeason` is seeds, but seeds only has 6 decimal precision, whereas Gs/bdv has 12 decimal precision.
         assertApproxEqRel(
             totalStalk,
-            totalBdv * avgGsPerBdvPerSeason / 1e6,
+            (totalBdv * avgGsPerBdvPerSeason) / 1e6,
             1e12,
             "invalid distrubution"
         );
