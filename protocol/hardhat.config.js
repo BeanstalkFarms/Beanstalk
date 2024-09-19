@@ -95,29 +95,27 @@ task("sunrise2", async function () {
 });
 
 task("sunriseArb", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  // call sunrise before attempting to mine more blocks:
+  try {
+    await beanstalk.sunrise();
+  } catch (error) {
+    // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
+    const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+    const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+    const additionalSeconds = 12;
+    await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp + additionalSeconds]);
 
-  season = await ethers.getContractAt("SeasonFacet", "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  await season.sunrise();
+    await beanstalk.sunrise();
 
-  seasonGetters = await ethers.getContractAt(
-    "SeasonGettersFacet",
-    "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
-  );
+    await network.provider.send("evm_mine");
+  }
   const unixTime = await time.latest();
   const currentTime = new Date(unixTime * 1000).toLocaleString();
 
-  // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
-  const afterSunriseTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-  const additionalSeconds = 12;
-  await network.provider.send("evm_setNextBlockTimestamp", [afterSunriseTimestamp + additionalSeconds]);
-  await network.provider.send("evm_mine");
-
   console.log(
     "sunrise complete!\ncurrent season:",
-    await seasonGetters.season(),
+    await beanstalk.season(),
     "\ncurrent blockchain time:",
     unixTime,
     "\nhuman readable time:",
@@ -125,7 +123,7 @@ task("sunriseArb", async function () {
     "\ncurrent block:",
     (await ethers.provider.getBlock("latest")).number,
     "\ndeltaB:",
-    (await seasonGetters.totalDeltaB()).toString()
+    (await beanstalk.totalDeltaB()).toString()
   );
 });
 
@@ -549,6 +547,11 @@ module.exports = {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
       timeout: 100000
+    },
+    reseedArbitrum: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/10991114-8428-4e06-88dc-426e4e5673da",
+      chainId: 42161,
+      timeout: 10000000000000
     }
   },
   etherscan: {
