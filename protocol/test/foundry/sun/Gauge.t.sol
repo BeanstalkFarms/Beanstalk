@@ -455,7 +455,7 @@ contract GaugeTest is TestHelper {
      * note: beanToMaxLPRatio and averageGrownStalkPerBdvPerSeason are kept constant for testing purposes.
      * see {testDistroGaugeBeanToLp} to see how the beanToMaxLPRatio and averageGrownStalkPerBdvPerSeason are adjusted.
      */
-     // FAILS
+    // FAILS
     function testDistroGaugeLpToLp() public {
         initLpToLpDistro();
         bs.mockStepGauge();
