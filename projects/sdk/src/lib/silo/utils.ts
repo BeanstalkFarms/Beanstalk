@@ -323,3 +323,20 @@ export function sumDeposits(token: ERC20Token, crates: Deposit[]) {
     }
   );
 }
+
+export function validateIsERC20Token(token: Token) {
+  if (!(token instanceof ERC20Token)) {
+    throw new Error(`Expected token ${token.address} to be an ERC20Token`);
+  }
+  return token;
+}
+
+export function normaliseERC20(token: Token, sdk: BeanstalkSDK) {
+  const normalised = sdk.tokens.findByAddress(token.address);
+
+  if (!normalised) {
+    throw new Error(`Could not find instance of ERC20Token ${token.address} in SDK`);
+  }
+
+  return validateIsERC20Token(normalised);
+}

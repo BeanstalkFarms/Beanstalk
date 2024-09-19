@@ -73,16 +73,7 @@ export class Contracts {
    */
   public readonly root: Root | null = null;
 
-  /**
-   * @deprecated as of Beanstalk 3.0 L2 migration
-   * @description mainnet only
-   */
   public readonly uniswapV3Router: UniswapV3Router;
-
-  /**
-   * @deprecated as of Beanstalk 3.0 L2 migration
-   * @description mainnet only
-   */
   public readonly uniswapV3QuoterV2: UniswapV3QuoterV2;
 
   constructor(sdk: BeanstalkSDK) {
@@ -150,18 +141,14 @@ export class Contracts {
     };
 
     // Uniswap
-    if (uniswapV3RouterAddress) {
-      this.uniswapV3Router = UniswapV3Router__factory.connect(
-        uniswapV3RouterAddress,
-        sdk.providerOrSigner
-      );
-    }
+    this.uniswapV3Router = UniswapV3Router__factory.connect(
+      uniswapV3RouterAddress,
+      sdk.providerOrSigner
+    );
 
-    if (uniswapV3QuoterV2Address) {
-      this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
-        uniswapV3QuoterV2Address,
-        sdk.providerOrSigner
-      );
-    }
+    this.uniswapV3QuoterV2 = UniswapV3QuoterV2__factory.connect(
+      uniswapV3QuoterV2Address,
+      sdk.providerOrSigner
+    );
   }
 }

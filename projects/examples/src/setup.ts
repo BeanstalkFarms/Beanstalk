@@ -7,7 +7,7 @@ const RPC_URL = "http://127.0.0.1:8545";
 const network = {
   name: "local",
   chainId: ChainId.LOCALHOST,
-  _defaultProvider: () => new ethers.providers.JsonRpcProvider(RPC_URL, network)
+  _defaultProvider: () => new ethers.providers.JsonRpcProvider(RPC_URL)
 };
 
 export const provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL, network);

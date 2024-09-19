@@ -4,7 +4,7 @@ import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
 import { Deposit } from "./types";
-import { pickCrates, sortCratesByBDVRatio, sortCratesByStem } from "./utils";
+import { normaliseERC20, pickCrates, sortCratesByBDVRatio, sortCratesByStem } from "./utils";
 
 export type ConvertDetails = {
   amount: TokenValue;
@@ -17,35 +17,48 @@ export type ConvertDetails = {
 
 export class Convert {
   static sdk: BeanstalkSDK;
-  Bean: Token;
-  BeanCrv3: Token;
-  BeanEth: Token;
-  beanWstETH: Token;
-  urBean: Token;
-  urBeanWstETH: Token;
-  paths: Map<Token, ERC20Token[]>;
+  readonly paths: Map<Token, ERC20Token[]>;
 
   constructor(sdk: BeanstalkSDK) {
     Convert.sdk = sdk;
-    this.Bean = Convert.sdk.tokens.BEAN;
-    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP;
-    this.BeanEth = Convert.sdk.tokens.BEAN_ETH_WELL_LP;
-    this.beanWstETH = Convert.sdk.tokens.BEAN_WSTETH_WELL_LP;
-    this.urBean = Convert.sdk.tokens.UNRIPE_BEAN;
-    this.urBeanWstETH = Convert.sdk.tokens.UNRIPE_BEAN_WSTETH;
 
-    // TODO: Update me for lambda to lambda converts
     this.paths = new Map<Token, ERC20Token[]>();
 
     // BEAN<>LP
     this.paths.set(Convert.sdk.tokens.BEAN, [
-      // Convert.sdk.tokens.BEAN_CRV3_LP, // Deprecated.
+      Convert.sdk.tokens.BEAN,
       Convert.sdk.tokens.BEAN_WSTETH_WELL_LP,
+      Convert.sdk.tokens.BEAN_ETH_WELL_LP,
+      Convert.sdk.tokens.BEAN_WBTC_WELL_LP,
+      Convert.sdk.tokens.BEAN_WEETH_WELL_LP,
+      Convert.sdk.tokens.BEAN_USDC_WELL_LP,
+      Convert.sdk.tokens.BEAN_USDT_WELL_LP
+    ]);
+
+    this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
       Convert.sdk.tokens.BEAN_ETH_WELL_LP
     ]);
-    this.paths.set(Convert.sdk.tokens.BEAN_CRV3_LP, [Convert.sdk.tokens.BEAN]);
-    this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
-    this.paths.set(Convert.sdk.tokens.BEAN_WSTETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WSTETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WBTC_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WBTC_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WEETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WEETH_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDC_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_USDC_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDT_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_USDT_WELL_LP
+    ]);
 
     // URBEAN<>(URBEAN_WSTETH_LP & RIPE BEAN)
     this.paths.set(Convert.sdk.tokens.UNRIPE_BEAN, [
@@ -166,12 +179,23 @@ export class Convert {
 
     const tks = Convert.sdk.tokens;
 
+    const deprecatedLPs = new Set([Convert.sdk.tokens.BEAN_CRV3_LP]);
+
     const whitelistedWellLPs = new Set([
       Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
       Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase()
     ]);
     const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
     const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
+
+    if (deprecatedLPs.has(fromToken as ERC20Token) || deprecatedLPs.has(toToken as ERC20Token)) {
+      throw new Error("SDK: Deprecated conversion pathway");
+    }
+
+    // BS3TODO: is this encoding correct ?
+    if (fromToken.equals(toToken)) {
+      return ConvertEncoder.lambdaLambda(amountIn.toBlockchain(), fromToken.address);
+    }
 
     if (
       fromToken.address === tks.UNRIPE_BEAN.address &&
@@ -242,17 +266,16 @@ export class Convert {
     return encoding;
   }
 
-  async validateTokens(fromToken: Token, toToken: Token) {
+  async validateTokens(_fromToken: Token, _toToken: Token) {
+    const fromToken = normaliseERC20(_fromToken, Convert.sdk);
+    const toToken = normaliseERC20(_toToken, Convert.sdk);
+
     if (!Convert.sdk.tokens.isWhitelisted(fromToken)) {
       throw new Error("fromToken is not whitelisted");
     }
 
     if (!Convert.sdk.tokens.isWhitelisted(toToken)) {
       throw new Error("toToken is not whitelisted");
-    }
-
-    if (fromToken.equals(toToken)) {
-      throw new Error("Cannot convert between the same token");
     }
 
     const path = this.getConversionPaths(fromToken as ERC20Token);
@@ -267,5 +290,4 @@ export class Convert {
     const token = Convert.sdk.tokens.findByAddress(fromToken.address);
     return token ? this.paths.get(token) || [] : [];
   }
-
 }

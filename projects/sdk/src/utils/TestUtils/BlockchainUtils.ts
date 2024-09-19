@@ -199,12 +199,18 @@ export class BlockchainUtils {
   private getBalanceConfig(tokenAddress: string) {
     const slotConfig = new Map();
     slotConfig.set(this.sdk.tokens.BEAN.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.WETH.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.WEETH.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.WBTC.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.USDC.address, [0, false]);
-    slotConfig.set(this.sdk.tokens.USDT.address, [0, false]);
+    slotConfig.set(this.sdk.tokens.WETH.address, [51, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.WETH.address, [0, false]); // MockToken
+    slotConfig.set(this.sdk.tokens.WSTETH.address, [1, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.WSTETH.address, [0, false]); // MockToken
+    slotConfig.set(this.sdk.tokens.WEETH.address, [51, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.WEETH.address, [0, false]); // MockToken
+    slotConfig.set(this.sdk.tokens.WBTC.address, [51, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.WBTC.address, [0, false]); // MockToken
+    slotConfig.set(this.sdk.tokens.USDC.address, [9, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.USDC.address, [0, false]); // MockToken
+    slotConfig.set(this.sdk.tokens.USDT.address, [51, false]); // OnChain
+    // slotConfig.set(this.sdk.tokens.USDT.address, [0, false]); // MockToken
     slotConfig.set(this.sdk.tokens.DAI.address, [2, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN.address, [0, false]);
     slotConfig.set(this.sdk.tokens.UNRIPE_BEAN_WSTETH.address, [0, false]);

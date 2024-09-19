@@ -2,8 +2,7 @@ import Pool from "src/classes/Pool/Pool";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { Address, ChainId, ChainResolver } from "@beanstalk/sdk-core";
-import { pool } from "src/constants/generated/projects/sdk/src/constants/abi/Curve";
+import { ChainResolver } from "@beanstalk/sdk-core";
 
 export class Pools {
   static sdk: BeanstalkSDK;
@@ -140,6 +139,13 @@ export class Pools {
       return this.lpAddressMap.get(token.toLowerCase());
     }
     return this.lpAddressMap.get(token.address);
+  }
+
+  getWellByLPToken(token: Token | string): BasinWell | undefined {
+    if (typeof token === "string") {
+      return this.wellAddressMap.get(token.toLowerCase());
+    }
+    return this.wellAddressMap.get(token.address);
   }
 
   getWells(): readonly BasinWell[] {
