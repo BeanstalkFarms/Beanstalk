@@ -17,6 +17,10 @@ import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogoUrl from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanEthWellLpLogoUrl from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beanLusdLogoUrl from '~/img/tokens/bean-lusd-logo.svg';
+import beanUsdcWellLpLogo from '~/img/tokens/bean-usdc-well-lp-logo.svg';
+import beanWbtcWellLpLogo from '~/img/tokens/bean-wbtc-well-lp-logo.svg';
+import beanUsdtWellLpLogo from '~/img/tokens/bean-usdt-well-lp-logo.svg';
+import beanWeethWellLpLogo from '~/img/tokens/bean-weeth-well-lp-logo.svg';
 
 // ERC-20 Token Images
 import wstethLogo from '~/img/tokens/wsteth-logo.svg';
@@ -301,7 +305,7 @@ export const BEAN_WEETH_WELL_LP = makeChainToken(
     name: 'BEAN:weETH LP',
     symbol: 'BEANweETH',
     isLP: true,
-    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    logo: beanWeethWellLpLogo,
     isUnripe: false,
     displayDecimals: 2,
   },
@@ -316,7 +320,7 @@ export const BEAN_WBTC_WELL_LP = makeChainToken(
     symbol: 'BEANWBTC',
     isLP: true,
     isUnripe: false,
-    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    logo: beanWbtcWellLpLogo,
     displayDecimals: 2,
   },
   { ...defaultRewards }
@@ -330,7 +334,7 @@ export const BEAN_USDC_WELL_LP = makeChainToken(
     symbol: 'BEANUSDC',
     isLP: true,
     isUnripe: false,
-    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    logo: beanUsdcWellLpLogo,
     displayDecimals: 2,
   },
   { ...defaultRewards }
@@ -344,7 +348,7 @@ export const BEAN_USDT_WELL_LP = makeChainToken(
     symbol: 'BEANUSDT',
     isLP: true,
     isUnripe: false,
-    logo: beanWstethLogo, // TODO: replace with bean:weeth logo
+    logo: beanUsdtWellLpLogo,
     displayDecimals: 2,
   },
   { ...defaultRewards }
