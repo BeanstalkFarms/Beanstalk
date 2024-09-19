@@ -11,12 +11,14 @@ const tokenMap = {
 
 // NOTE: once latest subgraph is deployed, will need to update beanstalk/marketplace ids in this query.
 (async () => {
+  // for testing purposes. set to empty string to ignore
+  const block = "block: { number: 20736200 }";
   const l1Values = await subgraph.request(gql`
     {
-      beanstalk(id: "beanstalk") {
+      beanstalk(id: "beanstalk" ${block}) {
         lastSeason
       }
-      field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
+      field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" ${block}) {
         numberOfSowers
         numberOfSows
         sownBeans
@@ -24,7 +26,7 @@ const tokenMap = {
         podIndex
         harvestableIndex
       }
-      podMarketplace(id: "0") {
+      podMarketplace(id: "0" ${block}) {
         filledListedPods
         expiredListedPods
         cancelledListedPods
@@ -34,13 +36,13 @@ const tokenMap = {
         podVolume
         beanVolume
       }
-      fertilizerTokens(first: 1000) {
+      fertilizerTokens(first: 1000 ${block}) {
         id
         humidity
         season
         startBpf
       }
-      unripeTokens {
+      unripeTokens${block ? `(${block})` : ""} {
         id
         totalChoppedAmount
         totalChoppedBdv

@@ -36,26 +36,26 @@ class UnripeTokenInitialValues {
   totalChoppedBdvReceived: BigInt;
 }
 
-export const SEASON_INITIAL = 24607;
+export const SEASON_INITIAL = 24508;
 
 export const FIELD_INITIAL_VALUES: FieldInitialValues = {
   numberOfSowers: 0,
-  numberOfSows: 19295,
-  sownBeans: BigInt.fromString("33592460890398"),
+  numberOfSows: 19196,
+  sownBeans: BigInt.fromString("33592460856188"),
   harvestedPods: BigInt.fromString("61126608133951"),
-  podIndex: BigInt.fromString("980532032792248"),
+  podIndex: BigInt.fromString("980532024233292"),
   harvestableIndex: BigInt.fromString("61128909242563")
 };
 
 export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {
   filledListedPods: BigInt.fromString("49222911145993"),
   expiredListedPods: BigInt.fromString("7065428228776"),
-  cancelledListedPods: BigInt.fromString("60153188425068"),
-  filledOrderBeans: BigInt.fromString("763175980418"),
-  filledOrderedPods: BigInt.fromString("14858570767416"),
+  cancelledListedPods: BigInt.fromString("60134193309316"),
+  filledOrderBeans: BigInt.fromString("762556935865"),
+  filledOrderedPods: BigInt.fromString("14851692494599"),
   cancelledOrderBeans: BigInt.fromString("1308742101463"),
-  podVolume: BigInt.fromString("64081481913409"),
-  beanVolume: BigInt.fromString("6509323029856")
+  podVolume: BigInt.fromString("64074603640592"),
+  beanVolume: BigInt.fromString("6508703985303")
 };
 
 export const FERT_TOKEN_INFO_CACHED: FertilizerTokenInfo[] = [
@@ -688,9 +688,9 @@ export const FERT_TOKEN_INFO_CACHED: FertilizerTokenInfo[] = [
 export const UNRIPE_TOKENS_INITIAL_VALUES: UnripeTokenInitialValues[] = [
   {
     tokenType: "urbean",
-    totalChoppedAmount: BigInt.fromString("25248630479617"),
-    totalChoppedBdv: BigInt.fromString("6035933361833"),
-    totalChoppedBdvReceived: BigInt.fromString("1370603113776")
+    totalChoppedAmount: BigInt.fromString("24665725897573"),
+    totalChoppedBdv: BigInt.fromString("5882168812974"),
+    totalChoppedBdvReceived: BigInt.fromString("1334001323440")
   },
   {
     tokenType: "urlp",

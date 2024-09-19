@@ -448,7 +448,7 @@ function incrementSows(protocol: Address, account: Address, block: ethereum.Bloc
   field.save();
 
   // Add to protocol numberOfSowers if this is the first time this account has sown
-  if (account != protocol && field.numberOfSows == 0) {
+  if (account != protocol && field.numberOfSows == 1) {
     incrementSowers(protocol, block);
   }
 }
