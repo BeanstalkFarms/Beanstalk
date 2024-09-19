@@ -29,49 +29,69 @@ const NonBeanToken = [
   L2_USDT // USDT
 ];
 
+async function setBalance(
+  contract, // token contract address
+  account, // account address
+  amount, // amount to set
+  slot // storage slot to set
+) {
+  const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], [account, slot]);
+  const balance = ethers.utils.hexlify(
+    ethers.utils.zeroPad(ethers.BigNumber.from(amount).toHexString(), 32)
+  );
+  await hre.network.provider.send("hardhat_setStorageAt", [contract, index, balance]);
+}
+
 async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, verbose = true) {
   const INIT_WELL_BALANCES = "./reseed/data/r2/L2_well_balances.json";
   [balancesInBeanEthWell, balancesInBeanWstEthWell, balancesInBeanStableWell] = JSON.parse(
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
 
+  const slots = [
+    51, // WETH
+    1, // wstETH
+    51, // WEETH
+    51, // WBTC
+    9, // USDC
+    51 // USDT
+  ];
+
   const nonBeanAmounts = [
-    to18("20"), // BEAN/WETH
+    to18("20.6"), // BEAN/WETH
     to18("2556"), // BEAN/WstETH
-    to18("16"), // BEAN/WEEETH
-    toX("8", 8), // BEAN/WBTC (8 decimals)
-    to6("190000"), // BEAN/USDC
-    to6("190000") // BEAN/USDT
+    to6("0"), // to18("16"), // BEAN/WEEETH
+    toX("0", 8), // BEAN/WBTC (8 decimals)
+    to6("206686.240460"), // to6("190000"), // BEAN/USDC
+    to6("0") // to6("190000") // BEAN/USDT
   ];
 
   const beanAmounts = [
-    to6("108357"), // BEAN/WETH
-    to6("14642617"), // BEAN/WstETH
-    to6("100000"), // BEAN/WEEETH
-    to6("1000000"), // BEAN/WBTC
-    to6("1000000"), // BEAN/USDC
-    to6("1000000") // BEAN/USDT
+    to6("107380.655868"), // BEAN/WETH
+    to6("14544578.478380"), // BEAN/WstETH
+    to6("0"), // to6("100000"), // BEAN/WEEETH
+    to6("0"), // to6("1000000"), // BEAN/WBTC
+    to6("83855.245277"), // BEAN/USDC
+    to6("0") // to6("1000000") // BEAN/USDT
   ];
   console.log("-----------------------------------");
   console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
+  const beanAddress = "0xBEA0005B8599265D41256905A9B3073D397812E4";
+  await impersonateToken(beanAddress, 6);
+  const bean = await ethers.getContractAt("MockToken", beanAddress);
 
-  await impersonateToken("0xBEA0005B8599265D41256905A9B3073D397812E4", 6);
-  const bean = await ethers.getContractAt(
-    "MockToken",
-    "0xBEA0005B8599265D41256905A9B3073D397812E4"
-  );
   // add liquidity and transfer to L2 Beanstalk:
   for (let i = 0; i < WellAddresses.length; i++) {
     const well = await ethers.getContractAt("IWell", WellAddresses[i], account);
-    const wellERC20 = await ethers.getContractAt("IERC20", WellAddresses[i], account);
-    const token = await ethers.getContractAt("MockToken", NonBeanToken[i], account);
-    const decimals = await token.decimals();
-    await impersonateToken(NonBeanToken[i], decimals);
+    const token = await ethers.getContractAt("IERC20", NonBeanToken[i], account);
+
     if (mock) {
-      // mint tokens to add liquidity:
-      await token.mint(account.address, nonBeanAmounts[i]);
-      await bean.mint(account.address, beanAmounts[i] + to6("1000000"));
+      console.log(`Minting tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
+      await setBalance(NonBeanToken[i], account.address, nonBeanAmounts[i], slots[i]);
+      await setBalance(beanAddress, account.address, beanAmounts[i], 0); // storage slot 0 for MockToken
     }
+
+    console.log(`Approving tokens for ${WellAddresses[i]} and ${NonBeanToken[i]}`);
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
     // add liquidity to well, to L2 Beanstalk:
