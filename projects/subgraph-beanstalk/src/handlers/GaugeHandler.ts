@@ -14,7 +14,7 @@ import {
   loadGerminating,
   loadOrCreateGerminating
 } from "../entities/Germinating";
-import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { setSiloHourlyCaseId, takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
@@ -52,7 +52,9 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   // This is not exactly accurate, the value in this event is pertaining to gauge only and does not include unripe.
   // In practice, seed values for non-gauge assets are negligible.
   // The correct approach is iterating whitelisted assets each season, multipying bdv and seeds
-  silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason);
+
+  // Divide by 1e6. newStalkPerBdvPerSeason is per unit of bdv, not per micro bdv.
+  silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason).div(BI_10.pow(6));
   takeSiloSnapshots(silo, event.block);
   silo.save();
 

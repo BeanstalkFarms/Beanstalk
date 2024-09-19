@@ -424,6 +424,31 @@ dataSources:
           handler: handleUpdatedStalkPerBdvPerSeason
       file: ../src/handlers/SiloHandler.ts
   - kind: ethereum/contract
+    name: LegacySilo-Replanted-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 15277986 # Replanted
+      # TODO: add reseed paused placeholders here and elsewhere
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: SeedsBalanceChanged(indexed address,int256)
+          handler: handleSeedsBalanceChanged
+        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveWithdrawal
+        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
+          handler: handleRemoveWithdrawals
+      file: ../src/handlers/legacy/LegacySiloHandler.ts
+  - kind: ethereum/contract
     name: LegacySilo-Replanted-SeedGauge
     network: mainnet
     source:
@@ -513,14 +538,8 @@ dataSources:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
-        - event: SeedsBalanceChanged(indexed address,int256)
-          handler: handleSeedsBalanceChanged
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
           handler: handleWhitelistToken_v4
-        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
-          handler: handleRemoveWithdrawal
-        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
-          handler: handleRemoveWithdrawals
       file: ../src/handlers/legacy/LegacySiloHandler.ts
   ###
   # SEED GAUGE
