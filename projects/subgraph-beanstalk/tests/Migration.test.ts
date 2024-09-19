@@ -117,7 +117,7 @@ describe("Beanstalk 3 Migration", () => {
       const index = BigInt.fromU32(250000000).times(BI_10.pow(6));
       const amount = BigInt.fromU32(1500).times(BI_10.pow(6));
       handleMigratedPlot(createMigratedPlotEvent(account, index, amount));
-      assert.fieldEquals("Plot", index.toString(), "source", "Reseed Migrated");
+      assert.fieldEquals("Plot", index.toString(), "source", "RESEED_MIGRATED");
       assert.fieldEquals("Field", account.toHexString(), "unharvestablePods", amount.toString());
     });
     test("MigratedPodListing", () => {

@@ -68,7 +68,7 @@ export function handleMigratedPlot(event: MigratedPlot): void {
   clearFieldDeltas(accountField, event.block);
 
   plot.farmer = event.params.account;
-  plot.source = "Reseed Migrated";
+  plot.source = "RESEED_MIGRATED";
   plot.sourceHash = event.transaction.hash;
   plot.season = 0;
   plot.creationHash = event.transaction.hash;
