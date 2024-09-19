@@ -94,7 +94,13 @@ contract L1RecieverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
+            // start measuring gas
+            uint256 gasBefore = gasleft();
             L1RecieverFacet(BEANSTALK).issuePlots(OWNER, index, pods, proof);
+
+            //stop measuring gas
+            uint256 gasAfter = gasleft();
+            console.log("Gas used for issuePlots:", gasBefore - gasAfter);
         }
     }
 

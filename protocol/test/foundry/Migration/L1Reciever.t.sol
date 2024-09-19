@@ -335,9 +335,9 @@ contract L1RecieverFacetTest is Order, TestHelper {
         pods[5] = 1525000;
 
         bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0xce6c05520ca960525c486ec28de7ab8018c0d094a404feb043b60ef658e1e921);
-        proof[1] = bytes32(0x804c830f86722b4afe4c1e19fe9445e7b1087969871708451c204d4a1a333789);
-        proof[2] = bytes32(0xe59a902f19ff32a47a5eac21bb2642fb0e6c695edfed938122aed52a46a635c3);
+        proof[0] = bytes32(0xbaef3e12a2feef6cdf5bf77dbc0274421b66278087273b06a1b7b9be6e4de62d);
+        proof[1] = bytes32(0xa2bf812102fee36e8db0bd0c3288a59e3119f9b631f2c33f95c4f12baddca96d);
+        proof[2] = bytes32(0xf8138f4b12984d61c5fe1a0f360d005fdef03cc9e06f1dd67c9f98700a5532c2);
 
         return (account, index, pods, proof);
     }
