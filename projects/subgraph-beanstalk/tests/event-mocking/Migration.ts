@@ -2,11 +2,13 @@ import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   AddMigratedDeposit,
   InternalBalanceMigrated,
+  MigratedAccountStatus,
   MigratedPlot,
   MigratedPodListing,
   MigratedPodOrder
 } from "../../generated/Beanstalk-ABIs/Reseed";
-import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import { mockContractEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import { BEANSTALK as BEANSTALK_ARB } from "../../../subgraph-core/constants/raw/BeanstalkArbConstants";
 
 export function createAddMigratedDepositEvent(
   account: Address,
@@ -15,7 +17,7 @@ export function createAddMigratedDepositEvent(
   amount: BigInt,
   bdv: BigInt
 ): AddMigratedDeposit {
-  let event = changetype<AddMigratedDeposit>(mockBeanstalkEvent());
+  let event = changetype<AddMigratedDeposit>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));
@@ -33,8 +35,36 @@ export function createAddMigratedDepositEvent(
   return event as AddMigratedDeposit;
 }
 
+export function createMigratedAccountStatus(
+  account: Address,
+  token: Address,
+  stalk: BigInt,
+  roots: BigInt,
+  bdv: BigInt,
+  lastStem: BigInt
+): MigratedAccountStatus {
+  let event = changetype<MigratedAccountStatus>(mockContractEvent(BEANSTALK_ARB));
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));
+  let param2 = new ethereum.EventParam("token", ethereum.Value.fromAddress(token));
+  let param3 = new ethereum.EventParam("stalk", ethereum.Value.fromUnsignedBigInt(stalk));
+  let param4 = new ethereum.EventParam("roots", ethereum.Value.fromUnsignedBigInt(roots));
+  let param5 = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(bdv));
+  let param6 = new ethereum.EventParam("lastStem", ethereum.Value.fromUnsignedBigInt(lastStem));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+  event.parameters.push(param4);
+  event.parameters.push(param5);
+  event.parameters.push(param6);
+
+  return event as MigratedAccountStatus;
+}
+
 export function createMigratedPlotEvent(account: Address, plotIndex: BigInt, pods: BigInt): MigratedPlot {
-  let event = changetype<MigratedPlot>(mockBeanstalkEvent());
+  let event = changetype<MigratedPlot>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));
@@ -59,7 +89,7 @@ export function createMigratedPodListingEvent(
   minFillAmount: BigInt,
   mode: i32
 ): MigratedPodListing {
-  let event = changetype<MigratedPodListing>(mockBeanstalkEvent());
+  let event = changetype<MigratedPodListing>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("lister", ethereum.Value.fromAddress(lister));
@@ -94,7 +124,7 @@ export function createMigratedPodOrderEvent(
   maxPlaceInLine: BigInt,
   minFillAmount: BigInt
 ): MigratedPodOrder {
-  let event = changetype<MigratedPodOrder>(mockBeanstalkEvent());
+  let event = changetype<MigratedPodOrder>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("orderer", ethereum.Value.fromAddress(orderer));
@@ -117,7 +147,7 @@ export function createMigratedPodOrderEvent(
 }
 
 export function createInternalBalanceMigratedEvent(account: Address, token: Address, delta: BigInt): InternalBalanceMigrated {
-  let event = changetype<InternalBalanceMigrated>(mockBeanstalkEvent());
+  let event = changetype<InternalBalanceMigrated>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));

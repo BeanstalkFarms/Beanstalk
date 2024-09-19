@@ -2,6 +2,7 @@ import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddMigratedDeposit,
   InternalBalanceMigrated,
+  MigratedAccountStatus,
   MigratedPlot,
   MigratedPodListing,
   MigratedPodOrder
@@ -11,7 +12,7 @@ import { loadField, loadPlot } from "../../entities/Field";
 import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
 import { updateFarmTotals } from "../../utils/Farm";
 import { podListingCreated, podOrderCreated } from "../../utils/Marketplace";
-import { addDeposits } from "../../utils/Silo";
+import { addDeposits, updateStalkBalances } from "../../utils/Silo";
 
 export function handleAddMigratedDeposit(event: AddMigratedDeposit): void {
   addDeposits({
@@ -24,6 +25,10 @@ export function handleAddMigratedDeposit(event: AddMigratedDeposit): void {
     bdvs: [event.params.bdv],
     depositVersion: "stem"
   });
+}
+
+export function handleMigratedAccountStatus(event: MigratedAccountStatus): void {
+  updateStalkBalances(event.address, event.params.account, event.params.stalk, event.params.roots, event.block);
 }
 
 export function handleMigratedPlot(event: MigratedPlot): void {
@@ -116,5 +121,4 @@ export function handleInternalBalanceMigrated(event: InternalBalanceMigrated): v
 }
 
 // Not currently necessary to handle the below. They are appropriately accounted for by the other events
-// MigratedAccountStatus - AddMigratedDeposit
 // FertilizerMigrated - TransferSingle events on fertilizer mints
