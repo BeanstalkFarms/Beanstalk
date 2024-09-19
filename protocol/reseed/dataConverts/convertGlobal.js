@@ -4,6 +4,17 @@ const { convertToBigNum } = require("../../utils/read.js");
 function parseGlobals(inputFilePath, outputFilePath) {
   const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
 
+  // Sort silo tokens alphabetically
+  const sortedSiloTokens = Object.keys(
+    data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }
+  ).sort();
+
+  // Create an object of sorted balances
+  const sortedBalances = sortedSiloTokens.reduce((acc, token) => {
+    acc[token] = data.silo?.balances[token] || { deposited: "0", depositedBdv: "0" };
+    return acc;
+  }, {});
+
   const result = [
     // SystemInternalBalances
     [
@@ -35,16 +46,9 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.silo?.earnedBeans ? convertToBigNum(data.silo.earnedBeans) : "0",
       data.orderLockedBeans ? convertToBigNum(data.orderLockedBeans) : "0",
       // all silo tokens
-      Object.keys(
-        data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }
-      ).sort(), // Sort alphabetically so that the 2 Unripe tokens that start with 0x1BEA appear first
-      // This is assumed in ReseedGlobal.sol
-      // all silo balances
-      Object.values(
-        data.silo?.balances || {
-          "0x0000000000000000000000000000000000000000": { deposited: "0", depositedBdv: "0" }
-        }
-      ).map((balance) => [
+      sortedSiloTokens,
+      // all silo balances (now sorted to match tokens)
+      Object.values(sortedBalances).map((balance) => [
         convertToBigNum(balance.deposited),
         convertToBigNum(balance.depositedBdv)
       ]),
