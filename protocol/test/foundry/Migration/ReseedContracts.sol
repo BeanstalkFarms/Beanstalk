@@ -55,7 +55,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
     /**
      * @notice validates that an account verification works, with the correct data.
      */
-    function test_L2MigrateDeposits() public {
+    function test_L2MigrateAllDeposits() public {
         // loop through all contracts that have deposits
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
@@ -67,20 +67,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
                 uint256[] memory bdvs
             ) = getDepositData(OWNER);
 
-            // log deposit ids, amounts, bdvs, and proof
-            // for (uint256 j = 0; j < depositIds.length; j++) {
-            //     console.log("depositId:", depositIds[j]);
-            //     console.log("amount:", amounts[j]);
-            //     console.log("bdv:", bdvs[j]);
-            // }
-
             bytes32[] memory proof = getProofForAccount(OWNER);
-
-            // log proof
-            // console.log("proof:");
-            // for (uint256 j = 0; j < proof.length; j++) {
-            //     console.logBytes32(proof[j]);
-            // }
 
             // if there are no deposits, continue to next contract
             if (depositIds.length == 0) {
@@ -91,12 +78,6 @@ contract L1RecieverFacetTest is Order, TestHelper {
             vm.prank(RECIEVER);
             L1RecieverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
         }
-
-        // assertEq(bs.balanceOfStalk(RECIEVER), 9278633023225688000000);
-        // (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
-        // (uint256 amount, uint256 bdv) = bs.getDeposit(RECIEVER, token, stem);
-        // assertEq(amount, depositAmounts[0]);
-        // assertEq(bdv, bdvs[0]);
     }
 
     function test_L2MigratePlots() public {
@@ -281,40 +262,6 @@ contract L1RecieverFacetTest is Order, TestHelper {
         L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
-    // test helpers
-    function getDepositData(
-        address account
-    ) internal returns (uint256[] memory, uint256[] memory, uint256[] memory) {
-        string[] memory inputs = new string[](4);
-        inputs[0] = "node";
-        inputs[1] = "./scripts/beanstalk-3/depositDataReader.js";
-        inputs[2] = "./scripts/beanstalk-3/data/inputs/Deposits.json";
-        inputs[3] = Strings.toHexString(uint160(account), 20);
-
-        bytes memory result = vm.ffi(inputs);
-
-        // Check if the result is empty or just "0x"
-        if (result.length == 0 || (result.length == 2 && result[0] == "0" && result[1] == "x")) {
-            // console.log("No deposit data found for account:", account);
-            return (new uint256[](0), new uint256[](0), new uint256[](0));
-        }
-
-        (uint256[] memory depositIds, uint256[] memory amounts, uint256[] memory bdvs) = abi.decode(
-            result,
-            (uint256[], uint256[], uint256[])
-        );
-
-        // Log the results
-        // console.log("Deposit data found for account:", account);
-        // for (uint i = 0; i < depositIds.length; i++) {
-        //     console.log("depositId:", depositIds[i]);
-        //     console.log("amount:", amounts[i]);
-        //     console.log("bdv:", bdvs[i]);
-        // }
-
-        return (depositIds, amounts, bdvs);
-    }
-
     function decodeDepositData(
         bytes memory data
     ) external pure returns (IMockFBeanstalk.TokenDepositId[] memory) {
@@ -399,26 +346,6 @@ contract L1RecieverFacetTest is Order, TestHelper {
         return (account, ids, amounts, lastBpf, proof);
     }
 
-    /*function getMockPodOrder()
-        internal
-        returns (address, L1RecieverFacet.L1PodOrder[] memory, bytes32[] memory)
-    {
-        address account = address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4);
-
-        L1RecieverFacet.L1PodOrder[] memory podOrders = new L1RecieverFacet.L1PodOrder[](1);
-        podOrders[0] = L1RecieverFacet.L1PodOrder(
-            Order.PodOrder(account, 1, 100000, 1000000000000, 1000000),
-            1000000
-        );
-
-        bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0x9887e2354e3cdb5d01aff524d71607cfdf3c4293c6f5711c806277fee5ad2063);
-        proof[1] = bytes32(0xe7d5a9eada9ddd23ca981cb62c1c0668339becddfdd69c463ae63ee3ebbdf50f);
-        proof[2] = bytes32(0x9dc791f184484213529aa44fad0074c356eb252777a3c9b0516efaf0fd740650);
-
-        return (account, podOrders, proof);
-    }*/
-
     /**
      * @notice Utility function that converts the address in the L1 that submitted a tx to
      * the inbox to the msg.sender viewed in the L2
@@ -431,6 +358,34 @@ contract L1RecieverFacetTest is Order, TestHelper {
                 uint160(l1Address) + uint160(0x1111000000000000000000000000000000001111)
             );
         }
+    }
+
+    //////////////////////// DEPOSITS ////////////////////////
+
+    // test helpers
+    function getDepositData(
+        address account
+    ) internal returns (uint256[] memory, uint256[] memory, uint256[] memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./scripts/beanstalk-3/depositDataReader.js";
+        inputs[2] = "./scripts/beanstalk-3/data/inputs/Deposits.json";
+        inputs[3] = Strings.toHexString(uint160(account), 20);
+
+        bytes memory result = vm.ffi(inputs);
+
+        // Check if the result is empty or just "0x"
+        if (result.length == 0 || (result.length == 2 && result[0] == "0" && result[1] == "x")) {
+            // console.log("No deposit data found for account:", account);
+            return (new uint256[](0), new uint256[](0), new uint256[](0));
+        }
+
+        (uint256[] memory depositIds, uint256[] memory amounts, uint256[] memory bdvs) = abi.decode(
+            result,
+            (uint256[], uint256[], uint256[])
+        );
+
+        return (depositIds, amounts, bdvs);
     }
 
     function getAllDeposits(
@@ -450,7 +405,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         return abi.decode(encodedData, (IMockFBeanstalk.TokenDepositId[]));
     }
 
-    function hexStringToBytes32(string memory s) internal view returns (bytes32 result) {
+    function hexStringToBytes32(string memory s) internal pure returns (bytes32 result) {
         bytes memory b = bytes(s);
         require(b.length == 64, "Invalid input length");
 
