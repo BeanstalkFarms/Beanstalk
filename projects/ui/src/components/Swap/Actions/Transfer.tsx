@@ -18,14 +18,12 @@ import {
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
+import { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
 import {
   BEAN,
-  BEAN_CRV3_LP,
   BEAN_ETH_WELL_LP,
-  CRV3,
   DAI,
   USDC,
   USDT,
@@ -50,6 +48,7 @@ import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import AddressInputField from '~/components/Common/Form/AddressInputField';
 import copy from '~/constants/copy';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 
 /// ---------------------------------------------------------------
 
@@ -168,7 +167,7 @@ const TransferForm: FC<
   );
 
   const handleTokenSelectSubmit = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
         setFieldValue('tokensIn.0.token', newTokenIn);
@@ -426,9 +425,7 @@ const SUPPORTED_TOKENS = [
   ETH,
   WETH,
   BEAN_ETH_WELL_LP,
-  BEAN_CRV3_LP,
   BEAN_WSTETH_WELL_LP,
-  CRV3,
   DAI,
   USDC,
   USDT,

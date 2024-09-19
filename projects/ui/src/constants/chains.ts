@@ -31,16 +31,19 @@ export enum NetworkType {
 }
 
 export const L1_CHAIN_IDS = [
-  SupportedChainId.MAINNET,
-  SupportedChainId.LOCALHOST,
-  SupportedChainId.TESTNET,
+  SupportedChainId.ETH_MAINNET,
+  SupportedChainId.LOCALHOST_ETH,
   SupportedChainId.ANVIL1,
 ] as const;
 
-export const L2_CHAIN_IDS = [] as const;
+export const L2_CHAIN_IDS = [
+  SupportedChainId.ARBITRUM_MAINNET,
+  SupportedChainId.TESTNET,
+  SupportedChainId.LOCALHOST,
+] as const;
 
-export type SupportedL1ChainId = typeof L1_CHAIN_IDS[number];
-export type SupportedL2ChainId = typeof L2_CHAIN_IDS[number];
+export type SupportedL1ChainId = (typeof L1_CHAIN_IDS)[number];
+export type SupportedL2ChainId = (typeof L2_CHAIN_IDS)[number];
 
 interface BaseChainInfo {
   readonly networkType: NetworkType;
@@ -48,6 +51,8 @@ interface BaseChainInfo {
   readonly docs?: string;
   readonly bridge?: string;
   readonly explorer: string;
+  readonly explorerName: string;
+  readonly explorerLogoUrl?: string;
   readonly infoLink?: string;
   readonly logoUrl: string;
   readonly label: string;
@@ -67,5 +72,5 @@ export interface L2ChainInfo extends BaseChainInfo {
   readonly networkType: NetworkType.L2;
   readonly bridge: string;
   readonly statusPage?: string;
-  readonly defaultListUrl: string;
+  readonly defaultListUrl?: string;
 }

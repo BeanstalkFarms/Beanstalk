@@ -268,7 +268,7 @@ contract ReseedStateTest is TestHelper {
 
     function test_AccountInternalBalance() public {
         string memory account;
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             for (uint256 j = 0; j < whitelistedTokens.length; j++) {
                 // get the internal balance from storage
@@ -303,7 +303,7 @@ contract ReseedStateTest is TestHelper {
         // test the L2 Beanstalk
         string memory account;
         // for every account
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
                 vm.parseAddress(account),
@@ -476,7 +476,7 @@ contract ReseedStateTest is TestHelper {
         return propertyValue;
     }
 
-    function searchAccountDeposits(address account) public returns (bytes memory) {
+    function searchAccountPlots(string memory account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script

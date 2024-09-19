@@ -217,7 +217,7 @@ const useTableConfig = (
 ) => {
   const sdk = useSdk();
   const rowData = useMemo(() => {
-    const baseTokens = [...sdk.tokens.siloWhitelistedWellLP] as ERC20Token[];
+    const baseTokens = [...sdk.tokens.wellLP] as ERC20Token[];
     const tokens = advancedView
       ? [
           sdk.tokens.BEAN,
@@ -377,6 +377,8 @@ const SeedGaugeTable = ({
   data: ReturnType<typeof useSeedGauge>['data'];
   onToggleAdvancedMode: (v: boolean) => void;
 }) => {
+
+  console.log('data', data);
   const [isAdvanced, setIsAdvanced] = useState(false);
   const rows = useTableConfig(isAdvanced, data);
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;

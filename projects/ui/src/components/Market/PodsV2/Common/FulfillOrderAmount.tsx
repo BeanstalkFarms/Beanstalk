@@ -1,16 +1,17 @@
 import { Button, InputAdornment, Typography } from '@mui/material';
 import React from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
+import { ERC20Token, NativeToken } from '~/classes/Token';
 import { TokenSelectDialog } from '~/components/Common/Form';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import { BEAN, ETH, WETH } from '~/constants/tokens';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import useToggle from '~/hooks/display/useToggle';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import { fulfillAmountAtom, useFulfillTokenAtom } from '../info/atom-context';
 import AtomInputField from '~/components/Common/Atom/AtomInputField';
 import { FontSize } from '~/components/App/muiTheme';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import { fulfillAmountAtom, useFulfillTokenAtom } from '../info/atom-context';
 
 const StartAdornment: React.FC<{}> = () => (
   <InputAdornment position="start">
@@ -21,7 +22,7 @@ const StartAdornment: React.FC<{}> = () => (
 );
 
 const TokenEndAdornment: React.FC<{
-  token: Token;
+  token: TokenInstance;
   onClick: () => void;
 }> = ({ token, onClick }) => (
   <InputAdornment position="end" sx={{ mt: 0.1 }}>
@@ -61,7 +62,7 @@ const FulfillOrderAmount: React.FC<{}> = () => {
       <TokenSelectDialog
         open={isTokenSelectVisible}
         handleClose={hideTokenSelect}
-        handleSubmit={(_tokens: Set<Token>) => {
+        handleSubmit={(_tokens: Set<TokenInstance>) => {
           const toArr = Array.from(_tokens);
           toArr.length && setFulfillToken(toArr[0]);
         }}

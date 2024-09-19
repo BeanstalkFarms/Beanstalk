@@ -1,9 +1,12 @@
 import React from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
+
+import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
 import { Spinner } from "../Spinner";
 import { BodyXS } from "../Typography";
-import { size } from "src/breakpoints";
 
 type Props = {
   label?: string;

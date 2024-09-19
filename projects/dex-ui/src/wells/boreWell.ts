@@ -1,12 +1,12 @@
+import { BigNumber, ethers } from "ethers";
+
 import { BeanstalkSDK, ERC20Token, FarmFromMode, FarmToMode, TokenValue } from "@beanstalk/sdk";
 import { Aquifer, WellFunction, Pump, Well } from "@beanstalk/sdk-wells";
-import { BigNumber, ethers } from "ethers";
-import { Settings } from "src/settings";
 
-import { getBytesHexString } from "src/utils/bytes";
-import { makeLocalOnlyStep } from "src/utils/workflow/steps";
-import { Log } from "src/utils/logger";
 import { TransactionToast } from "src/components/TxnToast/TransactionToast";
+import { getBytesHexString } from "src/utils/bytes";
+import { Log } from "src/utils/logger";
+import { makeLocalOnlyStep } from "src/utils/workflow/steps";
 
 /**
  * Prepare the parameters for a Aquifer.boreWell call
@@ -92,6 +92,7 @@ const prepareTokenOrderForBoreWell = (sdk: BeanstalkSDK, tokens: ERC20Token[]) =
  */
 const boreWell = async (
   sdk: BeanstalkSDK,
+  aquifer: Aquifer,
   account: string,
   implementation: string,
   wellFunction: WellFunction,
@@ -113,7 +114,6 @@ const boreWell = async (
     }
   }
 
-  const aquifer = new Aquifer(sdk.wells, Settings.AQUIFER_ADDRESS);
   const boreWellParams = await prepareBoreWellParameters(
     aquifer,
     implementation,

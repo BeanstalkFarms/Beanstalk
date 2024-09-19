@@ -42,6 +42,18 @@ export type PreloadOptions = {
   reserves?: boolean;
 };
 
+type CreateWellStaticParams = {
+  address: string;
+  name: string;
+  wellFunction: WellFunction | CallStruct;
+  pumps: Pump[] | CallStruct[];
+  aquifer: Aquifer | string;
+  lpToken: ERC20Token;
+  tokens: ERC20Token[];
+  wellData: string;
+  reserves: BigNumber[];
+};
+
 export class Well {
   public sdk: WellsSDK;
   public address: string;
@@ -54,6 +66,7 @@ export class Well {
   public pumps: Pump[] | undefined = undefined;
   public aquifer: Aquifer | undefined = undefined;
   public reserves: TokenValue[] | undefined = undefined;
+  public wellData: string | undefined = undefined;
 
   constructor(sdk: WellsSDK, address: string) {
     if (!address) {
@@ -84,7 +97,8 @@ export class Well {
     } else {
       if (options.name) toLoad.push(this.getName());
       if (options.lpToken) toLoad.push(this.getLPToken());
-      if (options.tokens || options.wellFunction || options.pumps || options.aquifer) toLoad.push(this.getWell());
+      if (options.tokens || options.wellFunction || options.pumps || options.aquifer)
+        toLoad.push(this.getWell());
     }
 
     await Promise.all(toLoad);
@@ -99,6 +113,25 @@ export class Well {
   }
 
   /**
+   * Create a Well with the given parameters.
+   *
+   * Expects all data to be fully initialized
+   * Make sure to load all token data before calling this method.
+   */
+  static createWithParams(sdk: WellsSDK, params: CreateWellStaticParams) {
+    const well = new Well(sdk, params.address);
+    well.setName(params.name);
+    well.setWellFunction(params.wellFunction);
+    well.setPumps(params.pumps);
+    well.setAquifer(params.aquifer instanceof Aquifer ? params.aquifer.address : params.aquifer);
+    well.setLPToken(params.lpToken);
+    well.setTokensWithTokens(params.tokens);
+    well.setWellData(params.wellData);
+    well.setReserves(params.tokens, params.reserves);
+    return well;
+  }
+
+  /**
    * Get this Well's name
    */
   async getName(): Promise<string> {
@@ -110,17 +143,38 @@ export class Well {
   }
 
   /**
+   * Set a Well's LP Token. For usage in Well.createWithParams()
+   */
+  private setLPToken(token: ERC20Token) {
+    setReadOnly(this, "lpToken", token, true);
+  }
+
+  /**
    * Get this Well's LP Token
    */
   async getLPToken(): Promise<ERC20Token> {
     if (!this.lpToken) {
-      const token = new ERC20Token(this.sdk.chainId, this.address, undefined, undefined, undefined, this.sdk.providerOrSigner);
+      const token = new ERC20Token(
+        this.sdk.chainId,
+        this.address,
+        undefined,
+        undefined,
+        undefined,
+        this.sdk.providerOrSigner
+      );
       await token.loadFromChain();
       token.isLP = true;
       setReadOnly(this, "lpToken", token, true);
     }
 
     return this.lpToken!;
+  }
+
+  /**
+   * Set the well data
+   */
+  setWellData(data: string) {
+    setReadOnly(this, "wellData", data, true);
   }
 
   /**
@@ -183,7 +237,7 @@ export class Well {
     const all = this.tokens && this.wellFunction && this.pumps && this.aquifer;
 
     if (!all) {
-      const { _tokens, _wellFunction, _pumps, _aquifer } = await this.contract.well();
+      const { _tokens, _wellFunction, _pumps, _aquifer, _wellData } = await this.contract.well();
 
       if (!this.tokens) {
         await this.setTokens(_tokens);
@@ -200,26 +254,69 @@ export class Well {
       if (!this.aquifer) {
         this.setAquifer(_aquifer);
       }
+
+      if (!this.wellData) {
+        this.wellData = _wellData;
+      }
     }
 
-    return { tokens: this.tokens!, wellFunction: this.wellFunction!, pumps: this.pumps!, aquifer: this.aquifer! };
+    return {
+      tokens: this.tokens!,
+      wellFunction: this.wellFunction!,
+      pumps: this.pumps!,
+      aquifer: this.aquifer!
+    };
+  }
+
+  private setName(name: string) {
+    setReadOnly(this, "name", name, true);
+  }
+
+  /**
+   * Set the tokens of the Well.
+   *
+   * @param _tokens The tokens to set.
+   *
+   * This method expects all tokens to be fully loaded.
+   *
+   * If you have the addresses of the tokens, use `setTokens(addresses: string[])`
+   */
+  private setTokensWithTokens(_tokens: ERC20Token[]) {
+    const tokens = [..._tokens];
+    Object.freeze(tokens);
+    setReadOnly(this, "tokens", tokens, true);
   }
 
   private async setTokens(addresses: string[]) {
     let tokens: ERC20Token[] = [];
+
     for await (const address of addresses) {
-      tokens.push(await loadToken(this.sdk, address));
+      const existing = this.sdk.tokens.findByAddress(address);
+      if (existing && existing instanceof ERC20Token) {
+        tokens.push(existing);
+      } else {
+        tokens.push(await loadToken(this.sdk, address));
+      }
     }
     Object.freeze(tokens);
     setReadOnly(this, "tokens", tokens, true);
   }
 
-  private setWellFunction({ target, data }: CallStruct) {
-    setReadOnly(this, "wellFunction", new WellFunction(this.sdk, target, data), true);
+  private setWellFunction(params: CallStruct | WellFunction) {
+    let wellFunction: WellFunction;
+    if (params instanceof WellFunction) {
+      wellFunction = params;
+    } else {
+      wellFunction = new WellFunction(this.sdk, params.target, params.data);
+    }
+    setReadOnly(this, "wellFunction", wellFunction, true);
   }
 
-  private setPumps(pumpData: CallStruct[]) {
-    let pumps = (pumpData ?? []).map((p, i) => new Pump(this.sdk, p.target, pumpData[i].data));
+  private setPumps(pumpData: CallStruct[] | Pump[]) {
+    let pumps = (pumpData ?? []).map((p, i) => {
+      if (p instanceof Pump) return p;
+      return new Pump(this.sdk, p.target, pumpData[i].data);
+    });
     Object.freeze(pumps);
     setReadOnly(this, "pumps", pumps, true);
   }
@@ -260,7 +357,9 @@ export class Well {
     validateAddress(recipient, "recipient");
     validateDeadline(deadline);
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFrom(
       fromToken.address,
@@ -280,12 +379,22 @@ export class Well {
    * @param amountIn The amount of `fromToken` to spend
    * @return amountOut The amount of `toToken` to receive
    */
-  async swapFromQuote(fromToken: Token, toToken: Token, amountIn: TokenValue, overrides?: CallOverrides): Promise<TokenValue> {
+  async swapFromQuote(
+    fromToken: Token,
+    toToken: Token,
+    amountIn: TokenValue,
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
     validateToken(fromToken, "fromToken");
     validateToken(toToken, "toToken");
     validateAmount(amountIn, "amountIn");
 
-    const amount = await this.contract.getSwapOut(fromToken.address, toToken.address, amountIn.toBigNumber(), overrides ?? {});
+    const amount = await this.contract.getSwapOut(
+      fromToken.address,
+      toToken.address,
+      amountIn.toBigNumber(),
+      overrides ?? {}
+    );
 
     return toToken.fromBlockchain(amount);
   }
@@ -309,7 +418,9 @@ export class Well {
     deadline?: number,
     overrides?: Overrides
   ): Promise<TokenValue> {
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
     if (!recipient) {
       return TokenValue.ZERO;
@@ -355,7 +466,9 @@ export class Well {
     validateAddress(recipient, "recipient");
     validateDeadline(deadline);
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
     return this.contract.swapFromFeeOnTransfer(
       fromToken.address,
@@ -387,7 +500,9 @@ export class Well {
     deadline?: number,
     overrides?: Overrides
   ): Promise<TokenValue> {
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
     if (!recipient) {
       return TokenValue.ZERO;
@@ -438,9 +553,19 @@ export class Well {
     const maxIn = maxAmountIn.toBigNumber();
     const out = amountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.swapTo(from, to, maxIn, out, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.swapTo(
+      from,
+      to,
+      maxIn,
+      out,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -450,7 +575,12 @@ export class Well {
    * @param amountOut The amount of `toToken` desired
    * @return amountIn The amount of `fromToken` that must be spent
    */
-  async swapToQuote(fromToken: Token, toToken: Token, amountOut: TokenValue, overrides?: CallOverrides): Promise<TokenValue> {
+  async swapToQuote(
+    fromToken: Token,
+    toToken: Token,
+    amountOut: TokenValue,
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
     const from = fromToken.address;
     const to = toToken.address;
     const amount = amountOut.toBigNumber();
@@ -487,9 +617,19 @@ export class Well {
       return TokenValue.ZERO;
     }
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    const gas = await this.contract.estimateGas.swapTo(from, to, maxIn, out, recipient, deadlineBlockchain, overrides ?? {});
+    const gas = await this.contract.estimateGas.swapTo(
+      from,
+      to,
+      maxIn,
+      out,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
@@ -517,9 +657,17 @@ export class Well {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.addLiquidity(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.addLiquidity(
+      amountsIn,
+      minLp,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -527,7 +675,10 @@ export class Well {
    * @param tokenAmountsIn The amount of each token to add; MUST match the indexing of {Well.tokens}
    * @return lpAmountOut The amount of LP tokens to receive
    */
-  async addLiquidityQuote(tokenAmountsIn: TokenValue[], overrides?: CallOverrides): Promise<TokenValue> {
+  async addLiquidityQuote(
+    tokenAmountsIn: TokenValue[],
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
     await this.getLPToken();
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const result = await this.contract.getAddLiquidityOut(amountsIn, overrides ?? {});
@@ -553,9 +704,17 @@ export class Well {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    const gas = await this.contract.estimateGas.addLiquidity(amountsIn, minLp, recipient, deadlineBlockchain, overrides || {});
+    const gas = await this.contract.estimateGas.addLiquidity(
+      amountsIn,
+      minLp,
+      recipient,
+      deadlineBlockchain,
+      overrides || {}
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
@@ -583,9 +742,17 @@ export class Well {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.addLiquidityFeeOnTransfer(
+      amountsIn,
+      minLp,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -606,9 +773,17 @@ export class Well {
     const amountsIn = tokenAmountsIn.map((tv) => tv.toBigNumber());
     const minLp = minLpAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    const gas = await this.contract.estimateGas.addLiquidityFeeOnTransfer(amountsIn, minLp, recipient, deadlineBlockchain, overrides ?? {});
+    const gas = await this.contract.estimateGas.addLiquidityFeeOnTransfer(
+      amountsIn,
+      minLp,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
@@ -636,9 +811,17 @@ export class Well {
     const lpAmount = lpAmountIn.toBigNumber();
     const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidity(lpAmount, minOutAmounts, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.removeLiquidity(
+      lpAmount,
+      minOutAmounts,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -646,9 +829,15 @@ export class Well {
    * @param lpAmountIn The amount of LP tokens to burn
    * @return tokenAmountsOut The amount of each underlying token to receive
    */
-  async removeLiquidityQuote(lpAmountIn: TokenValue, overrides?: CallOverrides): Promise<TokenValue[]> {
+  async removeLiquidityQuote(
+    lpAmountIn: TokenValue,
+    overrides?: CallOverrides
+  ): Promise<TokenValue[]> {
     const tokens = await this.getTokens();
-    const res = await this.contract.getRemoveLiquidityOut(lpAmountIn.toBigNumber(), overrides ?? {});
+    const res = await this.contract.getRemoveLiquidityOut(
+      lpAmountIn.toBigNumber(),
+      overrides ?? {}
+    );
     const quote = res.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
 
     return quote;
@@ -672,9 +861,17 @@ export class Well {
     const lpAmount = lpAmountIn.toBigNumber();
     const minOutAmounts = minTokenAmountsOut.map((a) => a.toBigNumber());
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    const gas = await this.contract.estimateGas.removeLiquidity(lpAmount, minOutAmounts, recipient, deadlineBlockchain, overrides ?? {});
+    const gas = await this.contract.estimateGas.removeLiquidity(
+      lpAmount,
+      minOutAmounts,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
@@ -704,9 +901,18 @@ export class Well {
     const token = tokenOut.address;
     const minOut = minTokenAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidityOneToken(amountIn, token, minOut, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.removeLiquidityOneToken(
+      amountIn,
+      token,
+      minOut,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -716,11 +922,19 @@ export class Well {
    * @return tokenAmountOut The amount of `tokenOut` to receive
    *
    */
-  async removeLiquidityOneTokenQuote(lpAmountIn: TokenValue, tokenOut: Token, overrides?: CallOverrides): Promise<TokenValue> {
+  async removeLiquidityOneTokenQuote(
+    lpAmountIn: TokenValue,
+    tokenOut: Token,
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
     const amountIn = lpAmountIn.toBigNumber();
     const address = tokenOut.address;
 
-    const quote = await this.contract.getRemoveLiquidityOneTokenOut(amountIn, address, overrides ?? {});
+    const quote = await this.contract.getRemoveLiquidityOneTokenOut(
+      amountIn,
+      address,
+      overrides ?? {}
+    );
     return tokenOut.fromBlockchain(quote);
   }
 
@@ -746,7 +960,9 @@ export class Well {
     const token = tokenOut.address;
     const minOut = minTokenAmountOut.toBigNumber();
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
     const gas = await this.contract.estimateGas.removeLiquidityOneToken(
       amountIn,
@@ -781,9 +997,17 @@ export class Well {
     const maxIn = maxLpAmountIn.toBigNumber();
     const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    return this.contract.removeLiquidityImbalanced(maxIn, amounts, recipient, deadlineBlockchain, overrides ?? {});
+    return this.contract.removeLiquidityImbalanced(
+      maxIn,
+      amounts,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -791,7 +1015,10 @@ export class Well {
    * @param tokenAmountsOut The amount of each underlying token to receive; MUST match the indexing of {Well.tokens}
    * @return lpAmountIn The amount of LP tokens to burn
    */
-  async removeLiquidityImbalancedQuote(tokenAmounts: TokenValue[], overrides?: CallOverrides): Promise<TokenValue> {
+  async removeLiquidityImbalancedQuote(
+    tokenAmounts: TokenValue[],
+    overrides?: CallOverrides
+  ): Promise<TokenValue> {
     const amounts = tokenAmounts.map((tv) => tv.toBigNumber());
     const quote = await this.contract.getRemoveLiquidityImbalancedIn(amounts, overrides ?? {});
     const lpToken = await this.getLPToken();
@@ -818,9 +1045,17 @@ export class Well {
     const maxIn = maxLpAmountIn.toBigNumber();
     const amounts = tokenAmountsOut.map((tv) => tv.toBigNumber());
 
-    const deadlineBlockchain = deadline ? deadlineSecondsToBlockchain(deadline) : TokenValue.MAX_UINT256.toBlockchain();
+    const deadlineBlockchain = deadline
+      ? deadlineSecondsToBlockchain(deadline)
+      : TokenValue.MAX_UINT256.toBlockchain();
 
-    const gas = await this.contract.estimateGas.removeLiquidityImbalanced(maxIn, amounts, recipient, deadlineBlockchain, overrides ?? {});
+    const gas = await this.contract.estimateGas.removeLiquidityImbalanced(
+      maxIn,
+      amounts,
+      recipient,
+      deadlineBlockchain,
+      overrides ?? {}
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
@@ -829,7 +1064,11 @@ export class Well {
   /**
    * Shifts excess tokens held by the Well into liquidity and delivers to `recipient` `minAmountOut` LP tokens.
    */
-  async sync(minAmountOut: TokenValue, recipient: string, overrides?: CallOverrides): Promise<ContractTransaction> {
+  async sync(
+    minAmountOut: TokenValue,
+    recipient: string,
+    overrides?: CallOverrides
+  ): Promise<ContractTransaction> {
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
 
@@ -852,12 +1091,22 @@ export class Well {
    * @param recipient The address to receive the token
    * @return amountOut The amount of `toToken` received
    */
-  async shift(toToken: Token, minAmountOut: TokenValue, recipient: string, overrides?: CallOverrides): Promise<ContractTransaction> {
+  async shift(
+    toToken: Token,
+    minAmountOut: TokenValue,
+    recipient: string,
+    overrides?: CallOverrides
+  ): Promise<ContractTransaction> {
     validateToken(toToken, "toToken");
     validateAmount(minAmountOut, "minAmountOut");
     validateAddress(recipient, "recipient");
-    
-    return this.contract.shift(toToken.address, minAmountOut.toBigNumber(), recipient, overrides ?? {});
+
+    return this.contract.shift(
+      toToken.address,
+      minAmountOut.toBigNumber(),
+      recipient,
+      overrides ?? {}
+    );
   }
 
   /**
@@ -868,6 +1117,18 @@ export class Well {
   async shiftQuote(toToken: Token): Promise<TokenValue> {
     const amount = await this.contract.getShiftOut(toToken.address);
     return toToken.fromBlockchain(amount);
+  }
+
+  /**
+   * Set the reserves of the Well.
+   *
+   * @param tokens The tokens to set the reserves for.
+   * @param reserves The reserves to set.
+   *
+   * Ensure that the reserves are set in the same order as the tokens.
+   */
+  setReserves(tokens: ERC20Token[], reserves: BigNumber[]) {
+    this.reserves = reserves.map((value: BigNumber, i: number) => tokens[i].fromBlockchain(value));
   }
 
   /**
@@ -914,6 +1175,51 @@ export class Well {
     const well = await aquifer.boreWell(deployedWell.address, tokens, wellFunction, pumps);
 
     return well;
+  }
+
+  /**
+   * Returns a JSON string representation of the Well of
+   * - chainId
+   * - name
+   * - wellData
+   * - lpToken: { address, symbol, decimals, name }
+   * - tokens: { address, symbol, decimals, name }[]
+   * - wellFunction: { symbol, name, data, address }
+   * - pumps: { address, data }[]
+   * - aquifer: { address }
+   * - reserves: { address, amount }[]
+   */
+  toJSON() {
+    const asObj = {
+      chainId: this.sdk.chainId,
+      name: this.name,
+      lpToken: {
+        address: this.lpToken?.address,
+        symbol: this.lpToken?.symbol,
+        decimals: this.lpToken?.decimals,
+        name: this.lpToken?.name
+      },
+      tokens: this.tokens?.map((token) => ({
+        address: token.address,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        name: token.name
+      })),
+      wellFunction: {
+        symbol: this.wellFunction?.symbol,
+        name: this.wellFunction?.name,
+        data: this.wellFunction?.data,
+        address: this.wellFunction?.address
+      },
+      pumps: this.pumps?.map((pump) => ({
+        address: pump.address,
+        data: pump.data
+      })),
+      aquifer: this.aquifer?.address,
+      reserves: this.reserves?.map((reserve) => reserve.blockchainString),
+      wellData: this.wellData
+    };
+    return JSON.stringify(asObj, null, 2);
   }
 
   /**
