@@ -111,7 +111,9 @@ task("sunriseArb", async function () {
   // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
   const afterSunriseTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
   const additionalSeconds = 12;
-  await network.provider.send("evm_setNextBlockTimestamp", [afterSunriseTimestamp + additionalSeconds]);
+  await network.provider.send("evm_setNextBlockTimestamp", [
+    afterSunriseTimestamp + additionalSeconds
+  ]);
   await network.provider.send("evm_mine");
 
   console.log(
@@ -126,6 +128,20 @@ task("sunriseArb", async function () {
     "\ndeltaB:",
     (await seasonGetters.totalDeltaB()).toString()
   );
+});
+
+task("tokenSettings", async function () {
+  const beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+
+  let whitelistedTokens = await beanstalk.getWhitelistedTokens();
+  console.log(whitelistedTokens);
+  for (let i = 0; whitelistedTokens.length; i++) {
+    let tokenSettings = await beanstalk.tokenSettings(whitelistedTokens[i]);
+    console.log("token:", whitelistedTokens[i]);
+    console.log("stalkEarnedPerSeason:", tokenSettings[1]);
+    console.log("deposited BDV:", await beanstalk.getTotalDepositedBdv(whitelistedTokens[i]));
+    console.log("-----");
+  }
 });
 
 task("getTime", async function () {

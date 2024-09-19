@@ -36,7 +36,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   );
 
   const nonBeanAmounts = [
-    to18("20.6"), // BEAN/WETH
+    to18("20.8"), // BEAN/WETH
     to18("2556"), // BEAN/WstETH
     to18("16"), // BEAN/WEEETH
     toX("8", 8), // BEAN/WBTC (8 decimals)
@@ -70,7 +70,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     if (mock) {
       // mint tokens to add liquidity:
       await token.mint(account.address, nonBeanAmounts[i]);
-      await bean.mint(account.address, beanAmounts[i] + to6("1000000"));
+      await bean.mint(account.address, beanAmounts[i]);
     }
     await token.connect(account).approve(well.address, MAX_UINT256);
     await bean.connect(account).approve(well.address, MAX_UINT256);
