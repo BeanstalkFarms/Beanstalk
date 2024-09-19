@@ -17,6 +17,7 @@ import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/sdk-wells";
 import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 import { Field } from "./field";
+import { ZeroX } from "./matcha";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -28,6 +29,7 @@ export type BeanstalkConfig = Partial<{
   subgraphUrl: string;
   source: DataSource;
   DEBUG: boolean;
+  zeroXApiKey?: string;
 }>;
 
 type Reconfigurable = Pick<BeanstalkConfig, "source">;
@@ -55,6 +57,7 @@ export class BeanstalkSDK {
   public readonly pools: Pools;
   public readonly graphql: GraphQLClient;
   public readonly queries: Queries;
+  public readonly zeroX: ZeroX;
 
   public readonly farm: Farm;
   public readonly silo: Silo;
@@ -83,6 +86,7 @@ export class BeanstalkSDK {
     this.pools = new Pools(this);
     this.graphql = new GraphQLClient(this.subgraphUrl);
     this.queries = getQueries(this.graphql);
+    this.zeroX = new ZeroX(config?.zeroXApiKey);
 
     // // Internal
     this.events = new EventManager(this);

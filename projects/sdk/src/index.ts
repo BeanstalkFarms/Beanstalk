@@ -27,5 +27,11 @@ export type {
   AdvancedPipeCallStruct as AdvancedPipeStruct
 } from "src/lib/depot";
 
+export type {
+  ZeroExQuoteParams,
+  ZeroExQuoteResponse,
+  ZeroExAPIRequestParams
+} from "src/lib/matcha/types";
+
 // Utilities
 export * as TestUtils from "./utils/TestUtils";
