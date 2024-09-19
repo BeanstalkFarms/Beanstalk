@@ -36,7 +36,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   );
 
   const nonBeanAmounts = [
-    to18("20"), // BEAN/WETH
+    to18("20.6"), // BEAN/WETH
     to18("2556"), // BEAN/WstETH
     to18("16"), // BEAN/WEEETH
     toX("8", 8), // BEAN/WBTC (8 decimals)
