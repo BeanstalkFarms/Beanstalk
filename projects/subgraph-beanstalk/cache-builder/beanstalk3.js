@@ -9,7 +9,6 @@ const tokenMap = {
   "0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d": "urlp"
 };
 
-// NOTE: once latest subgraph is deployed, will need to update beanstalk/marketplace ids in this query.
 (async () => {
   // for testing purposes. set to empty string to ignore
   const block = "block: { number: 20736200 }";
@@ -25,6 +24,7 @@ const tokenMap = {
         harvestedPods
         podIndex
         harvestableIndex
+        temperature
       }
       podMarketplace(id: "0" ${block}) {
         filledListedPods
@@ -74,6 +74,7 @@ const tokenMap = {
       harvestedPods: BigInt;
       podIndex: BigInt;
       harvestableIndex: BigInt;
+      temperature: i32;
     }
 
     class PodMarketplaceInitialValues {
@@ -109,7 +110,8 @@ const tokenMap = {
       sownBeans: BigInt.fromString('${l1Values.field.sownBeans}'),
       harvestedPods: BigInt.fromString('${l1Values.field.harvestedPods}'),
       podIndex: BigInt.fromString('${l1Values.field.podIndex}'),
-      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}')
+      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}'),
+      temperature: ${l1Values.field.temperature}
     };
 
     export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {
