@@ -36,7 +36,9 @@ async function reseedL2({
   end = 11,
   setState = true,
   deployBasin = false,
-  addLiquidity = true
+  addLiquidity = true,
+  verbose = true,
+  onlyState = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -52,7 +54,7 @@ async function reseedL2({
     reseed7, // reseed account status
     reseed8, // reseed internal balances
     reseed9, // reseed whitelist
-    reseed10 // add selectors to l2
+    // reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
 
@@ -94,7 +96,7 @@ async function reseedL2({
     }
 
     if (setState == true) {
-      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
+      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock, verbose);
       continue;
     }
 
@@ -113,7 +115,7 @@ async function reseedL2({
         initFacetNameInfo: "ReseedTransferOwnership"
       });
     }
-    if (i == reseeds.length - 1) {
+    if (i == reseeds.length - 1 && !onlyState) {
       // claim ownership of beanstalk:
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
       // initialize beanstalk state add selectors to L2 beanstalk.
@@ -144,8 +146,9 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
-  // TODO: Replace with actual smart contract accounts.
-  const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
+  // Read contract addresses to exclude them from the reseed
+  const contractFilePath = "./scripts/beanstalk-3/data/inputs/ContractAddresses.json";
+  const contractAccounts = JSON.parse(fs.readFileSync(contractFilePath, "utf8"));
   const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
@@ -179,7 +182,7 @@ function parseBeanstalkData() {
     contractAccounts
   );
   // Initial supplies and well balances
-  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`
+  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`;
   const outputFilePaths = {
     L2_initial_supply: "./reseed/data/r2/L2_initial_supply.json",
     L2_well_balances: "./reseed/data/r2/L2_well_balances.json"

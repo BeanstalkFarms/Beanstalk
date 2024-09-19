@@ -1,7 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 
-async function reseed3(account, L2Beanstalk, mock) {
+async function reseed3(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
   console.log("reseed3: Migrate pod listings and orders in the pod marketplace.\n");
 

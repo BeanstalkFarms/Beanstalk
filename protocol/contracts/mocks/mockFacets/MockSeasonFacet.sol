@@ -432,6 +432,14 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.stemStartSeason = uint16(s.sys.season.current);
     }
 
+    function mockSetMilestoneStem(address token, int96 stem) external {
+        s.sys.silo.assetSettings[token].milestoneStem = stem;
+    }
+
+    function mockSetMilestoneSeason(address token, uint32 season) external {
+        s.sys.silo.assetSettings[token].milestoneSeason = season;
+    }
+
     //constants for old seeds values
 
     function lastDeltaSoil() external view returns (uint256) {

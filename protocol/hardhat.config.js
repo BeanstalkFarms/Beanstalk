@@ -36,6 +36,7 @@ const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseedL2 } = require("./reseed/reseedL2.js");
 const { reseedL1 } = require("./reseed/reseedL1.js");
+const { reseed10 } = require("./reseed/reseed10.js");
 const { task } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } = require("hardhat/builtin-tasks/task-names");
 const {
@@ -94,29 +95,27 @@ task("sunrise2", async function () {
 });
 
 task("sunriseArb", async function () {
-  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
-  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp]);
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  // call sunrise before attempting to mine more blocks:
+  try {
+    await beanstalk.sunrise();
+  } catch (error) {
+    // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
+    const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+    const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+    const additionalSeconds = 12;
+    await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp + additionalSeconds]);
 
-  season = await ethers.getContractAt("SeasonFacet", "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  await season.sunrise();
+    await beanstalk.sunrise();
 
-  seasonGetters = await ethers.getContractAt(
-    "SeasonGettersFacet",
-    "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
-  );
+    await network.provider.send("evm_mine");
+  }
   const unixTime = await time.latest();
   const currentTime = new Date(unixTime * 1000).toLocaleString();
 
-  // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
-  const afterSunriseTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-  const additionalSeconds = 12;
-  await network.provider.send("evm_setNextBlockTimestamp", [afterSunriseTimestamp + additionalSeconds]);
-  await network.provider.send("evm_mine");
-
   console.log(
     "sunrise complete!\ncurrent season:",
-    await seasonGetters.season(),
+    await beanstalk.season(),
     "\ncurrent blockchain time:",
     unixTime,
     "\nhuman readable time:",
@@ -124,8 +123,34 @@ task("sunriseArb", async function () {
     "\ncurrent block:",
     (await ethers.provider.getBlock("latest")).number,
     "\ndeltaB:",
-    (await seasonGetters.totalDeltaB()).toString()
+    (await beanstalk.totalDeltaB()).toString()
   );
+});
+
+task("addReseedFacets", async function () {
+  let l2bcm = await impersonateSigner("0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69");
+  const l2BeanstalkAddress = "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70";
+  let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  await mintEth(l2bcm.address);
+  await mintEth(beanstalkDeployer.address);
+  // transfer ownership to the l2bcm.
+  await upgradeWithNewFacets({
+    diamondAddress: l2BeanstalkAddress,
+    facetNames: ["OwnershipFacet"],
+    initFacetName: "ReseedTransferOwnership",
+    initArgs: [l2bcm.address],
+    bip: false,
+    verbose: false,
+    account: beanstalkDeployer,
+    checkGas: true,
+    initFacetNameInfo: "ReseedTransferOwnership"
+  });
+  // claim ownership of the l2 beanstalk.
+  await (await getBeanstalk(l2BeanstalkAddress)).connect(l2bcm).claimOwnership();
+  // perform the diamond cut.
+  await reseed10(l2bcm, l2BeanstalkAddress, false, true);
+  console.log("-----------------------------------");
+  console.log("\nDiamond cut complete: Facets added to L2 Beanstalk.");
 });
 
 task("getTime", async function () {
@@ -508,15 +533,25 @@ module.exports = {
       url: "<CUSTOM_URL>",
       timeout: 100000
     },
-    testSiloV3: {
-      chainId: 31337,
-      url: "https://rpc.vnet.tenderly.co/devnet/silo-v3/3ed19e82-a81c-45e5-9b16-5e385aa74587",
-      timeout: 100000
+    reseedArbitrum: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/65fd0946-649e-4927-b8db-9a5ff8afa284",
+      chainId: 42161,
+      timeout: 10000000000000
+    },
+    reseedArbitrumSync: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/af868e07-a45a-41e7-b05f-c272e8d42cdd",
+      chainId: 42161,
+      timeout: 10000000000000
     },
     goerli: {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
       timeout: 100000
+    },
+    reseedArbitrum: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/10991114-8428-4e06-88dc-426e4e5673da",
+      chainId: 42161,
+      timeout: 10000000000000
     }
   },
   etherscan: {

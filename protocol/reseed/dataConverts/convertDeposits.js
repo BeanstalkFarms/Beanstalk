@@ -19,7 +19,7 @@ function parseDeposits(inputFilePath, outputFilePath, contractAccounts) {
           });
 
           // do not include contract accounts
-          if (!contractAccounts.includes(account)) {
+          if (!contractAccounts.includes(account.toLowerCase())) {
             result.push([account, depositArray]);
           }
         }
