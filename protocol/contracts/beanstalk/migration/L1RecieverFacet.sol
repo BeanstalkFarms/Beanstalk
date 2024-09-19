@@ -40,15 +40,15 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0xa1a847b9439cc6a293b68ff7d1ef36cb753e33e94a6d25cbec4369af40764968;
+        0x53d64bba5389504aeff2d680bd0d5a4a27f7c535578915ccfbc64f4aef1656ee;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x0314c9f403409b3af761d6a7591b62d0d9b7424e5288da3d79de67b3d37507cc;
+        0x828c73c8e073801828c564f95bafd55c6a0485f244d4581e638c90ca678d3a28;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
+        0x0ed5cf8908ddecd7d9285e5809315d007bfd5bd6d71f4c7db1131569180d23e2;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
-    bytes32 internal constant POD_ORDER_MERKLE_ROOT =
-        0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
+        0xa6e5ea73ff65d2f3378d95a7ce19b7226756100026ac0d29a79a71591e22b8f9;
+    // bytes32 internal constant POD_ORDER_MERKLE_ROOT =
+    // 0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
@@ -304,8 +304,10 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev Listings are not migrated from contracts (as no bean is
      * locked, and that the listed plot may have been already filled),
      * and will need to be recreated.
+     *
+     * There are no pod orders owned by contracts, so this function is commented out.
      */
-    function issuePodOrders(
+    /*function issuePodOrders(
         address owner,
         L1PodOrder[] memory orders,
         bytes32[] calldata proof
@@ -329,6 +331,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         emit L1OrdersMigrated(owner, reciever, orders);
     }
+    */
 
     //////////// MERKLE PROOF VERIFICATION ////////////
 
@@ -404,6 +407,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
     }
 
+    /*
+    // no pod orders owned by contracts, commenting this functionality out
     function verifyOrderProof(
         address owner,
         L1PodOrder[] memory orders,
@@ -413,7 +418,7 @@ contract L1RecieverFacet is ReentrancyGuard {
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
         return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
-    }
+    }*/
 
     //////////// MIGRATION HELPERS ////////////
 
