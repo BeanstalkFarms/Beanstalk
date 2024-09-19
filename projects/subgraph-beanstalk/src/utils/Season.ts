@@ -77,6 +77,7 @@ export function siloReceipt(amount: BigInt, block: ethereum.Block): void {
   takeSiloSnapshots(silo, block);
   silo.save();
 
+  // Add SiloAsset deposit immediately at the protocol level. Will be removed upon plant
   updateDepositInSiloAsset(v().protocolAddress, v().protocolAddress, getProtocolToken(v(), block.number), amount, amount, block);
 }
 

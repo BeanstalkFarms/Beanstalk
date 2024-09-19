@@ -21,6 +21,7 @@ import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/Whitel
 import { getCurrentSeason } from "../entities/Beanstalk";
 import { updateStalkBalances } from "../utils/Silo";
 import { UpdatedOptimalPercentDepositedBdvForToken } from "../../generated/Beanstalk-ABIs/Reseed";
+import { beanDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 
 // SEED GAUGE SEASONAL ADJUSTMENTS //
 
@@ -53,8 +54,8 @@ export function handleUpdateAverageStalkPerBdvPerSeason(event: UpdateAverageStal
   // In practice, seed values for non-gauge assets are negligible.
   // The correct approach is iterating whitelisted assets each season, multipying bdv and seeds
 
-  // Divide by 1e6. newStalkPerBdvPerSeason is per unit of bdv, not per micro bdv.
-  silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason).div(BI_10.pow(6));
+  // Divide by bdv decimals. newStalkPerBdvPerSeason is per unit of bdv, not per micro bdv.
+  silo.grownStalkPerSeason = silo.depositedBDV.times(event.params.newStalkPerBdvPerSeason).div(BI_10.pow(<u8>beanDecimals()));
   takeSiloSnapshots(silo, event.block);
   silo.save();
 
