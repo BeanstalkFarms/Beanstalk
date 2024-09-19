@@ -84,14 +84,34 @@ export function harvest(params: HarvestParams): void {
 
     if (harvestablePods >= plot.pods) {
       // Plot fully harvests
-      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, plot.pods, params.event.block);
+      updateFieldTotals(
+        protocol,
+        params.account,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI.minus(plot.pods),
+        plot.pods,
+        params.event.block
+      );
 
       plot.harvestedPods = plot.pods;
       plot.fullyHarvested = true;
       plot.save();
     } else {
       // Plot partially harvests
-      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, harvestablePods, params.event.block);
+      updateFieldTotals(
+        protocol,
+        params.account,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI.minus(harvestablePods),
+        harvestablePods,
+        params.event.block
+      );
 
       remainingIndex = plot.index.plus(harvestablePods);
       let remainingPods = plot.pods.minus(harvestablePods);
