@@ -13,9 +13,11 @@ const POD_ORDERS = "./scripts/beanstalk-3/data/inputs/PodOrders.json";
 function updateInputJsonData(verbose = false) {
   // reads ContractAddresses.json, pulls data from protocol/reseed/data/*.json, updates corresponding deposits/plots/internalbals/fertilizers/podorders jsons
 
-  const contractAddresses = JSON.parse(
-    fs.readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.json")
-  );
+  const contractAddresses = fs
+    .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   // loop through and update contract addresses to be the checksummed address
   for (const [address, data] of Object.entries(contractAddresses)) {
@@ -36,7 +38,11 @@ function updateInputJsonData(verbose = false) {
 
   // update Plots.json
   const allPlotsData = JSON.parse(fs.readFileSync(storageAccountsPath));
-  const plots = restructurePlots(allPlotsData, contractAddresses);
+  var plots = restructurePlots(allPlotsData, contractAddresses);
+
+  // Process the plots to keep only the top 435 per address
+  plots = processPlots(plots);
+
   fs.writeFileSync(PLOTS, JSON.stringify(plots, null, 2));
 
   // update InternalBalances.json
@@ -80,6 +86,48 @@ function restructureDeposits(inputData, addressesToInclude) {
 
       return [address, depositIds, amounts, bdvs];
     });
+}
+
+function processPlots(plots, maxPlotsPerAddress = 435) {
+  return plots.map(([address, indices, sizes]) => {
+    // If there are 435 or fewer plots, return the original data
+    if (sizes.length <= maxPlotsPerAddress) {
+      return [address, indices, sizes];
+    }
+
+    // Create an array of objects with index and size
+    let plotData = indices.map((index, i) => ({
+      index: index,
+      size: BigInt(sizes[i]) // Convert to BigInt for accurate sorting
+    }));
+
+    // Sort the plots by size in descending order
+    plotData.sort((a, b) => (b.size > a.size ? 1 : -1));
+
+    // sum the total of the first 435 plots, then the next 435 plots, etc.
+    let groupSums = [];
+    for (let i = 0; i < plotData.length; i += maxPlotsPerAddress) {
+      let groupSum = plotData
+        .slice(i, i + maxPlotsPerAddress)
+        .reduce((sum, plot) => sum + plot.size, BigInt(0));
+      groupSums.push(groupSum.toString());
+    }
+
+    console.log("Group sums for address:", address);
+    console.log(groupSums);
+
+    // Keep only the top 435 plots
+    plotData = plotData.slice(0, maxPlotsPerAddress);
+
+    // Sort back by index to maintain original order
+    plotData.sort((a, b) => a.index - b.index);
+
+    // Extract the indices and sizes
+    const newIndices = plotData.map((plot) => plot.index);
+    const newSizes = plotData.map((plot) => plot.size.toString()); // Convert back to string
+
+    return [address, newIndices, newSizes];
+  });
 }
 
 function restructurePlots(inputData, addressesToInclude) {
