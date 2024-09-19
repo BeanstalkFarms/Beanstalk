@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { ethers } = require("ethers");
 
-function readPlotData(jsonFilePath, account) {
+function readFertData(jsonFilePath, account) {
   try {
     // Read the JSON file
     const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, "utf8"));
@@ -15,22 +15,23 @@ function readPlotData(jsonFilePath, account) {
     );
 
     if (!accountData) {
-      //   console.error(`No plot data found for account: ${checksummedAccount}`);
+      // console.error(`No fert data found for account: ${checksummedAccount}`);
       return "0x";
     }
 
-    const plotIds = accountData[1];
+    const fertIds = accountData[1];
     const amounts = accountData[2];
+    const lastBpf = accountData[3];
 
     // Encode the data
     const encodedData = ethers.utils.defaultAbiCoder.encode(
-      ["uint256[]", "uint256[]"],
-      [plotIds, amounts]
+      ["uint256[]", "uint128[]", "uint128"],
+      [fertIds, amounts, lastBpf]
     );
 
     return encodedData;
   } catch (error) {
-    console.error(`Error reading plot data: ${error.message}`);
+    console.error(`Error reading fert data: ${error.message}`);
     return "0x";
   }
 }
@@ -41,5 +42,5 @@ const jsonFilePath = args[0];
 const account = args[1];
 
 // Run the function and output the result
-const encodedData = readPlotData(jsonFilePath, account);
+const encodedData = readFertData(jsonFilePath, account);
 console.log(encodedData);
