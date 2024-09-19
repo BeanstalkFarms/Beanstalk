@@ -25,6 +25,7 @@ enum PlotSource {
   SOW
   TRANSFER
   MARKET
+  RESEED_MIGRATED
 }
 
 enum EmaWindow {
