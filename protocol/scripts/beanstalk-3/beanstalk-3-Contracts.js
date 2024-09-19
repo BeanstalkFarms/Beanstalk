@@ -104,6 +104,18 @@ function processPlots(plots, maxPlotsPerAddress = 435) {
     // Sort the plots by size in descending order
     plotData.sort((a, b) => (b.size > a.size ? 1 : -1));
 
+    // sum the total of the first 435 plots, then the next 435 plots, etc.
+    let groupSums = [];
+    for (let i = 0; i < plotData.length; i += maxPlotsPerAddress) {
+      let groupSum = plotData
+        .slice(i, i + maxPlotsPerAddress)
+        .reduce((sum, plot) => sum + plot.size, BigInt(0));
+      groupSums.push(groupSum.toString());
+    }
+
+    console.log("Group sums for address:", address);
+    console.log(groupSums);
+
     // Keep only the top 435 plots
     plotData = plotData.slice(0, maxPlotsPerAddress);
 
