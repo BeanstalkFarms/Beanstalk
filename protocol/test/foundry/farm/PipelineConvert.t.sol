@@ -1949,7 +1949,7 @@ contract PipelineConvertTest is TestHelper {
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
 
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingBean(
@@ -1969,7 +1969,7 @@ contract PipelineConvertTest is TestHelper {
         // add to bean index (no beans out on this one)
         reserves[beanIndex] = reserves[beanIndex].add(beansIn);
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingNonBean(
@@ -1989,7 +1989,7 @@ contract PipelineConvertTest is TestHelper {
         reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
 
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     // verifies there's no way to withdraw from a deposit without losing grown stalk
