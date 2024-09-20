@@ -106,8 +106,9 @@ const PipelineConvertFormInner = ({
     queryFn: async () => {
       setFieldValue('tokens.0.quoting', true);
       try {
+        const lpIn = sourceWell.lpToken.fromHuman(debouncedAmountIn.toString());
         const sourceLPAmountOut = await sourceWell.getRemoveLiquidityOutEqual(
-          sourceWell.lpToken.fromHuman(debouncedAmountIn.toString())
+          lpIn
         );
 
         console.debug(`[pipelineConvert/removeLiquidity (1)] result:`, {
@@ -125,7 +126,7 @@ const PipelineConvertFormInner = ({
           takerAddress: sdk.contracts.pipeline.address,
           shouldSellEntireBalance: true,
           // 0x requests are formatted such that 0.01 = 1%. Everywhere else in the UI we use 0.01 = 0.01% ?? BS3TODO: VALIDATE ME
-          slippagePercentage: (slippage / 10).toString(),
+          slippagePercentage: (slippage * 100).toString(),
         });
 
         console.debug(`[pipelineConvert/0xQuote (2)] result:`, { quote });
@@ -141,6 +142,7 @@ const PipelineConvertFormInner = ({
 
         setFieldValue('tokens.0.amountOut', new BigNumber(targetLPAmountOut.toHuman()));
         return {
+          amountIn: lpIn,
           beanAmountOut,
           swapAmountIn,
           swapAmountOut,
@@ -167,7 +169,7 @@ const PipelineConvertFormInner = ({
           sdk,
           source: {
             well: sourceWell,
-            lpAmountIn: sourceWell.lpToken.fromHuman(debouncedAmountIn.toString()),
+            lpAmountIn: data.amountIn,
             beanAmountOut: data.beanAmountOut,
             nonBeanAmountOut: data.swapAmountOut,
           },
@@ -205,7 +207,9 @@ const PipelineConvertFormInner = ({
         throw e;
       }
     },
+    retry: 2,
     enabled: !!data && debouncedAmountIn?.gt(0),
+    ...baseQueryOptions
   })
 
   /// When a new output token is selected, reset maxAmountIn.
