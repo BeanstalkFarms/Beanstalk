@@ -38,7 +38,7 @@ export interface BuildPipeCallArgsEqual {
   slippage: number;
 }
 
-export class PipelineConvert {
+export class PipelineConvertUtil {
   private static erc20Approve(
     token: ERC20Token,
     spender: string,
@@ -149,12 +149,12 @@ export class PipelineConvert {
 
     // 0. Approve source well to spend LP tokens
     pipe.push(
-      PipelineConvert.erc20Approve(source.well.lpToken, source.well.address)
+      PipelineConvertUtil.erc20Approve(source.well.lpToken, source.well.address)
     );
 
     // 1. Remove liquidity from source well & set recipient to pipeline
     pipe.push(
-      PipelineConvert.getRemoveLiquidityEqual(
+      PipelineConvertUtil.getRemoveLiquidityEqual(
         source.well,
         source.lpAmountIn,
         sourceWellAmountsOut.map((a) => a.subSlippage(slippage)),
@@ -164,7 +164,7 @@ export class PipelineConvert {
 
     // 2. Approve 0x
     pipe.push(
-      PipelineConvert.erc20Approve(swap.sellToken, swap.quote.allowanceTarget)
+      PipelineConvertUtil.erc20Approve(swap.sellToken, swap.quote.allowanceTarget)
     );
 
     // 3. Swap nonBeanToken1 for nonBeanToken2. recipient MUST be Pipeline or this will fail.
@@ -176,7 +176,7 @@ export class PipelineConvert {
 
     // 4. transfer BuyToken to target well
     pipe.push(
-      PipelineConvert.transferToken(
+      PipelineConvertUtil.transferToken(
         swap.buyToken,
         target.well.address,
         ethers.constants.Zero,
@@ -186,7 +186,7 @@ export class PipelineConvert {
 
     // 5. Transfer well.tokens[0] to target well
     pipe.push(
-      PipelineConvert.transferToken(
+      PipelineConvertUtil.transferToken(
         sdk.tokens.BEAN,
         target.well.address,
         ethers.constants.Zero,
@@ -198,7 +198,7 @@ export class PipelineConvert {
 
     // 6. Call Sync on target well
     pipe.push(
-      PipelineConvert.wellSync(
+      PipelineConvertUtil.wellSync(
         target.well,
         sdk.contracts.pipeline.address,
         minLPOut
@@ -207,7 +207,7 @@ export class PipelineConvert {
 
     // 7. Check if amount receieved from sync >= minLPOut
     pipe.push(
-      PipelineConvert.junctionGte(
+      PipelineConvertUtil.junctionGte(
         sdk.contracts.junction,
         ethers.constants.Zero,
         minLPOut,
@@ -217,7 +217,7 @@ export class PipelineConvert {
 
     // 8. Check 7 is true
     pipe.push(
-      PipelineConvert.junctionCheck(
+      PipelineConvertUtil.junctionCheck(
         sdk.contracts.junction,
         true,
         Clipboard.encodeSlot(7, 0, 0)

@@ -34,6 +34,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 import { ActionType, displayFullBN } from '~/util';
+import { PipelineConvertUtil } from '~/lib/PipelineConvert/PipelineConvert';
 import { BaseConvertFormProps } from './types';
 
 interface Props extends BaseConvertFormProps {
@@ -66,6 +67,7 @@ const PipelineConvertFormInner = ({
 }: PipelineConvertFormProps) => {
   const [tokenSelectOpen, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
+  
 
   const sourceToken = sourceWell.lpToken; // LP token of source well
   const targetToken = targetWell.lpToken; // LP token of target well
@@ -75,6 +77,14 @@ const PipelineConvertFormInner = ({
 
   const maxConvertableBN = new BigNumber(
     (balance?.convertibleAmount || TokenValue.ZERO).toHuman()
+  );
+
+  const pickedDeposits = sdk.silo.siloConvert.calculateConvert(
+    sourceToken,
+    targetToken,
+    sourceToken.fromHuman(debouncedAmountIn.toString()),
+    balance?.convertibleDeposits || [],
+    0
   );
 
   const sourceIdx = getWellTokenIndexes(sourceWell, BEAN); // token indexes of source well
@@ -147,6 +157,56 @@ const PipelineConvertFormInner = ({
     enabled: maxConvertableBN.gt(0) && debouncedAmountIn?.gt(0),
     ...baseQueryOptions,
   });
+
+  const { data: staticCallData } = useQuery({
+    queryKey: ['pipelineConvert/callStatic', sourceWell.address, targetWell.address, data?.targetLPAmountOut?.toString()],
+    queryFn: async () => {
+      if (!data) return;
+      try {
+        const advPipeCalls = PipelineConvertUtil.buildEqual2Equal({
+          sdk,
+          source: {
+            well: sourceWell,
+            lpAmountIn: sourceWell.lpToken.fromHuman(debouncedAmountIn.toString()),
+            beanAmountOut: data.beanAmountOut,
+            nonBeanAmountOut: data.swapAmountOut,
+          },
+          swap: {
+            buyToken,
+            sellToken,
+            buyAmount: data.swapAmountOut,
+            quote: data.quote,
+          },
+          target: {
+            well: targetWell,
+            amountOut: data.targetLPAmountOut,
+          },
+          slippage,
+        });
+
+        const datas = await sdk.contracts.beanstalk.callStatic.pipelineConvert(
+          sourceToken.address,
+          pickedDeposits.crates.map((c) => c.stem),
+          pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
+          targetToken.address,
+          advPipeCalls
+        ).then((result) => ({
+          toStem: result.toStem,
+          fromAmount: result.fromAmount,
+          toAmount: result.toAmount,
+          fromBdv: result.fromBdv,
+          toBdv: result.toBdv,
+        }));
+
+        console.debug(`[pipelineConvert/callStatic] result:`, datas);
+        return datas;
+      } catch (e) {
+        console.debug('[pipelineConvert/callStatic] FAILED: ', e);
+        throw e;
+      }
+    },
+    enabled: !!data && debouncedAmountIn?.gt(0),
+  })
 
   /// When a new output token is selected, reset maxAmountIn.
   const handleSelectTokenOut = async (_selectedTokens: Set<Token>) => {
@@ -248,6 +308,18 @@ const PipelineConvertFormInner = ({
               <Typography>{targetToken?.symbol || 'Select token'}</Typography>
             </PillRow>
           ) : null}
+          <Stack>
+            {staticCallData && (
+              <Typography>
+                values from pipe convert:
+              </Typography>
+              )}
+            {staticCallData ? (Object.entries(staticCallData).map(([k, v]) => (
+                <Typography key={k}>
+                  {k}: {v.toString()}
+                </Typography>
+              ))) : "Failed to load results from static call"}
+          </Stack>
           {/* You may Lose Grown Stalk warning here */}
           <Box>
             <WarningAlert iconSx={{ alignItems: 'flex-start' }}>
