@@ -320,6 +320,7 @@ type Space {
   proposalsCount: Int
   proposalsCount1d: Int
   proposalsCount7d: Int
+  proposalsCount30d: Int
   rank: Float
   skin: String
   strategies: [Strategy]

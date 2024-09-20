@@ -17,6 +17,10 @@ import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogo from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanEthWellLpLogo from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beathWstethWellLPLogo from '~/img/tokens/bean-wsteth-logo.svg';
+import beanUsdcWellLpLogo from '~/img/tokens/bean-usdc-well-lp-logo.svg';
+import beanWbtcWellLpLogo from '~/img/tokens/bean-wbtc-well-lp-logo.svg';
+import beanUsdtWellLpLogo from '~/img/tokens/bean-usdt-well-lp-logo.svg';
+import beanWeethWellLpLogo from '~/img/tokens/bean-weeth-well-lp-logo.svg';
 
 // ERC-20 Token Images
 import crv3Logo from '~/img/tokens/crv3-logo.png';
@@ -64,10 +68,10 @@ const setTokenMetadatas = (sdk: BeanstalkSDK) => {
     logo: beathWstethWellLPLogo,
   });
   sdk.tokens.UNRIPE_BEAN_WSTETH.setMetadata({ logo: unripeBeanWstethLogoUrl });
-  sdk.tokens.BEAN_WEETH_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
-  sdk.tokens.BEAN_WBTC_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
-  sdk.tokens.BEAN_USDC_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
-  sdk.tokens.BEAN_USDT_WELL_LP.setMetadata({ logo: beathWstethWellLPLogo }); // TODO: fix me
+  sdk.tokens.BEAN_WEETH_WELL_LP.setMetadata({ logo: beanWeethWellLpLogo });
+  sdk.tokens.BEAN_WBTC_WELL_LP.setMetadata({ logo: beanWbtcWellLpLogo });
+  sdk.tokens.BEAN_USDC_WELL_LP.setMetadata({ logo: beanUsdcWellLpLogo });
+  sdk.tokens.BEAN_USDT_WELL_LP.setMetadata({ logo: beanUsdtWellLpLogo });
 
   // ERC-20 tokens
   sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
@@ -113,6 +117,7 @@ const useBeanstalkSdkContext = () => {
       signer: signer ?? undefined,
       source: datasource,
       DEBUG: IS_DEVELOPMENT_ENV,
+      zeroXApiKey: import.meta.env.VITE_ZERO_X_API_KEY,
       ...(subgraphUrl ? { subgraphUrl } : {}),
     });
 
