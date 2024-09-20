@@ -991,6 +991,8 @@ interface IMockFBeanstalk {
 
     function getActiveFertilizer() external view returns (uint256);
 
+    function getAddressAndStem(uint256 depositId) external pure returns (address token, int96 stem);
+
     function getAllBalance(address account, address token) external view returns (Balance memory b);
 
     function getAllBalances(

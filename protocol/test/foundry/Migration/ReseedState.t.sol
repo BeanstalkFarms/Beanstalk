@@ -85,6 +85,7 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
+        // the total number of accounts is 3665
         uint256 numAccounts = 10;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
@@ -338,6 +339,7 @@ contract ReseedStateTest is TestHelper {
     //////////////////// Account Deposits ////////////////////
 
     function test_AccountDeposits() public {
+        vm.pauseGasMetering();
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
@@ -374,6 +376,19 @@ contract ReseedStateTest is TestHelper {
                     assertEq(
                         accountDepositsStorage[j].tokenDeposits[k].bdv,
                         accountDepositsJson[j].tokenDeposits[k].bdv
+                    );
+
+                    (address token, int96 stem) = l2Beanstalk.getAddressAndStem(
+                        accountDepositsStorage[j].depositIds[k]
+                    );
+
+                    // withdraw deposit
+                    vm.prank(account);
+                    l2Beanstalk.withdrawDeposit(
+                        accountDepositsStorage[j].token,
+                        stem,
+                        accountDepositsStorage[j].tokenDeposits[k].amount,
+                        0
                     );
                 }
             }
