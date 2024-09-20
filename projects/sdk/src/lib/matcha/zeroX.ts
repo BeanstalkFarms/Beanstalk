@@ -1,7 +1,7 @@
 import { ZeroExAPIRequestParams, ZeroExQuoteResponse } from "./types";
 
 export class ZeroX {
-  readonly swapV1Endpoint = "http://arbitrum.api.0x.org/swap/v1/quote";
+  readonly swapV1Endpoint = "https://arbitrum.api.0x.org/swap/v1/quote";
 
   constructor(private _apiKey: string = "") {}
 
@@ -14,14 +14,14 @@ export class ZeroX {
 
   /**
    * fetch the quote from the 0x API
-   * @notes defaults: 
+   * @notes defaults:
    *  - slippagePercentage: In human readable form. 0.01 = 1%. Defaults to 0.001 (0.1%)
    *  - skipValidation: defaults to true
    *  - shouldSellEntireBalance: defaults to false
    */
   async fetchSwapQuote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
-    args: T , 
-    requestInit?: Omit<RequestInit, 'headers' | 'method'>
+    args: T,
+    requestInit?: Omit<RequestInit, "headers" | "method">
   ): Promise<ZeroExQuoteResponse> {
     if (!this._apiKey) {
       throw new Error("Cannot fetch from 0x without an API key");
@@ -35,8 +35,10 @@ export class ZeroX {
       ...requestInit,
       method: "GET",
       headers: new Headers({
+        "Content-Type": "application/json",
+        Accept: "application/json",
         "0x-api-key": this._apiKey
-      }),
+      })
     };
 
     const url = `${this.swapV1Endpoint}?${fetchParams.toString()}`;
@@ -47,10 +49,12 @@ export class ZeroX {
   /**
    * Generate the params for the 0x API
    * @throws if required params are missing
-   * 
+   *
    * @returns the params for the 0x API
    */
-  private generateQuoteParams<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(params: T): ZeroExAPIRequestParams {
+  private generateQuoteParams<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
+    params: T
+  ): ZeroExAPIRequestParams {
     if (!params.buyToken && !params.sellToken) {
       throw new Error("buyToken and sellToken and required");
     }
@@ -59,8 +63,7 @@ export class ZeroX {
       throw new Error("sellAmount or buyAmount is required");
     }
 
-    // Return all the params to filter out the ones that are not part of the request
-    return {
+    const quoteParams = {
       sellToken: params.sellToken,
       buyToken: params.buyToken,
       sellAmount: params.sellAmount,
@@ -75,7 +78,16 @@ export class ZeroX {
       buyTokenPercentageFee: params.buyTokenPercentageFee,
       priceImpactProtectionPercentage: params.priceImpactProtectionPercentage,
       feeRecipientTradeSurplus: params.feeRecipientTradeSurplus,
-      shouldSellEntireBalance: params.shouldSellEntireBalance ?? false,
+      shouldSellEntireBalance: params.shouldSellEntireBalance ?? false
     };
+
+    Object.keys(quoteParams).forEach((_key) => {
+      const key = _key as keyof typeof quoteParams;
+      if (quoteParams[key] === undefined || quoteParams[key] === null) {
+        delete quoteParams[key];
+      }
+    });
+
+    return quoteParams;
   }
 }
