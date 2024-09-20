@@ -47,13 +47,13 @@ async function reseedL2({
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
-    reseed3, // reseed pod marketplace
     reseed4, // reseed field
+    reseed3, // reseed pod marketplace
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
     reseed7, // reseed account status
     reseed8, // reseed internal balances
-    reseed9, // reseed whitelist
+    reseed9 // reseed whitelist
     // reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
@@ -146,7 +146,7 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
-    // Read contract addresses to exclude them from the reseed
+  // Read contract addresses to exclude them from the reseed
   const contractAccounts = fs
     .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
     .split("\n")
