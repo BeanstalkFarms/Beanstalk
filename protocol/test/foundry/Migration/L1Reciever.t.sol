@@ -303,11 +303,12 @@ contract L1RecieverFacetTest is Order, TestHelper {
         bdvs[2] = 248376525588;
         bdvs[3] = 7199435606;
 
-        bytes32[] memory proof = new bytes32[](4);
+        bytes32[] memory proof = new bytes32[](5);
         proof[0] = bytes32(0x5ef83f1a8578311c39534b42bee1dfeb3615286ea8d88cb8d1049815df6cc280);
         proof[1] = bytes32(0x707b589c0c392e07b09601c0c055bf263f597daa15a69b2a8081d05430997682);
-        proof[2] = bytes32(0x9e6eb9e0280de48adad93234edbb18284e135a06d7371391a14eed417d833523);
-        proof[3] = bytes32(0x15c9ecf466aefd85d1ced579df7a8fb0219af3d27d3255e808226bbd9e219303);
+        proof[2] = bytes32(0x53d6972a98c8e5ce655263437b60d4ae382d494ec58cc36a756b0b0c9a447523);
+        proof[3] = bytes32(0x2f5789a9206053a26272b0ec770d941e00e1466a6ccd54fce76f7707480e735e);
+        proof[4] = bytes32(0x477b91de87977b62583322b7945fa8ac5c1a3f444a4acf8c7c9397cce04a119c);
 
         return (account, depositIds, amounts, bdvs, proof);
     }
@@ -335,9 +336,9 @@ contract L1RecieverFacetTest is Order, TestHelper {
         pods[5] = 1525000;
 
         bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0xbaef3e12a2feef6cdf5bf77dbc0274421b66278087273b06a1b7b9be6e4de62d);
-        proof[1] = bytes32(0xa2bf812102fee36e8db0bd0c3288a59e3119f9b631f2c33f95c4f12baddca96d);
-        proof[2] = bytes32(0xf8138f4b12984d61c5fe1a0f360d005fdef03cc9e06f1dd67c9f98700a5532c2);
+        proof[0] = bytes32(0xce6c05520ca960525c486ec28de7ab8018c0d094a404feb043b60ef658e1e921);
+        proof[1] = bytes32(0x6e2858d71bc1af713bd1d79cb187cd16fa8c67e8de5f2c7a127fa111b864639d);
+        proof[2] = bytes32(0xdaee3bdb7a7364813d1448817b3f1cd0cd91c39dc5f547f4ab156cbd4af7b9e3);
 
         return (account, index, pods, proof);
     }
@@ -355,9 +356,9 @@ contract L1RecieverFacetTest is Order, TestHelper {
         amounts[0] = 8568;
 
         bytes32[] memory proof = new bytes32[](3);
-        proof[0] = bytes32(0xe6b126b486d1049a3c4ea6d32708dedf47b9d508d591671eddd7214476914f69);
-        proof[1] = bytes32(0x88659cfb1b3bec548b7ac3b0c5dd1ff653cbc33e3a12e10fd6e7a554a0402f46);
-        proof[2] = bytes32(0x18679f0b3b62978601eb10e75699f4a869665f734fcca4c304a4d639e2c32f26);
+        proof[0] = bytes32(0xee55dde20ac5a422ab93d3ffc9b0812d53d9385c39e0436133ce62248515088d);
+        proof[1] = bytes32(0xda23afb0ce9707b468ac3eeeab30d061c9da1ab67fd2a80bc6504c929ede41c9);
+        proof[2] = bytes32(0x1ef0c20ab764e10579628636be6eaac2d60da68612a068d52d6fce56642ebb56);
 
         return (account, tokens, amounts, proof);
     }
@@ -384,8 +385,8 @@ contract L1RecieverFacetTest is Order, TestHelper {
 
         bytes32[] memory proof = new bytes32[](3);
         proof[0] = bytes32(0x044efadc8244d78f08686bb10b22ee313b8331aefafc0badffbb74c0558e3f8a);
-        proof[1] = bytes32(0xf6e0807e42179f8c975067c891e93ac48621024dc25b223baf4a78f0edcfa61d);
-        proof[2] = bytes32(0x7e77601c08f8772a9cf44337db2696d84da8290be446b231dc70c4289526a4d9);
+        proof[1] = bytes32(0x210a5b9d1e024cb1613dac31cc1d46a3df59192015a72402be1fd8e7af3de316);
+        proof[2] = bytes32(0xf04e6bd2107788fa58343c3c91bec129ef0c4f961d7a6c8a80f0c9b7e0c6155a);
 
         return (account, ids, amounts, lastBpf, proof);
     }

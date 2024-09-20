@@ -40,13 +40,13 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0x53d64bba5389504aeff2d680bd0d5a4a27f7c535578915ccfbc64f4aef1656ee;
+        0xe8c85107aea17dd6d4330a7a996c8ec23d62aa22f3feb4c97cdd5368e1fa756b;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x828c73c8e073801828c564f95bafd55c6a0485f244d4581e638c90ca678d3a28;
+        0x8d60edfd9ab5f687b1d92f441b577b43d2ad8cb22e66779e6c37e3dc3b91f3e1;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0x0ed5cf8908ddecd7d9285e5809315d007bfd5bd6d71f4c7db1131569180d23e2;
+        0x3b6f4a3ceb1dc34f3a00414b79dcc5c16756093de2e4062e726ec22afd36741c;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0xa6e5ea73ff65d2f3378d95a7ce19b7226756100026ac0d29a79a71591e22b8f9;
+        0x6329fea484065f1f62d989fbf443406e3487276c4397ad36e0370f60ffbaa2e5;
     // bytes32 internal constant POD_ORDER_MERKLE_ROOT =
     // 0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
