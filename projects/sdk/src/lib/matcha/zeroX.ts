@@ -1,4 +1,4 @@
-import { ZeroExAPIRequestParams, ZeroExQuoteParams, ZeroExQuoteResponse } from "./types";
+import { ZeroExAPIRequestParams, ZeroExQuoteResponse } from "./types";
 
 export class ZeroX {
   readonly swapV1Endpoint = "http://arbitrum.api.0x.org/swap/v1/quote";
@@ -6,14 +6,23 @@ export class ZeroX {
   constructor(private _apiKey: string = "") {}
 
   /**
+   * Exposing here to allow other modules to use their own API key if needed
+   */
+  setApiKey(_apiKey: string) {
+    this._apiKey = _apiKey;
+  }
+
+  /**
    * fetch the quote from the 0x API
-   *
-   * params
+   * @notes defaults: 
    *  - slippagePercentage: In human readable form. 0.01 = 1%. Defaults to 0.001 (0.1%)
    *  - skipValidation: defaults to true
    *  - shouldSellEntireBalance: defaults to false
    */
-  async fetchQuote(args: ZeroExQuoteParams) {
+  async fetchSwapQuote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
+    args: T , 
+    requestInit?: Omit<RequestInit, 'headers' | 'method'>
+  ): Promise<ZeroExQuoteResponse> {
     if (!this._apiKey) {
       throw new Error("Cannot fetch from 0x without an API key");
     }
@@ -23,10 +32,11 @@ export class ZeroX {
     );
 
     const options = {
+      ...requestInit,
       method: "GET",
       headers: new Headers({
         "0x-api-key": this._apiKey
-      })
+      }),
     };
 
     const url = `${this.swapV1Endpoint}?${fetchParams.toString()}`;
@@ -34,9 +44,13 @@ export class ZeroX {
     return fetch(url, options).then((r) => r.json()) as Promise<ZeroExQuoteResponse>;
   }
 
-  private generateQuoteParams(args: ZeroExQuoteParams): ZeroExAPIRequestParams {
-    const { enabled, mode, ...params } = args;
-
+  /**
+   * Generate the params for the 0x API
+   * @throws if required params are missing
+   * 
+   * @returns the params for the 0x API
+   */
+  private generateQuoteParams<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(params: T): ZeroExAPIRequestParams {
     if (!params.buyToken && !params.sellToken) {
       throw new Error("buyToken and sellToken and required");
     }
@@ -45,11 +59,23 @@ export class ZeroX {
       throw new Error("sellAmount or buyAmount is required");
     }
 
+    // Return all the params to filter out the ones that are not part of the request
     return {
-      ...params,
+      sellToken: params.sellToken,
+      buyToken: params.buyToken,
+      sellAmount: params.sellAmount,
+      buyAmount: params.buyAmount,
       slippagePercentage: params.slippagePercentage ?? "0.01",
-      skipValidation: params.skipValidation ?? true,
-      shouldSellEntireBalance: params.shouldSellEntireBalance ?? false
+      gasPrice: params.gasPrice,
+      takerAddress: params.takerAddress,
+      excludedSources: params.excludedSources,
+      includedSources: params.includedSources,
+      skipValidation: params.skipValidation ?? true, // defaults to true b/c most of our swaps go through advFarm / pipeline calls
+      feeRecipient: params.feeRecipient,
+      buyTokenPercentageFee: params.buyTokenPercentageFee,
+      priceImpactProtectionPercentage: params.priceImpactProtectionPercentage,
+      feeRecipientTradeSurplus: params.feeRecipientTradeSurplus,
+      shouldSellEntireBalance: params.shouldSellEntireBalance ?? false,
     };
   }
 }
