@@ -1,5 +1,6 @@
 const { deployDiamond } = require("../scripts/diamond.js");
-const { impersonateSigner, mintEth } = require("../utils");
+const { mintEth } = require("../utils");
+const { retryOperation } = require("../utils/read.js");
 
 /**
  * @notice Deploys a new beanstalk diamond contract without any facets. Should be on an L2.
@@ -13,12 +14,14 @@ async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
 
   // owner is initially the deployer. Upon the verification of the diamond,
   // the deployer will transfer ownership to the beanstalk owner.
-  const beanstalkDiamond = await deployDiamond({
-    diamondName: "L2BeanstalkDiamond",
-    ownerAddress: account.address,
-    deployer: account,
-    args: [],
-    verbose: verbose
+  const beanstalkDiamond = await retryOperation(async () => {
+    return await deployDiamond({
+      diamondName: "L2BeanstalkDiamond",
+      ownerAddress: account.address,
+      deployer: account,
+      args: [],
+      verbose: verbose
+    });
   });
 
   return beanstalkDiamond.address;

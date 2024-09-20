@@ -35,9 +35,8 @@ async function reseedL2({
   start = 0,
   end = 11,
   setState = true,
-  deployBasin = false,
   addLiquidity = true,
-  verbose = true,
+  verbose = false,
   onlyState = true
 }) {
   if (convertData) parseBeanstalkData();
@@ -85,13 +84,7 @@ async function reseedL2({
       ]);
       console.log("BeanstalkPrice:", beanstalkPrice.address);
       // deploy bean addresses.
-      await reseed2(
-        beanstalkDeployer,
-        l2BeanstalkAddress,
-        deployBasin,
-        fertilizerImplementation.address,
-        mock
-      );
+      await reseed2(beanstalkDeployer, l2BeanstalkAddress, fertilizerImplementation.address, mock);
       continue;
     }
 

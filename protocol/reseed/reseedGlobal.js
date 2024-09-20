@@ -1,7 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
-
+const { retryOperation } = require("../utils/read.js");
 async function reseedGlobal(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseedGlobal: reseedGlobal.\n");
@@ -18,14 +18,16 @@ async function reseedGlobal(account, L2Beanstalk, mock) {
   settings[9][1][0] = ShipmentPlanner.address;
   settings[9][2][0] = ShipmentPlanner.address;
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedGlobal",
-    initArgs: [settings],
-    bip: false,
-    verbose: true,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedGlobal",
+      initArgs: [settings],
+      bip: false,
+      verbose: true,
+      account: account
+    });
   });
   console.log("-----------------------------------");
 }

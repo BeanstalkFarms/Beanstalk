@@ -23,7 +23,7 @@ async function reseed3(account, L2Beanstalk, mock, verbose = false) {
     initFacetName: "ReseedPodMarket",
     initArgs: [podListings, podOrders],
     bip: false,
-    verbose: true,
+    verbose: verbose,
     account: account,
     checkGas: true
   });

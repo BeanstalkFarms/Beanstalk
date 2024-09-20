@@ -1,5 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { retryOperation } = require("../utils/read.js");
 
 /**
  * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
@@ -85,17 +86,19 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: facets,
-    facetLibraries: facetLibraries,
-    libraryNames: libraryNames,
-    linkedLibraries: libraryLinks,
-    initFacetName: "InitReseed",
-    initArgs: [],
-    bip: false,
-    verbose: verbose,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: facets,
+      facetLibraries: facetLibraries,
+      libraryNames: libraryNames,
+      linkedLibraries: libraryLinks,
+      initFacetName: "InitReseed",
+      initArgs: [],
+      bip: false,
+      verbose: verbose,
+      account: account
+    });
   });
 }
 exports.reseed10 = reseed10;

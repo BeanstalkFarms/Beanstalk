@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
 
 async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -27,17 +28,19 @@ async function reseed4(account, L2Beanstalk, mock, verbose = false) {
       console.log("Data chunk:", plotChunks[i]);
       console.log("-----------------------------------");
     }
-    await upgradeWithNewFacets({
-      diamondAddress: L2Beanstalk,
-      facetNames: [],
-      initFacetName: "ReseedField",
-      initFacetAddress: InitFacet.address,
-      initArgs: [plotChunks[i]],
-      bip: false,
-      verbose: verbose,
-      account: account,
-      checkGas: true,
-      initFacetNameInfo: "ReseedField"
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedField",
+        initFacetAddress: InitFacet.address,
+        initArgs: [plotChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedField"
+      });
     });
   }
 }

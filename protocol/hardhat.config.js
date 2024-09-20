@@ -96,20 +96,13 @@ task("sunrise2", async function () {
 
 task("sunriseArb", async function () {
   beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  // call sunrise before attempting to mine more blocks:
-  try {
-    await beanstalk.sunrise();
-  } catch (error) {
-    // make a few seconds pass to avoid pump NoTimePassed() error for twa reserves right after the sunrise.
-    const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
-    const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
-    const additionalSeconds = 12;
-    await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp + additionalSeconds]);
-
-    await beanstalk.sunrise();
-
-    await network.provider.send("evm_mine");
-  }
+  // Simulate the transaction to check if it would succeed
+  const lastTimestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  const hourTimestamp = parseInt(lastTimestamp / 3600 + 1) * 3600;
+  const additionalSeconds = 12;
+  await network.provider.send("evm_setNextBlockTimestamp", [hourTimestamp + additionalSeconds]);
+  await beanstalk.sunrise();
+  await network.provider.send("evm_mine");
   const unixTime = await time.latest();
   const currentTime = new Date(unixTime * 1000).toLocaleString();
 
@@ -532,16 +525,6 @@ module.exports = {
       chainId: 133137,
       url: "<CUSTOM_URL>",
       timeout: 100000
-    },
-    reseedArbitrum: {
-      url: "https://virtual.arbitrum.rpc.tenderly.co/65fd0946-649e-4927-b8db-9a5ff8afa284",
-      chainId: 42161,
-      timeout: 10000000000000
-    },
-    reseedArbitrumSync: {
-      url: "https://virtual.arbitrum.rpc.tenderly.co/af868e07-a45a-41e7-b05f-c272e8d42cdd",
-      chainId: 42161,
-      timeout: 10000000000000
     },
     goerli: {
       chainId: 5,

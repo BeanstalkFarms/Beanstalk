@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
+const { retryOperation } = require("../utils/read.js");
 
 async function reseed9(account, L2Beanstalk, mock = false) {
   console.log("-----------------------------------");
@@ -29,15 +30,16 @@ async function reseed9(account, L2Beanstalk, mock = false) {
   oracles[4][0] = LSDChainlinkOracle.address;
   oracles[5][0] = LSDChainlinkOracle.address;
 
-
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedWhitelist",
-    initArgs: [tokens, nonBeanTokens, siloSettings, whitelistStatuses, oracles],
-    bip: false,
-    verbose: true,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedWhitelist",
+      initArgs: [tokens, nonBeanTokens, siloSettings, whitelistStatuses, oracles],
+      bip: false,
+      verbose: true,
+      account: account
+    });
   });
   console.log("-----------------------------------");
 }
