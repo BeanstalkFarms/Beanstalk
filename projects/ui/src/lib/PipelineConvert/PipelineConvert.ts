@@ -137,13 +137,6 @@ export class PipelineConvert {
     target,
     slippage,
   }: BuildPipeCallArgsEqual): AdvancedPipeStruct[] {
-    if (
-      swap.quote.from.toLowerCase() !==
-      sdk.contracts.pipeline.address.toLowerCase()
-    ) {
-      throw new Error('Swap quote from address must be pipeline');
-    }
-
     const pipe: AdvancedPipeStruct[] = [];
 
     const sourceWellAmountsOut = [
