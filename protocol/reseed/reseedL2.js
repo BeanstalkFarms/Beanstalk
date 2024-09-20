@@ -144,8 +144,11 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
-  // TODO: Replace with actual smart contract accounts.
-  const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
+  const contractAccounts = fs
+    .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
   const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
@@ -179,7 +182,7 @@ function parseBeanstalkData() {
     contractAccounts
   );
   // Initial supplies and well balances
-  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`
+  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`;
   const outputFilePaths = {
     L2_initial_supply: "./reseed/data/r2/L2_initial_supply.json",
     L2_well_balances: "./reseed/data/r2/L2_well_balances.json"
