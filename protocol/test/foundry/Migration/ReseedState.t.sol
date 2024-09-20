@@ -340,6 +340,16 @@ contract ReseedStateTest is TestHelper {
 
     function test_AccountDeposits() public {
         vm.pauseGasMetering();
+
+        uint256 totalStalkBefore = l2Beanstalk.totalStalk();
+        assertGt(totalStalkBefore, 0);
+
+        uint256 totalRootsBefore = l2Beanstalk.totalRoots();
+        assertGt(totalRootsBefore, 0);
+
+        // verify ratio is 1:1 on reseed
+        assertEq(totalStalkBefore * 1e12, totalRootsBefore);
+
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
