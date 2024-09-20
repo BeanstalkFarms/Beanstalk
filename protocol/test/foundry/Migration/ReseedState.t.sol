@@ -86,7 +86,7 @@ contract ReseedStateTest is TestHelper {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
         // the total number of accounts is 3665
-        uint256 numAccounts = 10;
+        uint256 numAccounts = 10000;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -392,6 +392,41 @@ contract ReseedStateTest is TestHelper {
                     );
                 }
             }
+        }
+
+        // check system level stalk and roots
+        // todo: capture stalk/root ratio before and after
+        // call sunrise and see that the average grown stalk per season is updated?
+
+        uint256 totalStalk = l2Beanstalk.totalStalk();
+        assertEq(totalStalk, 0);
+
+        uint256 totalRoots = l2Beanstalk.totalRoots();
+        assertEq(totalRoots, 0);
+
+        uint256 totalRainRoots = l2Beanstalk.totalRainRoots();
+        assertEq(totalRainRoots, 0);
+
+        uint256 getTotalBdv = l2Beanstalk.getTotalBdv();
+        assertEq(getTotalBdv, 0);
+
+        uint256[] memory depositedAmounts = l2Beanstalk.getTotalSiloDeposited();
+        for (uint256 i = 0; i < depositedAmounts.length; i++) {
+            assertEq(depositedAmounts[i], 0);
+        }
+
+        uint256[] memory depositedBdvs = l2Beanstalk.getTotalSiloDepositedBdv();
+        for (uint256 i = 0; i < depositedBdvs.length; i++) {
+            assertEq(depositedBdvs[i], 0);
+        }
+
+        // loop through whitelisted tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = whitelistedTokens[i];
+            uint256 totalDeposited = l2Beanstalk.getTotalDeposited(token);
+            assertEq(totalDeposited, 0);
+            uint256 totalDepositedBdv = l2Beanstalk.getTotalDepositedBdv(token);
+            assertEq(totalDepositedBdv, 0);
         }
     }
 
