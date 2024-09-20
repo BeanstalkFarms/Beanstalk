@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { Form } from 'formik';
 import BigNumber from 'bignumber.js';
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CircularProgress,
@@ -34,43 +34,22 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 import { ActionType, displayFullBN } from '~/util';
-import useSdk from '~/hooks/sdk';
 import { BaseConvertFormProps } from './types';
 
 interface Props extends BaseConvertFormProps {
   farmerBalances: TokenSiloBalance | undefined;
 }
 
-const defaultWellLpOut = [TokenValue.ZERO, TokenValue.ZERO];
-
-const baseQueryOptions = {
-  refetchOnWindowFocus: true,
-  staleTime: 20_000, // 20 seconds stale time
-  refetchIntervalInBackground: false,
-};
-
-// prettier-ignore
-const queryKeys = {
-  wellLPOut: (sourceWell: BasinWell,targetWell: BasinWell,amountIn: BigNumber) => [
-    ['pipe-convert'], ['source-lp-out'], sourceWell?.address || 'no-source-well', targetWell?.address || 'no-target-well', amountIn.toString(),
-  ],
-  swapOut: (sellToken: Token, buyToken: Token, amountIn: TokenValue, slippage: number) => [
-    ['pipe-convert'], ['swap-out'], sellToken?.address || 'no-sell-token', buyToken?.address || 'no-buy-token', amountIn.toHuman(), slippage,
-  ],
-  addLiquidity: (tokensIn: Token[], beanIn: TokenValue | undefined, nonBeanIn: TokenValue | undefined
-  ) => [
-    ['pipe-convert'],
-    'add-liquidity',
-    ...tokensIn.map((t) => t.address),
-    beanIn?.blockchainString || '0',
-    nonBeanIn?.blockchainString || '0',
-  ],
-};
-
 interface PipelineConvertFormProps extends Props {
   sourceWell: BasinWell;
   targetWell: BasinWell;
 }
+
+const baseQueryOptions = {
+  staleTime: 20_000, // 20 seconds stale time
+  refetchOnWindowFocus: true,
+  refetchIntervalInBackground: false,
+} as const;
 
 const PipelineConvertFormInner = ({
   sourceWell,
@@ -92,29 +71,24 @@ const PipelineConvertFormInner = ({
   const targetToken = targetWell.lpToken; // LP token of target well
   const BEAN = sdk.tokens.BEAN;
 
-  // Form values
-  const amountIn = values.tokens[0].amount; // amount of from token
+  const debouncedAmountIn = useDebounce(values.tokens[0].amount ?? ZERO_BN); //
 
-  const maxConvertable = (
-    balance?.convertibleAmount || TokenValue.ZERO
-  ).toHuman();
+  const maxConvertableBN = new BigNumber(
+    (balance?.convertibleAmount || TokenValue.ZERO).toHuman()
+  );
 
-  const maxConvertableBN = new BigNumber(maxConvertable);
-
-  // const amountOut = values.tokens[0].amountOut; // amount of to token
-  // const maxAmountIn = values.maxAmountIn;
-  // const canConvert = maxAmountIn?.gt(0) || false;
-  // const plantCrate = plantAndDoX?.crate?.bn;
-
-  const debouncedAmountIn = useDebounce(amountIn ?? ZERO_BN);
-
-  const sourceIdx = getWellTokenIndexes(sourceWell, BEAN);
-  const targetIdx = getWellTokenIndexes(targetWell, BEAN);
+  const sourceIdx = getWellTokenIndexes(sourceWell, BEAN); // token indexes of source well
+  const targetIdx = getWellTokenIndexes(targetWell, BEAN); // token indexes of target well
 
   const sellToken = sourceWell.tokens[sourceIdx.nonBeanIndex]; // token we will sell when after removing liquidity in equal parts
   const buyToken = targetWell.tokens[targetIdx.nonBeanIndex]; // token we will buy to add liquidity
 
   const slippage = values.settings.slippage;
+
+  // const amountOut = values.tokens[0].amountOut; // amount of to token
+  // const maxAmountIn = values.maxAmountIn;
+  // const canConvert = maxAmountIn?.gt(0) || false;
+  // const plantCrate = plantAndDoX?.crate?.bn;
 
   // prettier-ignore
   const { data } = useQuery({
@@ -189,6 +163,7 @@ const PipelineConvertFormInner = ({
     }
   };
 
+  // same as query.isFetching & query.isLoading
   const isQuoting = values.tokens?.[0]?.quoting;
 
   return (
@@ -209,7 +184,7 @@ const PipelineConvertFormInner = ({
             balanceLabel="Deposited Balance"
             // MUI
             fullWidth
-            max={new BigNumber(maxConvertable)}
+            max={maxConvertableBN}
             InputProps={{
               endAdornment: (
                 <TokenAdornment
@@ -279,7 +254,7 @@ const PipelineConvertFormInner = ({
               You may lose Grown Stalk through this transaction.
             </WarningAlert>
           </Box>
-          {amountIn?.gt(0) && data?.targetLPAmountOut?.gt(0) && (
+          {debouncedAmountIn?.gt(0) && data?.targetLPAmountOut?.gt(0) && (
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -287,7 +262,7 @@ const PipelineConvertFormInner = ({
                     {
                       type: ActionType.BASE,
                       message: `Convert ${displayFullBN(
-                        amountIn,
+                        debouncedAmountIn,
                         sourceToken.displayDecimals
                       )} ${sourceToken.name} to ${displayFullBN(
                         data?.targetLPAmountOut || ZERO_BN,
@@ -345,30 +320,6 @@ function getWellTokenIndexes(well: BasinWell | undefined, bean: Token) {
   } as const;
 }
 
-/**
- * We want to limit the next chained query to only run when the previous query is successful & has no errors.
- * Additionally, we don't want the next query start if the previous query is either loading or fetching.
- */
-function getNextChainedQueryEnabled(query: Omit<UseQueryResult, 'data'>) {
-  return (
-    query.isSuccess && !query.isLoading && !query.isFetching && !query.isError
-  );
-}
-
-function useBuildWorkflow(
-  sourceWell: BasinWell,
-  targetWell: BasinWell,
-  amountIn: TokenValue,
-  swapTokenIn: Token,
-  swapTokenOut: Token,
-  swapAmountOut: TokenValue,
-  minTargetLPOut: TokenValue,
-  slippage: number
-) {
-  const sdk = useSdk();
-
-  const buildWorkflow = useCallback(async () => {}, []);
-}
 // const swapAmountIn = removeOutQuery.data?.[sourceWellNonBeanIndex];
 
 // const swapOutQuery = useQuery({
