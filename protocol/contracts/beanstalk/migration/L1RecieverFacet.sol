@@ -42,7 +42,7 @@ contract L1RecieverFacet is ReentrancyGuard {
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
         0x53d64bba5389504aeff2d680bd0d5a4a27f7c535578915ccfbc64f4aef1656ee;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x26da8c597f94901bab9ecbe1f491f3d953d358c7221680a27dc76e19318de3d1;
+        0x828c73c8e073801828c564f95bafd55c6a0485f244d4581e638c90ca678d3a28;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
         0x0ed5cf8908ddecd7d9285e5809315d007bfd5bd6d71f4c7db1131569180d23e2;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =

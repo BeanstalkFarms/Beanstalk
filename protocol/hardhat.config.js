@@ -547,11 +547,6 @@ module.exports = {
       chainId: 5,
       url: process.env.GOERLI_RPC || "",
       timeout: 100000
-    },
-    reseedArbitrum: {
-      url: "https://virtual.arbitrum.rpc.tenderly.co/10991114-8428-4e06-88dc-426e4e5673da",
-      chainId: 42161,
-      timeout: 10000000000000
     }
   },
   etherscan: {

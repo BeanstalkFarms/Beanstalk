@@ -619,7 +619,7 @@
     "unripeSettings": {
       "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": {
         "underlyingToken": "0xBEA0005B8599265D41256905A9B3073D397812E4",
-        "balanceOfUnderlying": "0x19f4f0551a45"
+        "balanceOfUnderlying": "0x174018a57256"
       },
       "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
         "underlyingToken": "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8",
@@ -941,7 +941,7 @@
     "activeFertilizer": "0x106b5be",
     "fertilizedIndex": "0x5249320f8fa",
     "unfertilizedIndex": "0x57266060fa3c",
-    "fertilizedPaidIndex": "0x4ba57633e2d",
+    "fertilizedPaidIndex": "0x5249320f8fa",
     "fertFirst": "0x145c1f",
     "fertLast": "0x5b8d80",
     "bpf": "0x53342",
