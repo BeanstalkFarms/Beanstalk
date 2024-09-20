@@ -42,6 +42,7 @@ const CSP = buildCSP({
     '*.doubleclick.net',
     'https://gateway-arbitrum.network.thegraph.com', // Decentralized subgraph
     '*.0x.org', // 0x API
+    '*.tenderly.co', // Tenderly API
   ],
   'style-src': [
     "'self'",
