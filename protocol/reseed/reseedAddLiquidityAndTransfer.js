@@ -9,7 +9,9 @@ const {
 } = require("../test/hardhat/utils/constants.js");
 const { to18, to6, toX } = require("../test/hardhat/utils/helpers.js");
 const { impersonateToken } = require("../scripts/impersonate.js");
+const { getWellContractAt } = require("../utils/well.js");
 const fs = require("fs");
+const { toBN } = require("../utils");
 
 const WellAddresses = [
   "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB", // BEAN/WETH
@@ -48,6 +50,8 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
 
+  // divide balancesInBeanStableWell[1] by 1e12:
+  balancesInBeanStableWell[1] = Math.floor(balancesInBeanStableWell[1] / 1e12).toString();
   const slots = [
     51, // WETH
     1, // wstETH
@@ -57,21 +61,78 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     51 // USDT
   ];
 
+  const L1_beanstalkBalances = [
+    "1323213132988957601130", // ethLP
+    "185335736965741266416875", // wstethLP
+    "93024994011998500979055" // 3crvLP
+  ];
+
+  // note: the amounts
+  // were updated with the amounts in `L2_well_balances.json`
+
+  // calculate the LP token supply for each well:
+  // note: this is an estimation and is used for the sake of testing.
+
+  const cp2 = await getWellContractAt(
+    "ConstantProduct2",
+    "0xBA5104f2df98974A83CD10d16E24282ce6Bb647f"
+  );
+
+  const beanEthLpTokenSupply = await cp2.calcLpTokenSupply(balancesInBeanEthWell, "0x");
+  console.log("beanEthLpTokenSupply", beanEthLpTokenSupply);
+  const beanWstEthLpTokenSupply = await cp2.calcLpTokenSupply(balancesInBeanWstEthWell, "0x");
+  console.log("beanWstEthLpTokenSupply", beanWstEthLpTokenSupply);
+  // const beanStableLpTokenSupply = await cp2.calcLpTokenSupply(balancesInBeanStableWell, "0x");
+  // console.log("beanStableLpTokenSupply", beanStableLpTokenSupply);
+
+  // get the % of the total LP token supply that each well has:
+  // note: the bean3crv was manually calculated given the migration to the well.
+  const beanEthLpTokenSupplyPercentage = L1_beanstalkBalances[0] / beanEthLpTokenSupply;
+  const beanWstEthLpTokenSupplyPercentage = L1_beanstalkBalances[1] / beanWstEthLpTokenSupply;
+  const beanStableLpTokenSupplyPercentage = 0.998832;
+
+  const scaleFactor = to18("1"); // Scale factor to avoid decimals
+
+  // Convert percentages to BigNumber with scaling
+  const beanEthLpTokenSupplyPercentageBN = toBN((beanEthLpTokenSupplyPercentage * 1e18).toString());
+  const beanWstEthLpTokenSupplyPercentageBN = toBN(
+    (beanWstEthLpTokenSupplyPercentage * 1e18).toString()
+  );
+  const beanStableLpTokenSupplyPercentageBN = toBN(
+    (beanStableLpTokenSupplyPercentage * 1e18).toString()
+  );
+
+  // Scale balances using the percentages
+  balancesInBeanEthWell = await balancesInBeanEthWell.map((balance) => {
+    const balanceBN = toBN(balance.toString());
+    return balanceBN.mul(beanEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  });
+
+  balancesInBeanWstEthWell = await balancesInBeanWstEthWell.map((balance) => {
+    const balanceBN = toBN(balance.toString());
+    return balanceBN.mul(beanWstEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  });
+
+  balancesInBeanStableWell = await balancesInBeanStableWell.map((balance) => {
+    const balanceBN = toBN(balance.toString());
+    return balanceBN.mul(beanStableLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  });
+
   const nonBeanAmounts = [
-    to18("20.6"), // BEAN/WETH
-    to18("2556"), // BEAN/WstETH
-    to6("0"), // to18("16"), // BEAN/WEEETH
+    balancesInBeanEthWell[1], // BEAN/WETH
+    balancesInBeanWstEthWell[1], // BEAN/WstETH
+    to6("0"), // BEAN/WEEETH
     toX("0", 8), // BEAN/WBTC (8 decimals)
-    to6("206686.240460"), // to6("190000"), // BEAN/USDC
+    balancesInBeanStableWell[1], // BEAN/USDC
     to6("0") // to6("190000") // BEAN/USDT
   ];
 
   const beanAmounts = [
-    to6("107380.655868"), // BEAN/WETH
-    to6("14544578.478380"), // BEAN/WstETH
+    balancesInBeanEthWell[0], // BEAN/WETH
+    balancesInBeanWstEthWell[0], // BEAN/WstETH
     to6("0"), // to6("100000"), // BEAN/WEEETH
     to6("0"), // to6("1000000"), // BEAN/WBTC
-    to6("83855.245277"), // BEAN/USDC
+    balancesInBeanStableWell[0], // BEAN/USDC
     to6("0") // to6("1000000") // BEAN/USDT
   ];
   console.log("-----------------------------------");
@@ -82,6 +143,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
 
   // add liquidity and transfer to L2 Beanstalk:
   for (let i = 0; i < WellAddresses.length; i++) {
+    console.log(`-----------------------------------`);
     const well = await ethers.getContractAt("IWell", WellAddresses[i], account);
     const token = await ethers.getContractAt("IERC20", NonBeanToken[i], account);
 
