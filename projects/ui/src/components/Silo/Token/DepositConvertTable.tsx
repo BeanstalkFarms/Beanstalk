@@ -207,7 +207,7 @@ const DepositConvertTable = ({
                   : BeanstalkPalette.red,
               }}
             >
-              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 0)}
+              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 3)}
             </Typography>
           );
         },
@@ -233,7 +233,7 @@ const DepositConvertTable = ({
                   : BeanstalkPalette.red,
               }}
             >
-              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 0)}
+              {isGain ? '+' : '-'} {formatTV(params.row.deltaSeed, 3)}
             </Typography>
           );
         },
