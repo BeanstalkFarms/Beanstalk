@@ -30,9 +30,6 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
 
       const deltaStalk = deposit.seeds.mul(deltaBDV);
       const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
-      console.log('deltaStalk', deltaStalk);
-      console.log('deltaSeed', deltaSeed);
-      console.log('deposit.id', deposit.id);
       updateable.push({
         key: '....' + deposit.id.toHexString().slice(-13),
         currentBDV: currentBDV,
@@ -44,9 +41,6 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
 
       totalDeltaStalk = totalDeltaStalk.add(deltaStalk);
       totalDeltaSeed = totalDeltaSeed.add(deltaSeed);
-      console.log('totalDeltaStalk', totalDeltaStalk);
-      console.log('totalDeltaSeed', totalDeltaSeed);
-      console.log('deposit.id', deposit.id);
     });
 
     updateable.sort((a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1));
