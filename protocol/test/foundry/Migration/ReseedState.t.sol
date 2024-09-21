@@ -32,7 +32,7 @@ contract ReseedStateTest is TestHelper {
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
-    address constant BEANSTALK_PRICE = address(0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56);
+    address constant BEANSTALK_PRICE = address(0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7);
 
     uint256 constant FIELD_ID = 0;
 

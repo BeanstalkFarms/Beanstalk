@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
+const { L2_FERTILIZER } = require("../test/hardhat/utils/constants.js");
 
 // Files
 const INIT_SUPPLY = "./reseed/data/r2/L2_initial_supply.json";
@@ -13,7 +14,7 @@ const EXTERNAL_UNRIPE_BEAN_LP = "./reseed/data/r2/L2_external_unripe_lp_balances
  * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
  * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
  */
-async function reseed2(account, L2Beanstalk, fertilizerImplementation, mock) {
+async function reseed2(account, L2Beanstalk, mock, verbose) {
   verbose = true;
   console.log("-----------------------------------");
   console.log("reseed2: deploy bean tokens.\n");
@@ -44,7 +45,7 @@ async function reseed2(account, L2Beanstalk, fertilizerImplementation, mock) {
         beansInBeanStableWell,
         externalUrBean,
         externalUrBeanLP,
-        fertilizerImplementation
+        L2_FERTILIZER
       ],
       bip: false,
       verbose: false,
