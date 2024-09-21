@@ -17,7 +17,7 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   const fertilizerIds = JSON.parse(await fs.readFileSync(barnRaisePath));
 
   // Keep this lower due to fert id 100663296
-  targetEntriesPerChunk = 10;
+  targetEntriesPerChunk = 50;
   fertChunks = await splitEntriesIntoChunksOptimized(fertilizerIds, targetEntriesPerChunk);
   const InitFacet = await (await ethers.getContractFactory("ReseedBarn", account)).deploy();
   await InitFacet.deployed();

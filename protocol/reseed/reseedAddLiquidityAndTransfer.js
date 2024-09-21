@@ -87,8 +87,11 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
 
   // get the % of the total LP token supply that each well has:
   // note: the bean3crv was manually calculated given the migration to the well.
-  const beanEthLpTokenSupplyPercentage = L1_beanstalkBalances[0] / beanEthLpTokenSupply;
-  const beanWstEthLpTokenSupplyPercentage = L1_beanstalkBalances[1] / beanWstEthLpTokenSupply;
+  // small buffer to avoid rounding errors.
+  const beanEthLpTokenSupplyPercentage =
+    L1_beanstalkBalances[0] / (beanEthLpTokenSupply * (1 - 0.000001));
+  const beanWstEthLpTokenSupplyPercentage =
+    L1_beanstalkBalances[1] / (beanWstEthLpTokenSupply * (1 - 0.000001));
   const beanStableLpTokenSupplyPercentage = 0.998832;
 
   const scaleFactor = to18("1"); // Scale factor to avoid decimals

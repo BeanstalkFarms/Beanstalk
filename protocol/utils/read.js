@@ -76,8 +76,8 @@ async function updateProgress(current, total) {
   process.stdout.write(`Processing: [${progressBar}] ${percentage}% | Chunk ${current}/${total}`);
 }
 
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 5000; // 5 seconds
+const MAX_RETRIES = 20;
+const RETRY_DELAY = 500; // 0.5 seconds
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

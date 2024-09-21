@@ -476,7 +476,7 @@ contract ReseedStateTest is TestHelper {
         return propertyValue;
     }
 
-    function searchAccountPlots(string memory account) public returns (bytes memory) {
+    function searchAccountDeposits(address account) public returns (bytes memory) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script

@@ -16,7 +16,7 @@ export const BEANSTALK_PRICE_ADDRESSES = {
   [SupportedChainId.ETH_MAINNET]:
     '0x4bed6cb142b7d474242d87f4796387deb9e1e1b4'.toLowerCase(),
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56'.toLowerCase(),
+    '0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {

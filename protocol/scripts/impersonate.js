@@ -148,7 +148,9 @@ async function impersonateContractOnPath(artifactPath, deployAddress) {
 }
 
 async function impersonateContract(contractName, deployAddress) {
-  contract = await (await ethers.getContractFactory(contractName)).deploy();
+  contract = await (
+    await ethers.getContractFactory(contractName)
+  ).deploy("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
   await contract.deployed();
   const bytecode = await ethers.provider.getCode(contract.address);
   await network.provider.send("hardhat_setCode", [deployAddress, bytecode]);
