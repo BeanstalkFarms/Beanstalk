@@ -17,7 +17,7 @@ async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
-  targetEntriesPerChunk = 10;
+  targetEntriesPerChunk = 400;
   plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
   const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
   await InitFacet.deployed();
