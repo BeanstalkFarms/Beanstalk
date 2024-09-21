@@ -14,25 +14,26 @@ export class PipelineConvert extends StepClass<BasicPreparedResult> {
     public readonly _stems: ethers.BigNumberish[],
     public readonly _amounts: ethers.BigNumberish[],
     private _tokenOut: ERC20Token,
-    private _amountIn: TokenValue,
-    private _minAmountOut: TokenValue,
+    private _amountOut: TokenValue, // before slippage
     public readonly advancedPipeStructs: AdvancedPipeCallStruct[]
   ) {
     super();
   }
 
   async run(_amountInStep: ethers.BigNumber, context: RunContext) {
+    const slip = context?.data?.slippage || 0.1;
+    const minAmountOut = this._amountOut.subSlippage(slip).toBigNumber();
+
     return {
       name: this.name,
-      amountOut: _amountInStep,
+      amountOut: minAmountOut,
       prepare: () => {
         PipelineConvert.sdk.debug(`[${this.name}.encode()]`, {
           tokenIn: this._tokenIn,
           amounts: this._amounts,
           stems: this._stems,
           tokenOut: this._tokenOut,
-          amountIn: this._amountIn,
-          minAmountOut: this._minAmountOut,
+          amountOut: this._amountOut,
           advancedPipeStructs: this.advancedPipeStructs
         });
         return {

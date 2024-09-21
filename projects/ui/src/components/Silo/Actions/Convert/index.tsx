@@ -169,6 +169,10 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
         secondary: undefined,
         implied: [FormTxn.MOW],
       },
+      pipe: {
+        structs: [],
+        amountOut: undefined,
+      },
     }),
     [fromToken, initialTokenOut]
   );
@@ -185,6 +189,14 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
     fromToken,
   });
 
+  const pipelineConvertSubmitHandler = usePipelineConvertSubmitHandler({
+    sdk,
+    farmerSilo,
+    middleware,
+    initialValues,
+    season,
+  });
+
   const submitHandler: ConvertFormSubmitHandler = useCallback(
     async (values, formActions) => {
       const tokenOut = values.tokenOut;
@@ -193,10 +205,12 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
       }
 
       if (isPipelineConvert(fromToken, tokenOut as ERC20Token)) {
-        return defaultSubmitHandler(values, formActions);
+        return pipelineConvertSubmitHandler(values, formActions);
       }
+
+      return defaultSubmitHandler(values, formActions);
     },
-    [defaultSubmitHandler, fromToken]
+    [defaultSubmitHandler, pipelineConvertSubmitHandler, fromToken]
   );
 
   return (
@@ -237,6 +251,127 @@ export default Convert;
 // -----------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------
+
+function usePipelineConvertSubmitHandler({
+  sdk,
+  farmerSilo,
+  middleware,
+  initialValues,
+}: {
+  sdk: BeanstalkSDK;
+  farmerSilo: FarmerSilo;
+  middleware: ReturnType<typeof useFormMiddleware>;
+  initialValues: ConvertFormValues;
+  season: BigNumber;
+}) {
+  const account = useAccount();
+  const [refetchFarmerSilo] = useFetchFarmerSilo();
+  const [refetchPools] = useFetchPools();
+
+  return useCallback(
+    async (
+      values: ConvertFormValues,
+      formActions: FormikHelpers<ConvertFormValues>
+    ) => {
+      const txToast = new TransactionToast({
+        loading: 'Converting...',
+        success: 'Convert successful.',
+      });
+
+      try {
+        middleware.before();
+
+        // form Data
+        const tokenIn = values.tokens[0].token;
+        const _amountIn = values.tokens[0].amount;
+        const tokenOut = values.tokenOut;
+        const _amountOut = values?.pipe?.amountOut;
+
+        const advPipeStructs = values.pipe?.structs || [];
+        const slippage = values?.settings?.slippage;
+        const farmerBalances = farmerSilo.balancesSdk.get(tokenIn);
+        const amountIn = tokenIn?.amount(_amountIn?.toString() || '0'); // amount of from token
+        const amountOut = tokenOut?.amount(_amountOut?.toString() || '0'); // amount of to token
+
+        /// Validation
+        if (!account) throw new Error('Wallet connection required');
+        if (!slippage) throw new Error('No slippage value set.');
+        if (!tokenOut) throw new Error('Conversion pathway not set');
+        if (!farmerBalances) throw new Error('No balances found');
+        if (amountIn.lte(0)) throw new Error('Amount must be greater than 0');
+
+        if (!advPipeStructs?.length) {
+          throw new Error('No Pipeline Convert data found');
+        }
+        if (!amountOut || amountOut?.lte(0)) {
+          throw new Error('Conversion invalid');
+        }
+
+        const farm = sdk.farm.createAdvancedFarm();
+
+        const { crates = [] } = sdk.silo.siloConvert.calculateConvert(
+          tokenIn,
+          tokenOut,
+          amountIn,
+          farmerBalances.convertibleDeposits,
+          0 // this isn't being used in the calculation. We should remove it from the function signature
+        );
+
+        if (!crates.length) {
+          throw new Error('Could not find any crates to convert');
+        }
+
+        farm.add(
+          new sdk.farm.actions.PipelineConvert(
+            tokenIn as ERC20Token,
+            crates.map((c) => c.stem),
+            crates.map((c) => c.amount.toBigNumber()),
+            tokenOut as ERC20Token,
+            amountOut,
+            advPipeStructs
+          )
+        );
+
+        const gasEstimate = await farm.estimateGas(amountIn, { slippage });
+        const adjustedGas = Math.round(gasEstimate.toNumber() * 1.2).toString();
+        const txn = await farm.execute(
+          amountIn,
+          { slippage },
+          { gasLimit: adjustedGas }
+        );
+        txToast.confirming(txn);
+
+        const receipt = await txn.wait();
+
+        await Promise.all([
+          refetchFarmerSilo(),
+          refetchPools(), // update prices to account for pool conversion
+        ]);
+
+        txToast.success(receipt);
+
+        formActions.resetForm({
+          values: {
+            ...initialValues,
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        txToast.error(err);
+        formActions.setSubmitting(false);
+      }
+    },
+    [
+      sdk,
+      account,
+      farmerSilo.balancesSdk,
+      initialValues,
+      middleware,
+      refetchFarmerSilo,
+      refetchPools,
+    ]
+  );
+}
 
 function useDefaultConvertSubmitHandler({
   sdk,

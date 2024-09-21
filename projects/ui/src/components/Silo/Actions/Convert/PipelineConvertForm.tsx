@@ -67,7 +67,6 @@ const PipelineConvertFormInner = ({
 }: PipelineConvertFormProps) => {
   const [tokenSelectOpen, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
-  
 
   const sourceToken = sourceWell.lpToken; // LP token of source well
   const targetToken = targetWell.lpToken; // LP token of target well
@@ -140,7 +139,7 @@ const PipelineConvertFormInner = ({
           amount: targetLPAmountOut.toNumber(),
         });
 
-        setFieldValue('tokens.0.amountOut', new BigNumber(targetLPAmountOut.toHuman()));
+        setFieldValue('amountOut', new BigNumber(targetLPAmountOut.toHuman()));
         return {
           amountIn: lpIn,
           beanAmountOut,
@@ -161,7 +160,12 @@ const PipelineConvertFormInner = ({
   });
 
   const { data: staticCallData } = useQuery({
-    queryKey: ['pipelineConvert/callStatic', sourceWell.address, targetWell.address, data?.targetLPAmountOut?.toString()],
+    queryKey: [
+      'pipelineConvert/callStatic',
+      sourceWell.address,
+      targetWell.address,
+      data?.targetLPAmountOut?.toString(),
+    ],
     queryFn: async () => {
       if (!data) return;
       try {
@@ -186,19 +190,21 @@ const PipelineConvertFormInner = ({
           slippage,
         });
 
-        const datas = await sdk.contracts.beanstalk.callStatic.pipelineConvert(
-          sourceToken.address,
-          pickedDeposits.crates.map((c) => c.stem),
-          pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
-          targetToken.address,
-          advPipeCalls
-        ).then((result) => ({
-          toStem: result.toStem,
-          fromAmount: result.fromAmount,
-          toAmount: result.toAmount,
-          fromBdv: result.fromBdv,
-          toBdv: result.toBdv,
-        }));
+        const datas = await sdk.contracts.beanstalk.callStatic
+          .pipelineConvert(
+            sourceToken.address,
+            pickedDeposits.crates.map((c) => c.stem),
+            pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
+            targetToken.address,
+            advPipeCalls
+          )
+          .then((result) => ({
+            toStem: result.toStem,
+            fromAmount: result.fromAmount,
+            toAmount: result.toAmount,
+            fromBdv: result.fromBdv,
+            toBdv: result.toBdv,
+          }));
 
         console.debug(`[pipelineConvert/callStatic] result:`, datas);
         return datas;
@@ -209,8 +215,8 @@ const PipelineConvertFormInner = ({
     },
     retry: 2,
     enabled: !!data && debouncedAmountIn?.gt(0),
-    ...baseQueryOptions
-  })
+    ...baseQueryOptions,
+  });
 
   /// When a new output token is selected, reset maxAmountIn.
   const handleSelectTokenOut = async (_selectedTokens: Set<Token>) => {
@@ -314,15 +320,15 @@ const PipelineConvertFormInner = ({
           ) : null}
           <Stack>
             {staticCallData && (
-              <Typography>
-                values from pipe convert:
-              </Typography>
-              )}
-            {staticCallData ? (Object.entries(staticCallData).map(([k, v]) => (
-                <Typography key={k}>
-                  {k}: {v.toString()}
-                </Typography>
-              ))) : "Failed to load results from static call"}
+              <Typography>values from pipe convert:</Typography>
+            )}
+            {staticCallData
+              ? Object.entries(staticCallData).map(([k, v]) => (
+                  <Typography key={k}>
+                    {k}: {v.toString()}
+                  </Typography>
+                ))
+              : 'Failed to load results from static call'}
           </Stack>
           {/* You may Lose Grown Stalk warning here */}
           <Box>
