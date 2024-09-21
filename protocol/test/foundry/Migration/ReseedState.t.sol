@@ -303,6 +303,7 @@ contract ReseedStateTest is TestHelper {
     function test_AccountPlots() public {
         // test the L2 Beanstalk
         string memory account;
+        uint256 totalPlotsAmount;
         // for every account
         for (uint256 i = 0; i < accountNumber; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
@@ -332,8 +333,10 @@ contract ReseedStateTest is TestHelper {
                 // compare the plot amount and index
                 assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
                 assertEq(plotindexesJsonDecoded[j], plots[j].index);
+                totalPlotsAmount += plots[j].pods;
             }
         }
+        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
