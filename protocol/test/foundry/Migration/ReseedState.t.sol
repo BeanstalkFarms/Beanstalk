@@ -407,10 +407,6 @@ contract ReseedStateTest is TestHelper {
             }
         }
 
-        // check system level stalk and roots
-        // todo: capture stalk/root ratio before and after
-        // call sunrise and see that the average grown stalk per season is updated?
-
         uint256 totalStalk = l2Beanstalk.totalStalk();
         assertEq(totalStalk, 0);
 
