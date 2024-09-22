@@ -17,20 +17,11 @@ type Props = {
 };
 
 const TokenDepositsOverview = ({ token }: Props) => {
-  const { balances, updateableDepositsById, setSlug } =
-    useTokenDepositsContext();
+  const { balances, setSlug } = useTokenDepositsContext();
   const { BEAN } = useTokens();
-
   const isBEAN = token.equals(BEAN);
 
-  const hasUpdateableDeposits = Boolean(
-    Object.keys(updateableDepositsById).length
-  );
-
-  const depositedAmount = balances?.amount || TokenValue.ZERO;
-  const amount = new BigNumber(depositedAmount.toHuman());
-
-  const hasDeposits = Boolean(balances?.deposits?.length);
+  const amount = new BigNumber((balances?.amount || TokenValue.ZERO).toHuman());
 
   return (
     <Stack>
@@ -52,20 +43,17 @@ const TokenDepositsOverview = ({ token }: Props) => {
             </Typography>
           </Stack>
         </Stack>
-
         <Stack direction="row" gap={1}>
           <Button
             size="small"
             color="secondary"
             variant="outlined-secondary"
-            disabled={!hasDeposits}
             startIcon={
               <Box
                 component="img"
                 src={minimizeWindowIcon}
                 height="16px"
                 width="auto"
-                sx={{ opacity: hasDeposits ? 1 : 0.5 }}
               />
             }
             onClick={() => setSlug('transfer')}
@@ -84,14 +72,12 @@ const TokenDepositsOverview = ({ token }: Props) => {
               size="small"
               color="secondary"
               variant="outlined-secondary"
-              disabled={!hasUpdateableDeposits}
               startIcon={
                 <Box
                   component="img"
                   src={deliveryBoxIcon}
                   height="20px"
                   width="auto"
-                  sx={{ opacity: hasDeposits ? 1 : 0.5 }}
                 />
               }
               onClick={() => setSlug('lambda')}

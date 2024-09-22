@@ -92,18 +92,23 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
             Any deposits with a lower current BDV than BDV at deposit will not
             appear.
           </Typography>
-          <Box
-            onClick={handleSelectAll}
-            sx={{ cursor: 'pointer', alignSelf: 'flex-start' }}
-          >
-            <Typography
-              variant="subtitle1"
-              color="primary"
-              sx={{ textDecoration: 'underline', whiteSpace: 'nowrap' }}
+          {!!updatableDeposits.length && (
+            <Box
+              onClick={handleSelectAll}
+              sx={{
+                cursor: 'pointer',
+                alignSelf: 'flex-start',
+              }}
             >
-              Select All
-            </Typography>
-          </Box>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ textDecoration: 'underline', whiteSpace: 'nowrap' }}
+              >
+                Select All
+              </Typography>
+            </Box>
+          )}
         </Row>
       </Stack>
       <DepositConvertTable

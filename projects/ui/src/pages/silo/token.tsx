@@ -133,48 +133,47 @@ const LambdaConvertContent = ({
 }: Props & {
   handleClose: () => void;
 }) => {
-  const { selected, balances } = useTokenDepositsContext();
-  const hasSelected = Boolean(selected.size);
+  const { selected, updateableDepositsById } = useTokenDepositsContext();
+
+  const hasUpdateableDeposits = Boolean(
+    Object.keys(updateableDepositsById).length
+  );
   const getBDV = useBDV();
 
   const tokenBDV = getBDV(token);
 
   return (
-    <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
-      <Stack width="100%" alignItems="center">
-        <Module sx={{ width: '100%', maxWidth: '1080px' }}>
-          <ModuleHeader pb={1}>
-            <Row justifyContent="space-between">
-              <Typography variant="h4" fontWeight={FontWeight.bold}>
-                Update Deposits
-              </Typography>
-              <Button
-                variant="outlined-secondary"
-                color="secondary"
-                size="small"
-                endIcon={<CloseIcon fontSize="inherit" />}
-                onClick={handleClose}
-              >
-                Close
-              </Button>
-            </Row>
-          </ModuleHeader>
-          <ModuleContent px={2}>
-            <TokenLambdaConvert token={token} />
-          </ModuleContent>
-        </Module>
-      </Stack>
-      <Stack
-        width="100%"
-        alignItems={{ xs: 'center', lg: 'flex-start' }}
-        sx={{ height: '100%' }}
-      >
+    <Stack
+      gap={2}
+      width="100%"
+      direction={{ xs: 'column', lg: 'row' }}
+      justifyContent={{ lg: 'space-between' }}
+    >
+      <Module sx={{ width: '100%', maxWidth: { lg: 'unset' } }}>
+        <ModuleHeader pb={1}>
+          <Row justifyContent="space-between">
+            <Typography variant="h4" fontWeight={FontWeight.bold}>
+              Update Deposits
+            </Typography>
+            <Button
+              variant="outlined-secondary"
+              color="secondary"
+              size="small"
+              endIcon={<CloseIcon fontSize="inherit" />}
+              onClick={handleClose}
+            >
+              Close
+            </Button>
+          </Row>
+        </ModuleHeader>
+        <ModuleContent px={2}>
+          <TokenLambdaConvert token={token} />
+        </ModuleContent>
+      </Module>
+      {!!hasUpdateableDeposits && (
         <Module
           sx={{
-            maxWidth: {
-              sm: '1080px',
-              lg: ACTIONS_MAX_WIDTH,
-            },
+            maxWidth: { lg: ACTIONS_MAX_WIDTH },
             width: '100%',
             height: '100%',
           }}
@@ -188,7 +187,7 @@ const LambdaConvertContent = ({
             <LambdaConvert />
           </ModuleContent>
         </Module>
-      </Stack>
+      )}
     </Stack>
   );
 };

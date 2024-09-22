@@ -11,6 +11,7 @@ import React, {
   useContext,
   useMemo,
   useState,
+  useEffect,
 } from 'react';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import useTabs from '~/hooks/display/useTabs';
@@ -58,12 +59,16 @@ const TokenDepositsContext = createContext<TokenDepositsContextType | null>(
   null
 );
 
+const emptyObj = {};
+
 export const TokenDepositsProvider = (props: {
   children: React.ReactNode;
   token: ERC20Token;
 }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
+  const [updateableDepositsById, setUpdateableDepositsById] =
+    useState<TokenDepositsContextType['updateableDepositsById']>(emptyObj);
   const getBDV = useBDV();
 
   const tokenBDV = getBDV(props.token);
@@ -79,21 +84,27 @@ export const TokenDepositsProvider = (props: {
     return map;
   }, [siloBalances?.deposits]);
 
-  const updateableDepositsById = useMemo(() => {
-    const map: Record<string, UpdateableDeposit<TokenValue>> = {};
-    (siloBalances?.convertibleDeposits || []).forEach((deposit) => {
-      const newBDV = deposit.amount.mul(tokenBDV.toNumber());
+  useEffect(() => {
+    if (!siloBalances?.convertibleDeposits?.length) {
+      setUpdateableDepositsById(emptyObj);
+      return;
+    }
 
-      if (deposit.bdv.lt(newBDV.toNumber())) {
-        map[deposit.id.toString()] = {
+    const map = siloBalances.convertibleDeposits.reduce(
+      (prev, deposit) => {
+        const newBDV = deposit.amount.mul(tokenBDV.toNumber());
+        if (!deposit.bdv.lt(newBDV.toNumber())) return prev;
+        prev[deposit.id.toString()] = {
           ...deposit,
           newBDV,
         };
-      }
-    });
+        return prev;
+      },
+      {} as typeof updateableDepositsById
+    );
 
-    return map;
-  }, [siloBalances?.convertibleDeposits, tokenBDV]);
+    setUpdateableDepositsById(map);
+  }, [siloBalances, tokenBDV]);
 
   const handleSetSelected = useCallback(
     (
@@ -101,7 +112,7 @@ export const TokenDepositsProvider = (props: {
       selectType: TokenDepositsSelectType,
       callback?: () => void
     ) => {
-      const copy = new Set(selected);
+      const copy = new Set([...selected]);
       if (selectType === 'single') {
         const inSelected = copy.has(depositId);
         copy.clear();
@@ -140,35 +151,21 @@ export const TokenDepositsProvider = (props: {
     [setSlugIndex]
   );
 
-  const contextValue = useMemo(
-    () => ({
-      selected,
-      token: props.token,
-      balances: siloBalances,
-      depositsById: depositMap,
-      updateableDepositsById,
-      slug: slugIndexMap[slugIndex] || 'token',
-      setSlug,
-      setSelected: handleSetSelected,
-      setWithIds: handleSetMulti,
-      clear,
-    }),
-    [
-      clear,
-      depositMap,
-      handleSetMulti,
-      handleSetSelected,
-      setSlug,
-      props.token,
-      selected,
-      siloBalances,
-      slugIndex,
-      updateableDepositsById,
-    ]
-  );
-
   return (
-    <TokenDepositsContext.Provider value={contextValue}>
+    <TokenDepositsContext.Provider
+      value={{
+        selected,
+        token: props.token,
+        balances: siloBalances,
+        depositsById: depositMap,
+        updateableDepositsById,
+        slug: slugIndexMap[slugIndex] || 'token',
+        setSlug,
+        setSelected: handleSetSelected,
+        setWithIds: handleSetMulti,
+        clear,
+      }}
+    >
       {props.children}
     </TokenDepositsContext.Provider>
   );
