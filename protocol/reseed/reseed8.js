@@ -17,7 +17,7 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
 
   let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
-  targetEntriesPerChunk = 100;
+  targetEntriesPerChunk = 500;
   balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
   const InitFacet = await (
     await ethers.getContractFactory("ReseedInternalBalances", account)
