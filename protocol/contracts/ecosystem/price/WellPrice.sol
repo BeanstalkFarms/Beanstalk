@@ -61,7 +61,7 @@ contract WellPrice {
         pool.tokens = [address(wellTokens[0]), address(wellTokens[1])];
 
         uint256[] memory wellBalances = well.getReserves();
-        pool.balances = [wellBalances[0], wellBalances[1]];
+        if (wellBalances[0] == 0 || wellBalances[1] == 0) return pool;
 
         uint256 beanIndex = beanstalk.getBeanIndex(wellTokens);
         uint256 tknIndex = beanIndex == 0 ? 1 : 0;
