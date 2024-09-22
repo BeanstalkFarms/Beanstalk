@@ -37,7 +37,6 @@ import Row from '~/components/Common/Row';
 import CloseIcon from '@mui/icons-material/Close';
 import LambdaConvert from '~/components/Silo/Actions/LambdaConvert';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
-import useBDV from '~/hooks/beanstalk/useBDV';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -138,18 +137,22 @@ const LambdaConvertContent = ({
   const hasUpdateableDeposits = Boolean(
     Object.keys(updateableDepositsById).length
   );
-  const getBDV = useBDV();
-
-  const tokenBDV = getBDV(token);
 
   return (
     <Stack
       gap={2}
       width="100%"
       direction={{ xs: 'column', lg: 'row' }}
-      justifyContent={{ lg: 'space-between' }}
+      justifyContent={{ lg: 'center' }}
     >
-      <Module sx={{ width: '100%', maxWidth: { lg: 'unset' } }}>
+      <Module
+        sx={{
+          width: '100%',
+          maxWidth: {
+            lg: !selected.size ? '900px' : 'unset',
+          },
+        }}
+      >
         <ModuleHeader pb={1}>
           <Row justifyContent="space-between">
             <Typography variant="h4" fontWeight={FontWeight.bold}>
