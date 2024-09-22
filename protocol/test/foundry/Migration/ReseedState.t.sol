@@ -85,7 +85,8 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
-        uint256 numAccounts = 10;
+        // the total number of accounts is 3665
+        uint256 numAccounts = 10000;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -302,6 +303,7 @@ contract ReseedStateTest is TestHelper {
     function test_AccountPlots() public {
         // test the L2 Beanstalk
         string memory account;
+        uint256 totalPlotsAmount;
         // for every account
         for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
@@ -331,13 +333,26 @@ contract ReseedStateTest is TestHelper {
                 // compare the plot amount and index
                 assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
                 assertEq(plotindexesJsonDecoded[j], plots[j].index);
+                totalPlotsAmount += plots[j].pods;
             }
         }
+        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
 
     function test_AccountDeposits() public {
+        vm.pauseGasMetering();
+
+        uint256 totalStalkBefore = l2Beanstalk.totalStalk();
+        assertGt(totalStalkBefore, 0);
+
+        uint256 totalRootsBefore = l2Beanstalk.totalRoots();
+        assertGt(totalRootsBefore, 0);
+
+        // verify ratio is 1:1 on reseed
+        assertEq(totalStalkBefore * 1e12, totalRootsBefore);
+
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
@@ -375,8 +390,52 @@ contract ReseedStateTest is TestHelper {
                         accountDepositsStorage[j].tokenDeposits[k].bdv,
                         accountDepositsJson[j].tokenDeposits[k].bdv
                     );
+
+                    (address token, int96 stem) = l2Beanstalk.getAddressAndStem(
+                        accountDepositsStorage[j].depositIds[k]
+                    );
+
+                    // withdraw deposit
+                    vm.prank(account);
+                    l2Beanstalk.withdrawDeposit(
+                        accountDepositsStorage[j].token,
+                        stem,
+                        accountDepositsStorage[j].tokenDeposits[k].amount,
+                        0
+                    );
                 }
             }
+        }
+
+        uint256 totalStalk = l2Beanstalk.totalStalk();
+        assertEq(totalStalk, 0);
+
+        uint256 totalRoots = l2Beanstalk.totalRoots();
+        assertEq(totalRoots, 0);
+
+        uint256 totalRainRoots = l2Beanstalk.totalRainRoots();
+        assertEq(totalRainRoots, 0);
+
+        uint256 getTotalBdv = l2Beanstalk.getTotalBdv();
+        assertEq(getTotalBdv, 0);
+
+        uint256[] memory depositedAmounts = l2Beanstalk.getTotalSiloDeposited();
+        for (uint256 i = 0; i < depositedAmounts.length; i++) {
+            assertEq(depositedAmounts[i], 0);
+        }
+
+        uint256[] memory depositedBdvs = l2Beanstalk.getTotalSiloDepositedBdv();
+        for (uint256 i = 0; i < depositedBdvs.length; i++) {
+            assertEq(depositedBdvs[i], 0);
+        }
+
+        // loop through whitelisted tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = whitelistedTokens[i];
+            uint256 totalDeposited = l2Beanstalk.getTotalDeposited(token);
+            assertEq(totalDeposited, 0);
+            uint256 totalDepositedBdv = l2Beanstalk.getTotalDepositedBdv(token);
+            assertEq(totalDepositedBdv, 0);
         }
     }
 
