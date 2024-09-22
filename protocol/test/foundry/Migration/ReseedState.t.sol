@@ -14,6 +14,7 @@ import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import "forge-std/StdUtils.sol";
 import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
 import {P} from "contracts/ecosystem/price/P.sol";
+import {MockToken} from "contracts/mocks/MockToken.sol";
 
 interface IBeanstalkPrice {
     function price() external view returns (P.Prices memory p);
@@ -85,7 +86,8 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
-        uint256 numAccounts = 10;
+        // the total number of accounts is 3665
+        uint256 numAccounts = 10000;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -114,6 +116,119 @@ contract ReseedStateTest is TestHelper {
             address(0),
             new IMockFBeanstalk.AdvancedPipeCall[](0)
         );
+    }
+
+    function test_pipelineConvertRealUserLPToBean() public {
+        address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
+        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+        address beanWeethWell = 0xBEA00865405A02215B44eaADB853d0d2192Fc29D;
+
+        // add liquidity to beanWeethWell
+        // addLiquidityToWellArb(
+        //     realUser,
+        //     beanWeethWell,
+        //     10_000e6, // 10,000 bean,
+        //     10 ether // 10 WETH
+        // );
+
+        address token;
+        int96 stem;
+        uint256 amount;
+
+        IMockFBeanstalk.TokenDepositId[] memory deposits = l2Beanstalk.getDepositsForAccount(
+            realUser
+        );
+        for (uint256 i; i < deposits.length; i++) {
+            if (deposits[i].token == address(beanWethWell)) {
+                (token, stem) = l2Beanstalk.getAddressAndStem(deposits[i].depositIds[0]);
+                amount = deposits[i].tokenDeposits[0].amount;
+                break;
+            }
+        }
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        IMockFBeanstalk.AdvancedPipeCall[] memory calls = createLPToBeanPipeCalls(
+            amount,
+            beanWethWell
+        );
+
+        // previously this would revert with "Well: Bean reserve is less than the minimum"
+        vm.prank(realUser);
+        l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
+    }
+
+    function createLPToBeanPipeCalls(
+        uint256 amountOfLP,
+        address well
+    ) private view returns (IMockFBeanstalk.AdvancedPipeCall[] memory output) {
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            well,
+            type(uint256).max
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = amountOfLP;
+        tokenAmountsIn[1] = 0;
+
+        // encode remove liqudity.
+        bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
+            IWell.removeLiquidityOneToken.selector,
+            amountOfLP, // tokenAmountsIn
+            L2BEAN, // tokenOut
+            0, // min out
+            PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes:
+        IMockFBeanstalk.AdvancedPipeCall[]
+            memory advancedPipeCalls = new IMockFBeanstalk.AdvancedPipeCall[](2);
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = IMockFBeanstalk.AdvancedPipeCall(
+            L2BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 2: Remove One sided Liquidity into the well.
+        advancedPipeCalls[1] = IMockFBeanstalk.AdvancedPipeCall(
+            well, // target
+            removeLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        return advancedPipeCalls;
+    }
+
+    function addLiquidityToWellArb(
+        address user,
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal returns (uint256 lpOut) {
+        (address nonBeanToken, ) = l2Beanstalk.getNonBeanTokenAndIndexFromWell(well);
+
+        if (runningOnFork()) {
+            console.log("dealing tokens on fork");
+            deal(address(L2BEAN), well, beanAmount, true);
+            deal(address(nonBeanToken), well, nonBeanTokenAmount, true);
+        } else {
+            // mint and sync.
+            MockToken(BEAN).mint(well, beanAmount);
+            MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        }
+
+        lpOut = IWell(well).sync(user, 0);
+
+        // sync again to update reserves.
+        IWell(well).sync(user, 0);
     }
 
     // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
@@ -302,6 +417,7 @@ contract ReseedStateTest is TestHelper {
     function test_AccountPlots() public {
         // test the L2 Beanstalk
         string memory account;
+        uint256 totalPlotsAmount;
         // for every account
         for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
@@ -331,13 +447,26 @@ contract ReseedStateTest is TestHelper {
                 // compare the plot amount and index
                 assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
                 assertEq(plotindexesJsonDecoded[j], plots[j].index);
+                totalPlotsAmount += plots[j].pods;
             }
         }
+        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
 
     function test_AccountDeposits() public {
+        vm.pauseGasMetering();
+
+        uint256 totalStalkBefore = l2Beanstalk.totalStalk();
+        assertGt(totalStalkBefore, 0);
+
+        uint256 totalRootsBefore = l2Beanstalk.totalRoots();
+        assertGt(totalRootsBefore, 0);
+
+        // verify ratio is 1:1 on reseed
+        assertEq(totalStalkBefore * 1e12, totalRootsBefore);
+
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
@@ -375,8 +504,52 @@ contract ReseedStateTest is TestHelper {
                         accountDepositsStorage[j].tokenDeposits[k].bdv,
                         accountDepositsJson[j].tokenDeposits[k].bdv
                     );
+
+                    (address token, int96 stem) = l2Beanstalk.getAddressAndStem(
+                        accountDepositsStorage[j].depositIds[k]
+                    );
+
+                    // withdraw deposit
+                    vm.prank(account);
+                    l2Beanstalk.withdrawDeposit(
+                        accountDepositsStorage[j].token,
+                        stem,
+                        accountDepositsStorage[j].tokenDeposits[k].amount,
+                        0
+                    );
                 }
             }
+        }
+
+        uint256 totalStalk = l2Beanstalk.totalStalk();
+        assertEq(totalStalk, 0);
+
+        uint256 totalRoots = l2Beanstalk.totalRoots();
+        assertEq(totalRoots, 0);
+
+        uint256 totalRainRoots = l2Beanstalk.totalRainRoots();
+        assertEq(totalRainRoots, 0);
+
+        uint256 getTotalBdv = l2Beanstalk.getTotalBdv();
+        assertEq(getTotalBdv, 0);
+
+        uint256[] memory depositedAmounts = l2Beanstalk.getTotalSiloDeposited();
+        for (uint256 i = 0; i < depositedAmounts.length; i++) {
+            assertEq(depositedAmounts[i], 0);
+        }
+
+        uint256[] memory depositedBdvs = l2Beanstalk.getTotalSiloDepositedBdv();
+        for (uint256 i = 0; i < depositedBdvs.length; i++) {
+            assertEq(depositedBdvs[i], 0);
+        }
+
+        // loop through whitelisted tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = whitelistedTokens[i];
+            uint256 totalDeposited = l2Beanstalk.getTotalDeposited(token);
+            assertEq(totalDeposited, 0);
+            uint256 totalDepositedBdv = l2Beanstalk.getTotalDepositedBdv(token);
+            assertEq(totalDepositedBdv, 0);
         }
     }
 
