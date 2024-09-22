@@ -1,48 +1,33 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
-const { retryOperation } = require("../utils/read.js");
 
 async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
-  console.log("reseed4: re-initialize the field and plots.\n");
+  console.log("reseed4: Migrate pod listings and orders in the pod marketplace.\n");
 
   // Files
-  let farmerPlotsPath;
+  let podListingsPath;
+  let podOrdersPath;
   if (mock) {
-    farmerPlotsPath = "./reseed/data/mocks/r4-field-mock.json";
+    podListingsPath = "./reseed/data/mocks/r4/pod-listings-mock.json";
+    podOrdersPath = "./reseed/data/mocks/r4/pod-orders-mock.json";
   } else {
-    farmerPlotsPath = "./reseed/data/r4-field.json";
+    podListingsPath = "./reseed/data/r4/pod-listings.json";
+    podOrdersPath = "./reseed/data/r4/pod-orders.json";
   }
-  // Read and parse the JSON file
-  const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
-
-  targetEntriesPerChunk = 400;
-  plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
-  const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
-  await InitFacet.deployed();
-  console.log(`Starting to process ${plotChunks.length} chunks...`);
-  for (let i = 0; i < plotChunks.length; i++) {
-    await updateProgress(i + 1, plotChunks.length);
-    if (verbose) {
-      console.log("Data chunk:", plotChunks[i]);
-      console.log("-----------------------------------");
-    }
-    await retryOperation(async () => {
-      await upgradeWithNewFacets({
-        diamondAddress: L2Beanstalk,
-        facetNames: [],
-        initFacetName: "ReseedField",
-        initFacetAddress: InitFacet.address,
-        initArgs: [plotChunks[i]],
-        bip: false,
-        verbose: verbose,
-        account: account,
-        checkGas: true,
-        initFacetNameInfo: "ReseedField"
-      });
-    });
-  }
+  const podListings = JSON.parse(await fs.readFileSync(podListingsPath));
+  const podOrders = JSON.parse(await fs.readFileSync(podOrdersPath));
+  await upgradeWithNewFacets({
+    diamondAddress: L2Beanstalk,
+    facetNames: [],
+    initFacetName: "ReseedPodMarket",
+    initArgs: [podListings, podOrders],
+    bip: false,
+    verbose: verbose,
+    account: account,
+    checkGas: true
+  });
+  console.log("-----------------------------------");
 }
 
 exports.reseed4 = reseed4;

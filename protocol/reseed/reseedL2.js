@@ -23,7 +23,6 @@ const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransf
 const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { getBeanstalk } = require("../utils/contracts.js");
-const { deployContract } = require("../scripts/contracts.js");
 
 let reseeds;
 async function reseedL2({
@@ -46,14 +45,14 @@ async function reseedL2({
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
-    reseed4, // reseed field
-    reseed3, // reseed pod marketplace
+    reseed3, // reseed field
+    reseed4, // reseed pod marketplace
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
     reseed7, // reseed account status
     reseed8, // reseed internal balances
-    reseed9 // reseed whitelist
-    // reseed10 // add selectors to l2
+    reseed9, // reseed whitelist
+    reseed10 // add selectors to l2
   ];
   let l2BeanstalkAddress;
 
@@ -66,25 +65,6 @@ async function reseedL2({
     if (i == 0) {
       // first step on the l2 is to deploy the L2 beanstalk diamond with predetermined address.
       l2BeanstalkAddress = await reseedDeployL2Beanstalk(beanstalkDeployer, log, mock);
-      continue;
-    }
-
-    if (i == 1) {
-      // deploy fertilizer (TODO: Remove when fert is deployed on L2)
-      const fertilizerImplementation = await deployContract(
-        "Fertilizer",
-        beanstalkDeployer,
-        true,
-        []
-      );
-      console.log("Fertilizer Implementation:", fertilizerImplementation.address);
-      // deploy BeanstalkPrice contract (TODO: Remove when this is deployed on L2)
-      const beanstalkPrice = await deployContract("BeanstalkPrice", beanstalkDeployer, true, [
-        l2BeanstalkAddress
-      ]);
-      console.log("BeanstalkPrice:", beanstalkPrice.address);
-      // deploy bean addresses.
-      await reseed2(beanstalkDeployer, l2BeanstalkAddress, fertilizerImplementation.address, mock);
       continue;
     }
 
@@ -161,11 +141,11 @@ function parseBeanstalkData() {
   );
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
-  parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);
+  parseField(storageAccountsPath, "./reseed/data/r3-field.json", contractAccounts);
   parsePodMarketplace(
     marketPath,
-    "./reseed/data/r3/pod-listings.json",
-    "./reseed/data/r3/pod-orders.json"
+    "./reseed/data/r4/pod-listings.json",
+    "./reseed/data/r4/pod-orders.json"
   );
   parseExternalHolders(
     externalUnripeHoldersPath,

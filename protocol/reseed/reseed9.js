@@ -1,5 +1,4 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
-const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
 
@@ -21,14 +20,6 @@ async function reseed9(account, L2Beanstalk, mock = false) {
   let siloSettings = assets.map((asset) => asset[2]);
   let whitelistStatuses = assets.map((asset) => asset[3]);
   let oracles = assets.map((asset) => asset[4]);
-
-  // deploy LSD chainlink oracle for whitelist:
-  const LSDChainlinkOracle = await deployContract("LSDChainlinkOracle", account, true, []);
-  console.log("LSDChainlinkOracle deployed at:", LSDChainlinkOracle.address);
-
-  // modify oracles for token 4 (WSTETH) and token 5 (WEETH) to use LSDChainlinkOracle address.
-  oracles[4][0] = LSDChainlinkOracle.address;
-  oracles[5][0] = LSDChainlinkOracle.address;
 
   await retryOperation(async () => {
     await upgradeWithNewFacets({
