@@ -85,7 +85,7 @@ const DepositsTable = ({
         align: 'left',
         headerAlign: 'left',
         sortable: true,
-        valueGetter: (params) => parseFloat(params.row.key),
+        valueGetter: (params) => params.row.key,
         renderCell: (params) => {
           const isMultiSelect = selectType === 'multi';
           const isSelected = selected.has(params.row.key);

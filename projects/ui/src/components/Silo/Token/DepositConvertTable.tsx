@@ -20,6 +20,7 @@ import {
   TokenDepositsSelectType,
   useTokenDepositsContext,
 } from './TokenDepositsContext';
+import { trimDepositId } from './TokenDepositsOverview';
 
 export type FarmerTokenConvertRow = Deposit<TokenValue> & {
   key: string;
@@ -95,7 +96,7 @@ const DepositConvertTable = ({
   const allColumns = useMemo<GridColumns<FarmerTokenConvertRow>>(
     () => [
       {
-        field: 'deposits',
+        field: 'deposit',
         flex: 1,
         minWidth: 150,
         headerName: 'Deposits',
@@ -110,7 +111,7 @@ const DepositConvertTable = ({
             <Stack>
               <Typography>{token.symbol} Deposit</Typography>
               <Typography color="text.secondary" fontWeight={FontWeight.normal}>
-                {params.row.key}
+                {trimDepositId(params.row.key)}
               </Typography>
             </Stack>
           </Stack>

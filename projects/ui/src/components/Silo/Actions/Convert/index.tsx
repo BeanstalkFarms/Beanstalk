@@ -670,11 +670,16 @@ function useConvertTokenList(
       sdk.silo.siloConvert.getConversionPaths(fromToken).map((t) => t.address)
     );
 
+    // As of now, we don't include unripe PipelineConverts
     if (!fromToken.isUnripe) {
       whitelist.forEach((toToken) => {
         !toToken.isUnripe && pathSet.add(toToken.address);
       });
     }
+
+    // As of now, remove the fromToken from the list.
+    // They can update their deposits via silo/token/updateDeposits
+    pathSet.delete(fromToken.address);
 
     const list = Array.from(pathSet).map((address) => whitelistLookup[address]);
     return [

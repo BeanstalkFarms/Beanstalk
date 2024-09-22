@@ -13,25 +13,24 @@ import DepositConvertTable, {
 
 const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   const sdk = useSdk();
-  const { setWithIds, depositsById } = useTokenDepositsContext();
+  const { setWithIds, updateableDepositsById } = useTokenDepositsContext();
   const getBDV = useBDV();
 
   const { updatableDeposits, totalDeltaStalk, totalDeltaSeed } = useMemo(() => {
     const oneTokenBDV = token.fromHuman(getBDV(token).toString());
     const updateable: FarmerTokenConvertRow[] = [];
-    let totalDeltaStalk = sdk.tokens.STALK.fromHuman('0');
-    let totalDeltaSeed = sdk.tokens.SEEDS.fromHuman('0');
+    let ttlDeltaStalk = sdk.tokens.STALK.fromHuman('0');
+    let ttlDeltaSeed = sdk.tokens.SEEDS.fromHuman('0');
 
-    Object.entries(depositsById).forEach(([key, deposit]) => {
+    Object.entries(updateableDepositsById).forEach(([_, deposit]) => {
       const currentBDV = oneTokenBDV.mul(deposit.amount);
       const deltaBDV = currentBDV.sub(deposit.bdv);
 
       if (deposit.bdv.gte(currentBDV)) return;
-
       const deltaStalk = deposit.seeds.mul(deltaBDV);
       const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
       updateable.push({
-        key: '....' + deposit.id.toHexString().slice(-13),
+        key: `...${deposit.id.toHexString().slice(-13)}`,
         currentBDV: currentBDV,
         deltaBDV: deltaBDV,
         deltaStalk: deltaStalk,
@@ -39,14 +38,18 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
         ...deposit,
       });
 
-      totalDeltaStalk = totalDeltaStalk.add(deltaStalk);
-      totalDeltaSeed = totalDeltaSeed.add(deltaSeed);
+      ttlDeltaStalk = ttlDeltaStalk.add(deltaStalk);
+      ttlDeltaSeed = ttlDeltaSeed.add(deltaSeed);
     });
 
     updateable.sort((a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1));
 
-    return { updatableDeposits: updateable, totalDeltaStalk, totalDeltaSeed };
-  }, [depositsById, getBDV, token, sdk.tokens]);
+    return {
+      updatableDeposits: updateable,
+      totalDeltaStalk: ttlDeltaStalk,
+      totalDeltaSeed: ttlDeltaSeed,
+    };
+  }, [updateableDepositsById, getBDV, token, sdk.tokens]);
 
   const handleSelectAll = () => {
     setWithIds(updatableDeposits.map(({ key }) => key));

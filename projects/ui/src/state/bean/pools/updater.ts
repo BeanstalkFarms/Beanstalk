@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
 import { multicall } from '@wagmi/core';
 
-import { displayBeanPrice, tokenResult, exists } from '~/util';
+import { displayBeanPrice, tokenResult } from '~/util';
 import useSdk from '~/hooks/sdk';
 import { ContractFunctionParameters, erc20Abi } from 'viem';
 import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
@@ -94,7 +94,7 @@ export const useFetchPools = () => {
               const pool = sdk.pools.getPoolByLPToken(address);
               const lpResult = lpResults[address];
 
-              if (pool && exists(lpResult.deltaB) && exists(lpResult.supply)) {
+              if (pool) {
                 const payload: UpdatePoolPayload = {
                   address: address,
                   pool: {
@@ -104,14 +104,18 @@ export const useFetchPools = () => {
                       transform(poolData.balances[1], 'bnjs', pool.tokens[1]),
                     ],
                     deltaB: transform(poolData.deltaB, 'bnjs', BEAN),
-                    supply: transform(lpResult.supply, 'bnjs', pool.lpToken),
+                    supply: lpResult.supply
+                      ? transform(lpResult.supply, 'bnjs', pool.lpToken)
+                      : new BigNumber(0),
                     // Liquidity: always denominated in USD for the price contract
                     liquidity: transform(poolData.liquidity, 'bnjs', BEAN),
                     // USD value of 1 LP token == liquidity / supply
                     totalCrosses: new BigNumber(0),
                     lpUsd: transform(poolData.lpUsd, 'bnjs', BEAN),
                     lpBdv: transform(poolData.lpBdv, 'bnjs', BEAN),
-                    twaDeltaB: transform(lpResult.deltaB, 'bnjs', BEAN),
+                    twaDeltaB: lpResult.deltaB
+                      ? transform(lpResult.deltaB, 'bnjs', BEAN)
+                      : null,
                   },
                 } as UpdatePoolPayload;
                 acc.push(payload);

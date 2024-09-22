@@ -37,6 +37,7 @@ import Row from '~/components/Common/Row';
 import CloseIcon from '@mui/icons-material/Close';
 import LambdaConvert from '~/components/Silo/Actions/LambdaConvert';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -132,13 +133,16 @@ const LambdaConvertContent = ({
 }: Props & {
   handleClose: () => void;
 }) => {
-  const { selected } = useTokenDepositsContext();
+  const { selected, balances } = useTokenDepositsContext();
   const hasSelected = Boolean(selected.size);
+  const getBDV = useBDV();
+
+  const tokenBDV = getBDV(token);
 
   return (
     <Stack gap={2} direction={{ xs: 'column', lg: 'row' }} width="100%">
       <Stack width="100%" alignItems="center">
-        <Module sx={{ width: '100%', maxWidth: '900px' }}>
+        <Module sx={{ width: '100%', maxWidth: '1080px' }}>
           <ModuleHeader pb={1}>
             <Row justifyContent="space-between">
               <Typography variant="h4" fontWeight={FontWeight.bold}>
@@ -160,14 +164,19 @@ const LambdaConvertContent = ({
           </ModuleContent>
         </Module>
       </Stack>
-      {hasSelected && (
+      <Stack
+        width="100%"
+        alignItems={{ xs: 'center', lg: 'flex-start' }}
+        sx={{ height: '100%' }}
+      >
         <Module
           sx={{
             maxWidth: {
+              sm: '1080px',
               lg: ACTIONS_MAX_WIDTH,
-              width: '100%',
-              height: '100%',
             },
+            width: '100%',
+            height: '100%',
           }}
         >
           <ModuleHeader>
@@ -179,7 +188,7 @@ const LambdaConvertContent = ({
             <LambdaConvert />
           </ModuleContent>
         </Module>
-      )}
+      </Stack>
     </Stack>
   );
 };

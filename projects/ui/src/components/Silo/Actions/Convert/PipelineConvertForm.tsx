@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box,
+  Button,
   CircularProgress,
   Stack,
   Tooltip,
@@ -48,7 +49,7 @@ interface PipelineConvertFormProps extends Props {
 
 const baseQueryOptions = {
   staleTime: 20_000, // 20 seconds stale time
-  refetchOnWindowFocus: true,
+  refetchOnWindowFocus: false,
   refetchIntervalInBackground: false,
 } as const;
 
@@ -86,6 +87,10 @@ const PipelineConvertFormInner = ({
     0
   );
 
+  React.useEffect(() => {
+    console.debug('[pipelineConvert] pickedDeposits:', pickedDeposits);
+  }, [pickedDeposits]);
+
   const sourceIdx = getWellTokenIndexes(sourceWell, BEAN); // token indexes of source well
   const targetIdx = getWellTokenIndexes(targetWell, BEAN); // token indexes of target well
 
@@ -100,7 +105,7 @@ const PipelineConvertFormInner = ({
   // const plantCrate = plantAndDoX?.crate?.bn;
 
   // prettier-ignore
-  const { data } = useQuery({
+  const { data, ...restQuery } = useQuery({
     queryKey: ['pipelineConvert', sourceWell.address, targetWell.address, debouncedAmountIn.toString()],
     queryFn: async () => {
       setFieldValue('tokens.0.quoting', true);
@@ -118,6 +123,11 @@ const PipelineConvertFormInner = ({
         const beanAmountOut = sourceLPAmountOut[sourceIdx.beanIndex];
         const swapAmountIn = sourceLPAmountOut[sourceIdx.nonBeanIndex];
 
+        console.debug(
+          '[pipelineConvert/0xQuote] slippage:,',
+          slippage / 100
+        )
+
         const quote = await sdk.zeroX.fetchSwapQuote({
           sellToken: sellToken.address,
           buyToken: buyToken.address,
@@ -125,7 +135,9 @@ const PipelineConvertFormInner = ({
           takerAddress: sdk.contracts.pipeline.address,
           shouldSellEntireBalance: true,
           // 0x requests are formatted such that 0.01 = 1%. Everywhere else in the UI we use 0.01 = 0.01% ?? BS3TODO: VALIDATE ME
-          slippagePercentage: (slippage * 100).toString(),
+          slippagePercentage: (slippage / 10).toString(),
+
+          // 0.05% => 0.0005
         });
 
         console.debug(`[pipelineConvert/0xQuote (2)] result:`, { quote });
@@ -164,7 +176,7 @@ const PipelineConvertFormInner = ({
       'pipelineConvert/callStatic',
       sourceWell.address,
       targetWell.address,
-      data?.targetLPAmountOut?.toString(),
+      data?.targetLPAmountOut?.toHuman(),
     ],
     queryFn: async () => {
       if (!data) return;
@@ -175,7 +187,7 @@ const PipelineConvertFormInner = ({
             well: sourceWell,
             lpAmountIn: data.amountIn,
             beanAmountOut: data.beanAmountOut,
-            nonBeanAmountOut: data.swapAmountOut,
+            nonBeanAmountOut: data.swapAmountIn,
           },
           swap: {
             buyToken,
@@ -196,7 +208,8 @@ const PipelineConvertFormInner = ({
             pickedDeposits.crates.map((c) => c.stem),
             pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
             targetToken.address,
-            advPipeCalls
+            advPipeCalls,
+            { gasLimit: 1_000_000 }
           )
           .then((result) => ({
             toStem: result.toStem,
@@ -213,7 +226,7 @@ const PipelineConvertFormInner = ({
         throw e;
       }
     },
-    retry: 2,
+    retry: false,
     enabled: !!data && debouncedAmountIn?.gt(0),
     ...baseQueryOptions,
   });
@@ -319,9 +332,18 @@ const PipelineConvertFormInner = ({
             </PillRow>
           ) : null}
           <Stack>
-            {staticCallData && (
-              <Typography>values from pipe convert:</Typography>
-            )}
+            <Button onClick={() => restQuery.refetch()}>Refetch</Button>
+            <Stack gap={0.5}>
+              {data && (
+                <>
+                  <Typography>values from pipe convert:</Typography>
+                  <Typography>
+                    Amount Out: {data?.targetLPAmountOut.toHuman()}
+                  </Typography>
+                </>
+              )}
+            </Stack>
+
             {staticCallData
               ? Object.entries(staticCallData).map(([k, v]) => (
                   <Typography key={k}>

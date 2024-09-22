@@ -43,14 +43,14 @@ export class PipelineConvertUtil {
     token: ERC20Token,
     spender: string,
     amount: ethers.BigNumberish = ethers.constants.MaxUint256,
-    clipboard: string = ethers.constants.HashZero
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: token.address,
       callData: token
         .getContract()
         .interface.encodeFunctionData('approve', [spender, amount]),
-      clipboard,
+      clipboard: clipboard,
     };
   }
 
@@ -59,7 +59,7 @@ export class PipelineConvertUtil {
     amountIn: TokenValue,
     minAmountsOut: TokenValue[],
     recipient: string,
-    clipboard: string = ethers.constants.HashZero
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: sourceWell.address,
@@ -71,7 +71,7 @@ export class PipelineConvertUtil {
           recipient,
           ethers.constants.MaxUint256,
         ]),
-      clipboard,
+      clipboard: clipboard,
     };
   }
 
@@ -79,7 +79,7 @@ export class PipelineConvertUtil {
     well: BasinWell,
     recipient: string,
     amount: ethers.BigNumberish,
-    clipboard: string = ethers.constants.HashZero
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: well.address,
@@ -94,26 +94,29 @@ export class PipelineConvertUtil {
     token: ERC20Token,
     recipient: string,
     amount: ethers.BigNumberish,
-    clipboard: string = ethers.constants.HashZero
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: token.address,
       callData: token
         .getContract()
         .interface.encodeFunctionData('transfer', [recipient, amount]),
-      clipboard,
+      clipboard: clipboard,
     };
   }
 
   private static junctionGte(
     junction: BeanstalkSDK['contracts']['junction'],
-    left: ethers.BigNumberish,
-    right: ethers.BigNumberish,
-    clipboard: string = ethers.constants.HashZero
+    value: ethers.BigNumberish,
+    expectedGteValue: ethers.BigNumberish,
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: junction.address,
-      callData: junction.interface.encodeFunctionData('gte', [left, right]),
+      callData: junction.interface.encodeFunctionData('gte', [
+        value,
+        expectedGteValue,
+      ]),
       clipboard: clipboard,
     };
   }
@@ -121,12 +124,12 @@ export class PipelineConvertUtil {
   private static junctionCheck(
     junction: BeanstalkSDK['contracts']['junction'],
     value: boolean,
-    clipboard: string = ethers.constants.HashZero
+    clipboard: string = Clipboard.encode([])
   ): AdvancedPipeStruct {
     return {
       target: junction.address,
       callData: junction.interface.encodeFunctionData('check', [value]),
-      clipboard,
+      clipboard: clipboard,
     };
   }
 
@@ -143,7 +146,12 @@ export class PipelineConvertUtil {
       source.beanAmountOut,
       source.nonBeanAmountOut,
     ];
-    if (!source.well.tokens[0].equals(sdk.tokens.BEAN)) {
+
+    const sourceWellBeanIndex = source.well.tokens.findIndex((t) =>
+      t.equals(sdk.tokens.BEAN)
+    );
+
+    if (sourceWellBeanIndex !== 0) {
       sourceWellAmountsOut.reverse();
     }
 
@@ -157,14 +165,17 @@ export class PipelineConvertUtil {
       PipelineConvertUtil.getRemoveLiquidityEqual(
         source.well,
         source.lpAmountIn,
-        sourceWellAmountsOut.map((a) => a.subSlippage(slippage)),
+        sourceWellAmountsOut,
         sdk.contracts.pipeline.address
       )
     );
 
     // 2. Approve 0x
     pipe.push(
-      PipelineConvertUtil.erc20Approve(swap.sellToken, swap.quote.allowanceTarget)
+      PipelineConvertUtil.erc20Approve(
+        swap.sellToken,
+        swap.quote.allowanceTarget
+      )
     );
 
     // 3. Swap nonBeanToken1 for nonBeanToken2. recipient MUST be Pipeline or this will fail.
@@ -187,10 +198,10 @@ export class PipelineConvertUtil {
     // 5. Transfer well.tokens[0] to target well
     pipe.push(
       PipelineConvertUtil.transferToken(
-        sdk.tokens.BEAN,
+        source.well.tokens[sourceWellBeanIndex],
         target.well.address,
         ethers.constants.Zero,
-        Clipboard.encodeSlot(1, 3, 1)
+        Clipboard.encodeSlot(1, 2, 1)
       )
     );
 
@@ -209,7 +220,7 @@ export class PipelineConvertUtil {
     pipe.push(
       PipelineConvertUtil.junctionGte(
         sdk.contracts.junction,
-        ethers.constants.Zero,
+        minLPOut.add(1), // add 1 to ensure copy clip gte is true
         minLPOut,
         Clipboard.encodeSlot(6, 0, 0)
       )
@@ -219,7 +230,7 @@ export class PipelineConvertUtil {
     pipe.push(
       PipelineConvertUtil.junctionCheck(
         sdk.contracts.junction,
-        true,
+        false, // default false
         Clipboard.encodeSlot(7, 0, 0)
       )
     );

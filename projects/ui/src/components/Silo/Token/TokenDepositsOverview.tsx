@@ -8,6 +8,7 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
 import DepositsTable from './DepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 
@@ -16,7 +17,15 @@ type Props = {
 };
 
 const TokenDepositsOverview = ({ token }: Props) => {
-  const { balances, setSlug } = useTokenDepositsContext();
+  const { balances, updateableDepositsById, setSlug } =
+    useTokenDepositsContext();
+  const { BEAN } = useTokens();
+
+  const isBEAN = token.equals(BEAN);
+
+  const hasUpdateableDeposits = Boolean(
+    Object.keys(updateableDepositsById).length
+  );
 
   const depositedAmount = balances?.amount || TokenValue.ZERO;
   const amount = new BigNumber(depositedAmount.toHuman());
@@ -43,41 +52,46 @@ const TokenDepositsOverview = ({ token }: Props) => {
             </Typography>
           </Stack>
         </Stack>
-        {hasDeposits && (
-          <Stack direction="row" gap={1}>
-            <Button
-              size="small"
-              color="secondary"
-              variant="outlined-secondary"
-              startIcon={
-                <Box
-                  component="img"
-                  src={minimizeWindowIcon}
-                  height="16px"
-                  width="auto"
-                />
-              }
-              onClick={() => setSlug('transfer')}
+
+        <Stack direction="row" gap={1}>
+          <Button
+            size="small"
+            color="secondary"
+            variant="outlined-secondary"
+            disabled={!hasDeposits}
+            startIcon={
+              <Box
+                component="img"
+                src={minimizeWindowIcon}
+                height="16px"
+                width="auto"
+                sx={{ opacity: hasDeposits ? 1 : 0.5 }}
+              />
+            }
+            onClick={() => setSlug('transfer')}
+          >
+            Transfer
+            <Typography
+              component="span"
+              fontWeight="inherit"
+              display={{ xs: 'none', md: 'inline' }}
             >
-              Transfer
-              <Typography
-                component="span"
-                fontWeight="inherit"
-                display={{ xs: 'none', md: 'inline' }}
-              >
-                {' Deposits'}
-              </Typography>
-            </Button>
+              {' Deposits'}
+            </Typography>
+          </Button>
+          {!isBEAN && (
             <Button
               size="small"
               color="secondary"
               variant="outlined-secondary"
+              disabled={!hasUpdateableDeposits}
               startIcon={
                 <Box
                   component="img"
                   src={deliveryBoxIcon}
                   height="20px"
                   width="auto"
+                  sx={{ opacity: hasDeposits ? 1 : 0.5 }}
                 />
               }
               onClick={() => setSlug('lambda')}
@@ -91,8 +105,8 @@ const TokenDepositsOverview = ({ token }: Props) => {
                 {' Deposits'}
               </Typography>
             </Button>
-          </Stack>
-        )}
+          )}
+        </Stack>
       </Stack>
       <DepositsTable token={token} selectType="single" />
     </Stack>
