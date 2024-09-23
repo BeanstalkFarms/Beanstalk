@@ -3,7 +3,7 @@ import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { MinimumViableSwapQuote } from "src/lib/matcha";
 import { AdvancedPipeCallStruct, Clipboard } from "src/lib/depot";
 import { ERC20Token } from "src/classes/Token";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 
 export class PipelineConvert {
@@ -30,8 +30,8 @@ export class PipelineConvert {
    */
   async removeEqualAddEqual(
     tokenIn: ERC20Token,
-    stems: ethers.BigNumber[],
-    amounts: ethers.BigNumber[],
+    stems: BigNumber[],
+    amounts: BigNumber[],
     tokenOut: ERC20Token,
     advPipeCalls: AdvancedPipeCallStruct[],
     overrides?: ethers.PayableOverrides
@@ -58,7 +58,13 @@ export class PipelineConvert {
     targetWell: BasinWell,
     amountIn: TokenValue,
     slippage: number
-  ) {
+  ): Promise<{
+    fromWellAmountsOut: TokenValue[];
+    toWellAmountsIn: TokenValue[];
+    quote: MinimumViableSwapQuote;
+    amountOut: TokenValue;
+    advPipeCalls: AdvancedPipeCallStruct[];
+  }> {
     if (!PipelineConvert.sdk.pools.whitelistedPools.has(sourceWell.address)) {
       throw new Error(`${sourceWell.name} is not a whitelisted well`);
     }
@@ -218,6 +224,8 @@ export class PipelineConvert {
         target.amountOut
       )
     );
+
+    return pipe;
   }
 
   // ---------- static methods ----------
