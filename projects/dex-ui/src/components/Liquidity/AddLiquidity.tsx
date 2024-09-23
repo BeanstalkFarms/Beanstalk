@@ -1,26 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TokenInput } from "../../components/Swap/TokenInput";
-import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
+
 import styled from "styled-components";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
+
+import { ERC20Token, Token, TokenValue } from "@beanstalk/sdk";
 import { AddLiquidityETH, Well } from "@beanstalk/sdk-wells";
-import { useQuery } from "@tanstack/react-query";
-import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
-import { Button } from "../Swap/Button";
-import { ensureAllowance, hasMinimumAllowance } from "./allowance";
-import { Log } from "../../utils/logger";
-import QuoteDetails from "./QuoteDetails";
-import { TransactionToast } from "../TxnToast/TransactionToast";
-import useSdk from "src/utils/sdk/useSdk";
-import { useWellReserves } from "src/wells/useWellReserves";
-import { Checkbox } from "../Checkbox";
+
 import { size } from "src/breakpoints";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
 import { ActionWalletButtonWrapper } from "src/components/Wallet";
-import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { PriceLookups } from "src/utils/price/priceLookups";
-import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import { useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
+import useSdk from "src/utils/sdk/useSdk";
+import { useWellReserves } from "src/wells/useWellReserves";
+
+import { ensureAllowance, hasMinimumAllowance } from "./allowance";
+import QuoteDetails from "./QuoteDetails";
+import { LIQUIDITY_OPERATION_TYPE, LiquidityAmounts } from "./types";
+import { TokenInput } from "../../components/Swap/TokenInput";
+import { Log } from "../../utils/logger";
+import { Checkbox } from "../Checkbox";
+import { Button } from "../Swap/Button";
+import { TransactionToast } from "../TxnToast/TransactionToast";
 
 type BaseAddLiquidityProps = {
   slippage: number;
@@ -55,6 +59,7 @@ const AddLiquidityContent = ({
 }: AddLiquidityProps) => {
   const { address } = useAccount();
   const sdk = useSdk();
+  const chainId = useChainId();
 
   const WETH = sdk.tokens.WETH;
   const token1 = tokens[0];
@@ -79,7 +84,7 @@ const AddLiquidityContent = ({
       return [data[token1.symbol] || null, data[token2.symbol] || null]; // price indexed by token symbol
     }
   });
-  const invalidate = useInvalidateScopedQueries();
+  const invalidate = useInvalidateQueries();
 
   // Indexed in the same order as well.tokens
   const [tokenAllowance, setTokenAllowance] = useState<boolean[]>([]);
@@ -88,7 +93,9 @@ const AddLiquidityContent = ({
   const canFetchPrice2 = !!(token2 && token2.symbol in PriceLookups);
   const canFetchPrices = Boolean(canFetchPrice1 && canFetchPrice2 && prices.length === 2);
 
-  const someWellReservesEmpty = Boolean(wellReserves && wellReserves.some((reserve) => reserve.eq(0)));
+  const someWellReservesEmpty = Boolean(
+    wellReserves && wellReserves.some((reserve) => reserve.eq(0))
+  );
   const areSomeInputsZero = Boolean(inputs.some((amt) => amt.value.eq("0")));
 
   const atLeastOneAmountNonZero = useMemo(() => {
@@ -152,7 +159,7 @@ const AddLiquidityContent = ({
 
     const _tokenAllowance = [];
     for (let [index, token] of well.tokens!.entries()) {
-      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.MAINNET : well.address;
+      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.get(chainId) : well.address;
       if (amounts[index]) {
         const tokenHasMinAllowance = await hasMinimumAllowance(
           address,
@@ -179,7 +186,8 @@ const AddLiquidityContent = ({
     amounts,
     useNativeETH,
     well.address,
-    sdk.addresses.DEPOT.MAINNET,
+    sdk.addresses.DEPOT,
+    chainId,
     hasWETH,
     useWETH,
     well.tokens
@@ -206,7 +214,7 @@ const AddLiquidityContent = ({
     [tokenAllowance]
   );
 
-  const { data: quote } = useQuery({
+  const { data: quote } = useChainScopedQuery({
     queryKey: ["wells", "quote", "addliquidity", address, amounts, allTokensHaveMinAllowance],
 
     queryFn: async () => {
@@ -227,13 +235,12 @@ const AddLiquidityContent = ({
           } else {
             estimate = await well.addLiquidityGasEstimate(inputs, quote, address);
           }
-          
         } else {
           estimate = TokenValue.ZERO;
         }
 
         setShowQuoteDetails(true);
-        
+
         gas = estimate;
         return { quote, gas, estimate };
       } catch (error: any) {
@@ -291,9 +298,8 @@ const AddLiquidityContent = ({
       invalidate(queryKeys.tokenBalance(token1.address));
       invalidate(queryKeys.tokenBalance(token2.address));
       invalidate(queryKeys.lpSummaryAll);
-
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     quote,
     address,
@@ -326,8 +332,14 @@ const AddLiquidityContent = ({
       let _amounts = [];
       for (let i = 0; i < prices.length; i++) {
         if (i !== index) {
-          const conversion = prices[i] && prices[i]?.gt(TokenValue.ZERO) ? amountInUSD.div(prices[i]!) : TokenValue.ZERO;
-          const conversionFormatted = TokenValue.fromHuman(conversion.humanString, well.tokens![i].decimals);
+          const conversion =
+            prices[i] && prices[i]?.gt(TokenValue.ZERO)
+              ? amountInUSD.div(prices[i]!)
+              : TokenValue.ZERO;
+          const conversionFormatted = TokenValue.fromHuman(
+            conversion.humanString,
+            well.tokens![i].decimals
+          );
           _amounts[i] = conversionFormatted;
         } else {
           _amounts[i] = amount;
@@ -382,7 +394,7 @@ const AddLiquidityContent = ({
     (tokenIndex: number) => async () => {
       if (!address || !well.tokens || !amounts) return;
 
-      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.MAINNET : well.address;
+      const targetAddress = useNativeETH ? sdk.addresses.DEPOT.get(chainId) : well.address;
       await ensureAllowance(address, targetAddress, well.tokens[tokenIndex], amounts[tokenIndex]);
       checkMinAllowanceForAllTokens();
     },
@@ -392,7 +404,8 @@ const AddLiquidityContent = ({
       amounts,
       useNativeETH,
       well.address,
-      sdk.addresses.DEPOT.MAINNET,
+      sdk.addresses.DEPOT,
+      chainId,
       checkMinAllowanceForAllTokens
     ]
   );
@@ -403,7 +416,13 @@ const AddLiquidityContent = ({
     if (!atLeastOneAmountNonZero) return "Enter Amount(s)";
     if (someWellReservesEmpty && areSomeInputsZero) return "Both Amounts Required";
     return "Add Liquidity";
-  }, [atLeastOneAmountNonZero, hasEnoughBalance, address, someWellReservesEmpty, areSomeInputsZero]);
+  }, [
+    atLeastOneAmountNonZero,
+    hasEnoughBalance,
+    address,
+    someWellReservesEmpty,
+    areSomeInputsZero
+  ]);
 
   return (
     <div>
@@ -415,7 +434,9 @@ const AddLiquidityContent = ({
                 key={`input${index}`}
                 id={`input${index}`}
                 label={`Input amount in ${token.symbol}`}
-                token={hasWETH && !useWETH && tokens[index].equals(WETH) ? sdk.tokens.ETH : tokens[index]}
+                token={
+                  hasWETH && !useWETH && tokens[index].equals(WETH) ? sdk.tokens.ETH : tokens[index]
+                }
                 amount={amounts[index]}
                 onAmountChange={
                   balancedMode && canFetchPrices

@@ -4,6 +4,7 @@
 
 pragma solidity ^0.8.20;
 
+import {C} from "contracts/C.sol";
 import {LibUniswapOracle} from "./LibUniswapOracle.sol";
 import {LibChainlinkOracle} from "./LibChainlinkOracle.sol";
 import {IUniswapV3PoolImmutables} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -62,6 +63,7 @@ library LibUsdOracle {
      * @dev if address is 0, use the current contract.
      * If encodeType is 0x01, use the default chainlink implementation.
      * Returns 0 rather than reverting if the call fails.
+     * Note: token here refers to the non bean token when quoting for a well price.
      */
     function getTokenPriceFromExternal(
         address token,
@@ -97,7 +99,7 @@ library LibUsdOracle {
         Implementation memory oracleImpl = s.sys.oracleImplementation[token];
 
         // If the encode type is type 1, use the default chainlink implementation instead.
-        // `target` refers to the address of the price aggergator implmenation
+        // `target` refers to the address of the price aggergator implmentation
         if (oracleImpl.encodeType == bytes1(0x01)) {
             return
                 LibChainlinkOracle.getTokenPrice(
@@ -163,12 +165,18 @@ library LibUsdOracle {
             return (tokenPrice * chainlinkTokenPrice) / UNISWAP_DENOMINATOR;
         }
 
-        // If the oracle implementation address is not set, use the current contract.
-        address target = oracleImpl.target;
-        if (target == address(0)) target = address(this);
+        // Non-zero addresses are enforced in verifyOracleImplementation, this is just an extra check.
+        if (oracleImpl.target == address(0)) return 0;
 
-        (bool success, bytes memory data) = target.staticcall(
-            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImpl.data)
+        // if `isMillion` is enabled, append the boolean into the oracleImpl,
+        // such that the oracle implementation can use the data.
+        bytes memory oracleImplData = oracleImpl.data;
+        if (isMillion) {
+            oracleImplData = abi.encodePacked(oracleImpl.data, isMillion);
+        }
+
+        (bool success, bytes memory data) = oracleImpl.target.staticcall(
+            abi.encodeWithSelector(oracleImpl.selector, tokenDecimals, lookback, oracleImplData)
         );
 
         if (!success) return 0;

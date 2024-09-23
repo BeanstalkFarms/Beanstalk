@@ -5,12 +5,12 @@ import { useEffect, useMemo } from 'react';
 
 import { PlotFragment } from '~/components/Common/Form';
 import { PodListing, PodOrder } from '~/state/farmer/market';
-import Token from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
 import { BEAN, ETH, WETH } from '~/constants/tokens';
 import usePreferredToken, {
   PreferredToken,
 } from '~/hooks/farmer/usePreferredToken';
+import { TokenInstance } from '../../../../hooks/beanstalk/useTokens';
 // ---------- TYPES ----------
 type PartialOpenState = 0 | 1 | 2;
 
@@ -127,7 +127,7 @@ const _selectedOrderAtom = atom<PodOrder | null>(null);
 export const fulfillAmountAtom = atom<MayBN>(null);
 
 // the token used to fulfill a buy order
-export const fulfillTokenAtom = atom<Token | null>(null);
+export const fulfillTokenAtom = atom<TokenInstance | null>(null);
 
 // settings module atom
 export const settingsSlippageAtom = atom<number>(0.1);
@@ -244,7 +244,7 @@ export const useFulfillTokenAtom = () => {
 
   useEffect(() => {
     if (baseToken && !fulfillToken) {
-      setFulfillToken(baseToken as Token);
+      setFulfillToken(baseToken as TokenInstance);
     }
   }, [fulfillToken, baseToken, setFulfillToken]);
 

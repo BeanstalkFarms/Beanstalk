@@ -1,9 +1,10 @@
 import { TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { FormTokenStateNew } from '~/components/Common/Form';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
 import { Action, ActionType, SwapAction } from '~/util/Actions';
+import { useGetLegacyToken } from '../beanstalk/useTokens';
 
 export type SummaryData = {
   actions: Action[];
@@ -25,6 +26,7 @@ export default function useFertilizerSummary(
   wstETHPrice: TokenValue
 ) {
   const sdk = useSdk();
+  const getLegacyToken = useGetLegacyToken();
 
   // const usdc = sdk.tokens.USDC;
   const wstETH = sdk.tokens.WSTETH;
@@ -53,8 +55,8 @@ export default function useFertilizerSummary(
             } else {
               agg.actions[currTokenKey] = {
                 type: ActionType.SWAP,
-                tokenIn: getNewToOldToken(curr.token),
-                tokenOut: getNewToOldToken(wstETH),
+                tokenIn: getLegacyToken(curr.token),
+                tokenOut: getLegacyToken(wstETH),
                 amountIn: curr.amount,
                 amountOut: curr.amountOut,
               };

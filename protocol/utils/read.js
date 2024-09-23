@@ -76,8 +76,31 @@ async function updateProgress(current, total) {
   process.stdout.write(`Processing: [${progressBar}] ${percentage}% | Chunk ${current}/${total}`);
 }
 
+const MAX_RETRIES = 20;
+const RETRY_DELAY = 500; // 0.5 seconds
+
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retryOperation(operation, retries = MAX_RETRIES) {
+  try {
+    return await operation();
+  } catch (error) {
+    if (retries > 0 && error.message.includes("Internal server error")) {
+      console.log(
+        `RPC error encountered. Retrying in ${RETRY_DELAY / 1000} seconds... (${retries} attempts left)`
+      );
+      await sleep(RETRY_DELAY);
+      return retryOperation(operation, retries - 1);
+    }
+    throw error;
+  }
+}
+
 exports.readPrune = readPrune;
 exports.splitEntriesIntoChunks = splitEntriesIntoChunks;
 exports.splitEntriesIntoChunksOptimized = splitEntriesIntoChunksOptimized;
 exports.updateProgress = updateProgress;
 exports.convertToBigNum = convertToBigNum;
+exports.retryOperation = retryOperation;

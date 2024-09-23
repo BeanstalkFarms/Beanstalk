@@ -32,7 +32,7 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
         }
 
         // do not include contract accounts
-        if (!contractAccounts.includes(account)) {
+        if (!contractAccounts.includes(account.toLowerCase())) {
           result.push([account, stalk, tokenAddresses, mowStatusArray, lastUpdate, germinatingStalkOdd, germinatingStalkEven]);
         }
       }

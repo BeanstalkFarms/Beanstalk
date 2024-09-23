@@ -1,10 +1,13 @@
 const { parseAccountStatus } = require("./dataConverts/convertAccountStatuses.js");
 const { parseInternalBalances } = require("./dataConverts/convertInternalBalances.js");
 const { parseField } = require("./dataConverts/convertField.js");
+const { parseWhitelist } = require("./dataConverts/convertWhitelist.js");
 const { parseDeposits } = require("./dataConverts/convertDeposits.js");
 const { parseFertilizer } = require("./dataConverts/convertFert.js");
 const { parsePodMarketplace } = require("./dataConverts/convertPodMarketplace.js");
 const { parseGlobals } = require("./dataConverts/convertGlobal.js");
+const { parseExternalHolders } = require("./dataConverts/convertExternalHolders.js");
+const { parseTokens } = require("./dataConverts/convertTokens.js");
 const { reseedDeployL2Beanstalk } = require("./reseedDeployL2Beanstalk.js");
 const { reseed2 } = require("./reseed2.js");
 const { reseed3 } = require("./reseed3.js");
@@ -20,7 +23,6 @@ const { reseedAddLiquidityAndTransfer } = require("./reseedAddLiquidityAndTransf
 const fs = require("fs");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { getBeanstalk } = require("../utils/contracts.js");
-const { deployContract } = require("../scripts/contracts.js");
 
 let reseeds;
 async function reseedL2({
@@ -32,7 +34,9 @@ async function reseedL2({
   start = 0,
   end = 11,
   setState = true,
-  deployBasin = true
+  addLiquidity = true,
+  verbose = false,
+  onlyState = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -41,8 +45,8 @@ async function reseedL2({
     reseedDeployL2Beanstalk, // deploy l2 beanstalk diamond
     reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
-    reseed3, // reseed pod marketplace
-    reseed4, // reseed field
+    reseed3, // reseed field
+    reseed4, // reseed pod marketplace
     reseed5, // reseed barn (fert)
     reseed6, // reseed silo
     reseed7, // reseed account status
@@ -64,39 +68,15 @@ async function reseedL2({
       continue;
     }
 
-    if (i == 1) {
-      // deploy fertilizer (TODO: Remove when fert is deployed on L2)
-      const fertilizerImplementation = await deployContract(
-        "Fertilizer",
-        beanstalkDeployer,
-        true,
-        []
-      );
-      console.log("Fertilizer Implementation:", fertilizerImplementation.address);
-      // deploy BeanstalkPrice contract (TODO: Remove when this is deployed on L2)
-      const beanstalkPrice = await deployContract("BeanstalkPrice", beanstalkDeployer, true, [
-        l2BeanstalkAddress
-      ]);
-      console.log("BeanstalkPrice:", beanstalkPrice.address);
-      // deploy bean addresses.
-      await reseed2(
-        beanstalkDeployer,
-        l2BeanstalkAddress,
-        deployBasin,
-        fertilizerImplementation.address,
-        mock
-      );
-      continue;
-    }
-
     if (setState == true) {
-      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock);
+      await reseeds[i](beanstalkDeployer, l2BeanstalkAddress, mock, verbose);
       continue;
     }
 
     if (i == reseeds.length - 2) {
       // prior to the last reseed (i.e, adding facets to L2 beanstalk),
       // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
+      console.log("Transferring ownership to the beanstalk owner.");
       await upgradeWithNewFacets({
         diamondAddress: l2BeanstalkAddress,
         facetNames: ["OwnershipFacet"],
@@ -111,13 +91,14 @@ async function reseedL2({
     }
     if (i == reseeds.length - 1) {
       // claim ownership of beanstalk:
+      console.log("Claiming ownership of beanstalk.");
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
       // initialize beanstalk state add selectors to L2 beanstalk.
       await reseed10(l2owner, l2BeanstalkAddress, mock);
     }
   }
   // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:
-  await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
+  if (addLiquidity) await reseedAddLiquidityAndTransfer(l2owner, l2BeanstalkAddress, true);
   console.log("Reseed successful.");
 }
 
@@ -140,13 +121,19 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
-  // TODO: Replace with actual smart contract accounts.
-  const contractAccounts = ["0x1", "0x2", "0x3", "0x4", "0x5"];
-  const BLOCK_NUMBER = 20577510;
+  // Read contract addresses to exclude them from the reseed
+  const contractAccounts = fs
+    .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
-  const marketPath = "./reseed/data/exports/market-info20330000.json";
+  const marketPath = "./reseed/data/exports/market-info20330000.json"; // todo: update to latest block upon migration
+  const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
+  const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");
   parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
   parseInternalBalances(
@@ -156,12 +143,30 @@ function parseBeanstalkData() {
   );
   parseDeposits(storageAccountsPath, "./reseed/data/r6-deposits.json", contractAccounts);
   parseFertilizer(storageFertPath, "./reseed/data/r5-barn-raise.json", contractAccounts);
-  parseField(storageAccountsPath, "./reseed/data/r4-field.json", contractAccounts);
+  parseField(storageAccountsPath, "./reseed/data/r3-field.json", contractAccounts);
   parsePodMarketplace(
     marketPath,
-    "./reseed/data/r2/pod-listings.json",
-    "./reseed/data/r2/pod-orders.json"
+    "./reseed/data/r4/pod-listings.json",
+    "./reseed/data/r4/pod-orders.json"
   );
+  parseExternalHolders(
+    externalUnripeHoldersPath,
+    "./reseed/data/r2/L2_external_unripe_balances.json",
+    contractAccounts
+  );
+  parseExternalHolders(
+    externalUnripeLpHoldersPath,
+    "./reseed/data/r2/L2_external_unripe_lp_balances.json",
+    contractAccounts
+  );
+  // Initial supplies and well balances
+  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`;
+  const outputFilePaths = {
+    L2_initial_supply: "./reseed/data/r2/L2_initial_supply.json",
+    L2_well_balances: "./reseed/data/r2/L2_well_balances.json"
+  };
+  parseTokens(reserveSupplyJsonPath, outputFilePaths);
+  parseWhitelist(storageSystemPath, "./reseed/data/r9-whitelist.json");
 }
 
 async function printBeanstalk() {

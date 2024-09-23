@@ -45,6 +45,7 @@ library LibFertilizer {
      * @dev Adds a new fertilizer to Beanstalk, updates global state,
      * the season queue, and returns the corresponding fertilizer id.
      * @param season The season the fertilizer is added.
+     * @param tokenAmountIn The amount of barnRaiseToken being used to purchase Fertilizer.
      * @param fertilizerAmount The amount of Fertilizer to add.
      * @param minLP The minimum amount of LP to add.
      * @return id The id of the Fertilizer.
@@ -102,8 +103,8 @@ library LibFertilizer {
     }
 
     /**
-     * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
-     * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
+     * @dev Transfers `tokenAmountIn` of `barnRaiseToken` to the Barn Raise Well, mints and
+     * adds corresponding Bean liquidity.
      */
     function addUnderlying(
         uint256 tokenAmountIn,

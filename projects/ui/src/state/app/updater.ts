@@ -5,12 +5,18 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 import useSetting from '~/hooks/app/useSetting';
+import useSdk from '~/hooks/sdk';
+import { ChainResolver } from '@beanstalk/sdk-core';
 import { setEthPrices, updateSetting } from './actions';
 
 export const useEthPrices = () => {
   const dispatch = useDispatch();
+  const sdk = useSdk();
   const getGas = useCallback(() => {
     (async () => {
+      if (!ChainResolver.isL2Chain(sdk.chainId)) {
+        return;
+      }
       try {
         const query = await fetch('/.netlify/functions/ethprice');
         const ethprice = await query.json();
@@ -19,7 +25,7 @@ export const useEthPrices = () => {
         console.error('Failed to load: ethprice');
       }
     })();
-  }, [dispatch]);
+  }, [dispatch, sdk.chainId]);
 
   /// Auto-refresh gas prices every 10s.
   /// FIXME: refresh every block or N blocks instead?

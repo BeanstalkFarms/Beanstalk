@@ -10,41 +10,66 @@ import "forge-std/console.sol";
 import {Deposit} from "contracts/beanstalk/storage/Account.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import "forge-std/StdUtils.sol";
+import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
+import {P} from "contracts/ecosystem/price/P.sol";
+import {MockToken} from "contracts/mocks/MockToken.sol";
+
+interface IBeanstalkPrice {
+    function price() external view returns (P.Prices memory p);
+}
 
 /**
  * @notice Verfifies state and functionality of the new L2 Beanstalk
  */
 contract ReseedStateTest is TestHelper {
+    struct FertDepositData {
+        uint256 fertId;
+        uint256 amount;
+        uint256 lastBpf;
+    }
+
     // contracts for testing:
     address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
     address constant FERTILIZER = address(0xC59f881074Bf039352C227E21980317e6b969c8A);
+    address constant BEANSTALK_PRICE = address(0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7);
 
     uint256 constant FIELD_ID = 0;
 
+    // bean tokens
     address constant L2BEAN = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
     address constant L2URBEAN = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
     address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
 
+    address[] nonBeanTokens = [
+        address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1), // WETH
+        address(0x5979D7b546E38E414F7E9822514be443A4800529), // WstETH
+        address(0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe), // WEETH
+        address(0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f), // WBTC
+        address(0xaf88d065e77c8cC2239327C5EDb3A432268e5831), // USDC
+        address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9) // USDT
+    ];
+
     address[] whiteListedWellTokens = [
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     address[] whitelistedTokens = [
         L2BEAN,
         L2URBEAN,
         L2URLP,
-        address(0xBEA00ebA46820994d24E45dffc5c006bBE35FD89), // BEAN/WETH
-        address(0xBEA0039bC614D95B65AB843C4482a1A5D2214396), // BEAN/WstETH
-        address(0xBEA000B7fde483F4660041158D3CA53442aD393c), // BEAN/WEETH
-        address(0xBEA0078b587E8f5a829E171be4A74B6bA1565e6A), // BEAN/WBTC
-        address(0xBEA00C30023E873D881da4363C00F600f5e14c12), // BEAN/USDC
-        address(0xBEA00699562C71C2d3fFc589a848353151a71A61) // BEAN/USDT
+        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
+        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
+        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
+        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
+        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
+        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
     ];
 
     IMockFBeanstalk l2Beanstalk;
@@ -52,6 +77,7 @@ contract ReseedStateTest is TestHelper {
     string constant HEX_PREFIX = "0x";
 
     string constant ACCOUNTS_PATH = "./test/foundry/Migration/data/accounts.txt";
+    string constant FERT_ACCOUNTS_PATH = "./test/foundry/Migration/data/fert_accounts.txt";
 
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
@@ -60,11 +86,190 @@ contract ReseedStateTest is TestHelper {
     function setUp() public {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
-        uint256 numAccounts = 10;
+        // the total number of accounts is 3665
+        uint256 numAccounts = 10000;
         accountNumber = parseAccounts(numAccounts);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+        // skip(100_000_000);
         // l2Beanstalk.gm(address(this), 1);
+    }
+
+    function test_Sunrise() public {
+        // jump forward one hour in vm
+        vm.warp(block.timestamp + 3600);
+        console.log("calling sunrise");
+        l2Beanstalk.sunrise();
+    }
+
+    function test_pipelineConvert() public {
+        int96[] memory stems = new int96[](1);
+        stems[0] = 1;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1;
+        // simply verify the function exists
+        vm.expectRevert("Convert: Input token must be Bean or a well");
+        l2Beanstalk.pipelineConvert(
+            address(0),
+            stems,
+            amounts,
+            address(0),
+            new IMockFBeanstalk.AdvancedPipeCall[](0)
+        );
+    }
+
+    function test_pipelineConvertRealUserLPToBean() public {
+        address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
+        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+
+        address token;
+        int96 stem;
+        uint256 amount;
+
+        IMockFBeanstalk.TokenDepositId[] memory deposits = l2Beanstalk.getDepositsForAccount(
+            realUser
+        );
+        for (uint256 i; i < deposits.length; i++) {
+            if (deposits[i].token == address(beanWethWell)) {
+                (token, stem) = l2Beanstalk.getAddressAndStem(deposits[i].depositIds[0]);
+                amount = deposits[i].tokenDeposits[0].amount;
+                break;
+            }
+        }
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        IMockFBeanstalk.AdvancedPipeCall[] memory calls = createLPToBeanPipeCalls(
+            amount,
+            beanWethWell
+        );
+
+        // previously this would revert with "Well: Bean reserve is less than the minimum"
+        vm.prank(realUser);
+        l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
+    }
+
+    function test_pipelineConvertLowLiquidity() public {
+        address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
+        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+        address beanWeethWell = 0xBEA00865405A02215B44eaADB853d0d2192Fc29D;
+
+        // add liquidity to beanWeethWell
+        addLiquidityToWellArb(
+            realUser,
+            beanWeethWell,
+            1e6, // 1 bean,
+            0.001 ether // 0.001 weeth
+        );
+
+        address token;
+        int96 stem;
+        uint256 amount;
+
+        IMockFBeanstalk.TokenDepositId[] memory deposits = l2Beanstalk.getDepositsForAccount(
+            realUser
+        );
+        for (uint256 i; i < deposits.length; i++) {
+            if (deposits[i].token == address(beanWethWell)) {
+                (token, stem) = l2Beanstalk.getAddressAndStem(deposits[i].depositIds[0]);
+                amount = deposits[i].tokenDeposits[0].amount;
+                break;
+            }
+        }
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        IMockFBeanstalk.AdvancedPipeCall[] memory calls = createLPToBeanPipeCalls(
+            amount,
+            beanWethWell
+        );
+
+        // previously this would revert with "Well: Bean reserve is less than the minimum"
+        vm.prank(realUser);
+        l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
+    }
+
+    function createLPToBeanPipeCalls(
+        uint256 amountOfLP,
+        address well
+    ) private pure returns (IMockFBeanstalk.AdvancedPipeCall[] memory output) {
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            well,
+            type(uint256).max
+        );
+
+        uint256[] memory tokenAmountsIn = new uint256[](2);
+        tokenAmountsIn[0] = amountOfLP;
+        tokenAmountsIn[1] = 0;
+
+        // encode remove liqudity.
+        bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
+            IWell.removeLiquidityOneToken.selector,
+            amountOfLP, // tokenAmountsIn
+            L2BEAN, // tokenOut
+            0, // min out
+            PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes:
+        IMockFBeanstalk.AdvancedPipeCall[]
+            memory advancedPipeCalls = new IMockFBeanstalk.AdvancedPipeCall[](2);
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = IMockFBeanstalk.AdvancedPipeCall(
+            L2BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 2: Remove One sided Liquidity into the well.
+        advancedPipeCalls[1] = IMockFBeanstalk.AdvancedPipeCall(
+            well, // target
+            removeLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        return advancedPipeCalls;
+    }
+
+    function addLiquidityToWellArb(
+        address user,
+        address well,
+        uint256 beanAmount,
+        uint256 nonBeanTokenAmount
+    ) internal returns (uint256 lpOut) {
+        (address nonBeanToken, ) = l2Beanstalk.getNonBeanTokenAndIndexFromWell(well);
+
+        if (runningOnFork()) {
+            console.log("dealing tokens on fork");
+            deal(address(L2BEAN), well, beanAmount, true);
+            deal(address(nonBeanToken), well, nonBeanTokenAmount, true);
+        } else {
+            // mint and sync.
+            MockToken(BEAN).mint(well, beanAmount);
+            MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        }
+
+        lpOut = IWell(well).sync(user, 0);
+
+        // sync again to update reserves.
+        IWell(well).sync(user, 0);
+    }
+
+    // LibUsdOracle: 0x5003dF9E48dA96e4B4390373c8ae70EbFA5415A7
+    function test_beanstalkPrice() public {
+        // Get beanstalk price
+        IBeanstalkPrice beanstalkPrice = IBeanstalkPrice(BEANSTALK_PRICE);
+        P.Prices memory prices = beanstalkPrice.price();
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -212,7 +417,7 @@ contract ReseedStateTest is TestHelper {
 
     function test_AccountInternalBalance() public {
         string memory account;
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             for (uint256 j = 0; j < whitelistedTokens.length; j++) {
                 // get the internal balance from storage
@@ -246,8 +451,9 @@ contract ReseedStateTest is TestHelper {
     function test_AccountPlots() public {
         // test the L2 Beanstalk
         string memory account;
+        uint256 totalPlotsAmount;
         // for every account
-        for (uint256 i = 0; i < accountNumber; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             account = vm.readLine(ACCOUNTS_PATH);
             IMockFBeanstalk.Plot[] memory plots = l2Beanstalk.getPlotsFromAccount(
                 vm.parseAddress(account),
@@ -275,13 +481,26 @@ contract ReseedStateTest is TestHelper {
                 // compare the plot amount and index
                 assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
                 assertEq(plotindexesJsonDecoded[j], plots[j].index);
+                totalPlotsAmount += plots[j].pods;
             }
         }
+        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
 
     function test_AccountDeposits() public {
+        vm.pauseGasMetering();
+
+        uint256 totalStalkBefore = l2Beanstalk.totalStalk();
+        assertGt(totalStalkBefore, 0);
+
+        uint256 totalRootsBefore = l2Beanstalk.totalRoots();
+        assertGt(totalRootsBefore, 0);
+
+        // verify ratio is 1:1 on reseed
+        assertEq(totalStalkBefore * 1e12, totalRootsBefore);
+
         address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
 
         // for every account
@@ -319,12 +538,119 @@ contract ReseedStateTest is TestHelper {
                         accountDepositsStorage[j].tokenDeposits[k].bdv,
                         accountDepositsJson[j].tokenDeposits[k].bdv
                     );
+
+                    (address token, int96 stem) = l2Beanstalk.getAddressAndStem(
+                        accountDepositsStorage[j].depositIds[k]
+                    );
+
+                    // withdraw deposit
+                    vm.prank(account);
+                    l2Beanstalk.withdrawDeposit(
+                        accountDepositsStorage[j].token,
+                        stem,
+                        accountDepositsStorage[j].tokenDeposits[k].amount,
+                        0
+                    );
                 }
+            }
+        }
+
+        uint256 totalStalk = l2Beanstalk.totalStalk();
+        assertEq(totalStalk, 0);
+
+        uint256 totalRoots = l2Beanstalk.totalRoots();
+        assertEq(totalRoots, 0);
+
+        uint256 totalRainRoots = l2Beanstalk.totalRainRoots();
+        assertEq(totalRainRoots, 0);
+
+        uint256 getTotalBdv = l2Beanstalk.getTotalBdv();
+        assertEq(getTotalBdv, 0);
+
+        uint256[] memory depositedAmounts = l2Beanstalk.getTotalSiloDeposited();
+        for (uint256 i = 0; i < depositedAmounts.length; i++) {
+            assertEq(depositedAmounts[i], 0);
+        }
+
+        uint256[] memory depositedBdvs = l2Beanstalk.getTotalSiloDepositedBdv();
+        for (uint256 i = 0; i < depositedBdvs.length; i++) {
+            assertEq(depositedBdvs[i], 0);
+        }
+
+        // loop through whitelisted tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = whitelistedTokens[i];
+            uint256 totalDeposited = l2Beanstalk.getTotalDeposited(token);
+            assertEq(totalDeposited, 0);
+            uint256 totalDepositedBdv = l2Beanstalk.getTotalDepositedBdv(token);
+            assertEq(totalDepositedBdv, 0);
+        }
+    }
+
+    //////////////////// Fertilizer ////////////////////
+    function test_fertilizerProperties() public {
+        uint256 activeFertilizerJson = getGlobalPropertyUint("fert.activeFertilizer");
+        uint256 activeFertilizer = l2Beanstalk.getActiveFertilizer();
+        assertEq(activeFertilizer, activeFertilizerJson, "active fertilizer");
+
+        uint256 fertilizedIndexJson = getGlobalPropertyUint("fert.fertilizedIndex");
+        uint256 fertilizedIndex = l2Beanstalk.totalFertilizedBeans();
+        assertEq(fertilizedIndex, fertilizedIndexJson, "fertilized index");
+
+        uint256 unfertilizedIndexJson = getGlobalPropertyUint("fert.unfertilizedIndex");
+        uint256 unfertilizedIndex = l2Beanstalk.totalFertilizerBeans();
+        assertEq(unfertilizedIndex, unfertilizedIndexJson, "unfertilized index");
+
+        uint256 fertilizedPaidIndexJson = getGlobalPropertyUint("fert.fertilizedPaidIndex");
+        uint256 fertilizedPaidIndex = l2Beanstalk.rinsedSprouts();
+        assertEq(fertilizedPaidIndex, fertilizedPaidIndexJson, "fertilized paid index");
+
+        uint256 fertFirstJson = getGlobalPropertyUint("fert.fertFirst");
+        uint256 fertFirst = l2Beanstalk.getFirst();
+        assertEq(fertFirst, fertFirstJson, "fert first");
+
+        uint256 fertLastJson = getGlobalPropertyUint("fert.fertLast");
+        uint256 fertLast = l2Beanstalk.getLast();
+        assertEq(fertLast, fertLastJson, "fert last");
+    }
+
+    function test_AccountFertilizer() public {
+        // for every account
+        for (uint256 i = 0; i < accountNumber; i++) {
+            address account = vm.parseAddress(vm.readLine(FERT_ACCOUNTS_PATH));
+
+            // get fert id
+            // loop through storage-fertilizer json, parse into FertDepositData
+            FertDepositData[] memory jsonBalances = abi.decode(
+                searchAccountFertilizer(account),
+                (FertDepositData[])
+            );
+
+            // loop through jsonBalances' fertIds and compare to balanceOfFertilizer
+            for (uint256 j = 0; j < jsonBalances.length; j++) {
+                uint256 fertId = jsonBalances[j].fertId;
+                uint256 amount = jsonBalances[j].amount;
+                uint256 lastBpf = jsonBalances[j].lastBpf;
+
+                // get balanceOfFertilizer
+                IMockFBeanstalk.Balance memory balance = l2Beanstalk.balanceOfFertilizer(
+                    account,
+                    fertId
+                );
+
+                // compare balanceOfFertilizer to jsonBalances
+                assertEq(balance.amount, amount, "amount");
+                assertEq(balance.lastBpf, lastBpf, "lastBpf");
             }
         }
     }
 
     //////////////////// Helpers ////////////////////
+
+    function getGlobalPropertyUint(string memory property) public returns (uint256) {
+        bytes memory globalPropertyJson = searchGlobalPropertyData(property);
+        return vm.parseUint(vm.toString(globalPropertyJson));
+    }
 
     function parseAccounts(uint256 numAccounts) public returns (uint256) {
         string[] memory inputs = new string[](3);
@@ -341,7 +667,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-system20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-system20736200.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -351,7 +677,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20736200.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -361,9 +687,19 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20577510.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20736200.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
+    }
+
+    function searchAccountFertilizer(address account) public returns (bytes memory) {
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "./scripts/migrationFinderScripts/fertilizerFinder.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-fertilizer20736200.json"; // json file
+        inputs[3] = vm.toString(account);
+        bytes memory accountFertilizer = vm.ffi(inputs);
+        return accountFertilizer;
     }
 }

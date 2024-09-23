@@ -1,18 +1,21 @@
 import React from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
-import { BodyL, BodyS, TextNudge } from "../Typography";
-import { FC } from "src/types";
+
 import { Token, TokenValue } from "@beanstalk/sdk";
-import { TokenLogo } from "../TokenLogo";
-import { Item, Row } from "../Layout";
+
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
 import { formatNum, formatPercent } from "src/utils/format";
+import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useIsMultiFlowPump } from "src/wells/pump/utils";
 
 import { MultiFlowPumpTooltip } from "./MultiFlowPumpTooltip";
-import { Well } from "@beanstalk/sdk/Wells";
+import { Item, Row } from "../Layout";
+import { TokenLogo } from "../TokenLogo";
 import { TooltipProps } from "../Tooltip";
-import { useIsMobile } from "src/utils/ui/useIsMobile";
-import { getIsMultiPumpWell } from "src/wells/pump/utils";
+import { BodyL, BodyS, TextNudge } from "../Typography";
 
 export type ReservesProps = {
   well: Well | undefined;
@@ -27,6 +30,7 @@ export type ReservesProps = {
 
 export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => {
   const isMobile = useIsMobile();
+  const { isMultiFlow } = useIsMultiFlowPump(well);
 
   if (!well) return null;
 
@@ -36,7 +40,7 @@ export const Reserves: FC<ReservesProps> = ({ reserves, well, twaReserves }) => 
     <Item key={i} column>
       <Symbol>
         {r.token?.symbol}
-        {getIsMultiPumpWell(well).isMultiFlow && (
+        {isMultiFlow && (
           <div className="info-icon">
             <MultiFlowPumpTooltip
               well={well}
@@ -106,7 +110,13 @@ const Percent = styled.div`
   }
 `;
 
-const baseTooltipProps = { offsetX: 0, offsetY: 0, arrowSize: 0, arrowOffset: 0, side: "top" } as TooltipProps;
+const baseTooltipProps = {
+  offsetX: 0,
+  offsetY: 0,
+  arrowSize: 0,
+  arrowOffset: 0,
+  side: "top"
+} as TooltipProps;
 
 const getTooltipProps = (isMobile: boolean, index: number) => {
   const copy = { ...baseTooltipProps };

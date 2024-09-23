@@ -1,9 +1,12 @@
-import { Token } from "@beanstalk/sdk";
 import React from "react";
-import { size } from "src/breakpoints";
-import { FC } from "src/types";
-import { useTokenImage } from "src/tokens/useTokenMetadata";
+
 import styled from "styled-components";
+
+import { Token } from "@beanstalk/sdk";
+
+import { size } from "src/breakpoints";
+import { useTokenImage } from "src/tokens/useTokenMetadata";
+import { FC } from "src/types";
 
 type Props = {
   size: number;

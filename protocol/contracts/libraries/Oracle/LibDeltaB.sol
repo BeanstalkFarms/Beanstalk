@@ -44,8 +44,17 @@ library LibDeltaB {
      * @return The current deltaB uses the current reserves in the well.
      */
     function currentDeltaB(address well) internal view returns (int256) {
-        uint256[] memory reserves = IWell(well).getReserves();
-        return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
+        try IWell(well).getReserves() returns (uint256[] memory reserves) {
+            uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+            // if less than minimum bean balance, return 0, otherwise
+            // calculateDeltaBFromReserves will revert
+            if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return 0;
+            }
+            return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
+        } catch {
+            return 0;
+        }
     }
 
     /**
@@ -73,13 +82,20 @@ library LibDeltaB {
         address pump = pumps[0].target;
 
         // well address , data[]
-        uint256[] memory instReserves = ICappedReservesPump(pump).readCappedReserves(
-            well,
-            pumps[0].data
-        );
-
-        // calculate deltaB.
-        return calculateDeltaBFromReserves(well, instReserves, ZERO_LOOKBACK);
+        try ICappedReservesPump(pump).readCappedReserves(well, pumps[0].data) returns (
+            uint256[] memory instReserves
+        ) {
+            uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+            // if less than minimum bean balance, return 0, otherwise
+            // calculateDeltaBFromReserves will revert
+            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return 0;
+            }
+            // calculate deltaB.
+            return calculateDeltaBFromReserves(well, instReserves, ZERO_LOOKBACK);
+        } catch {
+            return 0;
+        }
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
@@ -124,6 +140,7 @@ library LibDeltaB {
         uint256 lpSupply
     ) internal view returns (int256 wellDeltaB) {
         wellDeltaB = currentDeltaB(well);
+        if (wellDeltaB == 0) return 0; // prevent divide by zero
         wellDeltaB = scaledDeltaB(lpSupply, IERC20(well).totalSupply(), wellDeltaB);
     }
 
@@ -167,14 +184,17 @@ library LibDeltaB {
             revert("Well: USD Oracle call failed");
         }
 
-        return
-            int256(
-                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                    reserves,
-                    beanIndex,
-                    ratios,
-                    wellFunction.data
-                )
-            ).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserve) {
+            return int256(reserve).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 }

@@ -467,10 +467,6 @@ describe("Convert", function () {
       );
       const depositBdv = depositResult[1];
 
-      console.log("stem tip for new silo token: ", this.stem);
-      console.log("current bdv: ", currentBdv);
-      console.log("deposit bdv: ", depositBdv);
-
       // ----------------------- CONVERT ------------------------
       this.result = await mockBeanstalk.connect(user2).convert(
         // CALLDATA                              // amount, token ,account

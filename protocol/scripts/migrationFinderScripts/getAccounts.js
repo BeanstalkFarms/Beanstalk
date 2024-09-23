@@ -3,9 +3,8 @@ const { ethers } = require("ethers");
 const { BigNumber } = require("ethers");
 
 // Define the paths as variables
-const jsonFilePath = "./reseed/data/exports/storage-accounts20577510.json"; // Replace with your actual JSON file path
+const jsonFilePath = "./reseed/data/exports/storage-accounts20736200.json"; // Replace with your actual JSON file path
 const outputFilePath = "./test/foundry/Migration/data/accounts.txt"; // Replace with your desired output file path
-
 function extractAccountAddresses(jsonFilePath, outputFilePath, numAccounts) {
   try {
     const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, "utf8"));

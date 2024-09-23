@@ -8,6 +8,7 @@ import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAg
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {LSDChainlinkOracle} from "contracts/ecosystem/oracles/LSDChainlinkOracle.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
+import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import "forge-std/console.sol";
@@ -194,6 +195,28 @@ contract OracleTest is TestHelper {
         assertEq(xEthTimeout, _xEthTimeout);
     }
 
+    function testExternalOracleImplementation() public {
+        // setup oracle implementation
+        address oracle = address(new ExternalOracleTester());
+        vm.prank(BEANSTALK);
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                oracle,
+                ExternalOracleTester.getPrice.selector,
+                bytes1(0x00), // 0x00 is external
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
+
+        uint256 tokenPriceWBTC = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC); // should be 50000e6
+        assertEq(tokenPriceWBTC, 50000e6, "getTokenUsdPrice wbtc");
+
+        // also exercise getMillionUsdPrice
+        uint256 tokenPriceWBTCMillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        assertEq(tokenPriceWBTCMillion, 50000e12, "getMillionUsdPrice wbtc");
+    }
+
     function testGetOracleImplementationForToken() public {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
@@ -209,6 +232,21 @@ contract OracleTest is TestHelper {
         IMockFBeanstalk.Implementation memory oracleImplementation = bs
             .getOracleImplementationForToken(WBTC);
         assertEq(oracleImplementation.target, WBTC_USD_CHAINLINK_PRICE_AGGREGATOR);
+    }
+
+    function testZeroAddressOracleImplementationTarget() public {
+        vm.prank(BEANSTALK);
+        // exersizes address 0 and bytes 0x00, although there's no current way to whitelist something with these values.
+        vm.expectRevert("Whitelist: Invalid Target Address");
+        bs.updateOracleImplementationForToken(
+            WBTC,
+            IMockFBeanstalk.Implementation(
+                address(0),
+                IMockFBeanstalk.getUsdTokenPriceFromExternal.selector,
+                bytes1(0x00),
+                abi.encode(LibChainlinkOracle.FOUR_HOUR_TIMEOUT)
+            )
+        );
     }
 
     function testGetTokenPrice() public {
@@ -316,7 +354,7 @@ contract OracleTest is TestHelper {
 
         vm.prank(WBTC_WHALE);
         IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
-        deal(address(BEAN), BEAN_WBTC_WELL, 118063754426, true); // approx 2 btc worth of beans
+        deal(address(BEAN), BEAN_WBTC_WELL, 117989199462, true); // approx 2 btc worth of beans
         IWell(BEAN_WBTC_WELL).sync(users[0], 0);
 
         // mock init state so that the bean token is defined
@@ -404,5 +442,31 @@ contract OracleTest is TestHelper {
                 abi.encode(LibChainlinkOracle.FOUR_DAY_TIMEOUT)
             )
         );
+    }
+}
+
+contract ExternalOracleTester {
+    function getPrice(
+        uint256 tokenDecimals,
+        uint256 lookback,
+        bytes memory data
+    ) external view returns (uint256) {
+        uint256 timeout;
+        bool isMillion = false;
+
+        if (data.length > 32) {
+            assembly {
+                timeout := mload(add(data, 32))
+                isMillion := byte(0, mload(add(data, 64)))
+            }
+        } else if (data.length == 32) {
+            // only timeout supplied
+            (timeout) = abi.decode(data, (uint256));
+        }
+
+        if (isMillion) {
+            return 50000e12;
+        }
+        return 50000e6;
     }
 }

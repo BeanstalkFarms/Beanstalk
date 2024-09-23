@@ -1,6 +1,15 @@
 const fs = require("fs");
 const { convertToBigNum } = require("../../utils/read.js");
 
+// Helper function to split an array into chunks of a given size
+function chunkArray(array, chunkSize) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
 function parseFertilizer(inputFilePath, outputFilePath, contractAccounts) {
   try {
     const data = fs.readFileSync(inputFilePath, "utf8");
@@ -13,20 +22,23 @@ function parseFertilizer(inputFilePath, outputFilePath, contractAccounts) {
         const accountIds = Object.keys(accountData);
 
         if (accountIds.length > 0) {
-          const accountArray = accountIds.map((account) => {
+          let accountArray = accountIds.map((account) => {
             const { amount, lastBpf } = accountData[account];
             return [account, convertToBigNum(amount), convertToBigNum(lastBpf)];
           });
 
-          // remove contract accounts from the list
-          for (let i = 0; i < contractAccounts.length; i++) {
-            const index = accountArray.findIndex((account) => account[0] === contractAccounts[i]);
-            if (index > -1) {
-              accountArray.splice(index, 1);
-            }
-          }
+          // Remove contract accounts from the list
+          contractAccounts.forEach((contractAccount) => {
+            accountArray = accountArray.filter(
+              (account) => account[0].toLowerCase() !== contractAccount.toLowerCase()
+            );
+          });
 
-          result.push([convertToBigNum(fertilizerId), accountArray]);
+          // Split into chunks if accountArray has more than 50 accounts
+          const chunkedAccounts = chunkArray(accountArray, 50);
+          chunkedAccounts.forEach((chunk) => {
+            result.push([convertToBigNum(fertilizerId), chunk]); // Keep the same fertilizer ID for each chunk
+          });
         }
       }
     }
@@ -39,3 +51,4 @@ function parseFertilizer(inputFilePath, outputFilePath, contractAccounts) {
 }
 
 exports.parseFertilizer = parseFertilizer;
+

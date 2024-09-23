@@ -16,7 +16,7 @@ import {
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
+import { ERC20Token, NativeToken } from '~/classes/Token';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -48,6 +48,7 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 
 export type FillListingFormValues = FormState & {
   settings: SlippageSettingsFragment;
@@ -112,7 +113,7 @@ const FillListingV2Form: FC<
 
   /// Token select
   const handleSelectTokens = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       // If the user has typed some existing values in,
       // save them. Add new tokens to the end of the list.
       // FIXME: match sorting of erc20TokenList

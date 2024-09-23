@@ -20,6 +20,8 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
+import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
  * @author Brean
@@ -38,15 +40,15 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0xa1a847b9439cc6a293b68ff7d1ef36cb753e33e94a6d25cbec4369af40764968;
+        0xe8c85107aea17dd6d4330a7a996c8ec23d62aa22f3feb4c97cdd5368e1fa756b;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x0314c9f403409b3af761d6a7591b62d0d9b7424e5288da3d79de67b3d37507cc;
+        0x8d60edfd9ab5f687b1d92f441b577b43d2ad8cb22e66779e6c37e3dc3b91f3e1;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0xf93c255615938ba5f00fac3b427da6dfa313b4d75eff216bbec62dbea2e629a2;
+        0x3b6f4a3ceb1dc34f3a00414b79dcc5c16756093de2e4062e726ec22afd36741c;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0x02ec4c26c5d970fef9bc46f5fc160788669d465da31e9edd37aded2b1c95b6c2;
-    bytes32 internal constant POD_ORDER_MERKLE_ROOT =
-        0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
+        0x6329fea484065f1f62d989fbf443406e3487276c4397ad36e0370f60ffbaa2e5;
+    // bytes32 internal constant POD_ORDER_MERKLE_ROOT =
+    // 0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
@@ -302,8 +304,10 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev Listings are not migrated from contracts (as no bean is
      * locked, and that the listed plot may have been already filled),
      * and will need to be recreated.
+     *
+     * There are no pod orders owned by contracts, so this function is commented out.
      */
-    function issuePodOrders(
+    /*function issuePodOrders(
         address owner,
         L1PodOrder[] memory orders,
         bytes32[] calldata proof
@@ -327,6 +331,7 @@ contract L1RecieverFacet is ReentrancyGuard {
 
         emit L1OrdersMigrated(owner, reciever, orders);
     }
+    */
 
     //////////// MERKLE PROOF VERIFICATION ////////////
 
@@ -402,6 +407,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         return MerkleProof.verify(proof, FERTILIZER_MERKLE_ROOT, leaf);
     }
 
+    /*
+    // no pod orders owned by contracts, commenting this functionality out
     function verifyOrderProof(
         address owner,
         L1PodOrder[] memory orders,
@@ -411,7 +418,7 @@ contract L1RecieverFacet is ReentrancyGuard {
             bytes.concat(keccak256(abi.encode(owner, keccak256(abi.encode(owner, orders)))))
         );
         return MerkleProof.verify(proof, POD_ORDER_MERKLE_ROOT, leaf);
-    }
+    }*/
 
     //////////// MIGRATION HELPERS ////////////
 
@@ -443,14 +450,15 @@ contract L1RecieverFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice adds the migrated deposits to the account.
+     * @notice adds the migrated plots to the account.
+     * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
         address reciever,
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
-        uint256 activeField = s.sys.activeField;
+        uint256 activeField = 0;
         Field storage field = s.accts[reciever].fields[activeField];
         for (uint i; i < index.length; i++) {
             field.plots[index[i]] = pods[i];
@@ -461,6 +469,9 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated internal balances to the account.
+     * Since global internal balances set in ReseedGlobal also reflect smart contract balances,
+     * we do not need to update global internal balances here,
+     * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
         address reciever,
@@ -468,7 +479,9 @@ contract L1RecieverFacet is ReentrancyGuard {
         uint256[] calldata amounts
     ) internal {
         for (uint i; i < tokens.length; i++) {
-            LibBalance.increaseInternalBalance(reciever, IERC20(tokens[i]), amounts[i]);
+            IERC20 token = IERC20(tokens[i]);
+            s.accts[reciever].internalTokenBalance[token] += amounts[i];
+            emit LibBalance.InternalBalanceChanged(reciever, token, SafeCast.toInt256(amounts[i]));
         }
     }
 

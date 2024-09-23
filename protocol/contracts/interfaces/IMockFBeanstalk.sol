@@ -55,7 +55,7 @@ interface IMockFBeanstalk {
         uint32 milestoneSeason;
         int96 milestoneStem;
         bytes1 encodeType;
-        int24 deltaStalkEarnedPerSeason;
+        int32 deltaStalkEarnedPerSeason;
         uint128 gaugePoints;
         uint64 optimalPercentDepositedBdv;
         Implementation gaugePointImplementation;
@@ -751,7 +751,7 @@ interface IMockFBeanstalk {
         uint256 outputTokenAmountInDirectionOfPeg
     ) external view returns (uint256 cumulativePenalty, PenaltyData memory pdCapacity);
 
-    function calculateDeltaBFromReservesE(
+    function calculateDeltaBFromReserves(
         address well,
         uint256[] memory reserves,
         uint256 lookback
@@ -990,6 +990,8 @@ interface IMockFBeanstalk {
     function getAbsTemperatureChangeFromCaseId(uint256 caseId) external view returns (int8 t);
 
     function getActiveFertilizer() external view returns (uint256);
+
+    function getAddressAndStem(uint256 depositId) external pure returns (address token, int96 stem);
 
     function getAllBalance(address account, address token) external view returns (Balance memory b);
 
@@ -1282,6 +1284,8 @@ interface IMockFBeanstalk {
 
     function getSeedGaugeSetting() external view returns (EvaluationParameters memory);
 
+    function getEvaluationParameters() external view returns (EvaluationParameters memory);
+
     function getShipmentRoutes() external view returns (ShipmentRoute[] memory);
 
     function getSiloTokens() external view returns (address[] memory tokens);
@@ -1534,6 +1538,10 @@ interface IMockFBeanstalk {
 
     function mockLiquidityWeight() external pure returns (uint256);
 
+    function mockSetMilestoneStem(address token, int96 stem) external;
+
+    function mockSetMilestoneSeason(address token, uint32 season) external;
+
     function mockSetAverageGrownStalkPerBdvPerSeason(
         uint128 _averageGrownStalkPerBdvPerSeason
     ) external;
@@ -1692,10 +1700,10 @@ interface IMockFBeanstalk {
 
     function pipelineConvert(
         address inputToken,
-        int96[] memory stems,
-        uint256[] memory amounts,
+        int96[] calldata stems,
+        uint256[] calldata amounts,
         address outputToken,
-        AdvancedFarmCall[] memory advancedFarmCalls
+        AdvancedPipeCall[] memory advancedPipeCalls
     )
         external
         payable

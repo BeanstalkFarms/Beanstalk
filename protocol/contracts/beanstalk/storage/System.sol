@@ -48,7 +48,6 @@ struct System {
     uint256 reentrantStatus;
     uint256 farmingStatus;
     address ownerCandidate;
-    uint256 plenty;
     uint128 soil;
     uint128 beanSown;
     uint256 activeField;
@@ -61,7 +60,6 @@ struct System {
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-    mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
     mapping(address => Implementation) oracleImplementation;
@@ -318,10 +316,10 @@ struct AssetSettings {
     int96 milestoneStem; //                 │ 12 (30)
     bytes1 encodeType; //                   │ 1  (31)
     // one byte is left here.             ──┘ 1  (32)
-    int24 deltaStalkEarnedPerSeason; // ────┐ 3
-    uint128 gaugePoints; //                 │ 16 (19)
-    uint64 optimalPercentDepositedBdv; //   │ 8  (27)
-    // 5 bytes are left here.             ──┘ 5  (32)
+    int32 deltaStalkEarnedPerSeason; // ────┐ 4
+    uint128 gaugePoints; //                 │ 16 (20)
+    uint64 optimalPercentDepositedBdv; //   │ 8  (28)
+    // 4 bytes are left here.             ──┘ 4  (32)
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
 }

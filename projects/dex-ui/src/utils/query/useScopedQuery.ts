@@ -1,22 +1,28 @@
-import { AddressIsh } from "./../../types";
-import { QueryKey, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
-import { useAccount, useChainId } from "wagmi";
-import useSdk from "../sdk/useSdk";
 import { useCallback } from "react";
 
-const makeScopedQueryKey = (address: AddressIsh, chainId: number, queryKey: QueryKey) => {
-  const scope = [address || "no-address", chainId];
+import { QueryKey, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
+
+import { AddressIsh } from "src/types";
+
+import { useSdkChainId } from "../chain";
+
+const makeScopedQueryKey = (chainId: number, address: AddressIsh, queryKey: QueryKey) => {
+  const scope = [chainId, address || "no-address"];
   return [scope, ...(typeof queryKey === "string" ? [queryKey] : queryKey)];
 };
 
+/**
+ * A hook that wraps `useQuery` and modifies the queryKey to be scoped to the current chainId && connected account.
+ */
 export function useScopedQuery<
   TQueryFnData,
-  TError,
+  TError = Error,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey
 >(arg: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
   const { address } = useAccount();
-  const chainId = useChainId();
+  const chainId = useSdkChainId();
 
   const { queryKey, ...rest } = arg;
 
@@ -27,8 +33,7 @@ export function useScopedQuery<
     key = queryKey;
   }
 
-  const scopedQueryKey: QueryKey = makeScopedQueryKey(address, chainId, key);
-
+  const scopedQueryKey: QueryKey = makeScopedQueryKey(chainId, address, key);
   const modifiedArguments = {
     ...rest,
     queryKey: scopedQueryKey
@@ -37,27 +42,53 @@ export function useScopedQuery<
   return useQuery(modifiedArguments);
 }
 
-export function useScopedQueryKey<TQueryKey extends QueryKey = QueryKey>(queryKey: TQueryKey) {
-  const { address } = useAccount();
-  const sdk = useSdk();
-
-  return makeScopedQueryKey(address, sdk.chainId, queryKey);
-}
-
+/**
+ * A wrapper hook for queryClient.setQueryData, scoped to the current chainId & connected account.
+ */
 export function useSetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
-  const chainId = useChainId();
+  const chainId = useSdkChainId();
   const { address } = useAccount();
   const queryClient = useQueryClient();
 
   return useCallback(
     <T>(queryKey: TQueryKey, mergeData: (oldData: undefined | void | T) => T) =>
       queryClient.setQueryData(
-        makeScopedQueryKey(address, chainId, queryKey),
+        makeScopedQueryKey(chainId, address, queryKey),
         (oldData: undefined | void | T) => {
           const merged = mergeData(oldData);
           return merged;
         }
       ),
+    [queryClient, address, chainId]
+  );
+}
+
+/**
+ * A wrapper hook for queryClient.getQueryData, scoped to the current chainId & connected account.
+ */
+export function useGetScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useSdkChainId();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    <T>(queryKey: TQueryKey) =>
+      queryClient.getQueryData<T>(makeScopedQueryKey(chainId, address, queryKey)),
+    [queryClient, address, chainId]
+  );
+}
+
+/**
+ * a wrapper hook for queryClient.fetchQuery, scoped to the current chainId & connected account.
+ */
+export function useFetchScopedQueryData<TQueryKey extends QueryKey = QueryKey>() {
+  const chainId = useSdkChainId();
+  const { address } = useAccount();
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    (queryKey: TQueryKey) =>
+      queryClient.fetchQuery({ queryKey: makeScopedQueryKey(chainId, address, queryKey) }),
     [queryClient, address, chainId]
   );
 }

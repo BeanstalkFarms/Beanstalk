@@ -1,14 +1,18 @@
 import React, { useCallback, useRef } from "react";
-import { Token, TokenValue } from "@beanstalk/sdk";
+
 import debounce from "lodash/debounce";
-import { FC } from "src/types";
 import styled, { keyframes } from "styled-components";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
+import { size } from "src/breakpoints";
+import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { FC } from "src/types";
+
 import { BasicInput } from "./BasicInput";
 import { TokenPicker, TokenPickerProps } from "./TokenPicker";
-import { useTokenBalance } from "src/tokens/useTokenBalance";
 import { Spinner } from "../Spinner";
 import { BodyXS } from "../Typography";
-import { size } from "src/breakpoints";
 
 type ContainerProps = {
   width: string;

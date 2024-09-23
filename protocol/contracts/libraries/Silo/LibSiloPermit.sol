@@ -202,7 +202,7 @@ library LibSiloPermit {
         address spender,
         address token,
         uint256 amount
-    ) internal {
+    ) external {
         uint256 currentAllowance = depositAllowance(owner, spender, token);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "Silo: insufficient allowance");
