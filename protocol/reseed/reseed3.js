@@ -1,33 +1,48 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
 
-async function reseed3(account, L2Beanstalk, mock) {
+async function reseed3(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
-  console.log("reseed3: Migrate pod listings and orders in the pod marketplace.\n");
+  console.log("reseed3: re-initialize the field and plots.\n");
 
   // Files
-  let podListingsPath;
-  let podOrdersPath;
+  let farmerPlotsPath;
   if (mock) {
-    podListingsPath = "./reseed/data/mocks/r3/pod-listings-mock.json";
-    podOrdersPath = "./reseed/data/mocks/r3/pod-orders-mock.json";
+    farmerPlotsPath = "./reseed/data/mocks/r3-field-mock.json";
   } else {
-    podListingsPath = "./reseed/data/r3/pod-listings.json";
-    podOrdersPath = "./reseed/data/r3/pod-orders.json";
+    farmerPlotsPath = "./reseed/data/r3-field.json";
   }
-  const podListings = JSON.parse(await fs.readFileSync(podListingsPath));
-  const podOrders = JSON.parse(await fs.readFileSync(podOrdersPath));
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedPodMarket",
-    initArgs: [podListings, podOrders],
-    bip: false,
-    verbose: true,
-    account: account,
-    checkGas: true
-  });
-  console.log("-----------------------------------");
+  // Read and parse the JSON file
+  const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
+
+  targetEntriesPerChunk = 500;
+  plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
+  const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
+  await InitFacet.deployed();
+  console.log(`Starting to process ${plotChunks.length} chunks...`);
+  for (let i = 0; i < plotChunks.length; i++) {
+    await updateProgress(i + 1, plotChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", plotChunks[i]);
+      console.log("-----------------------------------");
+    }
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedField",
+        initFacetAddress: InitFacet.address,
+        initArgs: [plotChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedField"
+      });
+    });
+  }
 }
 
 exports.reseed3 = reseed3;

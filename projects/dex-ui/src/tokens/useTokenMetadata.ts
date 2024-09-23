@@ -1,16 +1,18 @@
-import tokenMetadataJson from 'src/token-metadata.json';
-import { useQuery } from "@tanstack/react-query";
-import { alchemy } from "../utils/alchemy";
+import { useMemo } from "react";
+
 import { TokenMetadataResponse } from "alchemy-sdk";
 
-import { useTokens } from "src/tokens/TokenProvider";
-import { useWells } from "src/wells/useWells";
-import { getIsValidEthereumAddress } from "src/utils/addresses";
-import { queryKeys } from "src/utils/query/queryKeys";
 import { ERC20Token, Token } from "@beanstalk/sdk";
+
 import { images } from "src/assets/images/tokens";
-import { useMemo } from "react";
-import { TokenMetadataMap } from 'src/types';
+import tokenMetadataJson from "src/token-metadata.json";
+import { useTokens } from "src/tokens/useTokens";
+import { TokenMetadataMap } from "src/types";
+import { getIsValidEthereumAddress } from "src/utils/addresses";
+import { alchemy } from "src/utils/alchemy";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import { useWells } from "src/wells/useWells";
 
 const emptyMetas: TokenMetadataResponse = {
   decimals: null,
@@ -47,7 +49,7 @@ export const useTokenImage = (params: string | TokenIsh) => {
     return;
   })();
 
-  const query = useQuery({
+  const query = useChainScopedQuery({
     queryKey: queryKeys.tokenMetadata(address || "invalid"),
     queryFn: async () => {
       const tokenMeta = await alchemy.core.getTokenMetadata(address ?? "");
@@ -62,10 +64,8 @@ export const useTokenImage = (params: string | TokenIsh) => {
 
   if (existingImg) return existingImg;
   if (query?.data?.logo) return query.data.logo;
-  return lpToken ? images.LP : images.DEFAULT;  
-}
-
-
+  return lpToken ? images.LP : images.DEFAULT;
+};
 
 export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataResponse | undefined => {
   const address = (params instanceof Token ? params.address : params || "").toLowerCase();
@@ -86,16 +86,16 @@ export const useTokenMetadata = (params: string | TokenIsh): TokenMetadataRespon
       if (existingToken.symbol) metas.symbol = existingToken.symbol;
       if (existingToken.logo && !existingToken.logo?.includes("DEFAULT.svg")) {
         metas.logo = existingToken.logo;
-      };
+      }
     }
-    
+
     return metas;
   }, [isValidAddress, existingToken]);
 
   const metaValues = Object.values(existingMetas);
   const hasAllMetas = metaValues.length && metaValues.every(Boolean);
 
-  const query = useQuery({
+  const query = useChainScopedQuery({
     queryKey: queryKeys.tokenMetadata(address || "invalid"),
     queryFn: async () => {
       if (!wells?.length) return;

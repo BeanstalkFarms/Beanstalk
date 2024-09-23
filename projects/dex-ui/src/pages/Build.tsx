@@ -1,16 +1,15 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { ButtonPrimary } from "src/components/Button";
 
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
+import { ButtonPrimary } from "src/components/Button";
+import { ComponentLibraryTable } from "src/components/Create/ComponentLibraryTable";
 import { Flex } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { Text } from "src/components/Typography";
-
 import { theme } from "src/utils/ui/theme";
-import styled from "styled-components";
-
-import { ComponentLibraryTable } from "src/components/Create/ComponentLibraryTable";
 
 export const Build = () => {
   const navigate = useNavigate();

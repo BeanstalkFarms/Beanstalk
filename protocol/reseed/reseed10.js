@@ -1,5 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { retryOperation } = require("../utils/read.js");
 
 /**
  * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
@@ -9,9 +10,11 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
   let facets = [
     "SeasonFacet", // SUN
     "SeasonGettersFacet",
+    "GaugeGettersFacet",
     "GaugePointFacet",
     "LiquidityWeightFacet",
     "SiloFacet", // SILO
+    "ClaimFacet",
     "SiloGettersFacet",
     "WhitelistFacet",
     "ApprovalFacet",
@@ -19,6 +22,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "OracleFacet",
     "ConvertFacet", // CONVERT
     "ConvertGettersFacet",
+    "PipelineConvertFacet",
     "MetadataFacet", // METADATA
     "MarketplaceFacet", // MARKET
     "FieldFacet", // FIELD
@@ -35,53 +39,66 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
   ];
 
   // A list of public libraries that need to be deployed separately.
-  let libraryNames = [
+  libraryNames = [
     "LibGauge",
     "LibIncentive",
     "LibConvert",
     "LibLockedUnderlying",
     "LibWellMinting",
     "LibGerminate",
+    "LibPipelineConvert",
+    "LibSilo",
     "LibShipping",
     "LibFlood",
-    "LibSilo",
-    "LibPipelineConvert",
-    "LibUsdOracle",
-    "LibChainlinkOracle",
-    "LibWell"
+    "LibTokenSilo",
+    "LibEvaluate",
+    "LibSiloPermit"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
   // MockFacets will be deployed with the same public libraries.
-  let facetLibraries = {
+  facetLibraries = {
     SeasonFacet: [
       "LibGauge",
       "LibIncentive",
-      "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
       "LibShipping",
-      "LibFlood"
+      "LibFlood",
+      "LibEvaluate"
     ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo", "LibTokenSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
-    L1RecieverFacet: ["LibSilo"]
+    SiloFacet: ["LibSilo", "LibTokenSilo", "LibSiloPermit"],
+    EnrootFacet: ["LibSilo", "LibTokenSilo"],
+    ClaimFacet: ["LibSilo", "LibTokenSilo"],
+    GaugeGettersFacet: ["LibLockedUnderlying"],
+    L1RecieverFacet: ["LibSilo", "LibTokenSilo"]
+  };
+
+  // A mapping of external libraries to external libraries that need to be linked.
+  // note: if a library depends on another library, the dependency will need to come
+  // before itself in `libraryNames`
+  libraryLinks = {
+    LibEvaluate: ["LibLockedUnderlying"]
   };
 
   // upgrade beanstalk with all facets. calls `InitReseed`
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: facets,
-    facetLibraries: facetLibraries,
-    libraryNames: libraryNames,
-    initFacetName: "InitReseed",
-    initArgs: [],
-    bip: false,
-    verbose: verbose,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: facets,
+      facetLibraries: facetLibraries,
+      libraryNames: libraryNames,
+      linkedLibraries: libraryLinks,
+      initFacetName: "InitReseed",
+      initArgs: [],
+      bip: false,
+      verbose: verbose,
+      account: account
+    });
   });
 }
 exports.reseed10 = reseed10;

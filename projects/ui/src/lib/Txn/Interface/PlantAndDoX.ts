@@ -64,6 +64,7 @@ export default class PlantAndDoX {
 
       // asTV => as DepositCrate<TokenValue> from SDK;
       const crate: TokenSiloBalance['deposits'][number] = {
+        id: stem, // TODO: fix me
         stem: stem,
         // season: ethers.BigNumber.from(season),
         amount: earnedBeans,
@@ -93,6 +94,7 @@ export default class PlantAndDoX {
       const seeds = BEAN.getSeeds(earnedTV);
 
       const crate: LegacyDepositCrate = {
+        id: stem, // TODO: fix me
         amount: earnedBeans,
         stem: stem,
         bdv: earnedBeans,

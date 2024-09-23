@@ -16,7 +16,7 @@ import {C} from "contracts/C.sol";
  */
 contract ReseedInternalBalances {
     AppStorage internal s;
-    event InternalBalanceMigrated(address indexed user, IERC20 indexed token, int256 delta);
+    event InternalBalanceMigrated(address indexed account, IERC20 indexed token, int256 delta);
 
     struct BeanstalkInternalBalance {
         address farmer;

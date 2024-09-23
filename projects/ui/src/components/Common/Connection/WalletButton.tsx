@@ -131,9 +131,13 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
       >
         <Row sx={{ width: '100%' }} justifyContent="space-between">
           <Row gap={1}>
-            <img src={etherscanIcon} alt="Etherscan" width={20} />
+            <img
+              src={chain.explorerLogoUrl || etherscanIcon}
+              alt="Etherscan"
+              width={20}
+            />
             <Typography variant="body1" color="text.primary">
-              View on Etherscan
+              View on {chain.explorerName}
             </Typography>
           </Row>
           <ArrowForwardIcon

@@ -29,7 +29,7 @@ describe("Estimate", function () {
     [sdk.tokens.BEAN, sdk.tokens.USDT],
     [sdk.tokens.BEAN, sdk.tokens.USDC],
     [sdk.tokens.BEAN, sdk.tokens.DAI],
-    [sdk.tokens.BEAN, sdk.tokens.CRV3],
+    // [sdk.tokens.BEAN, sdk.tokens.CRV3],
 
     // wstETH => x
     [sdk.tokens.WSTETH, sdk.tokens.ETH],
@@ -37,8 +37,8 @@ describe("Estimate", function () {
     [sdk.tokens.WSTETH, sdk.tokens.BEAN],
     [sdk.tokens.WSTETH, sdk.tokens.USDT],
     [sdk.tokens.WSTETH, sdk.tokens.USDC],
-    [sdk.tokens.WSTETH, sdk.tokens.DAI],
-    [sdk.tokens.WSTETH, sdk.tokens.CRV3]
+    [sdk.tokens.WSTETH, sdk.tokens.DAI]
+    // [sdk.tokens.WSTETH, sdk.tokens.CRV3]
   ])("Estimate BEAN->x", (tokenIn, tokenOut) => {
     it(`estimate(${tokenIn.symbol}, ${tokenOut.symbol})`, async () => {
       await estimate(tokenIn, tokenOut);

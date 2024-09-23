@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { Well } from "@beanstalk/sdk/Wells";
+
 import { Token, TokenValue } from "@beanstalk/sdk";
 
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
+
 import { loadHistory } from "./historyLoader";
-import { Well } from "@beanstalk/sdk/Wells";
 
 export enum EVENT_TYPE {
   SWAP,
@@ -38,12 +40,12 @@ export type AddEvent = BaseEvent & {
 };
 export type RemoveEvent = AddEvent;
 
-export type WellEvent = SwapEvent | AddEvent | RemoveEvent | ShiftEvent ;
+export type WellEvent = SwapEvent | AddEvent | RemoveEvent | ShiftEvent;
 
 const useWellHistory = (well: Well) => {
   const sdk = useSdk();
 
-  return useQuery({
+  return useChainScopedQuery({
     queryKey: ["wells", "history", well.address],
 
     queryFn: async () => {

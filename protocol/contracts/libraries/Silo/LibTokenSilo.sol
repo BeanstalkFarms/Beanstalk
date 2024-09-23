@@ -237,7 +237,7 @@ library LibTokenSilo {
         address token,
         int96 stem,
         uint256 amount
-    ) internal returns (uint256 stalk, GerminationSide) {
+    ) external returns (uint256 stalk, GerminationSide) {
         uint256 bdv = beanDenominatedValue(token, amount);
         return depositWithBDV(account, token, stem, amount, bdv);
     }
@@ -289,7 +289,7 @@ library LibTokenSilo {
         uint256 amount,
         uint256 bdv,
         Transfer transferType
-    ) internal {
+    ) public {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 depositId = LibBytes.packAddressAndStem(token, stem);
 

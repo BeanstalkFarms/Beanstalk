@@ -1,8 +1,7 @@
-const { impersonateSigner } = require("../utils/index.js");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-const { deployMockToken, getWellContractAt } = require("../utils/well.js");
-const { deployBasinV1_2Components, deployUpgradeableWell } = require("../scripts/basinV1_2.js");
+const { retryOperation } = require("../utils/read.js");
+const { L2_FERTILIZER } = require("../test/hardhat/utils/constants.js");
 
 // Files
 const INIT_SUPPLY = "./reseed/data/r2/L2_initial_supply.json";
@@ -15,7 +14,7 @@ const EXTERNAL_UNRIPE_BEAN_LP = "./reseed/data/r2/L2_external_unripe_lp_balances
  * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
  * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
  */
-async function reseed2(account, L2Beanstalk, deployBasin = false, fertilizerImplementation, mock) {
+async function reseed2(account, L2Beanstalk, mock, verbose) {
   verbose = true;
   console.log("-----------------------------------");
   console.log("reseed2: deploy bean tokens.\n");
@@ -26,36 +25,32 @@ async function reseed2(account, L2Beanstalk, deployBasin = false, fertilizerImpl
   externalUrBean = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE_BEAN));
   externalUrBeanLP = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE_BEAN_LP));
 
-  if (deployBasin) {
-    [uWell, stable2] = await deployBasinV1_2Components();
-    console.log("uWell:", uWell.address);
-    console.log("stable2:", stable2.address);
-  }
-
   // get the bean sided liquidity from the L1 wells to mint it to the bcm.
   const beansInBeanEthWell = balancesInBeanEthWell[0];
   const beansInBeanWstEthWell = balancesInBeanWstEthWell[0];
   const beansInBeanStableWell = balancesInBeanStableWell[0];
 
   // call init:
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedBean",
-    initArgs: [
-      beanSupply,
-      unripeBeanSupply,
-      unripeLpSupply,
-      beansInBeanEthWell,
-      beansInBeanWstEthWell,
-      beansInBeanStableWell,
-      externalUrBean,
-      externalUrBeanLP,
-      fertilizerImplementation
-    ],
-    bip: false,
-    verbose: false,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedBean",
+      initArgs: [
+        beanSupply,
+        unripeBeanSupply,
+        unripeLpSupply,
+        beansInBeanEthWell,
+        beansInBeanWstEthWell,
+        beansInBeanStableWell,
+        externalUrBean,
+        externalUrBeanLP,
+        L2_FERTILIZER
+      ],
+      bip: false,
+      verbose: false,
+      account: account
+    });
   });
 
   console.log("-----------------------------------");

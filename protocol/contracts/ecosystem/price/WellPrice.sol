@@ -33,6 +33,7 @@ contract WellPrice {
     constructor(address _beanstalk) {
         beanstalk = IBeanstalk(_beanstalk);
     }
+
     uint256 private constant WELL_DECIMALS = 1e18;
     uint256 private constant PRICE_PRECISION = 1e6;
 
@@ -60,6 +61,7 @@ contract WellPrice {
         pool.tokens = [address(wellTokens[0]), address(wellTokens[1])];
 
         uint256[] memory wellBalances = well.getReserves();
+        if (wellBalances[0] == 0 || wellBalances[1] == 0) return pool;
         pool.balances = [wellBalances[0], wellBalances[1]];
 
         uint256 beanIndex = beanstalk.getBeanIndex(wellTokens);
@@ -78,9 +80,14 @@ contract WellPrice {
         // liquidity is calculated by getting the usd value of the bean portion of the pool,
         // and multiplying by 2 to get the total liquidity of the pool.
         pool.liquidity = pool.balances[beanIndex].mul(pool.price).mul(2).div(PRICE_PRECISION);
-
-        pool.deltaB = beanstalk.poolCurrentDeltaB(wellAddress);
-        pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
+        // attempt to get deltaB, if it fails, set deltaB to 0.
+        try beanstalk.poolCurrentDeltaB(wellAddress) returns (int256 deltaB) {
+            pool.deltaB = deltaB;
+        } catch {}
+        uint256 totalSupply = IERC20(wellAddress).totalSupply();
+        if (totalSupply > 0) {
+            pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(totalSupply);
+        }
         try beanstalk.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
             pool.lpBdv = bdv;
         } catch {}

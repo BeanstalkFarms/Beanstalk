@@ -13,7 +13,6 @@ import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -118,7 +117,7 @@ contract ReseedBean {
 
     // Fertilizer
     bytes32 internal constant FERTILIZER_PROXY_SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000000;
+        0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70fb8fe6ecbb7a4fead78f65ee;
 
     // BCM (TODO: Replace with actual L2 address)
     address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
@@ -164,8 +163,6 @@ contract ReseedBean {
         );
         // init token:
         s.sys.tokens.fertilizer = address(fertilizerProxy);
-        console.log("Fertilizer Proxy deployed at: ", address(fertilizerProxy));
-        console.log("Fertilizer Proxy implementation: ", fertImplementation);
     }
 
     function mintBeansToBCM(
@@ -188,7 +185,6 @@ contract ReseedBean {
         );
         s.sys.tokens.bean = address(bean);
         bean.mint(address(this), supply);
-        console.log("Bean deployed at: ", address(bean));
         return bean;
     }
 
@@ -203,7 +199,6 @@ contract ReseedBean {
         );
         s.sys.tokens.urBean = address(unripeBean);
         unripeBean.mint(address(this), supply);
-        console.log("Unripe Bean deployed at: ", address(unripeBean));
 
         for (uint i; i < externalUrBean.length; i++) {
             unripeBean.mint(externalUrBean[i].account, externalUrBean[i].amount);
@@ -222,7 +217,6 @@ contract ReseedBean {
         );
         s.sys.tokens.urLp = address(unripeLP);
         unripeLP.mint(address(this), supply);
-        console.log("Unripe LP deployed at: ", address(unripeLP));
 
         for (uint i; i < externalUrLP.length; i++) {
             unripeLP.mint(externalUrLP[i].account, externalUrLP[i].amount);
@@ -262,8 +256,6 @@ contract ReseedBean {
                 abi.encodeCall(IWellUpgradeable.init, (name, symbol))
             )
         );
-
-        console.log("Well Proxy for token pair %s deployed at: %s", name, wellProxy);
     }
 
     function deployUpgradableWells(address bean) internal {

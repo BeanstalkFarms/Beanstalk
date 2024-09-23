@@ -220,14 +220,8 @@ contract TestHelper is
             MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
         }
 
-        uint256 beanWellBalance = IERC20(BEAN).balanceOf(well);
-        console.log("bean well balance", beanWellBalance);
-        uint256 wbtcWellBalance = IERC20(WBTC).balanceOf(well);
-        console.log("wbtc well balance", wbtcWellBalance);
-
-        console.log("syncing");
         lpOut = IWell(well).sync(user, 0);
-        console.log("syncing again");
+
         // sync again to update reserves.
         IWell(well).sync(user, 0);
     }

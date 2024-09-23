@@ -176,6 +176,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice outputs the token and stem given a depositId.
+     */
+    function getAddressAndStem(
+        uint256 depositId
+    ) external pure returns (address token, int96 stem) {
+        return LibBytes.unpackAddressAndStem(depositId);
+    }
+
+    /**
      * @notice returns the bean denominated value ("bdv") of a token amount.
      */
     function bdv(address token, uint256 amount) public view returns (uint256 _bdv) {
