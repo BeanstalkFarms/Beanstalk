@@ -57,7 +57,7 @@ export class PipelineConvert {
     sourceWell: BasinWell,
     targetWell: BasinWell,
     amountIn: TokenValue,
-    slippage: number
+    swapSlippage: number
   ): Promise<{
     fromWellAmountsOut: TokenValue[];
     toWellAmountsIn: TokenValue[];
@@ -74,28 +74,37 @@ export class PipelineConvert {
     if (amountIn.lte(0)) {
       throw new Error("Cannot convert 0 or less tokens");
     }
-    if (slippage < 0) {
+    if (swapSlippage < 0) {
       throw new Error("Invalid slippage");
     }
 
     PipelineConvert.sdk.debug("[PipelineConvert] estimateRemoveEqual2AddEqual", {
-      sourceWell: sourceWell.address,
-      targetWell: targetWell.address,
+      sourceWell: sourceWell,
+      targetWell: targetWell,
       amountIn: amountIn.toHuman(),
-      slippage
+      swapSlippage
     });
 
-    const BEAN = PipelineConvert.sdk.tokens.BEAN;
-    const sourceWellBeanIndex = sourceWell.tokens.findIndex((t) => t.equals(BEAN));
-    const targetWellBeanIndex = targetWell.tokens.findIndex((t) => t.equals(BEAN));
+    const sourceIndexes = sourceWell.getBeanWellTokenIndexes();
+    const targetIndexes = targetWell.getBeanWellTokenIndexes();
 
-    const [outIndex0, outIndex1] = await sourceWell.getRemoveLiquidityOutEqual(amountIn);
+    const removeAmountsOut = await sourceWell.getRemoveLiquidityOutEqual(amountIn);
 
-    const sellToken = sourceWell.tokens[sourceWellBeanIndex === 0 ? 1 : 0];
-    const buyToken = targetWell.tokens[targetWellBeanIndex === 0 ? 1 : 0];
+    const sellToken = sourceWell.tokens[sourceIndexes.nonBean];
+    const buyToken = targetWell.tokens[targetIndexes.nonBean];
 
-    const sellAmount = sourceWellBeanIndex === 0 ? outIndex1 : outIndex0;
-    const beanAmount = sourceWellBeanIndex === 0 ? outIndex0 : outIndex1;
+    const sellAmount = removeAmountsOut[sourceIndexes.nonBean];
+    const beanAmount = removeAmountsOut[sourceIndexes.bean];
+
+    PipelineConvert.sdk.debug("[PipelineConvert] removeLiquidityQuote + Prepare swap quote", {
+      removeAmountsOut,
+      swap: {
+        buyToken,
+        sellToken,
+        sellAmount,
+        beanAmount
+      }
+    });
 
     const quote = await PipelineConvert.sdk.zeroX.fetchSwapQuote({
       sellToken: sellToken.address,
@@ -104,13 +113,13 @@ export class PipelineConvert {
       takerAddress: PipelineConvert.sdk.contracts.pipeline.address,
       shouldSellEntireBalance: true,
       skipValidation: true,
-      slippagePercentage: slippage.toString()
+      slippagePercentage: swapSlippage.toString()
     });
 
     const buyAmount = buyToken.fromBlockchain(quote.buyAmount);
 
     const toWellAmountsIn = [beanAmount, buyAmount];
-    if (sourceWellBeanIndex === 0) {
+    if (targetIndexes.bean !== 0) {
       toWellAmountsIn.reverse();
     }
 
@@ -119,7 +128,8 @@ export class PipelineConvert {
     const advPipeCalls = this.buildRemoveEqual2AddEqualAdvancedPipe({
       source: {
         well: sourceWell,
-        amountIn: amountIn
+        amountIn: amountIn,
+        minAmountsOut: removeAmountsOut
       },
       swap: {
         buyToken: buyToken,
@@ -152,6 +162,7 @@ export class PipelineConvert {
     source: {
       well: BasinWell;
       amountIn: TokenValue;
+      minAmountsOut: TokenValue[];
     };
     swap: {
       buyToken: ERC20Token;
@@ -181,8 +192,8 @@ export class PipelineConvert {
       PipelineConvert.snippets.removeLiquidity(
         source.well,
         source.amountIn,
-        [TokenValue.ZERO, TokenValue.ZERO],
-        source.well.lpToken.address
+        source.minAmountsOut,
+        PipelineConvert.sdk.contracts.pipeline.address
       )
     );
 
@@ -201,7 +212,7 @@ export class PipelineConvert {
       PipelineConvert.snippets.erc20Transfer(
         swap.buyToken,
         target.well.address,
-        target.amountOut,
+        TokenValue.ZERO, // overriden w/ clipboard
         Clipboard.encodeSlot(3, 0, 1)
       )
     );
@@ -211,7 +222,7 @@ export class PipelineConvert {
       PipelineConvert.snippets.erc20Transfer(
         source.well.tokens[sellTokenIndex === 1 ? 0 : 1],
         target.well.address,
-        TokenValue.MAX_UINT256, // set to max uint256 to ensure transfer succeeds
+        TokenValue.MAX_UINT256, // overriden w/ clipboard
         Clipboard.encodeSlot(1, 2, 1)
       )
     );
@@ -221,7 +232,7 @@ export class PipelineConvert {
       PipelineConvert.snippets.wellSync(
         target.well,
         PipelineConvert.sdk.contracts.pipeline.address, // set recipient to pipeline
-        target.amountOut
+        target.amountOut // min LP Out
       )
     );
 
@@ -229,17 +240,14 @@ export class PipelineConvert {
   }
 
   // ---------- static methods ----------
-  /**
-   * building blocks for the advanced pipe calls
-   */
   private static snippets = {
     // ERC20 Token Methods
-    erc20Approve: function (
+    erc20Approve: (
       token: ERC20Token,
       spender: string,
       amount: TokenValue = TokenValue.MAX_UINT256,
       clipboard: string = Clipboard.encode([])
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: token.address,
         callData: token
@@ -248,12 +256,12 @@ export class PipelineConvert {
         clipboard
       };
     },
-    erc20Transfer: function (
+    erc20Transfer: (
       token: ERC20Token,
       recipient: string,
       amount: TokenValue,
       clipboard: string = Clipboard.encode([])
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: token.address,
         callData: token
@@ -262,33 +270,33 @@ export class PipelineConvert {
         clipboard
       };
     },
-    // Well Methods
-    removeLiquidity: function (
+    // // Well Methods
+    removeLiquidity: (
       well: BasinWell,
       amountIn: TokenValue,
       minAmountsOut: TokenValue[],
       recipient: string,
       clipboard: string = Clipboard.encode([])
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: well.address,
         callData: well
           .getContract()
           .interface.encodeFunctionData("removeLiquidity", [
             amountIn.toBigNumber(),
-            minAmountsOut.map((a) => a.toBigNumber()),
+            minAmountsOut.map((v) => v.toBigNumber()),
             recipient,
             ethers.constants.MaxUint256
           ]),
         clipboard: clipboard
       };
     },
-    wellSync: function (
+    wellSync: (
       well: BasinWell,
       recipient: string,
       amount: TokenValue,
       clipboard: string = Clipboard.encode([])
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: well.address,
         callData: well
@@ -298,11 +306,11 @@ export class PipelineConvert {
       };
     },
     // Junction methods
-    gte: function (
+    gte: (
       value: TokenValue,
       compareTo: TokenValue,
       clipboard: string = Clipboard.encode([])
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: PipelineConvert.sdk.contracts.junction.address,
         // value >= compare
@@ -313,10 +321,10 @@ export class PipelineConvert {
         clipboard
       };
     },
-    check: function (
+    check: (
       // index of the math or logic operation in the pipe
       index: number
-    ): AdvancedPipeCallStruct {
+    ): AdvancedPipeCallStruct => {
       return {
         target: PipelineConvert.sdk.contracts.junction.address,
         callData: PipelineConvert.sdk.contracts.junction.interface.encodeFunctionData("check", [
