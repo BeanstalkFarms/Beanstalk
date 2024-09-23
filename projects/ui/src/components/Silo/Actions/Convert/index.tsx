@@ -28,7 +28,8 @@ import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { DefaultConvertForm } from './DefaultConvertForm';
-import { PipelineConvertForm } from './PipelineConvertForm';
+import { PipelineConvertFormV2 } from './PipelineconvertFormV2';
+// import { PipelineConvertForm } from './PipelineConvertForm';
 import {
   BaseConvertFormProps,
   ConvertFormSubmitHandler,
@@ -110,7 +111,7 @@ const PipelineConvertFormWrapper = (props: Props) => {
     stalk: TokenValue.ZERO,
   });
 
-  return <PipelineConvertForm {...props} />;
+  return <PipelineConvertFormV2 {...props} />;
 };
 
 // ---------- Convert Form Router ----------
@@ -321,16 +322,16 @@ function usePipelineConvertSubmitHandler({
           throw new Error('Could not find any crates to convert');
         }
 
-        farm.add(
-          new sdk.farm.actions.PipelineConvert(
-            tokenIn as ERC20Token,
-            crates.map((c) => c.stem),
-            crates.map((c) => c.amount.toBigNumber()),
-            tokenOut as ERC20Token,
-            amountOut,
-            advPipeStructs
-          )
-        );
+        // farm.add(
+        //   new sdk.farm.actions.PipelineConvert(
+        //     tokenIn as ERC20Token,
+        //     crates.map((c) => c.stem),
+        //     crates.map((c) => c.amount.toBigNumber()),
+        //     tokenOut as ERC20Token,
+        //     amountOut,
+        //     advPipeStructs
+        //   )
+        // );
 
         const gasEstimate = await farm.estimateGas(amountIn, { slippage });
         const adjustedGas = Math.round(gasEstimate.toNumber() * 1.2).toString();
