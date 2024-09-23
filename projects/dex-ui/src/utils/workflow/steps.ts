@@ -1,5 +1,6 @@
-import { TokenValue } from "@beanstalk/sdk";
 import { ethers } from "ethers";
+
+import { TokenValue } from "@beanstalk/sdk";
 
 export const makeLocalOnlyStep = (name: string, frontRunAmount?: TokenValue) => {
   const step = async (amountInStep: ethers.BigNumber) => {

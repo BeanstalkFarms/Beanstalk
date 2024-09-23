@@ -289,7 +289,7 @@ const TxnStep: FC<{
       step = (
         <IconRow>
           <TokenIcon
-            token={WSTETH[SupportedChainId.MAINNET]}
+            token={WSTETH[SupportedChainId.ETH_MAINNET]}
             css={{ height: '100%', marginTop: 0 }}
           />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />

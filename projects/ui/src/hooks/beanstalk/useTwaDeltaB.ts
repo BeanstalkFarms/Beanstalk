@@ -29,7 +29,7 @@ const useTwaDeltaB = () => {
   const query = useQuery({
     queryKey: ['beanstalk', 'twaDeltaB', season.toString()],
     queryFn: async () => {
-      const whitelist = sdk.tokens.siloWhitelistedWellLPAddresses;
+      const whitelist = sdk.tokens.siloWhitelistAddresses;
 
       const results = await multicall(config, {
         contracts: makeMultiCall(sdk.contracts.beanstalk.address, whitelist),

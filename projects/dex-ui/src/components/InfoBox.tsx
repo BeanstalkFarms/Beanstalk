@@ -1,8 +1,11 @@
 import React from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
-import { BodyS, BodyXS } from "./Typography";
+
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
+import { BodyS, BodyXS } from "./Typography";
 
 interface Composition {
   Header: typeof Header;

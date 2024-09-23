@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "../C.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title LibIncentive
@@ -25,9 +25,6 @@ library LibIncentive {
     /// @dev The Sunrise reward reaches its maximum after this many seconds elapse.
     uint256 internal constant MAX_SECONDS_LATE = 300;
 
-    /// @dev Base BEAN reward to cover cost of operating a bot.
-    uint256 internal constant BASE_REWARD = 5e6; // 5 BEAN
-
     /// @dev `sunriseReward` is precomputed in {fracExp} using this precision.
     uint256 private constant FRAC_EXP_PRECISION = 1e6;
 
@@ -36,7 +33,8 @@ library LibIncentive {
     /**
      * @param secondsLate The number of seconds late that {sunrise()} was called.
      */
-    function determineReward(uint256 secondsLate) external pure returns (uint256) {
+    function determineReward(uint256 secondsLate) external view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // Cap the maximum number of seconds late. If the sunrise is later than
         // this, Beanstalk will pay the same amount. Prevents unbounded return value.
         if (secondsLate > MAX_SECONDS_LATE) {
@@ -46,7 +44,7 @@ library LibIncentive {
         // Scale the reward up as the number of seconds after expected sunrise increases.
         // `sunriseReward * (1 + 1/100)^(seconds late)`
         // NOTE: 1.01^(300) = 19.78, This is the maximum multiplier.
-        return fracExp(BASE_REWARD, secondsLate);
+        return fracExp(s.sys.evaluationParameters.baseReward, secondsLate);
     }
 
     //////////////////// MATH UTILITIES ////////////////////

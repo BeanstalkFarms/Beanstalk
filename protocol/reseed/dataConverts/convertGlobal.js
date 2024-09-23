@@ -4,6 +4,17 @@ const { convertToBigNum } = require("../../utils/read.js");
 function parseGlobals(inputFilePath, outputFilePath) {
   const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
 
+  // Sort silo tokens alphabetically
+  const sortedSiloTokens = Object.keys(
+    data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }
+  ).sort();
+
+  // Create an object of sorted balances
+  const sortedBalances = sortedSiloTokens.reduce((acc, token) => {
+    acc[token] = data.silo?.balances[token] || { deposited: "0", depositedBdv: "0" };
+    return acc;
+  }, {});
+
   const result = [
     // SystemInternalBalances
     [
@@ -34,22 +45,24 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.silo?.roots ? convertToBigNum(data.silo.roots) : "0",
       data.silo?.earnedBeans ? convertToBigNum(data.silo.earnedBeans) : "0",
       data.orderLockedBeans ? convertToBigNum(data.orderLockedBeans) : "0",
-      Object.keys(data.silo?.balances || { "0x0000000000000000000000000000000000000000": {} }),
-      Object.values(
-        data.silo?.balances || {
-          "0x0000000000000000000000000000000000000000": { deposited: "0", depositedBdv: "0" }
-        }
-      ).map((balance) => [
+      // all silo tokens
+      sortedSiloTokens,
+      // all silo balances (now sorted to match tokens)
+      Object.values(sortedBalances).map((balance) => [
         convertToBigNum(balance.deposited),
         convertToBigNum(balance.depositedBdv)
       ]),
+      // unripeSettings
       Object.entries(
         data.silo?.unripeSettings || {
-          "0x0000000000000000000000000000000000000000": { balanceOfUnderlying: "0" }
+          "0x0000000000000000000000000000000000000000": {
+            underlyingToken: "0x0000000000000000000000000000000000000000",
+            balanceOfUnderlying: "0"
+          }
         }
       ).map(([token, settings]) => [
-        token,
-        settings.balanceOfUnderlying ? convertToBigNum(settings.balanceOfUnderlying) : "0"
+        settings.underlyingToken, // Extract the underlying token
+        settings.balanceOfUnderlying ? convertToBigNum(settings.balanceOfUnderlying) : "0" // Extract and convert balanceOfUnderlying
       ]),
       Object.entries(data.silo?.germinating?.["0"] || {}).map(([_, { amount, bdv }]) => [
         convertToBigNum(amount),
@@ -116,44 +129,68 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.rain?.roots ? convertToBigNum(data.rain.roots) : "0",
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
-    // EvaluationParameters
+    // seedGaugeSettings
+    // [
+    //   data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
+    //     ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
+    //     : "0",
+    //   data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
+    //     ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
+    //     : "0",
+    //   data.seedGaugeSettings?.targetSeasonsToCatchUp
+    //     ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateOptimal
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
+    //     : "0",
+    //   data.seedGaugeSettings?.podRateUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.deltaPodDemandLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.deltaPodDemandUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioUpperBound
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioOptimal
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
+    //     : "0",
+    //   data.seedGaugeSettings?.lpToSupplyRatioLowerBound
+    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
+    //     : "0",
+    //   data.seedGaugeSettings?.excessivePriceThreshold
+    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+    //     : "0",
+    //   data.seedGaugeSettings?.soilCoefficientHigh
+    //     ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
+    //     : "0",
+    //   data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
+    //   data.seedGaugeSettings?.excessivePriceThreshold
+    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
+    //     : "0"
+    // ],
     [
-      data.evaluationParameters?.maxBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.maxBeanMaxLpGpPerBdvRatio)
-        : "0",
-      data.evaluationParameters?.minBeanMaxLpGpPerBdvRatio
-        ? convertToBigNum(data.evaluationParameters.minBeanMaxLpGpPerBdvRatio)
-        : "0",
-      data.evaluationParameters?.targetSeasonsToCatchUp
-        ? convertToBigNum(data.evaluationParameters.targetSeasonsToCatchUp)
-        : "0",
-      data.evaluationParameters?.podRateLowerBound
-        ? convertToBigNum(data.evaluationParameters.podRateLowerBound)
-        : "0",
-      data.evaluationParameters?.podRateOptimal
-        ? convertToBigNum(data.evaluationParameters.podRateOptimal)
-        : "0",
-      data.evaluationParameters?.podRateUpperBound
-        ? convertToBigNum(data.evaluationParameters.podRateUpperBound)
-        : "0",
-      data.evaluationParameters?.deltaPodDemandLowerBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandLowerBound)
-        : "0",
-      data.evaluationParameters?.deltaPodDemandUpperBound
-        ? convertToBigNum(data.evaluationParameters.deltaPodDemandUpperBound)
-        : "0",
-      data.evaluationParameters?.lpToSupplyRatioUpperBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioUpperBound)
-        : "0",
-      data.evaluationParameters?.lpToSupplyRatioOptimal
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioOptimal)
-        : "0",
-      data.evaluationParameters?.lpToSupplyRatioLowerBound
-        ? convertToBigNum(data.evaluationParameters.lpToSupplyRatioLowerBound)
-        : "0",
-      data.evaluationParameters?.excessivePriceThreshold
-        ? convertToBigNum(data.evaluationParameters.excessivePriceThreshold)
-        : "0"
+      "100000000000000000000",
+      "50000000000000000000",
+      "4320",
+      "50000000000000000",
+      "150000000000000000",
+      "250000000000000000",
+      "950000000000000000",
+      "1050000000000000000",
+      "800000000000000000",
+      "40000000000000000",
+      "12000000000000000",
+      "1050000",
+      "500000000000000000",
+      "1500000000000000000",
+      "5000000"
     ],
     // ShipmentRoute
     data.shipmentRoutes.length
@@ -167,7 +204,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
   ];
 
   fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
-  console.log("JSON has been written successfully");
+  console.log("Globals JSON has been written successfully");
 }
 
 exports.parseGlobals = parseGlobals;

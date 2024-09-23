@@ -210,14 +210,31 @@ contract TestHelper is
     ) internal returns (uint256 lpOut) {
         (address nonBeanToken, ) = bs.getNonBeanTokenAndIndexFromWell(well);
 
-        // mint and sync.
-        MockToken(BEAN).mint(well, beanAmount);
-        MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        if (runningOnFork()) {
+            console.log("dealing tokens on fork");
+            deal(address(BEAN), well, beanAmount, true);
+            deal(address(nonBeanToken), well, nonBeanTokenAmount, true);
+        } else {
+            // mint and sync.
+            MockToken(BEAN).mint(well, beanAmount);
+            MockToken(nonBeanToken).mint(well, nonBeanTokenAmount);
+        }
 
         lpOut = IWell(well).sync(user, 0);
 
         // sync again to update reserves.
         IWell(well).sync(user, 0);
+    }
+
+    function runningOnFork() public view returns (bool) {
+        bool isForked;
+
+        try vm.activeFork() returns (uint256) {
+            isForked = true;
+        } catch {
+            isForked = false;
+        }
+        return isForked;
     }
 
     /**

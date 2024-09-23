@@ -23,7 +23,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     /**
      * @notice emitted when {EvaluationParameters} is updated.
      */
-    event UpdatedSeedGaugeSettings(EvaluationParameters);
+    event UpdatedEvaluationParameters(EvaluationParameters);
 
     /**
      * @notice Removes a token from the Silo Whitelist.
@@ -42,113 +42,30 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
      * @param selector The function selector that is used to calculate the BDV of the token.
      * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
      * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
-     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
-     * @param liquidityWeightSelector The function selector that outputs the liquidity weight of the token.
-     * @param gaugePoints The initial gauge points allocated to the token.
-     * @param optimalPercentDepositedBdv The target percentage
-     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
-     * @dev
-     * Can only be called by Beanstalk or Beanstalk owner.
-     * Assumes an `encodeType` of 0.
-     * Assumes the token uses a gaugePoint, LiquidityWeight, and oracle implementation in the beanstalk contract.
-     * Non standard implementations should use {whitelistTokenWithExternalImplementation}
-     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
-     * as the Silo is not compatible with these tokens.
-     */
-    function whitelistToken(
-        address token,
-        bytes4 selector,
-        uint48 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason,
-        bytes4 gaugePointSelector,
-        bytes4 liquidityWeightSelector,
-        uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv,
-        Implementation memory oracleImplementation
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.whitelistToken(
-            token,
-            selector,
-            stalkIssuedPerBdv,
-            stalkEarnedPerSeason,
-            0x00,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            gaugePoints,
-            optimalPercentDepositedBdv,
-            oracleImplementation
-        );
-    }
-
-    /**
-     * @notice Adds a token to the Silo Whitelist with an `encodeType`
-     * @param token Address of the token that is being Whitelisted.
-     * @param selector The function selector that is used to calculate the BDV of the token.
-     * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
-     * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
      * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
-     * @param gaugePointSelector The function selector that is used to calculate the Gauge Points of the token.
-     * @param gaugePoints The initial gauge points allocated to the token.
-     * @param optimalPercentDepositedBdv The target percentage
-     * of the total LP deposited BDV for this token. Only used if the token is an LP token.
-     *
-     * @dev Can only be called by Beanstalk or Beanstalk owner.
-     * Note: The Beanstalk DAO should not whitelist Fee-on-transfer or rebasing tokens,
-     * as the Silo is not compatible with these tokens.
-     */
-    function whitelistTokenWithEncodeType(
-        address token,
-        bytes4 selector,
-        uint48 stalkIssuedPerBdv,
-        uint32 stalkEarnedPerSeason,
-        bytes1 encodeType,
-        bytes4 gaugePointSelector,
-        bytes4 liquidityWeightSelector,
-        uint128 gaugePoints,
-        uint64 optimalPercentDepositedBdv,
-        Implementation memory oracleImplementation
-    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
-        LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.whitelistToken(
-            token,
-            selector,
-            stalkIssuedPerBdv,
-            stalkEarnedPerSeason,
-            encodeType,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            gaugePoints,
-            optimalPercentDepositedBdv,
-            oracleImplementation
-        );
-    }
-
-    /**
-     * @notice Adds a token to the Silo Whitelist with an external implementation.
-     * @param token Address of the token that is being Whitelisted.
-     * @param selector The function selector that is used to calculate the BDV of the token.
-     * @param stalkIssuedPerBdv The amount of Stalk issued per BDV on Deposit.
-     * @param stalkEarnedPerSeason The amount of Stalk earned per Season for each Deposited BDV.
-     * @param encodeType The encode type that should be used to encode the BDV function call. See {LibTokenSilo.beanDenominatedValue}.
+     * @param gaugePoints The initial gauge points for the token.
+     * @param optimalPercentDepositedBdv The optimal percent of deposited BDV for the token.
      * @param oracleImplementation The implementation of the oracle that should be used to fetch the token price.
      * @param gaugePointImplementation The implementation of the gauge point function that should be used to calculate the gauge points.
      * @param liquidityWeightImplementation The implementation of the liquidity weight function that should be used to calculate the liquidity weight.
+     *
      * @dev If the implementation addresses are 0, then beanstalk calls the selector on itself.
      * See {LibWhitelist.whitelistTokenWithExternalImplementation} for more info on implementation.
      * The selector MUST be a view function that returns an uint256 for all implementation.
      * The oracleImplementation selector should take:
      *  - `lookback` parameter
+     *  - `decimals` parameter
      *  (foo(uint256)).
      * The gaugePointImplementation selector should take:
      *  - current gauge points,
      *  - optimal deposited bdv,
      *  - percent depositedbdv
-     * (foo(uint256, uint256, uint256)).
-     * The liquidityWeightImplementation selector should take no parameters.
-     * (foo()).
+     *  - percent bytes
+     * (foo(uint256, uint256, uint256, bytes)).
+     * The liquidityWeightImplementation selector should take:
+     * (foo(bytes)).
      */
-    function whitelistTokenWithExternalImplementation(
+    function whitelistToken(
         address token,
         bytes4 selector,
         uint48 stalkIssuedPerBdv,
@@ -161,7 +78,7 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
         Implementation memory liquidityWeightImplementation
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.whitelistTokenWithExternalImplementation(
+        LibWhitelist.whitelistToken(
             token,
             selector,
             stalkIssuedPerBdv,
@@ -192,19 +109,21 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     /**
      * @notice Updates gauge settings for token.
      * @dev {LibWhitelistedTokens} must be updated to include the new token.
+     * Assumes the gaugePoint and LiquidityWeight implementations are functions
+     * implemented in the Beanstalk contract.
      */
     function updateGaugeForToken(
         address token,
-        bytes4 gaugePointSelector,
-        bytes4 liquidityWeightSelector,
-        uint64 optimalPercentDepositedBdv
+        uint64 optimalPercentDepositedBdv,
+        Implementation memory gpImplementation,
+        Implementation memory lwImplementation
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
         LibWhitelist.updateGaugeForToken(
             token,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            optimalPercentDepositedBdv
+            optimalPercentDepositedBdv,
+            gpImplementation,
+            lwImplementation
         );
     }
 
@@ -246,12 +165,24 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     ) external {
         LibDiamond.enforceIsOwnerOrContract();
         s.sys.evaluationParameters = updatedSeedGaugeSettings;
-        emit UpdatedSeedGaugeSettings(updatedSeedGaugeSettings);
+        emit UpdatedEvaluationParameters(updatedSeedGaugeSettings);
     }
 
     function getOracleImplementationForToken(
         address token
     ) external view returns (Implementation memory) {
-        return LibWhitelist.getOracleImplementationForToken(token);
+        return s.sys.oracleImplementation[token];
+    }
+
+    function getGaugePointImplementationForToken(
+        address token
+    ) external view returns (Implementation memory) {
+        return s.sys.silo.assetSettings[token].gaugePointImplementation;
+    }
+
+    function getLiquidityWeightImplementationForToken(
+        address token
+    ) external view returns (Implementation memory) {
+        return s.sys.silo.assetSettings[token].liquidityWeightImplementation;
     }
 }

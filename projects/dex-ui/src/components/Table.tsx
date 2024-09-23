@@ -1,5 +1,6 @@
-import { mediaQuery, size } from "src/breakpoints";
 import styled from "styled-components";
+
+import { mediaQuery, size } from "src/breakpoints";
 
 export const Table = styled.table`
   border: 0.5px solid #9ca3af;

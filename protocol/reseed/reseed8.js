@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
 
 async function reseed8(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -16,29 +17,31 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
 
   let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
-  targetEntriesPerChunk = 1000;
+  targetEntriesPerChunk = 500;
   balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
   const InitFacet = await (
     await ethers.getContractFactory("ReseedInternalBalances", account)
   ).deploy();
   await InitFacet.deployed();
   for (let i = 0; i < balanceChunks.length; i++) {
-    await updateProgress(i + 1, plotChunks.length);
+    await updateProgress(i + 1, balanceChunks.length);
     if (verbose) {
       console.log("Data chunk:", balanceChunks[i]);
       console.log("-----------------------------------");
     }
-    await upgradeWithNewFacets({
-      diamondAddress: L2Beanstalk,
-      facetNames: [],
-      initFacetName: "ReseedInternalBalances",
-      initFacetAddress: InitFacet.address,
-      initArgs: [balanceChunks[i]],
-      bip: false,
-      verbose: verbose,
-      account: account,
-      checkGas: true,
-      initFacetNameInfo: "ReseedInternalBalances"
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedInternalBalances",
+        initFacetAddress: InitFacet.address,
+        initArgs: [balanceChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedInternalBalances"
+      });
     });
   }
 }

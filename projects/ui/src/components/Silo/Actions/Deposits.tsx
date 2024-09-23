@@ -37,10 +37,10 @@ const Deposits: FC<
   const stemTip = useStemTipForToken(newToken) || ethersBN.from(0);
   const lastStem = siloBalance?.mowStatus?.lastStem || ethersBN.from(0);
   const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
-  const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
+  const rows: (LegacyDepositCrate & { key: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
-        id: deposit.stem?.toString(),
+        key: deposit.id.toString(),
         mowableStalk: deposit.bdv?.multipliedBy(deltaStem).div(10000),
         ...deposit,
       })) || [],
@@ -82,7 +82,7 @@ const Deposits: FC<
                     <Fiat amount={params.row.amount} token={token} />
                   </StatHorizontal>
                   <StatHorizontal label="Stem">
-                    {params.row.stem.toString()}
+                    {params.row.key.toString()}
                   </StatHorizontal>
                 </Stack>
               }

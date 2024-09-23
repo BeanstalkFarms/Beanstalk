@@ -2,13 +2,10 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell} from "test/foundry/utils/TestHelper.sol";
-import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {TestHelper, IMockFBeanstalk, MockToken, C, IWell} from "test/foundry/utils/TestHelper.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
 import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -388,8 +385,8 @@ contract GaugeTest is TestHelper {
         // bound beanToMaxLpRatio.
         beanToMaxLpRatio = bound(beanToMaxLpRatio, 0, 100e18);
         // bound averageGrownStalkPerBdvPerSeason to reasonable values.
-        // note: the bounds are limited by the ∆ seeds between seasons (cannot exceed int24.max, ~8 seeds).
-        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e6, 10e6);
+        // note: the bounds are limited by the ∆ seeds between seasons (cannot exceed int32.max, ~8 seeds).
+        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e12, 10e12);
 
         // set values.
         bs.mockSetAverageGrownStalkPerBdvPerSeason(uint128(avgGsPerBdvPerSeason));
@@ -434,11 +431,13 @@ contract GaugeTest is TestHelper {
         uint256 totalBdv = beanBDV + lpBDV;
         uint256 beanStalk = beanBDV * postBeanSettings.stalkEarnedPerSeason;
         uint256 lpStalk = lpBDV * postLpSettings.stalkEarnedPerSeason;
-        uint256 totalStalk = beanStalk + lpStalk;
+        uint256 totalStalk = (beanStalk + lpStalk);
         // precise within 1e-12%.
+        // note: with the stalk Precision update, totalBdv * avgGsPerBdvPerSeason needs to be divided by 1e6,
+        // as `avgGsPerBdvPerSeason` is seeds, but seeds only has 6 decimal precision, whereas Gs/bdv has 12 decimal precision.
         assertApproxEqRel(
             totalStalk,
-            totalBdv * avgGsPerBdvPerSeason,
+            (totalBdv * avgGsPerBdvPerSeason) / 1e6,
             1e12,
             "invalid distrubution"
         );
@@ -513,7 +512,7 @@ contract GaugeTest is TestHelper {
             uint256 tokenDepositedBdv = bs.getTotalDepositedBdv(tokens[i]);
             uint256 stalkToLp = postSettings[i].stalkEarnedPerSeason * tokenDepositedBdv;
             // precise within 1e-6.
-            assertApproxEqRel(stalkToLp, (totalStalk * percentGaugePoints) / 1e18, 1e12);
+            assertApproxEqRel(stalkToLp, (totalStalk * percentGaugePoints) / (1e18 * 1e6), 1e12);
         }
     }
 
@@ -534,7 +533,8 @@ contract GaugeTest is TestHelper {
         uint256 newGaugePoints = gpP.priceGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         if (gpP.getPriceThreshold() >= price) {
@@ -548,7 +548,8 @@ contract GaugeTest is TestHelper {
                 gpP.defaultGaugePointFunction(
                     gaugePoints,
                     optimalPercentDepositedBdv,
-                    percentOfDepositedBdv
+                    percentOfDepositedBdv,
+                    new bytes(0)
                 )
             );
         }
@@ -566,7 +567,8 @@ contract GaugeTest is TestHelper {
         uint256 newGaugePoints = gpP.defaultGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         uint256 extFarAbove = gpP.getExtremelyFarAbove(optimalPercentDepositedBdv);
@@ -720,13 +722,23 @@ contract GaugeTest is TestHelper {
 
         for (uint i; i < whitelistedWells.length; i++) {
             vm.prank(BEANSTALK);
-            bytes4 gpSelector = bs.gaugePointsNoChange.selector;
-            bytes4 lwSelector = bs.maxWeight.selector;
+            IMockFBeanstalk.Implementation memory gpImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.gaugePointsNoChange.selector,
+                bytes1(0),
+                new bytes(0)
+            );
+            IMockFBeanstalk.Implementation memory lwImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.maxWeight.selector,
+                bytes1(0),
+                new bytes(0)
+            );
             bs.updateGaugeForToken(
                 whitelistedWells[i],
-                gpSelector,
-                lwSelector,
-                100e6 // unused.
+                100e6, // unused.
+                gpImplementation,
+                lwImplementation
             );
 
             addLiquidityToWellAtCurrentPrice(whitelistedWells[i], 1000 ether);
@@ -748,15 +760,31 @@ contract GaugeTest is TestHelper {
      */
     function testSeedGaugeSettings() external {
         // validate current settings
-        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getEvaluationParameters();
 
         // change settings
         vm.prank(BEANSTALK);
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(0),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            )
         );
 
-        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getEvaluationParameters();
         assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.targetSeasonsToCatchUp, 0);
@@ -769,6 +797,48 @@ contract GaugeTest is TestHelper {
         assertEq(ssg.lpToSupplyRatioOptimal, 0);
         assertEq(ssg.lpToSupplyRatioLowerBound, 0);
         assertEq(ssg.excessivePriceThreshold, 0);
+        assertEq(ssg.soilCoefficientHigh, 0);
+        assertEq(ssg.soilCoefficientLow, 0);
+        assertEq(ssg.baseReward, 0);
+
+        // change settings
+        vm.prank(BEANSTALK);
+        bs.updateSeedGaugeSettings(
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(1),
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+            )
+        );
+
+        ssg = bs.getEvaluationParameters();
+        assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 1);
+        assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 2);
+        assertEq(ssg.targetSeasonsToCatchUp, 3);
+        assertEq(ssg.podRateLowerBound, 4);
+        assertEq(ssg.podRateOptimal, 5);
+        assertEq(ssg.podRateUpperBound, 6);
+        assertEq(ssg.deltaPodDemandLowerBound, 7);
+        assertEq(ssg.deltaPodDemandUpperBound, 8);
+        assertEq(ssg.lpToSupplyRatioUpperBound, 9);
+        assertEq(ssg.lpToSupplyRatioOptimal, 10);
+        assertEq(ssg.lpToSupplyRatioLowerBound, 11);
+        assertEq(ssg.excessivePriceThreshold, 12);
+        assertEq(ssg.soilCoefficientHigh, 13);
+        assertEq(ssg.soilCoefficientLow, 14);
+        assertEq(ssg.baseReward, 15);
     }
 
     function getPercentDifference(

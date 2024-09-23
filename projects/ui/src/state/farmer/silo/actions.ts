@@ -1,6 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
 import { Token, TokenSiloBalance } from '@beanstalk/sdk';
 import { AddressMap } from '~/constants';
+import { BigNumber } from 'ethers';
 import { FarmerSiloRewards, FarmerSiloTokenBalance } from '.';
 
 export type UpdateFarmerSiloBalancesPayload = AddressMap<
@@ -33,3 +34,7 @@ export const updateFarmerSiloRan = createAction<boolean>('farmer/silo/ran');
 export const updateFarmerSiloError = createAction<string | undefined>(
   'farmer/silo/error'
 );
+
+export const updateFarmerSiloMowStatuses = createAction<
+  Map<Token, { lastStem: BigNumber; bdv: BigNumber }>
+>('farmer/silo/mowStatuses');

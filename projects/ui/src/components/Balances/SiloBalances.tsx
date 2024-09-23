@@ -12,22 +12,15 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { useSelector } from 'react-redux';
-import {
-  BEAN,
-  SEEDS,
-  STALK,
-  UNRIPE_BEAN,
-  UNRIPE_BEAN_WSTETH,
-} from '~/constants/tokens';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
+import { SEEDS, STALK } from '~/constants/tokens';
 import Fiat from '~/components/Common/Fiat';
 
 import { displayFullBN, displayTokenAmount } from '~/util';
 import { AppState } from '~/state';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import useFarmerStalkByToken from '~/hooks/farmer/useFarmerStalkByToken';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
+import { useTokens, useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 import TokenIcon from '../Common/TokenIcon';
 import Row from '../Common/Row';
 import { BeanstalkPalette, IconSize } from '../App/muiTheme';
@@ -47,13 +40,13 @@ const TOOLTIP_COMPONENT_PROPS = {
 
 const SiloBalances: React.FC<{}> = () => {
   // Chain Constants
-  const whitelist = useWhitelist();
-  const getChainToken = useGetChainToken();
-
-  const Bean = getChainToken(BEAN);
-  const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
+  const { tokenMap: whitelist } = useWhitelistedTokens();
   const unripeUnderlyingTokens = useUnripeUnderlyingMap();
+  const {
+    BEAN: Bean,
+    UNRIPE_BEAN: urBean,
+    UNRIPE_BEAN_WSTETH: urBeanWstETH,
+  } = useTokens();
 
   // State
   const balances = useSelector<
@@ -129,7 +122,7 @@ const SiloBalances: React.FC<{}> = () => {
       <Stack px={1} py={1} spacing={1}>
         {tokens.map(([address, token]) => {
           const deposits = balances[address]?.deposited;
-          const isUnripe = token === urBean || token === urBeanWstETH;
+          const isUnripe = token.equals(urBean) || token.equals(urBeanWstETH);
 
           return (
             <Box key={`${token.address}-${token.chainId}`}>
@@ -446,7 +439,11 @@ const SiloBalances: React.FC<{}> = () => {
                         <TokenIcon token={SEEDS} />
                         <Typography color="text.primary" component="span">
                           {displayFullBN(
-                            token.getSeeds(deposits?.bdv ?? ZERO_BN),
+                            token.getSeeds(
+                              token.fromHuman(
+                                (deposits?.bdv ?? ZERO_BN).toString()
+                              )
+                            ),
                             2
                           )}
                         </Typography>

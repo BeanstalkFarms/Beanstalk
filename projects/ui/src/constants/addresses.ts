@@ -1,3 +1,4 @@
+import { Address } from '@beanstalk/sdk-core';
 import { SupportedChainId } from './chains';
 
 // ----------------------------------------
@@ -5,23 +6,24 @@ import { SupportedChainId } from './chains';
 // ----------------------------------------
 
 export const BEANSTALK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70'.toLowerCase(),
 };
 
 export const BEANSTALK_PRICE_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x4bed6cb142b7d474242d87f4796387deb9e1e1b4'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7'.toLowerCase(),
 };
 
 export const BEANSTALK_FERTILIZER_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6'.toLowerCase(),
-};
-
-export const BARNRAISE_CUSTODIAN_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xa9bA2C40b263843C04d344727b954A545c81D043'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x82a17bdeC3368f549A7BfE6734D6E2Aba82be455'.toLowerCase(),
 };
 
 // ----------------------------------------
@@ -29,22 +31,22 @@ export const BARNRAISE_CUSTODIAN_ADDRESSES = {
 // ----------------------------------------
 
 export const BEANFT_GENESIS_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79'.toLowerCase(),
 };
 
 export const BEANFT_WINTER_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x459895483556daD32526eFa461F75E33E458d9E9'.toLowerCase(),
 };
 
 export const BEANFT_BARNRAISE_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xa969BB19b1d35582Ded7EA869cEcD60A3Bd5D1E8'.toLowerCase(),
 };
 
 export const BEANFT_BASIN_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x191b7d1cfa89c9389bbf5f7f49f4b8f93ec3740f'.toLowerCase(),
 };
 
@@ -53,69 +55,145 @@ export const BEANFT_BASIN_ADDRESSES = {
 // ----------------------------------------
 
 export const BEAN_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA0005B8599265D41256905A9B3073D397812E4'.toLowerCase(),
 };
 
 export const UNRIPE_BEAN_ADDRESSES = {
   // --------------------------------------------------
   // "Unripe Bean": Unripe vesting asset for the Bean token, Localhost
   // -------------------------------------------------
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x1BEA0050E63e05FBb5D8BA2f10cf5800B6224449'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x1BEA054dddBca12889e07B3E076f511Bf1d27543'.toLowerCase(),
 };
 
 export const UNRIPE_BEAN_WSTETH_ADDRESSES = {
   // --------------------------------------------------
   // "Unripe BEAN:WETH LP": Unripe vesting asset for the BEAN:WETH LP token, Localhost
   // -------------------------------------------------
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x1BEA3CcD22F4EBd3d37d731BA31Eeca95713716D'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788'.toLowerCase(),
 };
 
 // ----------------------------------------
 // Common ERC-20 Tokens
 // ----------------------------------------
-
-export const STETH_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'.toLowerCase(),
+export const WETH_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'.toLowerCase(),
 };
 
 export const WSTETH_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x5979D7b546E38E414F7E9822514be443A4800529'.toLowerCase(),
+};
+
+export const WEETH_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe'.toLowerCase(),
+};
+
+export const WBTC_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'.toLowerCase(),
 };
 
 export const DAI_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x6B175474E89094C44Da98b954EedeAC495271d0F'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'.toLowerCase(),
 };
 
 export const USDC_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'.toLowerCase(),
 };
 
 export const USDT_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xdAC17F958D2ee523a2206206994597C13D831ec7'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'.toLowerCase(),
 };
 
 export const CRV3_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490'.toLowerCase(),
 };
 
 export const LUSD_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0'.toLowerCase(),
+};
+
+export const ARB_ADDRESSES = {
+  // bridged
+  [SupportedChainId.ETH_MAINNET]:
+    '0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x912CE59144191C1204E64559FE8253a0e49E6548'.toLowerCase(),
+};
+
+// ----------------------------------------
+// Wells
+// ----------------------------------------
+
+export const BEAN_ETH_WELL_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB'.toLowerCase(),
+};
+
+export const BEAN_WSTETH_ADDRESSS = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8'.toLowerCase(),
+};
+
+export const BEANWEETH_WELL_ADDRESSES = {
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA00865405A02215B44eaADB853d0d2192Fc29D'.toLowerCase(),
+};
+
+export const BEANWBTC_WELL_ADDRESSES = {
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA'.toLowerCase(),
+};
+
+export const BEANUSDC_WELL_ADDRESSES = {
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279'.toLowerCase(),
+};
+
+export const BEANUSDT_WELL_ADDRESSES = {
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b'.toLowerCase(),
 };
 
 // ----------------------------------------
 // Curve Pools: BEAN
 // ----------------------------------------
 
+/** @deprecated */
 export const BEAN_CRV3_ADDRESSES = {
   // --------------------------------------------------
   // "BEAN:3CRV Curve LP Token (BEAN3CRV-f)"
@@ -130,112 +208,68 @@ export const BEAN_CRV3_ADDRESSES = {
   //    case for 3pool itself on Mainnet:
   //    - 3CRV (the 3pool LP Token) = 0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490
   //    - 3pool Contract            = 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49'.toLowerCase(),
 };
 
-export const BEAN_ETH_WELL_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
-};
-
-export const BEAN_WSTETH_ADDRESSS = {
-  [SupportedChainId.MAINNET]:
-    '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
-};
-
 // ----------------------------------------
-// Curve Pools: Other
+// Legacy Uniswap Pools: BEAN
 // ----------------------------------------
 
-export const POOL3_ADDRESSES = {
-  // --------------------------------------------------
-  // "Curve.fi: DAI/USDC/USDT Pool" (aka 3pool)
-  // --------------------------------------------------
-  // coins[0] = 0x6B175474E89094C44Da98b954EedeAC495271d0F (DAI)
-  // coins[1] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 (USDC)
-  // coins[2] = 0xdAC17F958D2ee523a2206206994597C13D831ec7 (USDT)
-  [SupportedChainId.MAINNET]:
-    '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7'.toLowerCase(),
+/** @deprecated */
+export const BEAN_LUSD_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0xD652c40fBb3f06d6B58Cb9aa9CFF063eE63d465D'.toLowerCase(),
 };
 
-export const TRICRYPTO2_ADDRESSES = {
-  // --------------------------------------------------
-  // tricrypto2
-  // --------------------------------------------------
-  // coins[0] = 0xdAC17F958D2ee523a2206206994597C13D831ec7 (USDT)
-  // coins[1] = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 (WBTC)
-  // coins[2] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 (WETH)
-  [SupportedChainId.MAINNET]:
-    '0xD51a44d3FaE010294C616388b506AcdA1bfAAE46'.toLowerCase(),
+/** @deprecated */
+export const BEAN_ETH_UNIV2_LP_ADDRESSES = {
+  [SupportedChainId.ETH_MAINNET]:
+    '0x87898263B6C5BABe34b4ec53F22d98430b91e371'.toLowerCase(),
 };
 
-// ----------------------------------------
-// Curve: Registries / Factories / Utils
-// ----------------------------------------
-// "metapool" and "cryptoswap" are simultaneously
-// - "registries" (they track a list of pools)
-// - "factories"  (they allow creation of new pools)
-
-// 3pool, etc.
-export const POOL_REGISTRY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x90e00ace148ca3b23ac1bc8c240c2a7dd9c2d7f5'.toLowerCase(),
-};
-
-// X:3CRV, etc. aka StableFactory
-export const META_FACTORY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xB9fC157394Af804a3578134A6585C0dc9cc990d4'.toLowerCase(),
-};
-
-// tricrypto2, etc.
-export const CRYPTO_FACTORY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0x8F942C20D02bEfc377D41445793068908E2250D0'.toLowerCase(),
-};
-
-// zap
-export const CURVE_ZAP_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
-    '0xA79828DF1850E8a3A3064576f380D90aECDD3359'.toLowerCase(),
-};
-
-export const DAI_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+// Chainlink Feeds
+export const DAI_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.ETH_MAINNET]:
     '0xaed0c38402a5d19df6e4c03f4e2dced6e29c1ee9'.toLowerCase(),
-};
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0xc5C8E77B397E531B8EC06BFb0048328B30E9eCfB'.toLowerCase(),
+});
 
-export const USDT_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+export const USDT_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.ETH_MAINNET]:
     '0x3e7d1eab13ad0104d2750b8863b489d65364e32d'.toLowerCase(),
-};
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7'.toLowerCase(),
+});
 
-export const USDC_CHAINLINK_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+export const USDC_CHAINLINK_ADDRESSES = Address.make({
+  [SupportedChainId.ETH_MAINNET]:
     '0x8fffffd4afb6115b954bd326cbe7b4ba576818f6'.toLowerCase(),
-};
+  [SupportedChainId.ARBITRUM_MAINNET]:
+    '0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3'.toLowerCase(),
+});
 
 export const ETH_CHAINLINK_ADDRESS = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'.toLowerCase(),
 };
 
 /// Gnosis Snapshot Delegates Registry
 export const DELEGATES_REGISTRY_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446'.toLowerCase(),
 };
 
 /// Deprecated Pools
 export const BEAN_CRV3_V1_ADDRESSES = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x3a70DfA7d2262988064A2D051dd47521E43c9BdD'.toLowerCase(),
 };
 
 /// ENS Reverse Records
 export const ENS_REVERSE_RECORDS = {
-  [SupportedChainId.MAINNET]:
+  [SupportedChainId.ETH_MAINNET]:
     '0x3671ae578e63fdf66ad4f3e12cc0c0d71ac7510c'.toLowerCase(),
 };
 

@@ -6,6 +6,7 @@ import "./interfaces/IBean.sol";
 import "./interfaces/IFertilizer.sol";
 import "./interfaces/IProxyAdmin.sol";
 import "./libraries/Decimal.sol";
+import "./interfaces/IPipeline.sol";
 
 /**
  * @title C
@@ -73,5 +74,9 @@ library C {
 
     function precision() internal pure returns (uint256) {
         return PRECISION;
+    }
+
+    function pipeline() internal pure returns (IPipeline) {
+        return IPipeline(PIPELINE);
     }
 }

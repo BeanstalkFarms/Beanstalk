@@ -1,5 +1,8 @@
 import React, { forwardRef } from "react";
 import type { HTMLAttributes, ElementType, CSSProperties } from "react";
+
+import styled from "styled-components";
+
 import {
   BoxModelBase,
   BoxModelProps,
@@ -21,7 +24,7 @@ import {
   TextAlign,
   FontColorStyle
 } from "src/utils/ui/theme";
-import styled from "styled-components";
+
 import { ResponsiveTextProps } from "./typography-components";
 
 export interface TextProps

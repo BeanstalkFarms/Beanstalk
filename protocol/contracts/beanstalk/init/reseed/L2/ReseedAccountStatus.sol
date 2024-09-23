@@ -7,6 +7,7 @@ pragma experimental ABIEncoderV2;
 
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
+import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @author Deadmanwalking
@@ -21,6 +22,9 @@ contract ReseedAccountStatus {
         uint256 stalk;
         address[] tokens;
         MowStatus[] mowStatuses;
+        uint32 lastUpdate;
+        uint128 germinatingStalkOdd;
+        uint128 germinatingStalkEven;
     }
 
     // emitted when a status is migrated.
@@ -51,6 +55,15 @@ contract ReseedAccountStatus {
             // set stalk and roots for account.
             s.accts[accountStatuses[i].account].stalk = accountStatuses[i].stalk;
             s.accts[accountStatuses[i].account].roots = accountStatuses[i].stalk * 1e12;
+            // set lastUpdate for account.
+            s.accts[accountStatuses[i].account].lastUpdate = accountStatuses[i].lastUpdate;
+            // set germinatingStalk for account.
+            s.accts[accountStatuses[i].account].germinatingStalk[
+                GerminationSide.ODD
+            ] = accountStatuses[i].germinatingStalkOdd;
+            s.accts[accountStatuses[i].account].germinatingStalk[
+                GerminationSide.EVEN
+            ] = accountStatuses[i].germinatingStalkEven;
         }
     }
 }

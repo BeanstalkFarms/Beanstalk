@@ -56,7 +56,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { FC } from '~/types';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import {
   BalanceFrom,
@@ -126,9 +126,13 @@ const BuyForm: FC<
   const [wstETHPrice, setWstETHPrice] = useState(TokenValue.ZERO);
 
   useEffect(() => {
-    getWstETHPrice().then((price) => {
-      setWstETHPrice(price);
-    });
+    getWstETHPrice()
+      .then((price) => {
+        setWstETHPrice(price);
+      })
+      .catch((e) => {
+        console.log('Error getting wstETH price: ', e);
+      });
   }, [getWstETHPrice]);
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
@@ -502,14 +506,7 @@ const BuyPropProvider: FC<{}> = () => {
             farmerBalances: true,
             farmerSilo: true,
           },
-          [
-            () =>
-              refetchAllowances(
-                account,
-                fertilizer.address,
-                getNewToOldToken(USDC)
-              ),
-          ]
+          [() => refetchAllowances(account, fertilizer.address, USDC)]
         );
         txToast.success(receipt);
         formActions.resetForm();

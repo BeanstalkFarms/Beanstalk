@@ -28,6 +28,7 @@ library LibGauge {
 
     uint256 internal constant BDV_PRECISION = 1e6;
     uint256 internal constant GP_PRECISION = 1e18;
+    uint256 internal constant GROWN_STALK_PER_GP_PRECISION = 1e6;
 
     // Max and min are the ranges that the beanToMaxLpGpPerBdvRatioScaled can output.
     // uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18; //state
@@ -40,7 +41,7 @@ library LibGauge {
 
     // 24 * 30 * 6
     // uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320; //state
-    uint256 internal constant STALK_BDV_PRECISION = 1e4;
+    uint256 internal constant STALK_BDV_PRECISION = 1e10;
 
     /**
      * @notice Emitted when the AverageGrownStalkPerBdvPerSeason Updates.
@@ -200,7 +201,8 @@ library LibGauge {
                 selector,
                 ss.gaugePoints,
                 ss.optimalPercentDepositedBdv,
-                percentDepositedBdv
+                percentDepositedBdv,
+                ss.gaugePointImplementation.data
             )
         );
 
@@ -287,7 +289,10 @@ library LibGauge {
     ) internal {
         LibWhitelist.updateStalkPerBdvPerSeasonForToken(
             token,
-            grownStalkPerGp.mul(gpPerBdv).div(GP_PRECISION).toUint32()
+            grownStalkPerGp
+                .mul(gpPerBdv)
+                .div(GP_PRECISION * GROWN_STALK_PER_GP_PRECISION)
+                .toUint32()
         );
     }
 

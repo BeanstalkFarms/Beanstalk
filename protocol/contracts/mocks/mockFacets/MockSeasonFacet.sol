@@ -11,7 +11,6 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../MockToken.sol";
 import "contracts/libraries/LibBytes.sol";
 import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
-import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
@@ -57,12 +56,6 @@ contract MockSeasonFacet is SeasonFacet {
     event GaugePointChange(uint256 indexed season, address indexed token, uint256 gaugePoints);
     event Incentivization(address indexed account, uint256 beans);
     event UpdateAverageStalkPerBdvPerSeason(uint256 newStalkPerBdvPerSeason);
-    event UpdateGaugeSettings(
-        address indexed token,
-        bytes4 gpSelector,
-        bytes4 lwSelector,
-        uint64 optimalPercentDepositedBdv
-    );
     event TotalGerminatingStalkChanged(uint256 season, int256 deltaStalk);
     event TotalStalkChangedFromGermination(int256 deltaStalk, int256 deltaRoots);
 
@@ -439,6 +432,14 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.stemStartSeason = uint16(s.sys.season.current);
     }
 
+    function mockSetMilestoneStem(address token, int96 stem) external {
+        s.sys.silo.assetSettings[token].milestoneStem = stem;
+    }
+
+    function mockSetMilestoneSeason(address token, uint32 season) external {
+        s.sys.silo.assetSettings[token].milestoneSeason = season;
+    }
+
     //constants for old seeds values
 
     function lastDeltaSoil() external view returns (uint256) {
@@ -518,12 +519,6 @@ contract MockSeasonFacet is SeasonFacet {
         ss.gaugePointImplementation.selector = gaugePointSelector;
         ss.liquidityWeightImplementation.selector = liquidityWeightSelector;
         ss.optimalPercentDepositedBdv = optimalPercentDepositedBdv;
-        emit UpdateGaugeSettings(
-            token,
-            gaugePointSelector,
-            liquidityWeightSelector,
-            optimalPercentDepositedBdv
-        );
     }
 
     function mockEndTotalGerminationForToken(address token) external {

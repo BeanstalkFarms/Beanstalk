@@ -6,10 +6,7 @@ test = 'test'
 script = 'script'
 no_match_test = "testDiff"
 out = 'out'
-libs = [
-  'node_modules',
-  'lib'
-]
+libs = ['node_modules', 'lib']
 cache = true
 cache_path = 'cache'
 force = false
@@ -34,18 +31,19 @@ bytecode_hash = 'ipfs'
 verbosity = 0
 ffi = true
 fs_permissions = [
-  { access = "read", path = "../"},
-  { access = "read", path = "./out" }
+  { access = "read", path = "../" },
+  { access = "read", path = "./out" },
 ]
 ignored_warnings_from = [
   "test",
   "contracts/interfaces/IMockFBeanstalk.sol",
-  "contracts/mocks/"
+  "contracts/mocks/",
 ]
 gas_reports = ['*']
- # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
+# Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
 no_storage_caching = false
- 
+no_match_contract = "ReseedStateTest"
+
 [profile.differential]
 match_test = "testDiff"
 no_match_test = "a^"
@@ -55,7 +53,7 @@ chains = 'all'
 endpoints = 'all'
 
 [rpc_endpoints]
-mainnet = "${FORKING_RPC}" 
+mainnet = "${FORKING_RPC}"
 
 [invariant]
 runs = 4

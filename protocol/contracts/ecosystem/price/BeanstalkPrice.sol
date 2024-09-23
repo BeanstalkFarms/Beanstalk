@@ -18,18 +18,14 @@ contract BeanstalkPrice is WellPrice {
 
     /**
      * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
-     * Bean in the following liquidity pools.
-     * - Constant Product Bean:Eth Well
-     * - Constant Product Bean:Wsteth Well
-     * NOTE: Assumes all whitelisted Wells are CP2 wells. Needs to be updated if this changes.
+     * Bean in all whitelisted liquidity pools.
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
      **/
     function price() external view returns (Prices memory p) {
         address[] memory wells = beanstalk.getWhitelistedWellLpTokens();
         p.ps = new P.Pool[](wells.length);
         for (uint256 i = 0; i < wells.length; i++) {
-            // Assume all Wells are CP2 wells.
-            p.ps[i] = getConstantProductWell(wells[i]);
+            p.ps[i] = getWell(wells[i]);
         }
 
         // assumes that liquidity and prices on all pools uses the same precision.

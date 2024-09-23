@@ -120,11 +120,10 @@ library LibWellMinting {
             lastSnapshot
         );
 
-        // Set the Well reserves in storage, so that it can be read when
-        // 1) set the USD price of the non bean token so that it can be read when
-        //    calculating the price of Bean. See {LibEvaluate.evalPrice}.
-        // 2) When calculating the Bean reward for calling the Season (Bean:Eth Only).
-        //    See {LibIncentive.determineReward}.
+        // Set the Well reserves in storage, so that it can be read when calculating the
+        // twa liquidty of the well when calculating the L2SR.
+        // set the USD price of the non bean token so that it can be read when
+        // calculating the price of Bean. See {LibEvaluate.evalPrice}.
         LibWell.setTwaReservesForWell(well, twaReserves);
         LibWell.setUsdTokenPriceForWell(well, ratios);
         emit WellOracle(s.sys.season.current, well, deltaB, s.sys.wellOracleSnapshots[well]);
@@ -173,15 +172,18 @@ library LibWellMinting {
         uint256 beanIndex
     ) internal view returns (int256) {
         Call memory wellFunction = IWell(well).wellFunction();
-        return
-            int256(
-                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                    reserves,
-                    beanIndex,
-                    ratios,
-                    wellFunction.data
-                )
-            ).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserveAtRatioSwap) {
+            return int256(reserveAtRatioSwap).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 
     /**

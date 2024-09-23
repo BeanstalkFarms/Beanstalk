@@ -9,16 +9,14 @@ import "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
-import {C} from "contracts/C.sol";
+import {Distribution} from "contracts/beanstalk/sun/SeasonFacet/Distribution.sol";
 
 /**
  * @author Brean
  * @notice ReseedGlobal sets the global state of Beanstalk.
  * @dev Pod Orders and Listings are ommited and are set in a seperate reseed contract.
  */
-contract ReseedGlobal {
-    AppStorage internal s;
-
+contract ReseedGlobal is Distribution {
     /**
      * @param system contains the global state of Beanstalk.
      * 1) replaces mappings with arrays, so that the state can be re-initialized.
@@ -88,7 +86,8 @@ contract ReseedGlobal {
         s.sys.fieldCount = 1;
 
         LibCases.setCasesV2();
-        setShipmentRoutes(system.shipmentRoutes);
+        setInternalBalanceTotals(system.sysBalances);
+        _setShipmentRoutes(system.shipmentRoutes);
         setSilo(system.sysSilo);
         setFertilizer(system.sysFert);
         s.sys.fields[0] = system.f;
@@ -100,6 +99,13 @@ contract ReseedGlobal {
 
         // initalize tractor:
         setTractor();
+    }
+
+    function setInternalBalanceTotals(SystemInternalBalances calldata balances) internal {
+        for (uint i; i < balances.tokens.length; i++) {
+            s.sys.internalTokenBalanceTotal[balances.tokens[i]] = balances
+                .internalTokenBalanceTotal[i];
+        }
     }
 
     /**
@@ -157,10 +163,11 @@ contract ReseedGlobal {
      * @notice sets the routes.
      * @dev Solidity does not support direct assignment of array structs to Storage.
      */
-    function setShipmentRoutes(ShipmentRoute[] calldata routes) internal {
+    function _setShipmentRoutes(ShipmentRoute[] calldata routes) internal {
         for (uint i; i < routes.length; i++) {
             s.sys.shipmentRoutes.push(routes[i]);
         }
+        emit ShipmentRoutesSet(routes);
     }
 
     function setTractor() internal {

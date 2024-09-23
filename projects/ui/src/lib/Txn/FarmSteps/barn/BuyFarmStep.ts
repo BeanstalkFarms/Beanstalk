@@ -115,7 +115,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
   ): Promise<TokenValue> {
     const beanWstETHWellAddress = getChainConstant(
       BEAN_WSTETH_ADDRESSS,
-      SupportedChainId.MAINNET
+      SupportedChainId.ARBITRUM_MAINNET
     ).toLowerCase();
     const well = await this._sdk.wells.getWell(beanWstETHWellAddress);
 

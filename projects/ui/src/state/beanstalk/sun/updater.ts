@@ -2,11 +2,12 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { AppState } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
 import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
+import useChainState from '~/hooks/chain/useChainState';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
@@ -21,11 +22,13 @@ import {
 
 export const useSun = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
+  const sdk = useSdk();
+  const beanstalk = sdk.contracts.beanstalk;
+  const { isEthereum } = useChainState();
 
   const fetch = useCallback(async () => {
     try {
-      if (beanstalk) {
+      if (beanstalk && !isEthereum) {
         console.debug(
           `[beanstalk/sun/useSun] FETCH (contract = ${beanstalk.address})`
         );
@@ -67,7 +70,7 @@ export const useSun = () => {
       console.error(e);
       return [undefined, undefined, undefined] as const;
     }
-  }, [beanstalk, dispatch]);
+  }, [beanstalk, isEthereum, dispatch]);
 
   const clear = useCallback(() => {
     console.debug('[farmer/silo/useSun] clear');
@@ -127,7 +130,7 @@ const SunUpdater = () => {
   }, [dispatch, awaiting, season, next, fetch, refreshSeeds, sdk]);
 
   // Fetch when chain changes
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [fetch, clear]);

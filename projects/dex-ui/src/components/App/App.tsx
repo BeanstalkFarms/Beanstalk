@@ -1,16 +1,18 @@
 import React from "react";
+
 import { Route, Routes } from "react-router-dom";
+
+import { Frame } from "src/components/Frame/Frame";
 import { NotFound } from "src/pages/404";
-import { Home } from "src/pages/Home";
+import { Build } from "src/pages/Build";
+import { Create } from "src/pages/Create";
 import { Dev } from "src/pages/Dev";
+import { Home } from "src/pages/Home";
+import { Liquidity } from "src/pages/Liquidity";
+import { Swap } from "src/pages/Swap";
 import { Well } from "src/pages/Well";
 import { Wells } from "src/pages/Wells";
-import { Frame } from "src/components/Frame/Frame";
-import { Build } from "src/pages/Build";
-import { Swap } from "src/pages/Swap";
 import { Settings } from "src/settings";
-import { Liquidity } from "src/pages/Liquidity";
-import { Create } from "src/pages/Create";
 
 export const App = ({}) => {
   const isNotProd = !Settings.PRODUCTION;
@@ -27,6 +29,7 @@ export const App = ({}) => {
         <Route path="/create" element={<Create />} />
         {isNotProd && <Route path="/dev" element={<Dev />} />}
         <Route path="*" element={<NotFound />} />
+        {false && <></>}
       </Routes>
     </Frame>
   );

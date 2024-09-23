@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
 
 async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -16,7 +17,7 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   const fertilizerIds = JSON.parse(await fs.readFileSync(barnRaisePath));
 
   // Keep this lower due to fert id 100663296
-  targetEntriesPerChunk = 100;
+  targetEntriesPerChunk = 50;
   fertChunks = await splitEntriesIntoChunksOptimized(fertilizerIds, targetEntriesPerChunk);
   const InitFacet = await (await ethers.getContractFactory("ReseedBarn", account)).deploy();
   await InitFacet.deployed();
@@ -26,17 +27,19 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
       console.log("Data chunk:", fertChunks[i]);
       console.log("-----------------------------------");
     }
-    await upgradeWithNewFacets({
-      diamondAddress: L2Beanstalk,
-      facetNames: [],
-      initFacetName: "ReseedBarn",
-      initFacetAddress: InitFacet.address,
-      initArgs: [fertChunks[i]],
-      bip: false,
-      verbose: verbose,
-      account: account,
-      checkGas: true,
-      initFacetNameInfo: "ReseedBarn"
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedBarn",
+        initFacetAddress: InitFacet.address,
+        initArgs: [fertChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedBarn"
+      });
     });
   }
 }

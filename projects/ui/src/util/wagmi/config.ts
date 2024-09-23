@@ -1,8 +1,14 @@
 import { http, createConfig } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
 import { injected, safe, walletConnect } from 'wagmi/connectors';
 import { Chain, type Transport } from 'viem';
-import { localFork } from './chains';
+import {
+  mainnet,
+  arbitrum,
+  localForkArbitrum,
+  localForkMainnet,
+  ARBITRUM_RPC,
+  MAINNET_RPC,
+} from './chains';
 
 const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY;
 
@@ -15,19 +21,29 @@ if (!WALLET_CONNECT_PROJECT_ID) {
   throw new Error('VITE_WALLETCONNECT_PROJECT_ID is not set');
 }
 
-const MAINNET_RPC = `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
-
 const SHOW_DEV = import.meta.env.VITE_SHOW_DEV_CHAINS;
 
-const chains: readonly [Chain, ...Chain[]] = !SHOW_DEV
-  ? ([mainnet] as const)
-  : ([localFork, mainnet] as const);
+const prodChains: readonly [Chain, ...Chain[]] = [mainnet, arbitrum] as const;
+
+const devChains: readonly [Chain, ...Chain[]] = [
+  mainnet,
+  localForkMainnet,
+  localForkArbitrum,
+  arbitrum,
+] as const;
+
+const chains: readonly [Chain, ...Chain[]] = !SHOW_DEV ? prodChains : devChains;
 
 const transports: Record<number, Transport> = !SHOW_DEV
-  ? { [mainnet.id]: http(MAINNET_RPC) }
-  : {
-      [localFork.id]: http(localFork.rpcUrls.default.http[0]),
+  ? {
       [mainnet.id]: http(MAINNET_RPC),
+      [arbitrum.id]: http(ARBITRUM_RPC),
+    }
+  : {
+      [mainnet.id]: http(MAINNET_RPC),
+      [localForkMainnet.id]: http(localForkMainnet.rpcUrls.default.http[0]),
+      [localForkArbitrum.id]: http(localForkArbitrum.rpcUrls.default.http[0]),
+      [arbitrum.id]: http(ARBITRUM_RPC),
     };
 
 export const config = createConfig({
