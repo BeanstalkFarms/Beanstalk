@@ -190,7 +190,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
       "1050000",
       "500000000000000000",
       "1500000000000000000",
-      "5000000"
+      "1000000"
     ],
     // ShipmentRoute
     data.shipmentRoutes.length
