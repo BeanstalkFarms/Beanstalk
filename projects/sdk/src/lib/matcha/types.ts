@@ -1,8 +1,3 @@
-export interface ZeroExQuoteParams extends ZeroExAPIRequestParams {
-  mode: "exactInput" | "exactOutput";
-  enabled: boolean;
-}
-
 export interface ZeroExAPIRequestParams {
   /**
    * The ERC20 token address of the token you want to sell. It is recommended to always use the token address
@@ -146,6 +141,41 @@ interface ZeroExFee {
 interface ZeroExSource {
   name: string;
   proportion: string;
+}
+
+export interface MinimumViableSwapQuote {
+  /**
+   * The ERC20 token address of the token you want to receive in quote.
+   */
+  buyTokenAddress: string;
+  /**
+   * The ERC20 token address of the token you want to sell with quote.
+   */
+  sellTokenAddress: string;
+  /**
+   * The address of the contract to send call data to.
+   */
+  to: string;
+  /**
+   * The target contract address for which the user needs to have an allowance in order to be able to complete the swap.
+   */
+  allowanceTarget: string;
+  /**
+   * The amount of buyToken (in buyToken units) that would be bought in this swap.
+   */
+  buyAmount: string;
+  /**
+   * The amount of sellToken (in sellToken units) that would be sold in this swap.
+   */
+  sellAmount: string;
+  /**
+   * The amount of ether (in wei) that should be sent with the transaction.
+   */
+  value: string;
+  /**
+   * The call data
+   */
+  data: string;
 }
 
 /**
