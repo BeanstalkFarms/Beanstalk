@@ -193,24 +193,14 @@ function parseGlobals(inputFilePath, outputFilePath) {
       "5000000"
     ],
     // ShipmentRoute
-    // data.shipmentRoutes.length
-    //   ? data.shipmentRoutes.map((route) => [
-    //       route.planContract || "0x0000000000000000000000000000000000000000",
-    //       route.planSelector || "0x00000000",
-    //       route.recipient ? convertToBigNum(route.recipient) : "0",
-    //       route.data || "0x"
-    //     ])
-    //   : [["0x0000000000000000000000000000000000000000", "0x00000000", "0", "0x"]]
-    [
-      ["0x0000000000000000000000000000000000000000", "0x7c655075", "1", "0x"],
-      [
-        "0x0000000000000000000000000000000000000000",
-        "0x12e8d3ed",
-        "2",
-        "0x0000000000000000000000000000000000000000000000000000000000000000"
-      ],
-      ["0x0000000000000000000000000000000000000000", "0x43055ba8", "3", "0x"]
-    ]
+    data.shipmentRoutes.length
+      ? data.shipmentRoutes.map((route) => [
+          route.planContract || "0x0000000000000000000000000000000000000000",
+          route.planSelector || "0x00000000",
+          route.recipient ? convertToBigNum(route.recipient) : "0",
+          route.data || "0x"
+        ])
+      : [["0x0000000000000000000000000000000000000000", "0x00000000", "0", "0x"]]
   ];
 
   fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
