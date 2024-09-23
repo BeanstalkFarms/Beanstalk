@@ -101,12 +101,22 @@ const PipelineConvertFormInner = ({
     [balance?.convertibleAmount]
   );
 
-  const pickedDeposits = sdk.silo.siloConvert.calculateConvert(
-    sourceToken,
-    targetToken,
-    sourceToken.fromHuman(debouncedAmountIn.toString()),
-    balance?.convertibleDeposits || [],
-    0
+  const pickedDeposits = useMemo(
+    () =>
+      sdk.silo.siloConvert.calculateConvert(
+        sourceToken,
+        targetToken,
+        sourceToken.fromHuman(debouncedAmountIn.toString()),
+        balance?.convertibleDeposits || [],
+        0
+      ),
+    [
+      sdk,
+      sourceToken,
+      targetToken,
+      debouncedAmountIn,
+      balance?.convertibleDeposits,
+    ]
   );
 
   // same as query.isFetching & query.isLoading
@@ -206,15 +216,16 @@ const PipelineConvertFormInner = ({
     } finally {
       setFieldValue('tokens.0.quoting', false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    sdk.contracts.beanstalk,
+    sdk,
     query.isFetching,
     query.isLoading,
     data,
     pickedDeposits.crates,
     targetToken,
     sourceToken,
-    setFieldValue,
+    // setFieldValue,
   ]);
 
   useEffect(() => {
