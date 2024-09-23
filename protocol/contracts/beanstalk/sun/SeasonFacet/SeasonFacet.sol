@@ -35,7 +35,7 @@ contract SeasonFacet is Invariable, Weather {
      * @return reward The number of beans minted to the caller.
      * @dev No out flow because any externally sent reward beans are freshly minted.
      */
-    function sunrise() external payable fundsSafu nonReentrant noOutFlow returns (uint256) {
+    function sunrise() external payable fundsSafu nonReentrantFarm noOutFlow returns (uint256) {
         return _gm(LibTractor._user(), LibTransfer.To.EXTERNAL);
     }
 
