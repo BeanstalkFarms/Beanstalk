@@ -22,7 +22,7 @@ contract InvariableTest is TestHelper {
 
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
-        mintTokensToUsers(siloUsers, C.BEAN, 100_000e6);
+        mintTokensToUsers(siloUsers, BEAN, 100_000e6);
 
         setUpSiloDepositTest(10_000e6, siloUsers);
         addFertilizerBasedOnSprouts(0, 100e6);
@@ -81,6 +81,23 @@ contract InvariableTest is TestHelper {
             abi.encode("")
         );
         vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
+
+        // Exploit Pod Order Beans.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(MockAttackFacet.exploitPodOrderBeans.selector),
+            abi.encode("")
+        );
+        vm.expectRevert("INV: Insufficient token balance");
+        vm.prank(siloUsers[1]);
+        bs.advancedFarm(advancedFarmCalls);
+
+        // Happy path.
+        advancedFarmCalls[0] = IMockFBeanstalk.AdvancedFarmCall(
+            abi.encodeWithSelector(ClaimFacet.plant.selector),
+            abi.encode("")
+        );
         vm.prank(siloUsers[1]);
         bs.advancedFarm(advancedFarmCalls);
     }

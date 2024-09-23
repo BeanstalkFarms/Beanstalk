@@ -96,7 +96,7 @@ describe("Silo Enroot", function () {
         // 158327 * 0.185564685220298701 ~= 29379.899
         // floor(29380.085) - floor(29379.899) = 1
 
-        mockBeanstalk.deployStemsUpgrade();
+        await mockBeanstalk.deployStemsUpgrade();
 
         // call sunrise twice to avoid germination error.
         // note that `mockUnripeBeanDeposit` increments correctly,

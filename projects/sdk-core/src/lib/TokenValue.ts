@@ -67,7 +67,8 @@ export class TokenValue {
     if (typeof value === "bigint") {
       return TokenValue.fromBigInt(value, decimals);
     }
-    if ((value as BigNumber)._isBigNumber) return TokenValue.fromBigNumber(value as BigNumber, decimals);
+    if ((value as BigNumber)._isBigNumber)
+      return TokenValue.fromBigNumber(value as BigNumber, decimals);
 
     throw new Error("Invalid value parameter");
   }
@@ -116,7 +117,8 @@ export class TokenValue {
   }
 
   constructor(_blocker: typeof blocker, _bigNumber: BigNumber, decimals: number) {
-    if (_blocker !== blocker) throw new Error("Do not create an instance via the constructor. Use the .from...() methods");
+    if (_blocker !== blocker)
+      throw new Error("Do not create an instance via the constructor. Use the .from...() methods");
 
     this.decimals = decimals;
     this.value = new DecimalBigNumber(_bigNumber, decimals);
@@ -164,6 +166,14 @@ export class TokenValue {
     throw new Error(`Unsupported formatting option: ${format}`);
   }
 
+  public toNumber(): number {
+    try {
+      return parseFloat(this.toHuman());
+    } catch (e) {
+      throw new Error(`Could not convert ${this.toHuman()} to number`);
+    }
+  }
+
   // Used mostly by the math functions to normalize the input
   private toDBN(num: TokenValue | BigNumber | number): DecimalBigNumber {
     if (num instanceof TokenValue) {
@@ -200,10 +210,18 @@ export class TokenValue {
     return TokenValue.from(this.value.mul(this.toDBN(num)).reDecimal(this.decimals));
   }
   mulMod(num: TokenValue | number, denominator: TokenValue | number): TokenValue {
-    return TokenValue.from(this.value.mul(this.toDBN(num)).mod(this.toDBN(denominator).reDecimal(this.decimals)));
+    return TokenValue.from(
+      this.value.mul(this.toDBN(num)).mod(this.toDBN(denominator).reDecimal(this.decimals))
+    );
   }
-  mulDiv(num: TokenValue | BigNumber | number, denominator: TokenValue | number, rounding?: "down" | "up") {
-    return TokenValue.from(this.value.mulDiv(this.toDBN(num), this.toDBN(denominator), rounding).reDecimal(this.decimals));
+  mulDiv(
+    num: TokenValue | BigNumber | number,
+    denominator: TokenValue | number,
+    rounding?: "down" | "up"
+  ) {
+    return TokenValue.from(
+      this.value.mulDiv(this.toDBN(num), this.toDBN(denominator), rounding).reDecimal(this.decimals)
+    );
   }
   div(num: TokenValue | BigNumber | number, decimals?: number) {
     return TokenValue.from(this.value.div(this.toDBN(num), decimals));

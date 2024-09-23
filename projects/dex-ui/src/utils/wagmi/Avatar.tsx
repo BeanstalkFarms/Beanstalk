@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Types } from "connectkit";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 

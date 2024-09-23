@@ -70,8 +70,8 @@ library LibReceiving {
         s.sys.silo.stalk += (shipmentAmount * C.STALK_PER_BEAN);
 
         // SafeCast unnecessary here because of prior safe cast.
-        s.sys.silo.balances[C.BEAN].deposited += uint128(shipmentAmount);
-        s.sys.silo.balances[C.BEAN].depositedBdv += uint128(shipmentAmount);
+        s.sys.silo.balances[s.sys.tokens.bean].deposited += uint128(shipmentAmount);
+        s.sys.silo.balances[s.sys.tokens.bean].depositedBdv += uint128(shipmentAmount);
 
         // Confirm successful receipt.
         emit Receipt(ShipmentRecipient.SILO, shipmentAmount, abi.encode(""));
@@ -127,13 +127,11 @@ library LibReceiving {
                 // Calculate BPF beyond the first Fertilizer edge.
                 remainingBpf = (amountToFertilize - deltaFertilized) / s.sys.fert.activeFertilizer;
                 newBpf = oldBpf + remainingBpf;
-            }
-            // Else, if there is no more fertilizer. Matches plan cap.
-            else {
+            } else {
                 s.sys.fert.bpf = uint128(firstBpf); // SafeCast unnecessary here.
                 s.sys.fert.fertilizedIndex += deltaFertilized;
-                require(amountToFertilize == deltaFertilized, "Inexact amount of Beans at Barn");
-                require(s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex, "Paid != owed");
+                // Else, if there is no more fertilizer. Matches plan cap.
+                // s.sys.fert.fertilizedIndex == s.sys.fert.unfertilizedIndex
                 break;
             }
         }

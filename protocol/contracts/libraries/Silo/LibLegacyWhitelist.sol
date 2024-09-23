@@ -40,7 +40,7 @@ library LibLegacyWhitelist {
     function whitelistToken(
         address token,
         bytes4 selector,
-        uint32 stalkIssuedPerBdv,
+        uint48 stalkIssuedPerBdv,
         uint32 stalkEarnedPerSeason
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();

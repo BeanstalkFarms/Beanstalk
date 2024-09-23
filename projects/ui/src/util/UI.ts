@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 /**
  * converts hex string to rgba
  */
@@ -49,14 +50,6 @@ export const remToPx = (_rem: string | number) => {
   }
 };
 
-export const roundWithDecimals = (
-  value: number | undefined,
-  decimals?: number
-) => {
-  const factor = 10 ** (decimals ?? 2);
-  return Math.round((value || 0 + Number.EPSILON) * factor) / factor;
-};
-
 export function exists<T>(
   value: T | undefined | null
 ): value is NonNullable<T> {
@@ -65,4 +58,19 @@ export function exists<T>(
 
 export function existsNot(value: any): value is undefined | null {
   return !exists(value);
+}
+
+export function stringsEqual(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  // use BN here to avoid floating point errors
+  const length = Math.ceil(
+    new BigNumber(array.length).div(chunkSize).toNumber()
+  );
+
+  return Array.from({ length: length }, (_, index) =>
+    array.slice(index * chunkSize, (index + 1) * chunkSize)
+  );
 }

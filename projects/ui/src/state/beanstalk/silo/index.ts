@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
-import { TokenMap } from '../../../constants';
+import { createSelector } from '@reduxjs/toolkit';
+import { TokenMap, ZERO_BN } from '~/constants';
 
 /**
  * A "Silo Balance" provides all information
@@ -13,16 +14,17 @@ export type BeanstalkSiloBalance = {
     /** The total amount of this Token currently in the Deposited state. */
     amount: BigNumber;
   };
-  withdrawn: {
-    /** The total amount of this Token currently in the Withdrawn state. */
-    amount: BigNumber;
-  };
   /** the total amount of this Token currently germinating in the Deposited state. */
   germinating: {
     amount: BigNumber;
   };
   /** the total amount of this Token that is deposited (deposited & germinating)  */
   TVD: BigNumber;
+  /** @deprecated */
+  withdrawn?: {
+    /** The total amount of this Token currently in the Withdrawn state. */
+    amount: BigNumber;
+  };
 };
 
 /**
@@ -63,3 +65,13 @@ export type BeanstalkSiloAssets = {
 
 export type BeanstalkSilo = BeanstalkSiloBalances &
   BeanstalkSiloAssets & { withdrawSeasons: BigNumber };
+
+export const selectBeanstalkSilo = (state: {
+  _beanstalk: { silo: BeanstalkSilo };
+}) => state._beanstalk.silo;
+
+export const selectBdvPerToken = (address: string) =>
+  createSelector(
+    selectBeanstalkSilo,
+    (silo) => silo.balances[address]?.bdvPerToken || ZERO_BN
+  );

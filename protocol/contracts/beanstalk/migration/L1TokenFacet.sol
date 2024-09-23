@@ -13,14 +13,14 @@ import "contracts/beanstalk/migration/L1Libraries/LibTokenApprove.sol";
 import "contracts/beanstalk/migration/L1AppStorage.sol";
 import "contracts/beanstalk/migration/L1ReentrancyGuard.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
-import {C} from "contracts/C.sol";
 
 /**
  * @author Publius
  * @title L1TokenFacet updates the TokenFacet functions due to the L2 Migration.
  * @dev Beanstalk cannot assume that all tokens in Farm Balances can be transferred to
  * an L2. Addditionally, given that Beans will be re-issued on L2, Beanstalk will need to
- * restrict the transfer of beans and bean assets. Permit removed from farm balances due to complexity.
+ * restrict the transfer of beans and bean assets.Permit removed from farm balances due to it
+ * being unwidely used and not necessary for the migration.
  */
 contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
     struct Balance {
@@ -40,6 +40,12 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
         IERC20 token,
         uint256 amount
     );
+
+    // Blacklisted tokens that cannot be removed.
+    address internal constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
+    address internal constant CURVE_BEAN_METAPOOL = 0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49;
+    address internal constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
+    address internal constant BEAN_WSTETH_WELL = 0xBeA0000113B0d182f4064C86B71c315389E4715D;
 
     //////////////////////// Transfer ////////////////////////
 
@@ -61,13 +67,6 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
         LibTransfer.To toMode
     ) external payable {
         checkBeanAsset(address(token));
-        // L1 external -> internal transfers are not supported after the L2 migration.
-        if (fromMode != LibTransfer.From.INTERNAL) {
-            require(
-                toMode == LibTransfer.To.EXTERNAL,
-                "TokenFacet: EXTERNAL->INTERNAL transfers are disabled."
-            );
-        }
         LibTransfer.transferToken(token, msg.sender, recipient, amount, fromMode, toMode);
     }
 
@@ -305,17 +304,17 @@ contract L1TokenFacet is IERC1155Receiver, ReentrancyGuard {
      * and thus requires that these tokens are not transferred.
      */
     function checkBeanAsset(address token) internal pure {
-        require(token != address(C.BEAN), "TokenFacet: Beans cannot be transferred.");
+        require(token != address(BEAN), "TokenFacet: Beans cannot be transferred.");
         require(
-            token != address(C.BEAN_ETH_WELL),
+            token != address(BEAN_ETH_WELL),
             "TokenFacet: BeanEth Well Tokens cannot be transferred."
         );
         require(
-            token != address(C.BEAN_WSTETH_WELL),
+            token != address(BEAN_WSTETH_WELL),
             "TokenFacet: BeanwstEth Well Tokens cannot be transferred."
         );
         require(
-            token != address(C.CURVE_BEAN_METAPOOL),
+            token != address(CURVE_BEAN_METAPOOL),
             "TokenFacet: Bean3crv Well Tokens cannot be transferred."
         );
     }

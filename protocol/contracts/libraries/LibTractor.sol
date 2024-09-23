@@ -4,31 +4,31 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
-
 /**
  * @title Lib Tractor
- * @author funderbrker, 0xm00neth
+ * @author funderbrker
  **/
 library LibTractor {
-    // 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
-    // bytes32 constant TRACTOR_STORAGE_POSITION = keccak256("diamond.storage.tractor");
-
     enum CounterUpdateType {
         INCREASE,
         DECREASE
     }
 
     bytes32 private constant TRACTOR_HASHED_NAME = keccak256(bytes("Tractor"));
-    bytes32 private constant TRACTOR_HASHED_VERSION = keccak256(bytes("1"));
     bytes32 private constant EIP712_TYPE_HASH =
         keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            bytes(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            )
         );
     bytes32 public constant BLUEPRINT_TYPE_HASH =
         keccak256(
-            "Blueprint(address publisher,bytes data,bytes operatorData,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+            bytes(
+                "Blueprint(address publisher,bytes data,bytes32[] operatorPasteInstrs,uint256 maxNonce,uint256 startTime,uint256 endTime)"
+            )
         );
+
+    event TractorVersionSet(string version);
 
     struct TractorStorage {
         // Number of times the blueprint has been run.
@@ -37,6 +37,8 @@ library LibTractor {
         mapping(address => mapping(bytes32 => uint256)) blueprintCounters;
         // Publisher of current operations. Set to address(1) when no active publisher.
         address payable activePublisher;
+        // Version of Tractor. Only Blueprints using current Version can run.
+        string version;
     }
 
     // Blueprint stores blueprint related values
@@ -67,6 +69,14 @@ library LibTractor {
         assembly {
             ts.slot := 0x7efbaaac9214ca1879e26b4df38e29a72561affb741bba775ce66d5bb6a82a07
         }
+    }
+
+    /**
+     * @notice Set the tractor hashed version.
+     */
+    function _setVersion(string memory version) internal {
+        _tractorStorage().version = version;
+        emit TractorVersionSet(version);
     }
 
     /**
@@ -177,10 +187,10 @@ library LibTractor {
         return
             keccak256(
                 abi.encode(
-                    BLUEPRINT_TYPE_HASH,
+                    EIP712_TYPE_HASH,
                     TRACTOR_HASHED_NAME,
-                    TRACTOR_HASHED_VERSION,
-                    C.getChainId(),
+                    keccak256(bytes(_tractorStorage().version)),
+                    block.chainid,
                     address(this)
                 )
             );

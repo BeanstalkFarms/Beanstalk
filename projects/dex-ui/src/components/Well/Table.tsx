@@ -3,8 +3,10 @@
  * in Activity and Other
  */
 import styled from "styled-components";
-import { BodyCaps, BodyS, BodyXS } from "../Typography";
+
 import { size } from "src/breakpoints";
+
+import { BodyCaps, BodyS, BodyXS } from "../Typography";
 
 export const Table = styled.table`
   border: 0.5px solid #000;

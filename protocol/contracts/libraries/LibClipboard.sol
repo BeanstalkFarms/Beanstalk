@@ -93,7 +93,7 @@ library LibClipboard {
      *      Note: Should be encoded with ['bytes2', 'uint80', 'uint80', 'uint80']  where the first two bytes are Type and Send Ether Flag if using Pipeline
      *  Type 2 (0x02): Copy n bytes32 from a previous function return value
      *       [ Padding      | pasteParams[] ]
-     *       [ 64 bytes     | 32 + 32 * n   ]
+     *       [ 32 bytes     | 64 + 32 * n   ]
      *        * The first 32 bytes are the location of data, the next 32 bytes are the length of the array.
      * -------------------------------------------------------------------------------------
      * @param returnData A list of return values from previously executed Advanced Calls

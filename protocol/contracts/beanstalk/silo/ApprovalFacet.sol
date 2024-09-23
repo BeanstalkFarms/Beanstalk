@@ -189,7 +189,7 @@ contract ApprovalFacet is Invariable, ReentrancyGuard {
     function setApprovalForAll(
         address spender,
         bool approved
-    ) external fundsSafu noNetFlow noSupplyChange {
+    ) external fundsSafu noNetFlow noSupplyChange nonReentrant {
         s.accts[LibTractor._user()].isApprovedForAll[spender] = approved;
         emit ApprovalForAll(LibTractor._user(), spender, approved);
     }

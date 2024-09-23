@@ -8,7 +8,7 @@ import {ILiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFace
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {AssetSettings, Implementation} from "contracts/beanstalk/storage/System.sol";
-import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePointFacet.sol";
+import {IGaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFacet.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
@@ -29,10 +29,10 @@ contract InitalizeDiamond {
 
     // INITIAL CONSTANTS //
     uint128 constant INIT_BEAN_TO_MAX_LP_GP_RATIO = 33_333_333_333_333_333_333; // 33%
-    uint128 constant INIT_AVG_GSPBDV = 3e6;
+    uint128 constant INIT_AVG_GSPBDV = 3e12;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
-    uint32 constant INIT_STALK_ISSUED_PER_BDV = 1e4;
+    uint48 constant INIT_STALK_ISSUED_PER_BDV = 1e10;
     uint128 constant INIT_TOKEN_G_POINTS = 100e18;
     uint32 constant INIT_BEAN_TOKEN_WELL_PERCENT_TARGET = 100e6;
 
@@ -53,6 +53,15 @@ contract InitalizeDiamond {
     // Excessive price threshold constant
     uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
+    /// @dev When the Pod Rate is high, issue less Soil.
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+
+    /// @dev When the Pod Rate is low, issue more Soil.
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
+
+    /// @dev Base BEAN reward to cover cost of operating a bot.
+    uint256 internal constant BASE_REWARD = 5e6; // 5 BEAN
+
     // Gauge
     uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
@@ -68,6 +77,7 @@ contract InitalizeDiamond {
      */
     function initalizeDiamond(address bean, address beanTokenWell) internal {
         addInterfaces();
+        initializeTokens(bean);
         initalizeSeason();
         initalizeField();
         initalizeFarmAndTractor();
@@ -80,18 +90,19 @@ contract InitalizeDiamond {
 
         // note: bean and assets that are not in the gauge system
         // do not need to initalize the gauge system.
-        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0));
+        Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
             ILiquidityWeightFacet.maxWeight.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
         Implementation memory gaugePointImpl = Implementation(
             address(0),
             IGaugePointFacet.defaultGaugePointFunction.selector,
-            bytes1(0)
+            bytes1(0),
+            new bytes(0)
         );
-        Implementation memory oracleImpl = Implementation(address(0), bytes4(0), bytes1(0));
 
         AssetSettings[] memory assetSettings = new AssetSettings[](2);
         assetSettings[0] = AssetSettings({
@@ -105,8 +116,7 @@ contract InitalizeDiamond {
             gaugePoints: 0,
             optimalPercentDepositedBdv: 0,
             gaugePointImplementation: impl,
-            liquidityWeightImplementation: impl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: impl
         });
 
         assetSettings[1] = AssetSettings({
@@ -120,15 +130,14 @@ contract InitalizeDiamond {
             gaugePoints: INIT_TOKEN_G_POINTS,
             optimalPercentDepositedBdv: INIT_BEAN_TOKEN_WELL_PERCENT_TARGET,
             gaugePointImplementation: gaugePointImpl,
-            liquidityWeightImplementation: liquidityWeightImpl,
-            oracleImplementation: oracleImpl
+            liquidityWeightImplementation: liquidityWeightImpl
         });
 
         whitelistPools(tokens, assetSettings);
 
-        // init usdTokenPrice. C.Bean_eth_well should be
+        // init usdTokenPrice. beanTokenWell should be
         // a bean well w/ the native token of the network.
-        s.sys.usdTokenPrice[C.BEAN_ETH_WELL] = 1;
+        s.sys.usdTokenPrice[beanTokenWell] = 1;
         s.sys.twaReserves[beanTokenWell].reserve0 = 1;
         s.sys.twaReserves[beanTokenWell].reserve1 = 1;
 
@@ -144,6 +153,10 @@ contract InitalizeDiamond {
 
         ds.supportedInterfaces[0xd9b67a26] = true; // ERC1155
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
+    }
+
+    function initializeTokens(address bean) internal {
+        s.sys.tokens.bean = bean;
     }
 
     /**
@@ -166,7 +179,7 @@ contract InitalizeDiamond {
         s.sys.season.withdrawSeasons = 0;
 
         // initalize the duration of 1 season in seconds.
-        s.sys.season.period = C.getSeasonPeriod();
+        s.sys.season.period = C.CURRENT_SEASON_PERIOD;
 
         // initalize current timestamp.
         s.sys.season.timestamp = block.timestamp;
@@ -235,7 +248,7 @@ contract InitalizeDiamond {
             s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
 
             bool isLPandWell = true;
-            if (tokens[i] == C.BEAN) {
+            if (tokens[i] == s.sys.tokens.bean) {
                 isLPandWell = false;
             }
             bool isUnripe = LibUnripe.isUnripe(tokens[i]);
@@ -254,22 +267,25 @@ contract InitalizeDiamond {
     }
 
     function initializeSeedGaugeSettings() internal {
-        s.sys.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
-        s.sys.seedGaugeSettings.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
-        s.sys.seedGaugeSettings.podRateLowerBound = POD_RATE_LOWER_BOUND;
-        s.sys.seedGaugeSettings.podRateOptimal = POD_RATE_OPTIMAL;
-        s.sys.seedGaugeSettings.podRateUpperBound = POD_RATE_UPPER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
-        s.sys.seedGaugeSettings.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
-        s.sys.seedGaugeSettings.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
-        s.sys.seedGaugeSettings.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
-        s.sys.seedGaugeSettings.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.maxBeanMaxLpGpPerBdvRatio = MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.minBeanMaxLpGpPerBdvRatio = MIN_BEAN_MAX_LP_GP_PER_BDV_RATIO;
+        s.sys.evaluationParameters.targetSeasonsToCatchUp = TARGET_SEASONS_TO_CATCHUP;
+        s.sys.evaluationParameters.podRateLowerBound = POD_RATE_LOWER_BOUND;
+        s.sys.evaluationParameters.podRateOptimal = POD_RATE_OPTIMAL;
+        s.sys.evaluationParameters.podRateUpperBound = POD_RATE_UPPER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandLowerBound = DELTA_POD_DEMAND_LOWER_BOUND;
+        s.sys.evaluationParameters.deltaPodDemandUpperBound = DELTA_POD_DEMAND_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioUpperBound = LP_TO_SUPPLY_RATIO_UPPER_BOUND;
+        s.sys.evaluationParameters.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
+        s.sys.evaluationParameters.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
+        s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.soilCoefficientHigh = SOIL_COEFFICIENT_HIGH;
+        s.sys.evaluationParameters.soilCoefficientLow = SOIL_COEFFICIENT_LOW;
+        s.sys.evaluationParameters.baseReward = BASE_REWARD;
     }
 
-    function initalizeFarmAndTractor() public {
-        s.sys.isFarm = 1;
+    function initalizeFarmAndTractor() internal {
         LibTractor._resetPublisher();
+        LibTractor._setVersion("1.0.0");
     }
 }

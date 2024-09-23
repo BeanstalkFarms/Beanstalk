@@ -1,11 +1,12 @@
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import BigNumber from 'bignumber.js';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import Token, { NativeToken } from '~/classes/Token';
 import { MAX_UINT256 } from '~/constants';
 import useAccount from '~/hooks/ledger/useAccount';
 import { AppState } from '~/state';
 import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
+import { isNativeToken } from '~/util';
 
 /**
  * @param contractAddress The contract that needs approval.
@@ -15,7 +16,7 @@ import { useFetchFarmerAllowances } from '~/state/farmer/allowances/updater';
  */
 export default function useAllowances(
   contractAddress: string | undefined,
-  tokens: Token[],
+  tokens: TokenInstance[],
   config: { loadIfAbsent: boolean } = {
     loadIfAbsent: true,
   }
@@ -31,7 +32,7 @@ export default function useAllowances(
   const currentAllowances: (null | BigNumber)[] = useMemo(
     () =>
       tokens.map((curr) => {
-        if (curr instanceof NativeToken) return new BigNumber(MAX_UINT256);
+        if (isNativeToken(curr)) return new BigNumber(MAX_UINT256);
         if (!contractAddress) return null;
         return allowances[contractAddress]
           ? allowances[contractAddress][curr.address] || null
@@ -46,10 +47,13 @@ export default function useAllowances(
     if (config.loadIfAbsent && account && contractAddress) {
       // Reduce `results` to a list of the corresponding `tokens`,
       // filtering only for absent results.
-      const absent = currentAllowances.reduce<Token[]>((prev, curr, index) => {
-        if (!curr) prev.push(tokens[index]);
-        return prev;
-      }, [] as Token[]);
+      const absent = currentAllowances.reduce<TokenInstance[]>(
+        (prev, curr, index) => {
+          if (!curr) prev.push(tokens[index]);
+          return prev;
+        },
+        []
+      );
       // console.debug(`[hooks/useAllowance] found ${absent.length} absent tokens for ${contractAddress}`);
       if (absent.length > 0) {
         fetchAllowances(account, contractAddress, absent);
@@ -67,7 +71,7 @@ export default function useAllowances(
   // Allow a component to refetch initial allowances,
   // or to specify new ones to grab.
   const refetch = useCallback(
-    (_tokens?: Token[]) => {
+    (_tokens?: TokenInstance[]) => {
       if (account && contractAddress) {
         return fetchAllowances(account, contractAddress, _tokens || tokens);
       }

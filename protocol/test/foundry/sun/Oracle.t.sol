@@ -3,7 +3,6 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
-import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
@@ -18,7 +17,12 @@ contract OracleTest is TestHelper {
     event Sunrise(uint256 indexed season);
     event Soil(uint32 indexed season, uint256 soil);
     event Incentivization(address indexed account, uint256 beans);
-    event TemperatureChange(uint256 indexed season, uint256 caseId, int8 absChange);
+    event TemperatureChange(
+        uint256 indexed season,
+        uint256 caseId,
+        int8 absChange,
+        uint256 fieldId
+    );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
     event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
     event TotalGerminatingBalanceChanged(
@@ -27,9 +31,6 @@ contract OracleTest is TestHelper {
         int256 delta,
         int256 deltaBdv
     );
-
-    // Interfaces.
-    MockSeasonFacet season = MockSeasonFacet(BEANSTALK);
 
     // test accounts.
     address[] farmers;
@@ -45,7 +46,7 @@ contract OracleTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -53,7 +54,7 @@ contract OracleTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/WSTETH)
         // note: wstETH:stETH ratio is initialized to 1:1.
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 wstETH.
         );
@@ -123,10 +124,10 @@ contract OracleTest is TestHelper {
      * @notice tests that the deltaB for a well is capped at 1% of supply.
      */
     function test_oracleCappedDeltaB(uint256 entropy) public {
-        int256[] memory deltaBPerWell = setDeltaBForWellsWithEntropy(entropy);
+        setDeltaBForWellsWithEntropy(entropy);
         for (uint i; i < lps.length; i++) {
             int256 poolDeltaB = bs.poolDeltaB(lps[i]);
-            uint256 beanSupply = C.bean().totalSupply();
+            uint256 beanSupply = bean.totalSupply();
             assertLe(uint256(abs(poolDeltaB)), beanSupply);
         }
     }

@@ -1,95 +1,30 @@
-const { deploy, deployFacets } = require("../scripts/diamond.js");
-const fs = require("fs");
-const { impersonateSigner, mintEth } = require("../utils");
+const { deployDiamond } = require("../scripts/diamond.js");
+const { mintEth } = require("../utils");
+const { retryOperation } = require("../utils/read.js");
 
 /**
- * @notice deploys a new beanstalk. Should be on an L2.
+ * @notice Deploys a new beanstalk diamond contract without any facets. Should be on an L2.
  * @dev account: the account to deploy the beanstalk with.
- * Todo: facets should be added post-migration to prevent users from interacting.
  */
-async function reseedDeployL2Beanstalk(account, verbose = false, mock) {
-  // impersonate `account`:
-  let signer;
+async function reseedDeployL2Beanstalk(account, verbose = true, mock) {
+  // Initialize deployer account for vanity address.
   if (mock) {
-    await mintEth(account);
-    signer = await ethers.provider.getSigner(account);
-  } else {
-    signer = await impersonateSigner(account);
+    await mintEth(account.address);
   }
 
-  let tx;
-  let totalGasUsed = ethers.BigNumber.from("0");
-  let receipt;
-
-  // get list of facets to deploy:
-  let facets = [
-    "SeasonFacet", // SUN
-    "SeasonGettersFacet",
-    "GaugePointFacet",
-    "LiquidityWeightFacet",
-    "SiloFacet", // SILO
-    "SiloGettersFacet",
-    "WhitelistFacet",
-    "ApprovalFacet",
-    "BDVFacet",
-    "ConvertFacet", // CONVERT
-    "ConvertGettersFacet",
-    "MetadataFacet", // METADATA
-    "MarketplaceFacet", // MARKET
-    "FieldFacet", // FIELD
-    "DepotFacet", // FARM
-    "FarmFacet",
-    "TokenFacet",
-    "TokenSupportFacet",
-    "TractorFacet",
-    "FertilizerFacet", // BARN
-    "UnripeFacet",
-    "EnrootFacet",
-    "PauseFacet", // DIAMOND
-    "OwnershipFacet"
-  ];
-
-  // A list of public libraries that need to be deployed separately.
-  let libraryNames = [
-    "LibGauge",
-    "LibIncentive",
-    "LibConvert",
-    "LibLockedUnderlying",
-    "LibWellMinting",
-    "LibGerminate"
-  ];
-
-  // A mapping of facet to public library names that will be linked to it.
-  // MockFacets will be deployed with the same public libraries.
-  let facetLibraries = {
-    SeasonFacet: [
-      "LibGauge",
-      "LibIncentive",
-      "LibLockedUnderlying",
-      "LibWellMinting",
-      "LibGerminate"
-    ],
-    ConvertFacet: ["LibConvert"],
-    UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
-  };
-
-  // Deploy all facets and external libraries.
-  let facetsAndNames = await deployFacets(
-    verbose,
-    mock,
-    facets,
-    libraryNames,
-    facetLibraries,
-    totalGasUsed
-  );
-  const [beanstalkDiamond] = await deploy({
-    diamondName: "L2BeanstalkDiamond",
-    facets: facetsAndNames,
-    owner: account,
-    args: [],
-    verbose: verbose
+  // owner is initially the deployer. Upon the verification of the diamond,
+  // the deployer will transfer ownership to the beanstalk owner.
+  const beanstalkDiamond = await retryOperation(async () => {
+    return await deployDiamond({
+      diamondName: "L2BeanstalkDiamond",
+      ownerAddress: account.address,
+      deployer: account,
+      args: [],
+      verbose: verbose
+    });
   });
+
   return beanstalkDiamond.address;
 }
+
 exports.reseedDeployL2Beanstalk = reseedDeployL2Beanstalk;

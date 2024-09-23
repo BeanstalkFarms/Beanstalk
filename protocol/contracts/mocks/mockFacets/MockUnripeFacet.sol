@@ -43,7 +43,7 @@ contract MockUnripeFacet is UnripeFacet {
     function getLegacyLockedUnderlyingBean() public view returns (uint256) {
         return
             LibLockedUnderlying.getLockedUnderlying(
-                C.UNRIPE_BEAN,
+                s.sys.tokens.urBean,
                 LibUnripe.getRecapPaidPercentAmount(1e6)
             );
     }
@@ -51,7 +51,7 @@ contract MockUnripeFacet is UnripeFacet {
     function getLegacyLockedUnderlyingLP() public view returns (uint256) {
         return
             LibLockedUnderlying.getLockedUnderlying(
-                C.UNRIPE_LP,
+                s.sys.tokens.urLp,
                 LibUnripe.getRecapPaidPercentAmount(1e6)
             );
     }

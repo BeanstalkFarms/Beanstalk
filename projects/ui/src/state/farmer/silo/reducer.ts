@@ -10,6 +10,7 @@ import {
   updateFarmerSiloLoading,
   updateFarmerSiloError,
   updateFarmerSiloRan,
+  updateFarmerSiloMowStatuses,
 } from './actions';
 
 const NEG1 = new BigNumber(-1);
@@ -34,6 +35,7 @@ export const initialFarmerSilo: FarmerSilo = {
   roots: {
     total: NEG1,
   },
+  mowStatuses: new Map(),
   migrationNeeded: undefined,
   balancesSdk: new Map(),
   loading: false,
@@ -74,5 +76,8 @@ export default createReducer(initialFarmerSilo, (builder) =>
     })
     .addCase(updateFarmerSiloRan, (state, { payload }) => {
       state.ran = payload;
+    })
+    .addCase(updateFarmerSiloMowStatuses, (state, { payload }) => {
+      state.mowStatuses = payload;
     })
 );

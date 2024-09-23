@@ -1,81 +1,37 @@
-const { deployFacets, upgradeWithNewFacets } = require("../scripts/diamond.js");
+const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { retryOperation } = require("../utils/read.js");
 
-/**
- * @notice reseed9 (final step) adds all facets to beanstalk, and unpauses beanstalk.
- */
-async function reseed9(account) {
-  // get list of facets to deploy:
-  let facets = [
-    "SeasonFacet", // SUN
-    "SeasonGettersFacet",
-    "GaugePointFacet",
-    "LiquidityWeightFacet",
-    "SiloFacet", // SILO
-    "SiloGettersFacet",
-    "WhitelistFacet",
-    "ApprovalFacet",
-    "BDVFacet",
-    "ConvertFacet", // CONVERT
-    "ConvertGettersFacet",
-    "MetadataFacet", // METADATA
-    "MarketplaceFacet", // MARKET
-    "FieldFacet", // FIELD
-    "DepotFacet", // FARM
-    "FarmFacet",
-    "TokenFacet",
-    "TokenSupportFacet",
-    "TractorFacet",
-    "FertilizerFacet", // BARN
-    "UnripeFacet",
-    "EnrootFacet",
-    "PauseFacet", // DIAMOND
-    "OwnershipFacet"
-  ];
+async function reseed9(account, L2Beanstalk, mock = false) {
+  console.log("-----------------------------------");
+  console.log("reseed9: whitelist tokens.\n");
 
-  // A list of public libraries that need to be deployed separately.
-  let libraryNames = [
-    "LibGauge",
-    "LibIncentive",
-    "LibConvert",
-    "LibLockedUnderlying",
-    "LibWellMinting",
-    "LibGerminate"
-  ];
+  // Files
+  let whitelistSettingsPath;
+  if (mock) {
+    whitelistSettingsPath = "./reseed/data/mocks/r9-whitelist-mock.json";
+  } else {
+    whitelistSettingsPath = "./reseed/data/r9-whitelist.json";
+  }
 
-  // A mapping of facet to public library names that will be linked to it.
-  // MockFacets will be deployed with the same public libraries.
-  let facetLibraries = {
-    SeasonFacet: [
-      "LibGauge",
-      "LibIncentive",
-      "LibLockedUnderlying",
-      "LibWellMinting",
-      "LibGerminate"
-    ],
-    ConvertFacet: ["LibConvert"],
-    UnripeFacet: ["LibLockedUnderlying"],
-    SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
-  };
+  let assets = JSON.parse(await fs.readFileSync(whitelistSettingsPath));
+  let tokens = assets.map((asset) => asset[0]);
+  let nonBeanTokens = assets.map((asset) => asset[1]);
+  let siloSettings = assets.map((asset) => asset[2]);
+  let whitelistStatuses = assets.map((asset) => asset[3]);
+  let oracles = assets.map((asset) => asset[4]);
 
-  // Deploy all facets and external libraries.
-  let facetsAndNames = await deployFacets(
-    verbose,
-    mock,
-    facets,
-    libraryNames,
-    facetLibraries,
-    totalGasUsed
-  );
-
-  // upgrade beanstalk with all facets. calls `reseedRestart`
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: facetsAndNames,
-    initFacetName: "reseedRestart",
-    bip: false,
-    verbose: true,
-    account: account
+  await retryOperation(async () => {
+    await upgradeWithNewFacets({
+      diamondAddress: L2Beanstalk,
+      facetNames: [],
+      initFacetName: "ReseedWhitelist",
+      initArgs: [tokens, nonBeanTokens, siloSettings, whitelistStatuses, oracles],
+      bip: false,
+      verbose: true,
+      account: account
+    });
   });
+  console.log("-----------------------------------");
 }
 exports.reseed9 = reseed9;

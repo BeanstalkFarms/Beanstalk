@@ -42,16 +42,22 @@
     "sdk:prettier": "yarn prettier projects/sdk -w",
     "sdk:publish": "yarn workspace @beanstalk/sdk publish",
     "sdk:version": "yarn workspace @beanstalk/sdk version",
+    "dex-ui:dev": "yarn workspace dex-ui dev",
+    "dex-ui:build": "yarn workspace dex-ui build",
+    "dex-ui:generate": "yarn workspace dex-ui generate",
     "ui:generate": "yarn workspace ui generate",
+    "ui:dev": "yarn workspace ui dev",
     "ui:start": "yarn workspace ui start",
     "ui:build": "yarn workspace ui build",
     "ui:test": "yarn workspace ui test",
     "test:browser": "yarn workspace tests test:browser",
     "ex": "yarn workspace @beanstalk/examples x",
+    "anvil-arbitrum": "yarn cli:anvil-arbitrum",
+    "anvil-eth-mainnet": "yarn cli:anvil-eth-mainnet",
     "anvil": "anvil --fork-url https://eth-mainnet.g.alchemy.com/v2/5ubn94zT7v7DnB5bNW1VOnoIbX5-AG2N --chain-id 1337",
     "anvil4tests": "anvil --fork-url https://eth-mainnet.g.alchemy.com/v2/Kk7ktCQL5wz4v4AG8bR2Gun8TAASQ-qi  --chain-id 1337 --fork-block-number 18629000"
   },
   "dependencies": {
-    "prettier-plugin-solidity": "1.3.1"
+    "prettier-plugin-solidity": "1.4.1"
   }
 }

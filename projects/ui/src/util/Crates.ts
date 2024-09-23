@@ -1,14 +1,14 @@
 import { BeanstalkSDK } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import Token from '~/classes/Token';
 import { TokenMap } from '~/constants';
 import { Beanstalk } from '~/generated';
 import useBDV from '~/hooks/beanstalk/useBDV';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import {
   LegacyDepositCrate,
   FarmerSiloTokenBalance,
 } from '~/state/farmer/silo';
-import { transform } from '~/util';
+import { stringifyTokenAmount, transform } from '~/util';
 
 /**
  * @deprecated TOOD: Remove this
@@ -20,9 +20,9 @@ export const STALK_PER_SEED_PER_SEASON = 1 / 10_000;
  */
 export const selectCratesForEnroot = (
   beanstalk: Beanstalk,
-  unripeTokens: TokenMap<Token>,
+  unripeTokens: TokenMap<TokenInstance>,
   siloBalances: TokenMap<FarmerSiloTokenBalance>,
-  getBDV: (_token: Token) => BigNumber
+  getBDV: (_token: TokenInstance) => BigNumber
 ) =>
   Object.keys(unripeTokens).reduce<{
     [addr: string]: { crates: LegacyDepositCrate[]; encoded: string };
@@ -43,7 +43,7 @@ export const selectCratesForEnroot = (
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposit', [
             addr,
             crates[0].stem.toString(),
-            unripeTokens[addr].stringify(crates[0].amount), // amount
+            stringifyTokenAmount(crates[0].amount, unripeTokens[addr]), // amount
           ]),
         };
       } else {
@@ -52,7 +52,9 @@ export const selectCratesForEnroot = (
           encoded: beanstalk.interface.encodeFunctionData('enrootDeposits', [
             addr,
             crates.map((crate) => crate.stem.toString()),
-            crates.map((crate) => unripeTokens[addr].stringify(crate.amount)), // amounts
+            crates.map((crate) =>
+              stringifyTokenAmount(crate.amount, unripeTokens[addr])
+            ), // amounts
           ]),
         };
       }

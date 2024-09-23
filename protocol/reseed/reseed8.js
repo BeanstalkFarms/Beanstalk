@@ -1,71 +1,49 @@
-const { impersonateSigner } = require("../utils");
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
 
-const {
-  L2_WETH_ADDRESS,
-  L2_WSTETH_ADDRESS,
-  L2_USDC_ADDRESS
-} = require("../test/hardhat/utils/constants");
-
-// Files
-const INIT_SUPPLY = "./reseed/data/r8-L2_supply.json";
-const INIT_WELL_BALANCES = "./reseed/data/r8-L2_well_balances.json";
-const EXTERNAL_UNRIPE = "./reseed/data/r8-L2_external_unripe_balances.json";
-
-/**
- * reseed8 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,
- * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
- * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
- */
-async function reseed8(account, L2Beanstalk, mock = true) {
-  verbose = true;
+async function reseed8(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
-  console.log("reseed8: transfer beanEth, beanWsteth, beanUSDC.\n");
-  [beanSupply, unripeBeanSupply, unripeLpSupply] = JSON.parse(await fs.readFileSync(INIT_SUPPLY));
-  [beanEthAmounts, beanWstethAmounts, beanStableAmounts] = JSON.parse(
-    await fs.readFileSync(INIT_WELL_BALANCES)
-  );
-  [urBean, urBeanLP] = JSON.parse(await fs.readFileSync(EXTERNAL_UNRIPE));
+  console.log("reseed8: reissue internal balances.\n");
 
-  const weth = await ethers.getContractFactory("IERC20", L2_WETH_ADDRESS);
-  const wsteth = await ethers.getContractFactory("IERC20", L2_WSTETH_ADDRESS);
-  const stable = await ethers.getContractFactory("IERC20", L2_USDC_ADDRESS);
-
-  // mint:
+  // Files
+  let internalBalancesPath;
   if (mock) {
-    owner = impersonateSigner(account);
-    await weth.mint(account, ethInBeanEthWell);
-    await wsteth.mint(account, wstEthInBeanWstEthWell);
-    await stable.mint(account, stableInBeanStableWell);
-
-    // approve beanstalk:
-    await weth.connect(owner).approve(L2Beanstalk, ethInBeanEthWell);
-    await wsteth.connect(owner).approve(L2Beanstalk, wstEthInBeanWstEthWell);
-    await stable.connect(owner).approve(L2Beanstalk, stableInBeanStableWell);
+    internalBalancesPath = "./reseed/data/mocks/r8-internal-balances-mock.json";
+  } else {
+    internalBalancesPath = "./reseed/data/r8-internal-balances.json";
   }
 
-  // call init:
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedBean",
-    initArgs: [
-      account,
-      beanSupply,
-      unripeBeanSupply,
-      unripeLpSupply,
-      beanEthAmounts,
-      beanWstethAmounts,
-      beanStableAmounts,
-      urBean,
-      urBeanLP
-    ],
-    bip: false,
-    verbose: true,
-    account: account
-  });
+  let beanBalances = JSON.parse(await fs.readFileSync(internalBalancesPath));
 
-  console.log("-----------------------------------");
+  targetEntriesPerChunk = 500;
+  balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
+  const InitFacet = await (
+    await ethers.getContractFactory("ReseedInternalBalances", account)
+  ).deploy();
+  await InitFacet.deployed();
+  for (let i = 0; i < balanceChunks.length; i++) {
+    await updateProgress(i + 1, balanceChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", balanceChunks[i]);
+      console.log("-----------------------------------");
+    }
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedInternalBalances",
+        initFacetAddress: InitFacet.address,
+        initArgs: [balanceChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedInternalBalances"
+      });
+    });
+  }
 }
+
 exports.reseed8 = reseed8;

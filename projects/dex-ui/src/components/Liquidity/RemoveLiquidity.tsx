@@ -1,30 +1,34 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TokenInput } from "src/components/Swap/TokenInput";
-import { Token, TokenValue } from "@beanstalk/sdk";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
-import { Well } from "@beanstalk/sdk/Wells";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
+import { size } from "src/breakpoints";
+import { TokenInput } from "src/components/Swap/TokenInput";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
+import { displayTokenSymbol } from "src/utils/format";
+import { getPrice } from "src/utils/price/usePrice";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
+import useSdk from "src/utils/sdk/useSdk";
 import { useLiquidityQuote } from "src/wells/useLiquidityQuote";
-import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
-import { Button } from "../Swap/Button";
+import { useWellReserves } from "src/wells/useWellReserves";
+
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
-import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
+import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
+import { Log } from "../../utils/logger";
+import { Checkbox } from "../Checkbox";
+import { LoadingTemplate } from "../LoadingTemplate";
+import { Button } from "../Swap/Button";
 import { TabButton } from "../TabButton";
 import { TransactionToast } from "../TxnToast/TransactionToast";
-import useSdk from "src/utils/sdk/useSdk";
-import { getPrice } from "src/utils/price/usePrice";
-import { useWellReserves } from "src/wells/useWellReserves";
-import { Checkbox } from "../Checkbox";
-import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
-import { LoadingTemplate } from "../LoadingTemplate";
-import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-import { ActionWalletButtonWrapper } from "src/components/Wallet";
-import { useInvalidateScopedQueries } from "src/utils/query/useInvalidateQueries";
-import { queryKeys } from "src/utils/query/queryKeys";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
@@ -55,7 +59,7 @@ const RemoveLiquidityContent = ({
 
   const { getPositionWithWell, refetch: refetchLPSummary } = useLPPositionSummary();
   const position = getPositionWithWell(well);
-  const invalidateScopedQuery = useInvalidateScopedQueries();
+  const invalidateScopedQuery = useInvalidateQueries();
 
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
   const sdk = useSdk();
@@ -526,7 +530,9 @@ const RemoveLiquidityLoading = () => (
   </LargeGapContainer>
 );
 
-export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps> = (props) => {
+export const RemoveLiquidity: React.FC<
+  { well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps
+> = (props) => {
   if (!props.well || props.loading) {
     return <RemoveLiquidityLoading />;
   }

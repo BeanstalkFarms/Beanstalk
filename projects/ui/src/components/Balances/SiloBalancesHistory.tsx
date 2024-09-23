@@ -6,12 +6,12 @@ import useTimeTabState from '~/hooks/app/useTimeTabState';
 import BaseSeasonPlot, {
   QueryData,
 } from '~/components/Common/Charts/BaseSeasonPlot';
-import { SILO_WHITELIST } from '~/constants/tokens';
 import {
   SEASON_RANGE_TO_COUNT,
   SeasonRange,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useFarmerSiloHistory from '~/hooks/farmer/useFarmerSiloHistory';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 import MockPlot from '../Silo/MockPlot';
 import BlurComponent from '../Common/ZeroState/BlurComponent';
 import WalletButton from '../Common/Connection/WalletButton';
@@ -21,9 +21,10 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const account = useAccount();
   const timeTabParams = useTimeTabState();
   const { data, loading } = useFarmerSiloHistory(account, true, false);
+  const { whitelist } = useWhitelistedTokens();
 
   const formatValue = (value: number) =>
-    `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    `$${value?.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
   const getStatValue = <T extends BaseDataPoint>(v?: T[]) => {
     if (!v?.length) return 0;
@@ -48,7 +49,7 @@ const SiloBalancesHistory: React.FC<{}> = () => {
   const queryData: QueryData = {
     data: filteredSeries as BaseDataPoint[][],
     loading: loading,
-    keys: SILO_WHITELIST.map((t) => t[1].address),
+    keys: whitelist.map((t) => t.address),
     error: undefined,
   };
 

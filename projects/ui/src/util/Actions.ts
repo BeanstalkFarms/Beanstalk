@@ -8,7 +8,7 @@ import {
   AmountsBySource,
   displayAmountsBySource,
 } from '~/hooks/beanstalk/useBalancesUsedBySource';
-import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
+import { BEAN, PODS, SPROUTS } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
 export enum ActionType {
@@ -297,11 +297,7 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
-      if (
-        a.tokenOut.isLP &&
-        a.tokenOut.symbol !== CRV3[1].symbol &&
-        !a.tokenOut.isUnripe
-      ) {
+      if (a.tokenOut.isLP && !a.tokenOut.isUnripe) {
         const bySource = a.amountsBySource;
         const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut, {
           showName: false,
@@ -323,11 +319,7 @@ export const parseActionMessage = (a: Action) => {
           showSymbol: true,
         })} of liquidity for ${amtOutDisplay}.`;
       }
-      if (
-        a.tokenIn.isLP &&
-        a.tokenIn.symbol !== CRV3[1].symbol &&
-        !a.tokenIn.isUnripe
-      ) {
+      if (a.tokenIn.isLP && !a.tokenIn.isUnripe) {
         return `Burn ${displayTokenAmount(a.amountIn, a.tokenIn, {
           showName: false,
           showSymbol: true,

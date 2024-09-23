@@ -1,40 +1,45 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
-
-// Files
-const BEAN_INTERNAL_BALANCES = "./reseed/data/r6-bean_internal.json";
-const BEAN_ETH_BALANCES = "./reseed/data/r6-bean_eth_internal.json";
-const BEAN_WSTETH_BALANCES = "./reseed/data/r6-bean_wsteth_internal.json";
-const BEAN_STABLE_BALANCES = "./reseed/data/r6-bean_stable_internal.json";
-const URBEAN_BALANCES = "./reseed/data/r6-urbean_internal.json";
-const URBEAN_LP_BALANCES = "./reseed/data/r6-urbeanLP_internal.json";
-
-async function reseed6(account, L2Beanstalk) {
+const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
+const { retryOperation } = require("../utils/read.js");
+async function reseed6(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
-  console.log("reseed6: reissue internal balances.\n");
-  const beanBalances = JSON.parse(await fs.readFileSync(BEAN_INTERNAL_BALANCES));
-  const beanEthBalances = JSON.parse(await fs.readFileSync(BEAN_ETH_BALANCES));
-  const beanWstethBalances = JSON.parse(await fs.readFileSync(BEAN_WSTETH_BALANCES));
-  const beanStableBalances = JSON.parse(await fs.readFileSync(BEAN_STABLE_BALANCES));
-  const urBeanBalances = JSON.parse(await fs.readFileSync(URBEAN_BALANCES));
-  const urBeanLpBalances = JSON.parse(await fs.readFileSync(URBEAN_LP_BALANCES));
+  console.log("reseed6: reissue deposits.\n");
 
-  await upgradeWithNewFacets({
-    diamondAddress: L2Beanstalk,
-    facetNames: [],
-    initFacetName: "ReseedInternalBalances",
-    initArgs: [
-      beanBalances,
-      beanEthBalances,
-      beanWstethBalances,
-      beanStableBalances,
-      urBeanBalances,
-      urBeanLpBalances
-    ],
-    bip: false,
-    verbose: true,
-    account: account
-  });
-  console.log("-----------------------------------");
+  // Files
+  let depositsPath;
+  if (mock) {
+    depositsPath = "./reseed/data/mocks/r6-deposits-mock.json";
+  } else {
+    depositsPath = "./reseed/data/r6-deposits.json";
+  }
+  const beanDeposits = JSON.parse(await fs.readFileSync(depositsPath));
+
+  targetEntriesPerChunk = 400;
+  depositChunks = await splitEntriesIntoChunksOptimized(beanDeposits, targetEntriesPerChunk);
+  const InitFacet = await (await ethers.getContractFactory("ReseedSilo", account)).deploy();
+  await InitFacet.deployed();
+  for (let i = 0; i < depositChunks.length; i++) {
+    await updateProgress(i + 1, depositChunks.length);
+    if (verbose) {
+      console.log("Data chunk:", depositChunks[i]);
+      console.log("-----------------------------------");
+    }
+    await retryOperation(async () => {
+      await upgradeWithNewFacets({
+        diamondAddress: L2Beanstalk,
+        facetNames: [],
+        initFacetName: "ReseedSilo",
+        initFacetAddress: InitFacet.address,
+        initArgs: [depositChunks[i]],
+        bip: false,
+        verbose: verbose,
+        account: account,
+        checkGas: true,
+        initFacetNameInfo: "ReseedSilo"
+      });
+    });
+  }
 }
+
 exports.reseed6 = reseed6;

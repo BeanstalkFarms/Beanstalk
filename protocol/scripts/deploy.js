@@ -8,8 +8,7 @@ const {
   WSTETH,
   WSTETH_ETH_UNIV3_01_POOL,
   BEANSTALK,
-  UNRIPE_BEAN,
-  TRI_CRYPTO_POOL
+  UNRIPE_BEAN
 } = require("../test/hardhat/utils/constants.js");
 const diamond = require("./diamond.js");
 const {
@@ -19,11 +18,11 @@ const {
   impersonatePrice,
   impersonateChainlinkAggregator,
   impersonateUniswapV3,
-  impersonateWsteth,
   impersonatePipeline,
   impersonateToken
 } = require("./impersonate.js");
-
+const { getBeanstalk } = require("../utils/contracts");
+const { impersonateBeanstalkOwner } = require("../utils/signer");
 const { deployBasin } = require("./basin");
 const {
   whitelistWell,
@@ -73,13 +72,14 @@ async function main(
   const name = "Beanstalk";
 
   // Deploy all facets and external libraries.
-  [facets, libraryNames, facetLibraries] = await getFacetData(mock);
+  [facets, libraryNames, facetLibraries, linkedLibraries] = await getFacetData(mock);
   let facetsAndNames = await deployFacets(
     verbose,
     mock,
     facets,
     libraryNames,
     facetLibraries,
+    linkedLibraries,
     totalGasUsed
   );
 
@@ -151,6 +151,9 @@ async function main(
     console.log("--");
     console.log("Total gas used: " + strDisplay(totalGasUsed));
   }
+
+  // sets up ETH/WSTETH oracles
+  await initWhitelistOracles();
 
   return {
     account: account,
@@ -247,6 +250,7 @@ async function deployFacets(
   facets,
   libraryNames = [],
   facetLibraries = {},
+  linkedLibraries = {},
   totalGasUsed
 ) {
   const instancesAndNames = [];
@@ -254,7 +258,18 @@ async function deployFacets(
 
   for (const name of libraryNames) {
     if (verbose) console.log(`Deploying: ${name}`);
-    let libraryFactory = await ethers.getContractFactory(name);
+    let libraryFactory;
+    if (linkedLibraries[name]) {
+      let linkedLibrary = Object.keys(libraries).reduce((acc, val) => {
+        if (linkedLibraries[name].includes(val)) acc[val] = libraries[val];
+        return acc;
+      }, {});
+      libraryFactory = await ethers.getContractFactory(name, {
+        libraries: linkedLibrary
+      });
+    } else {
+      libraryFactory = await ethers.getContractFactory(name);
+    }
     libraryFactory = await libraryFactory.deploy();
     await libraryFactory.deployed();
     const receipt = await libraryFactory.deployTransaction.wait();
@@ -334,6 +349,7 @@ async function getFacetData(mock = true) {
     "PauseFacet",
     "DepotFacet",
     "SeasonGettersFacet",
+    "GaugeGettersFacet",
     "OwnershipFacet",
     "TokenFacet",
     "TokenSupportFacet",
@@ -366,7 +382,10 @@ async function getFacetData(mock = true) {
     "LibPipelineConvert",
     "LibSilo",
     "LibShipping",
-    "LibFlood"
+    "LibFlood",
+    "LibTokenSilo",
+    "LibEvaluate",
+    "LibSiloPermit"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -375,22 +394,30 @@ async function getFacetData(mock = true) {
     SeasonFacet: [
       "LibGauge",
       "LibIncentive",
-      "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
       "LibShipping",
-      "LibFlood"
+      "LibFlood",
+      "LibEvaluate"
     ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
-    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo", "LibTokenSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
-    ClaimFacet: ["LibSilo"]
+    SiloFacet: ["LibSilo", "LibTokenSilo", "LibSiloPermit"],
+    EnrootFacet: ["LibSilo", "LibTokenSilo"],
+    ClaimFacet: ["LibSilo", "LibTokenSilo"],
+    GaugeGettersFacet: ["LibLockedUnderlying"]
   };
 
-  return [facets, libraryNames, facetLibraries];
+  // A mapping of external libraries to external libraries that need to be linked.
+  // note: if a library depends on another library, the dependency will need to come
+  // before itself in `libraryNames`
+  libraryLinks = {
+    LibEvaluate: ["LibLockedUnderlying"]
+  };
+
+  return [facets, libraryNames, facetLibraries, libraryLinks];
 }
 
 /**
@@ -400,13 +427,13 @@ async function getFacetData(mock = true) {
  */
 async function impersonateERC20s() {
   await impersonateWeth();
-  await impersonateWsteth();
 
   // New default ERC20s should be added here.
   tokens = [
     [USDC, 6],
     [USDT, 18],
-    [DAI, 18]
+    [DAI, 18],
+    [WSTETH, 18]
   ];
   for (let token of tokens) {
     await impersonateToken(token[0], token[1]);
@@ -425,6 +452,58 @@ async function impersonateOracles() {
   await impersonateUniswapV3(WSTETH_ETH_UNIV3_01_POOL, WSTETH, WETH, 100);
 
   // New oracles for wells should be added here.
+}
+
+async function initWhitelistOracles() {
+  // init ETH:USD oracle
+  await updateOracleImplementationForTokenUsingChainlinkAggregator(
+    WETH,
+    ETH_USD_CHAINLINK_AGGREGATOR
+  );
+  await setupWstethOracleImplementation();
+}
+
+async function updateOracleImplementationForTokenUsingChainlinkAggregator(token, oracleAddress) {
+  const FOUR_HOUR_TIMEOUT = 14400; // 4 hours in seconds
+
+  const oracleImplementation = {
+    target: oracleAddress,
+    selector: "0x00000000",
+    encodeType: "0x01",
+    data: ethers.utils.defaultAbiCoder.encode(["uint256"], [FOUR_HOUR_TIMEOUT])
+  };
+
+  var owner = await impersonateBeanstalkOwner();
+
+  const beanstalk = await getBeanstalk();
+  await beanstalk.connect(owner).updateOracleImplementationForToken(token, oracleImplementation);
+}
+
+async function setupWstethOracleImplementation() {
+  // Deploy new staking eth oracle contract
+  const LSDChainlinkOracle = await ethers.getContractFactory("LSDChainlinkOracle");
+  const oracleAddress = await LSDChainlinkOracle.deploy();
+
+  const _ethChainlinkOracle = ETH_USD_CHAINLINK_AGGREGATOR;
+  const _ethTimeout = 3600 * 4;
+  const _xEthChainlinkOracle = STETH_ETH_CHAINLINK_PRICE_AGGREGATOR;
+  const _xEthTimeout = 3600 * 4;
+  const _token = WSTETH;
+
+  // Create the oracleImplementation object
+  const oracleImplementation = {
+    target: oracleAddress.address,
+    selector: LSDChainlinkOracle.interface.getSighash("getPrice"),
+    encodeType: "0x00",
+    data: ethers.utils.defaultAbiCoder.encode(
+      ["address", "uint256", "address", "uint256", "address"],
+      [_ethChainlinkOracle, _ethTimeout, _xEthChainlinkOracle, _xEthTimeout, _token]
+    )
+  };
+
+  var owner = await impersonateBeanstalkOwner();
+  const beanstalk = await getBeanstalk();
+  await beanstalk.connect(owner).updateOracleImplementationForToken(_token, oracleImplementation);
 }
 
 function addCommas(nStr) {
@@ -454,3 +533,4 @@ if (require.main === module) {
     });
 }
 exports.deploy = main;
+exports.initWhitelistOracles = initWhitelistOracles;

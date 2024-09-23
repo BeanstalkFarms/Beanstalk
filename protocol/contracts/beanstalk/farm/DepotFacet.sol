@@ -7,7 +7,9 @@ pragma solidity ^0.8.20;
 import "contracts/interfaces/IPipeline.sol";
 import "contracts/libraries/LibFunction.sol";
 import "contracts/libraries/Token/LibEth.sol";
+import {C} from "contracts/C.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 
 /**
  * @title Depot Facet
@@ -16,10 +18,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
  * in the same transaction that loads Ether, Pipes calls to other protocols and unloads Pipeline.
  **/
 
-contract DepotFacet is Invariable {
-    // Pipeline V1.0.1
-    address private constant PIPELINE = 0xb1bE0000C6B3C62749b5F0c92480146452D15423;
-
+contract DepotFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Pipe a PipeCall through Pipeline.
      * @param p PipeCall to pipe through Pipeline
@@ -27,8 +26,8 @@ contract DepotFacet is Invariable {
      **/
     function pipe(
         PipeCall calldata p
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
-        result = IPipeline(PIPELINE).pipe(p);
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
+        result = C.pipeline().pipe(p);
     }
 
     /**
@@ -39,8 +38,8 @@ contract DepotFacet is Invariable {
      **/
     function multiPipe(
         PipeCall[] calldata pipes
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
-        results = IPipeline(PIPELINE).multiPipe(pipes);
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
+        results = C.pipeline().multiPipe(pipes);
     }
 
     /**
@@ -51,8 +50,8 @@ contract DepotFacet is Invariable {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
-        results = IPipeline(PIPELINE).advancedPipe{value: value}(pipes);
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
+        results = C.pipeline().advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
 
@@ -65,8 +64,8 @@ contract DepotFacet is Invariable {
     function etherPipe(
         PipeCall calldata p,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
-        result = IPipeline(PIPELINE).pipe{value: value}(p);
+    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
+        result = C.pipeline().pipe{value: value}(p);
         LibEth.refundEth();
     }
 
