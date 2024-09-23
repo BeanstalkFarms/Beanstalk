@@ -33,16 +33,14 @@ export class PipelineConvert {
     stems: BigNumber[],
     amounts: BigNumber[],
     tokenOut: ERC20Token,
-    advPipeCalls: AdvancedPipeCallStruct[],
-    overrides?: ethers.PayableOverrides
+    advPipeCalls: AdvancedPipeCallStruct[]
   ) {
     return PipelineConvert.sdk.contracts.beanstalk.pipelineConvert(
       tokenIn.address,
       stems,
       amounts,
       tokenOut.address,
-      advPipeCalls,
-      overrides
+      advPipeCalls
     );
   }
 
@@ -183,9 +181,7 @@ export class PipelineConvert {
     const pipe: AdvancedPipeCallStruct[] = [];
 
     // 0: approve from.well.lpToken to use from.well.lpToken
-    pipe.push(
-      PipelineConvert.snippets.erc20Approve(source.well.lpToken, source.well.lpToken.address)
-    );
+    pipe.push(PipelineConvert.snippets.erc20Approve(source.well.lpToken, source.well.address));
 
     // 1: remove liquidity from from.well
     pipe.push(

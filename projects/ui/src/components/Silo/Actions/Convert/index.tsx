@@ -28,7 +28,6 @@ import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { DefaultConvertForm } from './DefaultConvertForm';
-import { PipelineConvertFormV2 } from './PipelineconvertFormV2';
 // import { PipelineConvertForm } from './PipelineConvertForm';
 import {
   BaseConvertFormProps,
@@ -37,6 +36,7 @@ import {
   ConvertProps,
   ConvertQuoteHandlerParams,
 } from './types';
+import { PipelineConvertForm } from './PipelineConvertForm';
 
 interface Props extends BaseConvertFormProps {
   farmerBalances: TokenSiloBalance | undefined;
@@ -100,20 +100,6 @@ const DefaultConvertFormWrapper = (props: Props) => {
   );
 };
 
-const PipelineConvertFormWrapper = (props: Props) => {
-  const [conversion, setConversion] = useState<ConvertDetails>({
-    // pull this to the parent?
-    actions: [],
-    amount: TokenValue.ZERO,
-    bdv: TokenValue.ZERO,
-    crates: [],
-    seeds: TokenValue.ZERO,
-    stalk: TokenValue.ZERO,
-  });
-
-  return <PipelineConvertFormV2 {...props} />;
-};
-
 // ---------- Convert Form Router ----------
 /**
  * Depending on whether the conversion requires a pipeline convert,
@@ -125,7 +111,7 @@ const ConvertFormRouter = (props: Props) => {
   if (!tokenOut) return null;
 
   if (isPipelineConvert(props.fromToken, tokenOut)) {
-    return <PipelineConvertFormWrapper {...props} />;
+    return <PipelineConvertForm {...props} />;
   }
 
   return <DefaultConvertFormWrapper {...props} />;
