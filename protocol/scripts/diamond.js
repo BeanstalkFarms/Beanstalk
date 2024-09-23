@@ -84,12 +84,6 @@ async function deployDiamond({
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
   }
   const diamondFactory = await ethers.getContractFactory("Diamond");
-  const diamondCut = [];
-  if (verbose) {
-    console.log("--");
-    console.log("Setting up diamondCut args");
-    console.log("--");
-  }
   let result;
   if (typeof initDiamond === "string") {
     const initDiamondName = initDiamond;
