@@ -13,6 +13,74 @@ export class PipelineConvert {
     PipelineConvert.sdk = sdk;
   }
 
+  public async estimateEqual2Equal(
+    fromWell: BasinWell,
+    toWell: BasinWell,
+    amountIn: TokenValue,
+    slippage: number
+  ) {
+    PipelineConvert.sdk.debug("[PipelineConvert] estimateEqual2Equal", {
+      fromWell: fromWell.address,
+      toWell: toWell.address,
+      amountIn: amountIn.toHuman(),
+      slippage
+    });
+
+    const BEAN = PipelineConvert.sdk.tokens.BEAN;
+    const fromWellBeanIndex = fromWell.tokens.findIndex((t) => t.equals(BEAN));
+    const toWellBeanIndex = toWell.tokens.findIndex((t) => t.equals(BEAN));
+
+    const [outIndex0, outIndex1] = await fromWell.getRemoveLiquidityOutEqual(amountIn);
+
+    const sellToken = fromWell.tokens[fromWellBeanIndex === 0 ? 1 : 0];
+    const buyToken = toWell.tokens[toWellBeanIndex === 0 ? 1 : 0];
+
+    const sellAmount = fromWellBeanIndex === 0 ? outIndex1 : outIndex0;
+    const beanAmount = fromWellBeanIndex === 0 ? outIndex0 : outIndex1;
+
+    const quote = await PipelineConvert.sdk.zeroX.fetchSwapQuote({
+      sellToken: sellToken.address,
+      buyToken: buyToken.address,
+      sellAmount: sellAmount.blockchainString,
+      takerAddress: PipelineConvert.sdk.contracts.pipeline.address,
+      shouldSellEntireBalance: true,
+      skipValidation: true,
+      slippagePercentage: slippage.toString()
+    });
+
+    const buyAmount = buyToken.fromBlockchain(quote.buyAmount);
+
+    const toWellAmountsIn = [beanAmount, buyAmount];
+    if (fromWellBeanIndex === 0) {
+      toWellAmountsIn.reverse();
+    }
+
+    const amountOut = await toWell.getAddLiquidityOut(toWellAmountsIn);
+
+    const advPipeCalls = this.buildEq2EqAdvancedPipeCalls({
+      from: {
+        well: fromWell,
+        amountIn: amountIn
+      },
+      swap: {
+        buyToken: buyToken,
+        sellToken: sellToken,
+        quote: quote
+      },
+      to: {
+        well: toWell,
+        amountOut
+      }
+    });
+
+    return {
+      fromWellAmountsOut: [beanAmount, sellAmount],
+      quote,
+      amountOut,
+      advPipeCalls
+    };
+  }
+
   /**
    * Equal2Equal
    * - remove in equal parts from Well 1
@@ -21,22 +89,25 @@ export class PipelineConvert {
    * Builds the advanced pipe calls for the pipeline convert
    * @param quote
    */
-  public buildEq2EqAdvancedPipeCalls(
+  public buildEq2EqAdvancedPipeCalls({
+    from,
+    swap,
+    to
+  }: {
     from: {
       well: BasinWell;
       amountIn: TokenValue;
-      amountsOut: TokenValue[];
-    },
+    };
     swap: {
       buyToken: ERC20Token;
       sellToken: ERC20Token;
       quote: MinimumViableSwapQuote;
-    },
+    };
     to: {
       well: BasinWell;
       amountOut: TokenValue;
-    }
-  ) {
+    };
+  }) {
     const sellTokenIndex = from.well.tokens.findIndex(
       (t) => t.address.toLowerCase() === swap.sellToken.address.toLowerCase()
     );
