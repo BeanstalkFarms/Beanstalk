@@ -9,6 +9,7 @@ import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
+import { ethers } from 'ethers';
 import DepositsTable from './DepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 
@@ -104,11 +105,6 @@ export default TokenDepositsOverview;
 /**
  * Shorten an Silo Deposit Id for UI display.
  */
-export function trimDepositId(
-  address: string,
-  options?: { start?: number; end?: number }
-) {
-  const start = options?.start || 4;
-  const end = options?.end || 2;
-  return `${address.substring(0, start)}${address ? `...${address.slice(-end)}` : ''}`;
+export function trimDepositId(address: string) {
+  return `...${ethers.BigNumber.from(address).toHexString().slice(-6)}`;
 }

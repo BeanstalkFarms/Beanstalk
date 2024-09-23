@@ -93,10 +93,13 @@ const DepositConvertTable = ({
   const isMultiSelect = selectType === 'multi';
   const isLambdaView = slug === 'lambda';
 
+  console.log('rows: ', rows);
+  console.log('selected: ', selected);
+
   const allColumns = useMemo<GridColumns<FarmerTokenConvertRow>>(
     () => [
       {
-        field: 'deposit',
+        field: 'deposits',
         flex: 1,
         minWidth: 150,
         headerName: 'Deposits',
@@ -251,7 +254,7 @@ const DepositConvertTable = ({
 
   const handleRowClick: GridEventListener<'rowClick'> = useCallback(
     (params) => {
-      setSelected(params.row.id, selectType);
+      setSelected(params.row.key, selectType);
     },
     [setSelected, selectType]
   );
