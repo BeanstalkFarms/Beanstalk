@@ -13,30 +13,83 @@ export class PipelineConvert {
     PipelineConvert.sdk = sdk;
   }
 
-  public async estimateEqual2Equal(
-    fromWell: BasinWell,
-    toWell: BasinWell,
+  ///// Remove Equal 2 Add Equal
+  // 1. Remove in equal parts from Well 1
+  // 2. Swap non-bean token of well 1 for non-bean token of well 2
+  // 3. Add in equal parts to well 2
+
+  /**
+   * Preforms a Remove Equal 2 Add Equal pipeline convert
+   * @param tokenIn
+   * @param stems
+   * @param amounts
+   * @param tokenOut
+   * @param advPipeCalls
+   * @param overrides
+   * @returns
+   */
+  async removeEqualAddEqual(
+    tokenIn: ERC20Token,
+    stems: ethers.BigNumber[],
+    amounts: ethers.BigNumber[],
+    tokenOut: ERC20Token,
+    advPipeCalls: AdvancedPipeCallStruct[],
+    overrides?: ethers.PayableOverrides
+  ) {
+    return PipelineConvert.sdk.contracts.beanstalk.pipelineConvert(
+      tokenIn.address,
+      stems,
+      amounts,
+      tokenOut.address,
+      advPipeCalls,
+      overrides
+    );
+  }
+
+  /**
+   * Estimates the result of a Remove Equal 2 Add Equal pipeline convert
+   * @param sourceWell Well to remove liquidity from
+   * @param targetWell Well to add liquidity to
+   * @param amountIn Amount of sourceWell.lpToken to remove
+   * @param slippage Slippage tolerance for swap
+   */
+  async removeEqual2AddEqualQuote(
+    sourceWell: BasinWell,
+    targetWell: BasinWell,
     amountIn: TokenValue,
     slippage: number
   ) {
-    PipelineConvert.sdk.debug("[PipelineConvert] estimateEqual2Equal", {
-      fromWell: fromWell.address,
-      toWell: toWell.address,
+    if (!PipelineConvert.sdk.pools.whitelistedPools.has(sourceWell.address)) {
+      throw new Error(`${sourceWell.name} is not a whitelisted well`);
+    }
+    if (!PipelineConvert.sdk.pools.whitelistedPools.has(targetWell.address)) {
+      throw new Error(`${targetWell.name} is not a whitelisted well`);
+    }
+    if (amountIn.lte(0)) {
+      throw new Error("Cannot convert 0 or less tokens");
+    }
+    if (slippage < 0) {
+      throw new Error("Invalid slippage");
+    }
+
+    PipelineConvert.sdk.debug("[PipelineConvert] estimateRemoveEqual2AddEqual", {
+      sourceWell: sourceWell.address,
+      targetWell: targetWell.address,
       amountIn: amountIn.toHuman(),
       slippage
     });
 
     const BEAN = PipelineConvert.sdk.tokens.BEAN;
-    const fromWellBeanIndex = fromWell.tokens.findIndex((t) => t.equals(BEAN));
-    const toWellBeanIndex = toWell.tokens.findIndex((t) => t.equals(BEAN));
+    const sourceWellBeanIndex = sourceWell.tokens.findIndex((t) => t.equals(BEAN));
+    const targetWellBeanIndex = targetWell.tokens.findIndex((t) => t.equals(BEAN));
 
-    const [outIndex0, outIndex1] = await fromWell.getRemoveLiquidityOutEqual(amountIn);
+    const [outIndex0, outIndex1] = await sourceWell.getRemoveLiquidityOutEqual(amountIn);
 
-    const sellToken = fromWell.tokens[fromWellBeanIndex === 0 ? 1 : 0];
-    const buyToken = toWell.tokens[toWellBeanIndex === 0 ? 1 : 0];
+    const sellToken = sourceWell.tokens[sourceWellBeanIndex === 0 ? 1 : 0];
+    const buyToken = targetWell.tokens[targetWellBeanIndex === 0 ? 1 : 0];
 
-    const sellAmount = fromWellBeanIndex === 0 ? outIndex1 : outIndex0;
-    const beanAmount = fromWellBeanIndex === 0 ? outIndex0 : outIndex1;
+    const sellAmount = sourceWellBeanIndex === 0 ? outIndex1 : outIndex0;
+    const beanAmount = sourceWellBeanIndex === 0 ? outIndex0 : outIndex1;
 
     const quote = await PipelineConvert.sdk.zeroX.fetchSwapQuote({
       sellToken: sellToken.address,
@@ -51,15 +104,15 @@ export class PipelineConvert {
     const buyAmount = buyToken.fromBlockchain(quote.buyAmount);
 
     const toWellAmountsIn = [beanAmount, buyAmount];
-    if (fromWellBeanIndex === 0) {
+    if (sourceWellBeanIndex === 0) {
       toWellAmountsIn.reverse();
     }
 
-    const amountOut = await toWell.getAddLiquidityOut(toWellAmountsIn);
+    const amountOut = await targetWell.getAddLiquidityOut(toWellAmountsIn);
 
-    const advPipeCalls = this.buildEq2EqAdvancedPipeCalls({
-      from: {
-        well: fromWell,
+    const advPipeCalls = this.buildRemoveEqual2AddEqualAdvancedPipe({
+      source: {
+        well: sourceWell,
         amountIn: amountIn
       },
       swap: {
@@ -67,34 +120,30 @@ export class PipelineConvert {
         sellToken: sellToken,
         quote: quote
       },
-      to: {
-        well: toWell,
+      target: {
+        well: targetWell,
         amountOut
       }
     });
 
-    return {
+    const result = {
       fromWellAmountsOut: [beanAmount, sellAmount],
+      toWellAmountsIn: toWellAmountsIn,
       quote,
       amountOut,
       advPipeCalls
     };
+
+    PipelineConvert.sdk.debug("[PipelineConvert] Result: ", result);
+
+    return result;
   }
 
   /**
-   * Equal2Equal
-   * - remove in equal parts from Well 1
-   * - swap non-bean token of well 1 for non-bean token of well 2
-   * - add in equal parts to well 2
-   * Builds the advanced pipe calls for the pipeline convert
-   * @param quote
+   * Builds the advanced pipe calls for a Remove Equal 2 Add Equal pipeline convert
    */
-  public buildEq2EqAdvancedPipeCalls({
-    from,
-    swap,
-    to
-  }: {
-    from: {
+  public buildRemoveEqual2AddEqualAdvancedPipe(params: {
+    source: {
       well: BasinWell;
       amountIn: TokenValue;
     };
@@ -103,27 +152,31 @@ export class PipelineConvert {
       sellToken: ERC20Token;
       quote: MinimumViableSwapQuote;
     };
-    to: {
+    target: {
       well: BasinWell;
       amountOut: TokenValue;
     };
   }) {
-    const sellTokenIndex = from.well.tokens.findIndex(
+    const { source, swap, target } = params;
+
+    const sellTokenIndex = source.well.tokens.findIndex(
       (t) => t.address.toLowerCase() === swap.sellToken.address.toLowerCase()
     );
 
     const pipe: AdvancedPipeCallStruct[] = [];
 
     // 0: approve from.well.lpToken to use from.well.lpToken
-    pipe.push(PipelineConvert.snippets.erc20Approve(from.well.lpToken, from.well.lpToken.address));
+    pipe.push(
+      PipelineConvert.snippets.erc20Approve(source.well.lpToken, source.well.lpToken.address)
+    );
 
     // 1: remove liquidity from from.well
     pipe.push(
       PipelineConvert.snippets.removeLiquidity(
-        from.well,
-        from.amountIn,
+        source.well,
+        source.amountIn,
         [TokenValue.ZERO, TokenValue.ZERO],
-        from.well.lpToken.address
+        source.well.lpToken.address
       )
     );
 
@@ -137,37 +190,42 @@ export class PipelineConvert {
       clipboard: Clipboard.encode([])
     });
 
-    // 4: transfer BuyToken to to.well
+    // 4: transfer swap result to target well
     pipe.push(
       PipelineConvert.snippets.erc20Transfer(
         swap.buyToken,
-        to.well.address,
-        to.amountOut,
+        target.well.address,
+        target.amountOut,
         Clipboard.encodeSlot(3, 0, 1)
       )
     );
 
-    // 5: transfer from.well.tokens[0] to to.well
+    // 5: transfer from from.well.tokens[non-bean index] to target well
     pipe.push(
       PipelineConvert.snippets.erc20Transfer(
-        from.well.tokens[sellTokenIndex === 1 ? 0 : 1],
-        to.well.address,
+        source.well.tokens[sellTokenIndex === 1 ? 0 : 1],
+        target.well.address,
         TokenValue.MAX_UINT256, // set to max uint256 to ensure transfer succeeds
         Clipboard.encodeSlot(1, 2, 1)
       )
     );
 
-    // 6. Call Sync on to.well
+    // 6. Call Sync on target well
     pipe.push(
       PipelineConvert.snippets.wellSync(
-        to.well,
+        target.well,
         PipelineConvert.sdk.contracts.pipeline.address, // set recipient to pipeline
-        to.amountOut
+        target.amountOut
       )
     );
   }
 
+  // ---------- static methods ----------
+  /**
+   * building blocks for the advanced pipe calls
+   */
   private static snippets = {
+    // ERC20 Token Methods
     erc20Approve: function (
       token: ERC20Token,
       spender: string,
@@ -196,6 +254,7 @@ export class PipelineConvert {
         clipboard
       };
     },
+    // Well Methods
     removeLiquidity: function (
       well: BasinWell,
       amountIn: TokenValue,
@@ -230,6 +289,7 @@ export class PipelineConvert {
         clipboard
       };
     },
+    // Junction methods
     gte: function (
       value: TokenValue,
       compareTo: TokenValue,
