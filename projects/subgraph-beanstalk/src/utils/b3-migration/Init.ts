@@ -23,6 +23,7 @@ export function init(block: ethereum.Block): void {
   let field = loadField(v().protocolAddress);
   field.podIndex = FIELD_INITIAL_VALUES.podIndex;
   field.harvestableIndex = FIELD_INITIAL_VALUES.harvestableIndex;
+  field.temperature = FIELD_INITIAL_VALUES.temperature;
   field.save();
 }
 

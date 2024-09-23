@@ -17,7 +17,7 @@ import { unripeChopped } from "../utils/Barn";
 import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 import { WhitelistToken } from "../../generated/Beanstalk-ABIs/Reseed";
-import { BI_10 } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -95,14 +95,14 @@ export function handlePlant(event: Plant): void {
   takeSiloSnapshots(silo, event.block);
   silo.save();
 
-  // Remove the asset-only amount that got added in Reward event handler.
+  // Remove the protocol asset amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
   updateDepositInSiloAsset(
     event.address,
     event.address,
     getProtocolToken(v(), event.block.number),
-    event.params.beans,
-    event.params.beans,
+    ZERO_BI.minus(event.params.beans),
+    ZERO_BI.minus(event.params.beans),
     event.block
   );
 }

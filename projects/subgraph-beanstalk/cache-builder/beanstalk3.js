@@ -9,22 +9,24 @@ const tokenMap = {
   "0x1bea3ccd22f4ebd3d37d731ba31eeca95713716d": "urlp"
 };
 
-// NOTE: once latest subgraph is deployed, will need to update beanstalk/marketplace ids in this query.
 (async () => {
+  // for testing purposes. set to empty string to ignore
+  const block = "block: { number: 20736200 }";
   const l1Values = await subgraph.request(gql`
     {
-      beanstalk(id: "beanstalk") {
+      beanstalk(id: "beanstalk" ${block}) {
         lastSeason
       }
-      field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5") {
+      field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" ${block}) {
         numberOfSowers
         numberOfSows
         sownBeans
         harvestedPods
         podIndex
         harvestableIndex
+        temperature
       }
-      podMarketplace(id: "0") {
+      podMarketplace(id: "0" ${block}) {
         filledListedPods
         expiredListedPods
         cancelledListedPods
@@ -34,13 +36,13 @@ const tokenMap = {
         podVolume
         beanVolume
       }
-      fertilizerTokens(first: 1000) {
+      fertilizerTokens(first: 1000 ${block}) {
         id
         humidity
         season
         startBpf
       }
-      unripeTokens {
+      unripeTokens${block ? `(${block})` : ""} {
         id
         totalChoppedAmount
         totalChoppedBdv
@@ -72,6 +74,7 @@ const tokenMap = {
       harvestedPods: BigInt;
       podIndex: BigInt;
       harvestableIndex: BigInt;
+      temperature: i32;
     }
 
     class PodMarketplaceInitialValues {
@@ -107,7 +110,8 @@ const tokenMap = {
       sownBeans: BigInt.fromString('${l1Values.field.sownBeans}'),
       harvestedPods: BigInt.fromString('${l1Values.field.harvestedPods}'),
       podIndex: BigInt.fromString('${l1Values.field.podIndex}'),
-      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}')
+      harvestableIndex: BigInt.fromString('${l1Values.field.harvestableIndex}'),
+      temperature: ${l1Values.field.temperature}
     };
 
     export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {

@@ -30,6 +30,7 @@ import { initL1Version } from "./entity-mocking/MockVersion";
 import { handleTemperatureChange_v1 } from "../src/handlers/legacy/LegacyFieldHandler";
 import { handleWhitelistToken_v4 } from "../src/handlers/legacy/LegacySiloHandler";
 import { handleUpdateGaugeSettings } from "../src/handlers/legacy/LegacyGaugeHandler";
+import { BI_10 } from "../../subgraph-core/utils/Decimals";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
@@ -99,7 +100,7 @@ describe("Seed Gauge", () => {
 
     test("event: UpdateAverageStalkPerBdvPerSeason", () => {
       const initialSilo = loadSilo(BEANSTALK);
-      initialSilo.depositedBDV = BigInt.fromU32(1000);
+      initialSilo.depositedBDV = BigInt.fromU32(1000).times(BI_10.pow(6));
       initialSilo.save();
 
       handleUpdateAverageStalkPerBdvPerSeason(createUpdateAverageStalkPerBdvPerSeasonEvent(BigInt.fromU32(3456)));

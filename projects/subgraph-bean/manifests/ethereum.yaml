@@ -82,6 +82,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 12974075
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -151,6 +152,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
       startBlock: 15277986 # Replanted
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -210,6 +212,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 15277988
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -342,6 +345,7 @@ dataSources:
       address: "0xc9C32cd16Bf7eFB85Ff14e0c8603cc90F6F2eE49"
       abi: Bean3CRV
       startBlock: 15278082
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -382,6 +386,7 @@ dataSources:
       address: "0xBEA0e11282e2bB5893bEcE110cF199501e872bAd"
       abi: Well
       startBlock: 17978134
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -418,6 +423,7 @@ dataSources:
       address: "0xBeA0000113B0d182f4064C86B71c315389E4715D"
       abi: Well
       startBlock: 20264128
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -477,6 +483,7 @@ dataSources:
       address: "0xb01CE0008CaD90104651d6A84b6B11e182a9B62A"
       abi: BeanstalkPrice
       startBlock: 15277986 # Replanted
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

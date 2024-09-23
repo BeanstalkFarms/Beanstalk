@@ -84,14 +84,34 @@ export function harvest(params: HarvestParams): void {
 
     if (harvestablePods >= plot.pods) {
       // Plot fully harvests
-      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, plot.pods, params.event.block);
+      updateFieldTotals(
+        protocol,
+        params.account,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI.minus(plot.pods),
+        plot.pods,
+        params.event.block
+      );
 
       plot.harvestedPods = plot.pods;
       plot.fullyHarvested = true;
       plot.save();
     } else {
       // Plot partially harvests
-      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, harvestablePods, params.event.block);
+      updateFieldTotals(
+        protocol,
+        params.account,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI,
+        ZERO_BI.minus(harvestablePods),
+        harvestablePods,
+        params.event.block
+      );
 
       remainingIndex = plot.index.plus(harvestablePods);
       let remainingPods = plot.pods.minus(harvestablePods);
@@ -448,7 +468,7 @@ function incrementSows(protocol: Address, account: Address, block: ethereum.Bloc
   field.save();
 
   // Add to protocol numberOfSowers if this is the first time this account has sown
-  if (account != protocol && field.numberOfSows == 0) {
+  if (account != protocol && field.numberOfSows == 1) {
     incrementSowers(protocol, block);
   }
 }

@@ -42,6 +42,8 @@ export const REPLANT_BLOCK = BigInt.fromU32(15278963);
 export const REPLANT_SUNRISE_BLOCK = BigInt.fromU32(15289934);
 export const BASIN_BLOCK = BigInt.fromU32(17977922);
 export const GAUGE_BIP45_BLOCK = BigInt.fromU32(19927634);
+// End of Beanstalk on L1, except for farm balances. (TODO: update after reseed pause)
+export const RESEED_PAUSE_BLOCK = BigInt.fromU32(191919191);
 
 export const BEAN_WETH_CP2_WELL_BLOCK = BigInt.fromU32(17978134);
 export const BEAN_WSTETH_CP2_WELL_BLOCK = BigInt.fromU32(20264128);
