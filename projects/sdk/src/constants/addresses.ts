@@ -21,7 +21,7 @@ export const addresses = {
   // ----------------------------------------
   BEANSTALK_PRICE: Address.make({
     [ChainId.ETH_MAINNET]: "0x4BEd6cb142b7d474242d87F4796387DEB9E1E1B4",
-    [ChainId.ARBITRUM_MAINNET]: "0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7"
+    [ChainId.ARBITRUM_MAINNET]: "0xA560c3aFcEb9a046573bf6F401134a6837f6D321"
   }),
   JUNCTION: Address.make({
     [ChainId.ETH_MAINNET]: "0x16a903b66403d3de69db50e6d1ad0b07490b740a",
