@@ -213,7 +213,8 @@ library LibEvaluate {
         for (uint256 i; i < pools.length; i++) {
             // get the non-bean value in an LP.
             twaReserves = LibWell.getTwaReservesFromStorageOrBeanstalkPump(pools[i]);
-
+            // if the twaReserves are 0, the well has no liquidity and thus can be skipped
+            if (twaReserves[0] == 0 && twaReserves[1] == 0) continue;
             // calculate the non-bean usd liquidity value.
             uint256 usdLiquidity = LibWell.getWellTwaUsdLiquidityFromReserves(
                 pools[i],

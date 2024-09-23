@@ -9,16 +9,14 @@ import "contracts/beanstalk/storage/System.sol";
 import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibCases} from "contracts/libraries/LibCases.sol";
-import {C} from "contracts/C.sol";
+import {Distribution} from "contracts/beanstalk/sun/SeasonFacet/Distribution.sol";
 
 /**
  * @author Brean
  * @notice ReseedGlobal sets the global state of Beanstalk.
  * @dev Pod Orders and Listings are ommited and are set in a seperate reseed contract.
  */
-contract ReseedGlobal {
-    AppStorage internal s;
-
+contract ReseedGlobal is Distribution {
     /**
      * @param system contains the global state of Beanstalk.
      * 1) replaces mappings with arrays, so that the state can be re-initialized.
@@ -89,7 +87,7 @@ contract ReseedGlobal {
 
         LibCases.setCasesV2();
         setInternalBalanceTotals(system.sysBalances);
-        setShipmentRoutes(system.shipmentRoutes);
+        _setShipmentRoutes(system.shipmentRoutes);
         setSilo(system.sysSilo);
         setFertilizer(system.sysFert);
         s.sys.fields[0] = system.f;
@@ -165,10 +163,11 @@ contract ReseedGlobal {
      * @notice sets the routes.
      * @dev Solidity does not support direct assignment of array structs to Storage.
      */
-    function setShipmentRoutes(ShipmentRoute[] calldata routes) internal {
+    function _setShipmentRoutes(ShipmentRoute[] calldata routes) internal {
         for (uint i; i < routes.length; i++) {
             s.sys.shipmentRoutes.push(routes[i]);
         }
+        emit ShipmentRoutesSet(routes);
     }
 
     function setTractor() internal {

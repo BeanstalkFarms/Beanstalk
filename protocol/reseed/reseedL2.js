@@ -76,6 +76,7 @@ async function reseedL2({
     if (i == reseeds.length - 2) {
       // prior to the last reseed (i.e, adding facets to L2 beanstalk),
       // the Beanstalk deployer needs to transfer ownership to the beanstalk owner.
+      console.log("Transferring ownership to the beanstalk owner.");
       await upgradeWithNewFacets({
         diamondAddress: l2BeanstalkAddress,
         facetNames: ["OwnershipFacet"],
@@ -88,8 +89,9 @@ async function reseedL2({
         initFacetNameInfo: "ReseedTransferOwnership"
       });
     }
-    if (i == reseeds.length - 1 && !onlyState) {
+    if (i == reseeds.length - 1) {
       // claim ownership of beanstalk:
+      console.log("Claiming ownership of beanstalk.");
       await (await getBeanstalk(l2BeanstalkAddress)).connect(l2owner).claimOwnership();
       // initialize beanstalk state add selectors to L2 beanstalk.
       await reseed10(l2owner, l2BeanstalkAddress, mock);
