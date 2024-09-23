@@ -121,15 +121,49 @@ contract ReseedStateTest is TestHelper {
     function test_pipelineConvertRealUserLPToBean() public {
         address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
         address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+
+        address token;
+        int96 stem;
+        uint256 amount;
+
+        IMockFBeanstalk.TokenDepositId[] memory deposits = l2Beanstalk.getDepositsForAccount(
+            realUser
+        );
+        for (uint256 i; i < deposits.length; i++) {
+            if (deposits[i].token == address(beanWethWell)) {
+                (token, stem) = l2Beanstalk.getAddressAndStem(deposits[i].depositIds[0]);
+                amount = deposits[i].tokenDeposits[0].amount;
+                break;
+            }
+        }
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        IMockFBeanstalk.AdvancedPipeCall[] memory calls = createLPToBeanPipeCalls(
+            amount,
+            beanWethWell
+        );
+
+        // previously this would revert with "Well: Bean reserve is less than the minimum"
+        vm.prank(realUser);
+        l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
+    }
+
+    function test_pipelineConvertLowLiquidity() public {
+        address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
+        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
         address beanWeethWell = 0xBEA00865405A02215B44eaADB853d0d2192Fc29D;
 
         // add liquidity to beanWeethWell
-        // addLiquidityToWellArb(
-        //     realUser,
-        //     beanWeethWell,
-        //     10_000e6, // 10,000 bean,
-        //     10 ether // 10 WETH
-        // );
+        addLiquidityToWellArb(
+            realUser,
+            beanWeethWell,
+            1e6, // 1 bean,
+            0.001 ether // 0.001 weeth
+        );
 
         address token;
         int96 stem;
@@ -164,7 +198,7 @@ contract ReseedStateTest is TestHelper {
     function createLPToBeanPipeCalls(
         uint256 amountOfLP,
         address well
-    ) private view returns (IMockFBeanstalk.AdvancedPipeCall[] memory output) {
+    ) private pure returns (IMockFBeanstalk.AdvancedPipeCall[] memory output) {
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
