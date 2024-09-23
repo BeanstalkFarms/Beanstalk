@@ -1,5 +1,6 @@
 var JSONbig = require("json-bigint");
 const fs = require("fs");
+const ethers = require("ethers");
 
 function parseJson(file) {
   var jsonString = fs.readFileSync(file);
@@ -19,7 +20,7 @@ async function getEthSpentOnGas(result) {
 }
 
 function toBean(amount) {
-  return ethers.utils.parseUnits(amount,6);
+  return ethers.utils.parseUnits(amount, 6);
 }
 
 function to6(amount) {
@@ -27,7 +28,7 @@ function to6(amount) {
 }
 
 function toStalk(amount) {
-  return ethers.utils.parseUnits(amount, 10);
+  return ethers.utils.parseUnits(amount, 16);
 }
 
 function toEther(amount) {
@@ -51,7 +52,7 @@ function toBN(a) {
 }
 
 async function advanceTime(time) {
-  let timestamp = (await ethers.provider.getBlock("latest")).timestamp;
+  let timestamp = (await hre.ethers.provider.getBlock("latest")).timestamp;
   timestamp += time;
   await hre.network.provider.request({
     method: "evm_setNextBlockTimestamp",

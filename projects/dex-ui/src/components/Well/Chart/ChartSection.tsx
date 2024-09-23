@@ -1,22 +1,36 @@
-import { Well } from "@beanstalk/sdk/Wells";
 import React, { useCallback, useEffect, useState } from "react";
-import { FC } from "src/types";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
-import { Row } from "../../Layout";
-import { ChevronDown } from "../../Icons";
-import { Chart } from "./Chart";
-import { TabButton } from "src/components/TabButton";
-import useWellChartData from "src/wells/useWellChartData";
-import { ChartContainer } from "./ChartStyles";
-import { BottomDrawer } from "src/components/BottomDrawer";
-import { mediaQuery, size } from "src/breakpoints";
-import { LoadingTemplate } from "src/components/LoadingTemplate";
-import { IWellHourlySnapshot } from "src/wells/chartDataLoader";
+
 import { TokenValue } from "@beanstalk/sdk";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { BottomDrawer } from "src/components/BottomDrawer";
+import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { TabButton } from "src/components/TabButton";
+import { FC } from "src/types";
+import { IWellHourlySnapshot } from "src/wells/chartDataLoader";
+import useWellChartData from "src/wells/useWellChartData";
+
+import { Chart } from "./Chart";
+import { ChartContainer } from "./ChartStyles";
+import { ChevronDown } from "../../Icons";
+import { Row } from "../../Layout";
 
 function timeToLocal(originalTime: number) {
   const d = new Date(originalTime * 1000);
-  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()) / 1000;
+  return (
+    Date.UTC(
+      d.getFullYear(),
+      d.getMonth(),
+      d.getDate(),
+      d.getHours(),
+      d.getMinutes(),
+      d.getSeconds(),
+      d.getMilliseconds()
+    ) / 1000
+  );
 }
 
 type TimeToHourlySnapshotItem = {

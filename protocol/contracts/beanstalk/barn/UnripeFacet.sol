@@ -181,9 +181,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return percent The recap % of the token.
      */
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return LibUnripe.percentBeansRecapped();
-        } else if (unripeToken == C.UNRIPE_LP) {
+        } else if (unripeToken == s.sys.tokens.urLp) {
             return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");
@@ -196,7 +196,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return
                 LibUnripe.getPenalizedUnderlying(
                     unripeToken,
@@ -205,7 +205,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
                 );
         }
 
-        if (unripeToken == C.UNRIPE_LP) {
+        if (unripeToken == s.sys.tokens.urLp) {
             return
                 LibUnripe
                     .getTotalRecapitalizedPercent()
@@ -307,7 +307,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
-    ) external payable fundsSafu noNetFlow noSupplyChange {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         require(
             s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,
@@ -334,7 +334,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
         return
             LibLockedUnderlying.getLockedUnderlying(
-                C.UNRIPE_BEAN,
+                s.sys.tokens.urBean,
                 LibUnripe.getTotalRecapitalizedPercent()
             );
     }

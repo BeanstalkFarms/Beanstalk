@@ -13,6 +13,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Brean
@@ -61,17 +62,8 @@ library LibFlood {
             }
             return;
         } else if (!s.sys.season.raining) {
-            s.sys.season.raining = true;
-            address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
-            // Set the plenty per root equal to previous rain start.
-            uint32 season = s.sys.season.current;
-            uint32 rainstartSeason = s.sys.season.rainStart;
-            for (uint i; i < wells.length; i++) {
-                s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
-            }
-            s.sys.season.rainStart = s.sys.season.current;
-            s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
-            s.sys.rain.roots = s.sys.silo.roots;
+            initRainVariables();
+            startRain();
         } else {
             // flood podline first, because it checks current Bean supply
             floodPodline();
@@ -101,18 +93,47 @@ library LibFlood {
     }
 
     /**
+     * @notice Snapshot variables required to start raining.
+     */
+    function initRainVariables() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        s.sys.season.raining = true;
+        address[] memory wells = LibWhitelistedTokens.getCurrentlySoppableWellLpTokens();
+        // Set the plenty per root equal to previous rain start.
+        uint32 season = s.sys.season.current;
+        uint32 rainstartSeason = s.sys.season.rainStart;
+        for (uint i; i < wells.length; i++) {
+            s.sys.sop.sops[season][wells[i]] = s.sys.sop.sops[rainstartSeason][wells[i]];
+        }
+        s.sys.season.rainStart = s.sys.season.current;
+        s.sys.rain.pods = s.sys.fields[s.sys.activeField].pods;
+        s.sys.rain.roots = s.sys.silo.roots;
+    }
+
+    /**
+     * @notice Handles any system-level logic that occurs when it starts raining.
+     */
+    function startRain() internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
+        // upon rain, set beanToMaxLpGpPerBdvRatio to zero, to encourage converts down before starting to flood
+        s.sys.seedGauge.beanToMaxLpGpPerBdvRatio = 0;
+    }
+
+    /**
      * @dev internal account-level logic to handle when beanstalk is raining. Called from mow.
      */
     function handleRainAndSops(
         address account,
         uint32 lastUpdate,
-        uint128 firstGerminatingRoots
+        uint256 firstGerminatingRoots
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         // If a Sop has occured since last update, calculate rewards and set last Sop.
         if (s.sys.season.lastSopSeason > lastUpdate) {
-            address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+            address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens
             for (uint i; i < tokens.length; i++) {
                 s.accts[account].sop.perWellPlenty[tokens[i]].plenty = balanceOfPlenty(
                     account,
@@ -151,7 +172,7 @@ library LibFlood {
             // If there has been a Sop since rain started,
             // save plentyPerRoot in case another SOP happens during rain.
             if (s.sys.season.lastSop == s.sys.season.rainStart) {
-                address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+                address[] memory tokens = LibWhitelistedTokens.getSoppableWellLpTokens(); // includes de-whitelisted tokens (need to update account-level PPR for all tokens)
                 for (uint i; i < tokens.length; i++) {
                     s.accts[account].sop.perWellPlenty[tokens[i]].plentyPerRoot = s.sys.sop.sops[
                         s.sys.season.lastSop
@@ -211,7 +232,7 @@ library LibFlood {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Make 0.1% of the total bean supply worth of pods harvestable.
 
-        uint256 totalBeanSupply = C.bean().totalSupply();
+        uint256 totalBeanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         uint256 sopFieldBeans = totalBeanSupply.div(FLOOD_PODLINE_PERCENT_DENOMINATOR); // 1/1000 = 0.1% of total supply
 
         // Note there may be cases where zero harvestable pods are available. For clarity, the code will still emit an event
@@ -227,7 +248,7 @@ library LibFlood {
             .fields[s.sys.activeField]
             .harvestable
             .add(sopFieldBeans);
-        C.bean().mint(address(this), sopFieldBeans);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), sopFieldBeans);
 
         emit SeasonOfPlentyField(sopFieldBeans);
     }
@@ -259,7 +280,6 @@ library LibFlood {
         quickSort(wellDeltaBs, 0, int(wellDeltaBs.length - 1));
     }
 
-    // Reviewer note: This works, but there's got to be a way to make this more gas efficient
     function quickSort(
         WellDeltaB[] memory arr,
         int left,
@@ -269,13 +289,29 @@ library LibFlood {
 
         // Choose the median of left, right, and middle as pivot (improves performance on random data)
         uint mid = uint(left) + (uint(right) - uint(left)) / 2;
-        WellDeltaB memory pivot = arr[uint(left)].deltaB > arr[uint(mid)].deltaB
-            ? (
-                arr[uint(left)].deltaB < arr[uint(right)].deltaB
-                    ? arr[uint(left)]
-                    : arr[uint(right)]
-            )
-            : (arr[uint(mid)].deltaB < arr[uint(right)].deltaB ? arr[uint(mid)] : arr[uint(right)]);
+        WellDeltaB memory pivot;
+
+        if (arr[uint(left)].deltaB > arr[uint(mid)].deltaB) {
+            if (arr[uint(left)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(left)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(mid)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(mid)];
+                }
+            }
+        } else {
+            if (arr[uint(mid)].deltaB < arr[uint(right)].deltaB) {
+                pivot = arr[uint(mid)];
+            } else {
+                if (arr[uint(right)].deltaB > arr[uint(left)].deltaB) {
+                    pivot = arr[uint(right)];
+                } else {
+                    pivot = arr[uint(left)];
+                }
+            }
+        }
 
         int i = left;
         int j = right;
@@ -290,7 +326,7 @@ library LibFlood {
         }
 
         if (left < j) {
-            return quickSort(arr, left, j);
+            arr = quickSort(arr, left, j);
         }
         if (i < right) {
             return quickSort(arr, i, right);
@@ -315,12 +351,12 @@ library LibFlood {
             IERC20 sopToken = LibWell.getNonBeanTokenFromWell(wellDeltaB.well);
 
             uint256 sopBeans = uint256(wellDeltaB.deltaB);
-            C.bean().mint(address(this), sopBeans);
+            BeanstalkERC20(s.sys.tokens.bean).mint(address(this), sopBeans);
 
             // Approve and Swap Beans for the non-bean token of the SOP well.
-            C.bean().approve(wellDeltaB.well, sopBeans);
+            BeanstalkERC20(s.sys.tokens.bean).approve(wellDeltaB.well, sopBeans);
             uint256 amountOut = IWell(wellDeltaB.well).swapFrom(
-                C.bean(),
+                BeanstalkERC20(s.sys.tokens.bean),
                 sopToken,
                 sopBeans,
                 0,

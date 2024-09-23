@@ -12,6 +12,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Sun
@@ -23,12 +24,6 @@ contract Sun is Oracle, Distribution {
     using LibRedundantMath256 for uint256;
     using LibRedundantMath128 for uint128;
     using SignedMath for int256;
-
-    /// @dev When the Pod Rate is high, issue less Soil.
-    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
-
-    /// @dev When the Pod Rate is low, issue more Soil.
-    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
 
     /**
      * @notice Emitted during Sunrise when Beanstalk adjusts the amount of available Soil.
@@ -48,7 +43,7 @@ contract Sun is Oracle, Distribution {
         if (deltaB > 0) {
             uint256 priorHarvestable = s.sys.fields[s.sys.activeField].harvestable;
 
-            C.bean().mint(address(this), uint256(deltaB));
+            BeanstalkERC20(s.sys.tokens.bean).mint(address(this), uint256(deltaB));
             LibShipping.ship(uint256(deltaB));
 
             setSoilAbovePeg(s.sys.fields[s.sys.activeField].harvestable - priorHarvestable, caseId);
@@ -75,9 +70,9 @@ contract Sun is Oracle, Distribution {
     function setSoilAbovePeg(uint256 newHarvestable, uint256 caseId) internal {
         uint256 newSoil = newHarvestable.mul(100).div(100 + s.sys.weather.temp);
         if (caseId.mod(36) >= 24) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_HIGH).div(C.PRECISION); // high podrate
+            newSoil = newSoil.mul(s.sys.evaluationParameters.soilCoefficientHigh).div(C.PRECISION); // high podrate
         } else if (caseId.mod(36) < 8) {
-            newSoil = newSoil.mul(SOIL_COEFFICIENT_LOW).div(C.PRECISION); // low podrate
+            newSoil = newSoil.mul(s.sys.evaluationParameters.soilCoefficientLow).div(C.PRECISION); // low podrate
         }
         setSoil(newSoil);
     }

@@ -1,6 +1,6 @@
 {
   "name": "@beanstalk/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A JavaScript framework for interacting with the Beanstalk protocol and ecosystem",
   "license": "MIT",
   "repository": {

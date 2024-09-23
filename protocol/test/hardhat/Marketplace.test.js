@@ -28,7 +28,7 @@ describe("Marketplace", function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
 
@@ -1054,13 +1054,13 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
         });
       });
 
       describe("transfers with allowance", async function () {
         beforeEach(async function () {
-          await expect(mockBeanstalk.connect(user).approvePods(user2.address, 0, 100));
+          await mockBeanstalk.connect(user).approvePods(user2.address, 0, 100);
           this.result = await mockBeanstalk
             .connect(user2)
             .transferPlot(user.address, user2.address, 0, 0, 0, 100);
@@ -1076,7 +1076,7 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
         });
       });
 
@@ -1104,7 +1104,7 @@ describe("Marketplace", function () {
         it("emits plot transfer the plot", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);
@@ -1138,7 +1138,7 @@ describe("Marketplace", function () {
         it("emits events", async function () {
           await expect(this.result)
             .to.emit(mockBeanstalk, "PlotTransfer")
-            .withArgs(user.address, user2.address, 0, 100);
+            .withArgs(user.address, user2.address, 0, 0, 100);
           await expect(this.result)
             .to.emit(mockBeanstalk, "PodListingCancelled")
             .withArgs(user.address, 0, 0);

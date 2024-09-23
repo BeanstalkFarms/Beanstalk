@@ -6,7 +6,7 @@ const { ConvertEncoder } = require("./utils/encoder.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const { getBean } = require("../../utils/contracts.js");
-const { initalizeUsersForToken, endGermination } = require("./utils/testHelpers.js");
+const { initializeUsersForToken, endGermination } = require("./utils/testHelpers.js");
 let user, user2, owner;
 
 describe("Convert", function () {
@@ -14,9 +14,9 @@ describe("Convert", function () {
     [owner, user, user2] = await ethers.getSigners();
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
-    userAddress = user.address
+    userAddress = user.address;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -25,12 +25,12 @@ describe("Convert", function () {
     this.siloToken = await this.siloToken.deploy("Silo", "SILO");
     await this.siloToken.deployed();
 
-    await initalizeUsersForToken(bean.address, [user, user2], "1000000000");
-    await initalizeUsersForToken(this.siloToken.address, [user, user2], "10000");
+    await initializeUsersForToken(bean.address, [user, user2], "1000000000");
+    await initializeUsersForToken(this.siloToken.address, [user, user2], "10000");
     await mockBeanstalk.mockWhitelistToken(
       this.siloToken.address,
       mockBeanstalk.interface.getSighash("mockBDV(uint256 amount)"),
-      "10000",
+      "10000000000",
       1e6 // aka "1 seed"
     );
 
@@ -50,6 +50,17 @@ describe("Convert", function () {
        '1', // stalkIssuedPerBdv
        1e6 //aka "1 seed" // stalkEarnedPerSeason
      );
+
+    // To isolate the anti lamda functionality, we will create and whitelist a new silo token
+    this.newSiloToken = await ethers.getContractFactory("MockToken");
+    this.newSiloToken = await this.newSiloToken.deploy("Silo2", "SILO2");
+    await this.newSiloToken.deployed();
+    await mockBeanstalk.mockWhitelistToken(
+      this.newSiloToken.address, // token
+      mockBeanstalk.interface.getSighash("newMockBDV()"), // selector (returns 1e6)
+      "1000000", // stalkIssuedPerBdv
+      1e6 //aka "1 seed" // stalkEarnedPerSeason
+    );
 
     // call sunrise twice, and end germination for the silo token.
     await endGermination();
@@ -104,18 +115,17 @@ describe("Convert", function () {
         await expect(this.result)
           .to.emit(beanstalk, "RemoveDeposits")
           .withArgs(user.address, this.siloToken.address, [2000000], ["100"], "100", ["100"]);
-        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs("200", "100");
+        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs(to6("200"), "100");
       });
 
       it("Decrements totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("100");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("100");
-        expect(await beanstalk.totalStalk()).to.equal("1000300");
-        //expect(await beanstalk.totalSeeds()).to.equal('100');
+        expect(await beanstalk.totalStalk()).to.equal("1000300000000");
       });
 
       it("Decrements balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("1000300");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("1000300000000");
       });
 
       it("properly removes the crate", async function () {
@@ -149,17 +159,17 @@ describe("Convert", function () {
             "100",
             ["100", "0"]
           );
-        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs("200", "100");
+        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs(to6("200"), "100");
       });
 
       it("Decrements totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("100");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("100");
-        expect(await beanstalk.totalStalk()).to.equal("1000300");
+        expect(await beanstalk.totalStalk()).to.equal("1000300000000");
       });
 
       it("Decrements balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("1000300");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("1000300000000");
       });
 
       it("properly removes the crate", async function () {
@@ -192,19 +202,18 @@ describe("Convert", function () {
             ["100", "50"]
           );
 
-        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs("400", "150");
+        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs(to6("400"), "150");
       });
 
       it("Decrements totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("50");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("50");
-        expect(await beanstalk.totalStalk()).to.equal("500100");
+        expect(await beanstalk.totalStalk()).to.equal("500100000000");
         //expect(await beanstalk.totalSeeds()).to.equal('50');
       });
 
       it("Decrements balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("500100");
-        //expect(await beanstalk.balanceOfSeeds(user.address)).to.equal('50');
+        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("500100000000");
       });
 
       it("properly removes the crate", async function () {
@@ -235,17 +244,17 @@ describe("Convert", function () {
             "150",
             ["100", "50"]
           );
-        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs("400", "150");
+        await expect(this.result).to.emit(mockBeanstalk, "MockConvert").withArgs(to6("400"), "150");
       });
 
       it("Decrements totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("50");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("50");
-        expect(await beanstalk.totalStalk()).to.equal("500100");
+        expect(await beanstalk.totalStalk()).to.equal("500100000000");
       });
 
       it("Decrements balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("500100");
+        expect(await beanstalk.balanceOfStalk(user.address)).to.equal("500100000000");
       });
 
       it("properly removes the crate", async function () {
@@ -263,13 +272,17 @@ describe("Convert", function () {
     describe("Revert", async function () {
       it("Reverts if BDV is 0", async function () {
         await expect(
-          mockBeanstalk.connect(user).depositForConvertE(this.siloToken.address, "100", "0", "100", )
+          mockBeanstalk
+            .connect(user)
+            .depositForConvertE(this.siloToken.address, "100", "0", "100000000")
         ).to.be.revertedWith("Convert: BDV or amount is 0.");
       });
 
       it("Reverts if amount is 0", async function () {
         await expect(
-          mockBeanstalk.connect(user).depositForConvertE(this.siloToken.address, "0", "100", "100", )
+          mockBeanstalk
+            .connect(user)
+            .depositForConvertE(this.siloToken.address, "0", "100", "100000000")
         ).to.be.revertedWith("Convert: BDV or amount is 0.");
       });
     });
@@ -282,13 +295,13 @@ describe("Convert", function () {
       beforeEach(async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("200");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("200");
-        expect(await beanstalk.totalStalk()).to.equal("2000100");
+        expect(await beanstalk.totalStalk()).to.equal("2000100000000");
         expect(await beanstalk.getGerminatingTotalDeposited(this.siloToken.address)).to.equal("0");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalGerminatingStalk()).to.equal("0");
         this.result = await mockBeanstalk
           .connect(user2)
-          .depositForConvertE(this.siloToken.address, "100", "100", "100", );
+          .depositForConvertE(this.siloToken.address, "100", "100", "100000000");
       });
 
       it("Emits event", async function () {
@@ -300,19 +313,19 @@ describe("Convert", function () {
       it("Increment totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("200");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("200");
-        expect(await beanstalk.totalStalk()).to.equal("2000200");
+        expect(await beanstalk.totalStalk()).to.equal("2000200000000");
         expect(await beanstalk.getGerminatingTotalDeposited(this.siloToken.address)).to.equal(
           "100"
         );
         expect(await beanstalk.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq(
           "100"
         );
-        expect(await beanstalk.getTotalGerminatingStalk()).to.equal("1000000");
+        expect(await beanstalk.getTotalGerminatingStalk()).to.equal("1000000000000");
       });
       // user 2 should have stalk == grown stalk
       it("Increment balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.equal("100");
-        expect(await beanstalk.balanceOfGerminatingStalk(user2.address)).to.equal("1000000");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.equal("100000000");
+        expect(await beanstalk.balanceOfGerminatingStalk(user2.address)).to.equal("1000000000000");
       });
 
       it("properly adds the crate", async function () {
@@ -326,13 +339,13 @@ describe("Convert", function () {
       beforeEach(async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("200");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("200");
-        expect(await beanstalk.totalStalk()).to.equal("2000100");
+        expect(await beanstalk.totalStalk()).to.equal("2000100000000");
         expect(await beanstalk.getGerminatingTotalDeposited(this.siloToken.address)).to.equal("0");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalGerminatingStalk()).to.equal("0");
         this.result = await mockBeanstalk
           .connect(user2)
-          .depositForConvertE(this.siloToken.address, "100", "100", "300", );
+          .depositForConvertE(this.siloToken.address, "100", "100", "300000000");
       });
 
       it("Emits event", async function () {
@@ -346,14 +359,14 @@ describe("Convert", function () {
       it("Increment totals", async function () {
         expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("300");
         expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("300");
-        expect(await beanstalk.totalStalk()).to.equal("3000400");
+        expect(await beanstalk.totalStalk()).to.equal("3000400000000");
         expect(await beanstalk.getGerminatingTotalDeposited(this.siloToken.address)).to.equal("0");
         expect(await beanstalk.getGerminatingTotalDepositedBdv(this.siloToken.address)).to.eq("0");
         expect(await beanstalk.getTotalGerminatingStalk()).to.equal("0");
       });
 
       it("Increment balances", async function () {
-        expect(await beanstalk.balanceOfStalk(user2.address)).to.equal("1000300");
+        expect(await beanstalk.balanceOfStalk(user2.address)).to.equal("1000300000000");
         expect(await beanstalk.balanceOfGerminatingStalk(user2.address)).to.equal("0");
       });
 
@@ -403,13 +416,13 @@ describe("Convert", function () {
     });
 
     it("Increments balances", async function () {
-      expect(await beanstalk.balanceOfStalk(user.address)).to.equal("2000500");
+      expect(await beanstalk.balanceOfStalk(user.address)).to.equal("2000500000000");
     });
 
     it("Increments totals", async function () {
       expect(await beanstalk.getTotalDeposited(this.siloToken.address)).to.equal("200");
       expect(await beanstalk.getTotalDepositedBdv(this.siloToken.address)).to.eq("200");
-      expect(await beanstalk.totalStalk()).to.equal("2000500");
+      expect(await beanstalk.totalStalk()).to.equal("2000500000000");
     });
 
     it("Emits events", async function () {
@@ -432,67 +445,77 @@ describe("Convert", function () {
   //  ------------------------------ ANTI LAMBDA CONVERT ----------------------------------
 
   describe("anti lambda convert bdv decrease", async function () {
-
     beforeEach(async function () {
       // ----------------------- SETUP ------------------------
       // user deposits 100 new silo token at stem 0 so 1000000 bdv
-      await this.newSiloToken.mint(userAddress, '10000000');
-      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, '1000000000');
-      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
       this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
       await endGermination();
 
       // simulate deposit bdv decrease for user by changing bdv selector to newMockBDVDecrease ie 0.9e6
-      await mockBeanstalk.mockChangeBDVSelector(this.newSiloToken.address, mockBeanstalk.interface.getSighash("newMockBDVDecrease()"))
-      const currentBdv = await mockBeanstalk.newMockBDVDecrease()
-      let depositResult = await mockBeanstalk.getDeposit(userAddress, this.newSiloToken.address, this.stem)
-      const depositBdv = depositResult[1]
-
-      console.log("stem tip for new silo token: ", this.stem)
-      console.log("current bdv: ", currentBdv)
-      console.log("deposit bdv: ", depositBdv)
+      await mockBeanstalk.mockChangeBDVSelector(
+        this.newSiloToken.address,
+        mockBeanstalk.interface.getSighash("newMockBDVDecrease()")
+      );
+      const currentBdv = await mockBeanstalk.newMockBDVDecrease();
+      let depositResult = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.stem
+      );
+      const depositBdv = depositResult[1];
 
       // ----------------------- CONVERT ------------------------
       this.result = await mockBeanstalk.connect(user2).convert(
         // CALLDATA                              // amount, token ,account
-        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
         // STEMS []
         [this.stem],
         // AMOUNTS []
-        ['100']
-      )
-      this.newStem = 1777778
-    })
+        ["100"]
+      );
+      this.newStem = 1777778;
+    });
 
-    it('Correctly updates deposit stats', async function () {
-      let deposit = await mockBeanstalk.getDeposit(userAddress, this.newSiloToken.address, this.newStem);
-      expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
-      expect(deposit[1]).to.eq('900000');  // deposit[1] = bdv
-    })
+    it("Correctly updates deposit stats", async function () {
+      let deposit = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.newStem
+      );
+      expect(deposit[0]).to.eq("100"); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq("900000"); // deposit[1] = bdv
+    });
 
-    it('Correctly updates totals', async function () {
-      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
-      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('900000');
+    it("Correctly updates totals", async function () {
+      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal("100");
+      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq("900000");
       // 100000 stalk removed = 1 stalk/bdv for newSiloToken * 100000 bdv removed from convert
-      expect(await mockBeanstalk.totalStalk()).to.equal('4900100');
-    })
+      expect(await mockBeanstalk.totalStalk()).to.equal(to6("4900100"));
+    });
 
-    it('Emits events', async function () {
-      await expect(this.result).to.emit(mockBeanstalk, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
-      await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '900000'); // last param = updated bdv
-      await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
-    })
-
-  })
+    it("Emits events", async function () {
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "RemoveDeposits")
+        .withArgs(userAddress, this.newSiloToken.address, [this.stem], ["100"], "100", ["1000000"]);
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "AddDeposit")
+        .withArgs(userAddress, this.newSiloToken.address, this.newStem, "100", "900000"); // last param = updated bdv
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "Convert")
+        .withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, "100", "100");
+    });
+  });
 
   describe("anti lambda convert bdv increase", async function () {
-
     beforeEach(async function () {
       // ----------------------- SETUP ------------------------
       // user deposits 100 new silo token at stem 0 so 1000000 bdv
-      await this.newSiloToken.mint(userAddress, '10000000');
-      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, '1000000000');
-      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
       this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
 
       // end germination:
@@ -500,52 +523,68 @@ describe("Convert", function () {
       await mockBeanstalk.siloSunrise(0);
 
       // simulate deposit bdv increase for user2 by changing bdv selector to mockBdvIncrease ie 1.1e6
-      await mockBeanstalk.mockChangeBDVSelector(this.newSiloToken.address, mockBeanstalk.interface.getSighash("newMockBDVIncrease()"))
-      currentBdv = await mockBeanstalk.newMockBDVIncrease()
-      let depositResult = await mockBeanstalk.getDeposit(userAddress, this.newSiloToken.address,  this.stem)
-      const depositBdv = depositResult[1]
+      await mockBeanstalk.mockChangeBDVSelector(
+        this.newSiloToken.address,
+        mockBeanstalk.interface.getSighash("newMockBDVIncrease()")
+      );
+      currentBdv = await mockBeanstalk.newMockBDVIncrease();
+      let depositResult = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.stem
+      );
+      const depositBdv = depositResult[1];
 
       // ----------------------- CONVERT ------------------------
       this.result = await mockBeanstalk.connect(user2).convert(
         // CALLDATA
         // amount, token ,account
-        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
+        ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
         // STEMS []
         [this.stem],
         // AMOUNTS []
-        ['100']
-      )
-      this.newStem = 2181819
-    })
+        ["100"]
+      );
+      this.newStem = 2181819;
+    });
 
-    it('Correctly updates deposit stats', async function () {
-      let deposit = await mockBeanstalk.getDeposit(userAddress, this.newSiloToken.address, this.newStem);
-      expect(deposit[0]).to.eq('100'); // deposit[0] = amount of tokens
-      expect(deposit[1]).to.eq('1100000');  // deposit[1] = bdv
-    })
+    it("Correctly updates deposit stats", async function () {
+      let deposit = await mockBeanstalk.getDeposit(
+        userAddress,
+        this.newSiloToken.address,
+        this.newStem
+      );
+      expect(deposit[0]).to.eq("100"); // deposit[0] = amount of tokens
+      expect(deposit[1]).to.eq("1100000"); // deposit[1] = bdv
+    });
 
-    it('Correctly updates totals', async function () {
-      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal('100');
-      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq('1100000');
+    it("Correctly updates totals", async function () {
+      expect(await mockBeanstalk.getTotalDeposited(this.newSiloToken.address)).to.equal("100");
+      expect(await mockBeanstalk.getTotalDepositedBdv(this.newSiloToken.address)).to.eq("1100000");
       // 100000 stalk added = 1 stalk/bdv for newSiloToken * 100000 bdv added from convert
-      expect(await mockBeanstalk.totalStalk()).to.equal('5100100');
-    })
+      expect(await mockBeanstalk.totalStalk()).to.equal(to6("5100100"));
+    });
 
-    it('Emits events', async function () {
-      await expect(this.result).to.emit(mockBeanstalk, 'RemoveDeposits').withArgs(userAddress, this.newSiloToken.address, [this.stem], ['100'], '100', ['1000000']);
-      await expect(this.result).to.emit(mockBeanstalk, 'AddDeposit').withArgs(userAddress, this.newSiloToken.address, this.newStem, '100', '1100000'); // last param = updated bdv
-      await expect(this.result).to.emit(mockBeanstalk, 'Convert').withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, '100', '100');
-    })
-  })
+    it("Emits events", async function () {
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "RemoveDeposits")
+        .withArgs(userAddress, this.newSiloToken.address, [this.stem], ["100"], "100", ["1000000"]);
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "AddDeposit")
+        .withArgs(userAddress, this.newSiloToken.address, this.newStem, "100", "1100000"); // last param = updated bdv
+      await expect(this.result)
+        .to.emit(mockBeanstalk, "Convert")
+        .withArgs(userAddress, this.newSiloToken.address, this.newSiloToken.address, "100", "100");
+    });
+  });
 
   describe("anti lambda convert revert on multiple deposit update", async function () {
-
     it("Reverts on multiple deposit input", async function () {
       // ----------------------- SETUP ------------------------
       // user deposits 100 new silo token at stem 0 so 1000000 bdv
-      await this.newSiloToken.mint(userAddress, '10000000');
-      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, '1000000000');
-      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, '100', EXTERNAL);
+      await this.newSiloToken.mint(userAddress, "10000000");
+      await this.newSiloToken.connect(user).approve(mockBeanstalk.address, "1000000000");
+      await mockBeanstalk.connect(user).deposit(this.newSiloToken.address, "100", EXTERNAL);
       this.stem = await mockBeanstalk.stemTipForToken(this.newSiloToken.address);
 
       // end germination:
@@ -553,15 +592,17 @@ describe("Convert", function () {
       await mockBeanstalk.siloSunrise(0);
 
       // ----------------------- CONVERT ------------------------
-      await expect(mockBeanstalk.connect(user2).convert(
-        // CALLDATA
-        // amount, token ,account
-        ConvertEncoder.convertAntiLambdaToLambda('100', this.newSiloToken.address , userAddress),
-        // STEMS []
-        [this.stem, this.stem],
-        // AMOUNTS []
-        ['100', '100']
-      )).to.be.revertedWith("Convert: DecreaseBDV only supports updating one deposit.")
-    })
-  })
+      await expect(
+        mockBeanstalk.connect(user2).convert(
+          // CALLDATA
+          // amount, token ,account
+          ConvertEncoder.convertAntiLambdaToLambda("100", this.newSiloToken.address, userAddress),
+          // STEMS []
+          [this.stem, this.stem],
+          // AMOUNTS []
+          ["100", "100"]
+        )
+      ).to.be.revertedWith("Convert: DecreaseBDV only supports updating one deposit.");
+    });
+  });
 });

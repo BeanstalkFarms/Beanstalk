@@ -167,7 +167,6 @@ export class SowFarmStep extends FarmStep {
       { token: tokens.WSTETH, minimum: new BigNumber(0.00075) }, // ~$2-4
       { token: tokens.ETH, minimum: new BigNumber(0.001) }, // ~$2-4
       { token: tokens.WETH, minimum: new BigNumber(0.001) }, // ~$2-4
-      { token: tokens.CRV3, minimum: new BigNumber(1) }, // $1
       { token: tokens.DAI, minimum: new BigNumber(1) }, // $1
       { token: tokens.USDC, minimum: new BigNumber(1) }, // $1
       { token: tokens.USDT, minimum: new BigNumber(1) }, // $1

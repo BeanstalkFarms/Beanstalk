@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { DateTime } from 'luxon';
 import { TokenMap, ZERO_BN } from '~/constants';
-import { BEAN, SEEDS, SILO_WHITELIST, STALK } from '~/constants/tokens';
+import { BEAN, SEEDS, STALK } from '~/constants/tokens';
 import {
   FarmerSiloRewardsQuery,
   SeasonalInstantPriceQuery,
@@ -15,7 +15,8 @@ import {
 } from '~/util';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
-import { BeanstalkSDK } from '@beanstalk/sdk';
+import { Token } from '@beanstalk/sdk';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
 
 export type Snapshot = {
   id: string;
@@ -40,7 +41,8 @@ export type SnapshotBeanstalk = {
 export const addBufferSeasons = (
   points: BaseDataPoint[],
   num: number = 24,
-  itemizeByToken: boolean = false
+  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist'],
+  itemizeByToken: boolean = false,
 ) => {
   if (points.length === 0) return [];
   const d = DateTime.fromJSDate(points[0].date);
@@ -58,8 +60,8 @@ export const addBufferSeasons = (
               value: 0,
               // FIXME: have the chart default to zero if a key isn't provided?
               ...(itemizeByToken
-                ? SILO_WHITELIST.reduce<TokenMap<number>>((prev, curr) => {
-                    prev[curr[1].address] = 0;
+                ? whitelist.reduce<TokenMap<number>>((prev, curr) => {
+                    prev[curr.address] = 0;
                     return prev;
                   }, {})
                 : undefined),
@@ -80,11 +82,10 @@ export const interpolateFarmerStalk = (
   season: BigNumber,
   bufferSeasons: number = 24,
   farmerSiloBalances: TokenMap<FarmerSiloTokenBalance>,
-  sdk: BeanstalkSDK
+  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist']
 ) => {
   // Sequence
   let j = 0;
-  const siloWhitelist = sdk.tokens.siloWhitelist;
   const minSeason = snapshots[j].season;
   const maxSeason = season.toNumber(); // current season
   let currStalk: BigNumber = ZERO_BN;
@@ -94,7 +95,7 @@ export const interpolateFarmerStalk = (
     secondsToDate(snapshots[j].createdAt)
   );
   let nextSeason: number | undefined = minSeason;
-  
+
   // Add buffer points before the first snapshot
   const stalk: BaseDataPoint[] = [];
   const seeds: BaseDataPoint[] = [];
@@ -102,21 +103,27 @@ export const interpolateFarmerStalk = (
 
   function getSeedsPerBdv(_season: number) {
     let _output: BigNumber = ZERO_BN;
-    siloWhitelist.forEach((token) => {
+    whitelist.forEach((token) => {
       if (farmerSiloBalances[token.address]) {
         const deposits = farmerSiloBalances[token.address].deposited;
-        const index = whitelistSnapshots.findLastIndex((snapshot) => snapshot.season <= _season && snapshot.token.id === token.address.toLowerCase());
+        const index = whitelistSnapshots.findLastIndex(
+          (snapshot) =>
+            snapshot.season <= _season &&
+            snapshot.token.id === token.address.toLowerCase()
+        );
         if (index >= 0) {
-          const seedsPerBdv = BigNumber(whitelistSnapshots[index].stalkEarnedPerSeason).div(1_000_000);
-          _output = (seedsPerBdv).multipliedBy(deposits.bdv).plus(_output);
-        };
-      };
+          const seedsPerBdv = BigNumber(
+            whitelistSnapshots[index].stalkEarnedPerSeason
+          ).div(1_000_000);
+          _output = seedsPerBdv.multipliedBy(deposits.bdv).plus(_output);
+        }
+      }
     });
     return _output;
-  };
+  }
 
   let lastSeedsSnapshot: BigNumber = ZERO_BN;
-  const lastSnapshotSeason =  snapshots[snapshots.length - 1].season;
+  const lastSnapshotSeason = snapshots[snapshots.length - 1].season;
   for (let s = minSeason; s <= maxSeason; s += 1) {
     if (s === nextSeason) {
       // Reached a data point for which we have a snapshot.
@@ -135,13 +142,13 @@ export const interpolateFarmerStalk = (
         currSeeds = lastSeedsSnapshot;
       } else {
         currSeeds = getSeedsPerBdv(s);
-      };
+      }
       // Estimate actual amount of stalk / grown stalk using seeds
       // Each Seed grows 1/10,000 Stalk per Season
-      currGrownStalk = currGrownStalk.plus((currSeeds).multipliedBy(1 / 10_000));
+      currGrownStalk = currGrownStalk.plus(currSeeds.multipliedBy(1 / 10_000));
 
       currTimestamp = currTimestamp.plus({ hours: 1 });
-    };
+    }
     stalk.push({
       season: s,
       date: currTimestamp.toJSDate(),
@@ -160,9 +167,9 @@ export const interpolateFarmerStalk = (
   }
 
   return [
-    addBufferSeasons(stalk, bufferSeasons, false),
-    addBufferSeasons(seeds, bufferSeasons, false),
-    addBufferSeasons(grownStalk, bufferSeasons, false),
+    addBufferSeasons(stalk, bufferSeasons, whitelist, false),
+    addBufferSeasons(seeds, bufferSeasons, whitelist, false),
+    addBufferSeasons(grownStalk, bufferSeasons, whitelist, false),
   ] as const;
 };
 
@@ -175,10 +182,12 @@ export const interpolateFarmerDepositedValue = (
   snapshots: SnapshotBeanstalk[], // oldest season first
   _prices: SeasonalInstantPriceQuery['seasons'], // most recent season first
   itemizeByToken: boolean = true,
-  bufferSeasons: number = 24
+  bufferSeasons: number = 24,
+  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist'],
+  normaliseChainToken: (token: string) => Token | undefined
 ) => {
   const prices = Array.from(_prices).reverse(); // FIXME: inefficient
-  if (prices.length === 0) return [];
+  if (!prices.length || !snapshots.length) return [];
 
   // Sequence
   let j = 0;
@@ -189,8 +198,8 @@ export const interpolateFarmerDepositedValue = (
 
   // null if we don't need to itemize by token
   const currBDVByToken = itemizeByToken
-    ? SILO_WHITELIST.reduce<{ [address: string]: BigNumber }>((prev, curr) => {
-        prev[curr[1].address] = ZERO_BN;
+    ? whitelist.reduce<{ [address: string]: BigNumber }>((prev, curr) => {
+        prev[curr.address] = ZERO_BN;
         return prev;
       }, {})
     : null;
@@ -237,7 +246,11 @@ export const interpolateFarmerDepositedValue = (
         thisBDV = thisBDV.plus(thisSnapshotBDV);
 
         if (currBDVByToken) {
-          const tokenAddr = snapshots[j]?.id.split('-')[1].toLowerCase();
+          const snapshotTokenAddress = snapshots[j]?.id
+            .split('-')[1]
+            .toLowerCase();
+          const tokenAddr = normaliseChainToken(snapshotTokenAddress)?.address;
+
           if (tokenAddr && currBDVByToken[tokenAddr]) {
             currBDVByToken[tokenAddr] =
               currBDVByToken[tokenAddr].plus(thisSnapshotBDV);
@@ -252,8 +265,8 @@ export const interpolateFarmerDepositedValue = (
       date: thisTimestamp.toJSDate(),
       value: thisBDV.multipliedBy(thisPriceBN).toNumber(),
       ...(currBDVByToken
-        ? SILO_WHITELIST.reduce<TokenMap<number>>((prev, token) => {
-            const addr = token[1].address;
+        ? whitelist.reduce<TokenMap<number>>((prev, token) => {
+            const addr = token.address;
             prev[addr] = currBDVByToken[addr]
               .multipliedBy(thisPriceBN)
               .toNumber();
@@ -265,5 +278,5 @@ export const interpolateFarmerDepositedValue = (
     currBDV = thisBDV;
   }
 
-  return addBufferSeasons(points, bufferSeasons, Boolean(currBDVByToken));
+  return addBufferSeasons(points, bufferSeasons, whitelist, Boolean(currBDVByToken));
 };

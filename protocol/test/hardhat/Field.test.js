@@ -7,7 +7,7 @@ const { MAX_UINT32, MAX_UINT256 } = require("./utils/constants.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 const {
-  initalizeUsersForToken,
+  initializeUsersForToken,
   endGermination,
   addMockUnderlying,
   endGerminationWithMockToken
@@ -26,11 +26,11 @@ describe("newField", function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     owner.address = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
-    bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
+    bean = await initializeUsersForToken(BEAN, [user, user2], to6("10000"));
   });
 
   beforeEach(async function () {
@@ -517,7 +517,7 @@ describe("twoField", function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     owner.address = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -535,7 +535,7 @@ describe("twoField", function () {
     this.activeField = 1;
     mockBeanstalk.setActiveField(this.activeField, 1);
 
-    bean = await initalizeUsersForToken(BEAN, [user, user2], to6("10000"));
+    bean = await initializeUsersForToken(BEAN, [user, user2], to6("10000"));
   });
 
   beforeEach(async function () {

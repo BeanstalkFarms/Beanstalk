@@ -1,29 +1,31 @@
 import React, { useCallback, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { Page } from "src/components/Page";
-import { LiquidityBox } from "src/components/Well/LiquidityBox";
-import { Button } from "src/components/Swap/Button";
-import { LearnYield } from "src/components/Well/LearnYield";
-import { Item, Row } from "src/components/Layout";
-import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
-import { LearnPump } from "src/components/Well/LearnPump";
-import { TabButton } from "src/components/TabButton";
-import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
-import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
-import { Log } from "src/utils/logger";
-import { BodyXS, TextNudge } from "src/components/Typography";
-import { ImageButton } from "src/components/ImageButton";
-import { ChevronDown } from "src/components/Icons";
+
 import { mediaQuery, size } from "src/breakpoints";
 import { Error } from "src/components/Error";
+import { ChevronDown } from "src/components/Icons";
+import { ImageButton } from "src/components/ImageButton";
+import { Item, Row } from "src/components/Layout";
+import { AddLiquidity } from "src/components/Liquidity/AddLiquidity";
+import { RemoveLiquidity } from "src/components/Liquidity/RemoveLiquidity";
 import { LoadingItem } from "src/components/LoadingItem";
+import { Page } from "src/components/Page";
+import { Button } from "src/components/Swap/Button";
+import { TabButton } from "src/components/TabButton";
+import { BodyXS, TextNudge } from "src/components/Typography";
+import { LearnPump } from "src/components/Well/LearnPump";
+import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
+import { LearnYield } from "src/components/Well/LearnYield";
+import { LiquidityBox } from "src/components/Well/LiquidityBox";
+import { Log } from "src/utils/logger";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 
 export const Liquidity = () => {
   const { well, loading, error } = useWellWithParams();
   const navigate = useNavigate();
-  
+
   const [tab, setTab] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -107,7 +109,15 @@ export const Liquidity = () => {
               </TabButton>
             </Item>
             <Item stretch>
-              <TabButton onClick={() => setTab(1)} active={tab === 1} stretch bold justify hover disabled={!nonEmptyReserves}>
+              <TabButton
+                onClick={() => setTab(1)}
+                active={tab === 1}
+                stretch
+                bold
+                justify
+                hover
+                disabled={!nonEmptyReserves}
+              >
                 <LoadingItem loading={loading} onLoading={<>{""}</>}>
                   <span>Remove Liquidity</span>
                 </LoadingItem>

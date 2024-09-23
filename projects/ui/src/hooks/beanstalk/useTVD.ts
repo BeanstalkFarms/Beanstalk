@@ -4,11 +4,12 @@ import BigNumber from 'bignumber.js';
 import { ERC20Token } from '~/classes/Token';
 import { AppState } from '~/state';
 import { ONE_BN, ZERO_BN } from '~/constants';
+import { Token } from '@beanstalk/sdk';
 import useSiloTokenToFiat from './useSiloTokenToFiat';
 import useWhitelist from './useWhitelist';
 import useUnripeUnderlyingMap from './useUnripeUnderlying';
 
-export default function useTVD() {
+export default function useTVD(token?: Token) {
   const whitelist = useWhitelist();
   const balances = useSelector<
     AppState,
@@ -64,11 +65,18 @@ export default function useTVD() {
       }
     );
 
+    const pctTVD =
+      token && token.address in tokenTvdMap
+        ? tokenTvdMap[token.address].div(total)
+        : ZERO_BN;
+
     return {
+      pctTotalTVD: pctTVD.times(100),
       tvdByToken: tokenTvdMap,
       total,
     };
   }, [
+    token,
     balances,
     siloTokenToFiat,
     unripeTokens,

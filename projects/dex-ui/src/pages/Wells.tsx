@@ -1,32 +1,34 @@
+import React, { useState } from "react";
+
+import styled from "styled-components";
+
 import { BeanstalkSDK, TokenValue } from "@beanstalk/sdk";
-import React, { useMemo, useState } from "react";
+import { Well } from "@beanstalk/sdk-wells";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { Error } from "src/components/Error";
 import { Item } from "src/components/Layout";
+import { Row as TabRow } from "src/components/Layout";
 import { Page } from "src/components/Page";
 import { Title } from "src/components/PageComponents/Title";
 import { TabButton } from "src/components/TabButton";
 import { Row, TBody, THead, Table, Th } from "src/components/Table";
-import { Row as TabRow } from "src/components/Layout";
-import { useWells } from "src/wells/useWells";
-import styled from "styled-components";
-import { mediaQuery, size } from "src/breakpoints";
-import { Error } from "src/components/Error";
-import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
-import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-
-import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
 import {
   MyWellPositionLoadingRow,
   MyWellPositionRow
 } from "src/components/Well/Table/MyWellPositionRow";
-import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
-import { useLagLoading } from "src/utils/ui/useLagLoading";
-import useBasinStats from "src/wells/useBasinStats";
-import { useTokenPrices } from "src/utils/price/useTokenPrices";
-import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
+import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { BasinAPIResponse } from "src/types";
-import { Well } from "@beanstalk/sdk-wells";
+import { useTokenPrices } from "src/utils/price/useTokenPrices";
 import useSdk from "src/utils/sdk/useSdk";
 import { theme } from "src/utils/ui/theme";
+import { useLagLoading } from "src/utils/ui/useLagLoading";
+import useBasinStats from "src/wells/useBasinStats";
+import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
+import { useWells } from "src/wells/useWells";
+import { useWellFunctionNames } from "src/wells/wellFunction/useWellFunctionNames";
 
 export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
@@ -39,12 +41,10 @@ export const Wells = () => {
   const { hasPositions, getPositionWithWell, isLoading: positionsLoading } = useLPPositionSummary();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { data: tokenPrices, isLoading: tokenPricesLoading } = useTokenPrices(wells);
+
   const { data: wellFnNames, isLoading: wellNamesLoading } = useWellFunctionNames(wells);
 
-  const tableData = useMemo(
-    () => makeTableData(sdk, wells, wellStats, tokenPrices),
-    [sdk, tokenPrices, wellStats, wells]
-  );
+  const tableData = makeTableData(sdk, wells, wellStats, tokenPrices);
 
   const loading = useLagLoading(
     isLoading ||
@@ -192,10 +192,10 @@ const makeTableData = (
       const reserve1USD = reserve1?.mul(basePrice);
       const reserve2USD = reserve2?.mul(targetPrice);
 
-      if (reserve2USD && reserve1 && reserve1.gt(0)) {
+      if (reserve2USD && reserve1?.gt(0)) {
         baseTokenPrice = reserve2USD.div(reserve1);
       }
-      if (reserve1USD && reserve2USD && reserve2USD.gt(0)) {
+      if (reserve1USD && reserve2USD?.gt(0)) {
         liquidityUSD = reserve1USD.add(reserve2USD);
       }
 
@@ -230,7 +230,7 @@ const makeTableData = (
 
   const whitelistedSort = data.sort(getSortByWhitelisted(sdk));
 
-  const sortedByLiquidity = whitelistedSort.sort((a, b) => {
+  whitelistedSort.sort((a, b) => {
     if (!a.liquidityUSDInferred) return 1;
     if (!b.liquidityUSDInferred) return -1;
 
@@ -239,12 +239,12 @@ const makeTableData = (
     return diff.gt(0) ? -1 : 1;
   });
 
-  const sortedByHasReserves = sortedByLiquidity.sort((a, b) => {
+  whitelistedSort.sort((a, b) => {
     if (a.hasReserves === b.hasReserves) return 0;
     return a.hasReserves && !b.hasReserves ? -1 : 1;
   });
 
-  return sortedByHasReserves;
+  return whitelistedSort;
 };
 
 const getSortByWhitelisted =

@@ -10,13 +10,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param farmingStatus Stores whether the function call originated in a Farm-like transaction - Farm, Tractor, PipelineConvert, etc.
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
  * @param beanSown The number of Bean sown within the current Season. Reset during {Weather.calcCaseId}.
  * @param activeField ID of the active Field.
  * @param fieldCount Number of Fields that have ever been initialized.
+ * @param orderLockedBeans The number of Beans locked in Pod Orders.
  * @param _buffer_0 Reserved storage for future additions.
  * @param podListings A mapping from fieldId to index to hash of Listing.
  * @param podOrders A mapping from the hash of a Pod Order to the amount of Pods that the Pod Order is still willing to buy.
@@ -45,13 +46,13 @@ struct System {
     bool paused;
     uint128 pausedAt;
     uint256 reentrantStatus;
-    uint256 isFarm;
+    uint256 farmingStatus;
     address ownerCandidate;
-    uint256 plenty;
     uint128 soil;
     uint128 beanSown;
     uint256 activeField;
     uint256 fieldCount;
+    uint256 orderLockedBeans;
     bytes32[16] _buffer_0;
     mapping(uint256 => mapping(uint256 => bytes32)) podListings;
     mapping(bytes32 => uint256) podOrders;
@@ -59,23 +60,37 @@ struct System {
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-    mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
     mapping(address => Implementation) oracleImplementation;
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
+    Tokens tokens;
     Silo silo;
     Fertilizer fert;
     Season season;
     Weather weather;
     SeedGauge seedGauge;
     Rain rain;
-    Migration migration;
+    L2Migration l2Migration;
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
+}
+
+/**
+ * @notice Tokens used in the Beanstalk system.
+ * @param bean Beanstalk ERC-20 fiat stablecoin
+ * @param fertilizer Fertilizer ERC-1555 token
+ * @param urBean Unripe Bean issud to Bean holders at the time of the exploit.
+ * @param urLp Unripe LP issued to LP holders at the time of the exploit.
+ */
+struct Tokens {
+    address bean;
+    address fertilizer;
+    address urBean;
+    address urLp;
 }
 
 /**
@@ -267,8 +282,7 @@ struct WhitelistStatus {
  * It is called by `LibTokenSilo` through the use of `delegatecall`
  * to calculate a token's BDV at the time of Deposit.
  * @param stalkEarnedPerSeason represents how much Stalk one BDV of the underlying deposited token
- * grows each season. In the past, this was represented by seeds. This is stored as 1e6, plus stalk is stored
- * as 1e10, so 1 legacy seed would be 1e6 * 1e10.
+ * grows each season. In the past, this was represented by seeds. 6 decimal precision.
  * @param stalkIssuedPerBdv The Stalk Per BDV that the Silo grants in exchange for Depositing this Token.
  * previously called stalk.
  * @param milestoneSeason The last season in which the stalkEarnedPerSeason for this token was updated.
@@ -297,13 +311,15 @@ struct WhitelistStatus {
 struct AssetSettings {
     bytes4 selector; // ────────────────────┐ 4
     uint32 stalkEarnedPerSeason; //         │ 4  (8)
-    uint32 stalkIssuedPerBdv; //            │ 4  (12)
-    uint32 milestoneSeason; //              │ 4  (16)
-    int96 milestoneStem; //                 │ 12 (28)
-    bytes1 encodeType; //                   │ 1  (29)
-    int24 deltaStalkEarnedPerSeason; // ────┘ 3  (32)
-    uint128 gaugePoints; // ─────────-───────┐ 16
-    uint64 optimalPercentDepositedBdv; //  ──┘ 8
+    uint48 stalkIssuedPerBdv; //            │ 6  (14)
+    uint32 milestoneSeason; //              │ 4  (18)
+    int96 milestoneStem; //                 │ 12 (30)
+    bytes1 encodeType; //                   │ 1  (31)
+    // one byte is left here.             ──┘ 1  (32)
+    int32 deltaStalkEarnedPerSeason; // ────┐ 4
+    uint128 gaugePoints; //                 │ 16 (20)
+    uint64 optimalPercentDepositedBdv; //   │ 8  (28)
+    // 4 bytes are left here.             ──┘ 4  (32)
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
 }
@@ -354,8 +370,8 @@ struct ConvertCapacity {
  * @notice Stores the system level germination Silo data.
  */
 struct GerminatingSilo {
-    uint128 stalk;
-    uint128 roots;
+    uint256 stalk;
+    uint256 roots;
 }
 
 /**
@@ -371,9 +387,28 @@ struct ShipmentRoute {
     bytes data;
 }
 
-struct Migration {
+/**
+ * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
+ * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
+ * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param _buffer_ Reserved storage for future additions.
+ */
+struct L2Migration {
     uint256 migratedL1Beans;
+    mapping(address => MigrationData) account;
     bytes32[4] _buffer_;
+}
+
+/**
+ * @notice contains data relating to migration.
+ */
+struct MigrationData {
+    address reciever;
+    bool migratedDeposits;
+    bool migratedPlots;
+    bool migratedFert;
+    bool migratedInternalBalances;
+    bool migratedPodOrders;
 }
 
 /**
@@ -382,13 +417,15 @@ struct Migration {
  * @param selector The function selector that is used to call on the implementation.
  * @param encodeType The encode type that should be used to encode the function call.
  * The encodeType value depends on the context of each implementation.
+ * @param data Any additional data, for example timeout
  * @dev assumes all future implementations will use the same parameters as the beanstalk
  * gaugePoint and liquidityWeight implementations.
  */
 struct Implementation {
-    address target;
+    address target; // 20 bytes
     bytes4 selector;
     bytes1 encodeType;
+    bytes data;
 }
 
 struct EvaluationParameters {
@@ -404,6 +441,9 @@ struct EvaluationParameters {
     uint256 lpToSupplyRatioOptimal;
     uint256 lpToSupplyRatioLowerBound;
     uint256 excessivePriceThreshold;
+    uint256 soilCoefficientHigh;
+    uint256 soilCoefficientLow;
+    uint256 baseReward;
 }
 
 /**

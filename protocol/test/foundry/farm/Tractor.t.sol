@@ -50,7 +50,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         vm.createSelectFork({urlOrAlias: "mainnet", blockNumber: 18_686_631});
 
 //         beanstalk = IBeanstalk(BEANSTALK);
-//         bean = IERC20(C.BEAN);
+//         bean = IERC20(BEAN);
 //         tokenFacet = TokenFacet(BEANSTALK);
 
 //         PUBLISHER = vm.addr(PUBLISHER_PRIVATE_KEY);
@@ -79,11 +79,11 @@ uint80 constant ARRAY_LENGTH = 5;
 
 //         // Mint beans
 //         // vm.prank(0x62d69f6867A0A084C6d313943dC22023Bc263691);
-//         deal(C.BEAN, PUBLISHER, 5000e6);
-//         console.log("Bean supply is", C.bean().totalSupply());
+//         deal(BEAN, PUBLISHER, 5000e6);
+//         console.log("Bean supply is", bean.totalSupply());
 
 //         // Operator position is unimportant, verify no held Beans.
-//         assertEq(C.bean().balanceOf(OPERATOR), 0);
+//         assertEq(bean.balanceOf(OPERATOR), 0);
 //     }
 
 //     function test_depositAllBeans() public {
@@ -188,7 +188,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //             callData: abi.encodeWithSelector(
 //                 tokenFacet.getInternalBalance.selector,
 //                 address(0),
-//                 C.BEAN
+//                 BEAN
 //             ),
 //             clipboard: abi.encodePacked(bytes2(0))
 //         });
@@ -215,7 +215,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         advancedFarmCalls[2] = AdvancedFarmCall({
 //             callData: abi.encodeWithSelector(
 //                 beanstalk.deposit.selector,
-//                 C.BEAN,
+//                 BEAN,
 //                 uint256(0),
 //                 LibTransfer.From.INTERNAL
 //             ),
@@ -232,7 +232,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         advancedFarmCalls[3] = AdvancedFarmCall({
 //             callData: abi.encodeWithSelector(
 //                 beanstalk.transferToken.selector,
-//                 C.BEAN,
+//                 BEAN,
 //                 address(0),
 //                 tip,
 //                 LibTransfer.From.INTERNAL,
@@ -310,7 +310,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         advancedFarmCalls[1] = AdvancedFarmCall({
 //             callData: abi.encodeWithSelector(
 //                 beanstalk.enrootDeposits.selector,
-//                 C.UNRIPE_BEAN,
+//                 UNRIPE_BEAN,
 //                 stems,
 //                 amounts
 //             ),
@@ -347,7 +347,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         advancedFarmCalls[2] = AdvancedFarmCall({
 //             callData: abi.encodeWithSelector(
 //                 beanstalk.enrootDeposits.selector,
-//                 C.UNRIPE_LP,
+//                 UNRIPE_LP,
 //                 stems,
 //                 amounts
 //             ),
@@ -416,7 +416,7 @@ uint80 constant ARRAY_LENGTH = 5;
 //         advancedFarmCalls[6] = AdvancedFarmCall({
 //             callData: abi.encodeWithSelector(
 //                 beanstalk.transferToken.selector,
-//                 C.BEAN,
+//                 BEAN,
 //                 address(0),
 //                 uint256(0),
 //                 LibTransfer.From.INTERNAL,

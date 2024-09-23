@@ -6,7 +6,9 @@ pragma solidity ^0.8.20;
 
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {LibUsdOracle, IERC20Decimals} from "contracts/libraries/Oracle/LibUsdOracle.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author pizzaman1337
@@ -53,10 +55,48 @@ contract OracleFacet is Invariable, ReentrancyGuard {
      * @param token address of token to get the price of.
      * @param lookback the amount of time to look back in seconds.
      */
-    function getTokenPriceFromExternal(
+    function getUsdTokenPriceFromExternal(
         address token,
         uint256 lookback
-    ) external view returns (uint256 tokenPrice) {
-        return LibUsdOracle.getTokenPriceFromExternal(token, lookback);
+    ) external view returns (uint256 usdToken) {
+        return
+            LibUsdOracle.getTokenPriceFromExternal(
+                token,
+                IERC20Decimals(token).decimals(),
+                lookback
+            );
+    }
+
+    /**
+     * @notice Fetches the amount of USD equal to 1 token, using the oracle implementation.
+     * @param token address of token to get the price of.
+     * @param lookback the amount of time to look back in seconds.
+     * @dev returns 6 decimal precision.
+     */
+    function getTokenUsdPriceFromExternal(
+        address token,
+        uint256 lookback
+    ) external view returns (uint256 tokenUsd) {
+        return LibUsdOracle.getTokenPriceFromExternal(token, 0, lookback);
+    }
+
+    /**
+     * @dev Returns the price ratios between `tokens` and the index of Bean in `tokens`.
+     * These actions are combined into a single function for gas efficiency.
+     */
+    function getRatiosAndBeanIndex(
+        IERC20[] memory tokens,
+        uint256 lookback
+    ) external view returns (uint[] memory ratios, uint beanIndex, bool success) {
+        (ratios, beanIndex, success) = LibWell.getRatiosAndBeanIndex(tokens, lookback);
+    }
+
+    /**
+     * @notice Fetches the amount of tokens equal to 1 Million USD for a given token.
+     * @param token address of the token to get the amount for.
+     * @param lookback the amount of time to look back in seconds.
+     */
+    function getMillionUsdPrice(address token, uint256 lookback) external view returns (uint256) {
+        return LibUsdOracle.getMillionUsdPrice(token, lookback);
     }
 }
