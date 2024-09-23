@@ -171,6 +171,21 @@ const PipelineConvertFormInner = ({
       return;
     }
     try {
+      const callDatas = sdk.contracts.beanstalk.interface.encodeFunctionData(
+        'pipelineConvert',
+        [
+          sourceToken.address,
+          pickedDeposits.crates.map((c) => c.stem),
+          pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
+          targetToken.address,
+          data.advPipeCalls,
+        ]
+      );
+
+      console.log('[pipelineconvert/callstatic]', {
+        callData: callDatas,
+      });
+
       const result = await sdk.contracts.beanstalk.callStatic.pipelineConvert(
         sourceToken.address,
         pickedDeposits.crates.map((c) => c.stem),

@@ -22,7 +22,7 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
     let ttlDeltaStalk = sdk.tokens.STALK.fromHuman('0');
     let ttlDeltaSeed = sdk.tokens.SEEDS.fromHuman('0');
 
-    Object.entries(updateableDepositsById).forEach(([_, deposit]) => {
+    Object.entries(updateableDepositsById).forEach(([key, deposit]) => {
       const currentBDV = oneTokenBDV.mul(deposit.amount);
       const deltaBDV = currentBDV.sub(deposit.bdv);
 
@@ -30,7 +30,7 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
       const deltaStalk = deposit.seeds.mul(deltaBDV);
       const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
       updateable.push({
-        key: `...${deposit.id.toHexString().slice(-13)}`,
+        key: key,
         currentBDV: currentBDV,
         deltaBDV: deltaBDV,
         deltaStalk: deltaStalk,
