@@ -145,16 +145,17 @@ export class Convert {
     currentSeason: number
   ): ConvertDetails {
     if (deposits.length === 0) throw new Error("No crates to withdraw from");
-    const sortedCrates = toToken.isLP
-      ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
-        /// on both sides of the convert, but having more seeds in older crates
-        /// allows you to accrue stalk faster after convert.
-        /// Note that during this convert, BDV is approx. equal after the convert.
-        sortCratesByStem(deposits, "asc")
-      : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
-        /// Since LP deposits can have varying BDV, the best option for the Farmer
-        /// is to increase the BDV of their existing lowest-BDV crates.
-        sortCratesByBDVRatio(deposits, "asc");
+    const sortedCrates =
+      !fromToken.isLP && toToken.isLP
+        ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
+          /// on both sides of the convert, but having more seeds in older crates
+          /// allows you to accrue stalk faster after convert.
+          /// Note that during this convert, BDV is approx. equal after the convert.
+          sortCratesByStem(deposits, "asc")
+        : /// X -> LP: use the crates with the lowest [BDV/Amount] ratio first.
+          /// Since LP deposits can have varying BDV, the best option for the Farmer
+          /// is to increase the BDV of their existing lowest-BDV crates.
+          sortCratesByBDVRatio(deposits, "asc");
 
     const pickedCrates = pickCrates(sortedCrates, fromAmount, fromToken, currentSeason);
 
@@ -192,7 +193,6 @@ export class Convert {
       throw new Error("SDK: Deprecated conversion pathway");
     }
 
-    // BS3TODO: is this encoding correct ?
     if (fromToken.equals(toToken)) {
       return ConvertEncoder.lambdaLambda(amountIn.toBlockchain(), fromToken.address);
     }

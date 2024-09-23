@@ -1,4 +1,10 @@
-import { BeanstalkSDK, ERC20Token, NativeToken, Token } from '@beanstalk/sdk';
+import {
+  AdvancedPipeStruct,
+  BeanstalkSDK,
+  ERC20Token,
+  NativeToken,
+  Token,
+} from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { FormikHelpers, FormikProps } from 'formik';
 import { FormStateNew, FormTxnsFormState } from '~/components/Common/Form';
@@ -12,6 +18,10 @@ export type ConvertFormValues = FormStateNew & {
   };
   maxAmountIn: BigNumber | undefined;
   tokenOut: Token | undefined;
+  pipe: {
+    amountOut: BigNumber | undefined;
+    structs: AdvancedPipeStruct[];
+  };
 } & FormTxnsFormState;
 
 export type ConvertFormSubmitHandler = (

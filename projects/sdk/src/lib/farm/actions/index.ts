@@ -20,7 +20,6 @@ import { UniswapV3Swap } from "./UniswapV3Swap";
 import { DevDebug } from "./_DevDebug";
 import { LidoWrapSteth } from "./LidoWrapSteth";
 import { LidoUnwrapWstETH } from "./LidoUnwrapWstETH";
-import { PipelineConvert } from "./PipelineConvert";
 
 export {
   // Approvals
@@ -45,7 +44,6 @@ export {
   ClaimWithdrawal,
   TransferDeposits,
   TransferDeposit,
-  PipelineConvert,
 
   // Lido
   LidoWrapSteth,

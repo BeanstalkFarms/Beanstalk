@@ -11,7 +11,9 @@ import React, {
   useContext,
   useMemo,
   useState,
+  useEffect,
 } from 'react';
+import useBDV from '~/hooks/beanstalk/useBDV';
 import useTabs from '~/hooks/display/useTabs';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import { exists } from '~/util/UI';
@@ -20,12 +22,17 @@ export type TokenDepositsSelectType = 'single' | 'multi';
 
 export type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
 
+export interface UpdateableDeposit<T> extends Deposit<T> {
+  newBDV: T;
+}
+
 export type TokenDepositsContextType = {
   selected: Set<string>;
   token: ERC20Token;
   slug: SiloTokenSlug;
   balances: TokenSiloBalance<TokenValue> | undefined;
   depositsById: Record<string, Deposit<TokenValue>>;
+  updateableDepositsById: Record<string, UpdateableDeposit<TokenValue>>;
   setSelected: (
     depositId: string,
     selectType: TokenDepositsSelectType,
@@ -52,12 +59,19 @@ const TokenDepositsContext = createContext<TokenDepositsContextType | null>(
   null
 );
 
+const emptyObj = {};
+
 export const TokenDepositsProvider = (props: {
   children: React.ReactNode;
   token: ERC20Token;
 }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
+  const [updateableDepositsById, setUpdateableDepositsById] =
+    useState<TokenDepositsContextType['updateableDepositsById']>(emptyObj);
+  const getBDV = useBDV();
+
+  const tokenBDV = getBDV(props.token);
 
   const siloBalances = useFarmerSiloBalanceSdk(props.token);
 
@@ -70,13 +84,35 @@ export const TokenDepositsProvider = (props: {
     return map;
   }, [siloBalances?.deposits]);
 
-  const handleSetSelected = (
-    depositId: string,
-    selectType: TokenDepositsSelectType,
-    callback?: () => void
-  ) => {
-    setSelected((prevSelected) => {
-      const copy = new Set(prevSelected);
+  useEffect(() => {
+    if (!siloBalances?.convertibleDeposits?.length) {
+      setUpdateableDepositsById(emptyObj);
+      return;
+    }
+
+    const map = siloBalances.convertibleDeposits.reduce(
+      (prev, deposit) => {
+        const newBDV = deposit.amount.mul(tokenBDV.toNumber());
+        if (!deposit.bdv.lt(newBDV.toNumber())) return prev;
+        prev[deposit.id.toString()] = {
+          ...deposit,
+          newBDV,
+        };
+        return prev;
+      },
+      {} as typeof updateableDepositsById
+    );
+
+    setUpdateableDepositsById(map);
+  }, [siloBalances, tokenBDV]);
+
+  const handleSetSelected = useCallback(
+    (
+      depositId: string,
+      selectType: TokenDepositsSelectType,
+      callback?: () => void
+    ) => {
+      const copy = new Set([...selected]);
       if (selectType === 'single') {
         const inSelected = copy.has(depositId);
         copy.clear();
@@ -87,10 +123,11 @@ export const TokenDepositsProvider = (props: {
         copy.add(depositId);
       }
 
-      return copy;
-    });
-    callback?.();
-  };
+      setSelected(copy);
+      callback?.();
+    },
+    [selected]
+  );
 
   const handleSetMulti = useCallback((depositIds: string[]) => {
     setSelected(new Set(depositIds));
@@ -114,32 +151,21 @@ export const TokenDepositsProvider = (props: {
     [setSlugIndex]
   );
 
-  const contextValue = useMemo(
-    () => ({
-      selected,
-      token: props.token,
-      balances: siloBalances,
-      depositsById: depositMap,
-      slug: slugIndexMap[slugIndex] || 'token',
-      setSlug,
-      setSelected: handleSetSelected,
-      setWithIds: handleSetMulti,
-      clear,
-    }),
-    [
-      clear,
-      depositMap,
-      handleSetMulti,
-      props.token,
-      selected,
-      setSlug,
-      siloBalances,
-      slugIndex,
-    ]
-  );
-
   return (
-    <TokenDepositsContext.Provider value={contextValue}>
+    <TokenDepositsContext.Provider
+      value={{
+        selected,
+        token: props.token,
+        balances: siloBalances,
+        depositsById: depositMap,
+        updateableDepositsById,
+        slug: slugIndexMap[slugIndex] || 'token',
+        setSlug,
+        setSelected: handleSetSelected,
+        setWithIds: handleSetMulti,
+        clear,
+      }}
+    >
       {props.children}
     </TokenDepositsContext.Provider>
   );
