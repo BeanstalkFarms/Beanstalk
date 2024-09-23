@@ -23,8 +23,8 @@ export const USDT = Address.fromString("0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCb
 // Contracts
 export const BEANSTALK = Address.fromString("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
 ////// TODO: These are subject to change. Fertilizer is "Proxy"
-export const FERTILIZER = Address.fromString("0x82a17bdeC3368f549A7BfE6734D6E2Aba82be455");
-export const BEANSTALK_PRICE = Address.fromString("0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56");
+export const FERTILIZER = Address.fromString("0xFEFEFECA5375630d6950F40e564A27f6074845B5");
+export const BEANSTALK_PRICE = Address.fromString("0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7");
 //////
 export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521");
 

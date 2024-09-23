@@ -357,7 +357,7 @@ dataSources:
     name: CrossCheck
     network: arbitrum-one
     source:
-      address: "0xEfE94bE746681ed73DfD15F932f9a8e8ffDdEE56"
+      address: "0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7"
       abi: BeanstalkPrice
       startBlock: 585858585858 # Reseed
     mapping:

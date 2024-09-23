@@ -255,7 +255,7 @@ dataSources:
     name: Fertilizer-1155
     network: arbitrum-one
     source:
-      address: "0x82a17bdeC3368f549A7BfE6734D6E2Aba82be455"
+      address: "0xFEFEFECA5375630d6950F40e564A27f6074845B5"
       abi: Fertilizer
       startBlock: 585858585858 # Reseed
     mapping:
