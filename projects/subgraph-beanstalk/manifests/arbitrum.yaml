@@ -12,7 +12,7 @@ dataSources:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
       startBlock: 256368013 # Reseed
-      endBlock: 254248791 # Reseed Completion
+      endBlock: 256368454 # Reseed Completion
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -87,8 +87,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 254248791 # Reseed Completion
-      endBlock: 254248791 # Reseed Completion
+      startBlock: 256368454 # Reseed Completion
+      endBlock: 256368454 # Reseed Completion
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

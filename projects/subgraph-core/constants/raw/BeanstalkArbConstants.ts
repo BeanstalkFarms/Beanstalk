@@ -30,7 +30,7 @@ export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E
 
 // Milestone
 ////// TODO: Set this upon deployment
-export const RESEED_SEASON = BigInt.fromU32(30001);
+export const RESEED_SEASON = BigInt.fromU32(30000);
 export const RESEED_BLOCK = BigInt.fromU64(256368013);
 //////
 export const BASIN_BLOCK = BigInt.fromU64(235608025);
