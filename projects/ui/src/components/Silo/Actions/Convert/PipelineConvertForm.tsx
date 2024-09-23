@@ -34,7 +34,7 @@ import WarningAlert from '~/components/Common/Alert/WarningAlert';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
-import { ActionType, displayFullBN, transform } from '~/util';
+import { ActionType, displayFullBN } from '~/util';
 import { useAppSelector } from '~/state';
 import { BaseConvertFormProps } from './types';
 
@@ -145,7 +145,7 @@ const PipelineConvertFormInner = ({
         );
 
         setFieldValue('pipe.structs', advPipeCalls);
-
+        setFieldValue('pipe.amountOut', new BigNumber(amountOut.toHuman()));
         return {
           amountOut,
           advPipeCalls
@@ -178,8 +178,6 @@ const PipelineConvertFormInner = ({
         targetToken.address,
         data.advPipeCalls
       );
-      const toAmount = transform(result.toAmount, 'bnjs', targetToken);
-      setFieldValue('pipe.amountOut', toAmount);
 
       setConvertResults({
         toAmount: result.toAmount,

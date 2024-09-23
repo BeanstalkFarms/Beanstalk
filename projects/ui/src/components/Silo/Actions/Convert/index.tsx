@@ -178,6 +178,7 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
 
   const pipelineConvertSubmitHandler = usePipelineConvertSubmitHandler({
     sdk,
+    fromToken,
     farmerSilo,
     middleware,
     initialValues,
@@ -243,9 +244,11 @@ function usePipelineConvertSubmitHandler({
   sdk,
   farmerSilo,
   middleware,
+  fromToken,
   initialValues,
 }: {
   sdk: BeanstalkSDK;
+  fromToken: ERC20Token;
   farmerSilo: FarmerSilo;
   middleware: ReturnType<typeof useFormMiddleware>;
   initialValues: ConvertFormValues;
@@ -276,7 +279,7 @@ function usePipelineConvertSubmitHandler({
 
         const advPipeStructs = values.pipe?.structs || [];
         const slippage = values?.settings?.slippage;
-        const farmerBalances = farmerSilo.balancesSdk.get(tokenIn);
+        const farmerBalances = farmerSilo.balancesSdk.get(fromToken);
         const amountIn = tokenIn?.amount(_amountIn?.toString() || '0'); // amount of from token
         const amountOut = tokenOut?.amount(_amountOut?.toString() || '0'); // amount of to token
 
@@ -308,16 +311,26 @@ function usePipelineConvertSubmitHandler({
           throw new Error('Could not find any crates to convert');
         }
 
-        // farm.add(
-        //   new sdk.farm.actions.PipelineConvert(
-        //     tokenIn as ERC20Token,
-        //     crates.map((c) => c.stem),
-        //     crates.map((c) => c.amount.toBigNumber()),
-        //     tokenOut as ERC20Token,
-        //     amountOut,
-        //     advPipeStructs
-        //   )
-        // );
+        farm.add(() => ({
+          name: 'pipe-convert',
+          amountOut: amountOut.toBigNumber(),
+          prepare: () => ({
+            target: sdk.contracts.beanstalk.address,
+            callData: sdk.contracts.beanstalk.interface.encodeFunctionData(
+              'pipelineConvert',
+              [
+                tokenIn.address,
+                crates.map((c) => c.stem),
+                crates.map((c) => c.amount.toBigNumber()),
+                tokenOut.address,
+                advPipeStructs,
+              ]
+            ),
+            clipboard: undefined,
+          }),
+          decode: () => undefined,
+          decodeResult: () => undefined,
+        }));
 
         const gasEstimate = await farm.estimateGas(amountIn, { slippage });
         const adjustedGas = Math.round(gasEstimate.toNumber() * 1.2).toString();
@@ -351,6 +364,7 @@ function usePipelineConvertSubmitHandler({
     [
       sdk,
       account,
+      fromToken,
       farmerSilo.balancesSdk,
       initialValues,
       middleware,
