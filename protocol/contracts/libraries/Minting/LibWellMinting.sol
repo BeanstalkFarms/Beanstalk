@@ -172,15 +172,18 @@ library LibWellMinting {
         uint256 beanIndex
     ) internal view returns (int256) {
         Call memory wellFunction = IWell(well).wellFunction();
-        return
-            int256(
-                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                    reserves,
-                    beanIndex,
-                    ratios,
-                    wellFunction.data
-                )
-            ).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserveAtRatioSwap) {
+            return int256(reserveAtRatioSwap).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 
     /**
