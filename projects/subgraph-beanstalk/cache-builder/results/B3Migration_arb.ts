@@ -40,7 +40,7 @@ class UnripeTokenInitialValues {
 export const SEASON_INITIAL = 24508;
 
 export const FIELD_INITIAL_VALUES: FieldInitialValues = {
-  numberOfSowers: 0,
+  numberOfSowers: 1640,
   numberOfSows: 19196,
   sownBeans: BigInt.fromString("33592460856188"),
   harvestedPods: BigInt.fromString("61126608133951"),
