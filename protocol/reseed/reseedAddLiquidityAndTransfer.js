@@ -139,7 +139,7 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
     to6("0") // to6("1000000") // BEAN/USDT
   ];
   console.log("-----------------------------------");
-  console.log("add liquidity to wells and transfers to l2 beanstalk.\n");
+  console.log("Add liquidity to wells and transfer LP tokens to L2 beanstalk.\n");
   const beanAddress = "0xBEA0005B8599265D41256905A9B3073D397812E4";
   await impersonateToken(beanAddress, 6);
   const bean = await ethers.getContractAt("MockToken", beanAddress);
