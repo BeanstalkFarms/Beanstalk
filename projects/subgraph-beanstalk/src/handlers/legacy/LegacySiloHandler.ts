@@ -155,12 +155,12 @@ export function handleWhitelistToken_v4(event: WhitelistToken): void {
 /// Withdrawal is a legacy feature from replant, but these events were still present until the reseed ///
 // Replanted -> Reseed
 export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.params.account, event.params.token, event.params.season, event.block);
+  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block);
 }
 
 // Replanted -> Reseed
 export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
   for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.params.account, event.params.token, event.params.seasons[i], event.block);
+    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block);
   }
 }

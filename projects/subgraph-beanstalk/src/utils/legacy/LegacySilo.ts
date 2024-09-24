@@ -1,24 +1,25 @@
 import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
-import { loadSilo, loadSiloAsset, loadSiloWithdraw } from "../../entities/Silo";
-import { takeSiloAssetSnapshots } from "../../entities/snapshots/SiloAsset";
+import { loadSilo, loadSiloWithdraw } from "../../entities/Silo";
 import { loadBeanstalk } from "../../entities/Beanstalk";
-import { updateStalkBalances } from "../Silo";
+import { addWithdrawToSiloAsset, updateStalkBalances } from "../Silo";
 import { Replanted } from "../../../generated/Beanstalk-ABIs/Replanted";
 import { BEAN_3CRV, BEAN_ERC20, UNRIPE_BEAN, UNRIPE_LP } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ONE_BI, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import { toAddress } from "../../../../subgraph-core/utils/Bytes";
-import { takeSiloSnapshots } from "../../entities/snapshots/Silo";
 import { PrevFarmerGerminatingEvent } from "../../../generated/schema";
 
-export function updateClaimedWithdraw(account: Address, token: Address, withdrawSeason: BigInt, block: ethereum.Block): void {
+export function updateClaimedWithdraw(
+  protocol: Address,
+  account: Address,
+  token: Address,
+  withdrawSeason: BigInt,
+  block: ethereum.Block
+): void {
   let withdraw = loadSiloWithdraw(account, token, withdrawSeason.toI32());
   withdraw.claimed = true;
   withdraw.save();
 
-  let asset = loadSiloAsset(account, token);
-  asset.withdrawnAmount = asset.withdrawnAmount.minus(withdraw.amount);
-  takeSiloAssetSnapshots(asset, block);
-  asset.save();
+  addWithdrawToSiloAsset(protocol, account, token, withdraw.amount.neg(), block);
 }
 
 // Replanted -> SiloV3
