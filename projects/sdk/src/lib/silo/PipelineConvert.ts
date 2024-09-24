@@ -209,7 +209,8 @@ export class PipelineConvert {
         swap.buyToken,
         target.well.address,
         TokenValue.ZERO, // overriden w/ clipboard
-        Clipboard.encodeSlot(3, 0, 1)
+        Clipboard.encodeSlot(3, 0, 1),
+        "copyIndex: 3, copySlot: 0, pasteSlot: 1"
       )
     );
 
@@ -219,7 +220,8 @@ export class PipelineConvert {
         source.well.tokens[sellTokenIndex === 1 ? 0 : 1],
         target.well.address,
         TokenValue.MAX_UINT256, // overriden w/ clipboard
-        Clipboard.encodeSlot(1, 2, 1)
+        Clipboard.encodeSlot(1, 2, 1),
+        "copyIndex: 1, copySlot: 2, pasteSlot: 1"
       )
     );
 
@@ -232,6 +234,8 @@ export class PipelineConvert {
       )
     );
 
+    console.debug("[pipelineConvert]: pipecalls: ", pipe);
+
     return pipe;
   }
 
@@ -242,8 +246,21 @@ export class PipelineConvert {
       token: ERC20Token,
       spender: string,
       amount: TokenValue = TokenValue.MAX_UINT256,
-      clipboard: string = Clipboard.encode([])
+      clipboard: string = Clipboard.encode([]),
+      clipboardDebugInfo?: any
     ): AdvancedPipeCallStruct => {
+      console.debug("[PipelineConvert]: ERC20Approve: ", {
+        target: token.address,
+        targetName: token.name,
+        spender: spender,
+        amount: amount.toHuman(),
+        amountBN: amount.blockchainString,
+        callData: token
+          .getContract()
+          .interface.encodeFunctionData("approve", [spender, amount.toBigNumber()]),
+        clipboardDebugInfo: clipboardDebugInfo
+      });
+
       return {
         target: token.address,
         callData: token
@@ -256,8 +273,21 @@ export class PipelineConvert {
       token: ERC20Token,
       recipient: string,
       amount: TokenValue,
-      clipboard: string = Clipboard.encode([])
+      clipboard: string = Clipboard.encode([]),
+      clipboardDebugInfo?: any
     ): AdvancedPipeCallStruct => {
+      console.debug("[PipelineConvert]: ERC20Transfer: ", {
+        target: token.address,
+        targetName: token.name,
+        recipient: recipient,
+        amount: amount.toHuman(),
+        amountBN: amount.blockchainString,
+        callData: token
+          .getContract()
+          .interface.encodeFunctionData("transfer", [recipient, amount.toBigNumber()]),
+        clipboardDebugInfo: clipboardDebugInfo
+      });
+
       return {
         target: token.address,
         callData: token
@@ -272,8 +302,27 @@ export class PipelineConvert {
       amountIn: TokenValue,
       minAmountsOut: TokenValue[],
       recipient: string,
-      clipboard: string = Clipboard.encode([])
+      clipboard: string = Clipboard.encode([]),
+      clipboardDebugInfo?: any
     ): AdvancedPipeCallStruct => {
+      console.debug("[PipelineConvert]: removeLiquidity: ", {
+        target: well.address,
+        targetName: well.name,
+        recipient: recipient,
+        minAmountsOut: minAmountsOut.map((v) => v.toHuman()),
+        minAmountsOutBN: minAmountsOut.map((v) => v.blockchainString),
+        callData: well
+          .getContract()
+          .interface.encodeFunctionData("removeLiquidity", [
+            amountIn.toBigNumber(),
+            minAmountsOut.map((v) => v.toBigNumber()),
+            recipient,
+            ethers.constants.MaxUint256
+          ]),
+        clipboard: clipboard,
+        clipboardDebugInfo: clipboardDebugInfo
+      });
+
       return {
         target: well.address,
         callData: well
@@ -291,8 +340,22 @@ export class PipelineConvert {
       well: BasinWell,
       recipient: string,
       amount: TokenValue,
-      clipboard: string = Clipboard.encode([])
+      clipboard: string = Clipboard.encode([]),
+      clipboardDebugInfo?: any
     ): AdvancedPipeCallStruct => {
+      console.debug("[PipelineConvert]: wellSync: ", {
+        target: well.address,
+        targetName: well.name,
+        recipient: recipient,
+        minAmountOut: amount.toHuman(),
+        minAmountOutBN: amount.blockchainString,
+        callData: well
+          .getContract()
+          .interface.encodeFunctionData("sync", [recipient, amount.toBigNumber()]),
+        clipboard: clipboard,
+        clipboardDebugInfo: clipboardDebugInfo
+      });
+
       return {
         target: well.address,
         callData: well
