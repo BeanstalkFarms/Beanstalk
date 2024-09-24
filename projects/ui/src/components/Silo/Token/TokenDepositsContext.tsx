@@ -11,9 +11,7 @@ import React, {
   useContext,
   useMemo,
   useState,
-  useEffect,
 } from 'react';
-import useBDV from '~/hooks/beanstalk/useBDV';
 import useTabs from '~/hooks/display/useTabs';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
 import { exists } from '~/util/UI';
@@ -26,13 +24,22 @@ export interface UpdateableDeposit<T> extends Deposit<T> {
   newBDV: T;
 }
 
+export interface UpdatableSiloDeposit extends Deposit<TokenValue> {
+  key: string;
+  currentBDV: TokenValue;
+  deltaBDV: TokenValue;
+  deltaStalk: TokenValue;
+  deltaSeed: TokenValue;
+}
+
+export type UpdatableDepositsByToken = Record<string, UpdatableSiloDeposit>;
+
 export type TokenDepositsContextType = {
   selected: Set<string>;
   token: ERC20Token;
   slug: SiloTokenSlug;
   balances: TokenSiloBalance<TokenValue> | undefined;
   depositsById: Record<string, Deposit<TokenValue>>;
-  updateableDepositsById: Record<string, UpdateableDeposit<TokenValue>>;
   setSelected: (
     depositId: string,
     selectType: TokenDepositsSelectType,
@@ -59,19 +66,13 @@ const TokenDepositsContext = createContext<TokenDepositsContextType | null>(
   null
 );
 
-const emptyObj = {};
-
+// This could probably be refactored for less duplicated code
 export const TokenDepositsProvider = (props: {
   children: React.ReactNode;
   token: ERC20Token;
 }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
-  const [updateableDepositsById, setUpdateableDepositsById] =
-    useState<TokenDepositsContextType['updateableDepositsById']>(emptyObj);
-  const getBDV = useBDV();
-
-  const tokenBDV = getBDV(props.token);
 
   const siloBalances = useFarmerSiloBalanceSdk(props.token);
 
@@ -83,28 +84,6 @@ export const TokenDepositsProvider = (props: {
 
     return map;
   }, [siloBalances?.deposits]);
-
-  useEffect(() => {
-    if (!siloBalances?.convertibleDeposits?.length) {
-      setUpdateableDepositsById(emptyObj);
-      return;
-    }
-
-    const map = siloBalances.convertibleDeposits.reduce(
-      (prev, deposit) => {
-        const newBDV = deposit.amount.mul(tokenBDV.toNumber());
-        if (!deposit.bdv.lt(newBDV.toNumber())) return prev;
-        prev[deposit.id.toString()] = {
-          ...deposit,
-          newBDV,
-        };
-        return prev;
-      },
-      {} as typeof updateableDepositsById
-    );
-
-    setUpdateableDepositsById(map);
-  }, [siloBalances, tokenBDV]);
 
   const handleSetSelected = useCallback(
     (
@@ -158,7 +137,6 @@ export const TokenDepositsProvider = (props: {
         token: props.token,
         balances: siloBalances,
         depositsById: depositMap,
-        updateableDepositsById,
         slug: slugIndexMap[slugIndex] || 'token',
         setSlug,
         setSelected: handleSetSelected,

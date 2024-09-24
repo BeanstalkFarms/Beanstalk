@@ -1,58 +1,35 @@
 import React, { useMemo } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { FontWeight } from '~/components/App/muiTheme';
-import { ERC20Token } from '@beanstalk/sdk';
-import useSdk from '~/hooks/sdk';
+import { ERC20Token, TokenValue } from '@beanstalk/sdk';
 import { formatTV } from '~/util';
 import Row from '~/components/Common/Row';
-import useBDV from '~/hooks/beanstalk/useBDV';
-import { useTokenDepositsContext } from './TokenDepositsContext';
-import DepositConvertTable, {
-  FarmerTokenConvertRow,
-} from './DepositConvertTable';
+import {
+  UpdatableDepositsByToken,
+  useTokenDepositsContext,
+} from './TokenDepositsContext';
+import DepositConvertTable from './DepositConvertTable';
 
-const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
-  const sdk = useSdk();
-  const { setWithIds, updateableDepositsById } = useTokenDepositsContext();
-  const getBDV = useBDV();
+const TokenLambdaConvert = ({
+  token,
+  updatableDeposits,
+  totalDeltaStalk,
+  totalDeltaSeed,
+}: {
+  token: ERC20Token;
+  updatableDeposits: UpdatableDepositsByToken;
+  totalDeltaStalk: TokenValue;
+  totalDeltaSeed: TokenValue;
+}) => {
+  const { setWithIds } = useTokenDepositsContext();
 
-  const { updatableDeposits, totalDeltaStalk, totalDeltaSeed } = useMemo(() => {
-    const oneTokenBDV = token.fromHuman(getBDV(token).toString());
-    const updateable: FarmerTokenConvertRow[] = [];
-    let ttlDeltaStalk = sdk.tokens.STALK.fromHuman('0');
-    let ttlDeltaSeed = sdk.tokens.SEEDS.fromHuman('0');
-
-    Object.entries(updateableDepositsById).forEach(([key, deposit]) => {
-      const currentBDV = oneTokenBDV.mul(deposit.amount);
-      const deltaBDV = currentBDV.sub(deposit.bdv);
-
-      if (deposit.bdv.gte(currentBDV)) return;
-      const deltaStalk = deposit.seeds.mul(deltaBDV);
-      const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
-      updateable.push({
-        key: key,
-        currentBDV: currentBDV,
-        deltaBDV: deltaBDV,
-        deltaStalk: deltaStalk,
-        deltaSeed: deltaSeed,
-        ...deposit,
-      });
-
-      ttlDeltaStalk = ttlDeltaStalk.add(deltaStalk);
-      ttlDeltaSeed = ttlDeltaSeed.add(deltaSeed);
-    });
-
-    updateable.sort((a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1));
-
-    return {
-      updatableDeposits: updateable,
-      totalDeltaStalk: ttlDeltaStalk,
-      totalDeltaSeed: ttlDeltaSeed,
-    };
-  }, [updateableDepositsById, getBDV, token, sdk.tokens]);
+  const rows = useMemo(
+    () => Object.values(updatableDeposits),
+    [updatableDeposits]
+  );
 
   const handleSelectAll = () => {
-    setWithIds(updatableDeposits.map(({ key }) => key));
+    setWithIds(rows.map(({ key }) => key));
   };
 
   return (
@@ -111,11 +88,7 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
           )}
         </Row>
       </Stack>
-      <DepositConvertTable
-        token={token}
-        rows={updatableDeposits}
-        selectType="multi"
-      />
+      <DepositConvertTable token={token} rows={rows} selectType="multi" />
     </Stack>
   );
 };

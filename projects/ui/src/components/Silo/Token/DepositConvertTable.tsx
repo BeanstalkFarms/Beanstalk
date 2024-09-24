@@ -93,9 +93,6 @@ const DepositConvertTable = ({
   const isMultiSelect = selectType === 'multi';
   const isLambdaView = slug === 'lambda';
 
-  console.log('rows: ', rows);
-  console.log('selected: ', selected);
-
   const allColumns = useMemo<GridColumns<FarmerTokenConvertRow>>(
     () => [
       {
