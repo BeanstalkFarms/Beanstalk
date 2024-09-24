@@ -31,7 +31,7 @@ const {
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
 } = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM } = require("./test/hardhat/utils/constants.js");
+const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM, L2_BCM } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseedL2 } = require("./reseed/reseedL2.js");
@@ -167,7 +167,7 @@ task("reseedL2", async () => {
   // the account that deploys the new diamond address at nonce 0.
   let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
   // the l2 bcm safe account address.
-  let l2bcm = await impersonateSigner("0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69");
+  let l2bcm = await impersonateSigner(L2_BCM);
   await mintEth(beanstalkDeployer.address);
   await mintEth(l2bcm.address);
   await reseedL2({
@@ -533,7 +533,10 @@ module.exports = {
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_KEY
+    apiKey: {
+      arbitrumOne: process.env.ETHERSCAN_KEY_ARBITRUM,
+      mainnet: process.env.ETHERSCAN_KEY
+    }
   },
   solidity: {
     compilers: [
