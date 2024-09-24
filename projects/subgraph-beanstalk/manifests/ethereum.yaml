@@ -442,8 +442,6 @@ dataSources:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
-        - event: SeedsBalanceChanged(indexed address,int256)
-          handler: handleSeedsBalanceChanged
         - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
           handler: handleRemoveWithdrawal
         - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)

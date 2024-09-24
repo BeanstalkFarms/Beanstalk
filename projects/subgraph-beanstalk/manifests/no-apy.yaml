@@ -180,8 +180,6 @@ dataSources:
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
       eventHandlers:
-        - event: SeedsBalanceChanged(indexed address,int256)
-          handler: handleSeedsBalanceChanged
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
           handler: handleWhitelistToken_v4
         - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)

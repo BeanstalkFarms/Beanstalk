@@ -38,26 +38,9 @@ export function updateStalkWithCalls(protocol: Address, block: ethereum.Block): 
       block,
       false
     );
-    updateSeedsBalances(protocol, account, beanstalk_call.balanceOfSeeds(account).minus(silo.seeds), block, false);
   }
   beanstalk.farmersToUpdate = [];
   beanstalk.save();
-}
-
-export function updateSeedsBalances(
-  protocol: Address,
-  account: Address,
-  seeds: BigInt,
-  block: ethereum.Block,
-  recurs: boolean = true
-): void {
-  if (recurs && account != protocol) {
-    updateSeedsBalances(protocol, protocol, seeds, block);
-  }
-  let silo = loadSilo(account);
-  silo.seeds = silo.seeds.plus(seeds);
-  takeSiloSnapshots(silo, block);
-  silo.save();
 }
 
 const STEM_START_SEASON = 14210;

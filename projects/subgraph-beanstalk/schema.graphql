@@ -51,7 +51,7 @@ type Beanstalk @entity {
   lastSeason: Int!
   "Array of the addresses for all active farmers in the silo"
   activeFarmers: [Bytes!]!
-  "Array of the addresses for all farmers that had silo transfers and need stalk/seeds/roots updated"
+  "Array of the addresses for all farmers that had silo transfers and need stalk/roots updated"
   farmersToUpdate: [Bytes!]!
 }
 
@@ -101,9 +101,11 @@ type Silo @entity {
   stalk: BigInt!
   "Current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Current seeds balance"
-  seeds: BigInt!
-  "Current grown stalk per season"
+  """
+  Current grown stalk per season.
+  NOTE: This value is currently not accurate for pre-gauge queries (BIP-45).
+  A correct implementation would recalculate this value when a whitelisted token's seed amount is changed.
+  """
   grownStalkPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
@@ -138,8 +140,6 @@ type SiloHourlySnapshot @entity {
   stalk: BigInt!
   "Point in time current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Point in time current seeds balance"
-  seeds: BigInt!
   "Point in time grown stalk per season"
   grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
@@ -156,7 +156,7 @@ type SiloHourlySnapshot @entity {
   deltaDepositedBDV: BigInt!
   deltaStalk: BigInt!
   deltaPlantableStalk: BigInt!
-  deltaSeeds: BigInt!
+  deltaGrownStalkPerSeason: BigInt!
   deltaRoots: BigInt!
   deltaGerminatingStalk: BigInt!
   deltaBeanMints: BigInt!
@@ -185,8 +185,6 @@ type SiloDailySnapshot @entity {
   stalk: BigInt!
   "Point in time current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Point in time current seeds balance"
-  seeds: BigInt!
   "Point in time grown stalk per season"
   grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
@@ -203,7 +201,7 @@ type SiloDailySnapshot @entity {
   deltaDepositedBDV: BigInt!
   deltaStalk: BigInt!
   deltaPlantableStalk: BigInt!
-  deltaSeeds: BigInt!
+  deltaGrownStalkPerSeason: BigInt!
   deltaRoots: BigInt!
   deltaGerminatingStalk: BigInt!
   deltaBeanMints: BigInt!
