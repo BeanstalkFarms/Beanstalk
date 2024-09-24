@@ -113,7 +113,27 @@ dataSources:
           handler: handleRemoveWithdrawal
         - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
           handler: handleRemoveWithdrawals
-        # This can continue to occur during v2-v3 migration.
+      file: ../src/handlers/legacy/LegacySiloHandler.ts
+  - kind: ethereum/contract
+    name: LegacySiloV3MigrationEvents
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: Replanted
+      startBlock: 15277986 # Replanted
+      endBlock: 191919191 # Reseed Pause on L1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo
+      abis:
+        - name: Replanted
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+      eventHandlers:
+        # The event with this signature is no longer present in SeedGauge ABI because the parameter types changed.
+        # This event is still emitted during v2-v3 migration even after Gauge deployment.
         - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
           handler: handleRemoveDeposit_v2
       file: ../src/handlers/legacy/LegacySiloHandler.ts
