@@ -446,6 +446,9 @@ dataSources:
           handler: handleRemoveWithdrawal
         - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
           handler: handleRemoveWithdrawals
+        # This can continue to occur during v2-v3 migration.
+        - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveDeposit_v2
       file: ../src/handlers/legacy/LegacySiloHandler.ts
   - kind: ethereum/contract
     name: LegacySilo-Replanted-SeedGauge
@@ -467,8 +470,6 @@ dataSources:
       eventHandlers:
         - event: AddDeposit(indexed address,indexed address,uint32,uint256,uint256)
           handler: handleAddDeposit_v2
-        - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
-          handler: handleRemoveDeposit_v2
         - event: RemoveDeposits(indexed address,indexed address,uint32[],uint256[],uint256)
           handler: handleRemoveDeposits_v2
         - event: AddWithdrawal(indexed address,indexed address,uint32,uint256)

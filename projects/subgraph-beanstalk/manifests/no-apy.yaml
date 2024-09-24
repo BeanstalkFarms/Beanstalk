@@ -63,6 +63,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 15277986 # Replanted (Silo currently has no support for pre-exploit)
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -91,6 +92,32 @@ dataSources:
           handler: handleUpdatedStalkPerBdvPerSeason
       file: ../src/handlers/SiloHandler.ts
   - kind: ethereum/contract
+    name: LegacySilo-Replanted-Reseed
+    network: mainnet
+    source:
+      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
+      abi: SeedGauge
+      startBlock: 15277986 # Replanted
+      endBlock: 191919191 # Reseed Pause on L1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Silo
+      abis:
+        - name: SeedGauge
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+      eventHandlers:
+        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveWithdrawal
+        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
+          handler: handleRemoveWithdrawals
+        # This can continue to occur during v2-v3 migration.
+        - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
+          handler: handleRemoveDeposit_v2
+      file: ../src/handlers/legacy/LegacySiloHandler.ts
+  - kind: ethereum/contract
     name: LegacySilo-Replanted-SeedGauge
     network: mainnet
     source:
@@ -110,8 +137,6 @@ dataSources:
       eventHandlers:
         - event: AddDeposit(indexed address,indexed address,uint32,uint256,uint256)
           handler: handleAddDeposit_v2
-        - event: RemoveDeposit(indexed address,indexed address,uint32,uint256)
-          handler: handleRemoveDeposit_v2
         - event: RemoveDeposits(indexed address,indexed address,uint32[],uint256[],uint256)
           handler: handleRemoveDeposits_v2
         - event: AddWithdrawal(indexed address,indexed address,uint32,uint256)
@@ -170,6 +195,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 19927634 # SeedGauge
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -182,10 +208,6 @@ dataSources:
       eventHandlers:
         - event: WhitelistToken(indexed address,bytes4,uint32,uint256,bytes4,bytes4,uint128,uint64)
           handler: handleWhitelistToken_v4
-        - event: RemoveWithdrawal(indexed address,indexed address,uint32,uint256)
-          handler: handleRemoveWithdrawal
-        - event: RemoveWithdrawals(indexed address,indexed address,uint32[],uint256)
-          handler: handleRemoveWithdrawals
       file: ../src/handlers/legacy/LegacySiloHandler.ts
   ###
   # SEED GAUGE
@@ -197,6 +219,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 19628074
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -230,6 +253,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 19628074
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -259,6 +283,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 12974075 # Field has all-time support
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -325,6 +350,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 14148509 # BIP-11 Pod Marketplace
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -346,6 +372,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 14148509 # BIP-11 Pod Marketplace
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -429,6 +456,7 @@ dataSources:
       address: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6"
       abi: Fertilizer
       startBlock: 14910573
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -453,6 +481,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 15277986
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -478,6 +507,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 12974075
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -506,6 +536,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 17671557 # SiloV3
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -616,6 +647,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 12974075
+      endBlock: 191919191 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

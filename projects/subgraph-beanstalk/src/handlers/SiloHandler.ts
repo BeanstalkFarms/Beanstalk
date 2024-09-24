@@ -17,7 +17,7 @@ import { unripeChopped } from "../utils/Barn";
 import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../utils/constants/Version";
 import { WhitelistToken } from "../../generated/Beanstalk-ABIs/Reseed";
-import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_10 } from "../../../subgraph-core/utils/Decimals";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -101,8 +101,8 @@ export function handlePlant(event: Plant): void {
     event.address,
     event.address,
     getProtocolToken(v(), event.block.number),
-    ZERO_BI.minus(event.params.beans),
-    ZERO_BI.minus(event.params.beans),
+    event.params.beans.neg(),
+    event.params.beans.neg(),
     event.block
   );
 }
