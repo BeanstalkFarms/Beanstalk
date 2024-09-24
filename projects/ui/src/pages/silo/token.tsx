@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Card, Container, Stack, Typography, Button } from '@mui/material';
 import SiloActions from '~/components/Silo/Actions';
@@ -21,6 +21,7 @@ import TokenAbout from '~/components/Silo/Token/TokenAbout';
 import {
   SiloTokenSlug,
   TokenDepositsProvider,
+  UpdatableDepositsByToken,
   useTokenDepositsContext,
 } from '~/components/Silo/Token/TokenDepositsContext';
 import { ERC20Token } from '@beanstalk/sdk';
@@ -36,7 +37,12 @@ import ToggleTabGroup from '~/components/Common/ToggleTabGroup';
 import Row from '~/components/Common/Row';
 import CloseIcon from '@mui/icons-material/Close';
 import LambdaConvert from '~/components/Silo/Actions/LambdaConvert';
-import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
+import {
+  useBeanstalkTokens,
+  useTokens,
+  useWhitelistedTokens,
+} from '~/hooks/beanstalk/useTokens';
+import useBDV from '~/hooks/beanstalk/useBDV';
 
 const guides = [
   HOW_TO_DEPOSIT_IN_THE_SILO,
@@ -132,10 +138,56 @@ const LambdaConvertContent = ({
 }: Props & {
   handleClose: () => void;
 }) => {
-  const { selected, updateableDepositsById } = useTokenDepositsContext();
+  const { BEAN } = useTokens();
+  const { STALK, SEEDS } = useBeanstalkTokens();
+  const { selected, balances } = useTokenDepositsContext();
+
+  const getBDV = useBDV();
+
+  const updateable = useMemo(() => {
+    let _totalDeltaStalk = STALK.fromHuman('0');
+    let _totalDeltaSeed = SEEDS.fromHuman('0');
+    let _totalDeltaBDV = BEAN.fromHuman('0');
+
+    const map = (
+      balances?.convertibleDeposits || []
+    ).reduce<UpdatableDepositsByToken>((prev, deposit) => {
+      // the bdv of this deposit if the deposit was made at current BDV
+      const currentBDV = deposit.amount.mul(getBDV(token).toNumber());
+      // the difference between the current bdv and the deposit bdv. Positive if current BDV is higher.
+      const deltaBDV = currentBDV.sub(deposit.bdv);
+
+      if (deltaBDV.gt(0)) {
+        const key = deposit.id.toString();
+        const deltaStalk = deposit.seeds.mul(deltaBDV);
+        const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
+
+        prev[key] = {
+          ...deposit,
+          key,
+          currentBDV: currentBDV,
+          deltaBDV,
+          deltaStalk,
+          deltaSeed,
+        };
+
+        _totalDeltaBDV = _totalDeltaBDV.add(deltaBDV);
+        _totalDeltaStalk = _totalDeltaStalk.add(deltaStalk);
+        _totalDeltaSeed = _totalDeltaSeed.add(deltaSeed);
+      }
+
+      return prev;
+    }, {});
+
+    return {
+      deposits: map,
+      totalDeltaStalk: _totalDeltaStalk,
+      totalDeltaSeed: _totalDeltaSeed,
+    };
+  }, [STALK, SEEDS, BEAN, balances?.convertibleDeposits, token, getBDV]);
 
   const hasUpdateableDeposits = Boolean(
-    Object.keys(updateableDepositsById).length
+    Object.keys(updateable.deposits).length
   );
 
   return (
@@ -170,7 +222,12 @@ const LambdaConvertContent = ({
           </Row>
         </ModuleHeader>
         <ModuleContent px={2}>
-          <TokenLambdaConvert token={token} />
+          <TokenLambdaConvert
+            token={token}
+            updatableDeposits={updateable.deposits}
+            totalDeltaStalk={updateable.totalDeltaStalk}
+            totalDeltaSeed={updateable.totalDeltaSeed}
+          />
         </ModuleContent>
       </Module>
       {!!hasUpdateableDeposits && (
@@ -187,7 +244,10 @@ const LambdaConvertContent = ({
             </Typography>
           </ModuleHeader>
           <ModuleContent px={1}>
-            <LambdaConvert />
+            <LambdaConvert
+              token={token}
+              updatableDeposits={updateable.deposits}
+            />
           </ModuleContent>
         </Module>
       )}

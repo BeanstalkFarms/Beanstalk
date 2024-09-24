@@ -23,26 +23,42 @@ import { LongArrowRight } from '~/components/Common/SystemIcons';
 import { ethers } from 'ethers';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
+import { useAppSelector } from '~/state';
 import {
-  TokenDepositsContextType,
+  UpdatableDepositsByToken,
   useTokenDepositsContext,
 } from '../Token/TokenDepositsContext';
 
-const LambdaConvert = () => {
+const LambdaConvert = ({
+  token,
+  updatableDeposits,
+}: {
+  token: ERC20Token;
+  updatableDeposits: UpdatableDepositsByToken;
+}) => {
   const sdk = useSdk();
-  const { selected, token, updateableDepositsById, clear } =
-    useTokenDepositsContext();
+  const { selected, clear } = useTokenDepositsContext();
   const [combine, setCombine] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fetchFarmerSilo] = useFetchFarmerSilo();
 
-  const totalDeltaStalk = sdk.tokens.STALK.fromHuman('50');
+  const [deltaStalk, setDeltaStalk] = useState(sdk.tokens.STALK.fromHuman('0'));
+  const [deltaSeed, setDeltaSeed] = useState(sdk.tokens.SEEDS.fromHuman('0'));
+  const balanceOfStalk = useAppSelector((s) => s._farmer.silo.stalk.active);
 
-  const totalDeltaStalkPct = TokenValue.fromHuman(0.000001, 0);
+  useEffect(() => {
+    let _deltaStalk: TokenValue = sdk.tokens.STALK.fromHuman('0');
+    let _deltaSeed: TokenValue = sdk.tokens.SEEDS.fromHuman('0');
 
-  const deltaSeed = sdk.tokens.SEEDS.fromHuman('150');
+    selected.forEach((key) => {
+      const deposit = updatableDeposits[key];
+      _deltaStalk = _deltaStalk.add(deposit.deltaStalk);
+      _deltaSeed = _deltaSeed.add(deposit.deltaSeed);
+    });
 
-  const stalkPerSeason = sdk.tokens.SEEDS.fromHuman('2.012345564');
+    setDeltaStalk(_deltaStalk);
+    setDeltaSeed(_deltaSeed);
+  }, [sdk, selected, updatableDeposits]);
 
   useEffect(() => {
     if (selected.size <= 1 && combine) {
@@ -64,7 +80,7 @@ const LambdaConvert = () => {
       const farm = constructLambdaConvert(
         sdk,
         selected,
-        updateableDepositsById,
+        updatableDeposits,
         token,
         combine
       );
@@ -87,6 +103,13 @@ const LambdaConvert = () => {
       setSubmitting(false);
     }
   };
+
+  const updatedStalkBalance = deltaStalk.add(balanceOfStalk.toNumber());
+
+  const totalDeltaStalkPct = TokenValue.fromHuman(0.000001, 0);
+
+  // delta
+  const stalkPerSeason = sdk.tokens.SEEDS.fromHuman('2.012345564');
 
   return (
     <Stack gap={1}>
@@ -130,7 +153,7 @@ const LambdaConvert = () => {
             </Stack>
             <Stack>
               <Typography variant="subtitle1" color="primary" align="right">
-                + {formatTV(totalDeltaStalk, 2)}
+                + {formatTV(deltaStalk, 2)}
               </Typography>
               <Typography
                 variant="bodySmall"
@@ -244,7 +267,7 @@ export default LambdaConvert;
 function constructCombineDepositsCallStruct(
   sdk: BeanstalkSDK,
   selected: Set<string>,
-  updateableDepositsById: TokenDepositsContextType['updateableDepositsById'],
+  updatableDepositsById: UpdatableDepositsByToken,
   token: ERC20Token
 ) {
   let amountIn = token.fromHuman('0');
@@ -252,7 +275,7 @@ function constructCombineDepositsCallStruct(
   const amounts: ethers.BigNumber[] = [];
 
   selected.forEach((id) => {
-    const deposit = updateableDepositsById[id];
+    const deposit = updatableDepositsById[id];
     amountIn = amountIn.add(deposit.amount);
     stems.push(deposit.stem);
     amounts.push(deposit.amount.toBigNumber());
@@ -279,7 +302,7 @@ function constructCombineDepositsCallStruct(
 
 function constructSingleDepositCallStruct(
   sdk: BeanstalkSDK,
-  deposit: TokenDepositsContextType['updateableDepositsById'][string],
+  deposit: UpdatableDepositsByToken[string],
   token: ERC20Token
 ) {
   const encoding = sdk.silo.siloConvert.calculateEncoding(
@@ -302,7 +325,7 @@ function constructSingleDepositCallStruct(
 function constructLambdaConvert(
   sdk: BeanstalkSDK,
   selected: Set<string>,
-  updateableDepositsById: TokenDepositsContextType['updateableDepositsById'],
+  updateableDepositsById: UpdatableDepositsByToken,
   token: ERC20Token,
   combineDeposits: boolean
 ) {

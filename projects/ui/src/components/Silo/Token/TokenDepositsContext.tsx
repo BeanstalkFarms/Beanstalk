@@ -16,6 +16,7 @@ import React, {
 import useBDV from '~/hooks/beanstalk/useBDV';
 import useTabs from '~/hooks/display/useTabs';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useSdk from '~/hooks/sdk';
 import { exists } from '~/util/UI';
 
 export type TokenDepositsSelectType = 'single' | 'multi';
@@ -25,6 +26,16 @@ export type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
 export interface UpdateableDeposit<T> extends Deposit<T> {
   newBDV: T;
 }
+
+export interface UpdatableSiloDeposit extends Deposit<TokenValue> {
+  key: string;
+  currentBDV: TokenValue;
+  deltaBDV: TokenValue;
+  deltaStalk: TokenValue;
+  deltaSeed: TokenValue;
+}
+
+export type UpdatableDepositsByToken = Record<string, UpdatableSiloDeposit>;
 
 export type TokenDepositsContextType = {
   selected: Set<string>;
@@ -61,6 +72,7 @@ const TokenDepositsContext = createContext<TokenDepositsContextType | null>(
 
 const emptyObj = {};
 
+// This could probably be refactored for less duplicated code
 export const TokenDepositsProvider = (props: {
   children: React.ReactNode;
   token: ERC20Token;
@@ -70,6 +82,7 @@ export const TokenDepositsProvider = (props: {
   const [updateableDepositsById, setUpdateableDepositsById] =
     useState<TokenDepositsContextType['updateableDepositsById']>(emptyObj);
   const getBDV = useBDV();
+  const sdk = useSdk();
 
   const tokenBDV = getBDV(props.token);
 
