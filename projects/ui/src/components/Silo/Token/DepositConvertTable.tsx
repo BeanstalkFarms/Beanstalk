@@ -20,6 +20,7 @@ import {
   TokenDepositsSelectType,
   useTokenDepositsContext,
 } from './TokenDepositsContext';
+import { trimDepositId } from './TokenDepositsOverview';
 
 export type FarmerTokenConvertRow = Deposit<TokenValue> & {
   key: string;
@@ -92,6 +93,9 @@ const DepositConvertTable = ({
   const isMultiSelect = selectType === 'multi';
   const isLambdaView = slug === 'lambda';
 
+  console.log('rows: ', rows);
+  console.log('selected: ', selected);
+
   const allColumns = useMemo<GridColumns<FarmerTokenConvertRow>>(
     () => [
       {
@@ -110,7 +114,7 @@ const DepositConvertTable = ({
             <Stack>
               <Typography>{token.symbol} Deposit</Typography>
               <Typography color="text.secondary" fontWeight={FontWeight.normal}>
-                {params.row.key}
+                {trimDepositId(params.row.key)}
               </Typography>
             </Stack>
           </Stack>
@@ -207,7 +211,7 @@ const DepositConvertTable = ({
                   : BeanstalkPalette.red,
               }}
             >
-              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 0)}
+              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 3)}
             </Typography>
           );
         },
@@ -233,7 +237,7 @@ const DepositConvertTable = ({
                   : BeanstalkPalette.red,
               }}
             >
-              {isGain ? '+' : '-'} {formatTV(params.row.deltaStalk, 0)}
+              {isGain ? '+' : '-'} {formatTV(params.row.deltaSeed, 3)}
             </Typography>
           );
         },
@@ -250,7 +254,7 @@ const DepositConvertTable = ({
 
   const handleRowClick: GridEventListener<'rowClick'> = useCallback(
     (params) => {
-      setSelected(params.row.id, selectType);
+      setSelected(params.row.key, selectType);
     },
     [setSelected, selectType]
   );

@@ -13,39 +13,47 @@ import DepositConvertTable, {
 
 const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
   const sdk = useSdk();
-  const { setWithIds, depositsById } = useTokenDepositsContext();
+  const { setWithIds, updateableDepositsById } = useTokenDepositsContext();
   const getBDV = useBDV();
 
-  const updatableDeposits: FarmerTokenConvertRow[] = useMemo(() => {
+  const { updatableDeposits, totalDeltaStalk, totalDeltaSeed } = useMemo(() => {
     const oneTokenBDV = token.fromHuman(getBDV(token).toString());
     const updateable: FarmerTokenConvertRow[] = [];
+    let ttlDeltaStalk = sdk.tokens.STALK.fromHuman('0');
+    let ttlDeltaSeed = sdk.tokens.SEEDS.fromHuman('0');
 
-    Object.entries(depositsById).forEach(([key, deposit]) => {
+    Object.entries(updateableDepositsById).forEach(([key, deposit]) => {
       const currentBDV = oneTokenBDV.mul(deposit.amount);
       const deltaBDV = currentBDV.sub(deposit.bdv);
 
       if (deposit.bdv.gte(currentBDV)) return;
+      const deltaStalk = deposit.seeds.mul(deltaBDV);
+      const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
       updateable.push({
-        key,
+        key: key,
         currentBDV: currentBDV,
         deltaBDV: deltaBDV,
-        deltaStalk: sdk.tokens.STALK.fromHuman('50'), // FIX ME
-        deltaSeed: sdk.tokens.SEEDS.fromHuman('100'), // FIX ME
+        deltaStalk: deltaStalk,
+        deltaSeed: deltaSeed,
         ...deposit,
       });
+
+      ttlDeltaStalk = ttlDeltaStalk.add(deltaStalk);
+      ttlDeltaSeed = ttlDeltaSeed.add(deltaSeed);
     });
 
     updateable.sort((a, b) => (a.deltaBDV.gte(b.deltaBDV) ? -1 : 1));
 
-    return updateable;
-  }, [depositsById, getBDV, token, sdk.tokens]);
+    return {
+      updatableDeposits: updateable,
+      totalDeltaStalk: ttlDeltaStalk,
+      totalDeltaSeed: ttlDeltaSeed,
+    };
+  }, [updateableDepositsById, getBDV, token, sdk.tokens]);
 
   const handleSelectAll = () => {
     setWithIds(updatableDeposits.map(({ key }) => key));
   };
-
-  const deltaStalk = sdk.tokens.STALK.fromHuman('50');
-  const deltaSeed = sdk.tokens.SEEDS.fromHuman('100');
 
   return (
     <Stack>
@@ -74,7 +82,8 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
             color="primary.main"
             lineHeight="30px"
           >
-            + {formatTV(deltaStalk, 0)} STALK and {formatTV(deltaSeed, 0)} SEED
+            {formatTV(totalDeltaStalk, 2)} Stalk and{' '}
+            {formatTV(totalDeltaSeed, 3)} Seeds
           </Typography>
         </Stack>
         <Divider sx={{ borderWidth: '0.5px' }} />
@@ -83,18 +92,23 @@ const TokenLambdaConvert = ({ token }: { token: ERC20Token }) => {
             Any deposits with a lower current BDV than BDV at deposit will not
             appear.
           </Typography>
-          <Box
-            onClick={handleSelectAll}
-            sx={{ cursor: 'pointer', alignSelf: 'flex-start' }}
-          >
-            <Typography
-              variant="subtitle1"
-              color="primary"
-              sx={{ textDecoration: 'underline', whiteSpace: 'nowrap' }}
+          {!!updatableDeposits.length && (
+            <Box
+              onClick={handleSelectAll}
+              sx={{
+                cursor: 'pointer',
+                alignSelf: 'flex-start',
+              }}
             >
-              Select All
-            </Typography>
-          </Box>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ textDecoration: 'underline', whiteSpace: 'nowrap' }}
+              >
+                Select All
+              </Typography>
+            </Box>
+          )}
         </Row>
       </Stack>
       <DepositConvertTable

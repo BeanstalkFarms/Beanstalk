@@ -28,7 +28,7 @@ const NetworkButton: React.FC<
   children,
   ...props
 }) => {
-  const { isDev } = useChainState();
+  const { isTestnet } = useChainState();
   const { chain } = useAccount();
 
   /// Dialog
@@ -72,7 +72,7 @@ const NetworkButton: React.FC<
             borderColor: 'divider',
           },
           // Follow similar pattern as WalletButton & show red bottom border if we are on localhost
-          ...(isDev ? { borderBottom: '2px solid red' } : {}),
+          ...(isTestnet ? { borderBottom: '2px solid red' } : {}),
           ...props.sx,
         }}
       >

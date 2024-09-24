@@ -24,6 +24,21 @@ export class BasinWell extends Pool {
       );
   }
 
+  // Ensure tokens are in the correct order
+  async updateTokenIndexes() {
+    const data = await this.getContract().tokens();
+    if (!data || data.length !== 2) {
+      throw new Error(`could not validate well tokens for ${this.name}`);
+    }
+
+    const first = data[0].toLowerCase();
+    const thisFirst = this.tokens[0].address.toLowerCase();
+
+    if (first !== thisFirst) {
+      this.tokens.reverse();
+    }
+  }
+
   async getAddLiquidityOut(amounts: TokenValue[]): Promise<TokenValue> {
     return this.getContract()
       .getAddLiquidityOut(amounts.map((a) => a.toBigNumber()))
@@ -48,5 +63,19 @@ export class BasinWell extends Pool {
     return this.getContract()
       .getRemoveLiquidityOneTokenOut(lpAmountIn.toBigNumber(), tokenOut.address)
       .then((result) => tokenOut.fromBlockchain(result));
+  }
+
+  getBeanWellTokenIndexes() {
+    // assumes tokens are in correct order
+    const beanIndex = this.tokens.findIndex((token) => token.equals(BasinWell.sdk.tokens.BEAN));
+
+    if (beanIndex < 0) {
+      throw new Error(`Bean token not found in well ${this.name}`);
+    }
+
+    return {
+      bean: beanIndex,
+      nonBean: beanIndex === 0 ? 1 : 0
+    };
   }
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
+import { ethers } from 'ethers';
 import { Form } from 'formik';
 import BigNumber from 'bignumber.js';
 import { useQuery } from '@tanstack/react-query';
@@ -22,6 +22,7 @@ import TokenSelectDialog, {
   TokenSelectMode,
 } from '~/components/Common/Form/TokenSelectDialogNew';
 import {
+  SmartSubmitButton,
   TokenAdornment,
   TokenInputField,
   TxnPreview,
@@ -34,7 +35,7 @@ import TxnAccordion from '~/components/Common/TxnAccordion';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 
 import { ActionType, displayFullBN } from '~/util';
-import { PipelineConvertUtil } from '~/lib/PipelineConvert/PipelineConvert';
+import { useAppSelector } from '~/state';
 import { BaseConvertFormProps } from './types';
 
 interface Props extends BaseConvertFormProps {
@@ -46,9 +47,16 @@ interface PipelineConvertFormProps extends Props {
   targetWell: BasinWell;
 }
 
+interface PipeConvertResult {
+  toAmount: ethers.BigNumber;
+  fromBdv: ethers.BigNumber;
+  toBdv: ethers.BigNumber;
+  toStem: ethers.BigNumber;
+}
+
 const baseQueryOptions = {
   staleTime: 20_000, // 20 seconds stale time
-  refetchOnWindowFocus: true,
+  refetchOnWindowFocus: false,
   refetchIntervalInBackground: false,
 } as const;
 
@@ -65,152 +73,164 @@ const PipelineConvertFormInner = ({
   isSubmitting,
   setFieldValue,
 }: PipelineConvertFormProps) => {
+  const beanstalkSiloBalances = useAppSelector(
+    (s) => s._beanstalk.silo.balances
+  );
+
   const [tokenSelectOpen, showTokenSelect, hideTokenSelect] = useToggle();
+  const [convertResults, setConvertResults] = useState<
+    PipeConvertResult | undefined
+  >(undefined);
+
   const getBDV = useBDV();
-  
 
   const sourceToken = sourceWell.lpToken; // LP token of source well
   const targetToken = targetWell.lpToken; // LP token of target well
-  const BEAN = sdk.tokens.BEAN;
+  const slippage = values.settings.slippage;
+
+  const sourceTokenStemTip =
+    beanstalkSiloBalances[sourceToken.address]?.stemTip;
+  const targetTokenStemTip =
+    beanstalkSiloBalances[targetToken.address]?.stemTip;
 
   const debouncedAmountIn = useDebounce(values.tokens[0].amount ?? ZERO_BN); //
 
-  const maxConvertableBN = new BigNumber(
-    (balance?.convertibleAmount || TokenValue.ZERO).toHuman()
+  const maxConvertableBN = useMemo(
+    () =>
+      new BigNumber((balance?.convertibleAmount || TokenValue.ZERO).toHuman()),
+    [balance?.convertibleAmount]
   );
 
-  const pickedDeposits = sdk.silo.siloConvert.calculateConvert(
-    sourceToken,
-    targetToken,
-    sourceToken.fromHuman(debouncedAmountIn.toString()),
-    balance?.convertibleDeposits || [],
-    0
+  const pickedDeposits = useMemo(
+    () =>
+      sdk.silo.siloConvert.calculateConvert(
+        sourceToken,
+        targetToken,
+        sourceToken.fromHuman(debouncedAmountIn.toString()),
+        balance?.convertibleDeposits || [],
+        0
+      ),
+    [
+      sdk,
+      sourceToken,
+      targetToken,
+      debouncedAmountIn,
+      balance?.convertibleDeposits,
+    ]
   );
 
-  const sourceIdx = getWellTokenIndexes(sourceWell, BEAN); // token indexes of source well
-  const targetIdx = getWellTokenIndexes(targetWell, BEAN); // token indexes of target well
-
-  const sellToken = sourceWell.tokens[sourceIdx.nonBeanIndex]; // token we will sell when after removing liquidity in equal parts
-  const buyToken = targetWell.tokens[targetIdx.nonBeanIndex]; // token we will buy to add liquidity
-
-  const slippage = values.settings.slippage;
-
-  // const amountOut = values.tokens[0].amountOut; // amount of to token
-  // const maxAmountIn = values.maxAmountIn;
-  // const canConvert = maxAmountIn?.gt(0) || false;
-  // const plantCrate = plantAndDoX?.crate?.bn;
+  // same as query.isFetching & query.isLoading
+  const isQuoting = values.tokens?.[0]?.quoting;
 
   // prettier-ignore
-  const { data } = useQuery({
-    queryKey: ['pipelineConvert', sourceWell.address, targetWell.address, debouncedAmountIn.toString()],
+  const { data, ...query } = useQuery({
+    queryKey: [
+      'pipelineConvert', 
+      sourceWell.address, 
+      targetWell.address, 
+      debouncedAmountIn.toString(),
+      pickedDeposits.crates,
+      slippage,
+    ],
     queryFn: async () => {
-      setFieldValue('tokens.0.quoting', true);
+      console.log({
+        sourceToken,
+        targetToken,
+        debouncedAmountIn,
+        maxConvertableBN,
+        pickedDeposits,
+      });
+
       try {
-        const lpIn = sourceWell.lpToken.fromHuman(debouncedAmountIn.toString());
-        const sourceLPAmountOut = await sourceWell.getRemoveLiquidityOutEqual(
-          lpIn
+        setFieldValue('tokens.0.quoting', true);
+        console.log("debouncedAmountIn: ", debouncedAmountIn.toString());
+        const { 
+          amountOut,
+          advPipeCalls
+        } = await sdk.silo.pipelineConvert.removeEqual2AddEqualQuote(
+          sourceWell,
+          targetWell,
+          sourceWell.lpToken.fromHuman(debouncedAmountIn.toString()),
+          slippage / 100 // 0x uses a different slippage format
         );
 
-        console.debug(`[pipelineConvert/removeLiquidity (1)] result:`, {
-          BEAN: sourceLPAmountOut[sourceIdx.beanIndex].toNumber(),
-          [`${sellToken.symbol}`]: sourceLPAmountOut[sourceIdx.nonBeanIndex].toNumber(),
-        });
-
-        const beanAmountOut = sourceLPAmountOut[sourceIdx.beanIndex];
-        const swapAmountIn = sourceLPAmountOut[sourceIdx.nonBeanIndex];
-
-        const quote = await sdk.zeroX.fetchSwapQuote({
-          sellToken: sellToken.address,
-          buyToken: buyToken.address,
-          sellAmount: swapAmountIn.blockchainString,
-          takerAddress: sdk.contracts.pipeline.address,
-          shouldSellEntireBalance: true,
-          // 0x requests are formatted such that 0.01 = 1%. Everywhere else in the UI we use 0.01 = 0.01% ?? BS3TODO: VALIDATE ME
-          slippagePercentage: (slippage * 100).toString(),
-        });
-
-        console.debug(`[pipelineConvert/0xQuote (2)] result:`, { quote });
-
-        const swapAmountOut = buyToken.fromBlockchain(quote?.buyAmount || '0');
-        const targetLPAmountOut = await targetWell.getAddLiquidityOut([
-          beanAmountOut,
-          swapAmountOut,
-        ]);
-        console.debug(`[pipelineConvert/addLiquidity (3)] result:`, {
-          amount: targetLPAmountOut.toNumber(),
-        });
-
-        setFieldValue('tokens.0.amountOut', new BigNumber(targetLPAmountOut.toHuman()));
+        setFieldValue('pipe.structs', advPipeCalls);
+        setFieldValue('pipe.amountOut', new BigNumber(amountOut.toHuman()));
         return {
-          amountIn: lpIn,
-          beanAmountOut,
-          swapAmountIn,
-          swapAmountOut,
-          quote,
-          targetLPAmountOut,
+          amountOut,
+          advPipeCalls
         };
       } catch (e) {
         console.debug('[pipelineConvert/query] FAILED: ', e);
-        throw e;
-      } finally {
         setFieldValue('tokens.0.quoting', false);
+        throw e;
       }
     },
-    enabled: maxConvertableBN.gt(0) && debouncedAmountIn?.gt(0),
+    enabled: maxConvertableBN.gt(0) && debouncedAmountIn?.gt(0) && pickedDeposits.crates.length > 0,
     ...baseQueryOptions,
   });
 
-  const { data: staticCallData } = useQuery({
-    queryKey: ['pipelineConvert/callStatic', sourceWell.address, targetWell.address, data?.targetLPAmountOut?.toString()],
-    queryFn: async () => {
-      if (!data) return;
-      try {
-        const advPipeCalls = PipelineConvertUtil.buildEqual2Equal({
-          sdk,
-          source: {
-            well: sourceWell,
-            lpAmountIn: data.amountIn,
-            beanAmountOut: data.beanAmountOut,
-            nonBeanAmountOut: data.swapAmountOut,
-          },
-          swap: {
-            buyToken,
-            sellToken,
-            buyAmount: data.swapAmountOut,
-            quote: data.quote,
-          },
-          target: {
-            well: targetWell,
-            amountOut: data.targetLPAmountOut,
-          },
-          slippage,
-        });
-
-        const datas = await sdk.contracts.beanstalk.callStatic.pipelineConvert(
+  const handleQuoteResult = useCallback(async () => {
+    if (
+      !data ||
+      data.amountOut.lte(0) ||
+      !data.advPipeCalls.length ||
+      query.isLoading ||
+      query.isFetching
+    ) {
+      return;
+    }
+    try {
+      const callDatas = sdk.contracts.beanstalk.interface.encodeFunctionData(
+        'pipelineConvert',
+        [
           sourceToken.address,
           pickedDeposits.crates.map((c) => c.stem),
           pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
           targetToken.address,
-          advPipeCalls
-        ).then((result) => ({
-          toStem: result.toStem,
-          fromAmount: result.fromAmount,
-          toAmount: result.toAmount,
-          fromBdv: result.fromBdv,
-          toBdv: result.toBdv,
-        }));
+          data.advPipeCalls,
+        ]
+      );
 
-        console.debug(`[pipelineConvert/callStatic] result:`, datas);
-        return datas;
-      } catch (e) {
-        console.debug('[pipelineConvert/callStatic] FAILED: ', e);
-        throw e;
-      }
-    },
-    retry: 2,
-    enabled: !!data && debouncedAmountIn?.gt(0),
-    ...baseQueryOptions
-  })
+      console.log('[pipelineconvert/callstatic]', {
+        callData: callDatas,
+      });
+
+      const result = await sdk.contracts.beanstalk.callStatic.pipelineConvert(
+        sourceToken.address,
+        pickedDeposits.crates.map((c) => c.stem),
+        pickedDeposits.crates.map((c) => c.amount.toBigNumber()),
+        targetToken.address,
+        data.advPipeCalls
+      );
+
+      setConvertResults({
+        toAmount: result.toAmount,
+        fromBdv: result.fromBdv,
+        toBdv: result.toBdv,
+        toStem: result.toStem,
+      });
+    } catch (e) {
+      console.error('[pipelineConvert/handleQuoteResult] FAILED: ', e);
+      throw e;
+    } finally {
+      setFieldValue('tokens.0.quoting', false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    sdk,
+    query.isFetching,
+    query.isLoading,
+    data,
+    pickedDeposits.crates,
+    targetToken,
+    sourceToken,
+    // setFieldValue,
+  ]);
+
+  useEffect(() => {
+    handleQuoteResult();
+  }, [handleQuoteResult]);
 
   /// When a new output token is selected, reset maxAmountIn.
   const handleSelectTokenOut = async (_selectedTokens: Set<Token>) => {
@@ -227,8 +247,30 @@ const PipelineConvertFormInner = ({
     }
   };
 
-  // same as query.isFetching & query.isLoading
-  const isQuoting = values.tokens?.[0]?.quoting;
+  const deltaStemTip =
+    convertResults &&
+    targetTokenStemTip &&
+    convertResults.toStem.sub(targetTokenStemTip);
+
+  const grownStalk =
+    convertResults &&
+    deltaStemTip &&
+    sdk.tokens.STALK.fromBlockchain(
+      deltaStemTip.mul(convertResults.toBdv.toString())
+    );
+
+  const baseStalk =
+    convertResults &&
+    sdk.tokens.STALK.fromHuman(convertResults.toBdv.toString());
+
+  const totalStalk = baseStalk && grownStalk && baseStalk.add(grownStalk);
+
+  const getButtonContents = () => {
+    if (maxConvertableBN.eq(0)) {
+      return 'Nothing to Convert';
+    }
+    return 'Convert';
+  };
 
   return (
     <>
@@ -313,16 +355,24 @@ const PipelineConvertFormInner = ({
             </PillRow>
           ) : null}
           <Stack>
-            {staticCallData && (
-              <Typography>
-                values from pipe convert:
-              </Typography>
+            <Stack gap={0.5}>
+              {data && (
+                <>
+                  <Typography>values from pipe convert:</Typography>
+                  <Typography>
+                    Amount Out: {data?.amountOut.toString()}
+                  </Typography>
+                </>
               )}
-            {staticCallData ? (Object.entries(staticCallData).map(([k, v]) => (
-                <Typography key={k}>
-                  {k}: {v.toString()}
-                </Typography>
-              ))) : "Failed to load results from static call"}
+            </Stack>
+
+            {convertResults && (
+              <>
+                <Typography>base Stalk: {baseStalk?.toHuman()}</Typography>
+                <Typography>grown Stalk: {grownStalk?.toHuman()}</Typography>
+                <Typography>Total Stalk: {totalStalk?.toHuman()}</Typography>
+              </>
+            )}
           </Stack>
           {/* You may Lose Grown Stalk warning here */}
           <Box>
@@ -330,7 +380,7 @@ const PipelineConvertFormInner = ({
               You may lose Grown Stalk through this transaction.
             </WarningAlert>
           </Box>
-          {debouncedAmountIn?.gt(0) && data?.targetLPAmountOut?.gt(0) && (
+          {debouncedAmountIn?.gt(0) && data?.amountOut?.gt(0) && (
             <Box>
               <TxnAccordion defaultExpanded={false}>
                 <TxnPreview
@@ -341,7 +391,7 @@ const PipelineConvertFormInner = ({
                         debouncedAmountIn,
                         sourceToken.displayDecimals
                       )} ${sourceToken.name} to ${displayFullBN(
-                        data?.targetLPAmountOut || ZERO_BN,
+                        data?.amountOut || ZERO_BN,
                         targetToken.displayDecimals
                       )} ${targetToken.name}.`,
                     },
@@ -355,6 +405,18 @@ const PipelineConvertFormInner = ({
               </TxnAccordion>
             </Box>
           )}
+          <SmartSubmitButton
+            loading={isQuoting || isSubmitting}
+            disabled={isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            tokens={[]}
+            mode="auto"
+          >
+            {getButtonContents()}
+          </SmartSubmitButton>
         </Stack>
       </Form>
     </>
@@ -381,38 +443,3 @@ export const PipelineConvertForm = ({ values, sdk, ...restProps }: Props) => {
     />
   );
 };
-
-// ------------------------------------------
-// Utils
-// ------------------------------------------
-
-function getWellTokenIndexes(well: BasinWell | undefined, bean: Token) {
-  const beanIndex = well?.tokens?.[0].equals(bean) ? 0 : 1;
-  const nonBeanIndex = beanIndex === 0 ? 1 : 0;
-
-  return {
-    beanIndex,
-    nonBeanIndex,
-  } as const;
-}
-
-// const swapAmountIn = removeOutQuery.data?.[sourceWellNonBeanIndex];
-
-// const swapOutQuery = useQuery({
-//   queryKey: queryKeys.swapOut(swapTokenIn, swapTokenOut, swapAmountIn),
-//   queryFn: ({ signal }) => {
-//     if (!swapTokenIn || !swapTokenOut || !swapAmountIn) return TokenValue.ZERO;
-//     const controller = new AbortController();
-//     signal.addEventListener('abort', () => controller.abort());
-
-//     const params = sdk.zeroX.fetchQuote({
-//       slippagePercentage: values.settings.slippage.toString(),
-//       buyToken: swapTokenIn.address,
-//       sellToken: swapTokenOut.address,
-//       sellAmount: swapAmountIn.blockchainString,
-//       mode: ""
-//     })
-//   },
-//   enabled: !!swapTokenIn && !!swapTokenOut && swapAmountIn?.gt(0),
-//   initialData: TokenValue.ZERO,
-// });

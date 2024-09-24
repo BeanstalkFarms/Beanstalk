@@ -42,23 +42,38 @@ export const useRefreshSeeds = () => {
   );
 };
 
+export const useUpdateSdkPoolTokenIndicies = () => {
+  const updatePoolIndicies = useCallback(async (sdk: BeanstalkSDK) => {
+    await Promise.all(
+      sdk.pools.getWells().map((well) => well.updateTokenIndexes())
+    );
+  }, []);
+
+  return updatePoolIndicies;
+};
+
 export const useDynamicSeeds = (
   sdk: BeanstalkSDK,
   allowRun: boolean = true
 ) => {
   const [ready, setReady] = useState(false);
   const refreshSeeds = useRefreshSeeds();
+  const updatePoolIndicies = useUpdateSdkPoolTokenIndicies();
   const { isArbitrum } = useChainState();
 
   useEffect(() => {
     if (!allowRun) return;
     const load = async () => {
-      await refreshSeeds(sdk);
+      await Promise.all([
+        refreshSeeds(sdk),
+        // fix me - put me somewhere else?
+        updatePoolIndicies(sdk),
+      ]);
       setReady(true);
     };
 
     load();
-  }, [refreshSeeds, sdk, allowRun, isArbitrum]);
+  }, [refreshSeeds, updatePoolIndicies, sdk, allowRun, isArbitrum]);
 
   return ready;
 };

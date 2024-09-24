@@ -15,16 +15,26 @@ import Row from '~/components/Common/Row';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
 import { formatTV } from '~/util';
-import { TokenValue } from '@beanstalk/sdk';
+import { BeanstalkSDK, ERC20Token, TokenValue } from '@beanstalk/sdk';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 import { LongArrowRight } from '~/components/Common/SystemIcons';
-import { useTokenDepositsContext } from '../Token/TokenDepositsContext';
+
+import { ethers } from 'ethers';
+import TransactionToast from '~/components/Common/TxnToast';
+import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
+import {
+  TokenDepositsContextType,
+  useTokenDepositsContext,
+} from '../Token/TokenDepositsContext';
 
 const LambdaConvert = () => {
   const sdk = useSdk();
-  const { selected, token } = useTokenDepositsContext();
+  const { selected, token, updateableDepositsById, clear } =
+    useTokenDepositsContext();
   const [combine, setCombine] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [fetchFarmerSilo] = useFetchFarmerSilo();
 
   const totalDeltaStalk = sdk.tokens.STALK.fromHuman('50');
 
@@ -39,6 +49,44 @@ const LambdaConvert = () => {
       setCombine((prev) => !prev);
     }
   }, [selected, combine]);
+
+  const onSubmit = async () => {
+    if (!selected.size) {
+      throw new Error('No deposits selected');
+    }
+
+    const txToast = new TransactionToast({
+      success: `Successfully updated ${selected.size} ${token.symbol} deposit${selected.size === 1 ? '' : 's'}`,
+      loading: 'Updating your deposits...',
+    });
+    try {
+      setSubmitting(true);
+      const farm = constructLambdaConvert(
+        sdk,
+        selected,
+        updateableDepositsById,
+        token,
+        combine
+      );
+
+      await farm.estimate(ethers.constants.Zero);
+      const tx = await farm.execute(ethers.constants.Zero, { slippage: 0.1 });
+
+      txToast.confirming(tx);
+
+      const receipt = await tx.wait();
+      await fetchFarmerSilo();
+
+      txToast.success(receipt);
+
+      clear();
+    } catch (e) {
+      console.error(e);
+      txToast.error(e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Stack gap={1}>
@@ -180,7 +228,11 @@ const LambdaConvert = () => {
           </Card>
         )}
       </Stack>
-      <Button size="large" disabled={!selected.size}>
+      <Button
+        size="large"
+        disabled={!selected.size || submitting}
+        onClick={onSubmit}
+      >
         {selected.size ? 'Update Deposits' : 'Select Deposits'}
       </Button>
     </Stack>
@@ -188,3 +240,91 @@ const LambdaConvert = () => {
 };
 
 export default LambdaConvert;
+
+function constructCombineDepositsCallStruct(
+  sdk: BeanstalkSDK,
+  selected: Set<string>,
+  updateableDepositsById: TokenDepositsContextType['updateableDepositsById'],
+  token: ERC20Token
+) {
+  let amountIn = token.fromHuman('0');
+  const stems: ethers.BigNumber[] = [];
+  const amounts: ethers.BigNumber[] = [];
+
+  selected.forEach((id) => {
+    const deposit = updateableDepositsById[id];
+    amountIn = amountIn.add(deposit.amount);
+    stems.push(deposit.stem);
+    amounts.push(deposit.amount.toBigNumber());
+  });
+
+  const encoding = sdk.silo.siloConvert.calculateEncoding(
+    token,
+    token,
+    amountIn,
+    amountIn
+  );
+
+  const farmCallStruct = {
+    target: sdk.contracts.beanstalk.address,
+    callData: sdk.contracts.beanstalk.interface.encodeFunctionData('convert', [
+      encoding,
+      stems,
+      amounts,
+    ]),
+  };
+
+  return farmCallStruct;
+}
+
+function constructSingleDepositCallStruct(
+  sdk: BeanstalkSDK,
+  deposit: TokenDepositsContextType['updateableDepositsById'][string],
+  token: ERC20Token
+) {
+  const encoding = sdk.silo.siloConvert.calculateEncoding(
+    token,
+    token,
+    deposit.amount,
+    deposit.amount
+  );
+
+  return {
+    target: sdk.contracts.beanstalk.address,
+    callData: sdk.contracts.beanstalk.interface.encodeFunctionData('convert', [
+      encoding,
+      [deposit.stem],
+      [deposit.amount.toBigNumber()],
+    ]),
+  };
+}
+
+function constructLambdaConvert(
+  sdk: BeanstalkSDK,
+  selected: Set<string>,
+  updateableDepositsById: TokenDepositsContextType['updateableDepositsById'],
+  token: ERC20Token,
+  combineDeposits: boolean
+) {
+  const farm = sdk.farm.create();
+
+  const combining = selected.size > 1 && combineDeposits;
+
+  if (combining) {
+    const callStruct = constructCombineDepositsCallStruct(
+      sdk,
+      selected,
+      updateableDepositsById,
+      token
+    );
+    farm.add(() => callStruct);
+  } else {
+    selected.forEach((id) => {
+      const deposit = updateableDepositsById[id];
+      const callStruct = constructSingleDepositCallStruct(sdk, deposit, token);
+      farm.add(() => callStruct);
+    });
+  }
+
+  return farm;
+}

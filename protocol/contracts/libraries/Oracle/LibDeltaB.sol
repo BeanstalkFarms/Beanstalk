@@ -184,14 +184,17 @@ library LibDeltaB {
             revert("Well: USD Oracle call failed");
         }
 
-        return
-            int256(
-                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                    reserves,
-                    beanIndex,
-                    ratios,
-                    wellFunction.data
-                )
-            ).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserve) {
+            return int256(reserve).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 }

@@ -8,6 +8,8 @@ import TokenIcon from '~/components/Common/TokenIcon';
 import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { deliveryBoxIcon, minimizeWindowIcon } from '~/img/icon';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
+import { ethers } from 'ethers';
 import DepositsTable from './DepositsTable';
 import { useTokenDepositsContext } from './TokenDepositsContext';
 
@@ -17,11 +19,10 @@ type Props = {
 
 const TokenDepositsOverview = ({ token }: Props) => {
   const { balances, setSlug } = useTokenDepositsContext();
+  const { BEAN } = useTokens();
+  const isBEAN = token.equals(BEAN);
 
-  const depositedAmount = balances?.amount || TokenValue.ZERO;
-  const amount = new BigNumber(depositedAmount.toHuman());
-
-  const hasDeposits = Boolean(balances?.deposits?.length);
+  const amount = new BigNumber((balances?.amount || TokenValue.ZERO).toHuman());
 
   return (
     <Stack>
@@ -43,31 +44,31 @@ const TokenDepositsOverview = ({ token }: Props) => {
             </Typography>
           </Stack>
         </Stack>
-        {hasDeposits && (
-          <Stack direction="row" gap={1}>
-            <Button
-              size="small"
-              color="secondary"
-              variant="outlined-secondary"
-              startIcon={
-                <Box
-                  component="img"
-                  src={minimizeWindowIcon}
-                  height="16px"
-                  width="auto"
-                />
-              }
-              onClick={() => setSlug('transfer')}
+        <Stack direction="row" gap={1}>
+          <Button
+            size="small"
+            color="secondary"
+            variant="outlined-secondary"
+            startIcon={
+              <Box
+                component="img"
+                src={minimizeWindowIcon}
+                height="16px"
+                width="auto"
+              />
+            }
+            onClick={() => setSlug('transfer')}
+          >
+            Transfer
+            <Typography
+              component="span"
+              fontWeight="inherit"
+              display={{ xs: 'none', md: 'inline' }}
             >
-              Transfer
-              <Typography
-                component="span"
-                fontWeight="inherit"
-                display={{ xs: 'none', md: 'inline' }}
-              >
-                {' Deposits'}
-              </Typography>
-            </Button>
+              {' Deposits'}
+            </Typography>
+          </Button>
+          {!isBEAN && (
             <Button
               size="small"
               color="secondary"
@@ -91,8 +92,8 @@ const TokenDepositsOverview = ({ token }: Props) => {
                 {' Deposits'}
               </Typography>
             </Button>
-          </Stack>
-        )}
+          )}
+        </Stack>
       </Stack>
       <DepositsTable token={token} selectType="single" />
     </Stack>
@@ -104,11 +105,6 @@ export default TokenDepositsOverview;
 /**
  * Shorten an Silo Deposit Id for UI display.
  */
-export function trimDepositId(
-  address: string,
-  options?: { start?: number; end?: number }
-) {
-  const start = options?.start || 4;
-  const end = options?.end || 2;
-  return `${address.substring(0, start)}${address ? `...${address.slice(-end)}` : ''}`;
+export function trimDepositId(address: string) {
+  return `...${ethers.BigNumber.from(address).toHexString().slice(-6)}`;
 }

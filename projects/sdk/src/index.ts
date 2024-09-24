@@ -28,7 +28,7 @@ export type {
 } from "src/lib/depot";
 
 export type {
-  ZeroExQuoteParams,
+  MinimumViableSwapQuote,
   ZeroExQuoteResponse,
   ZeroExAPIRequestParams
 } from "src/lib/matcha/types";
