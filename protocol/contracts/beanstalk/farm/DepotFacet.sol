@@ -26,7 +26,7 @@ contract DepotFacet is Invariable, ReentrancyGuard {
      **/
     function pipe(
         PipeCall calldata p
-    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
         result = C.pipeline().pipe(p);
     }
 
@@ -38,7 +38,7 @@ contract DepotFacet is Invariable, ReentrancyGuard {
      **/
     function multiPipe(
         PipeCall[] calldata pipes
-    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
         results = C.pipeline().multiPipe(pipes);
     }
 
@@ -50,7 +50,7 @@ contract DepotFacet is Invariable, ReentrancyGuard {
     function advancedPipe(
         AdvancedPipeCall[] calldata pipes,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes[] memory results) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes[] memory results) {
         results = C.pipeline().advancedPipe{value: value}(pipes);
         LibEth.refundEth();
     }
@@ -64,7 +64,7 @@ contract DepotFacet is Invariable, ReentrancyGuard {
     function etherPipe(
         PipeCall calldata p,
         uint256 value
-    ) external payable fundsSafu noSupplyIncrease nonReentrant returns (bytes memory result) {
+    ) external payable fundsSafu noSupplyIncrease returns (bytes memory result) {
         result = C.pipeline().pipe{value: value}(p);
         LibEth.refundEth();
     }
