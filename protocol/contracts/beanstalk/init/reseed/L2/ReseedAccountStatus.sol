@@ -38,10 +38,7 @@ contract ReseedAccountStatus {
     event MigratedAccountStatus(
         address indexed account,
         uint256 stalk,
-        uint256 roots,
-        uint32 lastUpdate,
-        uint128 germinatingStalkOdd,
-        uint128 germinatingStalkEven
+        uint256 roots
     );
 
     function init(AccountStatus[] calldata accountStatuses) external {
@@ -84,10 +81,7 @@ contract ReseedAccountStatus {
             emit MigratedAccountStatus(
                 accountStatuses[i].account,
                 accountStatuses[i].stalk,
-                accountStatuses[i].stalk * 1e12,
-                accountStatuses[i].lastUpdate,
-                accountStatuses[i].germinatingStalkOdd,
-                accountStatuses[i].germinatingStalkEven
+                accountStatuses[i].stalk * 1e12 // roots
             );
         }
     }
