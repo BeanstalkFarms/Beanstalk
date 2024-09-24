@@ -260,26 +260,30 @@ const LambdaConvert = ({
                 </Row>
               </Card>
             )}
-            <Card
-              sx={{
-                px: 2,
-                py: 1.5,
-                borderColor: combine
-                  ? BeanstalkPalette.logoGreen
-                  : BeanstalkPalette.lightestGrey,
-                background: combine ? BeanstalkPalette.lightestGreen : 'white',
-              }}
-            >
-              <Row justifyContent="space-between">
-                <Typography color={combine ? 'primary' : 'text.secondary'}>
-                  Combine Deposits of the same asset into one Deposit
-                </Typography>
-                <Switch
-                  value={combine}
-                  onChange={() => setCombine((prev) => !prev)}
-                />
-              </Row>
-            </Card>
+            {selected.size > 1 && (
+              <Card
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  borderColor: combine
+                    ? BeanstalkPalette.logoGreen
+                    : BeanstalkPalette.lightestGrey,
+                  background: combine
+                    ? BeanstalkPalette.lightestGreen
+                    : 'white',
+                }}
+              >
+                <Row justifyContent="space-between">
+                  <Typography color={combine ? 'primary' : 'text.secondary'}>
+                    Combine Deposits of the same asset into one Deposit
+                  </Typography>
+                  <Switch
+                    value={combine}
+                    onChange={() => setCombine((prev) => !prev)}
+                  />
+                </Row>
+              </Card>
+            )}
           </Stack>
           <Box>
             <TxnAccordion defaultExpanded={false}>
