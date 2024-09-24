@@ -318,6 +318,7 @@ library LibWell {
      * the bean reserves of the given well by 1 and recaclulating the new reserves,
      * while maintaining the same liquidity levels.
      * This essentially simulates a swap of 1 Bean for the non bean token and quotes the price.
+     * @dev wrapped in a try/catch to return gracefully.
      */
     function calculateTokenBeanPriceFromReserves(
         address well,
@@ -326,24 +327,35 @@ library LibWell {
         uint256[] memory reserves,
         Call memory wellFunction
     ) internal view returns (uint256 price) {
-        address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
-        uint256 lpTokenSupply = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
-            reserves,
-            wellFunction.data
-        );
+        // attempt to calculate the LP token Supply.
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+                reserves,
+                wellFunction.data
+            )
+        returns (uint256 lpTokenSupply) {
+            address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
+            uint256 oldReserve = reserves[nonBeanIndex];
+            reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
 
-        uint256 oldReserve = reserves[nonBeanIndex];
-        reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
-        uint256 newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
-            reserves,
-            nonBeanIndex,
-            lpTokenSupply,
-            wellFunction.data
-        );
-        // Measure the delta of the non bean reserve.
-        // Due to the invariant of the well function, old reserve > new reserve.
-        uint256 delta = oldReserve - newReserve;
-        price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
+            try
+                IBeanstalkWellFunction(wellFunction.target).calcReserve(
+                    reserves,
+                    nonBeanIndex,
+                    lpTokenSupply,
+                    wellFunction.data
+                )
+            returns (uint256 newReserve) {
+                // Measure the delta of the non bean reserve.
+                // Due to the invariant of the well function, old reserve > new reserve.
+                uint256 delta = oldReserve - newReserve;
+                price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
+            } catch {
+                return 0;
+            }
+        } catch {
+            return 0;
+        }
     }
 
     function getTwaReservesFromStorageOrBeanstalkPump(
