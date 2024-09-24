@@ -81,6 +81,10 @@ contract ReseedStateTest is TestHelper {
 
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
+    address constant realUser = 0xC2820F702Ef0fBd8842c5CE8A4FCAC5315593732;
+    address constant beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+    address constant beanWstethWell = 0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8;
+
     uint256 accountNumber;
 
     function setUp() public {
@@ -193,6 +197,124 @@ contract ReseedStateTest is TestHelper {
         // previously this would revert with "Well: Bean reserve is less than the minimum"
         vm.prank(realUser);
         l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
+    }
+
+    /**
+     * @dev this test will fail once the user has withdrawn their LP tokens.
+     * This can prevented by forking at an earlier block.
+     */
+    function test_pipelineConvertRealUserLPToLP() public {
+        address token;
+        int96 stem;
+        uint256 amount;
+
+        IMockFBeanstalk.TokenDepositId[] memory deposits = l2Beanstalk.getDepositsForAccount(
+            realUser
+        );
+        for (uint256 i; i < deposits.length; i++) {
+            if (deposits[i].token == address(beanWstethWell)) {
+                (token, stem) = l2Beanstalk.getAddressAndStem(deposits[i].depositIds[0]);
+                amount = deposits[i].tokenDeposits[0].amount;
+                break;
+            }
+        }
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        IMockFBeanstalk.AdvancedPipeCall[] memory calls = createLPToLPPipeCalls(
+            amount,
+            beanWstethWell,
+            beanWethWell
+        );
+
+        // previously this would revert with "Well: Bean reserve is less than the minimum"
+        vm.prank(realUser);
+        (
+            int96 toStem,
+            uint256 fromAmount,
+            uint256 toAmount,
+            uint256 fromBdv,
+            uint256 toBdv
+        ) = l2Beanstalk.pipelineConvert(beanWstethWell, stems, amounts, beanWethWell, calls);
+
+        console.log("toStem: ");
+        console.logInt(toStem);
+        console.log("fromAmount: ", fromAmount);
+        console.log("toAmount: ", toAmount);
+        console.log("fromBdv: ", fromBdv);
+        console.log("toBdv: ", toBdv);
+    }
+
+    function createLPToLPPipeCalls(
+        uint256 amountOfLP,
+        address inputWell,
+        address outputWell
+    ) private pure returns (IMockFBeanstalk.AdvancedPipeCall[] memory output) {
+        // setup approve max call
+        bytes memory approveEncoded = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            outputWell,
+            type(uint256).max
+        );
+
+        // encode remove liqudity.
+        bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
+            IWell.removeLiquidityOneToken.selector,
+            amountOfLP, // lpAmountIn
+            L2BEAN, // tokenOut
+            0, // min out
+            PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        uint256[] memory emptyAmountsIn = new uint256[](2);
+
+        // encode add liquidity
+        bytes memory addLiquidityEncoded = abi.encodeWithSelector(
+            IWell.addLiquidity.selector,
+            emptyAmountsIn, // to be pasted in
+            0, // min out
+            PIPELINE, // recipient
+            type(uint256).max // deadline
+        );
+
+        // Fabricate advancePipes:
+        IMockFBeanstalk.AdvancedPipeCall[]
+            memory advancedPipeCalls = new IMockFBeanstalk.AdvancedPipeCall[](3);
+
+        // Action 0: approve the Bean-Eth well to spend pipeline's bean.
+        advancedPipeCalls[0] = IMockFBeanstalk.AdvancedPipeCall(
+            L2BEAN, // target
+            approveEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // Action 1: remove beans from well.
+        advancedPipeCalls[1] = IMockFBeanstalk.AdvancedPipeCall(
+            inputWell, // target
+            removeLiquidityEncoded, // calldata
+            abi.encode(0) // clipboard
+        );
+
+        // returnDataItemIndex, copyIndex, pasteIndex
+        bytes memory clipboard = abi.encodePacked(
+            bytes2(0x0100), // clipboard type 1
+            uint80(1), // from result of call at index 1
+            uint80(32), // take the first param
+            uint80(196) // paste into the 6th 32 bytes of the clipboard
+        );
+
+        // Action 2: add beans to wsteth:bean well.
+        advancedPipeCalls[2] = IMockFBeanstalk.AdvancedPipeCall(
+            outputWell, // target
+            addLiquidityEncoded, // calldata
+            clipboard
+        );
+
+        return advancedPipeCalls;
     }
 
     function createLPToBeanPipeCalls(
