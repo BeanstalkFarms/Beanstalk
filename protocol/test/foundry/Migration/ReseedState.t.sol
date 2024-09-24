@@ -199,6 +199,10 @@ contract ReseedStateTest is TestHelper {
         l2Beanstalk.pipelineConvert(beanWethWell, stems, amounts, L2BEAN, calls);
     }
 
+    /**
+     * @dev this test will fail once the user has withdrawn their LP tokens.
+     * This can prevented by forking at an earlier block.
+     */
     function test_pipelineConvertRealUserLPToLP() public {
         address token;
         int96 stem;
