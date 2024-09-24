@@ -159,8 +159,8 @@ const LambdaConvertContent = ({
 
       if (deltaBDV.gt(0)) {
         const key = deposit.id.toString();
-        const deltaStalk = deposit.seeds.mul(deltaBDV);
-        const deltaSeed = deltaBDV.div(deposit.bdv).mul(deposit.seeds);
+        const deltaStalk = token.getStalk(deltaBDV);
+        const deltaSeed = token.getSeeds(deltaBDV);
 
         prev[key] = {
           ...deposit,
@@ -199,6 +199,7 @@ const LambdaConvertContent = ({
     >
       <Module
         sx={{
+          height: '100%',
           width: '100%',
           maxWidth: {
             lg: !selected.size ? '900px' : 'unset',
@@ -221,7 +222,7 @@ const LambdaConvertContent = ({
             </Button>
           </Row>
         </ModuleHeader>
-        <ModuleContent px={2}>
+        <ModuleContent px={2} height="100%">
           <TokenLambdaConvert
             token={token}
             updatableDeposits={updateable.deposits}

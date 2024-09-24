@@ -14,16 +14,20 @@ import { InfoOutlined } from '@mui/icons-material';
 import Row from '~/components/Common/Row';
 import stalkIconGrey from '~/img/beanstalk/stalk-icon-grey.svg';
 import seedIconGrey from '~/img/beanstalk/seed-icon-grey.svg';
-import { formatTV } from '~/util';
+import { ActionType, displayFullBN, formatTV } from '~/util';
 import { BeanstalkSDK, ERC20Token, TokenValue } from '@beanstalk/sdk';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 import { LongArrowRight } from '~/components/Common/SystemIcons';
-
+import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import { useAppSelector } from '~/state';
+import { ZERO_BN } from '~/constants';
+import { useBeanstalkTokens } from '~/hooks/beanstalk/useTokens';
+import { TxnPreview } from '~/components/Common/Form';
+import TxnAccordion from '~/components/Common/TxnAccordion';
 import {
   UpdatableDepositsByToken,
   useTokenDepositsContext,
@@ -36,19 +40,29 @@ const LambdaConvert = ({
   token: ERC20Token;
   updatableDeposits: UpdatableDepositsByToken;
 }) => {
-  const sdk = useSdk();
   const { selected, clear } = useTokenDepositsContext();
+  const { STALK, SEEDS } = useBeanstalkTokens();
+  const sdk = useSdk();
+
   const [combine, setCombine] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fetchFarmerSilo] = useFetchFarmerSilo();
+  const [deltaStalk, setDeltaStalk] = useState(STALK.fromHuman('0'));
+  const [deltaSeed, setDeltaSeed] = useState(SEEDS.fromHuman('0'));
+  const [deltaOwnership, setDeltaOwnership] = useState(ZERO_BN);
+  const [deltaStalkPerSeason, setDeltaStalkPerSeason] = useState(
+    STALK.fromHuman('0')
+  );
 
-  const [deltaStalk, setDeltaStalk] = useState(sdk.tokens.STALK.fromHuman('0'));
-  const [deltaSeed, setDeltaSeed] = useState(sdk.tokens.SEEDS.fromHuman('0'));
   const balanceOfStalk = useAppSelector((s) => s._farmer.silo.stalk.active);
+  const balanceOfSeed = useAppSelector((s) => s._farmer.silo.seeds.active);
+  const beanstalkTotalStalk = useAppSelector(
+    (s) => s._beanstalk.silo.stalk.active
+  );
 
   useEffect(() => {
-    let _deltaStalk: TokenValue = sdk.tokens.STALK.fromHuman('0');
-    let _deltaSeed: TokenValue = sdk.tokens.SEEDS.fromHuman('0');
+    let _deltaStalk: TokenValue = STALK.fromHuman('0');
+    let _deltaSeed: TokenValue = SEEDS.fromHuman('0');
 
     selected.forEach((key) => {
       const deposit = updatableDeposits[key];
@@ -56,13 +70,34 @@ const LambdaConvert = ({
       _deltaSeed = _deltaSeed.add(deposit.deltaSeed);
     });
 
+    const recordedStalkPct = beanstalkTotalStalk.gt(0)
+      ? balanceOfStalk.div(beanstalkTotalStalk).times(100)
+      : ZERO_BN;
+
+    const updatedStalkBal = balanceOfStalk.plus(_deltaStalk.toNumber());
+    const updatedStalkPct = beanstalkTotalStalk.gt(0)
+      ? updatedStalkBal.div(beanstalkTotalStalk).times(100)
+      : ZERO_BN;
+
+    const deltaStalkPct = updatedStalkPct.minus(recordedStalkPct);
+
     setDeltaStalk(_deltaStalk);
     setDeltaSeed(_deltaSeed);
-  }, [sdk, selected, updatableDeposits]);
+    setDeltaOwnership(deltaStalkPct);
+    setDeltaStalkPerSeason(STALK.fromHuman(_deltaSeed.toNumber()));
+  }, [
+    selected,
+    updatableDeposits,
+    balanceOfSeed,
+    beanstalkTotalStalk,
+    balanceOfStalk,
+    SEEDS,
+    STALK,
+  ]);
 
   useEffect(() => {
     if (selected.size <= 1 && combine) {
-      setCombine((prev) => !prev);
+      setCombine(false);
     }
   }, [selected, combine]);
 
@@ -103,13 +138,6 @@ const LambdaConvert = ({
       setSubmitting(false);
     }
   };
-
-  const updatedStalkBalance = deltaStalk.add(balanceOfStalk.toNumber());
-
-  const totalDeltaStalkPct = TokenValue.fromHuman(0.000001, 0);
-
-  // delta
-  const stalkPerSeason = sdk.tokens.SEEDS.fromHuman('2.012345564');
 
   return (
     <Stack gap={1}>
@@ -161,9 +189,11 @@ const LambdaConvert = ({
                 align="right"
               >
                 +{' '}
-                {totalDeltaStalkPct.gte(0.01)
-                  ? formatTV(totalDeltaStalkPct, 2)
-                  : '<0.01'}
+                {deltaOwnership.lte(0)
+                  ? '0.00'
+                  : deltaOwnership.gte(0.0001)
+                    ? displayFullBN(deltaOwnership, 4)
+                    : '<0.0001'}
                 %
               </Typography>
             </Stack>
@@ -208,49 +238,70 @@ const LambdaConvert = ({
                 color="text.tertiary"
                 align="right"
               >
-                + {formatTV(stalkPerSeason, 6)}
+                + {formatTV(deltaStalkPerSeason, 6)}
               </Typography>
             </Stack>
           </Stack>
         </Stack>
       </Card>
-      <Stack gap={1}>
-        {combine && selected.size > 1 && (
-          <Card sx={{ p: 2, background: 'white', borderColor: 'white' }}>
-            <Row justifyContent="space-between">
-              <Typography color="text.secondary">
-                {selected.size} {token.symbol} Deposits
-              </Typography>
-              <LongArrowRight color="black" />
-              <Typography color="text.secondary">
-                1 {token.symbol} Deposit
-              </Typography>
-            </Row>
-          </Card>
-        )}
-        {selected.size > 1 && (
-          <Card
-            sx={{
-              px: 2,
-              py: 1.5,
-              borderColor: combine
-                ? BeanstalkPalette.logoGreen
-                : BeanstalkPalette.lightestGrey,
-              background: combine ? BeanstalkPalette.lightestGreen : 'white',
-            }}
-          >
-            <Row justifyContent="space-between">
-              <Typography color={combine ? 'primary' : 'text.secondary'}>
-                Combine Deposits of the same asset into one Deposit
-              </Typography>
-              <Switch
-                value={combine}
-                onChange={() => setCombine((prev) => !prev)}
+      {!!selected.size && (
+        <>
+          <Stack gap={1}>
+            {combine && (
+              <Card sx={{ p: 2, background: 'white', borderColor: 'white' }}>
+                <Row justifyContent="space-between">
+                  <Typography color="text.secondary">
+                    {selected.size} {token.symbol} Deposits
+                  </Typography>
+                  <LongArrowRight color="black" />
+                  <Typography color="text.secondary">
+                    1 {token.symbol} Deposit
+                  </Typography>
+                </Row>
+              </Card>
+            )}
+            <Card
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderColor: combine
+                  ? BeanstalkPalette.logoGreen
+                  : BeanstalkPalette.lightestGrey,
+                background: combine ? BeanstalkPalette.lightestGreen : 'white',
+              }}
+            >
+              <Row justifyContent="space-between">
+                <Typography color={combine ? 'primary' : 'text.secondary'}>
+                  Combine Deposits of the same asset into one Deposit
+                </Typography>
+                <Switch
+                  value={combine}
+                  onChange={() => setCombine((prev) => !prev)}
+                />
+              </Row>
+            </Card>
+          </Stack>
+          <Box>
+            <TxnAccordion defaultExpanded={false}>
+              <TxnPreview
+                actions={[
+                  {
+                    type: ActionType.BASE,
+                    message: `Update ${selected.size} ${token.symbol} deposit${
+                      selected.size === 1 ? '' : 's'
+                    }`,
+                  },
+                  {
+                    type: ActionType.UPDATE_SILO_REWARDS,
+                    stalk: new BigNumber(deltaStalk.toHuman()) || ZERO_BN,
+                    seeds: new BigNumber(deltaSeed.toHuman()) || ZERO_BN,
+                  },
+                ]}
               />
-            </Row>
-          </Card>
-        )}
-      </Stack>
+            </TxnAccordion>
+          </Box>
+        </>
+      )}
       <Button
         size="large"
         disabled={!selected.size || submitting}
@@ -329,7 +380,7 @@ function constructLambdaConvert(
   token: ERC20Token,
   combineDeposits: boolean
 ) {
-  const farm = sdk.farm.create();
+  const farm = sdk.farm.create('lambda-2-lambda');
 
   const combining = selected.size > 1 && combineDeposits;
 

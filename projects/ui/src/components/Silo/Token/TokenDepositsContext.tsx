@@ -16,7 +16,6 @@ import React, {
 import useBDV from '~/hooks/beanstalk/useBDV';
 import useTabs from '~/hooks/display/useTabs';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
-import useSdk from '~/hooks/sdk';
 import { exists } from '~/util/UI';
 
 export type TokenDepositsSelectType = 'single' | 'multi';
@@ -82,7 +81,6 @@ export const TokenDepositsProvider = (props: {
   const [updateableDepositsById, setUpdateableDepositsById] =
     useState<TokenDepositsContextType['updateableDepositsById']>(emptyObj);
   const getBDV = useBDV();
-  const sdk = useSdk();
 
   const tokenBDV = getBDV(props.token);
 
