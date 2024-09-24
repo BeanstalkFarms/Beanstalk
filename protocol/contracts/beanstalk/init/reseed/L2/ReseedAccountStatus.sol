@@ -35,11 +35,7 @@ contract ReseedAccountStatus {
     );
 
     // emitted when a status is migrated.
-    event MigratedAccountStatus(
-        address indexed account,
-        uint256 stalk,
-        uint256 roots
-    );
+    event MigratedAccountStatus(address indexed account, uint256 stalk, uint256 roots);
 
     function init(AccountStatus[] calldata accountStatuses) external {
         // for each account
@@ -55,7 +51,7 @@ contract ReseedAccountStatus {
                     .accts[accountStatuses[i].account]
                     .mowStatuses[accountStatuses[i].tokens[j]]
                     .lastStem = accountStatuses[i].mowStatuses[j].lastStem;
-                
+
                 // emit event on a per account per token basis.
                 emit MigratedAccountTokenStatus(
                     accountStatuses[i].account,
