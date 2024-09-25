@@ -12,6 +12,6 @@ export function handleSunrise(event: Sunrise): void {
   let aquifer = loadOrCreateAquifer(getAquifer(v()));
 
   for (let i = 0; i < aquifer.wells.length; i++) {
-    checkForSnapshot(Address.fromBytes(aquifer.wells[i]), event.block.timestamp, event.block.number);
+    checkForSnapshot(Address.fromBytes(aquifer.wells[i]), event.block);
   }
 }

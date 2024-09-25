@@ -4,6 +4,7 @@ import { Well } from "../../generated/schema";
 import { loadWell } from "../entities/Well";
 import { loadToken } from "../entities/Token";
 import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 // Constant product volume calculations
 
@@ -13,8 +14,7 @@ export function updateWellVolumesAfterSwap(
   amountIn: BigInt,
   toToken: Address,
   amountOut: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
+  block: ethereum.Block
 ): void {
   let well = loadWell(wellAddress);
 
@@ -30,8 +30,8 @@ export function updateWellVolumesAfterSwap(
 
   updateVolumeStats(well, deltaTradeVolumeReserves, deltaTransferVolumeReserves);
 
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
 
   well.save();
 }
@@ -68,7 +68,7 @@ export function updateWellVolumesAfterLiquidity(
  */
 export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
   const wellFn = well.wellFunction.load()[0];
-  const wellFnContract = WellFunction.bind(wellFn.target);
+  const wellFnContract = WellFunction.bind(toAddress(wellFn.target));
   const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
 
   const tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];

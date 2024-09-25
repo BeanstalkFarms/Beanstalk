@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import {
   deltaBigDecimalArray,
@@ -15,7 +15,7 @@ import { v } from "./constants/Version";
 import { loadToken } from "../entities/Token";
 import { WellHourlySnapshot } from "../../generated/schema";
 
-export function updateWellReserves(wellAddress: Address, additiveAmounts: BigInt[], timestamp: BigInt, blockNumber: BigInt): void {
+export function updateWellReserves(wellAddress: Address, additiveAmounts: BigInt[], block: ethereum.Block): void {
   let well = loadWell(wellAddress);
   let balances = well.reserves;
 
@@ -24,8 +24,8 @@ export function updateWellReserves(wellAddress: Address, additiveAmounts: BigInt
   }
 
   well.reserves = balances;
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
   well.save();
 }
 
@@ -38,11 +38,11 @@ export function getCalculatedReserveUSDValues(tokens: Bytes[], reserves: BigInt[
   return results;
 }
 
-export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+export function updateWellLiquidityTokenBalance(wellAddress: Address, deltaAmount: BigInt, block: ethereum.Block): void {
   let well = loadWell(wellAddress);
   well.lpTokenSupply = well.lpTokenSupply.plus(deltaAmount);
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
   well.save();
 }
 
@@ -92,28 +92,28 @@ export function incrementWellWithdraw(wellAddress: Address): void {
   well.save();
 }
 
-export function checkForSnapshot(wellAddress: Address, timestamp: BigInt, blockNumber: BigInt): void {
+export function checkForSnapshot(wellAddress: Address, block: ethereum.Block): void {
   // We check for the prior period snapshot and then take one if needed
   // Schedule the "day" to begin at 9am PT/12pm ET.
   // Future work could include properly adjusting this when DST occurs.
-  let dayID = dayFromTimestamp(timestamp, 8 * 60 * 60) - 1;
-  let hourID = hourFromTimestamp(timestamp) - 1;
+  let dayID = dayFromTimestamp(block.timestamp, 8 * 60 * 60) - 1;
+  let hourID = hourFromTimestamp(block.timestamp) - 1;
 
   let well = loadWell(wellAddress);
 
   if (dayID > well.lastSnapshotDayID) {
-    takeWellDailySnapshot(wellAddress, dayID, timestamp, blockNumber);
+    takeWellDailySnapshot(wellAddress, dayID, block);
   }
   if (hourID > well.lastSnapshotHourID) {
-    takeWellHourlySnapshot(wellAddress, hourID, timestamp, blockNumber);
+    takeWellHourlySnapshot(wellAddress, hourID, block);
   }
 }
 
-export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestamp: BigInt, blockNumber: BigInt): void {
+export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, block: ethereum.Block): void {
   let well = loadWell(wellAddress);
 
   if (well.lastSnapshotDayID == 0) {
-    loadOrCreateWellDailySnapshot(wellAddress, dayID, timestamp, blockNumber);
+    loadOrCreateWellDailySnapshot(wellAddress, dayID, block);
     well.lastSnapshotDayID = dayID;
     well.save();
     return;
@@ -123,8 +123,8 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestam
   well.lastSnapshotDayID = dayID;
   well.save();
 
-  let priorSnapshot = loadOrCreateWellDailySnapshot(wellAddress, priorDay, timestamp, blockNumber);
-  let newSnapshot = loadOrCreateWellDailySnapshot(wellAddress, well.lastSnapshotDayID, timestamp, blockNumber);
+  let priorSnapshot = loadOrCreateWellDailySnapshot(wellAddress, priorDay, block);
+  let newSnapshot = loadOrCreateWellDailySnapshot(wellAddress, well.lastSnapshotDayID, block);
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
@@ -155,20 +155,20 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, timestam
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
   newSnapshot.deltaSwapCount = newSnapshot.cumulativeSwapCount - priorSnapshot.cumulativeSwapCount;
-  newSnapshot.lastUpdateTimestamp = timestamp;
-  newSnapshot.lastUpdateBlockNumber = blockNumber;
+  newSnapshot.lastUpdateTimestamp = block.timestamp;
+  newSnapshot.lastUpdateBlockNumber = block.number;
   newSnapshot.save();
 }
 
-export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timestamp: BigInt, blockNumber: BigInt): void {
+export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block: ethereum.Block): void {
   let well = loadWell(wellAddress);
 
   let priorHourID = well.lastSnapshotHourID;
   well.lastSnapshotHourID = hourID;
   well.save();
 
-  let priorSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, priorHourID, timestamp, blockNumber);
-  let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, hourID, timestamp, blockNumber);
+  let priorSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, priorHourID, block);
+  let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, hourID, block);
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
@@ -199,8 +199,8 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, timest
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
   newSnapshot.deltaSwapCount = newSnapshot.cumulativeSwapCount - priorSnapshot.cumulativeSwapCount;
-  newSnapshot.lastUpdateTimestamp = timestamp;
-  newSnapshot.lastUpdateBlockNumber = blockNumber;
+  newSnapshot.lastUpdateTimestamp = block.timestamp;
+  newSnapshot.lastUpdateBlockNumber = block.number;
   newSnapshot.save();
 
   // Update the rolling daily and weekly volumes by removing the oldest value.

@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { emptyBigDecimalArray, emptyBigIntArray, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
@@ -88,7 +88,7 @@ export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruc
   return wellFunction as WellFunction;
 }
 
-export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, timestamp: BigInt, blockNumber: BigInt): WellDailySnapshot {
+export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, block: ethereum.Block): WellDailySnapshot {
   let snapshot = WellDailySnapshot.load(wellAddress.concatI32(dayID));
 
   if (snapshot == null) {
@@ -120,19 +120,14 @@ export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, 
     snapshot.deltaDepositCount = 0;
     snapshot.deltaWithdrawCount = 0;
     snapshot.deltaSwapCount = 0;
-    snapshot.lastUpdateTimestamp = timestamp;
-    snapshot.lastUpdateBlockNumber = blockNumber;
+    snapshot.lastUpdateTimestamp = block.timestamp;
+    snapshot.lastUpdateBlockNumber = block.number;
     snapshot.save();
   }
   return snapshot as WellDailySnapshot;
 }
 
-export function loadOrCreateWellHourlySnapshot(
-  wellAddress: Address,
-  hourID: i32,
-  timestamp: BigInt,
-  blockNumber: BigInt
-): WellHourlySnapshot {
+export function loadOrCreateWellHourlySnapshot(wellAddress: Address, hourID: i32, block: ethereum.Block): WellHourlySnapshot {
   let snapshot = WellHourlySnapshot.load(wellAddress.concatI32(hourID));
   if (snapshot == null) {
     let well = loadWell(wellAddress);
@@ -163,8 +158,8 @@ export function loadOrCreateWellHourlySnapshot(
     snapshot.deltaDepositCount = 0;
     snapshot.deltaWithdrawCount = 0;
     snapshot.deltaSwapCount = 0;
-    snapshot.lastUpdateTimestamp = timestamp;
-    snapshot.lastUpdateBlockNumber = blockNumber;
+    snapshot.lastUpdateTimestamp = block.timestamp;
+    snapshot.lastUpdateBlockNumber = block.timestamp;
     snapshot.save();
   }
   return snapshot as WellHourlySnapshot;
