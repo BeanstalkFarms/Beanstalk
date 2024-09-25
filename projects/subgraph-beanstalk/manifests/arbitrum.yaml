@@ -25,6 +25,8 @@ dataSources:
       eventHandlers:
         - event: AddMigratedDeposit(indexed address,indexed address,int96,uint256,uint256)
           handler: handleAddMigratedDeposit
+        - event: MigratedAccountStatus(indexed address,uint256,uint256)
+          handler: handleMigratedAccountStatus
         - event: MigratedPlot(indexed address,indexed uint256,uint256)
           handler: handleMigratedPlot
         - event: MigratedPodListing(indexed address,uint256,uint256,uint256,uint256,uint24,uint256,uint256,uint8)
