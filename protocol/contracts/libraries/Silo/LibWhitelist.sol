@@ -180,7 +180,7 @@ library LibWhitelist {
         Implementation memory lwImplementation
     ) internal {
         updateGaugePointImplementationForToken(token, gpImplementation);
-        updateLiqudityWeightImplementationForToken(token, lwImplementation);
+        updateLiquidityWeightImplementationForToken(token, lwImplementation);
         updateOptimalPercentDepositedBdvForToken(token, optimalPercentDepositedBdv);
     }
 
@@ -261,7 +261,7 @@ library LibWhitelist {
     /**
      * @notice updates the gauge point implementation for a token.
      */
-    function updateLiqudityWeightImplementationForToken(
+    function updateLiquidityWeightImplementationForToken(
         address token,
         Implementation memory lwImplementation
     ) internal {

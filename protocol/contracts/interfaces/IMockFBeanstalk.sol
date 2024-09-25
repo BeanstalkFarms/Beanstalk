@@ -509,7 +509,7 @@ interface IMockFBeanstalk {
         address indexed token,
         Implementation gaugePointImplementation
     );
-    event UpdatedLiqudityWeightImplementationForToken(
+    event UpdatedLiquidityWeightImplementationForToken(
         address indexed token,
         Implementation liquidityWeightImplementation
     );
@@ -2048,7 +2048,7 @@ interface IMockFBeanstalk {
         Implementation memory impl
     ) external payable;
 
-    function updateLiqudityWeightImplementationForToken(
+    function updateLiquidityWeightImplementationForToken(
         address token,
         Implementation memory impl
     ) external payable;
