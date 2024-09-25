@@ -200,10 +200,7 @@ library LibPipelineConvert {
                 pipeData.initialLpSupply
             );
 
-            require(
-                pipeData.stalkPenaltyBdv == 0,
-                "Convert: Penalty would be applied to this convert, use pipeline convert"
-            );
+            require(pipeData.stalkPenaltyBdv == 0, "Convert: Non-zero Stalk Penalty");
         }
     }
 }
