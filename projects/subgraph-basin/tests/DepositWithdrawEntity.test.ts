@@ -71,6 +71,8 @@ describe("Deposit/Withdraw Entities", () => {
 
   test("RemoveLiquidity event", () => {
     const deltaLiquidity = [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT];
+    mockAddLiquidity(deltaLiquidity);
+    mockAddLiquidity(deltaLiquidity);
     let id = mockRemoveLiquidity(deltaLiquidity);
     assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, "id", id);
     assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, "well", WELL.toHexString());
