@@ -3,21 +3,21 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
+import {L1ReceiverFacet} from "contracts/beanstalk/migration/L1ReceiverFacet.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "forge-std/console.sol";
 
 /**
- * @notice Tests the functionality of the L1RecieverFacet.
+ * @notice Tests the functionality of the L1ReceiverFacet.
  */
 
 interface IERC1555 {
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract L1RecieverFacetTest is Order, TestHelper {
+contract L1ReceiverFacetTest is Order, TestHelper {
     using Strings for string;
     // Offset arbitrum uses for corresponding L2 address
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
@@ -58,7 +58,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setRecieverForL1Migration(OWNER, RECIEVER);
+            bs.setReceiverForL1Migration(OWNER, RECIEVER);
             (
                 uint256[] memory depositIds,
                 uint256[] memory amounts,
@@ -74,7 +74,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
-            L1RecieverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
+            L1ReceiverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
         }
     }
 
@@ -82,7 +82,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setRecieverForL1Migration(OWNER, RECIEVER);
+            bs.setReceiverForL1Migration(OWNER, RECIEVER);
             (uint256[] memory index, uint256[] memory pods) = getPlotData(OWNER);
 
             bytes32[] memory proof = getPlotsProofForAccount(OWNER);
@@ -96,7 +96,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
             vm.prank(RECIEVER);
             // start measuring gas
             uint256 gasBefore = gasleft();
-            L1RecieverFacet(BEANSTALK).issuePlots(OWNER, index, pods, proof);
+            L1ReceiverFacet(BEANSTALK).issuePlots(OWNER, index, pods, proof);
 
             //stop measuring gas
             uint256 gasAfter = gasleft();
@@ -108,7 +108,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setRecieverForL1Migration(OWNER, RECIEVER);
+            bs.setReceiverForL1Migration(OWNER, RECIEVER);
             (address[] memory _tokens, uint256[] memory _amounts) = getInternalBalanceData(OWNER);
 
             bytes32[] memory _proof = getInternalBalancesProofForAccount(OWNER);
@@ -120,7 +120,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
-            L1RecieverFacet(BEANSTALK).issueInternalBalances(OWNER, _tokens, _amounts, _proof);
+            L1ReceiverFacet(BEANSTALK).issueInternalBalances(OWNER, _tokens, _amounts, _proof);
         }
     }
 
@@ -128,7 +128,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setRecieverForL1Migration(OWNER, RECIEVER);
+            bs.setReceiverForL1Migration(OWNER, RECIEVER);
             (uint256[] memory fertIds, uint128[] memory _amounts, uint128 lastBpf) = getFertData(
                 OWNER
             );
@@ -142,7 +142,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
-            L1RecieverFacet(BEANSTALK).issueFertilizer(OWNER, fertIds, _amounts, lastBpf, proof);
+            L1ReceiverFacet(BEANSTALK).issueFertilizer(OWNER, fertIds, _amounts, lastBpf, proof);
         }
     }
 

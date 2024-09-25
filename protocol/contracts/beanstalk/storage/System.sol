@@ -390,7 +390,7 @@ struct ShipmentRoute {
 /**
  * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
  * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
- * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param contractata a mapping from a L1 contract to an approved L2 receiver.
  * @param _buffer_ Reserved storage for future additions.
  */
 struct L2Migration {
@@ -403,7 +403,7 @@ struct L2Migration {
  * @notice contains data relating to migration.
  */
 struct MigrationData {
-    address reciever;
+    address receiver;
     bool migratedDeposits;
     bool migratedPlots;
     bool migratedFert;

@@ -327,30 +327,30 @@ interface IMockFBeanstalk {
     event Harvest(address indexed account, uint256 fieldId, uint256[] plots, uint256 beans);
     event Incentivization(address indexed account, uint256 beans);
     event InternalBalanceChanged(address indexed account, address indexed token, int256 delta);
-    event L1BeansMigrated(address indexed reciever, uint256 amount, uint8 toMode);
+    event L1BeansMigrated(address indexed receiver, uint256 amount, uint8 toMode);
     event L1DepositsMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] depositIds,
         uint256[] amounts,
         uint256[] bdvs
     );
     event L1FertilizerMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] fertIds,
         uint128[] amounts,
         uint128 lastBpf
     );
     event L1InternalBalancesMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         address[] tokens,
         uint256[] amounts
     );
     event L1PlotsMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] index,
         uint256[] pods
     );
@@ -415,7 +415,7 @@ interface IMockFBeanstalk {
     );
     event PublishRequisition(Requisition requisition);
     event Receipt(ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
-    event RecieverApproved(address indexed owner, address reciever);
+    event ReceiverApproved(address indexed owner, address receiver);
     event RemoveDeposit(
         address indexed account,
         address indexed token,
@@ -603,8 +603,8 @@ interface IMockFBeanstalk {
 
     function approveDeposit(address spender, address token, uint256 amount) external payable;
 
-    function approveL2Reciever(
-        address reciever,
+    function approveL2Receiver(
+        address receiver,
         address L2Beanstalk,
         uint256 maxSubmissionCost,
         uint256 maxGas,
@@ -613,7 +613,7 @@ interface IMockFBeanstalk {
 
     function approvePods(address spender, uint256 fieldId, uint256 amount) external payable;
 
-    function approveReciever(address owner, address reciever) external;
+    function approveReceiver(address owner, address receiver) external;
 
     function approveToken(address spender, address token, uint256 amount) external payable;
 
@@ -1264,7 +1264,7 @@ interface IMockFBeanstalk {
 
     function getRecapitalized() external view returns (uint256);
 
-    function getReciever(address owner) external view returns (address);
+    function getReceiver(address owner) external view returns (address);
 
     function getRelBeanToMaxLpRatioChangeFromCaseId(uint256 caseId) external view returns (int80 l);
 
@@ -1492,7 +1492,7 @@ interface IMockFBeanstalk {
     function maxWeight(bytes memory) external pure returns (uint256);
 
     function migrateL2Beans(
-        address reciever,
+        address receiver,
         address L2Beanstalk,
         uint256 amount,
         uint8 toMode,
@@ -1741,7 +1741,7 @@ interface IMockFBeanstalk {
 
     function readPipe(PipeCall memory p) external view returns (bytes memory result);
 
-    function recieveL1Beans(address reciever, uint256 amount, uint8 toMode) external;
+    function recieveL1Beans(address receiver, uint256 amount, uint8 toMode) external;
 
     function reentrancyGuardTest() external;
 
@@ -1855,7 +1855,7 @@ interface IMockFBeanstalk {
 
     function setPrice(uint256 price, address targetWell) external returns (int256 deltaB);
 
-    function setRecieverForL1Migration(address owner, address reciever) external;
+    function setReceiverForL1Migration(address owner, address receiver) external;
 
     function setShipmentRoutes(ShipmentRoute[] memory shipmentRoutes) external;
 

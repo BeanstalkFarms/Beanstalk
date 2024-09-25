@@ -53,7 +53,7 @@ contract BeanstalkDeployer is Utils {
         "MarketplaceFacet",
         "ClaimFacet",
         "OracleFacet",
-        "L1RecieverFacet",
+        "L1ReceiverFacet",
         "GaugeGettersFacet"
     ];
 

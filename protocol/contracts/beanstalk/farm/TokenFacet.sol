@@ -172,10 +172,10 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         return LibTokenPermit.nonces(owner);
     }
 
-    //////////////////////// ERC1155Reciever ////////////////////////
+    //////////////////////// ERC1155Receiver ////////////////////////
 
     /**
-     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
+     * @notice ERC1155Receiver function that allows the silo to receive ERC1155 tokens.
      *
      * @dev as ERC1155 deposits are not accepted yet,
      * this function will revert.

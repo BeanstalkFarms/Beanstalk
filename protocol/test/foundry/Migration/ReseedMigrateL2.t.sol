@@ -150,7 +150,7 @@ contract reeseedMigrateL2 is TestHelper {
         assertEq(initialInternalTokenBalance - bs.getInternalBalance(user, token), 1e6);
     }
 
-    // verifies that the user is able to migrate external beans to L2 and approve a reciever on L2.
+    // verifies that the user is able to migrate external beans to L2 and approve a receiver on L2.
     function test_bean_l2_migration_external() public {
         vm.startPrank(BS_FARMS);
         IERC20(BEAN).approve(BEANSTALK, 1e6);
@@ -165,7 +165,7 @@ contract reeseedMigrateL2 is TestHelper {
         );
 
         vm.startPrank(BS_FARMS);
-        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+        L2MigrationFacet(BEANSTALK).approveL2Receiver{value: 0.005 ether}(
             BS_FARMS,
             L2_BEANSTALK,
             2e14, // max submission cost = 200k gas * 10 gwei
@@ -188,7 +188,7 @@ contract reeseedMigrateL2 is TestHelper {
         );
 
         vm.startPrank(BS_FARMS);
-        L2MigrationFacet(BEANSTALK).approveL2Reciever{value: 0.005 ether}(
+        L2MigrationFacet(BEANSTALK).approveL2Receiver{value: 0.005 ether}(
             BS_FARMS,
             L2_BEANSTALK,
             2e14, // max submission cost = 200k gas * 10 gwei

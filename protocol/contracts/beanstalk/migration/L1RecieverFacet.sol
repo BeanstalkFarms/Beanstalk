@@ -26,12 +26,12 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 /**
  * @author Brean
  * @title
- * @notice Allows Beanstalk to recieve data from an L1. see {L2MigrationFacet} for more details.
- * Beanstalk-native assets contract owners can delegate their assets to a reciever address on L2,
+ * @notice Allows Beanstalk to receive data from an L1. see {L2MigrationFacet} for more details.
+ * Beanstalk-native assets contract owners can delegate their assets to a receiver address on L2,
  * in order to migrate their deposits, plots, fertilizer, and internal balances to L2.
  **/
 
-contract L1RecieverFacet is ReentrancyGuard {
+contract L1ReceiverFacet is ReentrancyGuard {
     // todo: update with correct external beans once L1 Beanstalk has been paused.
     uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
 
@@ -60,14 +60,14 @@ contract L1RecieverFacet is ReentrancyGuard {
     /**
      * @notice emitted when L1 Beans are migrated to L2.
      */
-    event L1BeansMigrated(address indexed reciever, uint256 amount, LibTransfer.To toMode);
+    event L1BeansMigrated(address indexed receiver, uint256 amount, LibTransfer.To toMode);
 
     /**
      * @notice emitted when an account recieves a deposit(s) from L1.
      */
     event L1DepositsMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] depositIds,
         uint256[] amounts,
         uint256[] bdvs
@@ -78,7 +78,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      */
     event L1PlotsMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] index,
         uint256[] pods
     );
@@ -88,7 +88,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      */
     event L1InternalBalancesMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         address[] tokens,
         uint256[] amounts
     );
@@ -98,7 +98,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      */
     event L1FertilizerMigrated(
         address indexed owner,
-        address indexed reciever,
+        address indexed receiver,
         uint256[] fertIds,
         uint128[] amounts,
         uint128 lastBpf
@@ -107,9 +107,9 @@ contract L1RecieverFacet is ReentrancyGuard {
     event L1OrdersMigrated(address indexed owner, address indexed receiver, L1PodOrder[] orders);
 
     /**
-     * @notice emitted when an account approves a reciever to recieve their assets.
+     * @notice emitted when an account approves a receiver to receive their assets.
      */
-    event RecieverApproved(address indexed owner, address reciever);
+    event ReceiverApproved(address indexed owner, address receiver);
 
     /**
      * @dev Claims the Grown Stalk for user.
@@ -124,10 +124,10 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice migrates `amount` of Beans to L2,
-     * issued to `reciever`.
+     * issued to `receiver`.
      */
     function recieveL1Beans(
-        address reciever,
+        address receiver,
         uint256 amount,
         LibTransfer.To toMode
     ) external nonReentrant {
@@ -138,31 +138,31 @@ contract L1RecieverFacet is ReentrancyGuard {
             EXTERNAL_L1_BEANS >= s.sys.l2Migration.migratedL1Beans,
             "L2Migration: exceeds maximum migrated"
         );
-        LibTransfer.mintToken(IBean(s.sys.tokens.bean), amount, reciever, toMode);
+        LibTransfer.mintToken(IBean(s.sys.tokens.bean), amount, receiver, toMode);
 
-        emit L1BeansMigrated(reciever, amount, toMode);
+        emit L1BeansMigrated(receiver, amount, toMode);
     }
 
     /**
-     * @notice approves a reciever to recieve the beanstalk native assets of a sender.
+     * @notice approves a receiver to receive the beanstalk native assets of a sender.
      * @dev only able to be called by a bridge contract, or the diamond owner.
      */
-    function approveReciever(address owner, address reciever) external nonReentrant {
+    function approveReceiver(address owner, address receiver) external nonReentrant {
         // To check that message came from L1, we check that the sender is
         // 1) the L1 contract's L2 alias (i.e came from the arbitrum bridge)
         // 2) the diamond owner.
         require(
             msg.sender == applyL1ToL2Alias(L1BEANSTALK) || msg.sender == LibDiamond.contractOwner(),
-            "L1RecieverFacet: Invalid Caller"
+            "L1ReceiverFacet: Invalid Caller"
         );
 
-        s.sys.l2Migration.account[owner].reciever = reciever;
+        s.sys.l2Migration.account[owner].receiver = receiver;
 
-        emit RecieverApproved(owner, reciever);
+        emit ReceiverApproved(owner, receiver);
     }
 
     /**
-     * @notice issues deposits to `reciever`. Uses a merkle tree in order to verify deposits.
+     * @notice issues deposits to `receiver`. Uses a merkle tree in order to verify deposits.
      * @dev global silo variables (`totalDeposited` and `totalDepositedBdv`) do not need to be updated,
      * as the deposits were included in the initial L2 Migration.
      */
@@ -174,10 +174,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external mowAll nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
-        address reciever = LibTractor._user();
+        address receiver = LibTractor._user();
         require(
-            account.reciever != address(0) && account.reciever == reciever,
-            "L2Migration: Invalid Reciever"
+            account.receiver != address(0) && account.receiver == receiver,
+            "L2Migration: Invalid Receiver"
         );
         require(!account.migratedDeposits, "L2Migration: Deposits have been migrated");
 
@@ -188,19 +188,19 @@ contract L1RecieverFacet is ReentrancyGuard {
         );
 
         // add migrated deposits to the account.
-        uint256 stalk = addMigratedDepositsToAccount(reciever, depositIds, amounts, bdvs);
+        uint256 stalk = addMigratedDepositsToAccount(receiver, depositIds, amounts, bdvs);
 
         // increment receiver stalk:
-        LibSilo.mintActiveStalk(reciever, stalk);
+        LibSilo.mintActiveStalk(receiver, stalk);
 
         // set migrated deposits to true.
         account.migratedDeposits = true;
 
-        emit L1DepositsMigrated(owner, reciever, depositIds, amounts, bdvs);
+        emit L1DepositsMigrated(owner, receiver, depositIds, amounts, bdvs);
     }
 
     /**
-     * @notice issues plots to `reciever`. Uses a merkle tree in order to verify plots.
+     * @notice issues plots to `receiver`. Uses a merkle tree in order to verify plots.
      * @dev global field variables (`totalUnharvested`) do not need to be updated,
      * as the plots were included in the initial L2 Migration.
      */
@@ -211,10 +211,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
-        address reciever = LibTractor._user();
+        address receiver = LibTractor._user();
         require(
-            account.reciever != address(0) && account.reciever == reciever,
-            "L2Migration: Invalid Reciever"
+            account.receiver != address(0) && account.receiver == receiver,
+            "L2Migration: Invalid Receiver"
         );
         require(!account.migratedPlots, "L2Migration: Plots have been migrated");
 
@@ -222,15 +222,15 @@ contract L1RecieverFacet is ReentrancyGuard {
         require(verifyPlotMerkleProof(owner, index, pods, proof), "L2Migration: Invalid plots");
 
         // add migrated plots to the account.
-        addMigratedPlotsToAccount(reciever, index, pods);
+        addMigratedPlotsToAccount(receiver, index, pods);
 
         // set migrated plots to true.
         account.migratedPlots = true;
-        emit L1PlotsMigrated(owner, reciever, index, pods);
+        emit L1PlotsMigrated(owner, receiver, index, pods);
     }
 
     /**
-     * @notice issues InternalBalances to `reciever`. Uses a merkle tree in order to verify balances.
+     * @notice issues InternalBalances to `receiver`. Uses a merkle tree in order to verify balances.
      * @dev global internal balance variables (`internalTokenBalanceTotal`) do not need to be updated,
      * as the internal balances were included in the initial L2 Migration.
      */
@@ -241,10 +241,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
-        address reciever = LibTractor._user();
+        address receiver = LibTractor._user();
         require(
-            account.reciever != address(0) && account.reciever == reciever,
-            "L2Migration: Invalid Reciever"
+            account.receiver != address(0) && account.receiver == receiver,
+            "L2Migration: Invalid Receiver"
         );
         require(
             !account.migratedInternalBalances,
@@ -258,15 +258,15 @@ contract L1RecieverFacet is ReentrancyGuard {
         );
 
         // add migrated internal balances to the account.
-        addMigratedInternalBalancesToAccount(reciever, tokens, amounts);
+        addMigratedInternalBalancesToAccount(receiver, tokens, amounts);
 
         // set migrated internal balances to true.
         account.migratedInternalBalances = true;
-        emit L1InternalBalancesMigrated(owner, reciever, tokens, amounts);
+        emit L1InternalBalancesMigrated(owner, receiver, tokens, amounts);
     }
 
     /**
-     * @notice issues Fertilizer to `reciever`. Uses a merkle tree in order to verify fertilizer.
+     * @notice issues Fertilizer to `receiver`. Uses a merkle tree in order to verify fertilizer.
      * @dev global internal balance variables (`fertilizer, unfertilizedIndex`, etc) do not need to be updated,
      * as the internal balances were included in the initial L2 Migration.
      */
@@ -278,10 +278,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
-        address reciever = LibTractor._user();
+        address receiver = LibTractor._user();
         require(
-            account.reciever != address(0) && account.reciever == reciever,
-            "L2Migration: Invalid Reciever"
+            account.receiver != address(0) && account.receiver == receiver,
+            "L2Migration: Invalid Receiver"
         );
         require(!account.migratedFert, "L2Migration: Fertilizer have been migrated");
 
@@ -292,11 +292,11 @@ contract L1RecieverFacet is ReentrancyGuard {
         );
 
         // add migrated internal balances to the account.
-        addMigratedFertilizerToAccount(reciever, fertIds, amounts, lastBpf);
+        addMigratedFertilizerToAccount(receiver, fertIds, amounts, lastBpf);
 
         // set migrated internal balances to true.
         account.migratedFert = true;
-        emit L1FertilizerMigrated(owner, reciever, fertIds, amounts, lastBpf);
+        emit L1FertilizerMigrated(owner, receiver, fertIds, amounts, lastBpf);
     }
 
     /**
@@ -313,10 +313,10 @@ contract L1RecieverFacet is ReentrancyGuard {
         bytes32[] calldata proof
     ) external nonReentrant {
         MigrationData storage account = s.sys.l2Migration.account[owner];
-        address reciever = LibTractor._user();
+        address receiver = LibTractor._user();
         require(
-            account.reciever != address(0) && account.reciever == reciever,
-            "L2Migration: Invalid Reciever"
+            account.receiver != address(0) && account.receiver == receiver,
+            "L2Migration: Invalid Receiver"
         );
         require(!account.migratedPodOrders, "L2Migration: Orders have been migrated");
 
@@ -324,12 +324,12 @@ contract L1RecieverFacet is ReentrancyGuard {
         require(verifyOrderProof(owner, orders, proof), "L2Migration: Invalid Order");
 
         // add migrated orders to account.
-        addPodOrders(reciever, orders);
+        addPodOrders(receiver, orders);
 
         // set migrated order to true.
         account.migratedPodOrders = true;
 
-        emit L1OrdersMigrated(owner, reciever, orders);
+        emit L1OrdersMigrated(owner, receiver, orders);
     }
     */
 
@@ -426,7 +426,7 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @notice adds the migrated deposits to the account.
      */
     function addMigratedDepositsToAccount(
-        address reciever,
+        address receiver,
         uint256[] calldata depositIds,
         uint256[] calldata amounts,
         uint256[] calldata bdvs
@@ -436,7 +436,7 @@ contract L1RecieverFacet is ReentrancyGuard {
             uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             int96 stemTip = LibTokenSilo.stemTipForToken(token);
             LibTokenSilo.addDepositToAccount(
-                reciever,
+                receiver,
                 token,
                 stem,
                 amounts[i],
@@ -454,12 +454,12 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @dev active field is hardcoded here to conform with L1 field id.
      */
     function addMigratedPlotsToAccount(
-        address reciever,
+        address receiver,
         uint256[] calldata index,
         uint256[] calldata pods
     ) internal {
         uint256 activeField = 0;
-        Field storage field = s.accts[reciever].fields[activeField];
+        Field storage field = s.accts[receiver].fields[activeField];
         for (uint i; i < index.length; i++) {
             field.plots[index[i]] = pods[i];
             field.plotIndexes.push(index[i]);
@@ -474,14 +474,14 @@ contract L1RecieverFacet is ReentrancyGuard {
      * only balances for the individual account.
      */
     function addMigratedInternalBalancesToAccount(
-        address reciever,
+        address receiver,
         address[] calldata tokens,
         uint256[] calldata amounts
     ) internal {
         for (uint i; i < tokens.length; i++) {
             IERC20 token = IERC20(tokens[i]);
-            s.accts[reciever].internalTokenBalance[token] += amounts[i];
-            emit LibBalance.InternalBalanceChanged(reciever, token, SafeCast.toInt256(amounts[i]));
+            s.accts[receiver].internalTokenBalance[token] += amounts[i];
+            emit LibBalance.InternalBalanceChanged(receiver, token, SafeCast.toInt256(amounts[i]));
         }
     }
 
@@ -489,14 +489,14 @@ contract L1RecieverFacet is ReentrancyGuard {
      * @notice adds the migrated Fertilizer to the account.
      */
     function addMigratedFertilizerToAccount(
-        address reciever,
+        address receiver,
         uint256[] calldata fertIds,
         uint128[] calldata amounts,
         uint128 lastBpf
     ) internal {
         for (uint i; i < fertIds.length; i++) {
             IFertilizer(s.sys.tokens.fertilizer).beanstalkMint(
-                reciever,
+                receiver,
                 fertIds[i],
                 amounts[i],
                 lastBpf
@@ -506,12 +506,12 @@ contract L1RecieverFacet is ReentrancyGuard {
 
     /**
      * @notice adds the migrated pod orders to the account.
-     * @dev `orderer` is updated to the reciever.
+     * @dev `orderer` is updated to the receiver.
      */
-    function addPodOrders(address reciever, L1PodOrder[] memory orders) internal {
+    function addPodOrders(address receiver, L1PodOrder[] memory orders) internal {
         for (uint i; i < orders.length; i++) {
-            // change orders[i].podOrder.orderer to the reciever.
-            orders[i].podOrder.orderer = reciever;
+            // change orders[i].podOrder.orderer to the receiver.
+            orders[i].podOrder.orderer = receiver;
 
             // calculate new order id from new receiver, and set mapping.
             bytes32 id = _getOrderId(orders[i].podOrder);
@@ -533,8 +533,8 @@ contract L1RecieverFacet is ReentrancyGuard {
         }
     }
 
-    function getReciever(address owner) external view returns (address) {
-        return s.sys.l2Migration.account[owner].reciever;
+    function getReceiver(address owner) external view returns (address) {
+        return s.sys.l2Migration.account[owner].receiver;
     }
 
     /**

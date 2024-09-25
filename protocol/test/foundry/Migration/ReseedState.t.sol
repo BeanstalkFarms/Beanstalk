@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
+import {L1ReceiverFacet} from "contracts/beanstalk/migration/L1ReceiverFacet.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import "forge-std/console.sol";
@@ -106,6 +106,10 @@ contract ReseedStateTest is TestHelper {
         l2Beanstalk.sunrise();
     }
 
+    function test_cases() public {
+        l2Beanstalk.getChangeFromCaseId(99);
+    }
+
     function test_pipelineConvert() public {
         int96[] memory stems = new int96[](1);
         stems[0] = 1;
@@ -120,6 +124,15 @@ contract ReseedStateTest is TestHelper {
             address(0),
             new IMockFBeanstalk.AdvancedPipeCall[](0)
         );
+    }
+
+    function test_executeFunction() public {
+        address user = address(0xaE70d5C0f69487Ac6608Bc2c9ADF212404b1B8C8);
+        vm.prank(user);
+        bytes
+            memory data = hex"36bfafbd000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000064f19ed6be000000000000000000000000bea00865405a02215b44eaadb853d0d2192fc29d00000000000000000000000000000000000000000000087e61a5c19ef99f2f8f00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000";
+        (bool success, bytes memory result) = address(l2Beanstalk).call(data);
+        require(success && result.length > 0, "call failed");
     }
 
     function test_pipelineConvertRealUserLPToBean() public {

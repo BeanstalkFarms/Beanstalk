@@ -740,7 +740,7 @@ contract MockSeasonFacet is SeasonFacet {
         emit DeltaB(instDeltaB);
     }
 
-    function setRecieverForL1Migration(address owner, address reciever) external {
-        s.sys.l2Migration.account[owner].reciever = reciever;
+    function setReceiverForL1Migration(address owner, address receiver) external {
+        s.sys.l2Migration.account[owner].receiver = receiver;
     }
 }

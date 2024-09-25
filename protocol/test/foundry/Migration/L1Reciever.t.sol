@@ -3,19 +3,19 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
+import {L1ReceiverFacet} from "contracts/beanstalk/migration/L1ReceiverFacet.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
 
 /**
- * @notice Tests the functionality of the L1RecieverFacet.
+ * @notice Tests the functionality of the L1ReceiverFacet.
  */
 
 interface IERC1555 {
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract L1RecieverFacetTest is Order, TestHelper {
+contract L1ReceiverFacetTest is Order, TestHelper {
     // Offset arbitrum uses for corresponding L2 address
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
 
@@ -52,7 +52,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         OWNER = address(0x153072C11d6Dffc0f1e5489bC7C996c219668c67);
         RECIEVER = applyL1ToL2Alias(OWNER);
 
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -63,7 +63,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         ) = getMockDepositData();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
+        L1ReceiverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
 
         assertEq(bs.balanceOfStalk(RECIEVER), 9278633023225688000000);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
@@ -74,13 +74,13 @@ contract L1RecieverFacetTest is Order, TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Deposits have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
+        L1ReceiverFacet(BEANSTALK).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
     }
 
     function test_L2MigratePlots() public {
         OWNER = address(0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -90,20 +90,20 @@ contract L1RecieverFacetTest is Order, TestHelper {
         ) = getMockPlot();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
         uint256 amt = bs.plot(RECIEVER, 0, index[0]);
         assertEq(amt, pods[0]);
 
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Plots have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
     }
 
     function test_L2MigrateInternalBalances() public {
         OWNER = address(0x20DB9F8c46f9cD438Bfd65e09297350a8CDB0F95);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -113,19 +113,19 @@ contract L1RecieverFacetTest is Order, TestHelper {
         ) = getMockInternalBalance();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
         uint256 amount = bs.getInternalBalance(RECIEVER, tokens[0]);
         assertEq(amount, amounts[0]);
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Internal Balances have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
     }
 
     function test_L2MigrateFert() public {
         OWNER = address(0x735CAB9B02Fd153174763958FFb4E0a971DD7f29);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -136,35 +136,35 @@ contract L1RecieverFacetTest is Order, TestHelper {
         ) = getMockFertilizer();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
 
         assertEq(IERC1555(fertilizerAddress).balanceOf(RECIEVER, ids[0]), amounts[0]);
 
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Fertilizer have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
     /*
     // commented out because no pod orders owned by contracts
     function test_L2MigratePodOrder() public {
-        bs.setRecieverForL1Migration(address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4), RECIEVER);
+        bs.setReceiverForL1Migration(address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4), RECIEVER);
 
         (
             address owner,
-            L1RecieverFacet.L1PodOrder[] memory podOrders,
+            L1ReceiverFacet.L1PodOrder[] memory podOrders,
             bytes32[] memory proof
         ) = getMockPodOrder();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePodOrders(
+        L1ReceiverFacet(BEANSTALK).issuePodOrders(
             address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4),
             podOrders,
             proof
         );
 
-        // update pod order with reciever to verify id:
+        // update pod order with receiver to verify id:
         podOrders[0].podOrder.orderer = RECIEVER;
 
         bytes32 id = _getOrderId(podOrders[0].podOrder);
@@ -174,27 +174,27 @@ contract L1RecieverFacetTest is Order, TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Orders have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
+        L1ReceiverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
     }*/
 
     /**
      * @notice verifies only the owner or bridge can call the migration functions.
      */
-    function test_L2MigrateInvalidReciever(address reciever) public {
-        vm.prank(reciever);
-        vm.expectRevert("L1RecieverFacet: Invalid Caller");
-        bs.approveReciever(OWNER, reciever);
+    function test_L2MigrateInvalidReceiver(address receiver) public {
+        vm.prank(receiver);
+        vm.expectRevert("L1ReceiverFacet: Invalid Caller");
+        bs.approveReceiver(OWNER, receiver);
 
         uint256 snapshot = vm.snapshot();
         address aliasedAddress = applyL1ToL2Alias(BEANSTALK);
         vm.prank(aliasedAddress);
-        bs.approveReciever(OWNER, reciever);
-        assertEq(bs.getReciever(OWNER), reciever);
+        bs.approveReceiver(OWNER, receiver);
+        assertEq(bs.getReceiver(OWNER), receiver);
 
         vm.revertTo(snapshot);
         vm.prank(users[0]);
-        bs.approveReciever(OWNER, reciever);
-        assertEq(bs.getReciever(OWNER), reciever);
+        bs.approveReceiver(OWNER, receiver);
+        assertEq(bs.getReceiver(OWNER), receiver);
     }
 
     /**
@@ -203,7 +203,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
     function test_L2MigrateInvalidPlot() public {
         OWNER = address(0x21DE18B6A8f78eDe6D16C50A167f6B222DC08DF7);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -216,13 +216,13 @@ contract L1RecieverFacetTest is Order, TestHelper {
 
         vm.expectRevert("L2Migration: Invalid plots");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(BEANSTALK).issuePlots(owner, index, pods, proof);
     }
 
     function test_L2MigrateInvalidInternalBalance() public {
         OWNER = address(0x20DB9F8c46f9cD438Bfd65e09297350a8CDB0F95);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -235,13 +235,13 @@ contract L1RecieverFacetTest is Order, TestHelper {
 
         vm.expectRevert("L2Migration: Invalid internal balances");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(BEANSTALK).issueInternalBalances(owner, tokens, amounts, proof);
     }
 
     function test_L2MigrateInvalidFert() public {
         OWNER = address(0x735CAB9B02Fd153174763958FFb4E0a971DD7f29);
         RECIEVER = applyL1ToL2Alias(OWNER);
-        bs.setRecieverForL1Migration(OWNER, RECIEVER);
+        bs.setReceiverForL1Migration(OWNER, RECIEVER);
 
         (
             address owner,
@@ -256,7 +256,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Invalid Fertilizer");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(BEANSTALK).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
     /*
@@ -264,10 +264,10 @@ contract L1RecieverFacetTest is Order, TestHelper {
     function test_L2MigrateInvalidPodOrder() public {
         (
             address owner,
-            L1RecieverFacet.L1PodOrder[] memory podOrders,
+            L1ReceiverFacet.L1PodOrder[] memory podOrders,
             bytes32[] memory proof
         ) = getMockPodOrder();
-        bs.setRecieverForL1Migration(owner, RECIEVER);
+        bs.setReceiverForL1Migration(owner, RECIEVER);
 
         // update pod orderer
         podOrders[0].podOrder.orderer = RECIEVER;
@@ -275,7 +275,7 @@ contract L1RecieverFacetTest is Order, TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Invalid Order");
         vm.prank(RECIEVER);
-        L1RecieverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
+        L1ReceiverFacet(BEANSTALK).issuePodOrders(owner, podOrders, proof);
     }*/
 
     // test helpers
@@ -393,12 +393,12 @@ contract L1RecieverFacetTest is Order, TestHelper {
 
     /*function getMockPodOrder()
         internal
-        returns (address, L1RecieverFacet.L1PodOrder[] memory, bytes32[] memory)
+        returns (address, L1ReceiverFacet.L1PodOrder[] memory, bytes32[] memory)
     {
         address account = address(0x000000009d3a9e5C7C620514E1F36905c4eb91e4);
 
-        L1RecieverFacet.L1PodOrder[] memory podOrders = new L1RecieverFacet.L1PodOrder[](1);
-        podOrders[0] = L1RecieverFacet.L1PodOrder(
+        L1ReceiverFacet.L1PodOrder[] memory podOrders = new L1ReceiverFacet.L1PodOrder[](1);
+        podOrders[0] = L1ReceiverFacet.L1PodOrder(
             Order.PodOrder(account, 1, 100000, 1000000000000, 1000000),
             1000000
         );
