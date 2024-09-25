@@ -120,32 +120,6 @@ task("sunriseArb", async function () {
   );
 });
 
-task("addReseedFacets", async function () {
-  let l2bcm = await impersonateSigner("0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69");
-  const l2BeanstalkAddress = "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70";
-  let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
-  await mintEth(l2bcm.address);
-  await mintEth(beanstalkDeployer.address);
-  // transfer ownership to the l2bcm.
-  await upgradeWithNewFacets({
-    diamondAddress: l2BeanstalkAddress,
-    facetNames: ["OwnershipFacet"],
-    initFacetName: "ReseedTransferOwnership",
-    initArgs: [l2bcm.address],
-    bip: false,
-    verbose: false,
-    account: beanstalkDeployer,
-    checkGas: true,
-    initFacetNameInfo: "ReseedTransferOwnership"
-  });
-  // claim ownership of the l2 beanstalk.
-  await (await getBeanstalk(l2BeanstalkAddress)).connect(l2bcm).claimOwnership();
-  // perform the diamond cut.
-  await reseed10(l2bcm, l2BeanstalkAddress, false, true);
-  console.log("-----------------------------------");
-  console.log("\nDiamond cut complete: Facets added to L2 Beanstalk.");
-});
-
 task("getTime", async function () {
   beanstalk = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
