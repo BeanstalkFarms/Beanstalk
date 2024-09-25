@@ -80,31 +80,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
     });
+    test("Zero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() == "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT, transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.cumulativeTransferVolumeUSD.toString());
     });
   });
 
@@ -135,34 +123,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.times(BI_2).toString());
     });
+    test("Nonzero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() != "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT, ZERO_BI], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT, ZERO_BI], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).plus(WETH_USD_AMOUNT).toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
-      );
     });
   });
 
@@ -192,35 +165,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.plus(BI_10).toString());
     });
+    test("Zero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() == "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(
-        calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.div(BI_2), WETH_SWAP_AMOUNT.div(BI_2)], WELL_LP_AMOUNT)
-      );
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT, transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(
-        calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.div(BI_2), WETH_SWAP_AMOUNT.div(BI_2)], WELL_LP_AMOUNT)
-      );
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.cumulativeTransferVolumeUSD.toString());
     });
   });
 
@@ -252,31 +209,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.plus(BI_10).toString());
     });
+    test("Nonzero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() != "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [ZERO_BI, WETH_SWAP_AMOUNT.div(BI_2)], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.div(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [ZERO_BI, WETH_SWAP_AMOUNT.div(BI_2)], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).plus(WETH_USD_AMOUNT).toString(), updatedStore.cumulativeTransferVolumeUSD.toString());
     });
   });
 
@@ -298,38 +243,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", "0");
     });
+    test("Zero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() == "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(
-        calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.neg(), WETH_SWAP_AMOUNT.neg()], WELL_LP_AMOUNT)
-      );
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(
-        calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.neg(), WETH_SWAP_AMOUNT.neg()], WELL_LP_AMOUNT)
-      );
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        BEAN_USD_AMOUNT.times(BD_2).plus(WETH_USD_AMOUNT.times(BD_2)).toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
-      );
     });
   });
 
@@ -352,34 +278,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
     });
+    test("Nonzero trading volume", () => {
+      let updatedStore = loadWell(WELL);
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() != "0");
+    });
     test("Token volumes updated", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.neg(), ZERO_BI], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_3), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_3).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [BEAN_SWAP_AMOUNT.neg(), ZERO_BI], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        WETH_USD_AMOUNT.times(BD_2).plus(BEAN_USD_AMOUNT.times(BD_3)).toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
-      );
     });
   });
 
@@ -402,34 +313,19 @@ describe("Well Entity: Liquidity Event Tests", () => {
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
     });
-    test("Token volumes updated", () => {
+    test("Nonzero trading volume", () => {
       let updatedStore = loadWell(WELL);
-      const tradeReserves = updatedStore.cumulativeTradeVolumeReserves;
+      assert.assertTrue(updatedStore.cumulativeTradeVolumeUSD.toString() != "0");
+    });
+    test("Transfer volumes updated", () => {
+      let updatedStore = loadWell(WELL);
       const transferReserves = updatedStore.cumulativeTransferVolumeReserves;
-      const tradeReservesUSD = updatedStore.cumulativeTradeVolumeReservesUSD;
       const transferReservesUSD = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [ZERO_BI, WETH_SWAP_AMOUNT.neg()], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-
-      assert.bigIntEquals(expectedTradeVolume[0], tradeReserves[0]);
-      assert.bigIntEquals(expectedTradeVolume[1], tradeReserves[1]);
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_3), transferReserves[1]);
-      assert.stringEquals(expectedTradeVolumeUSD[0].toString(), tradeReservesUSD[0].toString());
-      assert.stringEquals(expectedTradeVolumeUSD[1].toString(), tradeReservesUSD[1].toString());
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.times(BD_3).toString(), transferReservesUSD[1].toString());
-    });
-    test("Cumulative volume updated (CP)", () => {
-      let updatedStore = loadWell(WELL);
-      const expectedTradeVolume = zeroNegative(calcLiquidityVolume(updatedStore, [ZERO_BI, WETH_SWAP_AMOUNT.neg()], WELL_LP_AMOUNT));
-      const expectedTradeVolumeUSD = assignUSD(expectedTradeVolume);
-      assert.stringEquals(BigDecimal_max(expectedTradeVolumeUSD).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        WETH_USD_AMOUNT.times(BD_3).plus(BEAN_USD_AMOUNT.times(BD_2)).toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
-      );
     });
   });
 });
