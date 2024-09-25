@@ -61,7 +61,7 @@ contract SeasonGettersFacet {
     /**
      * @notice Returns the block during which the current Season started.
      */
-    function sunriseBlock() external view returns (uint32) {
+    function sunriseBlock() external view returns (uint64) {
         return s.sys.season.sunriseBlock;
     }
 

@@ -189,7 +189,7 @@ struct Season {
     uint32 rainStart;
     bool raining;
     bool fertilizing;
-    uint32 sunriseBlock;
+    uint64 sunriseBlock;
     bool abovePeg;
     uint16 stemStartSeason;
     uint16 stemScaleSeason;

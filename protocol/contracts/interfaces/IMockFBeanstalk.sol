@@ -198,7 +198,7 @@ interface IMockFBeanstalk {
         uint32 rainStart;
         bool raining;
         bool fertilizing;
-        uint32 sunriseBlock;
+        uint64 sunriseBlock;
         bool abovePeg;
         uint16 stemStartSeason;
         uint16 stemScaleSeason;
@@ -1807,7 +1807,7 @@ interface IMockFBeanstalk {
 
     function season() external view returns (uint32);
 
-    function seasonTime() external view returns (uint32);
+    function seasonTime() external view returns (uint64);
 
     function seedGaugeSunSunrise(int256 deltaB, uint256 caseId, bool oracleFailure) external;
 
@@ -1902,7 +1902,7 @@ interface IMockFBeanstalk {
 
     function sunrise() external payable returns (uint256);
 
-    function sunriseBlock() external view returns (uint32);
+    function sunriseBlock() external view returns (uint64);
 
     function supportsInterface(bytes4 _interfaceId) external view returns (bool);
 
