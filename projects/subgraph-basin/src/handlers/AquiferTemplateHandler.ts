@@ -1,11 +1,10 @@
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
 import { BoreWell } from "../../generated/Basin-ABIs/Aquifer";
-import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import { Well } from "../../generated/templates";
-import { loadOrCreateAquifer } from "../utils/Aquifer";
-import { loadOrCreatePump } from "../utils/Pump";
-import { loadOrCreateToken } from "../utils/Token";
-import { createWell, loadOrCreateWellFunction } from "../utils/Well";
+import { loadOrCreatePump } from "../entities/Pump";
+import { loadOrCreateAquifer } from "../entities/Aquifer";
+import { createWell, loadOrCreateWellFunction } from "../entities/Well";
+import { loadOrCreateToken } from "../entities/Token";
 
 export function handleBoreWell(event: BoreWell): void {
   if (event.params.well == Address.fromString("0x875b1da8dcba757398db2bc35043a72b4b62195d")) {

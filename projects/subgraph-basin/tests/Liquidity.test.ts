@@ -1,6 +1,5 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadWell } from "../src/utils/Well";
 import {
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
@@ -19,11 +18,12 @@ import {
   mockSync
 } from "./helpers/Liquidity";
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { BigDecimal_max, BigDecimal_min } from "../../subgraph-core/utils/ArrayMath";
-import { calcLiquidityVolume } from "../src/utils/VolumeCP";
-import { loadToken } from "../src/utils/Token";
+import { BigDecimal_max } from "../../subgraph-core/utils/ArrayMath";
+import { calcLiquidityVolume } from "../src/utils/Volume";
 import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { loadToken } from "../src/entities/Token";
+import { loadWell } from "../src/entities/Well";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);

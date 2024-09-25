@@ -48,7 +48,7 @@ dataSources:
       eventHandlers:
         - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
-      file: ../src/templates/AquiferHandler.ts
+      file: ../src/handlers/AquiferTemplateHandler.ts
   - kind: ethereum/contract
     name: Beanstalk
     network: arbitrum-one
@@ -68,7 +68,7 @@ dataSources:
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
-      file: ../src/BeanstalkHandler.ts
+      file: ../src/handlers/BeanstalkHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well
@@ -101,7 +101,7 @@ templates:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
-      file: ../src/WellHandler.ts
+      file: ../src/handlers/WellHandler.ts
 # features:
 #   - grafting
 # graft:

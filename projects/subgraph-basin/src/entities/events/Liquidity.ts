@@ -1,8 +1,9 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Deposit, Withdraw } from "../../generated/schema";
-import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Sync } from "../../generated/Basin-ABIs/Well";
-import { getBigDecimalArrayTotal } from "../../../subgraph-core/utils/Decimals";
-import { getCalculatedReserveUSDValues, loadWell } from "./Well";
+import { Deposit, Withdraw } from "../../../generated/schema";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Sync } from "../../../generated/Basin-ABIs/Well";
+import { getBigDecimalArrayTotal } from "../../../../subgraph-core/utils/Decimals";
+import { getCalculatedReserveUSDValues } from "../../utils/Well";
+import { loadWell } from "../Well";
 
 export function recordAddLiquidityEvent(event: AddLiquidity): void {
   let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();

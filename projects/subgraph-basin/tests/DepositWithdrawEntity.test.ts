@@ -1,7 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadWell } from "../src/utils/Well";
 import {
   ACCOUNT_ENTITY_TYPE,
   BEAN_SWAP_AMOUNT,
@@ -17,6 +16,7 @@ import { mockAddLiquidity, mockRemoveLiquidity, mockRemoveLiquidityOneBean, load
 import { loadDeposit } from "./helpers/Liquidity";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { loadWell } from "../src/entities/Well";
 
 describe("Deposit/Withdraw Entities", () => {
   beforeEach(() => {

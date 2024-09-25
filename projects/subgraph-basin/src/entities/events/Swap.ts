@@ -1,5 +1,5 @@
-import { Shift, Swap } from "../../generated/Basin-ABIs/Well";
-import { Swap as SwapEvent } from "../../generated/schema";
+import { Shift, Swap } from "../../../generated/Basin-ABIs/Well";
+import { Swap as SwapEvent } from "../../../generated/schema";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 
 export function recordSwapEvent(event: Swap): void {

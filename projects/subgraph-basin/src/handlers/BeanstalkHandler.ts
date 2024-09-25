@@ -1,9 +1,9 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { Sunrise } from "../generated/Basin-ABIs/Beanstalk";
-import { loadOrCreateAquifer } from "./utils/Aquifer";
-import { checkForSnapshot } from "./utils/Well";
-import { getAquifer } from "../../subgraph-core/constants/RuntimeConstants";
-import { v } from "./utils/constants/Version";
+import { v } from "../utils/constants/Version";
+import { Sunrise } from "../../generated/Basin-ABIs/Beanstalk";
+import { loadOrCreateAquifer } from "../entities/Aquifer";
+import { checkForSnapshot } from "../utils/Well";
+import { getAquifer } from "../../../subgraph-core/constants/RuntimeConstants";
 
 export function handleSunrise(event: Sunrise): void {
   // Right now this is a manual list of aquifers that are checked for deployments and wells updated

@@ -1,20 +1,25 @@
-import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync, Transfer } from "../generated/Basin-ABIs/Well";
-import { loadOrCreateAccount } from "./utils/Account";
-import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { recordAddLiquidityEvent, recordRemoveLiquidityEvent, recordRemoveLiquidityOneEvent, recordSyncEvent } from "./utils/Liquidity";
-import { recordSwapEvent, recordShiftEvent } from "./utils/Swap";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../../generated/Basin-ABIs/Well";
+import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { loadWell } from "../entities/Well";
+import { loadOrCreateAccount } from "../entities/Account";
 import {
   checkForSnapshot,
   incrementWellDeposit,
   incrementWellSwap,
   incrementWellWithdraw,
-  loadWell,
   updateWellLiquidityTokenBalance,
   updateWellReserves,
   updateWellTokenUSDPrices
-} from "./utils/Well";
-import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { updateWellVolumesAfterLiquidity, updateWellVolumesAfterSwap } from "./utils/VolumeCP";
+} from "../utils/Well";
+import { updateWellVolumesAfterLiquidity, updateWellVolumesAfterSwap } from "../utils/Volume";
+import {
+  recordAddLiquidityEvent,
+  recordRemoveLiquidityEvent,
+  recordRemoveLiquidityOneEvent,
+  recordSyncEvent
+} from "../entities/events/Liquidity";
+import { recordShiftEvent, recordSwapEvent } from "../entities/events/Swap";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   let well = loadWell(event.address);

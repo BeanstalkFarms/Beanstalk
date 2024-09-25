@@ -1,48 +1,9 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
-import { Token } from "../../generated/schema";
 import { BI_MAX, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { getBeanPrice } from "./BeanstalkPrice";
 import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
-
-export function loadOrCreateToken(tokenAddress: Address): Token {
-  let token = Token.load(tokenAddress);
-  if (token == null) {
-    let tokenContract = ERC20.bind(tokenAddress);
-    token = new Token(tokenAddress);
-
-    let nameCall = tokenContract.try_name();
-    if (nameCall.reverted) {
-      token.name = "";
-    } else {
-      token.name = nameCall.value;
-    }
-
-    let symbolCall = tokenContract.try_symbol();
-    if (symbolCall.reverted) {
-      token.symbol = "";
-    } else {
-      token.symbol = symbolCall.value;
-    }
-
-    let decimalCall = tokenContract.try_decimals();
-    if (decimalCall.reverted) {
-      token.decimals = 18; // Default to 18 decimals
-    } else {
-      token.decimals = decimalCall.value;
-    }
-
-    token.lastPriceUSD = ZERO_BD;
-    token.lastPriceBlockNumber = ZERO_BI;
-    token.save();
-  }
-  return token as Token;
-}
-
-export function loadToken(tokenAddress: Address): Token {
-  return Token.load(tokenAddress) as Token;
-}
+import { loadToken } from "../entities/Token";
 
 export function getBeanPriceUDSC(): BigDecimal {
   let token = loadToken(getProtocolToken(v(), BI_MAX));

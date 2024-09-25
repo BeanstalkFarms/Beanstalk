@@ -1,6 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadWell } from "../src/utils/Well";
+import { loadWell } from "../src/entities/Well";
 import {
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
