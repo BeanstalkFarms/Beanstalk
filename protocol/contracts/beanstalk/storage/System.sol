@@ -297,10 +297,11 @@ struct WhitelistStatus {
  *  uint256 currentGaugePoints,
  *  uint256 optimalPercentDepositedBdv,
  *  uint256 percentOfDepositedBdv
+ *  bytes data
  *  ) external view returns (uint256);
  * ```
  * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to
- * an external view Beanstalk function with the following signature `function liquidityWeight()`
+ * an external view Beanstalk function with the following signature `function liquidityWeight(bytes)`
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
