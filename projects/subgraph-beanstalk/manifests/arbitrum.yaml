@@ -11,8 +11,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
-      endBlock: 256368454 # Reseed Completion
+      startBlock: 256715188 # Reseed
+      endBlock: 256715283 # Reseed Completion
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -45,8 +45,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
-      endBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
+      endBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -67,8 +67,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
-      endBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
+      endBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -89,8 +89,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368454 # Reseed Completion
-      endBlock: 256368454 # Reseed Completion
+      startBlock: 256715283 # Reseed Completion
+      endBlock: 256715283 # Reseed Completion
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -115,7 +115,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -156,7 +156,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -195,7 +195,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -226,7 +226,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -259,7 +259,7 @@ dataSources:
     source:
       address: "0xFEFEFECA5375630d6950F40e564A27f6074845B5"
       abi: Fertilizer
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -283,7 +283,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -308,7 +308,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -341,7 +341,7 @@ dataSources:
     source:
       address: "0xBEA0005B8599265D41256905A9B3073D397812E4"
       abi: ERC20
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -364,7 +364,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 256368013 # Reseed
+      startBlock: 256715188 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
