@@ -1,8 +1,9 @@
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Well } from "../../generated/schema";
 import { loadWell } from "../entities/Well";
 import { loadToken } from "../entities/Token";
+import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
 
 // Constant product volume calculations
 
@@ -40,27 +41,38 @@ export function updateWellVolumesAfterLiquidity(
   wellAddress: Address,
   tokens: Address[],
   amounts: BigInt[],
-  timestamp: BigInt,
-  blockNumber: BigInt
+  deltaLpSupply: BigInt,
+  block: ethereum.Block
 ): void {
   let well = loadWell(wellAddress);
   const wellTokens = well.tokens.map<Address>((t) => Address.fromBytes(t));
 
   // Determines which tokens were bough/sold and how much
-  const tradeAmount = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
+  const tradeAmount = calcLiquidityVolume(well, padTokenAmounts(wellTokens, tokens, amounts), deltaLpSupply);
   const deltaTransferVolumeReserves = padTokenAmounts(wellTokens, tokens, amounts);
 
   updateVolumeStats(well, tradeAmount, deltaTransferVolumeReserves);
 
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
 
   well.save();
 }
 
-export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
-  // TODO:
-  return emptyBigIntArray(2);
+/**
+ * Calculates the token volume resulting from a liquidity add/remove operation.
+ * The reserves corresponding to the amount of new lp tokens are compared with deltaReserves,
+ * the difference is the amount of trading volume. In a proportional liquidity add, the values will be identical.
+ *
+ * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
+ */
+export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
+  const wellFn = well.wellFunction.load()[0];
+  const wellFnContract = WellFunction.bind(wellFn.target);
+  const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
+
+  const tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];
+  return tokenAmountBought;
 }
 
 // Updates all volume statistics associated with this well using the provided values

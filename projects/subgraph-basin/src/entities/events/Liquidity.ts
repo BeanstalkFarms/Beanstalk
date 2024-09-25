@@ -31,6 +31,32 @@ export function recordAddLiquidityEvent(event: AddLiquidity): void {
   deposit.save();
 }
 
+export function recordSyncEvent(event: Sync, deltaReserves: BigInt[]): void {
+  let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let deposit = new Deposit(id);
+  let receipt = event.receipt;
+  let well = loadWell(event.address);
+
+  deposit.hash = event.transaction.hash;
+  deposit.nonce = event.transaction.nonce;
+  deposit.logIndex = event.logIndex.toI32();
+  deposit.gasLimit = event.transaction.gasLimit;
+  if (receipt !== null) {
+    deposit.gasUsed = receipt.gasUsed;
+  }
+  deposit.gasPrice = event.transaction.gasPrice;
+  deposit.eventType = "SYNC";
+  deposit.account = event.transaction.from;
+  deposit.well = event.address;
+  deposit.blockNumber = event.block.number;
+  deposit.timestamp = event.block.timestamp;
+  deposit.liquidity = event.params.lpAmountOut;
+  deposit.tokens = well.tokens;
+  deposit.reserves = deltaReserves;
+  deposit.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, deltaReserves));
+  deposit.save();
+}
+
 export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
   let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let withdraw = new Withdraw(id);
@@ -81,30 +107,4 @@ export function recordRemoveLiquidityOneEvent(event: RemoveLiquidityOneToken, to
   withdraw.reserves = tokenAmounts;
   withdraw.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, tokenAmounts));
   withdraw.save();
-}
-
-export function recordSyncEvent(event: Sync, deltaReserves: BigInt[]): void {
-  let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let deposit = new Deposit(id);
-  let receipt = event.receipt;
-  let well = loadWell(event.address);
-
-  deposit.hash = event.transaction.hash;
-  deposit.nonce = event.transaction.nonce;
-  deposit.logIndex = event.logIndex.toI32();
-  deposit.gasLimit = event.transaction.gasLimit;
-  if (receipt !== null) {
-    deposit.gasUsed = receipt.gasUsed;
-  }
-  deposit.gasPrice = event.transaction.gasPrice;
-  deposit.eventType = "SYNC";
-  deposit.account = event.transaction.from;
-  deposit.well = event.address;
-  deposit.blockNumber = event.block.number;
-  deposit.timestamp = event.block.timestamp;
-  deposit.liquidity = event.params.lpAmountOut;
-  deposit.tokens = well.tokens;
-  deposit.reserves = deltaReserves;
-  deposit.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, deltaReserves));
-  deposit.save();
 }

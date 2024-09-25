@@ -2,7 +2,7 @@ import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 /**
- * MANUAL CALCULATION IS DEPRECATED. See <TODO: insert new method location here>
+ * MANUAL CALCULATION IS DEPRECATED. See ../Volume:calcLiquidityVolume
  *
  * Calculates the amount of volume resulting from a liquidity add operation.
  * The methodology is as follows:
