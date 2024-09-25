@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import {
   loadSilo,
   loadSiloAsset,
@@ -124,7 +124,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
         toDecimal(whitelistSettings[i].stalkEarnedPerSeason),
         toDecimal(beanGrownStalk),
         silo.stalk,
-        silo.seeds
+        silo.grownStalkPerSeason
       );
       apys.push(tokenAPY);
     }

@@ -11429,12 +11429,6 @@
         "type": "address"
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
         "indexed": false,
         "internalType": "uint256",
         "name": "stalk",
@@ -11445,18 +11439,6 @@
         "internalType": "uint256",
         "name": "roots",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "bdv",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "int96",
-        "name": "lastStem",
-        "type": "int96"
       }
     ],
     "name": "MigratedAccountStatus",

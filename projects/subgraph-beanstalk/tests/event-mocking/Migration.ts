@@ -35,30 +35,17 @@ export function createAddMigratedDepositEvent(
   return event as AddMigratedDeposit;
 }
 
-export function createMigratedAccountStatus(
-  account: Address,
-  token: Address,
-  stalk: BigInt,
-  roots: BigInt,
-  bdv: BigInt,
-  lastStem: BigInt
-): MigratedAccountStatus {
+export function createMigratedAccountStatus(account: Address, stalk: BigInt, roots: BigInt): MigratedAccountStatus {
   let event = changetype<MigratedAccountStatus>(mockContractEvent(BEANSTALK_ARB));
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("account", ethereum.Value.fromAddress(account));
-  let param2 = new ethereum.EventParam("token", ethereum.Value.fromAddress(token));
-  let param3 = new ethereum.EventParam("stalk", ethereum.Value.fromUnsignedBigInt(stalk));
-  let param4 = new ethereum.EventParam("roots", ethereum.Value.fromUnsignedBigInt(roots));
-  let param5 = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(bdv));
-  let param6 = new ethereum.EventParam("lastStem", ethereum.Value.fromUnsignedBigInt(lastStem));
+  let param2 = new ethereum.EventParam("stalk", ethereum.Value.fromUnsignedBigInt(stalk));
+  let param3 = new ethereum.EventParam("roots", ethereum.Value.fromUnsignedBigInt(roots));
 
   event.parameters.push(param1);
   event.parameters.push(param2);
   event.parameters.push(param3);
-  event.parameters.push(param4);
-  event.parameters.push(param5);
-  event.parameters.push(param6);
 
   return event as MigratedAccountStatus;
 }

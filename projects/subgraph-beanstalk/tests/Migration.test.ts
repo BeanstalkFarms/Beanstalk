@@ -118,17 +118,13 @@ describe("Beanstalk 3 Migration", () => {
     test("MigratedAccountStatus", () => {
       const stalk1 = BigInt.fromU32(100).times(BI_10.pow(16));
       const roots1 = BigInt.fromU32(100).times(BI_10.pow(22));
-      const bdv1 = BigInt.fromU32(30).times(BI_10.pow(6));
-      const stem1 = BigInt.fromU32(248672);
-      handleMigratedAccountStatus(createMigratedAccountStatus(account, BEAN_ERC20, stalk1, roots1, bdv1, stem1));
+      handleMigratedAccountStatus(createMigratedAccountStatus(account, stalk1, roots1));
       assert.fieldEquals("Silo", account.toHexString(), "stalk", stalk1.toString());
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "stalk", stalk1.toString());
 
       const stalk2 = BigInt.fromU32(700).times(BI_10.pow(16));
       const roots2 = BigInt.fromU32(700).times(BI_10.pow(22));
-      const bdv2 = BigInt.fromU32(130).times(BI_10.pow(6));
-      const stem2 = BigInt.fromU32(2458672);
-      handleMigratedAccountStatus(createMigratedAccountStatus(account, UNRIPE_BEAN, stalk2, roots2, bdv2, stem2));
+      handleMigratedAccountStatus(createMigratedAccountStatus(account, stalk2, roots2));
       assert.fieldEquals("Silo", account.toHexString(), "stalk", stalk1.plus(stalk2).toString());
       assert.fieldEquals("Silo", BEANSTALK.toHexString(), "stalk", stalk1.plus(stalk2).toString());
     });
