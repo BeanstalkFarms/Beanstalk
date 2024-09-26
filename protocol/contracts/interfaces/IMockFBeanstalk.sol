@@ -193,7 +193,6 @@ interface IMockFBeanstalk {
     struct Season {
         uint32 current;
         uint32 lastSop;
-        uint8 withdrawSeasons;
         uint32 lastSopSeason;
         uint32 rainStart;
         bool raining;
