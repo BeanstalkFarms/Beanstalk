@@ -1,13 +1,14 @@
-import { DateTime } from 'luxon';
+import { Duration } from 'luxon';
 import { useCallback, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
 import useSdk, { useRefreshSeeds } from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { getMorningResult, getNextExpectedSunrise, parseSeasonResult } from '.';
 import {
   resetSun,
@@ -19,6 +20,13 @@ import {
   updateSeasonResult,
   updateSeasonTime,
 } from './actions';
+
+const sunriseRemainingAtom = atom<Duration>(getNextExpectedSunrise().diffNow());
+
+export const useRemainingUntilSunrise = () => {
+  const remaining = useAtomValue(sunriseRemainingAtom);
+  return remaining;
+};
 
 export const useSun = () => {
   const dispatch = useDispatch();
@@ -80,35 +88,43 @@ export const useSun = () => {
   return [fetch, clear] as const;
 };
 
+const useUpdateRemainingUntilSunrise = () => {
+  // use atom here instead of updating the redux tree.
+  const setRemaining = useSetAtom(sunriseRemainingAtom);
+  const dispatch = useDispatch();
+
+  const next = useAppSelector((s) => s._beanstalk.sun.sunrise.next);
+  const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
+
+  useEffect(() => {
+    if (awaiting === false) {
+      const i = setInterval(() => {
+        const _remaining = next.diffNow();
+        if (_remaining.as('seconds') <= 0) {
+          dispatch(setAwaitingSunrise(true));
+        } else {
+          setRemaining(_remaining);
+        }
+      }, 1000);
+      return () => clearInterval(i);
+    }
+  }, [awaiting, next, setRemaining, dispatch]);
+};
+
 const SunUpdater = () => {
   const [fetch, clear] = useSun();
   const sdk = useSdk();
   const dispatch = useDispatch();
   const season = useSeason();
-  const next = useSelector<AppState, DateTime>(
-    (state) => state._beanstalk.sun.sunrise.next
-  );
-  const awaiting = useSelector<AppState, boolean>(
-    (state) => state._beanstalk.sun.sunrise.awaiting
-  );
+  const next = useAppSelector((s) => s._beanstalk.sun.sunrise.next);
+  const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
 
   const refreshSeeds = useRefreshSeeds();
+  useUpdateRemainingUntilSunrise();
 
-  useEffect(() => {
-    if (awaiting === false) {
-      /// Setup timer. Count down from now until the start
-      /// of the next hour; when the timer is zero, set
-      /// `awaiting = true`.
-      const i = setInterval(() => {
-        const _remaining = next.diffNow();
-        if (_remaining.as('seconds') <= 0) {
-          // dispatch(setAwaitingSunrise(true));
-        } else {
-          // dispatch(setRemainingUntilSunrise(_remaining));
-        }
-      }, 1000);
-      return () => clearInterval(i);
-    }
+  useL2OnlyEffect(() => {
+    if (!awaiting) return;
+
     /// When awaiting sunrise, check every 3 seconds to see
     /// if the Season has incremented.
     const i = setInterval(() => {
