@@ -84,7 +84,7 @@ library LibEvaluate {
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
             // compute a valid price this Season.
             // deltaB > 0 implies that address(well) != address(0).
-            uint256 tokenBeanPrice = LibWell.getTokenBeanPriceFromTwaReserves(well); //variable name is wrong here
+            uint256 tokenBeanPrice = LibWell.getTokenBeanPriceFromTwaReserves(well);
             if (tokenBeanPrice > 1) {
                 address nonBeanToken = address(LibWell.getNonBeanTokenFromWell(well));
                 uint256 nonBeanTokenDecimals = IERC20Decimals(nonBeanToken).decimals();
@@ -98,7 +98,7 @@ library LibEvaluate {
             }
             caseId = 3;
         }
-        // p < 1
+        // p < 1 (caseId = 0)
     }
 
     /**
@@ -296,9 +296,9 @@ library LibEvaluate {
     function evaluateBeanstalk(int256 deltaB, uint256 beanSupply) external returns (uint256, bool) {
         BeanstalkState memory bs = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(bs.podRate) // Evaluate Pod Rate
-            .add(evalPrice(deltaB, bs.largestLiqWell))
-            .add(evalDeltaPodDemand(bs.deltaPodDemand))
-            .add(evalLpToSupplyRatio(bs.lpToSupplyRatio)); // Evaluate Price // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
+            .add(evalPrice(deltaB, bs.largestLiqWell)) // Evaluate Price
+            .add(evalDeltaPodDemand(bs.deltaPodDemand)) // Evaluate Delta Soil Demand
+            .add(evalLpToSupplyRatio(bs.lpToSupplyRatio));  // Evaluate LP to Supply Ratio
         return (caseId, bs.oracleFailure);
     }
 

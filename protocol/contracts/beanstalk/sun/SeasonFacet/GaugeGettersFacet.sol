@@ -53,7 +53,7 @@ contract GaugeGettersFacet {
     /**
      * @notice Returns the average grown stalk per BDV per season.
      * @dev 6 decimal precision (1 GrownStalkPerBdvPerSeason = 1e6);
-     * note that stalk has 10 decimals.
+     * note that stalk has 16 decimals.
      */
     function getAverageGrownStalkPerBdvPerSeason() public view returns (uint128) {
         return s.sys.seedGauge.averageGrownStalkPerBdvPerSeason;
@@ -103,6 +103,9 @@ contract GaugeGettersFacet {
         }
     }
 
+    /**
+     * @notice returns the largest Gauge Points per BDV of all whitelisted LP tokens.
+     */
     function getLargestGpPerBdv() public view returns (uint256) {
         uint256 largestGpPerBdv;
         address[] memory whitelistedLpTokens = LibWhitelistedTokens.getWhitelistedLpTokens();

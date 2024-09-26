@@ -45,6 +45,7 @@ contract OracleFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Fetches the amount of USD equal 1 token is worth, using a lookback
      * @param token address of token to get the price of.
+     * @param lookback the amount of time to look back in seconds.
      */
     function getTokenUsdTwap(address token, uint256 lookback) external view returns (uint256) {
         return LibUsdOracle.getTokenPrice(token, lookback);
