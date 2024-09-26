@@ -296,8 +296,9 @@ library LibEvaluate {
     function evaluateBeanstalk(int256 deltaB, uint256 beanSupply) external returns (uint256, bool) {
         BeanstalkState memory bs = updateAndGetBeanstalkState(beanSupply);
         uint256 caseId = evalPodRate(bs.podRate) // Evaluate Pod Rate
-        .add(evalPrice(deltaB, bs.largestLiqWell)) // Evaluate Price
-        .add(evalDeltaPodDemand(bs.deltaPodDemand)).add(evalLpToSupplyRatio(bs.lpToSupplyRatio)); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
+        .add(evalPrice(deltaB, bs.largestLiqWell)).add(evalDeltaPodDemand(bs.deltaPodDemand)).add( // Evaluate Price
+                evalLpToSupplyRatio(bs.lpToSupplyRatio)
+            ); // Evaluate Delta Soil Demand // Evaluate LP to Supply Ratio
         return (caseId, bs.oracleFailure);
     }
 
