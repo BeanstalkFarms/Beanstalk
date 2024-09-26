@@ -1,8 +1,17 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { BI_10, deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+
+// Retroactive replacement functionality for well function `calcRates` - did not exist in CP2 1.0
+export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
+  if (reserves[0] == ZERO_BI || reserves[1] == ZERO_BI) {
+    return [ZERO_BI, ZERO_BI];
+  }
+
+  return [reserves[1].times(BI_10.pow(tokenDecimals[0])).div(reserves[0]), reserves[0].times(BI_10.pow(tokenDecimals[1])).div(reserves[1])];
+}
 
 /**
- * MANUAL CALCULATION IS DEPRECATED. See ../Volume:calcLiquidityVolume
+ * MANUAL VOLUME CALCULATION IS DEPRECATED. See ../Volume:calcLiquidityVolume
  *
  * Calculates the amount of volume resulting from a liquidity add operation.
  * The methodology is as follows:

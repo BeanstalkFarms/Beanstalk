@@ -12,7 +12,8 @@ import {
   BEAN_WBTC,
   BEAN_USDC,
   BEAN_USDT,
-  AQUIFER
+  AQUIFER,
+  WELL_STABLE2
 } from "./raw/BeanstalkArbConstants";
 
 /// ADDRESSES ///
@@ -99,4 +100,14 @@ export function minEMASeason(): i32 {
 
 export function stalkDecimals(): i32 {
   return 16;
+}
+
+/// BASIN ///
+
+export function wellFnSupportsRate(wellFnAddress: Address): boolean {
+  return true;
+}
+
+export function isStable2WellFn(wellFnAddress: Address): boolean {
+  return wellFnAddress === WELL_STABLE2;
 }

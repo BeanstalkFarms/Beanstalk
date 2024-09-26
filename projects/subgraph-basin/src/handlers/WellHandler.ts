@@ -1,17 +1,16 @@
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../../generated/Basin-ABIs/Well";
 import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { loadWell } from "../entities/Well";
-import { loadOrCreateAccount } from "../entities/Account";
 import {
-  checkForSnapshot,
   incrementWellDeposit,
   incrementWellSwap,
   incrementWellWithdraw,
+  loadWell,
   updateWellLiquidityTokenBalance,
-  updateWellReserves,
-  updateWellTokenUSDPrices
-} from "../utils/Well";
+  updateWellReserves
+} from "../entities/Well";
+import { loadOrCreateAccount } from "../entities/Account";
+import { checkForSnapshot, updateWellTokenUSDPrices } from "../utils/Well";
 import { updateWellVolumesAfterLiquidity, updateWellVolumesAfterSwap } from "../utils/Volume";
 import {
   recordAddLiquidityEvent,

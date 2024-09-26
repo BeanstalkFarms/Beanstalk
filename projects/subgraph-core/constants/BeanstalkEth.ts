@@ -20,7 +20,8 @@ import {
   REPLANT_BLOCK,
   REPLANT_SEASON,
   UNRIPE_BEAN,
-  UNRIPE_LP
+  UNRIPE_LP,
+  WELL_CP2_1_0
 } from "./raw/BeanstalkEthConstants";
 
 /// ADDRESSES ///
@@ -123,4 +124,14 @@ export function minEMASeason(): i32 {
 
 export function stalkDecimals(): i32 {
   return 10;
+}
+
+/// BASIN ///
+
+export function wellFnSupportsRate(wellFnAddress: Address): boolean {
+  return wellFnAddress != WELL_CP2_1_0;
+}
+
+export function isStable2WellFn(wellFnAddress: Address): boolean {
+  return false;
 }

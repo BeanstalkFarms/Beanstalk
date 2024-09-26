@@ -2,7 +2,7 @@ import { BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../../generated/schema";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Sync } from "../../../generated/Basin-ABIs/Well";
 import { getBigDecimalArrayTotal } from "../../../../subgraph-core/utils/Decimals";
-import { getCalculatedReserveUSDValues } from "../../utils/Well";
+import { getCalculatedReserveUSDValues, getTokenPrices } from "../../utils/Well";
 import { loadWell } from "../Well";
 
 export function recordAddLiquidityEvent(event: AddLiquidity): void {
@@ -10,6 +10,8 @@ export function recordAddLiquidityEvent(event: AddLiquidity): void {
   let deposit = new Deposit(id);
   let receipt = event.receipt;
   let well = loadWell(event.address);
+  well.tokenPrice = getTokenPrices(well);
+  well.save();
 
   deposit.hash = event.transaction.hash;
   deposit.nonce = event.transaction.nonce;
@@ -28,6 +30,7 @@ export function recordAddLiquidityEvent(event: AddLiquidity): void {
   deposit.tokens = well.tokens;
   deposit.reserves = event.params.tokenAmountsIn;
   deposit.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, event.params.tokenAmountsIn));
+  deposit.tokenPrice = well.tokenPrice;
   deposit.save();
 }
 
@@ -36,6 +39,8 @@ export function recordSyncEvent(event: Sync, deltaReserves: BigInt[]): void {
   let deposit = new Deposit(id);
   let receipt = event.receipt;
   let well = loadWell(event.address);
+  well.tokenPrice = getTokenPrices(well);
+  well.save();
 
   deposit.hash = event.transaction.hash;
   deposit.nonce = event.transaction.nonce;
@@ -54,6 +59,7 @@ export function recordSyncEvent(event: Sync, deltaReserves: BigInt[]): void {
   deposit.tokens = well.tokens;
   deposit.reserves = deltaReserves;
   deposit.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, deltaReserves));
+  deposit.tokenPrice = well.tokenPrice;
   deposit.save();
 }
 
@@ -62,6 +68,8 @@ export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
   let withdraw = new Withdraw(id);
   let receipt = event.receipt;
   let well = loadWell(event.address);
+  well.tokenPrice = getTokenPrices(well);
+  well.save();
 
   withdraw.hash = event.transaction.hash;
   withdraw.nonce = event.transaction.nonce;
@@ -80,6 +88,7 @@ export function recordRemoveLiquidityEvent(event: RemoveLiquidity): void {
   withdraw.tokens = well.tokens;
   withdraw.reserves = event.params.tokenAmountsOut;
   withdraw.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, event.params.tokenAmountsOut));
+  withdraw.tokenPrice = well.tokenPrice;
   withdraw.save();
 }
 
@@ -88,6 +97,8 @@ export function recordRemoveLiquidityOneEvent(event: RemoveLiquidityOneToken, to
   let withdraw = new Withdraw(id);
   let receipt = event.receipt;
   let well = loadWell(event.address);
+  well.tokenPrice = getTokenPrices(well);
+  well.save();
 
   withdraw.hash = event.transaction.hash;
   withdraw.nonce = event.transaction.nonce;
@@ -106,5 +117,6 @@ export function recordRemoveLiquidityOneEvent(event: RemoveLiquidityOneToken, to
   withdraw.tokens = well.tokens;
   withdraw.reserves = tokenAmounts;
   withdraw.amountUSD = getBigDecimalArrayTotal(getCalculatedReserveUSDValues(well.tokens, tokenAmounts));
+  withdraw.tokenPrice = well.tokenPrice;
   withdraw.save();
 }
