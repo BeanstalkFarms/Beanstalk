@@ -362,7 +362,7 @@ struct Deposited {
 
 /**
  * @notice Stores convert capacity data for a given block.
- * @param overallConvertCapacityUsed The amount of total convert power used in the block.
+ * @param overallConvertCapacityUsed The amount of overall deltaB that can be converted towards peg within a block.
  * @param wellConvertCapacityUsed A mapping from well to the amount of deltaB
  * that can be converted in the given block.
  */
