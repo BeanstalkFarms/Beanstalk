@@ -1,11 +1,14 @@
 import React, { useMemo } from "react";
+
 import { useFormContext, useWatch } from "react-hook-form";
-import { theme } from "src/utils/ui/theme";
-import { CheckIcon, CircleEmptyIcon } from "src/components/Icons";
-import { Flex } from "src/components/Layout";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+
+import { CheckIcon, CircleEmptyIcon } from "src/components/Icons";
+import { Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
+import { theme } from "src/utils/ui/theme";
+
 import { FunctionTokenPumpFormValues } from "../CreateWellStep2";
 import { WellDetailsFormValues } from "../CreateWellStep3";
 

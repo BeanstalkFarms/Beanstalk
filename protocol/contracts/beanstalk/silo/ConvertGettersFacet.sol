@@ -70,6 +70,21 @@ contract ConvertGettersFacet {
     }
 
     /**
+     * @notice calculates the deltaB for a given well using the reserves.
+     * @dev reverts if the bean reserve is less than the minimum,
+     * or if the usd oracle fails.
+     * This differs from the twaDeltaB, as this function should not be used within the sunrise function.
+     * @return deltaB The deltaB using the reserves.
+     */
+    function calculateDeltaBFromReserves(
+        address well,
+        uint256[] memory reserves,
+        uint256 lookback
+    ) external view returns (int256) {
+        return LibDeltaB.calculateDeltaBFromReserves(well, reserves, lookback);
+    }
+
+    /**
      * @notice Returns currently available convert power for this block
      * @return convertCapacity The amount of convert power available for this block
      */

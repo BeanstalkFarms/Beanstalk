@@ -7,6 +7,8 @@ import { EIP712PermitMessage } from "src/lib/permit";
  * that has been added to the Silo.
  */
 export type Deposit<T extends any = TokenValue> = {
+  /** Deposit ID */
+  id: ethers.BigNumber;
   /** The Stem is the ID of the deposit. */
   stem: ethers.BigNumber;
   /** */

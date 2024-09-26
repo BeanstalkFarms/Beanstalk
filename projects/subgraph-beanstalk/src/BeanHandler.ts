@@ -1,6 +1,6 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { Transfer as LegacyTransfer } from "../generated/Bean/ERC20";
-import { Transfer } from "../generated/Bean-Replanted/ERC20";
+import { Transfer as LegacyTransfer } from "../generated/Beanstalk-ABIs/ERC20";
+import { Transfer } from "../generated/Beanstalk-ABIs/ERC20";
 import { ADDRESS_ZERO, BEANSTALK } from "../../subgraph-core/utils/Constants";
 import { loadSeason } from "./utils/Season";
 import { toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";

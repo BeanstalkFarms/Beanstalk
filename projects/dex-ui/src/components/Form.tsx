@@ -1,10 +1,13 @@
 import React, { InputHTMLAttributes, forwardRef } from "react";
-import { theme } from "src/utils/ui/theme";
-import styled from "styled-components";
-import { LinksButtonText, Text } from "src/components/Typography";
-import { Flex } from "./Layout";
-import { SearchIcon } from "./Icons";
+
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
+import styled from "styled-components";
+
+import { LinksButtonText, Text } from "src/components/Typography";
+import { theme } from "src/utils/ui/theme";
+
+import { SearchIcon } from "./Icons";
+import { Flex } from "./Layout";
 import { ToggleSwitch } from "./ToggleSwitch";
 
 export const StyledForm = styled.form<{ $width: string }>`

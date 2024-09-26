@@ -20,7 +20,7 @@ describe("Ownership", function () {
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 

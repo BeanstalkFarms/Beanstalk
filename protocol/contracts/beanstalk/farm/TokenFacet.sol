@@ -56,7 +56,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) {
+    ) external payable fundsSafu noSupplyChange oneOutFlow(address(token)) nonReentrant {
         LibTransfer.transferToken(token, LibTractor._user(), recipient, amount, fromMode, toMode);
     }
 
@@ -172,10 +172,10 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
         return LibTokenPermit.nonces(owner);
     }
 
-    //////////////////////// ERC1155Reciever ////////////////////////
+    //////////////////////// ERC1155Receiver ////////////////////////
 
     /**
-     * @notice ERC1155Reciever function that allows the silo to receive ERC1155 tokens.
+     * @notice ERC1155Receiver function that allows the silo to receive ERC1155 tokens.
      *
      * @dev as ERC1155 deposits are not accepted yet,
      * this function will revert.
@@ -222,7 +222,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     function wrapEth(
         uint256 amount,
         LibTransfer.To mode
-    ) external payable fundsSafu noOutFlow noSupplyChange {
+    ) external payable nonReentrant fundsSafu noOutFlow noSupplyChange {
         LibWeth.wrap(amount, mode);
         LibEth.refundEth();
     }
@@ -233,7 +233,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     function unwrapEth(
         uint256 amount,
         LibTransfer.From mode
-    ) external payable fundsSafu oneOutFlow(C.WETH) noSupplyChange {
+    ) external payable nonReentrant fundsSafu oneOutFlow(C.WETH) noSupplyChange {
         LibWeth.unwrap(amount, mode);
     }
 

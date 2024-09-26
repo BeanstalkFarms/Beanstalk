@@ -22,7 +22,7 @@ contract InvariableTest is TestHelper {
 
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
-        mintTokensToUsers(siloUsers, C.BEAN, 100_000e6);
+        mintTokensToUsers(siloUsers, BEAN, 100_000e6);
 
         setUpSiloDepositTest(10_000e6, siloUsers);
         addFertilizerBasedOnSprouts(0, 100e6);

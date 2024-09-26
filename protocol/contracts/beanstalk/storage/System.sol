@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @param paused True if Beanstalk is Paused.
  * @param pausedAt The timestamp at which Beanstalk was last paused.
  * @param reentrantStatus An intra-transaction state variable to protect against reentrance.
- * @param isFarm Stores whether the function is wrapped in the `farm` function (1 if not, 2 if it is).
+ * @param farmingStatus Stores whether the function call originated in a Farm-like transaction - Farm, Tractor, PipelineConvert, etc.
  * @param ownerCandidate Stores a candidate address to transfer ownership to. The owner must claim the ownership transfer.
  * @param plenty The amount of plenty token held by the contract.
  * @param soil The number of Soil currently available. Adjusted during {Sun.stepSun}.
@@ -46,9 +46,8 @@ struct System {
     bool paused;
     uint128 pausedAt;
     uint256 reentrantStatus;
-    uint256 isFarm;
+    uint256 farmingStatus;
     address ownerCandidate;
-    uint256 plenty;
     uint128 soil;
     uint128 beanSown;
     uint256 activeField;
@@ -61,13 +60,13 @@ struct System {
     mapping(address => bytes) wellOracleSnapshots;
     mapping(address => TwaReserves) twaReserves;
     mapping(address => uint256) usdTokenPrice;
-    mapping(uint32 => uint256) sops;
     mapping(uint256 => Field) fields;
     mapping(uint256 => ConvertCapacity) convertCapacity;
     mapping(address => Implementation) oracleImplementation;
     ShipmentRoute[] shipmentRoutes;
     bytes32[16] _buffer_1;
     bytes32[144] casesV2;
+    Tokens tokens;
     Silo silo;
     Fertilizer fert;
     Season season;
@@ -78,6 +77,20 @@ struct System {
     EvaluationParameters evaluationParameters;
     SeasonOfPlenty sop;
     // A buffer is not included here, bc current layout of AppStorage makes it unnecessary.
+}
+
+/**
+ * @notice Tokens used in the Beanstalk system.
+ * @param bean Beanstalk ERC-20 fiat stablecoin
+ * @param fertilizer Fertilizer ERC-1555 token
+ * @param urBean Unripe Bean issud to Bean holders at the time of the exploit.
+ * @param urLp Unripe LP issued to LP holders at the time of the exploit.
+ */
+struct Tokens {
+    address bean;
+    address fertilizer;
+    address urBean;
+    address urLp;
 }
 
 /**
@@ -284,10 +297,11 @@ struct WhitelistStatus {
  *  uint256 currentGaugePoints,
  *  uint256 optimalPercentDepositedBdv,
  *  uint256 percentOfDepositedBdv
+ *  bytes data
  *  ) external view returns (uint256);
  * ```
  * @param lwSelector The encoded liquidityWeight function selector for the token that pertains to
- * an external view Beanstalk function with the following signature `function liquidityWeight()`
+ * an external view Beanstalk function with the following signature `function liquidityWeight(bytes)`
  * @param gaugePoints the amount of Gauge points this LP token has in the LP Gauge. Only used for LP whitelisted assets.
  * GaugePoints has 18 decimal point precision (1 Gauge point = 1e18).
  * @param optimalPercentDepositedBdv The target percentage of the total LP deposited BDV for this token. 6 decimal precision.
@@ -303,10 +317,10 @@ struct AssetSettings {
     int96 milestoneStem; //                 │ 12 (30)
     bytes1 encodeType; //                   │ 1  (31)
     // one byte is left here.             ──┘ 1  (32)
-    int24 deltaStalkEarnedPerSeason; // ────┐ 3
-    uint128 gaugePoints; //                 │ 16 (19)
-    uint64 optimalPercentDepositedBdv; //   │ 8  (27)
-    // 5 bytes are left here.             ──┘ 5  (32)
+    int32 deltaStalkEarnedPerSeason; // ────┐ 4
+    uint128 gaugePoints; //                 │ 16 (20)
+    uint64 optimalPercentDepositedBdv; //   │ 8  (28)
+    // 4 bytes are left here.             ──┘ 4  (32)
     Implementation gaugePointImplementation;
     Implementation liquidityWeightImplementation;
 }
@@ -377,7 +391,7 @@ struct ShipmentRoute {
 /**
  * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
  * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
- * @param contractata a mapping from a L1 contract to an approved L2 reciever.
+ * @param contractata a mapping from a L1 contract to an approved L2 receiver.
  * @param _buffer_ Reserved storage for future additions.
  */
 struct L2Migration {
@@ -390,11 +404,12 @@ struct L2Migration {
  * @notice contains data relating to migration.
  */
 struct MigrationData {
-    address reciever;
+    address receiver;
     bool migratedDeposits;
     bool migratedPlots;
     bool migratedFert;
     bool migratedInternalBalances;
+    bool migratedPodOrders;
 }
 
 /**
@@ -403,13 +418,15 @@ struct MigrationData {
  * @param selector The function selector that is used to call on the implementation.
  * @param encodeType The encode type that should be used to encode the function call.
  * The encodeType value depends on the context of each implementation.
+ * @param data Any additional data, for example timeout
  * @dev assumes all future implementations will use the same parameters as the beanstalk
  * gaugePoint and liquidityWeight implementations.
  */
 struct Implementation {
-    address target;
+    address target; // 20 bytes
     bytes4 selector;
     bytes1 encodeType;
+    bytes data;
 }
 
 struct EvaluationParameters {
@@ -425,6 +442,9 @@ struct EvaluationParameters {
     uint256 lpToSupplyRatioOptimal;
     uint256 lpToSupplyRatioLowerBound;
     uint256 excessivePriceThreshold;
+    uint256 soilCoefficientHigh;
+    uint256 soilCoefficientLow;
+    uint256 baseReward;
 }
 
 /**

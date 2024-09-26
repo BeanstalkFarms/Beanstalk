@@ -5,8 +5,8 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {AppStorage} from "../storage/AppStorage.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
@@ -17,13 +17,14 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Publius
  * @title FertilizerFacet handles Minting Fertilizer and Rinsing Sprouts earned from Fertilizer.
  **/
 
-contract FertilizerFacet is Invariable {
+contract FertilizerFacet is Invariable, ReentrancyGuard {
     using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
     using LibRedundantMath128 for uint128;
@@ -31,8 +32,6 @@ contract FertilizerFacet is Invariable {
     event SetFertilizer(uint128 id, uint128 bpf);
 
     uint256 private constant FERTILIZER_AMOUNT_PRECISION = 1e24;
-
-    AppStorage internal s;
 
     struct Supply {
         uint128 endBpf;
@@ -47,10 +46,14 @@ contract FertilizerFacet is Invariable {
     function claimFertilized(
         uint256[] calldata ids,
         LibTransfer.To mode
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        uint256 amount = C.fertilizer().beanstalkUpdate(LibTractor._user(), ids, s.sys.fert.bpf);
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) nonReentrant {
+        uint256 amount = IFertilizer(s.sys.tokens.fertilizer).beanstalkUpdate(
+            LibTractor._user(),
+            ids,
+            s.sys.fert.bpf
+        );
         s.sys.fert.fertilizedPaidIndex += amount;
-        LibTransfer.sendToken(C.bean(), amount, LibTractor._user(), mode);
+        LibTransfer.sendToken(BeanstalkERC20(s.sys.tokens.bean), amount, LibTractor._user(), mode);
     }
 
     /**
@@ -64,7 +67,7 @@ contract FertilizerFacet is Invariable {
         uint256 tokenAmountIn,
         uint256 minFertilizerOut,
         uint256 minLPTokensOut
-    ) external payable fundsSafu noOutFlow returns (uint256 fertilizerAmountOut) {
+    ) external payable fundsSafu noOutFlow nonReentrant returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = _getMintFertilizerOut(
             tokenAmountIn,
             LibBarnRaise.getBarnRaiseToken()
@@ -82,7 +85,7 @@ contract FertilizerFacet is Invariable {
             fertilizerAmountOut,
             minLPTokensOut
         );
-        C.fertilizer().beanstalkMint(
+        IFertilizer(s.sys.tokens.fertilizer).beanstalkMint(
             LibTractor._user(),
             uint256(id),
             (fertilizerAmountOut).toUint128(),
@@ -92,20 +95,26 @@ contract FertilizerFacet is Invariable {
 
     /**
      * @dev Callback from Fertilizer contract in `claimFertilized` function.
+     * @dev Entrance cycle from Fertilizer contract.
      */
     function payFertilizer(
         address account,
         uint256 amount
-    ) external payable fundsSafu noSupplyChange oneOutFlow(C.BEAN) {
-        require(msg.sender == C.fertilizerAddress());
+    ) external payable fundsSafu noSupplyChange oneOutFlow(s.sys.tokens.bean) {
+        require(msg.sender == s.sys.tokens.fertilizer, "Fertilizer: Not Fertilizer.");
         s.sys.fert.fertilizedPaidIndex += amount;
-        LibTransfer.sendToken(C.bean(), amount, account, LibTransfer.To.INTERNAL);
+        LibTransfer.sendToken(
+            BeanstalkERC20(s.sys.tokens.bean),
+            amount,
+            account,
+            LibTransfer.To.INTERNAL
+        );
     }
 
     /**
      * @dev Returns the amount of Fertilizer that can be purchased with `tokenAmountIn` Barn Raise tokens.
      * Can be used to help calculate `minFertilizerOut` in `mintFertilizer`.
-     * `tokenAmountIn` has 18 decimals, `getUsdEthPrice()` has 6 decimals and `fertilizerAmountOut` has 0 decimals.
+     * `tokenAmountIn` has 18 decimals, `getUsdPrice()` of eth has 6 decimals and `fertilizerAmountOut` has 0 decimals.
      */
     function getMintFertilizerOut(
         uint256 tokenAmountIn
@@ -120,6 +129,8 @@ contract FertilizerFacet is Invariable {
     ) public view returns (uint256 fertilizerAmountOut) {
         fertilizerAmountOut = tokenAmountIn.div(LibUsdOracle.getUsdPrice(barnRaiseToken));
     }
+
+    ///////////////////////////// Fertilizer Getters //////////////////////////////
 
     function totalFertilizedBeans() external view returns (uint256 beans) {
         return s.sys.fert.fertilizedIndex;
@@ -193,28 +204,28 @@ contract FertilizerFacet is Invariable {
         address account,
         uint256[] memory ids
     ) external view returns (uint256 beans) {
-        return C.fertilizer().balanceOfUnfertilized(account, ids);
+        return IFertilizer(s.sys.tokens.fertilizer).balanceOfUnfertilized(account, ids);
     }
 
     function balanceOfFertilized(
         address account,
         uint256[] memory ids
     ) external view returns (uint256 beans) {
-        return C.fertilizer().balanceOfFertilized(account, ids);
+        return IFertilizer(s.sys.tokens.fertilizer).balanceOfFertilized(account, ids);
     }
 
     function balanceOfFertilizer(
         address account,
         uint256 id
     ) external view returns (IFertilizer.Balance memory) {
-        return C.fertilizer().lastBalanceOf(account, id);
+        return IFertilizer(s.sys.tokens.fertilizer).lastBalanceOf(account, id);
     }
 
     function balanceOfBatchFertilizer(
         address[] memory accounts,
         uint256[] memory ids
     ) external view returns (IFertilizer.Balance[] memory) {
-        return C.fertilizer().lastBalanceOfBatch(accounts, ids);
+        return IFertilizer(s.sys.tokens.fertilizer).lastBalanceOfBatch(accounts, ids);
     }
 
     function getFertilizers() external view returns (Supply[] memory fertilizers) {
@@ -257,5 +268,12 @@ contract FertilizerFacet is Invariable {
     function beginBarnRaiseMigration(address well) external {
         LibDiamond.enforceIsOwnerOrContract();
         LibFertilizer.beginBarnRaiseMigration(well);
+    }
+
+    /**
+     * @notice returns the total recapitalization dollars needed to recapitalize the Barn Raise.
+     */
+    function getTotalRecapDollarsNeeded() external view returns (uint256) {
+        return LibFertilizer.getTotalRecapDollarsNeeded();
     }
 }

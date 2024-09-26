@@ -13,7 +13,6 @@ const {
   setOracleFailure,
   setStethEthChainlinkPrice,
   setWstethEthUniswapPrice,
-  setWstethStethRedemptionPrice,
   setEthUsdChainlinkPrice
 } = require("../../utils/oracle.js");
 const { testIfRpcSet } = require("./utils/test.js");
@@ -55,7 +54,6 @@ describe.skip("wStEth Oracle", function () {
     // Wsteth:Usd Oracle
     await setStethEthChainlinkPrice("1");
     await setWstethEthUniswapPrice("1");
-    // await setWstethStethRedemptionPrice('1')
   });
 
   beforeEach(async function () {
@@ -74,7 +72,6 @@ describe.skip("wStEth Oracle", function () {
       });
 
       it("When redemption rate > 1", async function () {
-        await setWstethStethRedemptionPrice("2");
         await setStethEthChainlinkPrice("1.000327"); // The Uniswap Oracle cannot be exactly 2
         await setWstethEthUniswapPrice("2");
         await checkPriceWithError(to6("2"));
@@ -84,7 +81,6 @@ describe.skip("wStEth Oracle", function () {
 
     describe("When chainlinkPrice >= uniswapPrice", async function () {
       it("chainlinkPrice ~= uniswapPrice", async function () {
-        await setWstethStethRedemptionPrice("1.005");
         await setStethEthChainlinkPrice("0.995088"); // The Uniswap Oracle cannot be exactly 2
         await setWstethEthUniswapPrice("1.005");
         await checkPriceWithError(to6("1.0025"));
@@ -92,7 +88,6 @@ describe.skip("wStEth Oracle", function () {
       });
 
       it("chainlinkPrice >> uniswapPrice", async function () {
-        await setWstethStethRedemptionPrice("1.01");
         await setStethEthChainlinkPrice("1.02"); // The Uniswap Oracle cannot be exactly 2
         await setWstethEthUniswapPrice("1.005");
         expect(await season.getWstethEthPrice()).to.be.equal("0");
@@ -102,14 +97,12 @@ describe.skip("wStEth Oracle", function () {
 
     describe("When chainlinkPrice <= uniswapPrice", async function () {
       it("chainlinkPrice ~= uniswapPrice", async function () {
-        await setWstethStethRedemptionPrice("1.005");
         await setStethEthChainlinkPrice("1"); // The Uniswap Oracle cannot be exactly 2
         await setWstethEthUniswapPrice("1");
         await checkPriceWithError(to6("1.0025"), (lookback = 900));
       });
 
       it("chainlinkPrice << uniswapPrice", async function () {
-        await setWstethStethRedemptionPrice("1");
         await setStethEthChainlinkPrice("1.02"); // The Uniswap Oracle cannot be exactly 2
         await setWstethEthUniswapPrice("1");
         expect(await season.getWstethEthPrice()).to.be.equal("0");

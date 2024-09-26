@@ -1,5 +1,5 @@
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { DiamondCut } from "../../../generated/Diamond/Beanstalk";
+import { DiamondCut } from "../../../generated/Beanstalk-ABIs/PreReplant";
 import { loadBeanstalk } from "../../utils/Beanstalk";
 import { loadTokenCache } from "../CacheLoader";
 import { TOKEN_YIELD_7_DAY_12_000 } from "./HistoricToken_12_000";

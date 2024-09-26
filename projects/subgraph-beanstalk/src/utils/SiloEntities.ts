@@ -182,6 +182,14 @@ export function loadSiloAssetDailySnapshot(account: Address, token: Address, tim
 
 /* ===== Whitelist Token Settings Entities ===== */
 
+export function addToSiloWhitelist(siloAddress: Address, token: Address): void {
+  let silo = loadSilo(siloAddress);
+  let currentList = silo.whitelistedTokens;
+  currentList.push(token.toHexString());
+  silo.whitelistedTokens = currentList;
+  silo.save();
+}
+
 export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting {
   let setting = WhitelistTokenSetting.load(token);
   if (setting == null) {
@@ -336,11 +344,11 @@ export function loadSiloYield(season: i32, window: i32): SiloYield {
     siloYield.createdAt = ZERO_BI;
 
     if (window == 24) {
-      siloYield.window = "ROLLING_24_HOUR";
+      siloYield.emaWindow = "ROLLING_24_HOUR";
     } else if (window == 168) {
-      siloYield.window = "ROLLING_7_DAY";
+      siloYield.emaWindow = "ROLLING_7_DAY";
     } else if (window == 720) {
-      siloYield.window = "ROLLING_30_DAY";
+      siloYield.emaWindow = "ROLLING_30_DAY";
     }
     siloYield.save();
   }

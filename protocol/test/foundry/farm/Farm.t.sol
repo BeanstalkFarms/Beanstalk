@@ -24,11 +24,11 @@ contract FarmTest is TestHelper {
         MockToken(C.WETH).mint(BEANSTALK, 100_000);
 
         farmers = createUsers(2);
-        mintTokensToUsers(farmers, C.BEAN, 100_000e6);
+        mintTokensToUsers(farmers, BEAN, 100_000e6);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             10_000_000e6, // 10,000,000 Beans
             10_000 ether // 10,000 ether.
         );
@@ -61,7 +61,7 @@ contract FarmTest is TestHelper {
 
         farmCalls[0] = abi.encodeWithSelector(
             TokenFacet.transferToken.selector,
-            C.BEAN,
+            BEAN,
             farmers[0],
             100e6,
             LibTransfer.From.EXTERNAL,
@@ -69,7 +69,7 @@ contract FarmTest is TestHelper {
         );
         farmCalls[1] = abi.encodeWithSelector(
             SiloFacet.deposit.selector,
-            C.BEAN,
+            BEAN,
             50e6,
             LibTransfer.From.INTERNAL
         );
@@ -77,14 +77,14 @@ contract FarmTest is TestHelper {
         vm.prank(farmers[0]);
         bs.farm(farmCalls);
 
-        assertEq(bs.getInternalBalance(farmers[0], C.BEAN), 50e6);
+        assertEq(bs.getInternalBalance(farmers[0], BEAN), 50e6);
     }
 
     /**
      * @notice Wraps ETH, sends to Pipeline, then calls Well swap through Pipeline.
      */
     function test_farmWrapAndExchange() public {
-        uint256 farmerInitialBeans = IERC20(C.BEAN).balanceOf(farmers[0]);
+        uint256 farmerInitialBeans = IERC20(BEAN).balanceOf(farmers[0]);
 
         bytes[] memory farmCalls = new bytes[](3);
 
@@ -104,11 +104,11 @@ contract FarmTest is TestHelper {
         );
 
         PipeCall memory pipeCall = PipeCall(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             abi.encodeWithSelector(
                 IWell.swapFrom.selector,
                 C.WETH,
-                C.BEAN,
+                BEAN,
                 1e18,
                 0,
                 farmers[0],
@@ -119,11 +119,11 @@ contract FarmTest is TestHelper {
 
         deal(farmers[0], 1e18);
         vm.prank(C.PIPELINE);
-        IERC20(C.WETH).approve(C.BEAN_ETH_WELL, type(uint256).max);
+        IERC20(C.WETH).approve(BEAN_ETH_WELL, type(uint256).max);
 
         vm.prank(farmers[0]);
         bs.farm{value: 1e18}(farmCalls);
 
-        assertGt(IERC20(C.BEAN).balanceOf(farmers[0]), farmerInitialBeans);
+        assertGt(IERC20(BEAN).balanceOf(farmers[0]), farmerInitialBeans);
     }
 }

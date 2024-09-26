@@ -39,10 +39,10 @@ export const displayAmountsBySource = (
   const ownerStr = owner || 'your';
 
   const internal = amounts.internal.gt(0)
-    ? `${displayTokenAmount(amounts.internal, token)}${middle}from ${ownerStr} Farm Balance`
+    ? `${displayTokenAmount(amounts.internal, token, { showName: false, showSymbol: true })}${middle}from ${ownerStr} Farm Balance`
     : undefined;
   const external = amounts.external.gt(0)
-    ? `${displayTokenAmount(amounts.external, token)}${middle}from ${ownerStr} Circulating Balance`
+    ? `${displayTokenAmount(amounts.external, token, { showName: false, showSymbol: true })}${middle}from ${ownerStr} Circulating Balance`
     : undefined;
 
   const combined = `${internal || ''}${internal && external ? ' and ' : ''}${external || ''}`;

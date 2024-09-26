@@ -12,6 +12,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Mock Attack Facet
@@ -20,25 +21,27 @@ import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 contract MockAttackFacet is Invariable {
     AppStorage internal s;
 
+    address constant BEAN_ETH_WELL = 0xBEA0e11282e2bB5893bEcE110cF199501e872bAd;
+
     function revert_netFlow() external noNetFlow {
-        C.bean().transferFrom(msg.sender, address(this), 1);
+        BeanstalkERC20(s.sys.tokens.bean).transferFrom(msg.sender, address(this), 1);
     }
 
     function revert_outFlow() external noOutFlow {
-        C.bean().transfer(msg.sender, 1);
+        BeanstalkERC20(s.sys.tokens.bean).transfer(msg.sender, 1);
     }
 
-    function revert_oneOutFlow() external oneOutFlow(C.BEAN) {
-        C.bean().transfer(msg.sender, 1);
+    function revert_oneOutFlow() external oneOutFlow(s.sys.tokens.bean) {
+        BeanstalkERC20(s.sys.tokens.bean).transfer(msg.sender, 1);
         IERC20(C.WETH).transfer(msg.sender, 1);
     }
 
     function revert_supplyChange() external noSupplyChange {
-        C.bean().burn(1);
+        BeanstalkERC20(s.sys.tokens.bean).burn(1);
     }
 
     function revert_supplyIncrease() external noSupplyIncrease {
-        C.bean().mint(msg.sender, 1);
+        BeanstalkERC20(s.sys.tokens.bean).mint(msg.sender, 1);
     }
 
     ////// Variations of asset theft, internal and external ///////
@@ -48,16 +51,16 @@ contract MockAttackFacet is Invariable {
      * @dev Does not directly trigger an invariant failure.
      */
     function stealBeans(uint256 amount) external {
-        C.bean().transfer(msg.sender, amount);
+        BeanstalkERC20(s.sys.tokens.bean).transfer(msg.sender, amount);
     }
 
     function exploitUserInternalTokenBalance() public {
-        LibBalance.increaseInternalBalance(msg.sender, IERC20(C.UNRIPE_LP), 100_000_000);
+        LibBalance.increaseInternalBalance(msg.sender, IERC20(s.sys.tokens.urLp), 100_000_000);
     }
 
     function exploitUserSendTokenInternal() public {
         LibTransfer.sendToken(
-            IERC20(C.BEAN_ETH_WELL),
+            IERC20(BEAN_ETH_WELL),
             100_000_000_000,
             msg.sender,
             LibTransfer.To.INTERNAL

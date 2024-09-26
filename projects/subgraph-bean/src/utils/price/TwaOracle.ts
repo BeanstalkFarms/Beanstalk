@@ -6,7 +6,7 @@ import { WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
 import { curveCumulativePrices } from "./CurvePrice";
 import { TWAType } from "./Types";
 import { wellCumulativePrices, wellTwaReserves } from "./WellPrice";
-import { WellOracle } from "../../../generated/TWAPOracles/BIP37";
+import { WellOracle } from "../../../generated/Bean-ABIs/BIP37";
 
 export function loadOrCreateTwaOracle(poolAddress: string): TwaOracle {
   let twaOracle = TwaOracle.load(poolAddress);

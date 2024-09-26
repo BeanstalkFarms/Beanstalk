@@ -1,5 +1,10 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { BEAN_WETH_CP2_WELL, BEAN_WETH_CP2_WELL_BLOCK } from "../../../subgraph-core/utils/Constants";
+import {
+  BEAN_WETH_CP2_WELL,
+  BEAN_WETH_CP2_WELL_BLOCK,
+  BEAN_WSTETH_CP2_WELL,
+  BEAN_WSTETH_CP2_WELL_BLOCK
+} from "../../../subgraph-core/utils/Constants";
 
 export enum WellFunction {
   ConstantProduct
@@ -15,6 +20,11 @@ export const BEAN_WELLS: BeanWell[] = [
   {
     address: BEAN_WETH_CP2_WELL,
     startBlock: BEAN_WETH_CP2_WELL_BLOCK,
+    wellFunction: WellFunction.ConstantProduct
+  },
+  {
+    address: BEAN_WSTETH_CP2_WELL,
+    startBlock: BEAN_WSTETH_CP2_WELL_BLOCK,
     wellFunction: WellFunction.ConstantProduct
   }
 ];

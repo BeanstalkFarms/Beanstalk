@@ -12,14 +12,14 @@ import useBeanstalkSiloBreakdown, {
 import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import TokenRow from '~/components/Common/Balances/TokenRow';
 import useChainConstant from '~/hooks/chain/useChainConstant';
-import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_WETH } from '~/constants/tokens';
+import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
 import { FC } from '~/types';
-import StatHorizontal from '../StatHorizontal';
 import { useAppSelector } from '~/state';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
 import { ERC20Token } from '~/classes/Token';
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
+import StatHorizontal from '../StatHorizontal';
 
 const BeanstalkBalances: FC<{
   breakdown: ReturnType<typeof useBeanstalkSiloBreakdown>;
@@ -29,7 +29,7 @@ const BeanstalkBalances: FC<{
   const getChainToken = useGetChainToken();
   const Bean = useChainConstant(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
-  const urBeanWeth = getChainToken(UNRIPE_BEAN_WETH);
+  const urBeanWstETH = getChainToken(UNRIPE_BEAN_WSTETH);
   const availableTokens = useMemo(
     () => Object.keys(breakdown.tokens),
     [breakdown.tokens]
@@ -46,7 +46,7 @@ const BeanstalkBalances: FC<{
   function isTokenUnripe(tokenAddress: string) {
     return (
       tokenAddress.toLowerCase() === urBean.address ||
-      tokenAddress.toLowerCase() === urBeanWeth.address
+      tokenAddress.toLowerCase() === urBeanWstETH.address
     );
   }
 

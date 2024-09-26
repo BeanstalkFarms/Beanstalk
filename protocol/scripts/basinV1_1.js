@@ -130,7 +130,6 @@ async function deployBasinV1_1Upgrade(
   if (verbose) console.log("Adding Liquidity to Well...");
 
   const bean = await getBean();
-  const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
 
   const ethUsdChainlinkAggregator = await ethers.getContractAt(
     "MockChainlinkAggregator",
@@ -162,8 +161,6 @@ async function deployBasinV1_1Upgrade(
 
   if (verbose) console.log("Obtaining Wsteth..");
   if (mock) {
-    const mockWsteth = await ethers.getContractAt("MockToken", WSTETH);
-    await mockWsteth.connect(account).mint(account.address, amounts[1]);
     const mockBean = await ethers.getContractAt("MockToken", BEAN);
     await mockBean.connect(account).mint(account.address, amounts[0]);
   }

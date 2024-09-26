@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { Bean3CRV } from "../../../generated/Bean3CRV-V1/Bean3CRV";
+import { Bean3CRV } from "../../../generated/Bean-ABIs/Bean3CRV";
 import { BD_10, BI_10, ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   BEAN_3CRV_V1,
@@ -10,8 +10,8 @@ import {
   LUSD,
   LUSD_3POOL
 } from "../../../../subgraph-core/utils/Constants";
-import { CalculationsCurve } from "../../../generated/Bean3CRV-V1/CalculationsCurve";
-import { ERC20 } from "../../../generated/Bean3CRV-V1/ERC20";
+import { CalculationsCurve } from "../../../generated/Bean-ABIs/CalculationsCurve";
+import { ERC20 } from "../../../generated/Bean-ABIs/ERC20";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { Pool } from "../../../generated/schema";
 import { getTWAPrices, loadOrCreateTwaOracle } from "./TwaOracle";

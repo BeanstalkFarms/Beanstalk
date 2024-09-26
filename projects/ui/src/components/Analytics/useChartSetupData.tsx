@@ -28,6 +28,7 @@ import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
 import { DocumentNode } from 'graphql';
 import { OperationVariables, QueryOptions } from '@apollo/client';
 import { Typography } from '@mui/material';
+import { SupportedChainId } from '~/constants';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -96,6 +97,10 @@ type ChartSetupBase = {
    * price scales.
    */
   shortTickFormatter: (v: number) => string | undefined;
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
 };
 
 type ChartSetup = ChartSetupBase & {
@@ -114,20 +119,24 @@ export function useChartSetupData() {
   const sdk = useSdk();
 
   return useMemo(() => {
-    const beanstalkAddress = sdk.addresses.BEANSTALK.MAINNET;
+    const beanstalkAddress = sdk.addresses.BEANSTALK.get(
+      SupportedChainId.ETH_MAINNET
+    );
     const stalk = sdk.tokens.STALK;
 
     const depositedTokensToChart = [
       sdk.tokens.BEAN,
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WETH,
+      sdk.tokens.UNRIPE_BEAN_WSTETH,
     ];
 
     const lpTokensToChart = [
       sdk.tokens.BEAN_CRV3_LP,
       sdk.tokens.BEAN_ETH_WELL_LP,
+      sdk.tokens.BEAN_WSTETH_WELL_LP,
       sdk.tokens.BEAN_ETH_UNIV2_LP,
       BEAN_LUSD_LP[1],
       BEAN_CRV3_V1_LP[1],

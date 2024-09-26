@@ -75,7 +75,8 @@ async function deployFacets(facets, verbose = false) {
 async function deployDiamond({
   diamondName,
   initDiamond,
-  owner,
+  ownerAddress,
+  deployer,
   verbose = false,
   impersonate = false
 }) {
@@ -83,12 +84,6 @@ async function deployDiamond({
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
   }
   const diamondFactory = await ethers.getContractFactory("Diamond");
-  const diamondCut = [];
-  if (verbose) {
-    console.log("--");
-    console.log("Setting up diamondCut args");
-    console.log("--");
-  }
   let result;
   if (typeof initDiamond === "string") {
     const initDiamondName = initDiamond;
@@ -108,7 +103,7 @@ async function deployDiamond({
 
   let deployedDiamond;
   if (!impersonate) {
-    deployedDiamond = await diamondFactory.deploy(owner.address);
+    deployedDiamond = await diamondFactory.connect(deployer).deploy(ownerAddress);
     await deployedDiamond.deployed();
     result = await deployedDiamond.deployTransaction.wait();
     if (!result.status) {
@@ -123,16 +118,16 @@ async function deployDiamond({
       console.log("Diamond deploy transaction hash:" + deployedDiamond.deployTransaction.hash);
 
     if (verbose) console.log(`${diamondName} deployed: ${deployedDiamond.address}`);
-    if (verbose) console.log(`Diamond owner: ${owner.address}`);
+    if (verbose) console.log(`Diamond owner: ${ownerAddress}`);
   } else {
-    await impersonateBeanstalk(owner.address);
+    await impersonateBeanstalk(ownerAddress);
     deployedDiamond = await ethers.getContractAt("Diamond", BEANSTALK);
   }
 
   return deployedDiamond;
 }
 
-async function deploy ({
+async function deploy({
   diamondName,
   initDiamond,
   facets,
@@ -408,11 +403,171 @@ async function upgrade({
   return result;
 }
 
+// Deploys a list of facets along with their linked libraries
+async function deployFacetsAndLibraries({
+  facets,
+  libraryNames,
+  facetLibraries,
+  libraryLinks,
+  account,
+  verify = false,
+  verbose = true
+}) {
+  const deployedLibraries = {};
+  const deployedFacets = {};
+
+  // Helper function to deploy a contract
+  async function deployContract(name, libraries = {}) {
+    if (verbose) console.log(`Deploying: ${name}`);
+    const factory = await ethers.getContractFactory(name, { 
+      libraries: libraries,
+      signer: account 
+    });
+    const contract = await factory.deploy();
+    await contract.deployed();
+    
+    if (verify) {
+      await run("verify", {
+        address: contract.address,
+        constructorArguments: []
+      });
+    }
+    
+    const receipt = await contract.deployTransaction.wait();
+    if (verbose) console.log(`${name} deployed at ${contract.address}`);
+    if (verbose) console.log(`${name} deploy gas used: ${receipt.gasUsed.toString()}`);
+    
+    return contract;
+  }
+
+  // Deploy libraries
+  for (const libName of libraryNames) {
+    const linkedLibs = {};
+    if (libraryLinks[libName]) {
+      for (const linkLib of libraryLinks[libName]) {
+        if (!deployedLibraries[linkLib]) {
+          throw new Error(`Linked library ${linkLib} not deployed yet for ${libName}`);
+        }
+        linkedLibs[linkLib] = deployedLibraries[linkLib].address;
+      }
+    }
+    deployedLibraries[libName] = await deployContract(libName, linkedLibs);
+  }
+
+  // Deploy facets
+  for (const facetName of facets) {
+    const facetLibs = {};
+    if (facetLibraries[facetName]) {
+      for (const libName of facetLibraries[facetName]) {
+        if (!deployedLibraries[libName]) {
+          throw new Error(`Required library ${libName} not deployed for facet ${facetName}`);
+        }
+        facetLibs[libName] = deployedLibraries[libName].address;
+      }
+    }
+    deployedFacets[facetName] = await deployContract(facetName, facetLibs);
+  }
+  return { deployedLibraries, deployedFacets };
+}
+
+// upgrade diamond with already deployed facets
+async function upgradeWithDeployedFacets({
+  diamondAddress,
+  facetNames = [],
+  facetAddresses = [],
+  selectorsToRemove = [],
+  selectorsToAdd = {},
+  initFacetAddress = ethers.constants.AddressZero,
+  initArgs = [],
+  account = null,
+  verbose = false,
+}) {
+  let totalGasUsed = ethers.BigNumber.from("0");
+  let initFacetCallGas = ethers.BigNumber.from("0");
+
+  if (arguments.length !== 1) {
+    throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
+  }
+  const diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamondAddress);
+  const diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamondAddress);
+
+  const diamondCut = [];
+  const existingFacets = await diamondLoupeFacet.facets();
+
+  if (verbose && facetAddresses.length > 0) console.log("\nProcessing Facets");
+
+  if (selectorsToRemove.length > 0) {
+    // check if any selectorsToRemove are already gone
+    for (const selector of selectorsToRemove) {
+      if (!inFacets(selector, existingFacets)) {
+        throw Error("Function selector to remove is already gone.");
+      }
+    }
+    diamondCut.push([ethers.constants.AddressZero, FacetCutAction.Remove, selectorsToRemove]);
+  }
+
+  for (let i = 0; i < facetAddresses.length; i++) {
+    const facetAddress = facetAddresses[i];
+    const facetContract = await ethers.getContractAt(facetNames[i], facetAddress);
+    const add = [];
+    const replace = [];
+    const selectors =
+      selectorsToAdd[facetAddress] !== undefined
+        ? selectorsToAdd[facetAddress]
+        : await getSelectors(facetContract);
+
+    for (const selector of selectors) {
+      if (!inFacets(selector, existingFacets)) {
+        add.push(selector);
+      } else {
+        replace.push(selector);
+      }
+    }
+    if (add.length > 0) {
+      diamondCut.push([facetAddress, FacetCutAction.Add, add]);
+    }
+    if (replace.length > 0) {
+      diamondCut.push([facetAddress, FacetCutAction.Replace, replace]);
+    }
+    if (verbose) console.log(`Processed ${facetNames[i]} at ${facetAddress}`);
+  }
+
+  if (verbose) {
+    console.log("diamondCut arg:");
+    console.log(diamondCut);
+    console.log("------");
+  }
+
+  let functionCall = "0x";
+  if (initFacetAddress !== ethers.constants.AddressZero) {
+    const initFacet = await ethers.getContractAt("IDiamondCut", initFacetAddress);
+    functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
+    if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
+  }
+
+  let result = await diamondCutFacet
+    .connect(account)
+    .diamondCut(diamondCut, initFacetAddress, functionCall);
+
+  const receipt = await result.wait();
+  initFacetCallGas = receipt.gasUsed;
+  totalGasUsed = totalGasUsed.add(receipt.gasUsed);
+
+  if (verbose) {
+    console.log("------");
+    console.log("Upgrade transaction hash: " + result.hash);
+    console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
+    console.log("Total gas used: " + strDisplay(totalGasUsed));
+  }
+  return result;
+}
+
 async function upgradeWithNewFacets({
   diamondAddress,
   facetNames = [],
   facetLibraries = {},
   libraryNames = [],
+  linkedLibraries = {},
   selectorsToRemove = [],
   selectorsToAdd = {},
   initFacetName = undefined,
@@ -424,9 +579,14 @@ async function upgradeWithNewFacets({
   p = 0,
   verbose = false,
   account = null,
-  verify = false
+  verify = false,
+  checkGas = false,
+  reportGas = true,
+  initFacetNameInfo = undefined
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
+  let initFacetDeploymentGas = ethers.BigNumber.from("0");
+  let initFacetCallGas = ethers.BigNumber.from("0");
 
   if (arguments.length !== 1) {
     throw Error(`Requires only 1 map argument. ${arguments.length} arguments used.`);
@@ -440,9 +600,25 @@ async function upgradeWithNewFacets({
   const deployed = [];
   if (verbose && libraryNames.length > 0) console.log("Deploying Libraries");
   for (const name of libraryNames) {
-    if (!Object.keys(libraries).includes(name)) {
+    if (!Object.keys(libraryNames).includes(name)) {
       if (verbose) console.log(`Deploying: ${name}`);
-      let libraryFactory = await ethers.getContractFactory(name, account);
+      // if the library also has an external library, link them as well.
+      let libraryFactory;
+      if (linkedLibraries[name]) {
+        let linkedLibrary = Object.keys(libraries).reduce((acc, val) => {
+          if (linkedLibraries[name].includes(val)) acc[val] = libraries[val];
+          return acc;
+        }, {});
+        libraryFactory = await ethers.getContractFactory(
+          name,
+          {
+            libraries: linkedLibrary
+          },
+          account
+        );
+      } else {
+        libraryFactory = await ethers.getContractFactory(name, account);
+      }
       libraryFactory = await libraryFactory.deploy();
       await libraryFactory.deployed();
       if (verify) {
@@ -550,12 +726,13 @@ async function upgradeWithNewFacets({
       }
       const receipt = await initFacet.deployTransaction.wait();
       if (verbose) console.log(`Init Diamond deploy gas used: ` + strDisplay(receipt.gasUsed));
+      initFacetDeploymentGas = initFacetDeploymentGas.add(receipt.gasUsed);
       totalGasUsed = totalGasUsed.add(receipt.gasUsed);
       if (verbose) console.log("Deployed init facet: " + initFacet.address);
     } else {
       if (verbose) console.log("Using init facet: " + initFacet.address);
     }
-    functionCall = initFacet.interface.encodeFunctionData("init", initArgs);
+    functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
     if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
     initFacetAddress = initFacet.address;
   }
@@ -591,21 +768,42 @@ async function upgradeWithNewFacets({
       .diamondCut(diamondCut, initFacetAddress, functionCall);
   }
   const receipt = await result.wait();
+  initFacetCallGas = receipt.gasUsed;
   totalGasUsed = totalGasUsed.add(receipt.gasUsed);
   if (verbose) {
     console.log("------");
     console.log("Upgrade transaction hash: " + result.hash);
     console.log(`Diamond Cut Gas Used: ` + strDisplay(receipt.gasUsed));
     console.log("Total gas used: " + strDisplay(totalGasUsed));
+    gasLimit = ethers.BigNumber.from("21000000");
+    if (checkGas && totalGasUsed.gt(gasLimit)) {
+      console.log("\x1b[33m%s\x1b[0m", "Gas used Exceeds Limit!");
+    }
+  }
+  if (reportGas) {
+    const filePath = "./reseed/data/gas-report.csv";
+    const name = initFacetName || initFacetNameInfo;
+    if (!fs.existsSync(filePath)) {
+      fs.appendFileSync(
+        filePath,
+        "initFacetName,initFacetDeploymentGas,initFacetCallGas,totalGasUsed\n"
+      );
+    }
+    fs.appendFileSync(
+      filePath,
+      `${name}, ${initFacetDeploymentGas}, ${initFacetCallGas}, ${totalGasUsed}\n`
+    );
   }
   return result;
 }
 
-exports.upgrade = upgrade
-exports.upgradeWithNewFacets = upgradeWithNewFacets
-exports.getSelectors = getSelectors
-exports.deployFacets = deployFacets
-exports.deploy = deploy
-exports.inFacets = inFacets
-exports.upgrade = upgrade
-exports.deployDiamond = deployDiamond
+exports.upgrade = upgrade;
+exports.upgradeWithNewFacets = upgradeWithNewFacets;
+exports.getSelectors = getSelectors;
+exports.deployFacets = deployFacets;
+exports.deploy = deploy;
+exports.inFacets = inFacets;
+exports.upgrade = upgrade;
+exports.deployDiamond = deployDiamond;
+exports.deployFacetsAndLibraries = deployFacetsAndLibraries;
+exports.upgradeWithDeployedFacets = upgradeWithDeployedFacets;

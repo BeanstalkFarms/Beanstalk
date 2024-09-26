@@ -32,7 +32,17 @@ import FarmModeField from '~/components/Common/Form/FarmModeField';
 import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import { BEAN, CRV3, DAI, ETH, USDC, USDT, WETH } from '~/constants/tokens';
+import {
+  BEAN,
+  DAI,
+  ETH,
+  USDC,
+  USDT,
+  WETH,
+  WSTETH,
+  WEETH,
+  WBTC,
+} from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
@@ -57,6 +67,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 
 /// ---------------------------------------------------------------
 
@@ -441,7 +452,7 @@ const SwapForm: FC<
   }, [noBalancesFound, handleReverse, handleSetDefault, setInitialModes]);
 
   const handleTokenSelectSubmit = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
         setFieldValue('tokenOut.token', newTokenOut);
@@ -703,7 +714,17 @@ const SwapForm: FC<
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [BEAN, ETH, WETH, CRV3, DAI, USDC, USDT];
+const SUPPORTED_TOKENS = [
+  BEAN,
+  ETH,
+  WETH,
+  WEETH,
+  WBTC,
+  DAI,
+  USDC,
+  USDT,
+  WSTETH,
+];
 
 /**
  * SWAP

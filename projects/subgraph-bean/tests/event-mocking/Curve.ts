@@ -1,7 +1,7 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as";
 
-import { TokenExchangeUnderlying } from "../../generated/Bean3CRV-V1/Bean3CRV";
+import { TokenExchangeUnderlying } from "../../generated/Bean-ABIs/Bean3CRV";
 import { mockContractEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 import { BEAN_3CRV_V1 } from "../../../subgraph-core/utils/Constants";
 

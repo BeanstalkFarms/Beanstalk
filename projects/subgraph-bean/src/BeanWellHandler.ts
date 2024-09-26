@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI, deltaBigIntArray, toDecimal } from "../../subgraph-core/utils/Decimals";
-import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/BeanWETHCP2w/Well";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../generated/Bean-ABIs/Well";
 import { updateBeanAfterPoolSwap } from "./utils/Bean";
 import { getPoolLiquidityUSD, loadOrCreatePool, setPoolReserves, updatePoolPrice, updatePoolValues } from "./utils/Pool";
 import { BeanstalkPrice_try_price, getPoolPrice } from "./utils/price/BeanstalkPrice";
@@ -86,7 +86,10 @@ function handleLiquidityChange(
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  if (wellPrice == null) {
+    return;
+  }
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 
@@ -142,7 +145,10 @@ function handleSwapEvent(
   if (beanPrice.reverted) {
     return;
   }
-  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress))!;
+  let wellPrice = getPoolPrice(beanPrice, Address.fromString(poolAddress));
+  if (wellPrice == null) {
+    return;
+  }
 
   let startingLiquidity = getPoolLiquidityUSD(poolAddress, blockNumber);
 

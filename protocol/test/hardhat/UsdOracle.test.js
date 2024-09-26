@@ -8,7 +8,7 @@ const { getAllBeanstalkContracts } = require("../../utils/contracts.js");
 describe("USD Oracle", function () {
   before(async function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
   });

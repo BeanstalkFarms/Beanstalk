@@ -5,9 +5,9 @@ import {
   ModuleContent,
   ModuleHeader,
 } from '~/components/Common/Module';
-import Chop from './Chop';
 
 import { FC } from '~/types';
+import Chop from './Chop';
 
 const ChopActions: FC<{}> = () => (
   <Module>

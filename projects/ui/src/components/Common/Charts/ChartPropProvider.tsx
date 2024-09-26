@@ -32,13 +32,15 @@ export type BaseDataPoint = {
   [key: string]: number;
 };
 
+type BaseChartMultiStyle = {
+  stroke: string; // stroke color
+  fillPrimary: string; // gradient 'to' color
+  fillSecondary?: string; // gradient 'from' color
+  strokeWidth?: number;
+};
+
 export type ChartMultiStyles = {
-  [key: string]: {
-    stroke: string; // stroke color
-    fillPrimary: string; // gradient 'to' color
-    fillSecondary?: string; // gradient 'from' color
-    strokeWidth?: number;
-  };
+  [key: string]: BaseChartMultiStyle;
 };
 
 type ChartStyleConfig = {
@@ -75,8 +77,8 @@ type Scales = {
 };
 
 export type Scale = {
-  xScale: ReturnType<typeof SCALES[keyof typeof SCALES]>;
-  yScale: ReturnType<typeof SCALES[keyof typeof SCALES]>;
+  xScale: ReturnType<(typeof SCALES)[keyof typeof SCALES]>;
+  yScale: ReturnType<(typeof SCALES)[keyof typeof SCALES]>;
 };
 
 type ChartAccessorProps = {
@@ -120,6 +122,7 @@ type UtilProps = {
 };
 
 export type DataRegion = { yTop: number; yBottom: number };
+// eslint-disable-next-line react/no-unused-prop-types
 export type BaseGraphProps = { width: number; height: number };
 
 export type ProviderChartProps = {
@@ -142,7 +145,7 @@ export type BaseChartProps = {
   isTWAP?: boolean;
   useCustomTokenList?: ERC20Token[];
   useCustomTooltipNames?: { [key: string]: string };
-  tokenPerSeasonFilter?: { [key: string]: { from: number, to: number } };
+  tokenPerSeasonFilter?: { [key: string]: { from: number; to: number } };
   horizontalLineNumber?: number;
   stylesConfig?: ChartMultiStyles;
   stackedArea?: boolean;
@@ -184,33 +187,47 @@ const chartPadding = {
 };
 
 const chartColors = BeanstalkPalette.theme.spring.chart;
-const defaultChartStyles: ChartMultiStyles = {
-  0: {
-    stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
-    fillPrimary: chartColors.primaryLight,
-    strokeWidth: 2,
-  },
-  1: {
-    stroke: chartColors.purple,
-    fillPrimary: chartColors.purpleLight,
-    strokeWidth: 2,
-  },
-  2: {
-    stroke: chartColors.green,
-    fillPrimary: chartColors.greenLight,
-    strokeWidth: 2,
-  },
-  3: {
-    stroke: chartColors.yellow,
-    fillPrimary: chartColors.yellowLight,
-    strokeWidth: 2,
-  },
-  4: {
-    stroke: chartColors.blue,
-    fillPrimary: chartColors.blueLight,
-    strokeWidth: 2,
-  },
+
+const chartStylePrimary: BaseChartMultiStyle = {
+  stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
+  fillPrimary: chartColors.primaryLight,
+  strokeWidth: 2,
 };
+const chartStylePurple: BaseChartMultiStyle = {
+  stroke: chartColors.purple,
+  fillPrimary: chartColors.purpleLight,
+  strokeWidth: 2,
+};
+const chartStyleGreen: BaseChartMultiStyle = {
+  stroke: chartColors.green,
+  fillPrimary: chartColors.greenLight,
+  strokeWidth: 2,
+};
+const chartStyleYellow: BaseChartMultiStyle = {
+  stroke: chartColors.yellow,
+  fillPrimary: chartColors.yellowLight,
+  strokeWidth: 2,
+};
+const chartStyleBlue: BaseChartMultiStyle = {
+  stroke: chartColors.blue,
+  fillPrimary: chartColors.blueLight,
+  strokeWidth: 2,
+};
+
+const chartStyleArr = [
+  chartStylePrimary,
+  chartStylePurple,
+  chartStyleGreen,
+  chartStyleYellow,
+  chartStyleBlue,
+];
+
+const defaultChartStyles: ChartMultiStyles = Object.fromEntries(
+  [...chartStyleArr, ...chartStyleArr].map((chartStyle, i) => [
+    i.toString(),
+    chartStyle,
+  ])
+);
 
 /**
  * get chart styles for given key

@@ -1,15 +1,6 @@
-import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
-import {
-  BEAN_3CRV,
-  BEAN_ERC20_V1,
-  BEAN_ERC20,
-  BEAN_WETH_V1,
-  BEAN_WETH_CP2_WELL,
-  BEAN_3CRV_V1,
-  BEAN_LUSD_V1,
-  BEANSTALK
-} from "../../../subgraph-core/utils/Constants";
+import { BEAN_ERC20_V1, BEAN_ERC20, BEAN_WETH_V1, BEAN_3CRV_V1, BEAN_LUSD_V1, BEANSTALK } from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross, getV1Crosses } from "./Cross";

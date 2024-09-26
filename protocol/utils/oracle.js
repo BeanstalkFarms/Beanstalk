@@ -42,11 +42,6 @@ async function setWstethEthUniswapPrice(price) {
   await wstethEthUniswapPool.setOraclePrice(toX("1", 36).div(toBN("1").add(to18(price))), 18);
 }
 
-async function setWstethStethRedemptionPrice(price) {
-  const wsteth = await ethers.getContractAt("MockWsteth", WSTETH);
-  await wsteth.setStEthPerToken(to18(price));
-}
-
 async function setStethEthChainlinkPrice(price, secondsAgo = 900) {
   const ethUsdChainlinkAggregator = await ethers.getContractAt(
     "MockChainlinkAggregator",
@@ -64,7 +59,6 @@ async function setStethEthChainlinkPrice(price, secondsAgo = 900) {
 async function setWstethUsdPrice(price, wstethEthRatio = "1") {
   await setStethEthChainlinkPrice(wstethEthRatio);
   await setWstethEthUniswapPrice(wstethEthRatio);
-  await setWstethStethRedemptionPrice("1");
   await setEthUsdChainlinkPrice(price);
 }
 
@@ -79,5 +73,4 @@ exports.setEthUsdtPrice = setEthUsdtPrice;
 exports.setOracleFailure = setOracleFailure;
 exports.setWstethEthUniswapPrice = setWstethEthUniswapPrice;
 exports.setStethEthChainlinkPrice = setStethEthChainlinkPrice;
-exports.setWstethStethRedemptionPrice = setWstethStethRedemptionPrice;
 exports.setWstethUsdPrice = setWstethUsdPrice;

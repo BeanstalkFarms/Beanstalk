@@ -23,7 +23,7 @@ contract MockFieldFacet is FieldFacet {
     }
 
     function incrementTotalHarvestableE(uint256 fieldId, uint256 amount) external {
-        C.bean().mint(address(this), amount);
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), amount);
         s.sys.fields[fieldId].harvestable += amount;
     }
 
@@ -60,9 +60,8 @@ contract MockFieldFacet is FieldFacet {
                         // delta == 0, same block as sunrise
                         if (delta < 1) {
                             return LibDibbler.TEMPERATURE_PRECISION;
-                        }
-                        // delta == 1
-                        else {
+                        } else {
+                            // delta == 1
                             return _scaleTemperature(279415312704, initalTemp);
                         }
                     }

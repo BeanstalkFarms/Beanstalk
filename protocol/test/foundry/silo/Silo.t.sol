@@ -29,13 +29,13 @@ contract SiloTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
 
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -46,47 +46,47 @@ contract SiloTest is TestHelper {
      * @dev partial transfers, withdraws, and converts are tested here. See {SiloTest.test_siloDepositList} for full deposits.
      */
     function test_siloDepositList(uint256 amount, uint256 portion) public {
-        uint256[] memory depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
+        uint256[] memory depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
         IMockFBeanstalk.TokenDepositId memory deposit = bs.getTokenDepositsForAccount(
             farmers[0],
-            C.BEAN
+            BEAN
         );
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 0);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 0);
 
         amount = bound(amount, 100, 1e22);
         portion = bound(portion, 1, amount - 1);
-        mintTokensToUser(farmers[0], C.BEAN, amount);
+        mintTokensToUser(farmers[0], BEAN, amount);
 
         //////////// DEPOSIT ////////////
         vm.prank(farmers[0]);
-        bs.deposit(C.BEAN, portion, 0);
+        bs.deposit(BEAN, portion, 0);
 
         // verify depositList.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
         IMockFBeanstalk.TokenDepositId[] memory allDeposits = bs.getDepositsForAccount(farmers[0]);
 
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
-        assertEq(bs.getIndexForDepositId(farmers[0], C.BEAN, depositIds[0]), 0);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[0], BEAN, depositIds[0]), 0);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         assertEq(token, deposit.token);
         assertEq(stem, bs.stemTipForToken(token));
         assertEq(deposit.tokenDeposits[0].amount, portion);
         for (uint i; i < allDeposits.length; i++) {
             assertEq(allDeposits[i].token, bs.getWhitelistedTokens()[i]);
-            if (allDeposits[i].token != C.BEAN) {
+            if (allDeposits[i].token != BEAN) {
                 assertEq(allDeposits[i].depositIds.length, 0);
                 assertEq(allDeposits[i].tokenDeposits.length, 0);
             }
         }
 
         vm.prank(farmers[0]);
-        bs.deposit(C.BEAN, amount - portion, 0);
+        bs.deposit(BEAN, amount - portion, 0);
 
         // verify depositList index does not increase.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
         (token, stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
         assertEq(token, deposit.token);
         assertEq(stem, bs.stemTipForToken(token));
@@ -96,41 +96,41 @@ contract SiloTest is TestHelper {
 
         //////////// TRANSFER ////////////
         vm.prank(farmers[0]);
-        bs.transferDeposit(farmers[0], farmers[1], C.BEAN, stem, portion);
+        bs.transferDeposit(farmers[0], farmers[1], BEAN, stem, portion);
 
         // verify depositList for sender.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
-        assertEq(bs.getIndexForDepositId(farmers[0], C.BEAN, depositIds[0]), 0);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[0], BEAN, depositIds[0]), 0);
         assertEq(deposit.tokenDeposits[0].amount, amount - portion);
 
         // verify depositList for recipient.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[1], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
-        assertEq(bs.getIndexForDepositId(farmers[1], C.BEAN, depositIds[0]), 0);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[1], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
+        assertEq(bs.getIndexForDepositId(farmers[1], BEAN, depositIds[0]), 0);
         assertEq(deposit.tokenDeposits[0].amount, portion);
 
         vm.revertTo(snapshot);
 
         // withdraw `portion` of deposit.
         vm.prank(farmers[0]);
-        bs.withdrawDeposit(C.BEAN, stem, portion, 0);
+        bs.withdrawDeposit(BEAN, stem, portion, 0);
 
         // verify depositList.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
         assertEq(deposit.tokenDeposits[0].amount, amount - portion);
 
         //////////// CONVERT ////////////
 
         vm.revertTo(snapshot);
         // increase deltaB. 1e22 / 1e6 = 1e16 ethers.
-        addLiquidityToWell(C.BEAN_ETH_WELL, 0, 1e16 ether);
+        addLiquidityToWell(BEAN_ETH_WELL, 0, 1e16 ether);
 
-        bytes memory convertData = createBeanToLPConvert(C.BEAN_ETH_WELL, portion);
+        bytes memory convertData = createBeanToLPConvert(BEAN_ETH_WELL, portion);
 
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
@@ -146,14 +146,14 @@ contract SiloTest is TestHelper {
         bs.convert(convertData, stems, amounts);
 
         // verify depositList.
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 1);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 1);
         assertEq(deposit.tokenDeposits[0].amount, amount - portion);
 
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN_ETH_WELL);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN_ETH_WELL);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN_ETH_WELL, 1);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN_ETH_WELL);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN_ETH_WELL);
+        verifyDepositIdLengths(depositIds, deposit, BEAN_ETH_WELL, 1);
         assertGe(deposit.tokenDeposits[0].amount, 0);
     }
 
@@ -170,19 +170,19 @@ contract SiloTest is TestHelper {
         uint256 depositAmount = rand(1, 10e6);
         uint256 deposits = rand(1, 50);
         for (uint256 i; i < deposits; i++) {
-            mintTokensToUser(farmers[0], C.BEAN, depositAmount);
+            mintTokensToUser(farmers[0], BEAN, depositAmount);
             vm.prank(farmers[0]);
-            bs.deposit(C.BEAN, depositAmount, 0);
+            bs.deposit(BEAN, depositAmount, 0);
             bs.siloSunrise(0);
         }
 
         // verify depositList.
-        uint256[] memory depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
+        uint256[] memory depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
         IMockFBeanstalk.TokenDepositId memory deposit = bs.getTokenDepositsForAccount(
             farmers[0],
-            C.BEAN
+            BEAN
         );
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, deposits);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, deposits);
         for (uint256 i; i < deposits; i++) {
             assertEq(deposit.tokenDeposits[i].amount, depositAmount);
         }
@@ -192,48 +192,44 @@ contract SiloTest is TestHelper {
         // transfers a random amount of deposits to farmer[1].
         uint256 transfers = rand(1, ((deposits - 1) / 2) + 1);
         vm.startPrank(farmers[0]);
-        uint256 _stalkEarnedPerSeason = stalkEarnedPerSeason(C.BEAN);
+        uint256 _stalkEarnedPerSeason = stalkEarnedPerSeason(BEAN);
         int96[] memory stems = new int96[](transfers);
         uint256[] memory amounts = new uint256[](transfers);
         for (uint256 i; i < transfers; i++) {
             stems[i] = int96(uint96(i * _stalkEarnedPerSeason));
             amounts[i] = depositAmount;
         }
-        bs.transferDeposits(farmers[0], farmers[1], C.BEAN, stems, amounts);
+        bs.transferDeposits(farmers[0], farmers[1], BEAN, stems, amounts);
         vm.stopPrank();
 
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, deposits - transfers);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, deposits - transfers);
 
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[1], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, transfers);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[1], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, transfers);
 
         //////////// CONVERT ////////////
 
         // increase deltaB.
-        addLiquidityToWell(C.BEAN_ETH_WELL, 0, 100 ether);
+        addLiquidityToWell(BEAN_ETH_WELL, 0, 100 ether);
         // skip germination as germinating deposits cannot be converted.
         bs.siloSunrise(0);
         bs.siloSunrise(0);
 
         // converts deposits for farmer[1].
         vm.startPrank(farmers[1]);
-        bs.convert(
-            createBeanToLPConvert(C.BEAN_ETH_WELL, depositAmount * transfers),
-            stems,
-            amounts
-        );
+        bs.convert(createBeanToLPConvert(BEAN_ETH_WELL, depositAmount * transfers), stems, amounts);
         vm.stopPrank();
 
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[1], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 0);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[1], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 0);
 
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], C.BEAN_ETH_WELL);
-        deposit = bs.getTokenDepositsForAccount(farmers[1], C.BEAN_ETH_WELL);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN_ETH_WELL, 1);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[1], BEAN_ETH_WELL);
+        deposit = bs.getTokenDepositsForAccount(farmers[1], BEAN_ETH_WELL);
+        verifyDepositIdLengths(depositIds, deposit, BEAN_ETH_WELL, 1);
 
         //////////// WITHDRAW ////////////
 
@@ -245,10 +241,10 @@ contract SiloTest is TestHelper {
             amounts[i] = depositAmount;
         }
         vm.startPrank(farmers[0]);
-        bs.withdrawDeposits(C.BEAN, stems, amounts, 0);
-        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], C.BEAN);
-        deposit = bs.getTokenDepositsForAccount(farmers[0], C.BEAN);
-        verifyDepositIdLengths(depositIds, deposit, C.BEAN, 0);
+        bs.withdrawDeposits(BEAN, stems, amounts, 0);
+        depositIds = bs.getTokenDepositIdsForAccount(farmers[0], BEAN);
+        deposit = bs.getTokenDepositsForAccount(farmers[0], BEAN);
+        verifyDepositIdLengths(depositIds, deposit, BEAN, 0);
     }
 
     // silo list helpers //

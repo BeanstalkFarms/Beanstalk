@@ -9,7 +9,9 @@ import {
   BEAN_3CRV_V1,
   BEAN_LUSD_V1,
   BEAN_3CRV,
-  BEAN_WETH_CP2_WELL
+  BEAN_WETH_CP2_WELL,
+  BEAN_WSTETH_CP2_WELL,
+  WSTETH
 } from "../../../subgraph-core/utils/Constants";
 
 // Use this mapping to determine which tokens are in each pool. Pools may each follow a distinct interface,
@@ -58,6 +60,10 @@ const poolTokens: PoolTokens[] = [
   {
     pool: BEAN_WETH_CP2_WELL.toHexString(),
     tokens: [BEAN_ERC20.toHexString(), WETH.toHexString()]
+  },
+  {
+    pool: BEAN_WSTETH_CP2_WELL.toHexString(),
+    tokens: [BEAN_ERC20.toHexString(), WSTETH.toHexString()]
   }
 ];
 
@@ -92,5 +98,9 @@ const tokens: Token[] = [
   {
     address: LUSD.toHexString(),
     info: { name: "LUSD", decimals: BigInt.fromU32(18) }
+  },
+  {
+    address: WSTETH.toHexString(),
+    info: { name: "wstETH", decimals: BigInt.fromU32(18) }
   }
 ];

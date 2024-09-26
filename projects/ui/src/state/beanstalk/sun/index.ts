@@ -2,8 +2,8 @@ import BigNumber from 'bignumber.js';
 import { DateTime, Duration } from 'luxon';
 import { Beanstalk } from '~/generated';
 import { bigNumberResult } from '~/util';
-import { APPROX_SECS_PER_BLOCK } from './morning';
 import { BlockInfo } from '~/hooks/chain/useFetchLatestBlock';
+import { APPROX_SECS_PER_BLOCK } from './morning';
 
 export type Sun = {
   // season: BigNumber;

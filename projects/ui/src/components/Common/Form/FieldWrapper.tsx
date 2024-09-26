@@ -1,10 +1,10 @@
 import React, { ReactNode } from 'react';
 import { Box, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { FontSize } from '../../App/muiTheme';
 
 import { FC } from '~/types';
 import { useTheme } from '@mui/material/styles';
+import { FontSize } from '../../App/muiTheme';
 
 const FieldWrapper: FC<{
   label?: ReactNode | string;
@@ -17,8 +17,8 @@ const FieldWrapper: FC<{
     <Box>
       {label && (
         <Typography
+          variant="bodySmall"
           sx={{
-            fontSize: 'bodySmall',
             px: 0.5,
             mb: 0.25,
           }}

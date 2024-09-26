@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, ethereum, Address, log } from "@graphprotocol/graph-ts";
-import { Swap, Sync } from "../generated/BeanUniswapV2Pair/UniswapV2Pair";
+import { Swap, Sync } from "../generated/Bean-ABIs/UniswapV2Pair";
 import { getLastBeanPrice, calcLiquidityWeightedBeanPrice, loadBean, updateBeanSupplyPegPercent, updateBeanValues } from "./utils/Bean";
 import { BEAN_ERC20_V1, BEAN_WETH_V1, WETH } from "../../subgraph-core/utils/Constants";
 import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";

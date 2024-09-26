@@ -1,82 +1,223 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ButtonProps,
   Stack,
   Typography,
   useMediaQuery,
   Box,
-  Link,
   Switch,
   Chip,
   Avatar,
+  Divider,
 } from '@mui/material';
-import throttle from 'lodash/throttle';
 import { useTheme } from '@mui/material/styles';
 import { Close } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
 import usePools from '~/hooks/beanstalk/usePools';
 import PoolCard from '~/components/Silo/PoolCard';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import usePrice from '~/hooks/beanstalk/usePrice';
-import { displayBeanPrice, displayBN } from '~/util/Tokens';
-import { BASIN_WELL_LINK, CURVE_LINK, NEW_BN, ZERO_BN } from '~/constants';
-import { useFetchPools } from '~/state/bean/pools/updater';
-import { AppState } from '~/state';
-import ethereumLogo from '~/img/tokens/eth-logo-circled.svg';
+import {
+  displayBeanPrice,
+  displayBN,
+  displayUSD,
+  getTokenIndex,
+} from '~/util/Tokens';
+import { BASIN_WELL_LINK, NEW_BN, ZERO_BN } from '~/constants';
+import { useThrottledFetchPools } from '~/state/bean/pools/updater';
+import { useAppSelector } from '~/state';
 
 // ------------------------------------------------------------
 
 import { FC } from '~/types';
 import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
+import useTwaDeltaB from '~/hooks/beanstalk/useTwaDeltaB';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
+import { Token } from '@beanstalk/sdk';
+import BigNumber from 'bignumber.js';
 import FolderMenu from '../FolderMenu';
 
-const poolLinks: { [key: string]: string } = {
-  '0xc9c32cd16bf7efb85ff14e0c8603cc90f6f2ee49': CURVE_LINK,
-  '0xbea0e11282e2bb5893bece110cf199501e872bad': `${BASIN_WELL_LINK}0xbea0e11282e2bb5893bece110cf199501e872bad`,
+type TokenPriceEntry = {
+  token: Token;
+  price: BigNumber;
+  twap: BigNumber;
 };
 
-const PriceButton: FC<ButtonProps> = ({ ...props }) => {
-  const [showDeprecated, setShowDeprecated] = useState(false);
+const usePricesAndTWAPByToken = () => {
+  const prices = useDataFeedTokenPrices();
+  const { ETH, WSTETH, WBTC, WEETH, USDC, USDT } = useTokens();
 
-  const pools = usePools(showDeprecated);
-  for (const [address, pool] of Object.entries(pools)) {
-    pool.link = poolLinks[address];
-  }
+  return useMemo(() => {
+    const tokens = [ETH, WSTETH, WBTC, WEETH, USDC, USDT];
+
+    const entries = tokens.reduce<Record<string, TokenPriceEntry>>(
+      (acc, token) => {
+        const price = prices[getTokenIndex(token)] || ZERO_BN;
+        const twap = prices[`${token.symbol}-TWA`] || ZERO_BN;
+
+        acc[token.address] = { price, twap, token };
+        return acc;
+      },
+      {}
+    );
+
+    return {
+      underlying: tokens,
+      tokenMap: entries,
+    };
+  }, [ETH, WSTETH, WBTC, WEETH, USDC, USDT, prices]);
+};
+
+const UnderlyingPrices: FC<{
+  showTWA: boolean;
+  tokenPrices: ReturnType<typeof usePricesAndTWAPByToken>;
+  togglePrices: () => void;
+}> = ({
+  tokenPrices: { tokenMap, underlying },
+  showTWA = false,
+  togglePrices,
+}) => {
+  const [index, setIndex] = useState(0);
+
+  const currToken = underlying[index];
+  const prices = tokenMap[underlying[index]?.address];
+  const price = showTWA ? prices?.twap : prices?.price;
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setIndex((prevIndex) => (prevIndex + 1) % underlying.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [underlying.length]);
+
+  return (
+    <Chip
+      size="small"
+      sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
+      avatar={<Avatar src={currToken?.logo} />}
+      onClick={togglePrices}
+      label={
+        <Typography component="span" sx={{ textAlign: 'left' }}>
+          <>{displayUSD(price || 0)}</>
+          <ArrowOutwardIcon sx={{ fontSize: 12, marginLeft: '5px' }} />
+        </Typography>
+      }
+    />
+  );
+};
+
+const PriceDisplay = ({
+  token,
+  price,
+  isTWA = false,
+}: {
+  token: Token;
+  price: BigNumber;
+  isTWA?: boolean;
+}) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}
+  >
+    <Box display="flex" flexDirection="row">
+      <Avatar
+        sx={{ width: 18, height: 18, marginRight: '5px' }}
+        src={token.logo}
+      />
+      {`${isTWA ? 'TWA ' : ''}${token.symbol} Price`}
+    </Box>
+    <div>{displayUSD(price)}</div>
+  </Box>
+);
+
+const PriceOverlayContent: FC<{
+  tokenPrices: ReturnType<typeof usePricesAndTWAPByToken>;
+  togglePrices: () => void;
+}> = ({ tokenPrices: { tokenMap, underlying }, togglePrices }) => (
+  <Stack
+    p={1}
+    gap={1}
+    sx={{
+      border: '1px solid #ecf7fe',
+      borderRadius: '10px',
+      alignItems: 'stretch',
+      backgroundColor: '#f6fafe',
+    }}
+  >
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+        Prices of Non-Bean Assets
+      </Typography>
+      <Close sx={{ fontSize: 14, cursor: 'pointer' }} onClick={togglePrices} />
+    </Stack>
+    <Stack gap={0.5}>
+      {underlying.map((token) => {
+        const prices = tokenMap[token.address];
+        return (
+          <PriceDisplay
+            key={`${token.symbol}-price`}
+            token={token}
+            price={prices?.price || ZERO_BN}
+          />
+        );
+      })}
+      <Box py={1}>
+        <Divider sx={{ borderWidth: '0.5px', borderBottom: 0 }} />
+      </Box>
+      {underlying.map((token) => {
+        const prices = tokenMap[token.address];
+        return (
+          <PriceDisplay
+            key={`${token.symbol}-price-TWA`}
+            token={token}
+            price={prices?.twap || ZERO_BN}
+            isTWA
+          />
+        );
+      })}
+    </Stack>
+    <Box sx={{ marginTop: 2 }}>
+      <Typography
+        sx={{ color: '#647265', fontSize: '12px', lineHeight: '14px' }}
+      >
+        TWA prices indicate the prices of the non-Bean asset over the last hour
+        according to Beanstalk.
+      </Typography>
+    </Box>
+  </Stack>
+);
+
+const PriceButton: FC<ButtonProps> = ({ ...props }) => {
+  //
   const [showTWA, setShowTWA] = useState(false);
   const [showPrices, setShowPrices] = useState(false);
-  const season = useSeason();
+
+  //
+  const beanPools = useAppSelector((state) => state._bean.pools);
+  const beanTokenData = useAppSelector((state) => state._bean.token);
   const beanPrice = usePrice();
-  const beanPools = useSelector<AppState, AppState['_bean']['pools']>(
-    (state) => state._bean.pools
-  );
+  const season = useSeason();
+  const pools = usePools();
 
-  const toggleDisplayedPools = (e: React.MouseEvent<HTMLElement>) => {
-    e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
-    setShowDeprecated(!showDeprecated);
-  };
-
-  const toggleTWA = (v: React.ChangeEvent<HTMLInputElement>) =>
-    setShowTWA(v.target.checked);
-
-  const togglePrices = () => setShowPrices(!showPrices);
-
-  const beanTokenData = useSelector<AppState, AppState['_bean']['token']>(
-    (state) => state._bean.token
-  );
-  const tokenPrices = useDataFeedTokenPrices();
-  const [_refetchPools] = useFetchPools();
-  const refetchPools = useMemo(
-    () => throttle(_refetchPools, 10_000),
-    [_refetchPools]
-  ); // max refetch = 10s
+  const tokenPrices = usePricesAndTWAPByToken();
+  const refetchPools = useThrottledFetchPools();
+  const { data: twaDeltaBs } = useTwaDeltaB();
 
   // Theme
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const isTiny = useMediaQuery('(max-width:350px)');
+
+  // Callbacks
+  const toggleTWA = (v: React.ChangeEvent<HTMLInputElement>) =>
+    setShowTWA(v.target.checked);
+  const togglePrices = () => setShowPrices(!showPrices);
 
   // Content
   const isLoading = beanPrice.eq(NEW_BN);
@@ -84,7 +225,10 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
     <BeanProgressIcon size={25} enabled={isLoading} variant="indeterminate" />
   );
 
-  // calculate based on which pools we're shoing.
+  // Derived
+  const twaDeltaB = twaDeltaBs?.total || ZERO_BN;
+
+  // calculate based on which pools we're showing.
   // This is very weird code here, but we're just working with what we got
   const combinedDeltaB = Object.entries(beanPools)
     .map(([address, value]) => ({ ...value, address }))
@@ -97,29 +241,17 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
         sx={{
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
         }}
       >
-        <div>
-          <Chip
-            size="small"
-            sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
-            avatar={<Avatar src={ethereumLogo} />}
-            onClick={togglePrices}
-            label={
-              <span>
-                {showTWA ? (
-                  <> ${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</>
-                ) : (
-                  <> ${tokenPrices.eth?.toFixed(2) || 0}</>
-                )}
-
-                <ArrowOutwardIcon sx={{ fontSize: 12, marginLeft: '5px' }} />
-              </span>
-            }
+        <Stack gap={0.5}>
+          <UnderlyingPrices
+            showTWA={showTWA}
+            tokenPrices={tokenPrices}
+            togglePrices={togglePrices}
           />
-        </div>
+        </Stack>
         <div>
           <Chip
             sx={{ backgroundColor: '#f6fafe', color: '#647265' }}
@@ -131,7 +263,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
                     Total TWA deltaB:{' '}
                     <strong>
                       {beanTokenData.deltaB.gte(0) && '+'}
-                      {displayBN(beanTokenData.deltaB, true)}
+                      {displayBN(twaDeltaB, true)}
                     </strong>
                   </>
                 ) : (
@@ -155,7 +287,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           poolState={beanPools[pool.address]}
           useTWA={showTWA}
           ButtonProps={{
-            href: `${pool.link}`,
+            href: `${BASIN_WELL_LINK}${pool.address}`,
             target: '_blank',
             rel: 'noreferrer',
           }}
@@ -214,126 +346,9 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
               </>
             )}
           </Typography>
-
-          {/*  Leaving here for reference
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Cumulative Instantaneous deltaB:</div>
-            <div>
-              {combinedDeltaB.gte(0) && '+'}
-              {displayBN(combinedDeltaB, true)}
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Cumulative Time-Weighted deltaB:</div>
-            <div>
-              {beanTokenData.deltaB.gte(0) && '+'}
-              {displayBN(beanTokenData.deltaB, true)}
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Instantaneous ETH Price:</div>
-            <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>Time-Weighted ETH Price:</div>
-            <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
-          </Box> */}
-        </Box>
-        <Box
-          sx={{ padding: '5px', textAlign: 'center', fontSize: '12px' }}
-          maxWidth="sm"
-        >
-          <Link
-            onClick={toggleDisplayedPools}
-            sx={{ color: '#647265', cursor: 'pointer' }}
-          >
-            {showDeprecated
-              ? 'Show only whitelisted pools'
-              : 'Show dewhitelisted pools'}
-          </Link>
         </Box>
       </div>
     </>
-  );
-
-  const priceContent = (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        border: '1px solid #ecf7fe',
-        borderRadius: '10px',
-        alignItems: 'stretch',
-        backgroundColor: '#f6fafe',
-        padding: '10px',
-        gap: '10px',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-          Prices of Non-Bean Assets
-        </Typography>
-        <Close
-          sx={{ fontSize: 14, cursor: 'pointer' }}
-          onClick={togglePrices}
-        />
-      </Box>
-
-      {/* ETH Price */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box display="flex" flexDirection="row">
-          <Avatar
-            sx={{ width: 18, height: 18, marginRight: '5px' }}
-            src={ethereumLogo}
-          />{' '}
-          ETH Price
-        </Box>
-        <div>${tokenPrices.eth?.toFixed(2) || 0}</div>
-      </Box>
-
-      {/* TWA ETH Price */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box display="flex" flexDirection="row">
-          <Avatar
-            sx={{ width: 18, height: 18, marginRight: '5px' }}
-            src={ethereumLogo}
-          />{' '}
-          TWA ETH Price
-        </Box>
-        <div>${tokenPrices['ETH-TWA']?.toFixed(2) || 0}</div>
-      </Box>
-
-      <Box sx={{ marginTop: '100px' }}>
-        <Typography
-          sx={{ color: '#647265', fontSize: '12px', lineHeight: '14px' }}
-        >
-          TWA prices indicate the prices of the non-Bean asset over the last
-          hour according to Beanstalk.
-        </Typography>
-      </Box>
-    </Box>
   );
 
   return (
@@ -359,7 +374,14 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
       }
       popoverContent={
         <Stack gap={1} p={1}>
-          {showPrices ? priceContent : poolsContent}
+          {showPrices ? (
+            <PriceOverlayContent
+              tokenPrices={tokenPrices}
+              togglePrices={togglePrices}
+            />
+          ) : (
+            poolsContent
+          )}
         </Stack>
       }
       hotkey="opt+1, alt+1"

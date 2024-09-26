@@ -1,6 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { Deposit, Withdraw } from "../../generated/schema";
-import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Sync } from "../../generated/templates/Well/Well";
+import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Sync } from "../../generated/Basin-ABIs/Well";
 import { getBigDecimalArrayTotal } from "../../../subgraph-core/utils/Decimals";
 import { getCalculatedReserveUSDValues, loadWell } from "./Well";
 

@@ -7,16 +7,14 @@ pragma solidity ^0.8.20;
 import {C} from "contracts/C.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
-import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {LibRedundantMath32} from "contracts/libraries/LibRedundantMath32.sol";
 import {ReentrancyGuard} from "../ReentrancyGuard.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
-import {AdvancedFarmCall} from "../../libraries/LibFarm.sol";
+import {AdvancedPipeCall} from "contracts/interfaces/IPipeline.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
 import {LibPipelineConvert} from "contracts/libraries/Convert/LibPipelineConvert.sol";
@@ -31,7 +29,6 @@ import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 contract PipelineConvertFacet is Invariable, ReentrancyGuard {
     using LibRedundantMathSigned256 for int256;
     using SafeCast for uint256;
-    using LibConvertData for bytes;
     using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
     using LibRedundantMath32 for uint32;
@@ -52,7 +49,7 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
      * @param stems The stems of the deposits to convert from.
      * @param amounts The amounts of the deposits to convert from.
      * @param outputToken The token to convert to.
-     * @param advancedFarmCalls The farm calls to execute.
+     * @param advancedPipeCalls The pipe calls to execute.
      * @return toStem the new stems of the converted deposit
      * @return fromAmount the amount of tokens converted from
      * @return toAmount the amount of tokens converted to
@@ -64,20 +61,21 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
         int96[] calldata stems,
         uint256[] calldata amounts,
         address outputToken,
-        AdvancedFarmCall[] calldata advancedFarmCalls
+        AdvancedPipeCall[] memory advancedPipeCalls
     )
         external
         payable
         fundsSafu
+        nonReentrant
         returns (int96 toStem, uint256 fromAmount, uint256 toAmount, uint256 fromBdv, uint256 toBdv)
     {
         // require that input and output tokens be wells (Unripe not supported)
         require(
-            LibWell.isWell(inputToken) || inputToken == C.BEAN,
+            LibWell.isWell(inputToken) || inputToken == s.sys.tokens.bean,
             "Convert: Input token must be Bean or a well"
         );
         require(
-            LibWell.isWell(outputToken) || outputToken == C.BEAN,
+            LibWell.isWell(outputToken) || outputToken == s.sys.tokens.bean,
             "Convert: Output token must be Bean or a well"
         );
 
@@ -92,7 +90,13 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
 
         // withdraw tokens from deposits and calculate the total grown stalk and bdv.
         uint256 grownStalk;
-        (grownStalk, fromBdv) = LibConvert._withdrawTokens(inputToken, stems, amounts, fromAmount);
+        (grownStalk, fromBdv) = LibConvert._withdrawTokens(
+            inputToken,
+            stems,
+            amounts,
+            fromAmount,
+            LibTractor._user()
+        );
 
         (toAmount, grownStalk, toBdv) = LibPipelineConvert.executePipelineConvert(
             inputToken,
@@ -100,10 +104,16 @@ contract PipelineConvertFacet is Invariable, ReentrancyGuard {
             fromAmount,
             fromBdv,
             grownStalk,
-            advancedFarmCalls
+            advancedPipeCalls
         );
 
-        toStem = LibConvert._depositTokensForConvert(outputToken, toAmount, toBdv, grownStalk);
+        toStem = LibConvert._depositTokensForConvert(
+            outputToken,
+            toAmount,
+            toBdv,
+            grownStalk,
+            LibTractor._user()
+        );
 
         emit Convert(LibTractor._user(), inputToken, outputToken, fromAmount, toAmount);
     }

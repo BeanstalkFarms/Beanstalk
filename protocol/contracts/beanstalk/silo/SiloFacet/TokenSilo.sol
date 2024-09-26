@@ -21,6 +21,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {LibSiloPermit} from "contracts/libraries/Silo/LibSiloPermit.sol";
 
 /**
  * @title TokenSilo
@@ -319,7 +320,7 @@ contract TokenSilo is ReentrancyGuard {
         // If a Farmer's Germinating Stalk for a given Season is less than the number of
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
-        if (token == C.BEAN) {
+        if (token == s.sys.tokens.bean) {
             (uint256 germinatingStalk, uint256 earnedBeansStalk) = LibSilo.checkForEarnedBeans(
                 account,
                 stalk,
@@ -337,7 +338,7 @@ contract TokenSilo is ReentrancyGuard {
             // burn the earned bean stalk (which is active).
             LibSilo.burnActiveStalk(account, earnedBeansStalk);
             // calculate earnedBeans and decrement totalDeposited.
-            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+            LibTokenSilo.decrementTotalDeposited(s.sys.tokens.bean, earnedBeans, earnedBeans);
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
@@ -360,6 +361,13 @@ contract TokenSilo is ReentrancyGuard {
         int96 stem,
         uint256 amount
     ) internal returns (uint256) {
+        if (sender != LibTractor._user()) {
+            LibSiloPermit._spendDepositAllowance(sender, LibTractor._user(), token, amount);
+        }
+        LibSilo._mow(sender, token);
+        // Need to update the recipient's Silo as well.
+        LibSilo._mow(recipient, token);
+
         (uint256 initialStalk, uint256 activeStalk, uint256 bdv, GerminationSide side) = LibSilo
             ._removeDepositFromAccount(
                 sender,
@@ -380,7 +388,7 @@ contract TokenSilo is ReentrancyGuard {
         if (side == GerminationSide.NOT_GERMINATING) {
             LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo
                     .checkForEarnedBeans(sender, initialStalk, side);
                 // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an

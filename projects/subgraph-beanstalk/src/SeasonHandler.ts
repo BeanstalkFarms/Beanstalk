@@ -1,13 +1,13 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { MetapoolOracle, Reward, Soil, Incentivization, WellOracle } from "../generated/Season-Replanted/Beanstalk";
-import { CurvePrice } from "../generated/Season-Replanted/CurvePrice";
-import { SeasonSnapshot, Sunrise, Beanstalk } from "../generated/Season/Beanstalk";
+import { MetapoolOracle, Reward, Soil, WellOracle } from "../generated/Beanstalk-ABIs/BasinBip";
+import { CurvePrice } from "../generated/Beanstalk-ABIs/CurvePrice";
+import { SeasonSnapshot, Sunrise, Incentivization, PreReplant } from "../generated/Beanstalk-ABIs/PreReplant";
 import { Incentive } from "../generated/schema";
 import { updateHarvestablePlots } from "./FieldHandler";
 import { loadBeanstalk } from "./utils/Beanstalk";
 import { Reward as RewardEntity, MetapoolOracle as MetapoolOracleEntity, WellOracle as WellOracleEntity } from "../generated/schema";
-import { BEANSTALK, BEANSTALK_PRICE, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
-import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BEANSTALK, BEAN_ERC20, CURVE_PRICE, GAUGE_BIP45_BLOCK } from "../../subgraph-core/utils/Constants";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadField, loadFieldDaily, loadFieldHourly } from "./utils/Field";
 import {
   loadPodMarketplace,
@@ -25,7 +25,7 @@ import {
   loadSiloAssetDailySnapshot,
   loadSiloAssetHourlySnapshot
 } from "./utils/SiloEntities";
-import { BeanstalkPrice } from "../generated/Season-Replanted/BeanstalkPrice";
+import { BeanstalkPrice_try_price, getBeanstalkPrice } from "./utils/BeanstalkPrice";
 
 export function handleSunrise(event: Sunrise): void {
   let currentSeason = event.params.season.toI32();
@@ -161,8 +161,7 @@ export function handleMetapoolOracle(event: MetapoolOracle): void {
   if (event.block.number < GAUGE_BIP45_BLOCK) {
     let season = loadSeason(event.address, event.params.season);
     // Attempt to pull from Beanstalk Price contract first
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
-    let beanstalkQuery = beanstalkPrice.try_price();
+    let beanstalkQuery = BeanstalkPrice_try_price(event.address, event.block.number);
     if (beanstalkQuery.reverted) {
       let curvePrice = CurvePrice.bind(CURVE_PRICE);
       season.price = toDecimal(curvePrice.getCurve().price);
@@ -189,10 +188,8 @@ export function handleWellOracle(event: WellOracle): void {
 
   let season = loadSeason(event.address, event.params.season);
   season.deltaB = season.deltaB.plus(event.params.deltaB);
-  // FIXME: will not be accurate when there are multiple whitelisted wells.
-  // This information should be pulled from the Bean subgraph instead, and removed here.
   if (event.block.number >= GAUGE_BIP45_BLOCK && season.price == ZERO_BD) {
-    let beanstalkPrice = BeanstalkPrice.bind(BEANSTALK_PRICE);
+    let beanstalkPrice = getBeanstalkPrice(event.block.number);
     let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);
     season.price = toDecimal(beanstalkQuery.price);
   }
@@ -241,7 +238,7 @@ export function handleIncentive(event: Incentivization): void {
 
   // Update market cap for season
   let beanstalk = loadBeanstalk(event.address);
-  let beanstalk_contract = Beanstalk.bind(BEANSTALK);
+  let beanstalk_contract = PreReplant.bind(BEANSTALK);
   let season = loadSeason(event.address, BigInt.fromI32(beanstalk.lastSeason));
 
   season.marketCap = season.price.times(toDecimal(season.beans));
