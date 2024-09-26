@@ -119,8 +119,7 @@ contract ReseedBean {
     bytes32 internal constant FERTILIZER_PROXY_SALT =
         0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70fb8fe6ecbb7a4fead78f65ee;
 
-    // BCM (TODO: Replace with actual L2 address)
-    address internal constant L2_BCM = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+    address internal constant L2_BCM = address(0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69);
 
     /**
      * @notice deploys bean, unripe bean, unripe lp, and wells.
