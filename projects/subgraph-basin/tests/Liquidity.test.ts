@@ -1,5 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BI_10, toDecimal, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
@@ -17,33 +18,16 @@ import {
   mockRemoveLiquidityOneWeth,
   mockSync
 } from "./helpers/Liquidity";
-import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { BigDecimal_max } from "../../subgraph-core/utils/ArrayMath";
-import { calcLiquidityVolume } from "../src/utils/Volume";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { initL1Version } from "./entity-mocking/MockVersion";
-import { loadToken } from "../src/entities/Token";
 import { loadWell } from "../src/entities/Well";
+import { calcLiquidityVolume } from "../src/utils/Volume";
+import { toAddress } from "../../subgraph-core/utils/Bytes";
+import { mockWellLpTokenUnderlying } from "../../subgraph-core/tests/event-mocking/Tokens";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);
-const BI_4 = BigInt.fromU32(4);
 const BD_2 = BigDecimal.fromString("2");
 const BD_3 = BigDecimal.fromString("3");
-const BD_4 = BigDecimal.fromString("4");
-
-function zeroNegative(tokenAmounts: BigInt[]): BigInt[] {
-  return [tokenAmounts[0] < ZERO_BI ? ZERO_BI : tokenAmounts[0], tokenAmounts[1] < ZERO_BI ? ZERO_BI : tokenAmounts[1]];
-}
-
-function assignUSD(tokenAmounts: BigInt[]): BigDecimal[] {
-  const bean = loadToken(BEAN_ERC20);
-  const weth = loadToken(WETH);
-  return [
-    toDecimal(tokenAmounts[0], bean.decimals).times(bean.lastPriceUSD),
-    toDecimal(tokenAmounts[1], weth.decimals).times(weth.lastPriceUSD)
-  ];
-}
 
 describe("Well Entity: Liquidity Event Tests", () => {
   beforeEach(() => {
@@ -327,5 +311,34 @@ describe("Well Entity: Liquidity Event Tests", () => {
       assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[0].toString());
       assert.stringEquals(WETH_USD_AMOUNT.times(BD_3).toString(), transferReservesUSD[1].toString());
     });
+  });
+  test("Liquidity Volume Calculation", () => {
+    const well = loadWell(WELL);
+    const wellFn = well.wellFunction.load()[0];
+    well.lpTokenSupply = ONE_BI;
+
+    well.reserves = [BigInt.fromI32(3000).times(BI_10.pow(6)), BigInt.fromU32(1).times(BI_10.pow(18))];
+    let deltaReserves = [BigInt.fromI32(1500).times(BI_10.pow(6)), ZERO_BI];
+    let deltaLp = ONE_BI;
+    mockWellLpTokenUnderlying(toAddress(wellFn.target), deltaLp.abs(), well.reserves, well.lpTokenSupply, wellFn.data, [
+      BigInt.fromString("878679656"),
+      BigInt.fromString("292893218813452475")
+    ]);
+
+    let tokenTradeVolume = calcLiquidityVolume(well, deltaReserves, deltaLp);
+    assert.bigIntEquals(BigInt.fromString("-621320344"), tokenTradeVolume[0]);
+    assert.bigIntEquals(BigInt.fromString("292893218813452475"), tokenTradeVolume[1]);
+
+    well.reserves = [BigInt.fromI32(1200).times(BI_10.pow(6)), BigInt.fromU32(1).times(BI_10.pow(18))];
+    deltaReserves = [BigInt.fromI32(-1800).times(BI_10.pow(6)), ZERO_BI];
+    deltaLp = ONE_BI.neg();
+    mockWellLpTokenUnderlying(toAddress(wellFn.target), deltaLp.abs(), well.reserves, well.lpTokenSupply, wellFn.data, [
+      BigInt.fromString("-697366596"),
+      BigInt.fromString("-581138830084189666")
+    ]);
+
+    tokenTradeVolume = calcLiquidityVolume(well, deltaReserves, deltaLp);
+    assert.bigIntEquals(BigInt.fromString("1102633404"), tokenTradeVolume[0]);
+    assert.bigIntEquals(BigInt.fromString("-581138830084189666"), tokenTradeVolume[1]);
   });
 });

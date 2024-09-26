@@ -22,5 +22,5 @@ export function mockWellLpTokenUnderlying(
       ethereum.Value.fromUnsignedBigInt(totalLpTokens),
       ethereum.Value.fromBytes(data)
     ])
-    .returns([ethereum.Value.fromUnsignedBigIntArray(returnValues)]);
+    .returns([ethereum.Value.fromSignedBigIntArray(returnValues)]);
 }

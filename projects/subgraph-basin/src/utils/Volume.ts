@@ -63,7 +63,9 @@ export function updateWellVolumesAfterLiquidity(
  * Calculates the token volume resulting from a liquidity add/remove operation.
  * The reserves corresponding to the amount of new lp tokens are compared with deltaReserves,
  * the difference is the amount of trading volume. In a proportional liquidity add, the values will be identical.
- *
+ * @param well - The Well entity, which has already updated its reserves and lp supply to the new values
+ * @param deltaReserves - the change in reserves from the liquidity operation
+ * @param deltaLpSupply - the change in lp token supply from the liquidity operation
  * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
 export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {

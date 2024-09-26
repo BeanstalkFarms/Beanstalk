@@ -62,7 +62,8 @@ export function mockRemoveLiquidityOneWeth(lpAmount: BigInt = WELL_LP_AMOUNT, be
   return newEvent.transaction.hash.toHexString() + "-" + newEvent.logIndex.toString();
 }
 
-export function mockCalcLPTokenUnderlying(deltaReserves: BigInt[], lpDelta: BigInt): void {
+// Proxy to the mockWellLpTokenUnderlying method, adds base well amounts to reserves/lp delta
+function mockCalcLPTokenUnderlying(deltaReserves: BigInt[], lpDelta: BigInt): void {
   const well = loadWell(WELL);
   mockWellLpTokenUnderlying(
     toAddress(well.wellFunction.load()[0].target),
