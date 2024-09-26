@@ -27,15 +27,15 @@ contract ReseedAccountStatus {
         uint128 germinatingStalkEven;
     }
 
-    // emitted when a status is migrated.
-    event MigratedAccountStatus(
+    event MigratedAccountTokenStatus(
         address indexed account,
         address indexed token,
-        uint256 stalk,
-        uint256 roots,
         uint256 bdv,
         int96 lastStem
     );
+
+    // emitted when a status is migrated.
+    event MigratedAccountStatus(address indexed account, uint256 stalk, uint256 roots);
 
     function init(AccountStatus[] calldata accountStatuses) external {
         // for each account
@@ -51,6 +51,14 @@ contract ReseedAccountStatus {
                     .accts[accountStatuses[i].account]
                     .mowStatuses[accountStatuses[i].tokens[j]]
                     .lastStem = accountStatuses[i].mowStatuses[j].lastStem;
+
+                // emit event on a per account per token basis.
+                emit MigratedAccountTokenStatus(
+                    accountStatuses[i].account,
+                    accountStatuses[i].tokens[j],
+                    accountStatuses[i].mowStatuses[j].bdv,
+                    accountStatuses[i].mowStatuses[j].lastStem
+                );
             }
             // set stalk and roots for account.
             s.accts[accountStatuses[i].account].stalk = accountStatuses[i].stalk;
@@ -64,6 +72,13 @@ contract ReseedAccountStatus {
             s.accts[accountStatuses[i].account].germinatingStalk[
                 GerminationSide.EVEN
             ] = accountStatuses[i].germinatingStalkEven;
+
+            // emit event on a per account basis.
+            emit MigratedAccountStatus(
+                accountStatuses[i].account,
+                accountStatuses[i].stalk,
+                accountStatuses[i].stalk * 1e12 // roots
+            );
         }
     }
 }

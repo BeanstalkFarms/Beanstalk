@@ -141,12 +141,12 @@ contract WhitelistFacet is Invariable, WhitelistedTokens, ReentrancyGuard {
     /**
      * @notice Updates the Liquidity Weight Implementation for a given Token.
      */
-    function updateLiqudityWeightImplementationForToken(
+    function updateLiquidityWeightImplementationForToken(
         address token,
         Implementation memory impl
     ) external payable {
         LibDiamond.enforceIsOwnerOrContract();
-        LibWhitelist.updateLiqudityWeightImplementationForToken(token, impl);
+        LibWhitelist.updateLiquidityWeightImplementationForToken(token, impl);
     }
 
     /**

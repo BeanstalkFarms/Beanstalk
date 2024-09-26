@@ -334,7 +334,7 @@ contract GaugeTest is TestHelper {
         uint256 initialLockedBeans = bs.getLockedBeansUnderlyingUnripeLP();
 
         // add liquidity to unripeLP well.
-        // Note: {addLiqudityToWell} is not used as sync() is called to manipulate the reserves.
+        // Note: {addLiquidityToWell} is not used as sync() is called to manipulate the reserves.
         // Additionally, calling sync() multiple times to update reserves only works for the MockPump and should
         // not work for the multiFlowPump.
 
