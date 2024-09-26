@@ -397,6 +397,37 @@ describe("Tractor", function () {
       expect(operatorPaid, "unpaid operator").to.be.gt(0);
     });
 
+    it("Auto Farm Empty Blueprint", async function (verbose = true) {
+      console.log("Empty Auto Farm");
+      [advancedFarmCalls, this.blueprint.operatorPasteInstrs] = await draftAutoFarm(
+        0,
+        0,
+        ZERO_ADDRESS,
+        0,
+        0,
+        verbose
+      );
+      this.blueprint.data = this.farmFacet.interface.encodeFunctionData("advancedFarm", [
+        advancedFarmCalls
+      ]);
+      this.requisition.blueprintHash = await this.tractorFacet
+        .connect(publisher)
+        .getBlueprintHash(this.blueprint);
+
+      let operatorData = ethers.utils.defaultAbiCoder.encode(
+        ["uint256"], // to mode
+        [0] // external
+      );
+
+      console.log("blueprint:");
+      process.stdout.write(JSON.stringify(this.blueprint) + "\n");
+
+      console.log("operatorData:");
+      console.log(operatorData);
+
+      // expect(false);
+    });
+
     it("Auto Farm", async function (verbose = false) {
       console.log("Auto Farm");
 
@@ -441,7 +472,6 @@ describe("Tractor", function () {
       await time.increase(3600);
       await mine(25);
       await mockBeanstalk.captureE();
-
 
       //// NOTE WHY IS TWA DELTAB STILL ZERO HERE? ////
 

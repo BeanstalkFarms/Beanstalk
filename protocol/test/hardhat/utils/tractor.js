@@ -571,14 +571,14 @@ const draftAutoFarm = async (
     )
   });
 
-  // call[] - Get TWA deltaB.
+  // call[] - Get total deltaB.
   twaDeltaBCallIndex = advancedFarmCalls.length;
   advancedFarmCalls.push({
     callData: (await seasonGettersFacetInterface()).encodeFunctionData("totalDeltaB", []),
     clipboard: NULL_CLIPBOARD
   });
 
-  // call[] - TWA deltaB > 0 (P>1).
+  // call[] - deltaB > 0 (P>1).
   twaGtCallIndex = advancedFarmCalls.length;
   advancedFarmCalls.push({
     callData: await wrapExternalCall(
@@ -708,7 +708,7 @@ const draftAutoFarm = async (
 
   // call[] - Update latest blueprint use season counter.
   advancedFarmCalls.push({
-    callData: (await tractorFacetInterface()).encodeFunctionData("updateCounter", [
+    callData: (await tractorFacetInterface()).encodeFunctionData("updatePublisherCounter", [
       counterId,
       CounterUpdateType.INCREASE,
       0
@@ -769,7 +769,9 @@ const draftAutoFarm = async (
   );
 
   if (verbose) {
+    console.log("advancedFarmCalls:");
     console.log(advancedFarmCalls);
+    console.log("operatorPasteInstrs:");
     console.log(operatorPasteInstrs);
   }
 
