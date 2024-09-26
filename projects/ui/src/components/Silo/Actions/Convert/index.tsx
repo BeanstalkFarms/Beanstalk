@@ -178,11 +178,8 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
 
   const pipelineConvertSubmitHandler = usePipelineConvertSubmitHandler({
     sdk,
-    fromToken,
-    farmerSilo,
     middleware,
     initialValues,
-    season,
   });
 
   const submitHandler: ConvertFormSubmitHandler = useCallback(
@@ -242,17 +239,12 @@ export default Convert;
 
 function usePipelineConvertSubmitHandler({
   sdk,
-  farmerSilo,
   middleware,
-  fromToken,
   initialValues,
 }: {
   sdk: BeanstalkSDK;
-  fromToken: ERC20Token;
-  farmerSilo: FarmerSilo;
   middleware: ReturnType<typeof useFormMiddleware>;
   initialValues: ConvertFormValues;
-  season: BigNumber;
 }) {
   const account = useAccount();
   const [refetchFarmerSilo] = useFetchFarmerSilo();
