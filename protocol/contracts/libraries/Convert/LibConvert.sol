@@ -476,7 +476,7 @@ library LibConvert {
 
         AssetsRemovedConvert memory a;
         uint256 i = 0;
-        
+
         // a bracket is included here to avoid the "stack too deep" error.
         {
             a.bdvsRemoved = new uint256[](stems.length);
