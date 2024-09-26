@@ -143,8 +143,8 @@ struct Field {
  * @param fertilizedPaidIndex The total number of Fertilizer Beans that have been sent out to users.
  * @param fertFirst The lowest active Fertilizer Id (start of linked list that is stored by nextFid).
  * @param fertLast The highest active Fertilizer Id (end of linked list that is stored by nextFid).
- * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Season.
- * @param recapitalized The number of USDC that has been recapitalized in the Barn Raise.
+ * @param bpf The cumulative Beans Per Fertilizer (bfp) minted over all Seasons.
+ * @param recapitalized The number of USD that has been recapitalized in the Barn Raise.
  * @param leftoverBeans Amount of Beans that have shipped to Fert but not yet reflected in bpf.
  * @param _buffer Reserved storage for future expansion.
  */
@@ -167,7 +167,6 @@ struct Fertilizer {
  * @notice System-level Season state variables.
  * @param current The current Season in Beanstalk.
  * @param lastSop The Season in which the most recent consecutive series of Seasons of Plenty started.
- * @param withdrawSeasons The number of Seasons required to Withdraw a Deposit.
  * @param lastSopSeason The Season in which the most recent consecutive series of Seasons of Plenty ended.
  * @param rainStart Stores the most recent Season in which Rain started.
  * @param raining True if it is Raining (P > 1, Pod Rate Excessively Low).
@@ -184,7 +183,6 @@ struct Fertilizer {
 struct Season {
     uint32 current;
     uint32 lastSop;
-    uint8 withdrawSeasons;
     uint32 lastSopSeason;
     uint32 rainStart;
     bool raining;
@@ -202,8 +200,8 @@ struct Season {
 /**
  * @notice System-level Weather state variables.
  * @param lastDeltaSoil Delta Soil; the number of Soil purchased last Season.
- * @param lastSowTime The number of seconds it for Soil to sell out last Season.
- * @param thisSowTime The number of seconds it for Soil to sell out this Season.
+ * @param lastSowTime The number of seconds it took for Soil to sell out last Season.
+ * @param thisSowTime The number of seconds it took for Soil to sell out this Season.
  * @param temp Temperature is max interest rate in current Season for sowing Beans in Soil. Adjusted each Season.
  * @param _buffer Reserved storage for future expansion.
  */
@@ -338,7 +336,7 @@ struct AssetSettings {
  *  - Unripe LP, with its `underlyingToken` as BEAN:3CRV LP.
  *
  * Unripe Tokens are initially distributed through the use of a `merkleRoot`.
- *
+ * The `underlyingToken` for Unripe LP was modified and currently set to BEAN:WSTEH well LP.
  * The existence of a non-zero {UnripeSettings} implies that a Token is an Unripe Token.
  */
 struct UnripeSettings {
@@ -362,6 +360,12 @@ struct Deposited {
     uint128 bdv;
 }
 
+/**
+ * @notice Stores convert capacity data for a given block.
+ * @param overallConvertCapacityUsed The amount of total convert power used in the block.
+ * @param wellConvertCapacityUsed A mapping from well to the amount of deltaB
+ * that can be converted in the given block.
+ */
 struct ConvertCapacity {
     uint256 overallConvertCapacityUsed;
     mapping(address => uint256) wellConvertCapacityUsed;
@@ -389,7 +393,7 @@ struct ShipmentRoute {
 }
 
 /**
- * @notice storage relating to the L2 Migration. Can be removed upon a full migration.
+ * @notice storage relating to the L2 Migration of smart contracts. Can be removed upon a full migration.
  * @param migratedL1Beans the amount of L1 Beans that have been migrated to L2.
  * @param contractata a mapping from a L1 contract to an approved L2 receiver.
  * @param _buffer_ Reserved storage for future additions.
@@ -401,7 +405,7 @@ struct L2Migration {
 }
 
 /**
- * @notice contains data relating to migration.
+ * @notice contains data relating to migration of a smart contract from L1 to L2.
  */
 struct MigrationData {
     address receiver;
