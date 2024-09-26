@@ -48,6 +48,7 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
   well.save();
 }
 
+// Value at index i is how much of token i is received in exchange for one of token 1 - i.
 export function getTokenPrices(well: Well): BigInt[] {
   const wellFn = well.wellFunction.load()[0];
   const wellFnAddress = toAddress(wellFn.target);

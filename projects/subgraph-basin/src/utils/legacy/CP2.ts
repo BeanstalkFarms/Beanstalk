@@ -8,8 +8,8 @@ export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
   }
 
   return [
-    reserves[1].times(BI_10.pow(<u8>tokenDecimals[0])).div(reserves[0]),
-    reserves[0].times(BI_10.pow(<u8>tokenDecimals[1])).div(reserves[1])
+    reserves[0].times(BI_10.pow(<u8>tokenDecimals[1])).div(reserves[1]),
+    reserves[1].times(BI_10.pow(<u8>tokenDecimals[0])).div(reserves[0])
   ];
 }
 
@@ -35,7 +35,7 @@ export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
  * @param addedReserves - the net change in reserves after the liquidity event
  * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
-export function calcLiquidityVolume_deprecated(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
+export function deprecated_calcLiquidityVolume(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
   // Reserves prior to adding liquidity
   const initialReserves = deltaBigIntArray(currentReserves, addedReserves);
   const initialCp = initialReserves[0].times(initialReserves[1]);

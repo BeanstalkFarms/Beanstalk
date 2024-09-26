@@ -118,7 +118,7 @@ type Well @entity {
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
 
-  " The current price of each token in terms of the other token. "
+  " The current amount of each token needed to exchange for one of the other token. "
   tokenPrice: [BigInt!]!
 
   " Amount of each token in the well. The ordering should be the same as the well's `tokens` field. "
@@ -249,7 +249,7 @@ type WellDailySnapshot @entity {
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
 
-  " The current price of each token in terms of the other token. "
+  " The current amount of each token needed to exchange for one of the other token. "
   tokenPrice: [BigInt!]!
 
   " All trade volume occurred for a specific token, in native amount. Volume for an individual token is defined as a purchase of that token. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
@@ -345,7 +345,7 @@ type WellHourlySnapshot @entity {
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
 
-  " The current price of each token in terms of the other token. "
+  " The current amount of each token needed to exchange for one of the other token. "
   tokenPrice: [BigInt!]!
 
   " All trade volume occurred for a specific token, in native amount. Volume for an individual token is defined as a purchase of that token. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
@@ -476,7 +476,7 @@ type Deposit @entity(immutable: true) {
   " USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a well) "
   amountUSD: BigDecimal!
 
-  " The price of each token in terms of the other token, after this event. "
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
   tokenPrice: [BigInt!]!
 
   " Block number of this event "
@@ -530,7 +530,7 @@ type Withdraw @entity(immutable: true) {
   " USD-normalized value of the transaction of the underlying (e.g. sum of tokens withdrawn from a well) "
   amountUSD: BigDecimal!
 
-  " The price of each token in terms of the other token, after this event. "
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
   tokenPrice: [BigInt!]!
 
   " Block number of this event "
@@ -583,7 +583,7 @@ type Swap @entity(immutable: true) {
   " Amount of the token withdrawn from the well in native units "
   amountOut: BigInt!
 
-  " The price of each token in terms of the other token, after this event. "
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
   tokenPrice: [BigInt!]!
 
   " Block number of this event "
