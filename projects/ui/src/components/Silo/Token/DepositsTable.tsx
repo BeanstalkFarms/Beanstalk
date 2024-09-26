@@ -68,7 +68,7 @@ const DepositsTable = ({
   const rows: FarmerTokenDepositRow[] = useMemo(() => {
     const rowData = Object.entries(depositsById).map(([key, deposit]) => ({
       ...deposit,
-      mowableStalk: deposit.bdv?.mul(deltaStem.toNumber()).div(10000),
+      mowableStalk: deposit.bdv?.mul(deltaStem.toNumber()),
       key,
     }));
     return rowData;
