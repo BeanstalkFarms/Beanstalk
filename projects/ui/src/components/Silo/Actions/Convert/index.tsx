@@ -157,7 +157,7 @@ const ConvertFormsWrapper = ({ fromToken }: ConvertProps) => {
         implied: [FormTxn.MOW],
       },
       pipe: {
-        structs: [],
+        callData: [],
         amountOut: undefined,
       },
     }),
@@ -277,9 +277,8 @@ function usePipelineConvertSubmitHandler({
         const tokenOut = values.tokenOut;
         const _amountOut = values?.pipe?.amountOut;
 
-        const advPipeStructs = values.pipe?.structs || [];
+        const callData = values.pipe?.callData || [];
         const slippage = values?.settings?.slippage;
-        const farmerBalances = farmerSilo.balancesSdk.get(fromToken);
         const amountIn = tokenIn?.amount(_amountIn?.toString() || '0'); // amount of from token
         const amountOut = tokenOut?.amount(_amountOut?.toString() || '0'); // amount of to token
 
@@ -287,11 +286,10 @@ function usePipelineConvertSubmitHandler({
         if (!account) throw new Error('Wallet connection required');
         if (!slippage) throw new Error('No slippage value set.');
         if (!tokenOut) throw new Error('Conversion pathway not set');
-        if (!farmerBalances) throw new Error('No balances found');
         if (amountIn.lte(0)) throw new Error('Amount must be greater than 0');
 
-        if (!advPipeStructs?.length) {
-          throw new Error('No Pipeline Convert data found');
+        if (!callData?.length) {
+          throw new Error('Pipeline Convert callData not found');
         }
         if (!amountOut || amountOut?.lte(0)) {
           throw new Error('Conversion invalid');
@@ -299,38 +297,12 @@ function usePipelineConvertSubmitHandler({
 
         const farm = sdk.farm.createAdvancedFarm();
 
-        const { crates = [] } = sdk.silo.siloConvert.calculateConvert(
-          tokenIn,
-          tokenOut,
-          amountIn,
-          farmerBalances.convertibleDeposits,
-          0 // this isn't being used in the calculation. We should remove it from the function signature
-        );
-
-        if (!crates.length) {
-          throw new Error('Could not find any crates to convert');
-        }
-
-        farm.add(() => ({
-          name: 'pipe-convert',
-          amountOut: amountOut.toBigNumber(),
-          prepare: () => ({
+        callData.forEach((data) => {
+          farm.add(() => ({
             target: sdk.contracts.beanstalk.address,
-            callData: sdk.contracts.beanstalk.interface.encodeFunctionData(
-              'pipelineConvert',
-              [
-                tokenIn.address,
-                crates.map((c) => c.stem),
-                crates.map((c) => c.amount.toBigNumber()),
-                tokenOut.address,
-                advPipeStructs,
-              ]
-            ),
-            clipboard: undefined,
-          }),
-          decode: () => undefined,
-          decodeResult: () => undefined,
-        }));
+            callData: data,
+          }));
+        });
 
         const gasEstimate = await farm.estimateGas(amountIn, { slippage });
         const adjustedGas = Math.round(gasEstimate.toNumber() * 1.2).toString();
@@ -361,16 +333,7 @@ function usePipelineConvertSubmitHandler({
         formActions.setSubmitting(false);
       }
     },
-    [
-      sdk,
-      account,
-      fromToken,
-      farmerSilo.balancesSdk,
-      initialValues,
-      middleware,
-      refetchFarmerSilo,
-      refetchPools,
-    ]
+    [sdk, account, initialValues, middleware, refetchFarmerSilo, refetchPools]
   );
 }
 
