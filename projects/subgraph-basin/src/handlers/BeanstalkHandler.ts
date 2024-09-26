@@ -4,6 +4,7 @@ import { Sunrise } from "../../generated/Basin-ABIs/Beanstalk";
 import { loadOrCreateAquifer } from "../entities/Aquifer";
 import { checkForSnapshot } from "../utils/Well";
 import { getAquifer } from "../../../subgraph-core/constants/RuntimeConstants";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 export function handleSunrise(event: Sunrise): void {
   // Right now this is a manual list of aquifers that are checked for deployments and wells updated
@@ -12,6 +13,6 @@ export function handleSunrise(event: Sunrise): void {
   let aquifer = loadOrCreateAquifer(getAquifer(v()));
 
   for (let i = 0; i < aquifer.wells.length; i++) {
-    checkForSnapshot(Address.fromBytes(aquifer.wells[i]), event.block);
+    checkForSnapshot(toAddress(aquifer.wells[i]), event.block);
   }
 }

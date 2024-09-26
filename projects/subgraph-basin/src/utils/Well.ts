@@ -14,7 +14,7 @@ import { calcRates } from "./legacy/CP2";
 export function getCalculatedReserveUSDValues(tokens: Bytes[], reserves: BigInt[]): BigDecimal[] {
   let results = emptyBigDecimalArray(tokens.length);
   for (let i = 0; i < tokens.length; i++) {
-    let token = loadToken(Address.fromBytes(tokens[i]));
+    let token = loadToken(toAddress(tokens[i]));
     results[i] = toDecimal(reserves[i], token.decimals).times(token.lastPriceUSD);
   }
   return results;
@@ -37,7 +37,7 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
     if (i == beanIndex) {
       continue;
     }
-    let tokenAddress = Address.fromBytes(well.tokens[i]);
+    let tokenAddress = toAddress(well.tokens[i]);
     if (well.reserves[i].gt(ZERO_BI)) {
       updateTokenUSD(tokenAddress, blockNumber, currentBeans.div(toDecimal(well.reserves[i], getTokenDecimals(tokenAddress))));
     }
@@ -62,13 +62,13 @@ export function getTokenPrices(well: Well): BigInt[] {
     // Stable2 does not require transforming rates. Otherwise, the rates are given with this precision:
     // quoteToken + 18 - baseToken
     if (!isStable2WellFn(v(), wellFnAddress)) {
-      const decimalsToRemove = [18 - getTokenDecimals(well.tokens[1]), 18 - getTokenDecimals(well.tokens[0])];
-      rates[0] = rates[0].div(BI_10.pow(decimalsToRemove[0]));
-      rates[1] = rates[1].div(BI_10.pow(decimalsToRemove[1]));
+      const decimalsToRemove = [18 - getTokenDecimals(toAddress(well.tokens[1])), 18 - getTokenDecimals(toAddress(well.tokens[0]))];
+      rates[0] = rates[0].div(BI_10.pow(<u8>decimalsToRemove[0]));
+      rates[1] = rates[1].div(BI_10.pow(<u8>decimalsToRemove[1]));
     }
   } else {
     // In practice only the original constant product well does not support calcRate
-    rates = calcRates(well.reserves, [getTokenDecimals(well.tokens[0]), getTokenDecimals(well.tokens[1])]);
+    rates = calcRates(well.reserves, [getTokenDecimals(toAddress(well.tokens[0])), getTokenDecimals(toAddress(well.tokens[1]))]);
   }
   return rates;
 }

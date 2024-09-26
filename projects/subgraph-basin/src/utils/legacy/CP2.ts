@@ -7,7 +7,10 @@ export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
     return [ZERO_BI, ZERO_BI];
   }
 
-  return [reserves[1].times(BI_10.pow(tokenDecimals[0])).div(reserves[0]), reserves[0].times(BI_10.pow(tokenDecimals[1])).div(reserves[1])];
+  return [
+    reserves[1].times(BI_10.pow(<u8>tokenDecimals[0])).div(reserves[0]),
+    reserves[0].times(BI_10.pow(<u8>tokenDecimals[1])).div(reserves[1])
+  ];
 }
 
 /**

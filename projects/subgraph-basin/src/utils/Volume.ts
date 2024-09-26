@@ -45,7 +45,7 @@ export function updateWellVolumesAfterLiquidity(
   block: ethereum.Block
 ): void {
   let well = loadWell(wellAddress);
-  const wellTokens = well.tokens.map<Address>((t) => Address.fromBytes(t));
+  const wellTokens = well.tokens.map<Address>((t) => toAddress(t));
 
   // Determines which tokens were bough/sold and how much
   const tradeAmount = calcLiquidityVolume(well, padTokenAmounts(wellTokens, tokens, amounts), deltaLpSupply);
@@ -99,7 +99,7 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
   let totalTradeUSD = ZERO_BD;
   let totalTransferUSD = ZERO_BD;
   for (let i = 0; i < deltaTradeVolumeReserves.length; ++i) {
-    const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
+    const tokenInfo = loadToken(toAddress(well.tokens[i]));
     let usdTradeAmount = ZERO_BD;
     if (deltaTradeVolumeReserves[i] > ZERO_BI) {
       tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);

@@ -19,6 +19,7 @@ import {
   recordSyncEvent
 } from "../entities/events/Liquidity";
 import { recordShiftEvent, recordSwapEvent } from "../entities/events/Swap";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 export function handleAddLiquidity(event: AddLiquidity): void {
   let well = loadWell(event.address);
@@ -33,7 +34,7 @@ export function handleAddLiquidity(event: AddLiquidity): void {
 
   updateWellVolumesAfterLiquidity(
     event.address,
-    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    well.tokens.map<Address>((b) => toAddress(b)),
     event.params.tokenAmountsIn,
     event.params.lpAmountOut,
     event.block
@@ -59,7 +60,7 @@ export function handleSync(event: Sync): void {
 
   updateWellVolumesAfterLiquidity(
     event.address,
-    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    well.tokens.map<Address>((b) => toAddress(b)),
     deltaReserves,
     event.params.lpAmountOut,
     event.block
@@ -89,7 +90,7 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
 
   updateWellVolumesAfterLiquidity(
     event.address,
-    well.tokens.map<Address>((b) => Address.fromBytes(b)),
+    well.tokens.map<Address>((b) => toAddress(b)),
     event.params.tokenAmountsOut,
     event.params.lpAmountIn.neg(),
     event.block
@@ -168,7 +169,7 @@ export function handleShift(event: Shift): void {
   let well = loadWell(event.address);
 
   let fromTokenIndex = well.tokens.indexOf(event.params.toToken) == 0 ? 1 : 0;
-  let fromToken = Address.fromBytes(well.tokens[fromTokenIndex]);
+  let fromToken = toAddress(well.tokens[fromTokenIndex]);
 
   let deltaReserves = deltaBigIntArray(event.params.reserves, well.reserves);
   let amountIn = deltaReserves[fromTokenIndex];
