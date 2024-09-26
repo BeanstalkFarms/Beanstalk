@@ -97,7 +97,7 @@ describe("Sop Test Cases", function () {
       await mockBeanstalk.rainSunrise(); // 6 => 7
 
       const rain = await beanstalk.rain();
-      let season = await beanstalk.time();
+      // let season = await beanstalk.time();
 
       // there is a flood in season 8
       await mockBeanstalk.rainSunrise(); // 7 => 8
@@ -146,7 +146,7 @@ describe("Sop Test Cases", function () {
     await mockBeanstalk.rainSunrise(); // 6 => 7
 
     const rain = await beanstalk.rain();
-    let season = await beanstalk.time();
+    // let season = await beanstalk.time();
 
     // there is a flood in season 8
     await mockBeanstalk.rainSunrise(); // 7 => 8

@@ -284,7 +284,6 @@ contract MockSeasonFacet is SeasonFacet {
         s.sys.season.start = block.timestamp;
         s.sys.season.timestamp = block.timestamp;
         s.sys.silo.stalk = 0;
-        s.sys.season.withdrawSeasons = 25;
         s.sys.season.current = 1;
         s.sys.paused = false;
         BeanstalkERC20(s.sys.tokens.bean).burn(
