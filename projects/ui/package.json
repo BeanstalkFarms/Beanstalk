@@ -35,6 +35,7 @@
     "apollo3-cache-persist": "^0.14.1",
     "axios": "^0.27.2",
     "bignumber.js": "^9.1.2",
+    "bottleneck": "2.19.5",
     "buffer": "^6.0.3",
     "d3-scale": "^4.0.2",
     "d3-time-format": "^4.1.0",
