@@ -17610,6 +17610,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bottleneck@npm:2.19.5":
+  version: 2.19.5
+  resolution: "bottleneck@npm:2.19.5"
+  checksum: 10/ffb982185236fc42b135f88eb3cfc8b87c4307fb9c3e3658e843ed673ad1c77780b65a01ab532f9857fa0f75ad4d6c1857985b21c9b2bd7eac8ef3c378d7ebf6
+  languageName: node
+  linkType: hard
+
 "bowser@npm:^2.9.0":
   version: 2.11.0
   resolution: "bowser@npm:2.11.0"
@@ -41054,6 +41061,7 @@ __metadata:
     apollo3-cache-persist: "npm:^0.14.1"
     axios: "npm:^0.27.2"
     bignumber.js: "npm:^9.1.2"
+    bottleneck: "npm:2.19.5"
     buffer: "npm:^6.0.3"
     d3-scale: "npm:^4.0.2"
     d3-time-format: "npm:^4.1.0"
