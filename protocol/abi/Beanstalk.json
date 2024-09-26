@@ -6420,7 +6420,7 @@
         "type": "tuple"
       }
     ],
-    "name": "updateLiqudityWeightImplementationForToken",
+    "name": "updateLiquidityWeightImplementationForToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -7172,6 +7172,30 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "depositId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAddressAndStem",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "stem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -10866,7 +10890,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10890,7 +10914,7 @@
         "type": "uint256"
       }
     ],
-    "name": "approveL2Reciever",
+    "name": "approveL2Receiver",
     "outputs": [
       {
         "internalType": "uint256",
@@ -10905,7 +10929,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10956,7 +10980,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10987,7 +11011,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11024,7 +11048,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11061,7 +11085,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11136,7 +11160,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct L1RecieverFacet.L1PodOrder[]",
+        "internalType": "struct L1ReceiverFacet.L1PodOrder[]",
         "name": "orders",
         "type": "tuple[]"
       }
@@ -11156,7 +11180,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11187,11 +11211,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       }
     ],
-    "name": "RecieverApproved",
+    "name": "ReceiverApproved",
     "type": "event"
   },
   {
@@ -11203,11 +11227,11 @@
       },
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       }
     ],
-    "name": "approveReciever",
+    "name": "approveReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11272,7 +11296,7 @@
         "type": "address"
       }
     ],
-    "name": "getReciever",
+    "name": "getReceiver",
     "outputs": [
       {
         "internalType": "address",
@@ -11409,7 +11433,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {

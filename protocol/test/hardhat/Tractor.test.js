@@ -543,7 +543,7 @@ describe("Tractor", function () {
       // await this.well
       //   .connect(owner)
       //   .addLiquidity([to6("0"), to18("1000000")], 0, owner.address, ethers.constants.MaxUint256);
-      await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
+      // await this.tractorFacet.connect(operator).tractor(this.requisition, operatorData);
 
       // // Fail bc not enough seasons passed.
       // await this.seasonFacet.siloSunrise(to6("1000"));

@@ -639,7 +639,7 @@ const draftAutoFarm = async (
     )
   });
 
-  // call[] - TWA deltaB check AND delta seasons check.
+  // call[] - TWA deltaB AND delta seasons.
   andConditionalCallIndex = advancedFarmCalls.length;
   advancedFarmCalls.push({
     callData: await wrapExternalCall(
