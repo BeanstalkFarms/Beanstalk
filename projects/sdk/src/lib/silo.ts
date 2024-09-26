@@ -18,7 +18,6 @@ import {
 } from "./silo/types";
 import { Transfer } from "./silo/Transfer";
 import { Convert, ConvertDetails } from "./silo/Convert";
-import { PipelineConvert } from "./silo/PipelineConvert";
 
 export class Silo {
   static sdk: BeanstalkSDK;
@@ -26,7 +25,6 @@ export class Silo {
   siloWithdraw: Withdraw;
   siloTransfer: Transfer;
   siloConvert: Convert;
-  pipelineConvert: PipelineConvert;
 
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
@@ -39,7 +37,6 @@ export class Silo {
     this.siloWithdraw = new Withdraw(sdk);
     this.siloTransfer = new Transfer(sdk);
     this.siloConvert = new Convert(sdk);
-    this.pipelineConvert = new PipelineConvert(sdk);
   }
 
   public calculateGrownStalk = utils.calculateGrownStalkStems;
