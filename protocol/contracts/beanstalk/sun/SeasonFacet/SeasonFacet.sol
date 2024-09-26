@@ -102,7 +102,7 @@ contract SeasonFacet is Invariable, Weather {
     function stepSeason() private returns (uint32 season) {
         s.sys.season.current += 1;
         season = s.sys.season.current;
-        s.sys.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.sys.season.sunriseBlock = uint64(block.number); // Note: will overflow after 2^64 blocks.
         emit Sunrise(season);
     }
 

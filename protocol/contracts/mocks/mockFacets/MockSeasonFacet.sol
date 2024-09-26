@@ -73,7 +73,7 @@ contract MockSeasonFacet is SeasonFacet {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.timestamp = block.timestamp;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         mockStepSilo(amount);
         LibGerminate.endTotalGermination(
             s.sys.season.current,
@@ -89,7 +89,7 @@ contract MockSeasonFacet is SeasonFacet {
     function rainSunrise() public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         LibGerminate.endTotalGermination(
@@ -110,13 +110,13 @@ contract MockSeasonFacet is SeasonFacet {
             );
             mockStartSop();
         }
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
     }
 
     function droughtSunrise() public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         LibGerminate.endTotalGermination(
@@ -129,7 +129,7 @@ contract MockSeasonFacet is SeasonFacet {
     function rainSiloSunrise(uint256 amount) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         LibGerminate.endTotalGermination(
@@ -143,7 +143,7 @@ contract MockSeasonFacet is SeasonFacet {
     function droughtSiloSunrise(uint256 amount) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         // update last snapshot in beanstalk.
         stepOracle();
         LibGerminate.endTotalGermination(
@@ -157,14 +157,14 @@ contract MockSeasonFacet is SeasonFacet {
     function sunSunrise(int256 deltaB, uint256 caseId) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         stepSun(deltaB, caseId);
     }
 
     function seedGaugeSunSunrise(int256 deltaB, uint256 caseId, bool oracleFailure) public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         updateTemperatureAndBeanToMaxLpGpPerBdvRatio(caseId, oracleFailure);
         stepSun(deltaB, caseId);
     }
@@ -177,14 +177,14 @@ contract MockSeasonFacet is SeasonFacet {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.weather.temp = t;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         stepSun(deltaB, caseId);
     }
 
     function lightSunrise() public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
     }
 
     /**
@@ -193,7 +193,7 @@ contract MockSeasonFacet is SeasonFacet {
     function mockStepSeason() public returns (uint32 season) {
         s.sys.season.current += 1;
         season = s.sys.season.current;
-        s.sys.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.sys.season.sunriseBlock = uint64(block.number); // Note: Will overflow in the year 3650.
         emit Sunrise(season);
     }
 
@@ -215,14 +215,14 @@ contract MockSeasonFacet is SeasonFacet {
 
     function teleportSunrise(uint32 _s) public {
         s.sys.season.current = _s;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
     }
 
     function farmSunrise() public {
         require(!s.sys.paused, "Season: Paused.");
         s.sys.season.current += 1;
         s.sys.season.timestamp = block.timestamp;
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
         LibGerminate.endTotalGermination(
             s.sys.season.current,
             LibWhitelistedTokens.getWhitelistedTokens()
@@ -242,7 +242,7 @@ contract MockSeasonFacet is SeasonFacet {
                 );
             }
         }
-        s.sys.season.sunriseBlock = uint32(block.number);
+        s.sys.season.sunriseBlock = uint64(block.number);
     }
 
     function setMaxTempE(uint32 number) public {
@@ -397,7 +397,7 @@ contract MockSeasonFacet is SeasonFacet {
     }
 
     function setSunriseBlock(uint256 _block) external {
-        s.sys.season.sunriseBlock = uint32(_block);
+        s.sys.season.sunriseBlock = uint64(_block);
     }
 
     //fake the grown stalk per bdv deployment, does same as InitBipNewSilo
