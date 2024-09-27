@@ -364,6 +364,7 @@ input SpaceWhere {
   created_in: [Int]
   created_lt: Int
   created_lte: Int
+  domain: String
   id: String
   id_in: [String]
   plugin: String

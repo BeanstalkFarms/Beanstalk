@@ -2,10 +2,7 @@ import BigNumber from 'bignumber.js';
 import { useCallback, useMemo } from 'react';
 import { ONE_BN, ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
-import {
-  APPROX_L2_BLOCK_PER_L1_BLOCK,
-  BLOCKS_PER_MORNING,
-} from '~/state/beanstalk/sun/morning';
+import { INTERVALS_PER_MORNING } from '~/state/beanstalk/sun/morning';
 
 // Constants
 export const TEMPERATURE_DECIMALS = 6;
@@ -32,13 +29,19 @@ export type MorningBlockTemperature = {
   /** */
   maxTemperature: BigNumber;
   /** */
+  index: BigNumber;
+  /** index + 1  */
   interval: BigNumber;
-  /** */
-  blockNumber: BigNumber;
 };
 
 export type MorningTemperatureMap = {
   [blockNumber: string]: MorningBlockTemperature;
+};
+
+type Temperature = {
+  current: BigNumber;
+  next: BigNumber;
+  max: BigNumber;
 };
 
 /**
@@ -99,26 +102,24 @@ const DELTA_TEMPERATURE_PCTS: Record<number, number> = {
   24: 976861116107,
 };
 
-const scaleTemperature = (_pct: BigNumber, _maxTemperature: BigNumber) => {
-  if (_maxTemperature.eq(0)) {
+const scaleTemperature = (pct: BigNumber, maxTemp: BigNumber) => {
+  if (maxTemp.eq(0)) {
     return ZERO_BN;
   }
-  const pct = new BigNumber(_pct).div(TEMPERATURE_PRECISION);
-  const temperature = pct.times(_maxTemperature).div(TEMPERATURE_PRECISION);
+  const pctScaled = pct.div(TEMPERATURE_PRECISION);
+  const temperature = pctScaled.times(maxTemp).div(TEMPERATURE_PRECISION);
   return temperature.decimalPlaces(6, BigNumber.ROUND_CEIL);
 };
 
 const getMorningTemperature = (
-  delta: BigNumber, // in terms of L1 blocks
+  index: BigNumber, // in terms of L1 blocks
   maxTemperature: BigNumber
 ) => {
-  const _deltaKey = delta.toNumber();
+  const indexKey = index.toNumber();
 
-  if (_deltaKey in DELTA_TEMPERATURE_PCTS) {
-    const pct = DELTA_TEMPERATURE_PCTS[delta.toNumber()];
-
+  if (indexKey in DELTA_TEMPERATURE_PCTS) {
     const scaledTemperature = scaleTemperature(
-      new BigNumber(pct),
+      new BigNumber(DELTA_TEMPERATURE_PCTS[indexKey]),
       maxTemperature
     );
 
@@ -127,87 +128,82 @@ const getMorningTemperature = (
   return maxTemperature;
 };
 
-// get the key in terms of L1 blocks
-const getRelativeBlockKey = (
-  blockNumber: BigNumber,
-  sunriseBlock: BigNumber
-) => {
-  const key = blockNumber.minus(sunriseBlock).div(APPROX_L2_BLOCK_PER_L1_BLOCK);
-  return key.dp(0, BigNumber.ROUND_DOWN);
-};
-
-export default function useTemperature() {
+export default function useTemperature(): readonly [
+  temperature: Temperature,
+  utils: {
+    loading: boolean;
+    generate: () => MorningTemperatureMap;
+    calculate: (morningIdx: BigNumber) => BigNumber;
+  },
+] {
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
   const season = useAppSelector((s) => s._beanstalk.sun.season);
   const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
 
   const maxTemperature = temperature.max;
   const sunriseBlock = season.sunriseBlock;
-  const morningBlock = morning.blockNumber;
   const isMorning = morning.isMorning;
   const morningIndex = morning.index;
 
   /**
-   * Calculate the temperature of a block during the morning period.
+   * Get the temperature of a block during the morning period given the index of the morning interval.
+   * @param morningIdx - the index of the morning interval. See getMorningResult() in morning.ts
    */
   const calculate = useCallback(
-    (_blockNumber: BigNumber = morning.blockNumber) => {
-      if (sunriseBlock.lte(0)) return ZERO_BN;
-      const key = getRelativeBlockKey(_blockNumber, sunriseBlock);
-      return getMorningTemperature(key, maxTemperature);
+    (morningIdx: BigNumber) => {
+      const t = getMorningTemperature(morningIdx, maxTemperature);
+      return t;
     },
-    [maxTemperature, sunriseBlock, morning.blockNumber]
-  );
-
-  const getNextTemperatureWithBlock = useCallback(
-    (_blockNumber: BigNumber) => {
-      const key = getRelativeBlockKey(_blockNumber, sunriseBlock).plus(1);
-      return calculate(key);
-    },
-    [calculate, sunriseBlock]
+    [maxTemperature]
   );
 
   /**
    * Generate a mapping of block numbers to their respective temperatures.
    */
   const generate = useCallback(() => {
-    const blocks = Array.from({ length: BLOCKS_PER_MORNING }, (_, i) => i);
+    const blocks = Array.from({ length: INTERVALS_PER_MORNING }, (_, i) => i);
 
-    return blocks.reduce<MorningTemperatureMap>((prev, _, index) => {
-      const delta = new BigNumber(index);
-      const interval = delta.plus(1);
+    return blocks.reduce<MorningTemperatureMap>((prev, _, i) => {
+      const index = new BigNumber(i);
 
-      const blockNumber = sunriseBlock.plus(delta);
-      const blockKey = blockNumber.toString();
-
-      prev[blockKey] = {
-        interval,
-        blockNumber,
-        temperature: getMorningTemperature(delta, maxTemperature),
+      prev[index.toString()] = {
+        index: new BigNumber(index),
+        interval: index.plus(1),
+        temperature: calculate(index),
         maxTemperature: maxTemperature,
       };
 
       return prev;
     }, {});
-  }, [maxTemperature, sunriseBlock]);
+  }, [maxTemperature, calculate]);
 
   /// The current and max temperatures.
   const temperatures = useMemo(() => {
-    const current = isMorning ? calculate(morningBlock) : maxTemperature;
-    const next =
-      isMorning || morningIndex.lt(24)
-        ? calculate(morningBlock.plus(1))
-        : maxTemperature;
+    const current = isMorning ? calculate(morningIndex) : maxTemperature;
+
+    const nextIndex = morningIndex.plus(1);
+
+    const next = nextIndex.lt(INTERVALS_PER_MORNING)
+      ? calculate(nextIndex)
+      : maxTemperature;
 
     return {
       current,
       next,
       max: maxTemperature,
     };
-  }, [morningBlock, isMorning, calculate, maxTemperature, morningIndex]);
+  }, [isMorning, calculate, maxTemperature, morningIndex]);
 
-  return [
-    temperatures,
-    { generate, calculate, getNextTemperatureWithBlock },
-  ] as const;
+  const loading = maxTemperature.lte(0);
+
+  const utils = useMemo(
+    () => ({
+      loading,
+      generate,
+      calculate,
+    }),
+    [generate, calculate, loading]
+  );
+
+  return [temperatures, utils] as const;
 }

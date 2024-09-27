@@ -6,6 +6,13 @@ import { IS_DEV } from '~/util';
 
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 import { useAppSelector } from '~/state';
+import Row from '../Common/Row';
+
+const Split = ({ children }: { children: React.ReactNode }) => (
+  <Row justifyContent="space-between" gap={1}>
+    {children}
+  </Row>
+);
 
 const minimize = false;
 /**
@@ -38,22 +45,42 @@ const FieldOverlay: React.FC<{}> = () => {
       <Box>
         <Box sx={{ width: '400px' }}>
           <Stack gap={0.5} p={2}>
-            <Typography>
-              Current Block: {morning.blockNumber.toString()}
-            </Typography>
-            <Typography>
-              Sunrise Block: {sunrise.sunriseBlock.toString()}
-            </Typography>
-            <Typography>Delta Blocks: {deltaBlocks.toString()}</Typography>
-            <Typography>SunriseTime: {seasonTime.toString()}</Typography>
-            <Typography>
-              Interval: {morning.index.plus(1).toString()}
-            </Typography>
-            <Typography>temp from storage: {temp.scaled.toString()}</Typography>
-            <Typography>
-              calculated temp: {calculatedTempData?.toString()}
-            </Typography>
-            <Typography>max temp: {temp.max.toString()}</Typography>
+            <Split>
+              <Typography>SeasonTime:</Typography>
+              <Typography>{seasonTime.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Morning Block:</Typography>
+              <Typography>{morning.blockNumber.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Sunrise Block:</Typography>
+              <Typography>{sunrise.sunriseBlock.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Delta Blocks:</Typography>
+              <Typography>{deltaBlocks.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Morning index:</Typography>
+              <Typography>{morning.index.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Interval:</Typography>
+              <Typography>{morning.index.plus(1).toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Scaled Temperature:</Typography>
+              <Typography>{temp.scaled.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Calculated temp:</Typography>
+              <Typography>{calculatedTempData?.toString()}</Typography>
+            </Split>
+            <Split>
+              <Typography>Max Temperature:</Typography>
+              <Typography>{temp.max.toString()}</Typography>
+            </Split>
           </Stack>
         </Box>
       </Box>
