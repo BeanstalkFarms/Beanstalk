@@ -10,8 +10,8 @@ import useTemperature from './useTemperature';
  *
  * Beanstalk only exposes only 'totalSoil()', which returns the instantaneous amount of soil.
  *
- * 'Beanstalk.totalSoil()' utilizes s.f.soil (AppState.field.soil) in it's calculation, and unfortunately,
- * Beanstalk doesn't expose s.f.soil.
+ * 'Beanstalk.totalSoil()' utilizes s.sys.soil (AppState.field.soil) in it's calculation, but
+ * this is not exposed.
  *
  * refer to LibDibbler.sol for more information on how Beanstalk calculates 'totalSoil()'
  *
@@ -39,10 +39,9 @@ import useTemperature from './useTemperature';
  *
  * - We calculate 'nextSoil' instead of 'soil' b/c 'soil' would require us to know the temperature of the
  * previous morning interval.
- *    - If we are at index = 0, we cannot calculate the temperature of the previous interval, wheras if we
+ *    - If we are at index = 0, we cannot calculate the temperature of the previous interval, whereas if we
  * calculate the soil for the next interval, if we are at interval 25, we can assume 'nextTemperature' is
  * the maxTemperature for the season.
- *
  */
 
 /**

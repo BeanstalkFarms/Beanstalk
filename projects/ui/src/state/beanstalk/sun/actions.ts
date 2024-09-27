@@ -1,7 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
 import BigNumber from 'bignumber.js';
 import { Duration } from 'luxon';
-import { Sun } from '.';
+import { Morning, Sun } from '.';
 
 export const updateSeasonTime = createAction<BigNumber>(
   'beanstalk/sun/updateSeasonTime'
@@ -23,17 +23,11 @@ export const setAwaitingSunrise = createAction<Sun['sunrise']['awaiting']>(
   'beanstalk/sun/setAwaitingSunrise'
 );
 
-export const setRemainingUntilSunrise = createAction<
-  Sun['sunrise']['remaining']
->('beanstalk/sun/setRemainingUntilSunrise');
-
 export const resetSun = createAction('beanstalk/sun/reset');
 
 /// morning
 
-export const setMorning = createAction<Pick<Sun, 'morning' | 'morningTime'>>(
-  'beanstalk/sun/setMorning'
-);
+export const setMorning = createAction<Morning>('beanstalk/sun/setMorning');
 
 export const updateMorningBlock = createAction<Sun['morning']['blockNumber']>(
   'beanstalk/sun/updateMorningBlock'

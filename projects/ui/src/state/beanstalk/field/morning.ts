@@ -3,10 +3,10 @@ import { useCallback, useEffect } from 'react';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { useAppSelector } from '~/state';
 
-import { useFetchBeanstalkField } from './updater';
 import { BEAN } from '~/constants/tokens';
 import { tokenResult } from '~/util';
 import { getNowRounded, getDiffNow } from '~/state/beanstalk/sun';
+import { useFetchBeanstalkField } from './updater';
 import { updateTotalSoil } from './actions';
 
 const SOIL_UPDATE_INTERVAL = 4;
@@ -23,7 +23,7 @@ export function useUpdateMorningField() {
   const season = useAppSelector((s) => s._beanstalk.sun.season);
   const soil = useAppSelector((s) => s._beanstalk.field.soil);
   const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
-  const next = useAppSelector((s) => s._beanstalk.sun.morningTime.next);
+  const next = useAppSelector((s) => s._beanstalk.sun.morning.next);
 
   /// Fetch
   const [fetchBeanstalkField] = useFetchBeanstalkField();

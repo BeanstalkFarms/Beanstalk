@@ -31,14 +31,12 @@ import { SGEnvironments, SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import useSetting from '~/hooks/app/useSetting';
 import useFarmerSiloBalances from '~/hooks/farmer/useFarmerSiloBalances';
 import { save } from '~/state';
-import {
-  setNextSunrise,
-  setRemainingUntilSunrise,
-} from '~/state/beanstalk/sun/actions';
+import { setNextSunrise } from '~/state/beanstalk/sun/actions';
 import { clearApolloCache, trimAddress } from '~/util';
 import useChainId from '~/hooks/chain/useChainId';
 import { CHAIN_INFO } from '~/constants';
 import { useAccount } from 'wagmi';
+import { useSetRemainingUntilSunrise } from '~/state/beanstalk/sun/updater';
 import OutputField from '../Common/Form/OutputField';
 
 const Split: FC<{}> = ({ children }) => (
@@ -92,6 +90,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const dispatch = useDispatch();
   const siloBalances = useFarmerSiloBalances();
   const account = useAccount();
+  const setRemainingUntilSunrise = useSetRemainingUntilSunrise();
 
   const checkAddress = useCallback(
     (address: string) => {
@@ -137,8 +136,8 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
   const setSeasonTimer = useCallback(() => {
     const _next = DateTime.now().plus({ second: 5 });
     dispatch(setNextSunrise(_next));
-    dispatch(setRemainingUntilSunrise(_next.diffNow()));
-  }, [dispatch]);
+    setRemainingUntilSunrise(_next.diffNow());
+  }, [dispatch, setRemainingUntilSunrise]);
   const exportDepositsCSV = useCallback(() => {
     const rows = Object.keys(siloBalances).reduce(
       (prev, curr) => {
