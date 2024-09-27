@@ -276,7 +276,7 @@ export function calculateGrownStalkStems(
   stem: ethers.BigNumber,
   bdv: TokenValue
 ) {
-  const deltaStem = stemTip.sub(stem).div(10 ** 6);
+  const deltaStem = stemTip.sub(stem);
 
   if (deltaStem.lt(0)) return Silo.sdk.tokens.STALK.fromHuman("0"); // FIXME
   return Silo.sdk.tokens.STALK.fromBlockchain(bdv.toBigNumber().mul(deltaStem));
