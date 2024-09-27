@@ -64,18 +64,18 @@ export default function useSoil() {
   const morningBlock = sunMorning.blockNumber;
 
   const calculateNextSoil = useCallback(
-    (_blockNumber: BigNumber) => {
+    (morningIndex: BigNumber) => {
       if (!season.abovePeg) {
         return soil;
       }
-      const currTemp = calculateTemperature(_blockNumber);
-      const nextTemp = calculateTemperature(_blockNumber.plus(1));
+      const currTemp = calculateTemperature(morningIndex);
+      const nextTemp = calculateTemperature(morningIndex.plus(1));
 
       const ratio = currTemp.plus(100).div(nextTemp.plus(100));
 
       return soil.times(ratio).decimalPlaces(6, BigNumber.ROUND_DOWN);
     },
-    [calculateTemperature, season.abovePeg, soil]
+    [season.abovePeg, soil, calculateTemperature]
   );
 
   /**

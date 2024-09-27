@@ -396,7 +396,6 @@ const SowFormContainer: FC<{}> = () => {
     (state) => state._beanstalk.field
   );
   const [{ current: temperature }] = useTemperature();
-  // const temperature = beanstalkField.temperature.scaled;
   const soil = beanstalkField.soil;
 
   /// Farmer

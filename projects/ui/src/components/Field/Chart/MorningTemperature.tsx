@@ -226,9 +226,9 @@ const Chart: React.FC<Props> = ({
 const ChartWrapper: React.FC<{
   seriesData: MorningBlockTemperature[] | undefined;
   interval: BigNumber;
-  onHover: (block: MorningBlockTemperature | undefined) => void;
+  onHover: (data: MorningBlockTemperature | undefined) => void;
 }> = ({ seriesData, interval, onHover }) => {
-  if (!seriesData) return null;
+  if (!seriesData?.length) return null;
 
   return (
     <ParentSize debounceTime={50}>
@@ -245,6 +245,14 @@ const ChartWrapper: React.FC<{
   );
 };
 
+const SECONDS_PER_INTERVAL = 12;
+
+const formatTimestamp = (ts: number) =>
+  new Date(ts * 1000).toLocaleString(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+
 const MorningTemperature: React.FC<{
   show: boolean;
   height?: string;
@@ -252,44 +260,43 @@ const MorningTemperature: React.FC<{
   const sunSeason = useAppSelector((s) => s._beanstalk.sun.season);
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
 
-  const [{ current, max }, { generate, getNextTemperatureWithBlock }] =
-    useTemperature();
-
-  const temperatureMap = useMemo(() => generate(), [generate]);
+  const [{ current, max }, { loading, generate, calculate }] = useTemperature();
 
   /// Local State
   const [hovered, setHovered] = useState<MorningBlockTemperature | undefined>(
     undefined
   );
 
+  const temperatureSeriesData: MorningBlockTemperature[] = useMemo(
+    () => Object.values(generate()),
+    [generate]
+  );
+
   /// Derived
-  const blockNumber = morning.blockNumber;
   const season = sunSeason.current;
-  const interval = morning.isMorning ? morning.index.plus(1) : NON_MORNING_BN;
-  const temperatureDisplay = (hovered?.temperature || current).toNumber();
-  const displaySeconds = morning.isMorning
+  const temperatureDisplay = hovered?.temperature || current;
+
+  const secondsElapsedSinceSunrise = morning.isMorning
     ? hovered
-      ? hovered.interval.times(12).toNumber()
-      : morning.index.times(12).toNumber()
+      ? hovered.interval.times(SECONDS_PER_INTERVAL).toNumber()
+      : morning.index.times(SECONDS_PER_INTERVAL).toNumber()
     : 0;
-  const displayTimestamp = new Date(
-    sunSeason.timestamp.plus({ seconds: displaySeconds }).toSeconds() * 1000
-  ).toLocaleString(undefined, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
 
-  const [seriesData, loading] = useMemo(() => {
-    const _temperatures = Object.values(temperatureMap);
-    const _loading = !_temperatures || _temperatures.length === 0;
+  const displayTimestamp = formatTimestamp(
+    sunSeason.timestamp
+      .plus({ seconds: secondsElapsedSinceSunrise })
+      .toSeconds()
+  );
 
-    return [_temperatures, _loading] as const;
-  }, [temperatureMap]);
+  const interval = useMemo(
+    () => (morning.isMorning ? morning.index.plus(1) : NON_MORNING_BN),
+    [morning.isMorning, morning.index]
+  );
 
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
     if (getIsMorningInterval(nextInterval)) {
-      const nextTemp = getNextTemperatureWithBlock(blockNumber);
+      const nextTemp = calculate(nextInterval);
       return nextTemp?.minus(temperatureDisplay || ZERO_BN) || ZERO_BN;
     }
     if (nextInterval.eq(26)) {
@@ -297,18 +304,12 @@ const MorningTemperature: React.FC<{
     }
 
     return ZERO_BN;
-  }, [
-    blockNumber,
-    interval,
-    max,
-    temperatureDisplay,
-    getNextTemperatureWithBlock,
-  ]);
+  }, [interval, max, temperatureDisplay, calculate]);
 
   // We debounce b/c part of the Stat is rendered conditionally
   // based on the hover state and causes flickering
   const _setHovered = useMemo(
-    () => debounce(setHovered, 40, { trailing: true }),
+    () => debounce(setHovered, 20, { trailing: true }),
     []
   );
 
@@ -355,9 +356,9 @@ const MorningTemperature: React.FC<{
           </Centered>
         ) : (
           <ChartWrapper
-            seriesData={seriesData}
+            seriesData={temperatureSeriesData}
             interval={interval}
-            onHover={(_block) => _setHovered(_block)}
+            onHover={(data) => _setHovered(data)}
           />
         )}
       </Box>
