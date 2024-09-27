@@ -252,7 +252,9 @@ const MorningTemperature: React.FC<{
   const sunSeason = useAppSelector((s) => s._beanstalk.sun.season);
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
 
-  const [{ current, max }, { generate }] = useTemperature();
+  const [{ current, max }, { generate, getNextTemperatureWithBlock }] =
+    useTemperature();
+
   const temperatureMap = useMemo(() => generate(), [generate]);
 
   /// Local State
@@ -277,7 +279,7 @@ const MorningTemperature: React.FC<{
     timeStyle: 'short',
   });
 
-  const [temperatures, loading] = useMemo(() => {
+  const [seriesData, loading] = useMemo(() => {
     const _temperatures = Object.values(temperatureMap);
     const _loading = !_temperatures || _temperatures.length === 0;
 
@@ -287,8 +289,7 @@ const MorningTemperature: React.FC<{
   const temperatureIncrease = useMemo(() => {
     const nextInterval = interval.plus(1);
     if (getIsMorningInterval(nextInterval)) {
-      const nextTemp =
-        temperatureMap[blockNumber.plus(1).toString()]?.temperature;
+      const nextTemp = getNextTemperatureWithBlock(blockNumber);
       return nextTemp?.minus(temperatureDisplay || ZERO_BN) || ZERO_BN;
     }
     if (nextInterval.eq(26)) {
@@ -296,7 +297,13 @@ const MorningTemperature: React.FC<{
     }
 
     return ZERO_BN;
-  }, [blockNumber, interval, max, temperatureDisplay, temperatureMap]);
+  }, [
+    blockNumber,
+    interval,
+    max,
+    temperatureDisplay,
+    getNextTemperatureWithBlock,
+  ]);
 
   // We debounce b/c part of the Stat is rendered conditionally
   // based on the hover state and causes flickering
@@ -348,7 +355,7 @@ const MorningTemperature: React.FC<{
           </Centered>
         ) : (
           <ChartWrapper
-            seriesData={temperatures}
+            seriesData={seriesData}
             interval={interval}
             onHover={(_block) => _setHovered(_block)}
           />
