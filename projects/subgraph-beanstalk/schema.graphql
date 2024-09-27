@@ -26,6 +26,7 @@ enum PlotSource {
   TRANSFER
   MARKET
   RESEED_MIGRATED
+  CONTRACT_RECEIVER_MIGRATED
 }
 
 enum EmaWindow {
