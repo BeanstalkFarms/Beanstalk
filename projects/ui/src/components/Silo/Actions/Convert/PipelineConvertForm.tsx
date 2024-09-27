@@ -247,23 +247,23 @@ const PipelineConvertFormInner = ({
           toStem: result.toStem.toString(),
         },
         before: {
-          baseStalk: deposit.stalk.base.blockchainString,
-          grownStalk: deposit.stalk.grown.blockchainString,
-          totalStalk: deposit.stalk.total.blockchainString,
-          seeds: deposit.seeds.blockchainString,
+          baseStalk: deposit.stalk.base.toHuman(),
+          grownStalk: deposit.stalk.grown.toHuman(),
+          totalStalk: deposit.stalk.total.toHuman(),
+          seeds: deposit.seeds.toHuman(),
         },
         after: {
-          baseStalk: baseStalkAfter.blockchainString,
-          grownStalk: grownStalkAfter.blockchainString,
-          totalStalk: baseStalkAfter.add(grownStalkAfter).blockchainString,
-          seeds: afterSeeds.blockchainString,
+          baseStalk: baseStalkAfter.toHuman(),
+          grownStalk: grownStalkAfter.toHuman(),
+          totalStalk: baseStalkAfter.add(grownStalkAfter).toHuman(),
+          seeds: afterSeeds.toHuman(),
         },
         delta: {
           stem: deltaStem.toString(),
-          baseStalk: deltaBaseStalk.blockchainString,
-          grownStalk: deltaGrownStalk.blockchainString,
-          totalStalk: totalDeltaStalk.blockchainString,
-          seeds: deltaSeed.blockchainString,
+          baseStalk: deltaBaseStalk.toHuman(),
+          grownStalk: deltaGrownStalk.toHuman(),
+          totalStalk: deltaBaseStalk.add(deltaGrownStalk).toHuman(),
+          seeds: deltaSeed.toHuman(),
         },
       });
     });
@@ -282,12 +282,11 @@ const PipelineConvertFormInner = ({
 
     console.log('RESULTS INDIVIDUAL: ', debugArr);
     console.log('RESULTS TOTALS: ', {
-      deltaGrownStalk: totalDeltaGrownStalk.blockchainString,
-      deltaBaseStalk: totalDeltaBaseStalk.blockchainString,
-      deltaStalk: totalDeltaStalk.blockchainString,
-      deltaSeed: totalDeltaSeed.blockchainString,
+      deltaGrownStalk: totalDeltaGrownStalk.toHuman(),
+      deltaBaseStalk: totalDeltaBaseStalk.toHuman(),
+      deltaStalk: totalDeltaStalk.toHuman(),
+      deltaSeed: totalDeltaSeed.toHuman(),
     });
-    console.log('RESULTS APPROACH: ', {});
 
     return {
       deltaGrownStalk: transform(totalDeltaGrownStalk, 'bnjs', STALK),
