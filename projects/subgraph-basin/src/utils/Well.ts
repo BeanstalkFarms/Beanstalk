@@ -1,7 +1,7 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { BI_10, emptyBigDecimalArray, getBigDecimalArrayTotal, ONE_BI, toDecimal, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { loadWell, takeWellDailySnapshot, takeWellHourlySnapshot } from "../entities/Well";
+import { loadOrCreateWellFunction, loadWell, takeWellDailySnapshot, takeWellHourlySnapshot } from "../entities/Well";
 import { getTokenDecimals, updateTokenUSD } from "./Token";
 import { getProtocolToken, isStable2WellFn, wellFnSupportsRate } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
@@ -50,8 +50,8 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
 
 // Value at index i is how much of token i is received in exchange for one of token 1 - i.
 export function getTokenPrices(well: Well): BigInt[] {
-  const wellFn = well.wellFunction.load()[0];
-  const wellFnAddress = toAddress(wellFn.target);
+  const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
+  const wellFnAddress = toAddress(wellFn.id);
   const wellFnContract = WellFunction.bind(wellFnAddress);
 
   let rates: BigInt[] = [];

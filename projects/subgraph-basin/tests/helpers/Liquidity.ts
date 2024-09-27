@@ -66,7 +66,7 @@ export function mockRemoveLiquidityOneWeth(lpAmount: BigInt = WELL_LP_AMOUNT, be
 function mockCalcLPTokenUnderlying(deltaReserves: BigInt[], lpDelta: BigInt): void {
   const well = loadWell(WELL);
   mockWellLpTokenUnderlying(
-    toAddress(well.wellFunction.load()[0].target),
+    toAddress(well.wellFunction),
     lpDelta.abs(),
     [well.reserves[0].plus(deltaReserves[0]), well.reserves[1].plus(deltaReserves[1])],
     well.lpTokenSupply.plus(lpDelta),

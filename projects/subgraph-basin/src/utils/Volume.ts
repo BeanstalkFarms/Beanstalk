@@ -1,7 +1,7 @@
 import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { Well } from "../../generated/schema";
-import { loadWell } from "../entities/Well";
+import { loadOrCreateWellFunction, loadWell } from "../entities/Well";
 import { loadToken } from "../entities/Token";
 import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
@@ -69,8 +69,8 @@ export function updateWellVolumesAfterLiquidity(
  * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
 export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
-  const wellFn = well.wellFunction.load()[0];
-  const wellFnContract = WellFunction.bind(toAddress(wellFn.target));
+  const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
+  const wellFnContract = WellFunction.bind(toAddress(wellFn.id));
   const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
 
   const tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];

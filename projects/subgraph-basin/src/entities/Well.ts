@@ -9,9 +9,8 @@ import {
   ZERO_BD,
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
-import { BoreWellWellFunctionStruct } from "../../generated/Basin-ABIs/Aquifer";
 
-export function createWell(wellAddress: Address, implementation: Address, inputTokens: Address[]): Well {
+export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
   let well = Well.load(wellAddress);
   if (well !== null) {
     return well as Well;
@@ -36,7 +35,8 @@ export function createWell(wellAddress: Address, implementation: Address, inputT
   }
 
   well.aquifer = Bytes.empty();
-  well.implementation = implementation;
+  well.wellFunction = Bytes.empty();
+  well.implementation = Bytes.empty();
   well.tokens = []; // This is currently set in the `handleBoreWell` function
   well.tokenOrder = [];
   well.createdTimestamp = ZERO_BI;
@@ -83,14 +83,11 @@ export function loadWell(wellAddress: Address): Well {
   return Well.load(wellAddress) as Well;
 }
 
-export function loadOrCreateWellFunction(functionData: BoreWellWellFunctionStruct, wellAddress: Address): WellFunction {
-  let id = wellAddress.toHexString() + "-" + functionData.target.toHexString();
-  let wellFunction = WellFunction.load(id);
+export function loadOrCreateWellFunction(wellFnAddress: Address): WellFunction {
+  let wellFunction = WellFunction.load(wellFnAddress);
   if (wellFunction == null) {
-    wellFunction = new WellFunction(id);
-    wellFunction.target = functionData.target;
-    wellFunction.data = functionData.data;
-    wellFunction.well = wellAddress;
+    wellFunction = new WellFunction(wellFnAddress);
+    wellFunction.data = Bytes.empty();
     wellFunction.save();
   }
   return wellFunction as WellFunction;
