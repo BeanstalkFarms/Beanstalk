@@ -20,7 +20,6 @@ const FIELD_REFRESH_MS = 2000;
 export function useUpdateMorningField() {
   /// App State
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
-  const season = useAppSelector((s) => s._beanstalk.sun.season);
   const soil = useAppSelector((s) => s._beanstalk.field.soil);
   const temperature = useAppSelector((s) => s._beanstalk.field.temperature);
   const next = useAppSelector((s) => s._beanstalk.sun.morning.next);
@@ -32,11 +31,6 @@ export function useUpdateMorningField() {
   const beanstalk = useBeanstalkContract();
 
   const dispatch = useDispatch();
-
-  /// Derived
-  const morningBlock = morning.blockNumber;
-  const sunriseBlock = season.sunriseBlock;
-  const deltaBlocks = morningBlock.minus(sunriseBlock);
 
   /// -------------------------------------
   /// Callbacks
@@ -79,19 +73,16 @@ export function useUpdateMorningField() {
   }, [fetchSoil, morning.isMorning, next]);
 
   /**
-   * Notes:
-   *    We define 'interval' as (currentBlock - sunriseBlock + 1) where 1 <= interval <= 25.
-   *
    * Refetch the field every 2 seconds for updates if:
    *
    * If it is the morning:
-   *    We are in the 1st interval of the morning & the scaled temperature in redux !== 1.
-   *    The temperature of the 1st interval of the morning is always 1%.
+   *    morning index is 0 & the scaled temperature in redux !== 1.
+   *    The temperature of the 0th index of the morning is always 1%.
    *    - This occurs when we are transitioning into the morning state from the previous season.
    */
   const shouldUpdateField = (() => {
     if (morning.isMorning) {
-      return deltaBlocks.isZero() && !temperature.scaled.eq(1);
+      return morning.index.isZero() && !temperature.scaled.eq(1);
     }
     return false;
   })();

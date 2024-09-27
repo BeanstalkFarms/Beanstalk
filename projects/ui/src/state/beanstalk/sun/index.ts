@@ -4,9 +4,10 @@ import { Beanstalk } from '~/generated';
 import { bigNumberResult } from '~/util';
 import { BlockInfo } from '~/hooks/chain/useFetchLatestBlock';
 import {
-  APPROX_SECS_PER_L2_BLOCK,
   APPROX_L2_BLOCK_PER_L1_BLOCK,
+  APPROX_SECS_PER_L2_BLOCK,
   INTERVALS_PER_MORNING,
+  SECONDS_PER_MORNING_INTERVAL,
 } from './morning';
 
 export interface Morning {
@@ -122,37 +123,47 @@ export const getMorningResult = ({
   remaining: Duration;
 } => {
   // sunrise timestamp in seconds
-  const sunriseSecs = sunriseTime.toSeconds();
+  const sunriseSecs = Math.floor(sunriseTime.toSeconds());
   // current timestamp in seconds
   const nowSecs = getNowRounded().toSeconds();
   // seconds since sunrise
-  const secondsSinceSunrise = nowSecs - sunriseSecs;
+  const secondsSinceSunrise = Math.floor(nowSecs - sunriseSecs);
 
-  // The approximate number of L2 blocks since sunrise, rounded down
-  const deltaBlocks = new BigNumber(
-    Math.floor(secondsSinceSunrise / APPROX_SECS_PER_L2_BLOCK)
+  // The morning interval index (0 - 24)
+  const index = new BigNumber(
+    Math.floor(secondsSinceSunrise / SECONDS_PER_MORNING_INTERVAL)
   );
-
-  // The index (0 - 24) of the current morning interval
-  const index = deltaBlocks.div(APPROX_L2_BLOCK_PER_L1_BLOCK);
+  // The approximate blockNumber that represents the start the current morning interval
+  const deltaBlocks = index.times(APPROX_L2_BLOCK_PER_L1_BLOCK);
 
   // It is considered morning if...
   // - SunriseBlock has been fetched
   // - We are within the first 25 L1 blocks (1200 L2 blocks) since sunrise
   const isMorning =
-    deltaBlocks.lt(INTERVALS_PER_MORNING) &&
-    deltaBlocks.gte(0) &&
-    sunriseBlock.gt(0);
+    index.gte(0) && index.lt(INTERVALS_PER_MORNING) && sunriseBlock.gt(0);
 
   // The L2 Block Number that represents the start of the current morning interval
   const blockNumber = sunriseBlock.plus(deltaBlocks);
 
+  // we could use secondsSinceSunrise, but this is more precise.
+  // Using secondsSinceSunrise results in 0.5s inaccuracy.
+  const elapsedSeconds = deltaBlocks.times(APPROX_SECS_PER_L2_BLOCK);
+
   const curr = isMorning
-    ? sunriseTime.plus({ seconds: secondsSinceSunrise })
+    ? sunriseTime.plus({ seconds: elapsedSeconds.toNumber() })
     : getNextExpectedSunrise().plus({ seconds: 12 });
 
   const next = getNextMorningIntervalUpdate(curr);
   const remaining = getDiffNow(next);
+
+  console.log({
+    sunriseSecs,
+    nowSecs,
+    secondsSinceSunrise,
+    index: index.toNumber(),
+    deltaBlocks: deltaBlocks.toNumber(),
+    blockNumber: blockNumber.toNumber(),
+  });
 
   return {
     remaining,

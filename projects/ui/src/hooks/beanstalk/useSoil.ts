@@ -52,24 +52,24 @@ import useTemperature from './useTemperature';
 export default function useSoil() {
   /// App State
   const season = useAppSelector((s) => s._beanstalk.sun.season);
-  const sunMorning = useAppSelector((s) => s._beanstalk.sun.morning);
+  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
   const soil = useAppSelector((s) => s._beanstalk.field.soil);
 
   /// Hooks
   const [_, { calculate: calculateTemperature }] = useTemperature();
 
   /// Derived
-  const isMorning = sunMorning.isMorning;
+  const isMorning = morning.isMorning;
   const abovePeg = season.abovePeg;
-  const morningBlock = sunMorning.blockNumber;
+  const morningIndex = morning.index;
 
   const calculateNextSoil = useCallback(
-    (morningIndex: BigNumber) => {
+    (morningIdx: BigNumber) => {
       if (!season.abovePeg) {
         return soil;
       }
-      const currTemp = calculateTemperature(morningIndex);
-      const nextTemp = calculateTemperature(morningIndex.plus(1));
+      const currTemp = calculateTemperature(morningIdx);
+      const nextTemp = calculateTemperature(morningIdx.plus(1));
 
       const ratio = currTemp.plus(100).div(nextTemp.plus(100));
 
@@ -89,13 +89,13 @@ export default function useSoil() {
         nextSoil: soil,
       };
 
-    const nextSoil = calculateNextSoil(morningBlock);
+    const nextSoil = calculateNextSoil(morningIndex);
 
     return {
       soil,
       nextSoil,
     };
-  }, [abovePeg, calculateNextSoil, isMorning, soil, morningBlock]);
+  }, [abovePeg, calculateNextSoil, isMorning, soil, morningIndex]);
 
   return [soilData, { calculate: calculateNextSoil }] as const;
 }
