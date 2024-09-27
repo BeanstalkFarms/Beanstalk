@@ -120,7 +120,7 @@ function useUpdateMorning() {
     // set up the timer while in the  morning state.
     const intervalId = setInterval(async () => {
       const { abovePeg, sunriseBlock, timestamp: sTimestamp } = season;
-      const { blockNumber: morningBlock } = morning;
+      const { index: morningIdx } = morning;
 
       const now = getNowRounded();
       const _remaining = getDiffNow(nextMorningInterval, now);
@@ -133,8 +133,8 @@ function useUpdateMorning() {
           blockNumber: sunriseBlock,
         });
 
-        const scaledTemp = calculateTemperature(morningBlock.plus(1));
-        const nextSoil = abovePeg ? calculateNextSoil(morningBlock) : undefined;
+        const scaledTemp = calculateTemperature(morningIdx.plus(1));
+        const nextSoil = abovePeg ? calculateNextSoil(morningIdx) : undefined;
 
         console.debug('[beanstalk/sun/useUpdateMorning]: new block: ', {
           temp: scaledTemp.toNumber(),
