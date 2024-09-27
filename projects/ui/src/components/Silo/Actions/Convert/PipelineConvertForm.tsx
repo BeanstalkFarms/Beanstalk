@@ -200,7 +200,7 @@ const PipelineConvertFormInner = ({
     refetchQuote();
   }, [refetchQuote]);
 
-  const getConvertResults = () => {
+  const getConvertResults = useCallback(() => {
     if (
       debouncedAmountIn.eq(0) ||
       !convertQuote?.length ||
@@ -209,6 +209,8 @@ const PipelineConvertFormInner = ({
     ) {
       return;
     }
+
+    const debugArr: any[] = [];
 
     let totalDeltaBaseStalk = STALK.fromHuman('0');
     let totalDeltaGrownStalk = STALK.fromHuman('0');
@@ -232,6 +234,38 @@ const PipelineConvertFormInner = ({
       const afterSeeds = targetToken.getSeeds(toBDV);
       const deltaSeed = afterSeeds.sub(deposit.seeds);
       totalDeltaSeed = totalDeltaSeed.add(deltaSeed);
+
+      debugArr.push({
+        depositId: deposit.id.toHexString(),
+        amount: deposit.amount.blockchainString,
+        toTokenStem: targetStemTip.toString(),
+        result: {
+          fromAmount: result.fromAmount.toString(),
+          toAmount: result.toAmount.toString(),
+          fromBdv: result.fromBdv.toString(),
+          toBDV: result.toBdv.toString(),
+          toStem: result.toStem.toString(),
+        },
+        before: {
+          baseStalk: deposit.stalk.base.blockchainString,
+          grownStalk: deposit.stalk.grown.blockchainString,
+          totalStalk: deposit.stalk.total.blockchainString,
+          seeds: deposit.seeds.blockchainString,
+        },
+        after: {
+          baseStalk: baseStalkAfter.blockchainString,
+          grownStalk: grownStalkAfter.blockchainString,
+          totalStalk: baseStalkAfter.add(grownStalkAfter).blockchainString,
+          seeds: afterSeeds.blockchainString,
+        },
+        delta: {
+          stem: deltaStem.toString(),
+          baseStalk: deltaBaseStalk.blockchainString,
+          grownStalk: deltaGrownStalk.blockchainString,
+          totalStalk: totalDeltaStalk.blockchainString,
+          seeds: deltaSeed.blockchainString,
+        },
+      });
     });
 
     const beforeFarmerStalk = farmerSilo.stalk.active;
@@ -246,6 +280,15 @@ const PipelineConvertFormInner = ({
       .minus(currOwnershipRatio)
       .times(100);
 
+    console.log('RESULTS INDIVIDUAL: ', debugArr);
+    console.log('RESULTS TOTALS: ', {
+      deltaGrownStalk: totalDeltaGrownStalk.blockchainString,
+      deltaBaseStalk: totalDeltaBaseStalk.blockchainString,
+      deltaStalk: totalDeltaStalk.blockchainString,
+      deltaSeed: totalDeltaSeed.blockchainString,
+    });
+    console.log('RESULTS APPROACH: ', {});
+
     return {
       deltaGrownStalk: transform(totalDeltaGrownStalk, 'bnjs', STALK),
       deltaBaseStalk: transform(totalDeltaBaseStalk, 'bnjs', STALK),
@@ -254,9 +297,23 @@ const PipelineConvertFormInner = ({
       deltaOwnership,
       deltaStalkPerSeason: ZERO_BN,
     };
-  };
+  }, [
+    debouncedAmountIn,
+    convertQuote,
+    targetStemTip,
+    pickedDeposits.crates,
+    STALK,
+    SEEDS,
+    farmerSilo.stalk.active,
+    silo.stalk.active,
+    sdk.tokens.BEAN,
+    targetToken,
+  ]);
 
-  const convertResults = getConvertResults();
+  const convertResults = useMemo(
+    () => getConvertResults(),
+    [getConvertResults]
+  );
 
   /// When a new output token is selected, reset maxAmountIn.
   const handleSelectTokenOut = async (_selectedTokens: Set<Token>) => {
