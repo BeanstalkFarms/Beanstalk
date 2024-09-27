@@ -72,7 +72,7 @@ import { setMorning } from './actions';
  *
  */
 
-export const BLOCKS_PER_MORNING = 25;
+export const INTERVALS_PER_MORNING = 25;
 
 export const MORNING_INTERVAL_1 = 1;
 
@@ -96,7 +96,7 @@ export const useSetRemainingUntilNextMorningInterval = () => {
 };
 
 export const getIsMorningInterval = (interval: BigNumber) =>
-  interval.gte(MORNING_INTERVAL_1) && interval.lte(BLOCKS_PER_MORNING);
+  interval.gte(MORNING_INTERVAL_1) && interval.lte(INTERVALS_PER_MORNING);
 
 function useUpdateMorning() {
   const nextMorningInterval = useAppSelector(

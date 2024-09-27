@@ -4,7 +4,7 @@ import { ONE_BN, ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import {
   APPROX_L2_BLOCK_PER_L1_BLOCK,
-  BLOCKS_PER_MORNING,
+  INTERVALS_PER_MORNING,
 } from '~/state/beanstalk/sun/morning';
 
 // Constants
@@ -171,7 +171,7 @@ export default function useTemperature() {
    * Generate a mapping of block numbers to their respective temperatures.
    */
   const generate = useCallback(() => {
-    const blocks = Array.from({ length: BLOCKS_PER_MORNING }, (_, i) => i);
+    const blocks = Array.from({ length: INTERVALS_PER_MORNING }, (_, i) => i);
 
     return blocks.reduce<MorningTemperatureMap>((prev, _, index) => {
       const delta = new BigNumber(index);

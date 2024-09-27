@@ -4,19 +4,28 @@ import { Beanstalk } from '~/generated';
 import { bigNumberResult } from '~/util';
 import { BlockInfo } from '~/hooks/chain/useFetchLatestBlock';
 import {
-  BLOCKS_PER_MORNING,
   APPROX_SECS_PER_L2_BLOCK,
   APPROX_L2_BLOCK_PER_L1_BLOCK,
+  INTERVALS_PER_MORNING,
 } from './morning';
 
 export interface Morning {
-  /** The current L2 Block Number on chain */
+  /**
+   * The L2 Block Number that represents the start of the current morning interval.
+   */
   blockNumber: BigNumber;
-  /** */
+  /**
+   * Whether it is morning
+   */
   isMorning: boolean;
-  /** */
+  /**
+   * The index (0 - 24) of the current morning.
+   * Can think of this as 12 second intervals (L1 blocks) since sunrise
+   */
   index: BigNumber;
-  //   /** The DateTime of the next expected temperature update */
+  /**
+   * The DateTime of the next expected morning interval update
+   */
   next: DateTime;
 }
 
@@ -99,10 +108,10 @@ export const getNowRounded = () => {
  * Ethereum block times don't include MS, so we use the current timestamp
  * rounded down to the nearest second.
  *
- * We determine the current block using the difference in seconds between
+ * We approximate the current block using the difference in seconds between
  * the current timestamp & the sunriseBlock timestamp.
  *
- * We determine it is morning by calcuating whether we are within 5 mins
+ * We determine it is morning by calculating whether we are within 5 mins
  * since sunrise was called.
  *
  */
@@ -121,21 +130,21 @@ export const getMorningResult = ({
 
   // The approximate number of L2 blocks since sunrise, rounded down
   const deltaBlocks = new BigNumber(
-    Math.floor(
-      secondsSinceSunrise /
-        APPROX_SECS_PER_L2_BLOCK /
-        APPROX_L2_BLOCK_PER_L1_BLOCK
-    )
+    Math.floor(secondsSinceSunrise / APPROX_SECS_PER_L2_BLOCK)
   );
 
-  // it is considered morning if...
+  // The index (0 - 24) of the current morning interval
+  const index = deltaBlocks.div(APPROX_L2_BLOCK_PER_L1_BLOCK);
+
+  // It is considered morning if...
   // - SunriseBlock has been fetched
   // - We are within the first 25 L1 blocks (1200 L2 blocks) since sunrise
   const isMorning =
-    deltaBlocks.lt(BLOCKS_PER_MORNING) &&
+    deltaBlocks.lt(INTERVALS_PER_MORNING) &&
     deltaBlocks.gte(0) &&
     sunriseBlock.gt(0);
 
+  // The L2 Block Number that represents the start of the current morning interval
   const blockNumber = sunriseBlock.plus(deltaBlocks);
 
   const curr = isMorning
@@ -149,7 +158,7 @@ export const getMorningResult = ({
     remaining,
     isMorning,
     blockNumber,
-    index: new BigNumber(deltaBlocks),
+    index,
     next,
   };
 };
