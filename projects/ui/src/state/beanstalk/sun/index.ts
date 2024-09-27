@@ -156,15 +156,6 @@ export const getMorningResult = ({
   const next = getNextMorningIntervalUpdate(curr);
   const remaining = getDiffNow(next);
 
-  console.log({
-    sunriseSecs,
-    nowSecs,
-    secondsSinceSunrise,
-    index: index.toNumber(),
-    deltaBlocks: deltaBlocks.toNumber(),
-    blockNumber: blockNumber.toNumber(),
-  });
-
   return {
     remaining,
     isMorning,
