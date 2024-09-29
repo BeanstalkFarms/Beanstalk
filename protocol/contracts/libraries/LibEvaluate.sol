@@ -84,7 +84,7 @@ library LibEvaluate {
             // and thus will skip the p > EXCESSIVE_PRICE_THRESHOLD check if the well oracle fails to
             // compute a valid price this Season.
             // deltaB > 0 implies that address(well) != address(0).
-            uint256 tokenBeanPrice = LibWell.getTokenBeanPriceFromTwaReserves(well); //variable name is wrong here
+            uint256 tokenBeanPrice = LibWell.getTokenBeanPriceFromTwaReserves(well);
             if (tokenBeanPrice > 1) {
                 address nonBeanToken = address(LibWell.getNonBeanTokenFromWell(well));
                 uint256 nonBeanTokenDecimals = IERC20Decimals(nonBeanToken).decimals();
@@ -98,7 +98,7 @@ library LibEvaluate {
             }
             caseId = 3;
         }
-        // p < 1
+        // p < 1 (caseId = 0)
     }
 
     /**

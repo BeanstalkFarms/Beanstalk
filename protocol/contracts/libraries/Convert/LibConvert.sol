@@ -476,7 +476,6 @@ library LibConvert {
 
         AssetsRemovedConvert memory a;
         uint256 i = 0;
-        // if (user == address(0)) user = LibTractor._user();
 
         // a bracket is included here to avoid the "stack too deep" error.
         {
@@ -490,7 +489,6 @@ library LibConvert {
             while ((i < stems.length) && (a.active.tokens < maxTokens)) {
                 // skip any stems that are germinating, due to the ability to
                 // circumvent the germination process.
-                // TODO: expose a view function that let's you pass in stems/amounts and returns the non-germinating stems/amounts?
                 if (germStem.germinatingStem <= stems[i]) {
                     i++;
                     continue;

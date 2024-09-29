@@ -207,6 +207,9 @@ contract MarketplaceFacet is Invariable, Order {
         amount = end - start;
     }
 
+    /**
+     * @notice Approves pods to be spent by `spender`.
+     */
     function approvePods(
         address spender,
         uint256 fieldId,

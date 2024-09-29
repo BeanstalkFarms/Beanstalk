@@ -175,9 +175,6 @@ contract InitalizeDiamond {
         // set current season to 1.
         s.sys.season.current = 1;
 
-        // set withdraw seasons to 0. Kept here for verbosity.
-        s.sys.season.withdrawSeasons = 0;
-
         // initalize the duration of 1 season in seconds.
         s.sys.season.period = C.CURRENT_SEASON_PERIOD;
 

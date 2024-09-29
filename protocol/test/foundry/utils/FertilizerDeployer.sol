@@ -32,7 +32,7 @@ contract FertilizerDeployer is Utils {
         IOwner(fertilizerAddress).transferOwnership(newOwner);
     }
 
-    function mintFertilizer() internal {} // TODO
+    function mintFertilizer() internal {}
 
     function mockMintFertilizer() internal {}
 

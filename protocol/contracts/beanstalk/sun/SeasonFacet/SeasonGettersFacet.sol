@@ -107,6 +107,10 @@ contract SeasonGettersFacet {
         revert("Oracle: Pool not supported");
     }
 
+    /**
+     * @notice Returns the current Delta B for a given well using `calculateDeltaBFromReserves`.
+     * @return deltaB The deltaB for the well, calculated by its reserves.
+     */
     function poolCurrentDeltaB(address pool) public view returns (int256 deltaB) {
         if (LibWell.isWell(pool)) {
             (deltaB) = LibDeltaB.currentDeltaB(pool);
@@ -116,6 +120,9 @@ contract SeasonGettersFacet {
         }
     }
 
+    /**
+     * @notice Returns the cumulative Delta B from a given list of wells.
+     */
     function cumulativeCurrentDeltaB(
         address[] calldata pools
     ) external view returns (int256 deltaB) {
@@ -170,6 +177,9 @@ contract SeasonGettersFacet {
         }
     }
 
+    /**
+     * @notice Returns the well with the largest USD time weighted average liquidity.
+     */
     function getLargestLiqWell() external view returns (address) {
         uint256 beanSupply = BeanstalkERC20(s.sys.tokens.bean).totalSupply();
         (, address well, ) = LibEvaluate.calcLPToSupplyRatio(beanSupply);
