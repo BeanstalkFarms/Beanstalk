@@ -39,7 +39,7 @@ contract ReseedBean {
 
     using SafeERC20 for IERC20;
 
-    address internal constant OWNER = address(0xa9bA2C40b263843C04d344727b954A545c81D043);
+    address internal constant OWNER = address(0xDd5b31E73dB1c566Ca09e1F1f74Df34913DaaF69);
     AppStorage internal s;
 
     // A default well salt is used to prevent front-running attacks
