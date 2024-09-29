@@ -91,7 +91,6 @@ function parseGlobals(inputFilePath, outputFilePath) {
     [
       data.season?.current ? convertToBigNum(data.season.current) : "0",
       data.season?.lastSop ? convertToBigNum(data.season.lastSop) : "0",
-      data.season?.withdrawSeasons ? convertToBigNum(data.season.withdrawSeasons) : "0",
       data.season?.lastSopSeason ? convertToBigNum(data.season.lastSopSeason) : "0",
       data.season?.rainStart ? convertToBigNum(data.season.rainStart) : "0",
       !!data.season?.raining,
