@@ -181,7 +181,7 @@ export const BEANWBTC_WELL_ADDRESSES = {
 
 export const BEANUSDC_WELL_ADDRESSES = {
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xbEA00EeEC3A0DC145c4dC5008f44212771a4704'.toLowerCase(),
+    '0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d'.toLowerCase(),
 };
 
 export const BEANUSDT_WELL_ADDRESSES = {
