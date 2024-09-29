@@ -52,24 +52,24 @@ contract ReseedStateTest is TestHelper {
     ];
 
     address[] whiteListedWellTokens = [
-        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
-        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
-        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
-        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
-        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
-        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
+        address(0xBEA00AA912aEc233303C9455f0fc2D438ac929f5), // BEAN/WETH
+        address(0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870), // BEAN/WstETH
+        address(0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1), // BEAN/WEETH
+        address(0xBeA00DD4B4D7cA2b4B49dE3D2A51189D22c1f31e), // BEAN/WBTC
+        address(0xbEA00EeEC3A0DC145c4dC5008f44212771a4704), // BEAN/USDC
+        address(0xBea00fF64E706B16bB5485B0aDe41d09DC95A9A9) // BEAN/USDT
     ];
 
     address[] whitelistedTokens = [
         L2BEAN,
         L2URBEAN,
         L2URLP,
-        address(0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB), // BEAN/WETH
-        address(0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8), // BEAN/WstETH
-        address(0xBEA00865405A02215B44eaADB853d0d2192Fc29D), // BEAN/WEETH
-        address(0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA), // BEAN/WBTC
-        address(0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279), // BEAN/USDC
-        address(0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b) // BEAN/USDT
+        address(0xBEA00AA912aEc233303C9455f0fc2D438ac929f5), // BEAN/WETH
+        address(0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870), // BEAN/WstETH
+        address(0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1), // BEAN/WEETH
+        address(0xBeA00DD4B4D7cA2b4B49dE3D2A51189D22c1f31e), // BEAN/WBTC
+        address(0xbEA00EeEC3A0DC145c4dC5008f44212771a4704), // BEAN/USDC
+        address(0xBea00fF64E706B16bB5485B0aDe41d09DC95A9A9) // BEAN/USDT
     ];
 
     IMockFBeanstalk l2Beanstalk;
@@ -82,8 +82,8 @@ contract ReseedStateTest is TestHelper {
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
     address constant realUser = 0xC2820F702Ef0fBd8842c5CE8A4FCAC5315593732;
-    address constant beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
-    address constant beanWstethWell = 0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8;
+    address constant beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
+    address constant beanWstethWell = 0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870;
 
     uint256 accountNumber;
 
@@ -137,7 +137,7 @@ contract ReseedStateTest is TestHelper {
 
     function test_pipelineConvertRealUserLPToBean() public {
         address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
-        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
+        address beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
 
         address token;
         int96 stem;
@@ -171,8 +171,8 @@ contract ReseedStateTest is TestHelper {
 
     function test_pipelineConvertLowLiquidity() public {
         address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
-        address beanWethWell = 0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB;
-        address beanWeethWell = 0xBEA00865405A02215B44eaADB853d0d2192Fc29D;
+        address beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
+        address beanWeethWell = 0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1;
 
         // add liquidity to beanWeethWell
         addLiquidityToWellArb(
