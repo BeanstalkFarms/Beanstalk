@@ -31,7 +31,13 @@ const {
   INTERNAL_EXTERNAL,
   INTERNAL_TOLERANT
 } = require("./test/hardhat/utils/balances.js");
-const { BEANSTALK, PUBLIUS, BEAN_ETH_WELL, BCM, L2_BCM } = require("./test/hardhat/utils/constants.js");
+const {
+  BEANSTALK,
+  PUBLIUS,
+  BEAN_ETH_WELL,
+  BCM,
+  L2_BCM
+} = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
 const { reseedL2 } = require("./reseed/reseedL2.js");
@@ -225,6 +231,18 @@ task("diamondABI", "Generates ABI file for diamond, includes all ABIs of facets"
       files.push("contracts/libraries/LibGauge.sol");
       files.push("contracts/libraries/LibShipping.sol");
       files.push("contracts/libraries/Token/LibTransfer.sol");
+
+      // add init reseed events that emit events.
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedAccountStatus.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedBarn.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedBean.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedField.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedGlobal.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedInternalBalances.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedPodMarket.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedSilo.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedTransferOwnership.sol");
+      files.push("contracts/beanstalk/init/reseed/L2/ReseedWhitelist.sol");
     }
     files.forEach((file) => {
       const facetName = getFacetName(file);
@@ -290,9 +308,6 @@ task("mockDiamondABI", "Generates ABI file for mock contracts", async () => {
     const filesInModule = fs.readdirSync(path.join(".", modulesDir, module));
     paths.push(...filesInModule.map((f) => [module, f]));
   });
-
-  console.log("Facets:");
-  console.log(paths);
 
   // Build ABI
   let abi = [];
