@@ -1,7 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
-const { L2_FERTILIZER } = require("../test/hardhat/utils/constants.js");
+const { L2_FERTILIZER, L2_RESEED_BEAN } = require("../test/hardhat/utils/constants.js");
 
 // Files
 const INIT_SUPPLY = "./reseed/data/r2/L2_initial_supply.json";
@@ -10,10 +10,8 @@ const EXTERNAL_UNRIPE_BEAN = "./reseed/data/r2/L2_external_unripe_balances.json"
 const EXTERNAL_UNRIPE_BEAN_LP = "./reseed/data/r2/L2_external_unripe_lp_balances.json";
 
 /**
- * reseed8 approves beanstalk to use the BCM's wsteth, eth, and a stablecoin,
- * where it will 1) transfer to a well 2) sync and add liquidity, upon deployment.
- * note: for testing purposes, the L2 is on base, and the stablecoin is USDC, but can be switched based on the discretion of the DAO.
- */
+ * reseed2 re-initializes the bean tokens mints beans to the bcm and deploys the upgradeable wells
+**/
 async function reseed2(account, L2Beanstalk, mock, verbose) {
   verbose = true;
   console.log("-----------------------------------");
@@ -36,6 +34,7 @@ async function reseed2(account, L2Beanstalk, mock, verbose) {
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: "ReseedBean",
+      initFacetAddress: L2_RESEED_BEAN,
       initArgs: [
         beanSupply,
         unripeBeanSupply,

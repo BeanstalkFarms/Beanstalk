@@ -10,7 +10,7 @@ const { printBeanstalk } = require("./reseedL2.js");
  * - pausing beanstalk.
  * - transferring bean LP tokens to BCM.
  */
-async function reseedL1(account) {
+async function reseedL1(account, mock) {
   await printBeanstalk();
   beanstalkSelectors = [];
   console.log("-----------------------------------");
@@ -47,11 +47,12 @@ async function reseedL1(account) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["L2MigrationFacet", "L1TokenFacet"],
-    facetsToRemove: beanstalkSelectors,
+    selectorsToRemove: beanstalkSelectors,
     initFacetName: "ReseedL2Migration",
     bip: false,
     verbose: true,
-    account: account
+    account: account,
+    object: !mock
   });
   console.log("Beanstalk is now paused and bean LP tokens are transferred to BCM.");
   console.log("-----------------------------------");

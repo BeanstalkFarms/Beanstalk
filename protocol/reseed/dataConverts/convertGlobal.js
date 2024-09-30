@@ -128,52 +128,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.rain?.roots ? convertToBigNum(data.rain.roots) : "0",
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
-    // seedGaugeSettings
-    // [
-    //   data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
-    //     ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
-    //     : "0",
-    //   data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
-    //     ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
-    //     : "0",
-    //   data.seedGaugeSettings?.targetSeasonsToCatchUp
-    //     ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateOptimal
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.deltaPodDemandLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.deltaPodDemandUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioOptimal
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.excessivePriceThreshold
-    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-    //     : "0",
-    //   data.seedGaugeSettings?.soilCoefficientHigh
-    //     ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
-    //     : "0",
-    //   data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
-    //   data.seedGaugeSettings?.excessivePriceThreshold
-    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-    //     : "0"
-    // ],
+    // Evaluation Parameters
     [
       "100000000000000000000",
       "50000000000000000000",
@@ -194,7 +149,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
     // ShipmentRoute
     data.shipmentRoutes.length
       ? data.shipmentRoutes.map((route) => [
-          route.planContract || "0x0000000000000000000000000000000000000000",
+          "0x555555987d98079b9f43CDcDBD52DbB24FfEEef5", // l2 shipment planner
           route.planSelector || "0x00000000",
           route.recipient ? convertToBigNum(route.recipient) : "0",
           route.data || "0x"

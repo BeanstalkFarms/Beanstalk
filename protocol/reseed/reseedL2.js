@@ -36,7 +36,6 @@ async function reseedL2({
   setState = true,
   addLiquidity = true,
   verbose = false,
-  onlyState = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report

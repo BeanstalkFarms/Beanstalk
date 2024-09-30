@@ -1,6 +1,7 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
+const { L2_RESEED_WHITELIST } = require("../test/hardhat/utils/constants.js");
 
 async function reseed9(account, L2Beanstalk, mock = false) {
   console.log("-----------------------------------");
@@ -26,6 +27,7 @@ async function reseed9(account, L2Beanstalk, mock = false) {
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: "ReseedWhitelist",
+      initFacetAddress: L2_RESEED_WHITELIST,
       initArgs: [tokens, nonBeanTokens, siloSettings, whitelistStatuses, oracles],
       bip: false,
       verbose: true,
