@@ -4,12 +4,12 @@ import { Address, BigInt } from "@graphprotocol/graph-ts";
 export const BEAN_ERC20 = Address.fromString("0xBEA0005B8599265D41256905A9B3073D397812E4");
 export const UNRIPE_BEAN = Address.fromString("0x1BEA054dddBca12889e07B3E076f511Bf1d27543");
 export const UNRIPE_LP = Address.fromString("0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788");
-export const BEAN_WETH = Address.fromString("0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB");
-export const BEAN_WSTETH = Address.fromString("0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8");
-export const BEAN_WEETH = Address.fromString("0xBEA00865405A02215B44eaADB853d0d2192Fc29D");
-export const BEAN_WBTC = Address.fromString("0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA");
-export const BEAN_USDC = Address.fromString("0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279");
-export const BEAN_USDT = Address.fromString("0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b");
+export const BEAN_WETH = Address.fromString("0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce");
+export const BEAN_WSTETH = Address.fromString("0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F");
+export const BEAN_WEETH = Address.fromString("0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c");
+export const BEAN_WBTC = Address.fromString("0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c");
+export const BEAN_USDC = Address.fromString("0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7");
+export const BEAN_USDT = Address.fromString("0xbEA00fF437ca7E8354B174339643B4d1814bED33");
 
 // External tokens
 export const ARB = Address.fromString("0x912CE59144191C1204E64559FE8253a0e49E6548");
@@ -27,8 +27,8 @@ export const FERTILIZER = Address.fromString("0xFEFEFECA5375630d6950F40e564A27f6
 export const BEANSTALK_PRICE = Address.fromString("0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7");
 //////
 export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521");
-export const WELL_CP2 = Address.fromString("0xBA5104f2df98974A83CD10d16E24282ce6Bb647f");
-export const WELL_STABLE2 = Address.fromString("0xBA51055Ac3068Ffd884B495BF58314493cde9653");
+export const WELL_CP2 = Address.fromString("0xbA1500c28C8965521f47F17Fc21A7829D6E1343e");
+export const WELL_STABLE2 = Address.fromString("0xba150052e11591D0648b17A0E608511874921CBC");
 
 // Milestone
 ////// TODO: Set this upon deployment
