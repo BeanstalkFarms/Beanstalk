@@ -301,28 +301,28 @@
   },
   "internalTokenBalanceTotal": {
     "0xBEA0005B8599265D41256905A9B3073D397812E4": "0xc399a44e74",
-    "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": "0x0",
-    "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": "0x0",
-    "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d": "0xa699d131de911038b9",
+    "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": "0x0",
+    "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": "0x0",
+    "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7": "0xa699d131de911038b9",
     "0x1BEA054dddBca12889e07B3E076f511Bf1d27543": "0x23f160e09ae",
     "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": "0x3120d987ec7"
   },
   "wellOracleSnapshots": {
-    "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": "0x401d4be1353d0bb498cffe34f2bb567c00000000000000000000000000000000401e16e7a094a5d9f09bb56f27201edb00000000000000000000000000000000",
-    "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": "0x401a9c7463078ba512f3ab1e68bb3e4000000000000000000000000000000000401b596e161d2af103e45240051bc16d00000000000000000000000000000000"
+    "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": "0x401d4be1353d0bb498cffe34f2bb567c00000000000000000000000000000000401e16e7a094a5d9f09bb56f27201edb00000000000000000000000000000000",
+    "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": "0x401a9c7463078ba512f3ab1e68bb3e4000000000000000000000000000000000401b596e161d2af103e45240051bc16d00000000000000000000000000000000"
   },
   "twaReserves": {
-    "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": {
+    "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": {
       "reserve0": "0x1",
       "reserve1": "0x1"
     },
-    "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": {
+    "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": {
       "reserve0": "0x1",
       "reserve1": "0x1"
     }
   },
   "usdTokenPrice": {
-    "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": 1
+    "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": 1
   },
   "sops": {},
   "fields": {
@@ -509,15 +509,15 @@
         "deposited": "0x33f180a3594",
         "depositedBdv": "0x3420f438e64"
       },
-      "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": {
+      "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": {
         "deposited": "0x47bb4565c512886740",
         "depositedBdv": "0x1be5f3c027"
       },
-      "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": {
+      "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": {
         "deposited": "0x13b7d78f59a70ba00",
         "depositedBdv": "0xb30b6dbe"
       },
-      "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d": {
+      "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7": {
         "deposited": "0x133a3dde09dcf9be4000",
         "depositedBdv": "0x1490529312"
       },
@@ -545,7 +545,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": {
+      "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": {
         "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0x1",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -559,7 +559,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": {
+      "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": {
         "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0x568abd",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -573,7 +573,7 @@
         "liquidityWeightImplementation": null,
         "oracleImplementation": null
       },
-      "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d": {
+      "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7": {
         "selector": "0xc84c7727",
         "stalkEarnedPerSeason": "0x1",
         "stalkIssuedPerBdv": "0x2540be400",
@@ -622,7 +622,7 @@
         "balanceOfUnderlying": "0x174018a57256"
       },
       "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788": {
-        "underlyingToken": "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870",
+        "underlyingToken": "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F",
         "balanceOfUnderlying": "0x273dd68a6a9036dc75fe"
       }
     },
@@ -635,14 +635,14 @@
         "isSoppable": false
       },
       {
-        "token": "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5",
+        "token": "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce",
         "isWhitelisted": true,
         "isWhitelistedLp": true,
         "isWhitelistedWell": true,
         "isSoppable": true
       },
       {
-        "token": "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d",
+        "token": "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7",
         "isWhitelisted": false,
         "isWhitelistedLp": false,
         "isWhitelistedWell": false,
@@ -663,7 +663,7 @@
         "isSoppable": false
       },
       {
-        "token": "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870",
+        "token": "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F",
         "isWhitelisted": true,
         "isWhitelistedLp": true,
         "isWhitelistedWell": true,
@@ -676,15 +676,15 @@
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": {
+        "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": {
+        "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d": {
+        "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7": {
           "amount": "0x0",
           "bdv": "0x0"
         },
@@ -702,15 +702,15 @@
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xBEA00AA912aEc233303C9455f0fc2D438ac929f5": {
+        "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870": {
+        "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F": {
           "amount": "0x0",
           "bdv": "0x0"
         },
-        "0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d": {
+        "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7": {
           "amount": "0x0",
           "bdv": "0x0"
         },

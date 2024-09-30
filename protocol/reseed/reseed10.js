@@ -39,7 +39,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "UnripeFacet",
     "EnrootFacet",
     "PauseFacet", // DIAMOND
-    "L1RecieverFacet" // MIGRATION
+    "L1ReceiverFacet" // MIGRATION
   ];
 
   // get list of facet addresses to link

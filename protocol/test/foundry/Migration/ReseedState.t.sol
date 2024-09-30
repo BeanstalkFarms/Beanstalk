@@ -52,24 +52,24 @@ contract ReseedStateTest is TestHelper {
     ];
 
     address[] whiteListedWellTokens = [
-        address(0xBEA00AA912aEc233303C9455f0fc2D438ac929f5), // BEAN/WETH
-        address(0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870), // BEAN/WstETH
-        address(0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1), // BEAN/WEETH
-        address(0xBeA00DD4B4D7cA2b4B49dE3D2A51189D22c1f31e), // BEAN/WBTC
-        address(0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d), // BEAN/USDC
-        address(0xBea00fF64E706B16bB5485B0aDe41d09DC95A9A9) // BEAN/USDT
+        address(0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce), // BEAN/WETH
+        address(0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F), // BEAN/WstETH
+        address(0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c), // BEAN/WEETH
+        address(0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c), // BEAN/WBTC
+        address(0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7), // BEAN/USDC
+        address(0xbEA00fF437ca7E8354B174339643B4d1814bED33) // BEAN/USDT
     ];
 
     address[] whitelistedTokens = [
         L2BEAN,
         L2URBEAN,
         L2URLP,
-        address(0xBEA00AA912aEc233303C9455f0fc2D438ac929f5), // BEAN/WETH
-        address(0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870), // BEAN/WstETH
-        address(0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1), // BEAN/WEETH
-        address(0xBeA00DD4B4D7cA2b4B49dE3D2A51189D22c1f31e), // BEAN/WBTC
-        address(0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d), // BEAN/USDC
-        address(0xBea00fF64E706B16bB5485B0aDe41d09DC95A9A9) // BEAN/USDT
+        address(0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce), // BEAN/WETH
+        address(0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F), // BEAN/WstETH
+        address(0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c), // BEAN/WEETH
+        address(0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c), // BEAN/WBTC
+        address(0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7), // BEAN/USDC
+        address(0xbEA00fF437ca7E8354B174339643B4d1814bED33) // BEAN/USDT
     ];
 
     IMockFBeanstalk l2Beanstalk;
@@ -82,10 +82,16 @@ contract ReseedStateTest is TestHelper {
     address constant DEFAULT_ACCOUNT = address(0xC5581F1aE61E34391824779D505Ca127a4566737);
 
     address constant realUser = 0xC2820F702Ef0fBd8842c5CE8A4FCAC5315593732;
-    address constant beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
-    address constant beanWstethWell = 0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870;
+    address constant beanWethWell = 0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce;
+    address constant beanWstethWell = 0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F;
 
     uint256 accountNumber;
+
+    struct CapReservesParameters {
+        bytes16[][] maxRateChanges;
+        bytes16 maxLpSupplyIncrease;
+        bytes16 maxLpSupplyDecrease;
+    }
 
     function setUp() public {
         // parse accounts and populate the accounts.txt file
@@ -135,9 +141,34 @@ contract ReseedStateTest is TestHelper {
         require(success && result.length > 0, "call failed");
     }
 
+    function test_encodeAllPumpData() public {
+        // pump data        (0,9993057966)
+        bytes16 alpha = hex"3FFEFFA50266335115654FB78EA74130"; // 1 - 2 / 1 + blocks where blocks = 2880
+        uint256 capInterval = 1;
+        bytes16[][] memory maxRateChanges = new bytes16[][](2);
+        maxRateChanges[0] = new bytes16[](2);
+        maxRateChanges[1] = new bytes16[](2);
+        maxRateChanges[0][0] = 0; // diagonals are 0                                                  (1 + old value (0.005))
+        maxRateChanges[0][1] = hex"3FF3B3E89A99E5E872E5BE430D3A7096"; // 0,000415714844729 = (12th root of 1.005) - 1
+        maxRateChanges[1][0] = hex"3FF3B3E89A99E5E872E5BE430D3A7096"; // 0,000415714844729 = (12th root of 1.005) - 1
+        maxRateChanges[1][1] = 0; // diagonals are 0                                                        (1 + old value (0.005))
+        bytes16 maxLpSupplyIncrease = hex"3FF643424807C2ED328363FE03642382"; // 0,002466269772304 = (12th root of 1.03) - 1
+        bytes16 maxLpSupplyDecrease = hex"3FF643424807C2ED328363FE03642382"; // 0,002466269772304 = (12th root of 1.03) - 1
+
+        CapReservesParameters memory crp = CapReservesParameters({
+            maxRateChanges: maxRateChanges,
+            maxLpSupplyIncrease: maxLpSupplyIncrease,
+            maxLpSupplyDecrease: maxLpSupplyDecrease
+        });
+
+        bytes memory pumpData = abi.encode(alpha, capInterval, crp);
+        console.log("Encoded data for pump");
+        console.logBytes(pumpData);
+    }
+
     function test_pipelineConvertRealUserLPToBean() public {
         address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
-        address beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
+        address beanWethWell = 0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce;
 
         address token;
         int96 stem;
@@ -171,8 +202,8 @@ contract ReseedStateTest is TestHelper {
 
     function test_pipelineConvertLowLiquidity() public {
         address realUser = 0x0b8e605A7446801ae645e57de5AAbbc251cD1e3c; // first user in deposits with bean:weth
-        address beanWethWell = 0xBEA00AA912aEc233303C9455f0fc2D438ac929f5;
-        address beanWeethWell = 0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1;
+        address beanWethWell = 0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce;
+        address beanWeethWell = 0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c;
 
         // add liquidity to beanWeethWell
         addLiquidityToWellArb(
