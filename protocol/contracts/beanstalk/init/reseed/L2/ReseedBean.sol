@@ -66,8 +66,8 @@ contract ReseedBean {
     // Basin
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
     address internal constant CONSTANT_PRODUCT_2 =
-        address(0xBA5104f2df98974A83CD10d16E24282ce6Bb647f);
-    address internal constant STABLE_2 = address(0xBA51055Ac3068Ffd884B495BF58314493cde9653);
+        address(0xbA1500c28C8965521f47F17Fc21A7829D6E1343e);
+    address internal constant STABLE_2 = address(0xba150052e11591D0648b17A0E608511874921CBC);
     address internal constant UPGRADEABLE_WELL_IMPLEMENTATION =
         address(0xBA510995783111be5301d93CCfD5dE4e3B28e50B);
     address internal constant MULTIFLOW_PUMP = address(0xBA150000D1E90C3a1FC4CC385bB43C403b4a006c);
