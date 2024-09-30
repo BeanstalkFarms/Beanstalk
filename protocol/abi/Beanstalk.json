@@ -6420,7 +6420,7 @@
         "type": "tuple"
       }
     ],
-    "name": "updateLiqudityWeightImplementationForToken",
+    "name": "updateLiquidityWeightImplementationForToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -7172,6 +7172,30 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "depositId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAddressAndStem",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "int96",
+        "name": "stem",
+        "type": "int96"
+      }
+    ],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -9555,11 +9579,6 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint8",
-            "name": "withdrawSeasons",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint32",
             "name": "lastSopSeason",
             "type": "uint32"
@@ -9580,9 +9599,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint64",
             "name": "sunriseBlock",
-            "type": "uint32"
+            "type": "uint64"
           },
           {
             "internalType": "bool",
@@ -9881,9 +9900,9 @@
     "name": "sunriseBlock",
     "outputs": [
       {
-        "internalType": "uint32",
+        "internalType": "uint64",
         "name": "",
-        "type": "uint32"
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -9906,11 +9925,6 @@
             "type": "uint32"
           },
           {
-            "internalType": "uint8",
-            "name": "withdrawSeasons",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint32",
             "name": "lastSopSeason",
             "type": "uint32"
@@ -9931,9 +9945,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint32",
+            "internalType": "uint64",
             "name": "sunriseBlock",
-            "type": "uint32"
+            "type": "uint64"
           },
           {
             "internalType": "bool",
@@ -10866,7 +10880,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10890,7 +10904,7 @@
         "type": "uint256"
       }
     ],
-    "name": "approveL2Reciever",
+    "name": "approveL2Receiver",
     "outputs": [
       {
         "internalType": "uint256",
@@ -10905,7 +10919,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10956,7 +10970,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -10987,7 +11001,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11024,7 +11038,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11061,7 +11075,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11156,7 +11170,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
@@ -11187,11 +11201,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       }
     ],
-    "name": "RecieverApproved",
+    "name": "ReceiverApproved",
     "type": "event"
   },
   {
@@ -11203,11 +11217,11 @@
       },
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       }
     ],
-    "name": "approveReciever",
+    "name": "approveReceiver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -11272,7 +11286,7 @@
         "type": "address"
       }
     ],
-    "name": "getReciever",
+    "name": "getReceiver",
     "outputs": [
       {
         "internalType": "address",
@@ -11409,7 +11423,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "reciever",
+        "name": "receiver",
         "type": "address"
       },
       {
