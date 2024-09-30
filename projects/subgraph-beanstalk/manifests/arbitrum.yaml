@@ -36,6 +36,26 @@ dataSources:
         - event: InternalBalanceMigrated(indexed address,indexed address,int256)
           handler: handleInternalBalanceMigrated
       file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
+  - kind: ethereum/contract
+    name: ReseedContractMigration
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 585858585858 # Reseed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Plot
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: L1PlotsMigrated(indexed address,indexed address,uint256[],uint256[])
+          handler: handleL1PlotsMigrated
+      file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
   ###
   # INITIALIZATION
   ###

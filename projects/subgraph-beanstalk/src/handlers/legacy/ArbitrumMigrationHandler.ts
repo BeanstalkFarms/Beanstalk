@@ -3,6 +3,7 @@ import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddMigratedDeposit,
   InternalBalanceMigrated,
+  L1PlotsMigrated,
   MigratedAccountStatus,
   MigratedPlot,
   MigratedPodListing,
@@ -32,10 +33,16 @@ export function handleMigratedAccountStatus(event: MigratedAccountStatus): void 
   updateStalkBalances(event.address, event.params.account, event.params.stalk, event.params.roots, event.block);
 }
 
-// TODO: L1PlotsMigrated + in manifest
-
+// Executed upon Reseed
 export function handleMigratedPlot(event: MigratedPlot): void {
   addMigratedPlot(event.params.account, event.params.plotIndex, event.params.pods, event, true);
+}
+
+// Executed upon contract balances migrated to L2
+export function handleL1PlotsMigrated(event: L1PlotsMigrated): void {
+  for (let i = 0; i < event.params.index.length; ++i) {
+    addMigratedPlot(event.params.receiver, event.params.index[i], event.params.pods[i], event, false);
+  }
 }
 
 export function handleMigratedPodListing(event: MigratedPodListing): void {
