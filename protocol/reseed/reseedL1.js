@@ -2,6 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { BEANSTALK } = require("../test/hardhat/utils/constants.js");
 const SELECTORS = require("./data/beanstalkSelectors.json");
+const SILO_SELECTORS = require("./data/SiloFacetSelectors.json");
 const { printBeanstalk } = require("./reseedL2.js");
 
 /**
@@ -34,6 +35,7 @@ async function reseedL1(account, mock) {
     "0x5f504a82", // ownerCandidate
     "0xf2fde38b" // transferOwnership
   ];
+
   for (let i = 0; i < SELECTORS.length; i++) {
     selectors = SELECTORS[i][1];
     for (let j = 0; j < selectors.length; j++) {
@@ -43,7 +45,22 @@ async function reseedL1(account, mock) {
       }
     }
   }
+
+  // remove only the siloFacet:
+  console.log("Stage 1: Remove siloFacet");
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    selectorsToRemove: SILO_SELECTORS[1],
+    bip: false,
+    verbose: true,
+    account: account,
+    object: !mock
+  });
+
   // add the BeanL2MigrationFacet, L1TokenFacet, remove all selectors other than the diamond functionality.
+  console.log(
+    "Stage 2: Add L2MigrationFacet, L1TokenFacet, remove all selectors other than the diamond functionality."
+  );
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["L2MigrationFacet", "L1TokenFacet"],
