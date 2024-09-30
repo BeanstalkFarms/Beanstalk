@@ -159,34 +159,34 @@ export const BEAN_ETH_WELL_ADDRESSES = {
   [SupportedChainId.ETH_MAINNET]:
     '0xBEA0e11282e2bB5893bEcE110cF199501e872bAd'.toLowerCase(),
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xBEA00AA912aEc233303C9455f0fc2D438ac929f5'.toLowerCase(),
+    '0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce'.toLowerCase(),
 };
 
 export const BEAN_WSTETH_ADDRESSS = {
   [SupportedChainId.ETH_MAINNET]:
     '0xBeA0000113B0d182f4064C86B71c315389E4715D'.toLowerCase(),
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xbea00BB0102b5F3C351a08c47C730fD0E9fD9870'.toLowerCase(),
+    '0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F'.toLowerCase(),
 };
 
 export const BEANWEETH_WELL_ADDRESSES = {
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xBEA00Cc5152e597eAfBA470453932BdC5fC3C8A1'.toLowerCase(),
+    '0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c'.toLowerCase(),
 };
 
 export const BEANWBTC_WELL_ADDRESSES = {
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xBeA00DD4B4D7cA2b4B49dE3D2A51189D22c1f31e'.toLowerCase(),
+    '0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c'.toLowerCase(),
 };
 
 export const BEANUSDC_WELL_ADDRESSES = {
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xbEA00EeEC3A0DC145c4dC5008f44212771a4704d'.toLowerCase(),
+    '0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7'.toLowerCase(),
 };
 
 export const BEANUSDT_WELL_ADDRESSES = {
   [SupportedChainId.ARBITRUM_MAINNET]:
-    '0xBea00fF64E706B16bB5485B0aDe41d09DC95A9A9'.toLowerCase(),
+    '0xbEA00fF437ca7E8354B174339643B4d1814bED33'.toLowerCase(),
 };
 
 // ----------------------------------------
