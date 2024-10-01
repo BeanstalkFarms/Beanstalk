@@ -112,8 +112,8 @@ function parseBeanstalkData() {
   const marketPath = `./reseed/data/exports/market-info${BLOCK_NUMBER}.json`;
   const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
   const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
-  parseGlobals(storageSystemPath, "./reseed/data/global.json");
-  parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
+  const [smartContractStalk, smartContractRoots] = parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
+  parseGlobals(storageSystemPath, "./reseed/data/global.json", smartContractStalk, smartContractRoots);
   parseInternalBalances(
     storageAccountsPath,
     "./reseed/data/r8-internal-balances.json",

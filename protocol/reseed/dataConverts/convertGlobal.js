@@ -1,7 +1,8 @@
 const fs = require("fs");
 const { convertToBigNum } = require("../../utils/read.js");
+const { BigNumber } = require("ethers");
 
-function parseGlobals(inputFilePath, outputFilePath) {
+function parseGlobals(inputFilePath, outputFilePath, smartContractStalk, smartContractRoots) {
   const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
 
   // Sort silo tokens alphabetically
@@ -40,9 +41,9 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.fert?.leftoverBeans ? convertToBigNum(data.fert.leftoverBeans) : "0"
     ],
     // Silo
-    [
-      data.silo?.stalk ? convertToBigNum(data.silo.stalk) : "0",
-      data.silo?.roots ? convertToBigNum(data.silo.roots) : "0",
+    [ // subtract stalk and roots from smart contract accounts from globals, until they have migrated
+      data.silo?.stalk ? BigNumber.from(data.silo.stalk).sub(smartContractStalk).toString() : "0",
+      data.silo?.roots ? BigNumber.from(data.silo.roots).sub(smartContractRoots).toString() : "0",
       data.silo?.earnedBeans ? convertToBigNum(data.silo.earnedBeans) : "0",
       data.orderLockedBeans ? convertToBigNum(data.orderLockedBeans) : "0",
       // all silo tokens
