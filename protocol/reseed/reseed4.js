@@ -1,5 +1,6 @@
 const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
+const { L2_RESEED_POD_MARKETPLACE } = require("../test/hardhat/utils/constants.js");
 
 async function reseed4(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -21,6 +22,7 @@ async function reseed4(account, L2Beanstalk, mock, verbose = false) {
     diamondAddress: L2Beanstalk,
     facetNames: [],
     initFacetName: "ReseedPodMarket",
+    initFacetAddress: L2_RESEED_POD_MARKETPLACE,
     initArgs: [podListings, podOrders],
     bip: false,
     verbose: verbose,

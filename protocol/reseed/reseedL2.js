@@ -36,7 +36,6 @@ async function reseedL2({
   setState = true,
   addLiquidity = true,
   verbose = false,
-  onlyState = true
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -110,7 +109,7 @@ function parseBeanstalkData() {
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
-  const marketPath = "./reseed/data/exports/market-info20330000.json"; // todo: update to latest block upon migration
+  const marketPath = `./reseed/data/exports/market-info${BLOCK_NUMBER}.json`;
   const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
   const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
   parseGlobals(storageSystemPath, "./reseed/data/global.json");

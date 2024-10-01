@@ -2,6 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 const { retryOperation } = require("../utils/read.js");
+const { L2_RESEED_INTERNAL_BALANCES } = require("../test/hardhat/utils/constants.js");
 
 async function reseed8(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -19,10 +20,6 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
 
   targetEntriesPerChunk = 500;
   balanceChunks = await splitEntriesIntoChunksOptimized(beanBalances, targetEntriesPerChunk);
-  const InitFacet = await (
-    await ethers.getContractFactory("ReseedInternalBalances", account)
-  ).deploy();
-  await InitFacet.deployed();
   for (let i = 0; i < balanceChunks.length; i++) {
     await updateProgress(i + 1, balanceChunks.length);
     if (verbose) {
@@ -34,7 +31,7 @@ async function reseed8(account, L2Beanstalk, mock, verbose = false) {
         diamondAddress: L2Beanstalk,
         facetNames: [],
         initFacetName: "ReseedInternalBalances",
-        initFacetAddress: InitFacet.address,
+        initFacetAddress: L2_RESEED_INTERNAL_BALANCES,
         initArgs: [balanceChunks[i]],
         bip: false,
         verbose: verbose,
