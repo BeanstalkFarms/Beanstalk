@@ -84,34 +84,14 @@ export function harvest(params: HarvestParams): void {
 
     if (harvestablePods >= plot.pods) {
       // Plot fully harvests
-      updateFieldTotals(
-        protocol,
-        params.account,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI.minus(plot.pods),
-        plot.pods,
-        params.event.block
-      );
+      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, plot.pods, params.event.block);
 
       plot.harvestedPods = plot.pods;
       plot.fullyHarvested = true;
       plot.save();
     } else {
       // Plot partially harvests
-      updateFieldTotals(
-        protocol,
-        params.account,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI.minus(harvestablePods),
-        harvestablePods,
-        params.event.block
-      );
+      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, harvestablePods, params.event.block);
 
       remainingIndex = plot.index.plus(harvestablePods);
       let remainingPods = plot.pods.minus(harvestablePods);
@@ -159,21 +139,6 @@ export function plotTransfer(params: PlotTransferParams): void {
   // Ensure both farmer entites exist
   loadFarmer(params.from);
   loadFarmer(params.to);
-
-  // Update farmer field data
-  updateFieldTotals(
-    protocol,
-    params.from,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI.minus(params.amount),
-    ZERO_BI,
-    ZERO_BI,
-    params.event.block,
-    false
-  );
-  updateFieldTotals(protocol, params.to, ZERO_BI, ZERO_BI, ZERO_BI, params.amount, ZERO_BI, ZERO_BI, params.event.block, false);
 
   let field = loadField(protocol);
   let sortedPlots = field.plotIndexes.sort();
@@ -345,21 +310,30 @@ export function plotTransfer(params: PlotTransferParams): void {
 
   // Update any harvestable pod amounts
   // No need to shift beanstalk field, only the farmer fields.
-  if (transferredHarvestable != ZERO_BI) {
-    updateFieldTotals(
-      protocol,
-      params.from,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI.minus(transferredHarvestable),
-      ZERO_BI,
-      params.event.block,
-      false
-    );
-    updateFieldTotals(protocol, params.to, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, transferredHarvestable, ZERO_BI, params.event.block, false);
-  }
+  updateFieldTotals(
+    protocol,
+    params.from,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI.minus(params.amount),
+    ZERO_BI.minus(transferredHarvestable),
+    ZERO_BI,
+    params.event.block,
+    false
+  );
+  updateFieldTotals(
+    protocol,
+    params.to,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    params.amount,
+    transferredHarvestable,
+    ZERO_BI,
+    params.event.block,
+    false
+  );
 }
 
 // This function is for handling both the WeatherChange and TemperatureChange events.
@@ -406,7 +380,7 @@ export function updateFieldTotals(
   field.season = getCurrentSeason();
   field.sownBeans = field.sownBeans.plus(sownBeans);
   field.unharvestablePods = field.unharvestablePods.plus(sownPods).minus(harvestablePods).plus(transferredPods);
-  field.harvestablePods = field.harvestablePods.plus(harvestablePods);
+  field.harvestablePods = field.harvestablePods.plus(harvestablePods).minus(harvestedPods);
   field.harvestedPods = field.harvestedPods.plus(harvestedPods);
   if (account == protocol) {
     field.soil = field.soil.plus(soil).minus(sownBeans);
