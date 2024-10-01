@@ -26,6 +26,7 @@ export type {
   PipeCallStruct as PipeStruct,
   AdvancedPipeCallStruct as AdvancedPipeStruct
 } from "src/lib/depot";
+export { BeanSwapV2 } from "src/lib/swapV2/BeanSwapV2";
 
 export type {
   MinimumViableSwapQuote,
