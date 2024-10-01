@@ -14,7 +14,6 @@ import {
 import { ethers } from 'ethers';
 import { multicall } from '@wagmi/core';
 import { config } from '~/util/wagmi/config';
-import { fetch0xWithLimiter } from '~/util/Bottleneck';
 import Utils from './utils';
 /**
  * @notes Space-bean
@@ -93,25 +92,18 @@ export class PipelineConvert {
     const sellToken = sourceWell.tokens[sourceIndexes.nonBean];
     const buyToken = targetWell.tokens[targetIndexes.nonBean];
 
-    const requests = removeLPResult.amountsOut.map((amounts, i) => {
+    const params = removeLPResult.amountsOut.map((amounts) => {
       const nonBeanAmount = amounts[sourceIndexes.nonBean];
-      const requestId = convertDetails.crates[i].id.toHexString();
 
-      const request = () =>
-        PipelineConvert.fetchSwapQuote(
-          buyToken,
-          sellToken,
-          nonBeanAmount,
-          swapSlippage
-        );
-
-      return {
-        id: requestId,
-        request,
-      };
+      return this.generateSwapQuoteParams(
+        buyToken,
+        sellToken,
+        nonBeanAmount,
+        swapSlippage
+      );
     });
 
-    const swapQuotes = await fetch0xWithLimiter(requests);
+    const swapQuotes = await PipelineConvert.sdk.zeroX.quote(params);
 
     // Add Liquidity
     const denominator = removeLPResult.summedAmounts[sourceIndexes.nonBean];
@@ -120,7 +112,7 @@ export class PipelineConvert {
         const beanAmountOut = removeLPResult.amountsOut[i][sourceIndexes.bean];
         const nonBeanAmountOut = tokenAmountsOut[sourceIndexes.nonBean];
         const ratio = nonBeanAmountOut.div(denominator);
-        const buyAmount = swapQuotes[i].buyAmount;
+        const buyAmount = buyToken.fromBlockchain(swapQuotes[i].buyAmount);
 
         const addLiquidityAmountsIn = [beanAmountOut, buyAmount.mul(ratio)];
 
@@ -148,7 +140,7 @@ export class PipelineConvert {
         swap: {
           buyToken: buyToken,
           sellToken: sellToken,
-          quote: swapQuotes[i].swapQuote,
+          quote: swapQuotes[i],
         },
         target: {
           well: targetWell,
@@ -172,13 +164,13 @@ export class PipelineConvert {
     };
   }
 
-  private static async fetchSwapQuote(
+  private generateSwapQuoteParams(
     buyToken: ERC20Token,
     sellToken: ERC20Token,
     sellAmount: TokenValue,
     slippage: number
   ) {
-    const quote = await PipelineConvert.sdk.zeroX.fetchSwapQuote({
+    return {
       sellToken: sellToken.address,
       buyToken: buyToken.address,
       sellAmount: sellAmount.blockchainString,
@@ -186,16 +178,6 @@ export class PipelineConvert {
       shouldSellEntireBalance: true,
       skipValidation: true,
       slippagePercentage: slippage.toString(),
-    });
-
-    // prettier-ignore
-    console.debug('[PipelineConvert] fetchQuote: ', { 
-      buyToken: buyToken, sellToken: sellToken, sellAmount: sellAmount, slippage, quote 
-    });
-
-    return {
-      swapQuote: quote,
-      buyAmount: buyToken.fromBlockchain(quote.buyAmount),
     };
   }
 

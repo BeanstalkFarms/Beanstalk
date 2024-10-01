@@ -36,38 +36,6 @@ export class ZeroX {
   }
 
   /**
-   * fetch the quote from the 0x API
-   * @notes defaults:
-   *  - slippagePercentage: In human readable form. 0.01 = 1%. Defaults to 0.001 (0.1%)
-   *  - skipValidation: defaults to true
-   *  - shouldSellEntireBalance: defaults to false
-   */
-  async fetchSwapQuote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
-    args: T,
-    requestInit?: RequestParams
-  ): Promise<ZeroExQuoteResponse> {
-    this.validateAPIKey();
-
-    const fetchParams = new URLSearchParams(
-      this.generateQuoteParams(args) as unknown as Record<string, string>
-    );
-
-    const options = {
-      ...requestInit,
-      method: "GET",
-      headers: new Headers({
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "0x-api-key": this._apiKey
-      })
-    };
-
-    const url = `${this.swapV1Endpoint}?${fetchParams.toString()}`;
-
-    return fetch(url, options).then((r) => r.json()) as Promise<ZeroExQuoteResponse>;
-  }
-
-  /**
    * Fetches quotes from the 0x API
    *
    * @note Utilizes Bottleneck limiter to prevent rate limiting.
