@@ -112,7 +112,7 @@ export class ZeroXSwapNode extends SwapV2Node {
 
     for (let iterations = 0; iterations < maxRetries; iterations++) {
       try {
-        const quote = await ZeroXSwapNode.sdk.zeroX.fetchSwapQuote({
+        const [quote] = await ZeroXSwapNode.sdk.zeroX.quote({
           sellToken: sellToken.address,
           buyToken: buyToken.address,
           sellAmount: sellAmount?.toString(),

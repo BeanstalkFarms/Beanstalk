@@ -86,7 +86,7 @@ export class BeanstalkSDK {
     this.pools = new Pools(this);
     this.graphql = new GraphQLClient(this.subgraphUrl);
     this.queries = getQueries(this.graphql);
-    this.zeroX = new ZeroX(config?.zeroXApiKey);
+    this.zeroX = new ZeroX(this, config?.zeroXApiKey);
 
     // // Internal
     this.events = new EventManager(this);
