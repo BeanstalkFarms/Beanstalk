@@ -42,7 +42,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 585858585858 # Reseed
+      startBlock: 259307838 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
