@@ -16,10 +16,13 @@ export function updateClaimedWithdraw(
   block: ethereum.Block
 ): void {
   let withdraw = loadSiloWithdraw(account, token, withdrawSeason.toI32());
-  withdraw.claimed = true;
-  withdraw.save();
+  // In some cases the event is emitted again with a zero amount. This should account for that
+  if (!withdraw.claimed) {
+    withdraw.claimed = true;
+    withdraw.save();
 
-  addWithdrawToSiloAsset(protocol, account, token, withdraw.amount.neg(), block);
+    addWithdrawToSiloAsset(protocol, account, token, withdraw.amount.neg(), block);
+  }
 }
 
 // Replanted -> SiloV3
