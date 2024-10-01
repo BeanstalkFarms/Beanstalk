@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { BASIN_BLOCK, BEAN_ERC20, WETH } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
-import { handleShift, handleSwap } from "../../src/WellHandler";
+import { handleShift, handleSwap } from "../../src/handlers/WellHandler";
 import { BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, WELL, WETH_SWAP_AMOUNT } from "./Constants";
 import { createContractCallMocks } from "./Functions";
 import { createShiftEvent, createSwapEvent } from "./Well";

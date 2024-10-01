@@ -21,6 +21,9 @@ export const BEANSTALK_PRICE_1 = Address.fromString("0xb01CE0008CaD90104651d6A84
 export const BEANSTALK_PRICE_2 = Address.fromString("0x4bed6cb142b7d474242d87f4796387deb9e1e1b4");
 export const CALCULATIONS_CURVE = Address.fromString("0x25BF7b72815476Dd515044F9650Bf79bAd0Df655");
 
+export const WELL_CP2_1_0 = Address.fromString("0xBA510C20FD2c52E4cb0d23CFC3cCD092F9165a6E");
+export const WELL_CP2_1_1 = Address.fromString("0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26");
+
 // LP Addresses
 export const BEAN_3CRV_V1 = Address.fromString("0x3a70DfA7d2262988064A2D051dd47521E43c9BdD");
 export const CRV3_TOKEN = Address.fromString("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");

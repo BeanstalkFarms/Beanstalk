@@ -19,6 +19,7 @@ import {
 import {
   handleAddMigratedDeposit,
   handleInternalBalanceMigrated,
+  handleL1PlotsMigrated,
   handleMigratedAccountStatus,
   handleMigratedPlot,
   handleMigratedPodListing,
@@ -27,6 +28,7 @@ import {
 import {
   createAddMigratedDepositEvent,
   createInternalBalanceMigratedEvent,
+  createL1PlotsMigratedEvent,
   createMigratedAccountStatus,
   createMigratedPlotEvent,
   createMigratedPodListingEvent,
@@ -134,6 +136,13 @@ describe("Beanstalk 3 Migration", () => {
       handleMigratedPlot(createMigratedPlotEvent(account, index, amount));
       assert.fieldEquals("Plot", index.toString(), "source", "RESEED_MIGRATED");
       assert.fieldEquals("Field", account.toHexString(), "unharvestablePods", amount.toString());
+    });
+    test("L1PlotsMigrated", () => {
+      const index = [BigInt.fromU32(250000000).times(BI_10.pow(6)), BigInt.fromU32(450000000).times(BI_10.pow(6))];
+      const amount = [BigInt.fromU32(1500).times(BI_10.pow(6)), BigInt.fromU32(2500).times(BI_10.pow(6))];
+      handleL1PlotsMigrated(createL1PlotsMigratedEvent(account, account, index, amount));
+      assert.fieldEquals("Plot", index[1].toString(), "source", "CONTRACT_RECEIVER_MIGRATED");
+      assert.fieldEquals("Field", account.toHexString(), "unharvestablePods", amount[0].plus(amount[1]).toString());
     });
     test("MigratedPodListing", () => {
       const index = BigInt.fromU32(500).times(BI_10.pow(6));

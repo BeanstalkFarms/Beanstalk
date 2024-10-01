@@ -135,3 +135,23 @@ export function stalkDecimals(v: VersionDto): i32 {
 export function beanDecimals(): i32 {
   return 6;
 }
+
+/// BASIN ///
+
+export function wellFnSupportsRate(v: VersionDto, wellFnAddress: Address): boolean {
+  if (v.chain == "ethereum" && v.protocolAddress == ConstantsEth.BEANSTALK) {
+    return BeanstalkEth.wellFnSupportsRate(wellFnAddress);
+  } else if (v.chain == "arbitrum" && v.protocolAddress == ConstantsArb.BEANSTALK) {
+    return BeanstalkArb.wellFnSupportsRate(wellFnAddress);
+  }
+  throw new Error("Unsupported protocol");
+}
+
+export function isStable2WellFn(v: VersionDto, wellFnAddress: Address): boolean {
+  if (v.chain == "ethereum" && v.protocolAddress == ConstantsEth.BEANSTALK) {
+    return BeanstalkEth.isStable2WellFn(wellFnAddress);
+  } else if (v.chain == "arbitrum" && v.protocolAddress == ConstantsArb.BEANSTALK) {
+    return BeanstalkArb.isStable2WellFn(wellFnAddress);
+  }
+  throw new Error("Unsupported protocol");
+}

@@ -1,9 +1,10 @@
-import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { loadWell } from "./Well";
-import { loadToken } from "./Token";
-import { deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Token, Well } from "../../generated/schema";
-import { BigDecimal_sum } from "../../../subgraph-core/utils/ArrayMath";
+import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { Well } from "../../generated/schema";
+import { loadOrCreateWellFunction, loadWell } from "../entities/Well";
+import { loadToken } from "../entities/Token";
+import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 // Constant product volume calculations
 
@@ -13,8 +14,7 @@ export function updateWellVolumesAfterSwap(
   amountIn: BigInt,
   toToken: Address,
   amountOut: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt
+  block: ethereum.Block
 ): void {
   let well = loadWell(wellAddress);
 
@@ -30,8 +30,8 @@ export function updateWellVolumesAfterSwap(
 
   updateVolumeStats(well, deltaTradeVolumeReserves, deltaTransferVolumeReserves);
 
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
 
   well.save();
 }
@@ -41,77 +41,39 @@ export function updateWellVolumesAfterLiquidity(
   wellAddress: Address,
   tokens: Address[],
   amounts: BigInt[],
-  timestamp: BigInt,
-  blockNumber: BigInt
+  deltaLpSupply: BigInt,
+  block: ethereum.Block
 ): void {
   let well = loadWell(wellAddress);
-  const wellTokens = well.tokens.map<Address>((t) => Address.fromBytes(t));
+  const wellTokens = well.tokens.map<Address>((t) => toAddress(t));
 
   // Determines which tokens were bough/sold and how much
-  const tradeAmount = calcLiquidityVolume(well.reserves, padTokenAmounts(wellTokens, tokens, amounts));
+  const tradeAmount = calcLiquidityVolume(well, padTokenAmounts(wellTokens, tokens, amounts), deltaLpSupply);
   const deltaTransferVolumeReserves = padTokenAmounts(wellTokens, tokens, amounts);
 
   updateVolumeStats(well, tradeAmount, deltaTransferVolumeReserves);
 
-  well.lastUpdateTimestamp = timestamp;
-  well.lastUpdateBlockNumber = blockNumber;
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
 
   well.save();
 }
 
 /**
- * Calculates the amount of volume resulting from a liquidity add operation.
- * The methodology is as follows:
- *
- * When adding liquidity in unbalanced proportions, we treat it as if some of one asset must first be bought,
- * and then the rest is added in a balanced proportion.
- *
- * We know the constant product before adding liquidity, and after adding liquidity. The
- * newer constant product can be scaled down until it reaches the older constant product.
- * From there, it becomes clear how much of an asset must have been purchased as a result.
- *
- * Example: initial 1500 BEAN and 1 ETH. If 1500 BEAN liquidity is added, in terms of buy pressure, this is equivalent
- * to buying 0.29289 ETH for 621 BEAN and then adding in equal proportions.
- * After that purchase there would be 2121 BEAN and 0.70711 ETH, which can be scaled up to (3000, 1) in equal proportion.
- * The below implementation solves this scenario backwards.
- *
- * @param currentReserves - the current reserves, after the liquidity event
- * @param addedReserves - the net change in reserves after the liquidity event
+ * Calculates the token volume resulting from a liquidity add/remove operation.
+ * The reserves corresponding to the amount of new lp tokens are compared with deltaReserves,
+ * the difference is the amount of trading volume. In a proportional liquidity add, the values will be identical.
+ * @param well - The Well entity, which has already updated its reserves and lp supply to the new values
+ * @param deltaReserves - the change in reserves from the liquidity operation
+ * @param deltaLpSupply - the change in lp token supply from the liquidity operation
  * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
-export function calcLiquidityVolume(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
-  // Reserves prior to adding liquidity
-  const initialReserves = deltaBigIntArray(currentReserves, addedReserves);
-  const initialCp = initialReserves[0].times(initialReserves[1]);
-  const currentCp = currentReserves[0].times(currentReserves[1]);
+export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
+  const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
+  const wellFnContract = WellFunction.bind(toAddress(wellFn.id));
+  const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
 
-  if (initialCp == ZERO_BI || currentCp == ZERO_BI) {
-    // Either there was no liquidity, or there is no liquidity. In either case, this is not volume.
-    return emptyBigIntArray(2);
-  }
-
-  // The overall product is scaled by `scale`, so the individual assets must be scaled by `scaleSqrt`
-  const scale = new BigDecimal(initialCp).div(new BigDecimal(currentCp));
-  const scaleSqrt = toDecimal(toBigInt(scale, 36).sqrt(), 18);
-  // Reserves after the "buy" portion of the imbalanced liquidity addition
-  const reservesBeforeBalancedAdd = [
-    BigInt.fromString(new BigDecimal(currentReserves[0]).times(scaleSqrt).truncate(0).toString()),
-    BigInt.fromString(new BigDecimal(currentReserves[1]).times(scaleSqrt).truncate(0).toString())
-  ];
-
-  // log.debug("currentReserves [{}, {}]", [currentReserves[0].toString(), currentReserves[1].toString()]);
-  // log.debug("initialReserves [{}, {}]", [initialReserves[0].toString(), initialReserves[1].toString()]);
-  // log.debug("initialCp {}", [initialCp.toString()]);
-  // log.debug("currentCp {}", [currentCp.toString()]);
-  // log.debug("scale {}", [scale.toString()]);
-  // log.debug("scaleSqrt {}", [scaleSqrt.toString()]);
-  // log.debug("reservesBeforeBalancedAdd [{}, {}]", [reservesBeforeBalancedAdd[0].toString(), reservesBeforeBalancedAdd[1].toString()]);
-
-  // Returns the positive value for the token which was bought and negative for the sold token.
-  const tokenAmountBought = [
-    initialReserves[0].minus(reservesBeforeBalancedAdd[0]),
-    initialReserves[1].minus(reservesBeforeBalancedAdd[1])
-  ];
+  const tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];
   return tokenAmountBought;
 }
 
@@ -137,7 +99,7 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
   let totalTradeUSD = ZERO_BD;
   let totalTransferUSD = ZERO_BD;
   for (let i = 0; i < deltaTradeVolumeReserves.length; ++i) {
-    const tokenInfo = loadToken(Address.fromBytes(well.tokens[i]));
+    const tokenInfo = loadToken(toAddress(well.tokens[i]));
     let usdTradeAmount = ZERO_BD;
     if (deltaTradeVolumeReserves[i] > ZERO_BI) {
       tradeVolumeReserves[i] = tradeVolumeReserves[i].plus(deltaTradeVolumeReserves[i]);

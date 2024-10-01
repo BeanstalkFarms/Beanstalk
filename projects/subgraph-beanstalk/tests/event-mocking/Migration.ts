@@ -2,6 +2,7 @@ import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   AddMigratedDeposit,
   InternalBalanceMigrated,
+  L1PlotsMigrated,
   MigratedAccountStatus,
   MigratedPlot,
   MigratedPodListing,
@@ -63,6 +64,23 @@ export function createMigratedPlotEvent(account: Address, plotIndex: BigInt, pod
   event.parameters.push(param3);
 
   return event as MigratedPlot;
+}
+
+export function createL1PlotsMigratedEvent(owner: Address, receiver: Address, index: BigInt[], pods: BigInt[]): L1PlotsMigrated {
+  let event = changetype<L1PlotsMigrated>(mockContractEvent(BEANSTALK_ARB));
+  event.parameters = new Array();
+
+  let param1 = new ethereum.EventParam("owner", ethereum.Value.fromAddress(owner));
+  let param2 = new ethereum.EventParam("receiver", ethereum.Value.fromAddress(receiver));
+  let param3 = new ethereum.EventParam("index", ethereum.Value.fromUnsignedBigIntArray(index));
+  let param4 = new ethereum.EventParam("pods", ethereum.Value.fromUnsignedBigIntArray(pods));
+
+  event.parameters.push(param1);
+  event.parameters.push(param2);
+  event.parameters.push(param3);
+  event.parameters.push(param4);
+
+  return event as L1PlotsMigrated;
 }
 
 export function createMigratedPodListingEvent(

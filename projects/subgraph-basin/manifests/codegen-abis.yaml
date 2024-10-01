@@ -29,6 +29,8 @@ dataSources:
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: Well
           file: ../../subgraph-core/abis/Well.json
+        - name: WellFunction
+          file: ../../subgraph-core/abis/WellFunction.json
         - name: CurvePrice
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
