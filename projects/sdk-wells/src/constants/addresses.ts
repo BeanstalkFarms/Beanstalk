@@ -60,21 +60,26 @@ export const addresses = {
     [ChainId.ARBITRUM_MAINNET]: "0xD6Fc4a63d7E93267c3007eA176081052369A4749"
   }),
 
-  // Well Components
+  // ---- Well Components ----
+  // Pumps
   MULTI_FLOW_PUMP_V1_1: Address.make({
     [ChainId.ETH_MAINNET]: "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17",
-    [ChainId.ARBITRUM_MAINNET]: "0xBA510482E3e6B96C88A1fe34Ce58385fB554C9a9"
+    [ChainId.ARBITRUM_MAINNET]: "0xBA150000D1E90C3a1FC4CC385bB43C403b4a006c"
   }),
+
+  // Well Functions
   CONSTANT_PRODUCT_2_V2: Address.make({
     [ChainId.ETH_MAINNET]: "0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26",
-    [ChainId.ARBITRUM_MAINNET]: "0xBA5104f2df98974A83CD10d16E24282ce6Bb647f"
+    [ChainId.ARBITRUM_MAINNET]: "0xbA1500c28C8965521f47F17Fc21A7829D6E1343e"
   }),
+  STABLE2: Address.make({
+    [ChainId.ARBITRUM_MAINNET]: "0xba150052e11591D0648b17A0E608511874921CBC"
+  }),
+
+  // Well Implementations
   WELL_DOT_SOL: Address.make({
     [ChainId.ETH_MAINNET]: "0xba510e11eeb387fad877812108a3406ca3f43a4b",
     [ChainId.ARBITRUM_MAINNET]: "0xBA5106bd62b342afAcB93f1078fe60177A62d1a9"
-  }),
-  STABLE2: Address.make({
-    [ChainId.ARBITRUM_MAINNET]: "0xBA51055Ac3068Ffd884B495BF58314493cde9653"
   }),
 
   STABLE2_LOOKUP: Address.make({
@@ -82,12 +87,14 @@ export const addresses = {
   }),
 
   /**
+   * @deprecated
    * @note Use `MULTI_FLOW_PUMP_V1_1` for new wells instead
    */
   MULTI_FLOW_PUMP_V1: Address.make({
     [ChainId.ETH_MAINNET]: "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C"
   }),
   /**
+   * @deprecated
    * @note Use `CONSTANT_PRODUCT_2_V2` for new wells instead
    */
   CONSTANT_PRODUCT_2_V1: Address.make({
