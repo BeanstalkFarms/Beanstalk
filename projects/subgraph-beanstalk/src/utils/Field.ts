@@ -308,7 +308,7 @@ export function plotTransfer(params: PlotTransferParams): void {
   field.plotIndexes = sortedPlots;
   field.save();
 
-  // Update any harvestable pod amounts
+  // Decrements the sender's unharvestable/harvestable and adds the same values to the receiver's field.
   // No need to shift beanstalk field, only the farmer fields.
   updateFieldTotals(
     protocol,
@@ -360,6 +360,7 @@ export function temperatureChanged(params: TemperatureChangedParams): void {
   setFieldHourlyCaseId(params.caseId, field);
 }
 
+// Harvestable pods are removed from field.unharvestablePods and harvested pods are removed from field.harvestablePods
 export function updateFieldTotals(
   protocol: Address,
   account: Address,
