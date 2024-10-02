@@ -494,3 +494,43 @@ export class SwapV2WellNode extends SwapV2Node {
 //     }
 //   }
 // }
+
+/*
+
+BEAN -> USDC
+forward: 
+  a. quote all BEAN for all WELLS
+  b. find:  
+    - direct path
+    - best path
+
+  c. paths either
+    -> BEAN -> USDC via well
+    -> BEAN -> X -> USDC via 0x
+
+reverse: 
+
+BEAN -> USDC
+BEAN -> X -> USDC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+USDC -> BEAN
+
+
+
+
+
+
+*/

@@ -44,17 +44,17 @@ export class BeanSwapV2 {
   /**
    * Mapping of non-bean tokens to their price.
    */
-  private nonBeanPair2Price: Map<ERC20Token, TokenValue> = new Map();
+  nonBeanPair2Price: Map<ERC20Token, TokenValue> = new Map();
 
   /**
    * Timestamp of the last time the prices of non-bean tokens were updated.
    * Instantaneous prices are fetched from the Beanstalk contract.
    */
-  private pricesLastUpdated: number = 0;
+  pricesLastUpdated: number = 0;
 
-  private quoter: BeanSwapV2Quoter;
+  quoter: BeanSwapV2Quoter;
 
-  private builder: BeanSwapV2Builder;
+  builder: BeanSwapV2Builder;
 
   constructor(sdk: BeanstalkSDK) {
     BeanSwapV2.sdk = sdk;
