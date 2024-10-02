@@ -477,9 +477,11 @@ async function upgradeWithDeployedFacets({
   facetAddresses = [],
   selectorsToRemove = [],
   selectorsToAdd = {},
+  initFacetName = undefined,
   initFacetAddress = ethers.constants.AddressZero,
   initArgs = [],
   account = null,
+  object = false,
   verbose = false,
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
@@ -494,7 +496,7 @@ async function upgradeWithDeployedFacets({
   const diamondCut = [];
   const existingFacets = await diamondLoupeFacet.facets();
 
-  if (verbose && facetAddresses.length > 0) console.log("\nProcessing Facets");
+  if (verbose && facetAddresses.length > 0) console.log("\nProcessing Facets...");
 
   if (selectorsToRemove.length > 0) {
     // check if any selectorsToRemove are already gone
@@ -543,6 +545,27 @@ async function upgradeWithDeployedFacets({
     const initFacet = await ethers.getContractAt("IDiamondCut", initFacetAddress);
     functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
     if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
+  }
+
+  if (object) {
+    dc = {
+      diamondCut: diamondCut,
+      initFacetAddress: initFacetAddress,
+      functionCall: functionCall
+    };
+    const encodedDiamondCut = await diamondCutFacet.interface.encodeFunctionData(
+      "diamondCut",
+      Object.values(dc)
+    );
+    console.log(JSON.stringify(dc, null, 4));
+    console.log("Encoded: -------------------------------------------------------------");
+    console.log(encodedDiamondCut);
+    const dcName = `diamondCut-${initFacetName}-${Math.floor(Date.now() / 1000)}-${facetNames.length}-facets.json`;
+    await fs.writeFileSync(
+      `./diamondCuts/${dcName}`,
+      JSON.stringify({ diamondCut: dc, encoded: encodedDiamondCut }, null, 4)
+    );
+    return dc;
   }
 
   let result = await diamondCutFacet
