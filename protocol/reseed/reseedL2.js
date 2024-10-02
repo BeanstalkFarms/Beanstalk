@@ -105,6 +105,10 @@ function parseBeanstalkData() {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+  // convert all contract addresses to lowercase for comparison
+  contractAccounts.forEach((account, i) => {
+    contractAccounts[i] = account.toLowerCase();
+  });
   const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
