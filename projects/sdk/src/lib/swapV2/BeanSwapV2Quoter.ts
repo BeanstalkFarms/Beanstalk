@@ -1,4 +1,3 @@
-import { getWell } from "./../../../../examples/src/dex/utils";
 import { BeanSwapV2Quote, BeanSwapV2QuoterOptions, BeanSwapV2QuoterResult } from "./types";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { ERC20Token, NativeToken } from "src/classes/Token";
