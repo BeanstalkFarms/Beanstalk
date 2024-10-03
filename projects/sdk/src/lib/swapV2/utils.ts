@@ -1,52 +1,63 @@
-import { BigNumber } from "ethers";
 import { TokenValue } from "@beanstalk/sdk-core";
+
 import { BasinWell } from "src/classes/Pool";
-import { ERC20Token } from "src/classes/Token";
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { BeanstalkPrice } from "src/constants/generated";
 
-export function constructWellQuotePipeCall(
-  well: BasinWell,
-  sellToken: ERC20Token,
-  buyToken: ERC20Token,
-  amount: TokenValue,
-  direction: "forward" | "reverse"
-) {
-  const { encodeFunctionData: encode } = well.getContract().interface;
+import { PricePoolData } from "./types";
 
-  if (direction === "forward") {
-    return encode("getSwapOut", [sellToken.address, buyToken.address, amount.toBlockchain()]);
-  }
-
-  return encode("getSwapIn", [sellToken.address, buyToken.address, amount.toBlockchain()]);
-}
-
-export function decodeWellQuotePipeCall(
-  well: BasinWell,
-  result: string,
-  direction: "forward" | "reverse"
-) {
-  const { decodeFunctionResult } = well.getContract().interface;
-
-  const fnName = direction === "forward" ? "getSwapOut" : "getSwapIn";
-
+export function decodeTokenPriceResult(sdk: BeanstalkSDK, result: string) {
   try {
-    if (direction === "forward") {
-      return BigNumber.from(decodeFunctionResult("getSwapOut", result)[0]);
-    }
-    return BigNumber.from(decodeFunctionResult("getSwapIn", result)[0]);
+    const priceDecoded = sdk.contracts.beanstalk.interface.decodeFunctionResult(
+      "getTokenUsdPrice",
+      result
+    )[0];
+
+    return TokenValue.fromBlockchain(priceDecoded, 6);
   } catch (e) {
-    console.error(`Error decoding ${fnName} for ${well.name}`, e);
+    sdk.debug(`[BeanSwapV2/decodeTokenPriceResult] Error decoding getTokenUsdPrice for result: ${result}`, e);
     throw e;
   }
 }
 
-export function getWellPairToken(well: BasinWell, token: ERC20Token) {
-  if (well.tokens.length !== 2) {
-    throw new Error("Cannot determine pair token for well with != 2 tokens");
-  }
+export function decodePriceContractResult(sdk: BeanstalkSDK, result: string) {
+  const map = new Map<BasinWell, PricePoolData>();
 
-  if (well.tokens[0].equals(token)) {
-    return well.tokens[1];
-  }
+  try {
+    const decoded = sdk.contracts.beanstalkPrice.interface.decodeFunctionResult(
+      "price",
+      result
+    )[0] as BeanstalkPrice.PricesStructOutput;
 
-  return well.tokens[0];
+    const beanPrice = sdk.tokens.BEAN.fromBlockchain(decoded.price);
+
+    for (const pool of decoded.ps) {
+      const well = sdk.pools.getWellByLPToken(pool.pool);
+      if (!well) continue;
+
+      const poolPriceResult: PricePoolData = {
+        well,
+        address: pool.pool.toLowerCase(),
+        price: TokenValue.fromBlockchain(pool.price, 6),
+        reserves: [
+          well.tokens[0].fromBlockchain(pool.balances[0]),
+          well.tokens[1].fromBlockchain(pool.balances[1])
+        ] as [TokenValue, TokenValue],
+        deltaB: TokenValue.fromBlockchain(pool.deltaB, 6),
+        liquidity: TokenValue.fromBlockchain(pool.liquidity, 6),
+        lpUsd: TokenValue.fromBlockchain(pool.lpUsd, 6),
+        lpBdv: sdk.tokens.BEAN.fromBlockchain(pool.lpBdv)
+      };
+
+      map.set(well, poolPriceResult);
+    }
+
+    return {
+      beanPrice,
+      poolData: map
+    };
+  } catch (e) {
+    console.error("[BeanSwapV2/decodePriceContractResult] Error decoding Price contract result", e);
+    throw e;
+  }
 }

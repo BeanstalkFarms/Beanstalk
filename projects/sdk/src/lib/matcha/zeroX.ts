@@ -1,6 +1,6 @@
 import Bottleneck from "bottleneck";
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { ZeroExAPIRequestParams, ZeroExQuoteResponse } from "./types";
-import { BeanstalkSDK } from "../BeanstalkSDK";
 import { fetchWithBottleneckLimiter, isRateLimitError } from "./utils";
 
 const RETRY_AFTER_MS = 200;

@@ -1,11 +1,9 @@
-import { BeanSwapV2Quote, BeanSwapV2QuoterOptions, BeanSwapV2QuoterResult } from "./types";
+import { BeanSwapV2Quote, SwapApproximation } from "./types";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { ERC20Token, NativeToken } from "src/classes/Token";
+import { ERC20Token,  Token } from "src/classes/Token";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { AdvancedPipeCallStruct } from "src/lib/depot";
-import { SwapV2Node, SwapV2WellNode } from "./SwapV2Node";
 import { BeanSwapV2 } from "./BeanSwapV2";
-import { getWellPairToken } from "./utils";
 
 export class BeanSwapV2Quoter {
   static sdk: BeanstalkSDK;
@@ -17,150 +15,117 @@ export class BeanSwapV2Quoter {
     this.swapV2 = swapV2;
   }
 
-  async getQuote(
-    _sellToken: ERC20Token,
-    _buyToken: ERC20Token,
-    amount: TokenValue,
-    direction: "forward" | "reverse",
-    slippage: number,
-    options?: BeanSwapV2QuoterOptions
-  ) {
+  async getQuote(_sellToken: ERC20Token, _buyToken: ERC20Token, amount: TokenValue, slippage: number) {
     const sellToken = this.ensureERC20(_sellToken);
     const buyToken = this.ensureERC20(_buyToken);
 
-    let result: BeanSwapV2QuoterResult | undefined;
+    const quotes: BeanSwapV2Quote[] = [];
 
-    if (sellToken.equals(buyToken)) {
-      result = undefined;
-    } else if (sellToken.equals(BeanSwapV2Quoter.sdk.tokens.BEAN)) {
-      result = await this.quoteSellBeanForX(buyToken, amount, direction, slippage, options);
-    } else if (buyToken.equals(BeanSwapV2Quoter.sdk.tokens.BEAN)) {
-      result = await this.quoteBuyBeanWithX(sellToken, amount, direction, slippage, options);
-    } else {
-      result = await this.quoteNonWellSwap(
-        sellToken,
-        buyToken,
-        amount,
-        direction,
-        slippage,
-        options
-      );
+    /**
+     * Unwrap should only be a single action or the last action
+     * This handles the case where it is a single swap action.
+     */
+    if (
+      _sellToken.equals(BeanSwapV2Quoter.sdk.tokens.WETH) &&
+      _buyToken.equals(BeanSwapV2Quoter.sdk.tokens.ETH)
+    ) {
+      const unwrapQuote = await this.swapV2.unwrapEthNode.quote(_buyToken, amount);
+      return [unwrapQuote];
     }
 
-    return result;
+    // If our input token is ETH, add the wrap step.
+    if (_sellToken.equals(BeanSwapV2Quoter.sdk.tokens.ETH)) {
+      const wrapQuote = await this.swapV2.wrapEthNode.quote(_sellToken, amount);
+      quotes.push(wrapQuote);
+    }
+
+    let path: BeanSwapV2Quote[];
+
+    // this will catch any swaps that are only wrap / unwrap
+    if (sellToken.equals(buyToken)) {
+      path = [];
+    } else if (sellToken.equals(BeanSwapV2Quoter.sdk.tokens.BEAN)) {
+      path = await this.quoteSellBeanForX(buyToken, amount, slippage);
+    } else if (buyToken.equals(BeanSwapV2Quoter.sdk.tokens.BEAN)) {
+      path = await this.quoteBuyBeanWithX(sellToken, amount, slippage);
+    } else {
+      path = await this.quoteNonBeanSwap(sellToken, buyToken, amount, slippage);
+    }
+
+    quotes.push(...path);
+
+    // Only add the unwrap step if the _sellToken is NOT WETH. If it is WETH, it'll be handled above.
+    if (!_sellToken.equals(BeanSwapV2Quoter.sdk.tokens.WETH) && _buyToken.equals(BeanSwapV2Quoter.sdk.tokens.ETH)) {
+      const lastPathBuyToken = path[path.length - 1].buyToken;
+      if (!BeanSwapV2Quoter.sdk.tokens.WETH.equals(lastPathBuyToken)) {
+        throw new Error(`Error constructing swap quote. Expected last quote to be WETH, but got ${lastPathBuyToken.symbol}`);
+      }
+
+      const unwrapQuote = await this.swapV2.unwrapEthNode.quote(lastPathBuyToken as ERC20Token, amount);
+      quotes.push(unwrapQuote);
+    }
+
+    return path;
   }
 
-  private async quoteNonWellSwap(
-    sellToken: ERC20Token,
-    buyToken: ERC20Token,
-    amount: TokenValue,
-    direction: "forward" | "reverse",
-    slippage: number,
-    _options?: BeanSwapV2QuoterOptions // TODO
-  ) {
+  // TODO: Eventually provide Well1 => BEAN => Well2
+  private async quoteNonBeanSwap(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number) {
     if (sellToken.equals(buyToken)) {
-      throw new Error(
-        "[BeanSwapQuoterV2/quoteNonBean2NonBean]: sellToken and buyToken cannot be the same"
-      );
+      throw new Error('Invalid swap path. SellToken and BuyToken cannot be the same');
     }
 
     const path: BeanSwapV2Quote[] = [];
-
-    const zeroXQuote = await this.swapV2.zeroXSwapNode.quote(
-      sellToken,
-      buyToken,
-      amount,
-      direction,
-      slippage / 100
-    );
+  
+    const zeroXQuote = await this.swapV2.zeroXSwapNode.quote(sellToken, buyToken, amount, slippage / 100);
     path.push(zeroXQuote);
 
-    // const [wellQuotes, zeroXQuote] = await Promise.all([
-    //   this.quoteDualStepWellSwap(sellToken, buyToken, amount, direction, slippage),
-    //   this.swapV2.zeroXSwapNode.quote(sellToken, buyToken, amount, direction, slippage / 100)
-    // ]);
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteNonBean2NonBean] path: ", path);
 
-    // if (!wellQuotes.length) {
-    //   throw new Error("[BeanSwapQuoterV2/quoteNonBean2NonBean]: No well quotes found");
-    // }
-
-    // if (
-    //   !wellQuotes.length ||
-    //   wellQuotes[wellQuotes.length - 1].buyAmount.lt(zeroXQuote.buyAmount)
-    // ) {
-    //   path.push(zeroXQuote);
-    // } else {
-    //   path.push(...wellQuotes);
-    // }
-
-    const result = this.constructQuoteResult(path);
-
-    BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteNonBean2NonBean] RESULT: ", result);
-
-    return result;
+    return path;
   }
 
-  private async quoteSellBeanForX(
-    buyToken: ERC20Token,
-    amount: TokenValue,
-    direction: "forward" | "reverse",
-    slippage: number,
-    _options?: BeanSwapV2QuoterOptions // TODO
-  ): Promise<BeanSwapV2QuoterResult> {
+  private async quoteSellBeanForX(buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<BeanSwapV2Quote[]> {
     const sellToken = BeanSwapV2Quoter.sdk.tokens.BEAN;
 
     if (buyToken.equals(sellToken)) {
-      throw new Error(
-        "[BeanSwapQuoterV2/quoteSellBeanForX]: Expected buyToken to be a non-BEAN token"
-      );
+      throw new Error("Expected buyToken to be a non-BEAN token");
     }
 
     const path: BeanSwapV2Quote[] = [];
-
     // well quotes from BEAN => pairToken
-    const wellQuotes = await this.quoteAllWellsBean2X(amount, buyToken, direction, slippage);
-
-    const directPath = wellQuotes.find((quote) => quote.buyToken.equals(buyToken));
+    const wellQuotes = await this.quoteAllWellsBean2X(amount, slippage);
+    const directPath = wellQuotes.find((quote) => buyToken.equals(quote.buyToken));
 
     if (!wellQuotes.length) {
-      throw new Error("[BeanSwapQuoterV2/quoteSellBeanForX]: No well quotes found");
-    }
-    if (!directPath) {
-      throw new Error("[BeanSwapQuoterV2/quoteSellBeanForX]: Could not find direct Well Swap path");
+      throw new Error("Error finding well routes. No well quotes found");
     }
 
     const bestWellQuote = wellQuotes[0];
 
-    BeanSwapV2Quoter.sdk.debug(
-      "[BeanSwapQuoterV2/quoteSellBeanForX]: bestWellQuote",
-      bestWellQuote
-    );
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteSellBeanForX]: bestWellQuote", bestWellQuote);
     BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteSellBeanForX]: directPath", directPath);
 
     // if no direct path or if the best well quote is not the direct path, fetch a zeroX quote
-    if (!bestWellQuote.buyToken.equals(buyToken)) {
+    if (!directPath || !buyToken.equals(bestWellQuote.buyToken)) {
       const zeroXQuote = await this.swapV2.zeroXSwapNode.quote(
-        bestWellQuote.buyToken,
+        bestWellQuote.buyToken as ERC20Token,
         buyToken,
         amount,
-        "forward",
         slippage / 100
       );
 
-      if (zeroXQuote.buyAmount.gt(directPath.buyAmount)) {
+      if (zeroXQuote.buyAmount.gt(directPath?.buyAmount || 0)) {
         path.push(bestWellQuote, zeroXQuote);
       }
     }
 
-    if (!path.length) {
+    if (!path.length && directPath) {
       path.push(directPath);
     }
 
-    const result = this.constructQuoteResult(path);
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteSellBeanForX] path: ", path);
 
-    BeanSwapV2Quoter.sdk.debug("[BeanSwapQuoterV2/quoteSellBeanForX] RESULT: ", result);
-
-    return result;
+    return path;
   }
 
   /**
@@ -170,51 +135,45 @@ export class BeanSwapV2Quoter {
    * @param slippage
    * @returns
    */
-  private async quoteBuyBeanWithX(
-    sellToken: ERC20Token,
-    amount: TokenValue,
-    direction: "forward" | "reverse",
-    slippage: number,
-    _options?: BeanSwapV2QuoterOptions // TODO
-  ): Promise<BeanSwapV2QuoterResult> {
+  private async quoteBuyBeanWithX(sellToken: ERC20Token, amount: TokenValue, slippage: number): Promise<BeanSwapV2Quote[]> {
     const buyToken = BeanSwapV2Quoter.sdk.tokens.BEAN;
 
     if (sellToken.equals(buyToken)) {
-      throw new Error(
-        "[BeanSwapV2Quoter/quoteBuyBeanWithX]: Expected sellToken to be a non-BEAN token"
-      );
+      throw new Error("Error determing best well to buy BEAN. Expected sellToken to be a non-BEAN token");
     }
 
     // well quotes from pairToken => BEAN
-    const wellQuotes = await this.quoteAllWellsToBean(sellToken, amount, direction, slippage);
+    const wellQuotes = await this.quoteAllWellsX2Bean(sellToken, amount, slippage);
     BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteBuyBeanWithX]: quotes: ", wellQuotes);
 
     if (!wellQuotes.length) {
-      throw new Error("[BeanSwapV2Quoter/quoteBuyBeanWithX]: No well quotes found");
+      throw new Error("Error determining swap path. No well quotes found");
     }
 
-    const directPath = wellQuotes.find((quote) => quote.sellToken.equals(sellToken));
+    const directPath = wellQuotes.find((quote) => sellToken.equals(quote.sellToken));
     const bestWellQuote = wellQuotes[0];
 
     const path: BeanSwapV2Quote[] = [];
 
-    const wellNode = this.swapV2.getWellNodeWithToken(bestWellQuote.sellToken);
+    const wellNode = this.swapV2.getWellNodeWithToken(bestWellQuote.sellToken as ERC20Token);
+
+    if (!wellNode) {
+      throw new Error("Could not find well node");
+    }
 
     // If no direct path or the best well quote is not the direct path, fetch a zeroX quote
-    if (!directPath || !bestWellQuote.sellToken.equals(sellToken)) {
+    if (!directPath || !sellToken.equals(bestWellQuote.sellToken)) {
       const zeroXQuote = await this.swapV2.zeroXSwapNode.quote(
         sellToken,
-        bestWellQuote.sellToken, // buyToken
+        bestWellQuote.sellToken as ERC20Token, // buyToken
         amount,
-        "forward",
         slippage / 100
       );
       // wellQuotes were all approximations, so get a fresh quote from the Well w/ the 0x quote amountOut
       const postZeroXWellQuote = await wellNode.getSwapOutQuote(
-        zeroXQuote.buyToken,
+        zeroXQuote.buyToken as ERC20Token,
         buyToken,
         zeroXQuote.buyAmount,
-        direction === "reverse",
         slippage
       );
 
@@ -226,66 +185,26 @@ export class BeanSwapV2Quoter {
       path.push(directPath);
     }
 
-    const result = this.constructQuoteResult(path);
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteBuyBeanWithX] RESULT: ", path);
 
-    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteBuyBeanWithX] RESULT: ", result);
-
-    return result;
-  }
-
-  async quoteAllWellsBean2XReverse(buyAmount: TokenValue, buyToken: ERC20Token, slippage: number) {
-    const direction = "reverse";
-    const entries = [...this.swapV2.wellNodes.entries()];
-
-    const pipeCalls: AdvancedPipeCallStruct[] = [];
-
-    const sellToken = BeanSwapV2Quoter.sdk.tokens.BEAN;
-
-    const buyTokenUsd = this.swapV2.getTokenUsd(buyToken).mul(buyAmount);
-
-    // bean -> well reverse
-    for (const [well, node] of entries) {
-      /**
-       * Ex: BEAN -> WETH
-       */
-      // WETH
-      const targetToken = getWellPairToken(well, sellToken);
-      // USDC -> WETH amount out
-      const estAmountOut = this.approximate0xOut(buyToken, buyAmount, targetToken, slippage);
-      // BEAN -> WETH
-      const nodePipeCalls = node.constructQuotePipeCalls(sellToken, estAmountOut);
-      // gives me max bean amount in
-      pipeCalls.push(nodePipeCalls.reverse);
-    }
+    return path;
   }
 
   /**
-   * Given an amount of BEAN, fetches quotes for all wells to buy BEAN.
+   * Given an amount of BEAN, fetches quotes for all wells to sell BEAN.
    *
    * @param amount The amount of BEAN to sell
-   * @returns an array of quotes sorted by buyAmount in non-increasing order
+   * @returns an array of well quotes sorted by USD value in non-increasing order
    */
-  private async quoteAllWellsBean2X(
-    amount: TokenValue,
-    buyToken: ERC20Token,
-    direction: "forward" | "reverse",
-    slippage: number
-  ) {
+  private async quoteAllWellsBean2X(amount: TokenValue, slippage: number) {
     const sellToken = BeanSwapV2Quoter.sdk.tokens.BEAN;
     const pipeCalls: AdvancedPipeCallStruct[] = [];
 
-    const entries = [...this.swapV2.wellNodes.entries()];
-
-    const fwd = direction === "forward";
+    const entries = [...this.swapV2.getWellNodes().entries()];
 
     for (const [_, node] of entries) {
-      if (fwd) {
-        const nodePipeCalls = node.constructQuotePipeCalls(sellToken, amount);
-        pipeCalls.push(nodePipeCalls[direction]);
-      } else {
-        const pairToken = node.getPairToken(sellToken);
-        // const approxOut = this.approximate0xOut(buyToken, pairToken, );
-      }
+      const nodePipeCalls = node.getSwapOutAdvancedPipeStruct(sellToken, amount);
+      pipeCalls.push(nodePipeCalls);
     }
 
     BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsFromBean] Fetching quotes: ", {
@@ -294,46 +213,42 @@ export class BeanSwapV2Quoter {
       sellAmount: amount
     });
 
-    const data = await BeanSwapV2Quoter.sdk.contracts.beanstalk.callStatic.advancedPipe(
-      pipeCalls,
-      "0"
-    );
+    const data = await BeanSwapV2Quoter.sdk.contracts.beanstalk.callStatic.advancedPipe(pipeCalls, "0");
 
-    BeanSwapV2Quoter.sdk.debug(
-      "[BeanSwapV2Quoter/quoteAllWellsFromBean] AdvancedPipe response: ",
-      data
-    );
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsFromBean] AdvancedPipe response: ", data);
 
     const quotes = entries.map<BeanSwapV2Quote>(([well, node], i) => {
-      const amountOut = node.decodeQuote(data[i], direction);
+      // Non-BEAN token we are buying by selling BEAN
       const buyToken = node.getPairToken(sellToken);
-      const price = this.swapV2.getTokenUsd(buyToken);
+
+      // The amount of non-BEAN token received from well.getSwapOut
+      const buyAmount = buyToken.fromBlockchain(node.decodeGetSwapOut(data[i]));
+
+      // The USD value of the non-BEAN token received
+      const usdValue = this.swapV2.getTokenUsd(buyToken).mul(buyAmount);
 
       return {
-        sellToken: sellToken,
+        sellToken,
         sellAmount: amount,
         maxSellAmount: amount,
-        buyToken: buyToken,
-        buyAmount: buyToken.fromBlockchain(amountOut),
-        minBuyAmount: buyToken.fromBlockchain(amountOut).subSlippage(slippage),
-        usd: buyToken.fromBlockchain(amountOut).mul(price),
+        buyToken,
+        buyAmount,
+        minBuyAmount: buyAmount.subSlippage(slippage),
+        usd: usdValue,
         sourceType: "WELL",
-        sourceName: well.name,
+        sourceName: node.name,
         allowanceTarget: well.address,
-        isReverse: direction === "reverse",
         node,
         tag: `buy-${buyToken.symbol}`
       };
     });
 
+    // Should never happen, but sanity check.
     if (!quotes.length) {
-      throw new Error("[BeanSwapV2Quoter/allWellsQuote]: Could not determine best Well Swap quote");
+      throw new Error("Error determining route to sell BEAN. No quotes found");
     }
-    if (direction === "reverse") {
-      quotes.sort((a, b) => b.sellAmount.sub(a.sellAmount).toNumber());
-    } else {
-      quotes.sort((a, b) => b.buyAmount.sub(a.buyAmount).toNumber());
-    }
+
+    quotes.sort((a, b) => b.usd.sub(a.usd).toNumber());
 
     BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsFromBean] RESULT", quotes);
 
@@ -348,145 +263,91 @@ export class BeanSwapV2Quoter {
    * @param amount
    * @returns quotes sorted by buyAmount in non-increasing order
    */
-  private async quoteAllWellsToBean(
-    sellToken: ERC20Token,
-    amount: TokenValue,
-    direction: "forward" | "reverse",
-    slippage: number
-  ) {
+  private async quoteAllWellsX2Bean(sellToken: ERC20Token, amount: TokenValue, slippage: number) {
     if (sellToken.equals(BeanSwapV2Quoter.sdk.tokens.BEAN)) {
-      return [];
+      throw new Error("Cannot determine best well to buy BEAN. Expected sellToken to be a non-BEAN token");
     }
 
-    const pipeCalls: AdvancedPipeCallStruct[] = [];
-    const entries = [...this.swapV2.wellNodes.entries()];
-
+    const entries = [...this.swapV2.getWellNodes().entries()];
     const buyToken = BeanSwapV2Quoter.sdk.tokens.BEAN;
 
+    const pipeCalls: AdvancedPipeCallStruct[] = [];
+
     const swapEstimates: {
-      token: ERC20Token;
-      amount: TokenValue;
+      swapToken: ERC20Token; // The non-bean token post 0x swap to sell for BEAN
+      estimate: SwapApproximation;
     }[] = [];
 
     for (const [_, node] of entries) {
-      const pairToken = node.getPairToken(buyToken);
-      const estAmountOut = this.approximate0xOut(sellToken, amount, pairToken, slippage);
-      const nodePipeCalls = node.constructQuotePipeCalls(pairToken, estAmountOut);
+      // the non-bean token in the well.
+      const swapToken = node.getPairToken(buyToken);
 
-      swapEstimates.push({ token: pairToken, amount: estAmountOut });
-      pipeCalls.push(nodePipeCalls.forward);
+      // the approximate amounts of the non-bean token we will get if we swap sellToken for nonBeanPair
+      const estimate = this.approximate0xOut(sellToken, swapToken, amount, slippage);
+
+      // construct well.getSwapOut for nonBeanPair => BEAN
+      const nodePipeCalls = node.getSwapOutAdvancedPipeStruct(swapToken, estimate.minAmountOut);
+
+      swapEstimates.push({ swapToken, estimate });
+      pipeCalls.push(nodePipeCalls);
     }
 
     BeanSwapV2Quoter.sdk.debug(
-      "[BeanSwapV2Quoter/quoteAllWellsToBean] Fetching quotes: ",
+      "[BeanSwapV2Quoter/quoteAllWellsX2Bean] Fetching quotes: ",
       sellToken,
       buyToken,
+      swapEstimates,
       pipeCalls
     );
 
-    const data = await BeanSwapV2Quoter.sdk.contracts.beanstalk.callStatic.advancedPipe(
-      pipeCalls,
-      "0"
-    );
+    const data = await BeanSwapV2Quoter.sdk.contracts.beanstalk.callStatic.advancedPipe(pipeCalls, "0");
 
-    BeanSwapV2Quoter.sdk.debug(
-      "[BeanSwapV2Quoter/quoteAllWellsToBean] AdvancedPipe response: ",
-      data
-    );
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsX2Bean] AdvancedPipe response: ", data);
 
-    const quotes = entries.map<BeanSwapV2Quote>(([well, node], i) => {
-      const amountOut = node.decodeQuote(data[i], "forward");
-      const swapEstimate = swapEstimates[i];
+    const quotes: BeanSwapV2Quote[] = [];
 
-      return {
-        sellToken: swapEstimate.token,
-        sellAmount: swapEstimate.amount,
-        maxSellAmount: swapEstimate.amount,
-        buyToken: buyToken,
-        buyAmount: buyToken.fromBlockchain(amountOut),
-        minBuyAmount: buyToken.fromBlockchain(amountOut).subSlippage(slippage),
+    for (const [i, [well, node]] of entries.entries()) {
+      const { swapToken, estimate } = swapEstimates[i];
+
+      // Should never happen, but sanity check.
+      if (!estimate || !swapToken) {
+        continue;
+      }
+
+      // The amount of BEAN received from well.getSwapOut
+      const decodedAmountOut = node.decodeGetSwapOut(data[i]);
+      const buyAmount = buyToken.fromBlockchain(decodedAmountOut);
+
+      const quote: BeanSwapV2Quote = {
+        sellToken: swapToken,
+        sellAmount: estimate.minAmountOut,
+        maxSellAmount: estimate.maxAmountOut,
+        buyToken,
+        buyAmount,
+        minBuyAmount: buyAmount.subSlippage(slippage),
         usd: TokenValue.ZERO,
         sourceType: "WELL",
         sourceName: well.name,
         allowanceTarget: well.address,
-        isReverse: direction === "reverse",
         node,
         tag: `buy-${buyToken.symbol}`
       };
-    });
-    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsToBean]: Quote result", {
+
+      quotes.push(quote);
+    }
+
+    BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteAllWellsX2Bean]: Quote result", {
       quotes
     });
 
     if (!quotes.length) {
-      throw new Error("[BeanSwapV2Quoter/allWellsQuote]: Could not determine best Well Swap quote");
+      throw new Error("[BeanSwapV2Quoter/quoteAllWellsX2Bean]: Could not determine best Well Swap quote");
     }
 
     quotes.sort((a, b) => b.buyAmount.sub(a.buyAmount).toNumber());
 
     return quotes;
   }
-
-  // /**
-  //  * TODO: // fix me
-  //  * Quotes a multi-step well swap.
-  //  * @param sellToken
-  //  * @param buyToken
-  //  * @param amount
-  //  * @returns
-  //  */
-  // private quoteDualStepWellSwap(
-  //   sellToken: ERC20Token,
-  //   buyToken: ERC20Token,
-  //   amount: TokenValue,
-  //   direction: "forward" | "reverse",
-  //   slippage: number
-  // ): Promise<BeanSwapV2Quote[]> {
-  //   const isReverse = direction === "reverse";
-
-  //   const inputWellNode = this.swapV2.getWellNodeWithToken(sellToken);
-  //   const outputWellNode = this.swapV2.getWellNodeWithToken(buyToken);
-
-  //   BeanSwapV2Quoter.sdk.debug(
-  //     "[BeanSwapV2Quoter/quoteDualStepWellSwap] Fetching quotes: ",
-  //     sellToken,
-  //     buyToken
-  //   );
-
-  //   const promise1 = (amt: TokenValue) =>
-  //     inputWellNode.getSwapOutQuote(
-  //       sellToken,
-  //       inputWellNode.getPairToken(sellToken),
-  //       amt,
-  //       isReverse,
-  //       slippage
-  //     );
-
-  //   const promise2 = (amt: TokenValue) =>
-  //     outputWellNode.getSwapOutQuote(
-  //       outputWellNode.getPairToken(buyToken),
-  //       buyToken,
-  //       amt,
-  //       isReverse,
-  //       slippage
-  //     );
-
-  //   const quoteFns = [promise1, promise2];
-  //   if (isReverse) {
-  //     quoteFns.reverse();
-  //   }
-
-  //   return promise1(amount).then(async (response0) => {
-  //     const response1 = await promise2(amount);
-
-  //     BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteDualStepWellSwap] Quote response: ", [
-  //       response0,
-  //       response1
-  //     ]);
-
-  //     return [response0, response1];
-  //   });
-  // }
 
   /**
    * Approximates the sell amount for a token pair in a swap operation via 0x.
@@ -518,49 +379,118 @@ export class BeanSwapV2Quoter {
    * Note: This is an approximation and does not account for slippage, fees, or
    * the actual liquidity in the pool, which may affect the real swap outcome.
    */
-  approximate0xOut(
-    fromToken: ERC20Token,
-    amount: TokenValue,
-    toToken: ERC20Token,
-    slippage: number
-  ) {
+  approximate0xOut(fromToken: ERC20Token, toToken: ERC20Token, amount: TokenValue, slippage: number): SwapApproximation {
     const fromTokenUsd = this.swapV2.getTokenUsd(fromToken);
     const toTokenUsd = this.swapV2.getTokenUsd(toToken);
     const relativeUsd = fromTokenUsd.div(toTokenUsd);
 
     const pairTokenAmount = toToken.fromHuman(relativeUsd.mul(amount).toHuman());
 
-    const amountLessFees = 1 - 0.0003;
-    return pairTokenAmount.subSlippage(slippage).mul(amountLessFees);
-  }
+    const amountLessFees = 1 - 0.0003; // Assume 0.03 % fee
 
-  private constructQuoteResult(quotes: BeanSwapV2Quote | BeanSwapV2Quote[]) {
-    const quoteArray = Array.isArray(quotes) ? quotes : [quotes];
-
-    if (!quoteArray.length) {
-      throw new Error("BeanSwapV2Quoter: No quotes provided");
-    }
-
-    const lastQuote = quoteArray[quoteArray.length - 1];
-    const firstQuote = quoteArray[0];
-
-    const result: BeanSwapV2QuoterResult = {
-      sellToken: firstQuote.sellToken,
-      sellAmount: firstQuote.sellAmount,
-      buyToken: lastQuote.buyToken,
-      buyAmount: lastQuote.buyAmount,
-      minAmountOut: lastQuote.minBuyAmount,
-      usd: lastQuote.usd,
-      path: quoteArray
+    return {
+      minAmountOut: pairTokenAmount.subSlippage(slippage).mul(amountLessFees),
+      maxAmountOut: pairTokenAmount.mul(amountLessFees)
     };
-
-    return result;
   }
 
-  private ensureERC20(token: ERC20Token | NativeToken): ERC20Token {
-    if (token instanceof NativeToken) {
-      return BeanSwapV2Quoter.sdk.tokens.WETH;
+  /**
+   * Ensures the token is an ERC20 token. If token is ETH, returns WETH.
+   * @throws If token is not an ERC20 | NativeToken.
+   */
+  private ensureERC20(token: Token): ERC20Token {
+    if (!(token instanceof ERC20Token)) {
+      if (token.equals(BeanSwapV2Quoter.sdk.tokens.ETH)) {
+        return BeanSwapV2Quoter.sdk.tokens.WETH;
+      }
+
+      throw new Error(`Invalid token type. Expected either an ERC20 or Native Token, but got ${token}`);
     }
+
     return token;
   }
 }
+
+// /**
+//  * TODO: Eventually add this back in
+//  * Quotes a multi-step well swap.
+//  * @param sellToken
+//  * @param buyToken
+//  * @param amount
+//  * @returns
+//  */
+// private quoteDualStepWellSwap(
+//   sellToken: ERC20Token,
+//   buyToken: ERC20Token,
+//   amount: TokenValue,
+//   direction: "forward" | "reverse",
+//   slippage: number
+// ): Promise<BeanSwapV2Quote[]> {
+//   const isReverse = direction === "reverse";
+
+//   const inputWellNode = this.swapV2.getWellNodeWithToken(sellToken);
+//   const outputWellNode = this.swapV2.getWellNodeWithToken(buyToken);
+
+//   BeanSwapV2Quoter.sdk.debug(
+//     "[BeanSwapV2Quoter/quoteDualStepWellSwap] Fetching quotes: ",
+//     sellToken,
+//     buyToken
+//   );
+
+//   const promise1 = (amt: TokenValue) =>
+//     inputWellNode.getSwapOutQuote(
+//       sellToken,
+//       inputWellNode.getPairToken(sellToken),
+//       amt,
+//       isReverse,
+//       slippage
+//     );
+
+//   const promise2 = (amt: TokenValue) =>
+//     outputWellNode.getSwapOutQuote(
+//       outputWellNode.getPairToken(buyToken),
+//       buyToken,
+//       amt,
+//       isReverse,
+//       slippage
+//     );
+
+//   const quoteFns = [promise1, promise2];
+//   if (isReverse) {
+//     quoteFns.reverse();
+//   }
+
+//   return promise1(amount).then(async (response0) => {
+//     const response1 = await promise2(amount);
+
+//     BeanSwapV2Quoter.sdk.debug("[BeanSwapV2Quoter/quoteDualStepWellSwap] Quote response: ", [
+//       response0,
+//       response1
+//     ]);
+
+//     return [response0, response1];
+//   });
+// }
+
+// private constructQuoteResult(quotes: BeanSwapV2Quote | BeanSwapV2Quote[]) {
+//   const quoteArray = Array.isArray(quotes) ? quotes : [quotes];
+
+//   if (!quoteArray.length) {
+//     throw new Error("BeanSwapV2Quoter: No quotes provided");
+//   }
+
+//   const lastQuote = quoteArray[quoteArray.length - 1];
+//   const firstQuote = quoteArray[0];
+
+//   const result: BeanSwapV2QuoterResult = {
+//     sellToken: firstQuote.sellToken,
+//     sellAmount: firstQuote.sellAmount,
+//     buyToken: lastQuote.buyToken,
+//     buyAmount: lastQuote.buyAmount,
+//     minAmountOut: lastQuote.minBuyAmount,
+//     usd: lastQuote.usd,
+//     path: quoteArray
+//   };
+
+//   return result;
+// }
