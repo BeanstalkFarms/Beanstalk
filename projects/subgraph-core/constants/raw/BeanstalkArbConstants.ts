@@ -35,4 +35,7 @@ export const WELL_STABLE2 = Address.fromString("0xba150052e11591D0648b17A0E60851
 export const RESEED_SEASON = BigInt.fromU32(30000);
 export const RESEED_BLOCK = BigInt.fromU64(585858585858);
 //////
-export const BASIN_BLOCK = BigInt.fromU64(235608025);
+// In practice no wells were deployed for months following Aquifer's initial deployment.
+// Therefore there is no need to start indexing from the initial block. The selected block
+// number is arbitrary and slightly prior to the reseed.
+export const BASIN_BLOCK = BigInt.fromU64(261000000);

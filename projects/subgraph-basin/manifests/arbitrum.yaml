@@ -11,8 +11,10 @@ dataSources:
     source:
       address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"
       abi: Aquifer
-      startBlock: 235608025
-      endBlock: 235608025
+      # NOTE ON BLOCK NUMBERS: in practice no wells were deployed for months following Aquifer's
+      # initial deployment. Therefore there is no need to start indexing from the initial block
+      startBlock: 261000000
+      endBlock: 261000000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -33,7 +35,7 @@ dataSources:
     source:
       address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"
       abi: Aquifer
-      startBlock: 235608025
+      startBlock: 261000000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
