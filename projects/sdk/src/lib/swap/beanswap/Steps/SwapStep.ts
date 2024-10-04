@@ -1,11 +1,10 @@
 import { ERC20Token, NativeToken, TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { SwapApproximation } from "../types";
 import { StepFunction, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
 import { Token } from "src/classes/Token";
-import { getValidateSwapFields, isValidSwapStepParam } from "../utils";
+import { SwapApproximation } from "src/lib/swap/beanSwap/types";
 
 type IBuildStepArgs = Partial<{
   copySlot: number | undefined;
@@ -256,3 +255,23 @@ export abstract class BeanSwapStep implements IBeanSwapStepParams {
 }
 
 type NativeOrERC20 = NativeToken | ERC20Token;
+
+
+function isValidSwapStepParam<K extends keyof IBeanSwapStepParams>(
+  key: K,
+  value: unknown
+): value is IBeanSwapStepParams[K] {
+  switch (key) {
+    case "sellToken":
+    case "buyToken":
+      return value instanceof ERC20Token || value instanceof NativeToken;
+    case "sellAmount":
+    case "buyAmount":
+    case "minBuyAmount":
+      return value instanceof TokenValue;
+    case "slippage":
+      return typeof value === "number";
+    default:
+      return false;
+  }
+}

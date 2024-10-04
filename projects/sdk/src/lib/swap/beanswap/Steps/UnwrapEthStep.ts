@@ -24,14 +24,13 @@ export class UnwrapEthSwapStep extends BeanSwapStep {
     const buyAmount = sellAmount;
     const minBuyAmount = sellAmount;
 
-    const approximation: SwapApproximation = {
+    
+    this.setFields({ sellToken, buyToken, sellAmount, buyAmount, minBuyAmount, slippage });
+
+    return {
       maxAmountOut: buyAmount,
       minAmountOut: minBuyAmount
     };
-
-    this.setFields({ sellToken, buyToken, sellAmount, buyAmount, minBuyAmount, slippage });
-
-    return approximation;
   }
 
   buildStep({ fromMode }: BuildParams): StepClass<AdvancedPipePreparedResult> {

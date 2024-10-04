@@ -4,8 +4,6 @@ import { Token } from "src/classes/Token";
 import { StepFunction } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { ZeroExQuoteResponse } from "src/lib/matcha";
-import { SwapApproximation } from "src/lib/swap/beanSwap/types";
-
 import { BeanSwapStep, IAmountOutCopySlot } from "./SwapStep";
 
 export class ZeroXSwapStep extends BeanSwapStep implements IAmountOutCopySlot {
@@ -48,7 +46,7 @@ export class ZeroXSwapStep extends BeanSwapStep implements IAmountOutCopySlot {
     return {
       maxAmountOut: buyAmount,
       minAmountOut: minBuyAmount
-    } as SwapApproximation;
+    };
   }
 
   buildStep(): StepFunction<AdvancedPipePreparedResult> {

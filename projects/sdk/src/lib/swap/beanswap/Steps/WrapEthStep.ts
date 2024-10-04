@@ -2,11 +2,10 @@ import { NativeToken, TokenValue } from "@beanstalk/sdk-core";
 import { Token } from "src/classes/Token";
 import { RunContext, StepFunction } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
-import { SwapApproximation } from "src/lib/swap/beanSwap/types";
-import { getValidateSwapFields } from "src/lib/swap/beanSwap/utils";
 import { Clipboard } from "src/lib/depot";
-import { BeanSwapStep } from "./SwapStep";
 import { FarmToMode } from "src/lib/farm";
+
+import { BeanSwapStep } from "./SwapStep";
 
 export class WrapEthSwapStep extends BeanSwapStep {
   name = "SwapStep: WrapEth";
@@ -22,14 +21,12 @@ export class WrapEthSwapStep extends BeanSwapStep {
     const buyAmount = sellAmount;
     const minBuyAmount = sellAmount;
 
-    const approximation: SwapApproximation = {
+    this.setFields({ sellToken, buyToken, sellAmount, buyAmount, minBuyAmount, slippage });
+
+    return {
       maxAmountOut: buyAmount,
       minAmountOut: minBuyAmount
     };
-
-    this.setFields({ sellToken, buyToken, sellAmount, buyAmount, minBuyAmount, slippage });
-
-    return approximation;
   }
 
   buildStep({ toMode, copySlot }: { toMode: FarmToMode; copySlot: number | undefined }): StepFunction<AdvancedPipePreparedResult> {

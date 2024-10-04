@@ -1,15 +1,11 @@
-import { ERC20Token, TokenValue } from "@beanstalk/sdk-core";
+import { BigNumber } from "ethers";
+import { TokenValue } from "@beanstalk/sdk-core";
 import { BasinWell } from "src/classes/Pool";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { SwapApproximation } from "../types";
-import { StepFunction, StepClass, RunContext } from "src/classes/Workflow";
+import { StepFunction, RunContext } from "src/classes/Workflow";
 import { Clipboard } from "src/lib/depot";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
-import { FarmFromMode, FarmToMode } from "src/lib/farm";
-import { BigNumber } from "ethers";
-import { NativeToken, Token } from "src/classes/Token";
-import { getValidateSwapFields, isValidSwapStepParam } from "../utils";
-import { ZeroExQuoteResponse } from "src/lib/matcha";
+import { Token } from "src/classes/Token";
 import { BeanSwapStep, IAmountOutCopySlot } from "./SwapStep";
 
 interface ICopySlot {
@@ -50,12 +46,10 @@ export class WellSwapStep extends BeanSwapStep implements IAmountOutCopySlot {
 
     this.setFields({ sellToken, buyToken, sellAmount, buyAmount, minBuyAmount, slippage });
 
-    const approximation: SwapApproximation = {
+    return {
       maxAmountOut: buyAmount,
       minAmountOut: minBuyAmount,
     }
-    
-    return approximation;
   }
   
   buildStep({ copySlot }: ICopySlot): StepFunction<AdvancedPipePreparedResult> {
