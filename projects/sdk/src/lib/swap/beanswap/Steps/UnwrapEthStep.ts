@@ -2,7 +2,6 @@ import { TokenValue, NativeToken } from "@beanstalk/sdk-core";
 import { Token } from "src/classes/Token";
 import { StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
-import { SwapApproximation } from "src/lib/swap/beanSwap/types";
 import { BeanSwapStep } from "./SwapStep";
 import { FarmFromMode } from "src/lib/farm";
 
