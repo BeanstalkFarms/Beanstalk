@@ -6,6 +6,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import TransactionToast from '~/components/Common/TxnToast';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
+import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 
 
 export default function L2Claim() {
@@ -16,16 +17,22 @@ export default function L2Claim() {
     const [deposits, setDeposits] = useState<any>(undefined);
     const [ferts, setFerts] = useState<any>(undefined);
     const [plots, setPlots] = useState<any>(undefined);
-    const [farmBal, setFarmBal] = useState<any>(undefined);
+    const [farmBalance, setFarmBalance] = useState<any>(undefined);
 
     const [receiverApproved, setReceiverApproved] = useState<boolean>(false);
 
     const account = useAccount();
     const sdk = useSdk();
 
+    const hasDeposits = deposits ? Object.keys(deposits).length > 0 : false;
+    const hasFert = ferts ? Object.keys(ferts).length > 0 : false;
+    const hasPlots = plots ? Object.keys(plots).length > 0 : false;
+    const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
+
     function getEvent() {
-        const event = sdk.contracts.beanstalk.filters['RecieverApproved(address,address)'](sourceAccount);
-        if (!event) return
+        const event = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](sourceAccount);
+        console.log("event: ", event)
+        if (!event || !event.topics || event.topics.length === 1) return
         setReceiverApproved(true)
     };
 
@@ -43,13 +50,13 @@ export default function L2Claim() {
     useEffect(() => {
         async function getMigrationData() {
             if (!account) return
-            const migrationData = await fetch(`/.netlify/functions/l2migration?account=${account}`)
+            const migrationData = await fetch(`/.netlify/functions/l2migration?account=${sourceAccount}`)
                 .then((response) => response.json())
             setNeedsMigration(migrationData.needsManualMigration)
             setDeposits(migrationData.deposits)
             setFerts(migrationData.fertilizer)
             setPlots(migrationData.plots)
-            setFarmBal(migrationData.farmBalance)
+            setFarmBalance(migrationData.farmBalance)
         };
         getMigrationData();
     }, [account]);
@@ -57,14 +64,16 @@ export default function L2Claim() {
     useEffect(() => {
         const interval = setInterval(() => {
             getEvent()
-        }, 30000);
+        }, 5000);
 
         return () => clearInterval(interval);
     }, []);
 
+    const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
+
     function onSubmit() {
 
-        if (!account) return
+        if (!sourceAccount || !account) return
 
         const txToast = new TransactionToast({
             loading: 'Receiving Balances from Mainnet...',
@@ -73,9 +82,9 @@ export default function L2Claim() {
 
         const farmCallData = [];
 
-        if (Object.keys(deposits).length > 0) {
+        if (hasDeposits) {
             const issueDeposits = sdk.contracts.beanstalk.interface.encodeFunctionData("issueDeposits", [
-                account,
+                sourceAccount,
                 deposits.depositIds,
                 deposits.amounts,
                 deposits.bdvs,
@@ -84,9 +93,9 @@ export default function L2Claim() {
             farmCallData.push(issueDeposits)
         };
 
-        if (Object.keys(ferts).length > 0) {
+        if (hasFert) {
             const issueFert = sdk.contracts.beanstalk.interface.encodeFunctionData("issueFertilizer", [
-                account,
+                sourceAccount,
                 ferts.fertIds,
                 ferts.amounts,
                 ferts.lastBpf,
@@ -95,9 +104,9 @@ export default function L2Claim() {
             farmCallData.push(issueFert)
         }
 
-        if (Object.keys(plots).length > 0) {
+        if (hasPlots) {
             const issuePlots = sdk.contracts.beanstalk.interface.encodeFunctionData("issuePlots", [
-                account,
+                sourceAccount,
                 plots.index,
                 plots.pods,
                 plots.proofs
@@ -105,12 +114,12 @@ export default function L2Claim() {
             farmCallData.push(issuePlots)
         }
 
-        if (Object.keys(farmBal).length > 0) {
+        if (hasFarmBalance) {
             const issueFarmBalance = sdk.contracts.beanstalk.interface.encodeFunctionData("issueInternalBalances", [
-                account,
-                farmBal.tokens,
-                farmBal.amounts,
-                farmBal.proofs
+                sourceAccount,
+                farmBalance.tokens,
+                farmBalance.amounts,
+                farmBalance.proofs
             ])
             farmCallData.push(issueFarmBalance)
         }
@@ -139,31 +148,90 @@ export default function L2Claim() {
                     {"Receive Delegated Balances from Mainnet"}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ padding: 1, border: 1, borderColor: '#46B955', backgroundColor: '#EDF8EE', borderRadius: 1, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <CheckIcon sx={{ width: 20, height: 20 }} />
-                        <Typography>Silo Deposits</Typography>
+                    <Box
+                        sx={{
+                            padding: 1,
+                            border: 1,
+                            borderColor: hasDeposits ? '#46B955' : undefined,
+                            backgroundColor: hasDeposits ? '#EDF8EE' : undefined,
+                            borderRadius: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                        }}>
+                        {hasDeposits &&
+                            <CheckIcon sx={{ width: 20, height: 20 }} />
+                        }
+                        <Typography>{hasDeposits ? 'Silo Deposits' : 'No Silo Deposits'}</Typography>
                     </Box>
-                    <Box sx={{ padding: 1, border: 1, borderColor: '#46B955', backgroundColor: '#EDF8EE', borderRadius: 1, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <CheckIcon sx={{ width: 20, height: 20 }} />
-                        <Typography>Pods</Typography>
+                    <Box
+                        sx={{
+                            padding: 1,
+                            border: 1,
+                            borderColor: hasPlots ? '#46B955' : undefined,
+                            backgroundColor: hasPlots ? '#EDF8EE' : undefined,
+                            borderRadius: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                        }}>
+                        {hasPlots &&
+                            <CheckIcon sx={{ width: 20, height: 20 }} />
+                        }
+                        <Typography>{hasPlots ? 'Pods' : 'No Pods'}</Typography>
                     </Box>
-                    <Box sx={{ padding: 1, border: 1, borderColor: '#46B955', backgroundColor: '#EDF8EE', borderRadius: 1, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <CheckIcon sx={{ width: 20, height: 20 }} />
-                        <Typography>Farm Balance</Typography>
+                    <Box
+                        sx={{
+                            padding: 1,
+                            border: 1,
+                            borderColor: hasFarmBalance ? '#46B955' : undefined,
+                            backgroundColor: hasFarmBalance ? '#EDF8EE' : undefined,
+                            borderRadius: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                        }}>
+                        {hasFarmBalance &&
+                            <CheckIcon sx={{ width: 20, height: 20 }} />
+                        }
+                        <Typography>{hasFarmBalance ? 'Farm Balance' : 'No Farm Balance'}</Typography>
                     </Box>
-                    <Box sx={{ padding: 1, border: 1, borderColor: '#46B955', backgroundColor: '#EDF8EE', borderRadius: 1, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <CheckIcon sx={{ width: 20, height: 20 }} />
-                        <Typography>Fertilizer</Typography>
+                    <Box
+                        sx={{
+                            padding: 1,
+                            border: 1,
+                            borderColor: hasFert ? '#46B955' : undefined,
+                            backgroundColor: hasFert ? '#EDF8EE' : undefined,
+                            borderRadius: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                        }}>
+                        {hasFert &&
+                            <CheckIcon sx={{ width: 20, height: 20 }} />
+                        }
+                        <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                     </Box>
                     <Button
-                        disabled={false}
+                        disabled={!claimEnabled}
                         sx={{
                             width: "100%",
                             height: 60,
                         }}
                         onClick={() => onSubmit()}
                     >
-                        {'Receive Assets'}
+                        {!receiverApproved ?
+                            <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
+                                <BeanProgressIcon
+                                    size={16}
+                                    enabled
+                                    variant="indeterminate"
+                                />
+                                Waiting For L2...
+                            </Box>
+                            :
+                            'Receive Assets'
+                        }
                     </Button>
                 </Box>
             </Card>

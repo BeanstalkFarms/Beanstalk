@@ -168,11 +168,17 @@ function MigrationGate() {
             <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
             :
             <Box sx={{ marginTop: 4 }}>
-              {(hasReceipt && isArbitrum) ?
-                <L2Claim />
-                :
-                <L1Delegate />
-              }
+              <Routes>
+                <Route index element={<L1Delegate />} />
+                <Route path="*" element={<L1Delegate />} />
+                <Route path="/l1delegate" element={<L1Delegate />} />
+                <Route path="/l1" element={<L1Delegate />} />
+                <Route path="/ethereum" element={<L1Delegate />} />
+                <Route path="/l2claim" element={<L2Claim />} />
+                <Route path="/l2" element={<L2Claim />} />
+                <Route path="/arbitrum" element={<L2Claim />} />
+                <Route path="/404" element={<PageNotFound />} />
+              </Routes>
             </Box>
           }
           {/* <Routes>
@@ -303,6 +309,8 @@ function Arbitrum() {
             <Route path="/silo" element={<SiloPage />} />
             <Route path="/silo/:address" element={<SiloTokenPage />} />
             <Route path="/swap" element={<SwapPage />} />
+            <Route path="/l1delegate" element={<L1Delegate />} />
+            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
@@ -314,6 +322,12 @@ function Arbitrum() {
 
 export default function App() {
   const { isArbitrum, isTestnet } = useChainState();
+  const isDevMode = import.meta.env.DEV;
+  const migrationUnderway = true;
+
+  if (migrationUnderway) {
+    return <MigrationGate />;
+  }
 
   if (!isArbitrum || (isArbitrum && !isTestnet)) {
     return <MigrationGate />;

@@ -38,10 +38,6 @@ export default function L1Delegate() {
         };
     };
 
-    useEffect(() => {
-        getReceipt();
-    }, []);
-
     function checkAddress(address: string) {
         if (address) {
             const isValid = ethers.utils.isAddress(address);
@@ -151,7 +147,7 @@ export default function L1Delegate() {
                                 backgroundColor: hasReceipt ? '#12ABFF' : undefined,
                             }
                         }}
-                        onClick={() => hasReceipt ? switchChain({ chainId: 42161 }) : onSubmit()}
+                        onClick={() => hasReceipt ? switchChain({ chainId: 1337 }) : onSubmit()}
                     >
                         {hasReceipt ? 'Switch to Arbitrum' :
                             !isAddressValid ? 'Input Address' : 'Begin L2 Migration'}
