@@ -1,0 +1,114 @@
+
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
+import { StepClass } from "src/classes/Workflow";
+import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
+import { FarmFromMode, FarmToMode } from "src/lib/farm";
+import { ERC20Token, NativeToken } from "src/classes/Token";
+import { SwapNode, ISwapNode } from "./SwapNode";
+import { ClipboardSettings } from "src/types";
+
+/**
+ * Abstract class to extend for actions involving ETH, specifically, wrapETH & unwrapETH.
+ * we declare the sellToken & buyToken as readonly to ensure they are never changed
+ */
+export abstract class NativeSwapNode extends SwapNode {
+  abstract readonly sellToken: NativeToken | ERC20Token;
+
+  abstract readonly buyToken: NativeToken | ERC20Token;
+
+  override setFields(args: Partial<ISwapNode>) {
+    const amount = args.sellAmount ?? args.buyAmount;
+    if (amount) {
+      // We can do this b/c both ETH & WETH share the same decimal places
+      this.sellAmount = this.sellAmount ?? amount;
+      this.buyAmount = this.buyAmount ?? amount;
+    }
+    return this;
+  }
+
+  override validateTokens() {
+    super.validateTokens();
+    if (this.sellToken instanceof ERC20Token) {
+      this.validateIsNativeToken(this.buyToken);
+    } else {
+      this.validateIsNativeToken(this.sellToken);
+    }
+  }
+}
+
+
+interface UnwrapEthBuildParams {
+  fromMode: FarmFromMode;
+  copySlot: number | undefined;
+}
+
+/**
+ * Class to faciliate unwrapping WETH -> ETH
+ */
+export class UnwrapEthSwapNode extends NativeSwapNode {
+  readonly name = "SwapNode: UnwrapEth";
+
+  readonly sellToken: ERC20Token;
+
+  readonly buyToken: NativeToken;
+
+  readonly allowanceTarget: string;
+
+  constructor(sdk: BeanstalkSDK) {
+    super(sdk);
+    this.sellToken = sdk.tokens.WETH;
+    this.buyToken = sdk.tokens.ETH;
+    this.allowanceTarget = sdk.contracts.beanstalk.address;
+  }
+
+  buildStep({ fromMode, copySlot }: UnwrapEthBuildParams): StepClass<AdvancedPipePreparedResult> {
+    this.validateTokens();
+    this.validateSellAmount();
+    this.validateBuyAmount();
+
+    let clipboard: ClipboardSettings | undefined;
+
+    if (copySlot !== undefined) {
+      clipboard = {
+        tag: this.returnIndexTag,
+        copySlot,
+        pasteSlot: 0
+      };
+    }
+
+    return new UnwrapEthSwapNode.sdk.farm.actions.UnwrapEth(fromMode, clipboard);
+  }
+}
+
+
+interface WrapEthBuildParams {
+  toMode: FarmToMode;
+}
+
+/**
+ * Class to faciliate wrapping ETH -> WETH
+ */
+export class WrapEthSwapNode extends NativeSwapNode {
+  readonly name = "SwapNode: WrapEth";
+
+  readonly sellToken: NativeToken;
+
+  readonly buyToken: ERC20Token;
+
+  readonly allowanceTarget: string;
+
+  constructor(sdk: BeanstalkSDK) {
+    super(sdk);
+    this.sellToken = sdk.tokens.ETH;
+    this.buyToken = sdk.tokens.WETH;
+    this.allowanceTarget = sdk.contracts.beanstalk.address;
+  }
+
+  buildStep({ toMode }: WrapEthBuildParams): StepClass<AdvancedPipePreparedResult> {
+    this.validateTokens();
+    this.validateSellAmount();
+    this.validateBuyAmount();
+
+    return new WrapEthSwapNode.sdk.farm.actions.WrapEth(toMode);
+  }
+}
