@@ -1,7 +1,7 @@
 import { BasinWell__factory, BasinWell as BasinWellContract } from "src/constants/generated";
 import { TokenValue } from "src/TokenValue";
 import Pool, { Reserves } from "./Pool";
-import { ERC20Token } from "../Token";
+import { ERC20Token, Token } from "../Token";
 
 export class BasinWell extends Pool {
   public getContract() {
@@ -22,6 +22,22 @@ export class BasinWell extends Pool {
             TokenValue.fromBlockchain(result[1], 0)
           ] as Reserves
       );
+  }
+
+  getPairToken(token: Token) {
+    if (this.tokens.length !== 2) {
+      throw new Error("Cannot get pair token for non-pair well");
+    }
+
+    const [token0, token1] = this.tokens;
+
+    if (!token0.equals(token) && !token1.equals(token)) {
+      throw new Error(
+        `Invalid token. ${token.symbol} is not an underlying token of well ${this.name}`
+      );
+    }
+
+    return token.equals(token0) ? token1 : token0;
   }
 
   // Ensure tokens are in the correct order

@@ -18,7 +18,7 @@ import { WellsSDK } from "@beanstalk/sdk-wells";
 import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 import { Field } from "./field";
 import { ZeroX } from "./matcha";
-import { BeanSwapV2 } from "./swapV2/BeanSwapV2";
+import { BeanSwap } from "./swapV2/BeanSwap";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -69,7 +69,7 @@ export class BeanstalkSDK {
   public readonly swap: Swap;
   public readonly bean: Bean;
   public readonly wells: WellsSDK;
-  public readonly beanSwapV2: BeanSwapV2;
+  public readonly beanSwap: BeanSwap;
 
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
@@ -101,8 +101,9 @@ export class BeanstalkSDK {
     this.field = new Field(this);
 
     // // Ecosystem
+    /** @deprecated  */
     this.swap = new Swap(this);
-    this.beanSwapV2 = new BeanSwapV2(this);
+    this.beanSwap = new BeanSwap(this);
 
     // // Wells
     this.wells = new WellsSDK(config);
