@@ -62,13 +62,13 @@ export default function L1Delegate() {
             loading: 'Approving L2 Receiver...',
             success: 'L2 Receiver approved!',
         });
-        beanstalk.approveL2Reciever(
+        beanstalk.approveL2Receiver(
             destinationAccount,
             beanstalkL2Address,
             2e14,
             200000,
             10e9
-        )
+            , { value: ethers.utils.parseEther("0.005") })
             .then((txn) => {
                 txToast.confirming(txn);
                 return txn.wait();
