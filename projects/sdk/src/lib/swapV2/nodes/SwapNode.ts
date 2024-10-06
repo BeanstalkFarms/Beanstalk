@@ -3,22 +3,17 @@ import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { StepFunction, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
-import { Token, ERC20Token, NativeToken } from "src/classes/Token";
+import { Token } from "src/classes/Token";
+import { isERC20Token } from "src/utils/token";
 
-export interface ISwapNode {
-  sellToken: Token;
-  buyToken: Token;
+export interface ISwapNodeSettable {
   sellAmount: TokenValue;
   buyAmount: TokenValue;
 }
-
-export interface IERC20SwapNode {
-  minBuyAmount: TokenValue;
-  slippage: number;
-  amountOutCopySlot: number;
+export interface ISwapNode extends ISwapNodeSettable {
+  sellToken: Token;
+  buyToken: Token; 
 }
-
-type ISwapNodeUnion = ISwapNode & IERC20SwapNode;
 
 type BuildStepParams = Partial<{
   copySlot: number;
@@ -26,32 +21,24 @@ type BuildStepParams = Partial<{
   toMode: FarmToMode;
 }>;
 
-// prettier-ignore
 export abstract class SwapNode implements ISwapNode {
   protected static sdk: BeanstalkSDK;
-  /** 
-   * The Token to exchange 
-   */
+
   name: string;
-  /** 
-   * The token to recieve 
-   */
-  sellToken: Token;
-  /** 
-   * amount of sellToken to exchange 
-   */
+
+  /** Token to exchange */
+  readonly sellToken: Token;
+  
+  /** Token to receive */
+  readonly buyToken: Token;
+
+  /** Amount of SellToken to exchange */
   sellAmount: TokenValue;
-  /** 
-   * amount of buyToken to receive 
-   */
-  buyToken: Token;
-  /** 
-   * minimum amount of buyToken to receive after swap 
-   */
+  
+  /** Max amount of of buyToken received */
   buyAmount: TokenValue;
-  /**
-   * The address that should be approved to perform the txn in buildStep
-   */
+
+  /** The address that should be approved to perform the txn in buildStep */
   abstract readonly allowanceTarget: string;
 
   /// ----------------------------------------
@@ -64,7 +51,7 @@ export abstract class SwapNode implements ISwapNode {
    * Build the swap step
    * @param args copySlot, fromMode, toMode
    */
-  abstract buildStep(args: BuildStepParams): StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>;
+  abstract buildStep(args?: BuildStepParams): StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>;
 
   /**
    * The tag for the amount out for THIS node. Subsequent nodes will copy from this value.
@@ -83,14 +70,8 @@ export abstract class SwapNode implements ISwapNode {
   /**
    * Set the fields of the node
    */
-  setFields(args: Partial<ISwapNodeUnion>) {
-    Object.entries(args).forEach(([key, value]) => {
-      if (key in this && value !== undefined && value !== null) {
-        // @ts-ignore
-        this[key] = value;
-      }
-    });
-
+  setFields<T extends ISwapNodeSettable>(args: Partial<T>) {
+    Object.assign(this, args);
     return this;
   }
 
@@ -100,13 +81,8 @@ export abstract class SwapNode implements ISwapNode {
     return new Error(`Error: building swap step in ${this.name}: ${msg}`);
   }
   protected validateIsERC20Token(token: Token) {
-    if (!(token instanceof ERC20Token)) {
+    if (!(isERC20Token(token))) {
       throw this.makeErrorWithContext(`Expected ERC20 token but got ${token.symbol}.`);
-    }
-  }
-  protected validateIsNativeToken(token: Token) {
-    if (!(token instanceof NativeToken)) {
-      throw this.makeErrorWithContext(`Expected Native token but got ${token.symbol}.`);
     }
   }
   protected validateTokens() {

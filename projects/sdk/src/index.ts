@@ -26,6 +26,15 @@ export type {
   PipeCallStruct as PipeStruct,
   AdvancedPipeCallStruct as AdvancedPipeStruct
 } from "src/lib/depot";
+export { 
+  SwapNode, 
+  WellSwapNode, 
+  ZeroXSwapNode,
+  ERC20SwapNode, 
+  NativeSwapNode, 
+  UnwrapEthSwapNode, 
+  WrapEthSwapNode 
+} from "src/lib/swapV2/nodes"
 
 export type {
   MinimumViableSwapQuote,

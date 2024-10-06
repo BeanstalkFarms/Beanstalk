@@ -1,4 +1,4 @@
-import { ERC20Token, NativeToken, Token } from "src/classes/Token";
+import { ERC20Token } from "src/classes/Token";
 
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { AdvancedFarmWorkflow, FarmFromMode, FarmToMode } from "src/lib/farm";
@@ -6,12 +6,10 @@ import { AdvancedPipeWorkflow } from "src/lib/depot";
 
 import {
   ERC20SwapNode,
-  NativeSwapNode,
   SwapNode,
   UnwrapEthSwapNode,
   WellSwapNode,
   WrapEthSwapNode,
-  ZeroXSwapNode
 } from "./nodes";
 import { TokenValue } from "@beanstalk/sdk-core";
 
@@ -22,7 +20,7 @@ class Builder {
 
   #advFarm: AdvancedFarmWorkflow;
 
-  #nodes: SwapNode[] = [];
+  #nodes: readonly SwapNode[] = [];
 
   constructor(sdk: BeanstalkSDK) {
     Builder.sdk = sdk;
@@ -33,7 +31,7 @@ class Builder {
     return this.#advFarm;
   }
 
-  get nodes(): ReadonlyArray<SwapNode> {
+  get nodes() {
     return this.#nodes as ReadonlyArray<SwapNode>;
   }
 
@@ -52,19 +50,8 @@ class Builder {
    * - The sellAmount in the first node is the amount to be sold
    * - The buyAmount in the last node is the amount to be bought
    */
-  translateNodesToWorkflow(
-    nodes: SwapNode[],
-    initFromMode: FarmFromMode,
-    finalToMode: FarmToMode,
-    caller: string,
-    recipient: string
-  ) {
+  translateNodesToWorkflow(nodes: readonly SwapNode[], initFromMode: FarmFromMode, finalToMode: FarmToMode, caller: string, recipient: string) {
     this.#nodes = nodes;
-
-    if (!this.nodes.length) {
-      !this.#advFarm.length && this.#initWorkFlows();
-      throw new Error("Error building swap. No swap nodes provided.");
-    }
 
     let fromMode = initFromMode;
     let toMode = finalToMode;
@@ -79,13 +66,15 @@ class Builder {
     );
 
     // Handle the case where there is only one action in the swap & it is a wrap or unwrap action.
-    if (numNodes === 1 && isNativeNode(first)) {
-      const wrapOrUnwrap = isWrapEthNode(first)
-        ? this.#getWrapETH(first, toMode, 0)
-        : this.#getUnwrapETH(first as UnwrapEthSwapNode, fromMode, 0);
-
-      this.#advFarm.add(wrapOrUnwrap, { tag: first.tag });
-      return;
+    if (numNodes === 1) {
+      if (isWrapEthNode(first)) {
+        this.#advFarm.add(this.#getWrapETH(first, toMode, 0), { tag: first.tag });
+        return;
+      }
+      if (isUnwrapEthNode(first)) {
+        this.#advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
+        return;
+      }
     }
 
     for (const [i, node] of this.#nodes.entries()) {
@@ -111,7 +100,7 @@ class Builder {
       if (isERC20Node(node)) {
         const swap = isWellNode(node)
           ? node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) })
-          : (node as ZeroXSwapNode).buildStep();
+          : node.buildStep();
 
         this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
         this.#advPipe.add(swap, { tag: node.tag });
@@ -161,13 +150,7 @@ class Builder {
    * Adds approve Beanstalk & transferToken to advancedPipe.
    * Transfer to the recipient is conditional on the recipient not being pipeline.
    */
-  #offloadPipeline(
-    node: SwapNode,
-    recipient: string,
-    fromMode: FarmFromMode,
-    toMode: FarmToMode,
-    i: number
-  ) {
+  #offloadPipeline(node: SwapNode, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode, i: number) {
     const recipientIsPipeline =
       recipient.toLowerCase() === Builder.sdk.contracts.pipeline.address.toLowerCase();
     if (recipientIsPipeline) return;
@@ -298,9 +281,6 @@ const isUnwrapEthNode = (node: SwapNode): node is UnwrapEthSwapNode => {
 };
 const isERC20Node = (node: SwapNode): node is ERC20SwapNode => {
   return node instanceof ERC20SwapNode;
-};
-const isNativeNode = (node: SwapNode): node is NativeSwapNode => {
-  return node instanceof NativeSwapNode;
 };
 const isWellNode = (node: SwapNode): node is WellSwapNode => {
   return node instanceof WellSwapNode;

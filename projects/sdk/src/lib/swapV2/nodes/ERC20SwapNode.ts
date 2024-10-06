@@ -3,11 +3,19 @@ import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { StepFunction, RunContext } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
-import { ERC20Token, Token } from "src/classes/Token";
+import { ERC20Token } from "src/classes/Token";
 import { Clipboard } from "src/lib/depot";
 import { BasinWell } from "src/classes/Pool/BasinWell";
 import { ZeroExQuoteResponse } from "src/lib/matcha";
-import { SwapNode, IERC20SwapNode } from "./SwapNode";
+import { SwapNode, ISwapNode } from "./SwapNode";
+
+interface IERC20SwapNode {
+  minBuyAmount: TokenValue;
+  slippage: number;
+  amountOutCopySlot: number;
+}
+
+type IERC20SwapNodeUnion = IERC20SwapNode & ISwapNode;
 
 /**
  * Abstract class for swaps involving only ERC20 tokens.
@@ -15,14 +23,9 @@ import { SwapNode, IERC20SwapNode } from "./SwapNode";
  * Implements properties & methods that require slippage to be considered.
  */
 export abstract class ERC20SwapNode extends SwapNode implements IERC20SwapNode {
-  sellToken: ERC20Token;
+  readonly sellToken: ERC20Token;
 
-  buyToken: ERC20Token;
-
-  /**
-   * The index pointing towards the amount buyAmount receieved at run-time to be copied
-   */
-  abstract readonly amountOutCopySlot: number;
+  readonly buyToken: ERC20Token;
 
   /**
    * The slippage for the swap occuring via this node
@@ -35,18 +38,29 @@ export abstract class ERC20SwapNode extends SwapNode implements IERC20SwapNode {
   minBuyAmount: TokenValue;
 
   /**
+   * The index pointing towards the amount buyAmount receieved at run-time to be copied
+   */
+  abstract readonly amountOutCopySlot: number;
+
+  constructor(sdk: BeanstalkSDK, sellToken: ERC20Token, buyToken: ERC20Token) {
+    super(sdk);
+    this.sellToken = sellToken;
+    this.buyToken = buyToken;
+  }
+
+  /**
    * Quote the amount of buyToken that will be received for selling sellToken
    * @param sellToken
    * @param buyToken
    * @param sellAmount
    * @param slippage
    */
-  abstract quoteForward(
-    sellToken: Token,
-    buyToken: Token,
-    sellAmount: TokenValue,
-    slippage: number
-  ): Promise<this>;
+  abstract quoteForward(sellAmount: TokenValue, slippage: number): Promise<this>;
+
+  override setFields<T extends IERC20SwapNodeUnion>(args: Partial<T>) {
+    super.setFields(args);
+    return this;
+  }
 
   // ------------------------------------------
   // ----- ERC20SwapNode specific methods -----
@@ -104,27 +118,16 @@ export class WellSwapNode extends ERC20SwapNode {
 
   readonly allowanceTarget: string;
 
-  constructor(sdk: BeanstalkSDK, well: BasinWell) {
-    super(sdk);
+  constructor(sdk: BeanstalkSDK, well: BasinWell, sellToken: ERC20Token, buyToken: ERC20Token) {
+    super(sdk, sellToken, buyToken);
     this.well = well;
     this.name = `SwapNode: Well ${this.well.name}`;
     this.allowanceTarget = this.well.address;
+    this.validateWellHasTokens();
   }
 
-  equals(other: SwapNode): boolean {
-    if (!(other instanceof WellSwapNode)) {
-      return false;
-    }
-
-    const wellsEqual = this.well.equals(other.well);
-    const sellTokenEqual = this.sellToken.equals(other.sellToken);
-    const buyTokenEqual = this.buyToken.equals(other.buyToken);
-    const sellAmountsEqual = this.sellAmount.eq(other.sellAmount);
-    return wellsEqual && sellTokenEqual && buyTokenEqual && sellAmountsEqual;
-  }
-
-  async quoteForward(sellToken: Token, buyToken: Token, sellAmount: TokenValue, slippage: number) {
-    this.setFields({ sellToken, buyToken, sellAmount, slippage });
+  async quoteForward(sellAmount: TokenValue, slippage: number) {
+    this.setFields({ sellAmount, slippage })
     this.validateQuoteForward();
     this.validateWellHasTokens();
 
@@ -135,6 +138,7 @@ export class WellSwapNode extends ERC20SwapNode {
       .then((result) => this.buyToken.fromBlockchain(result));
     
     const minBuyAmount = buyAmount.subSlippage(this.slippage);
+    this.setFields({ buyAmount, minBuyAmount });
     
     WellSwapNode.sdk.debug("[WellSwapNode/quoteForward] result: ", {
       sellToken: this.sellToken,
@@ -145,7 +149,7 @@ export class WellSwapNode extends ERC20SwapNode {
       minBuyAmount,
     });
 
-    return this.setFields({ buyAmount, minBuyAmount });
+    return this;
   }
   
   buildStep({ copySlot }: WellSwapBuildParams): StepFunction<AdvancedPipePreparedResult> {
@@ -224,20 +228,19 @@ export class WellSwapNode extends ERC20SwapNode {
 export class ZeroXSwapNode extends ERC20SwapNode {
   name: string = "SwapNode: ZeroX";
 
-  private _quote: ZeroExQuoteResponse;
+  quote: ZeroExQuoteResponse | undefined;
 
   readonly amountOutCopySlot: number = 0;
 
-  get quote() {
-    return this._quote;
-  }
-
   get allowanceTarget() {
-    return this.quote.allowanceTarget;
+    return this.quote?.allowanceTarget || "";
   }
 
-  async quoteForward(sellToken: Token, buyToken: Token, sellAmount: TokenValue, slippage: number) {
-    this.setFields({ sellToken, buyToken, sellAmount, slippage }).validateQuoteForward();
+  async quoteForward(sellAmount: TokenValue, slippage: number) {
+    this.setFields({ sellAmount, slippage });
+    this.validateQuoteForward();
+    this.validateTokenIsNotBEAN(this.sellToken);
+    this.validateTokenIsNotBEAN(this.buyToken);
 
     const [quote] = await ZeroXSwapNode.sdk.zeroX.quote({
       sellToken: this.sellToken.address,
@@ -251,16 +254,19 @@ export class ZeroXSwapNode extends ERC20SwapNode {
 
     ZeroXSwapNode.sdk.debug("[ZeroXSwapNode/quoteForward] Quote: ", quote);
 
-    this._quote = quote;
+    this.quote = quote;
     const buyAmount = this.buyToken.fromBlockchain(quote.buyAmount);
-
-    return this.setFields({ buyAmount, minBuyAmount: buyAmount });
+    this.setFields({ buyAmount, minBuyAmount: buyAmount });
+    return this;
   }
 
   buildStep(): StepFunction<AdvancedPipePreparedResult> {
     this.validateAll();
-    this.validateQuote();
-
+    const zeroXQuote = this.quote;
+    if (!zeroXQuote) {
+      throw this.makeErrorWithContext("Error building zeroX swap: no quote found. Run quoteForward first.");
+    }
+    
     return (_amountInStep, _) => {
       ZeroXSwapNode.sdk.debug(`>[${this.name}].buildStep()`, {
         sellToken: this.sellToken,
@@ -269,15 +275,15 @@ export class ZeroXSwapNode extends ERC20SwapNode {
         buyAmount: this.buyAmount,
         minBuyAmount: this.minBuyAmount,
         recipient: WellSwapNode.sdk.contracts.pipeline.address,
-        target: this.quote.allowanceTarget
+        target: zeroXQuote.allowanceTarget
       });
       return {
         name: `${this.name}-${this.sellToken.symbol}-${this.buyToken.symbol}`,
         amountOut: this.minBuyAmount.toBigNumber(),
         value: BigNumber.from(0),
         prepare: () => ({
-          target: this.quote.allowanceTarget,
-          callData: this.quote.data as string,
+          target: zeroXQuote.allowanceTarget,
+          callData: zeroXQuote.data,
           clipboard: Clipboard.encode([])
         }),
         decode: () => undefined, // Cannot decode
@@ -286,9 +292,9 @@ export class ZeroXSwapNode extends ERC20SwapNode {
     };
   }
 
-  validateQuote() {
-    if (!this.quote) {
-      throw this.makeErrorWithContext("Error building swap. No 0x quote found.");
+  private validateTokenIsNotBEAN (token: ERC20Token) {
+    if (token.equals(ZeroXSwapNode.sdk.tokens.BEAN)) {
+      throw this.makeErrorWithContext("Cannot swap BEAN tokens via 0x. For BEAN quotes, use WELLS instead.");
     }
   }
 }

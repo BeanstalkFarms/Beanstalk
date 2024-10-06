@@ -4,8 +4,9 @@ import { StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
 import { ERC20Token, NativeToken } from "src/classes/Token";
-import { SwapNode, ISwapNode } from "./SwapNode";
+import { SwapNode,  ISwapNodeSettable } from "./SwapNode";
 import { ClipboardSettings } from "src/types";
+import { isERC20Token, isNativeToken } from "src/utils/token";
 
 /**
  * Abstract class to extend for actions involving ETH, specifically, wrapETH & unwrapETH.
@@ -16,26 +17,31 @@ export abstract class NativeSwapNode extends SwapNode {
 
   abstract readonly buyToken: NativeToken | ERC20Token;
 
-  override setFields(args: Partial<ISwapNode>) {
+  override setFields<T extends ISwapNodeSettable>(args: Partial<T>) {
     const amount = args.sellAmount ?? args.buyAmount;
     if (amount) {
-      // We can do this b/c both ETH & WETH share the same decimal places
-      this.sellAmount = this.sellAmount ?? amount;
-      this.buyAmount = this.buyAmount ?? amount;
+      this.sellAmount = amount;
+      this.buyAmount = amount;
     }
     return this;
   }
 
+
+  protected validateIsNativeToken(token: ERC20Token | NativeToken) {
+    if (!(isNativeToken(token))) {
+      throw this.makeErrorWithContext(`Expected Native token but got ${token.symbol}.`);
+    }
+  }
+
   override validateTokens() {
     super.validateTokens();
-    if (this.sellToken instanceof ERC20Token) {
+    if (isERC20Token(this.sellToken)) {
       this.validateIsNativeToken(this.buyToken);
     } else {
       this.validateIsNativeToken(this.sellToken);
     }
   }
 }
-
 
 interface UnwrapEthBuildParams {
   fromMode: FarmFromMode;
