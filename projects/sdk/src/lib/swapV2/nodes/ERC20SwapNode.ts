@@ -215,13 +215,12 @@ export class WellSwapNode extends ERC20SwapNode {
       throw this.makeErrorWithContext("Cannot configure well swap with non-pair wells");
     }
     const [t0, t1] = this.well.tokens;
-    if (!t0.equals(this.sellToken) && !t0.equals(this.sellToken)) {
+    if (!t0.equals(this.sellToken) && !t1.equals(this.sellToken)) {
       throw this.makeErrorWithContext(`Invalid token Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`);
     }
-    if (!t1.equals(this.buyToken) && !t1.equals(this.buyToken)) {
+    if (!t0.equals(this.buyToken) && !t1.equals(this.buyToken)) {
       throw this.makeErrorWithContext(`Invalid token Sell Token. Well ${this.well.name} does not contain ${this.buyToken.symbol}`);
     }
-
   }
 }
 
