@@ -129,7 +129,11 @@ class WellsRouter {
       routes: routes
     }
 
-    WellsRouter.sdk.debug("[WellsRouter/makeSummary] Summary: ", summary);
+    WellsRouter.sdk.debug("[WellsRouter/makeSummary] bestRoute: ", bestRoute);
+    WellsRouter.sdk.debug("[WellsRouter/makeSummary] directRoute: ", directRoute);
+    WellsRouter.sdk.debug("[WellsRouter/makeSummary] routes: ", routes);
+
+
     return summary;
   }
 
@@ -164,10 +168,7 @@ class WellsRouter {
       }
     }
 
-    WellsRouter.sdk.debug("[WellsRouter/constructWellGetSwapOutPipeCalls] PipelineCalls & Swap Approximations: ", {
-      pipeCalls,
-      swapApproximations
-    });
+    WellsRouter.sdk.debug("[WellsRouter/constructWellGetSwapOutPipeCalls] Swap Approximations: ", swapApproximations);
 
     return { pipeCalls, swapApproximations };
   }
@@ -316,12 +317,11 @@ class Quoter {
     // ETH -> X
     if (wrappingETH) {
       wrapEthNode.setFields({ sellAmount: amount });
-      nodes.push(wrapEthNode);
-
       // ONLY ETH -> WETH 
       if (buyingWETH) {
-        return nodes;
+        return [wrapEthNode];
       }
+      nodes.push(wrapEthNode);
     }
  
     const swapPath = await this.handleERC20OnlyQuote(sellToken, buyToken as ERC20Token, amount, slippage);
@@ -409,7 +409,7 @@ class Quoter {
     }
 
     const zeroX = new ZeroXSwapNode(Quoter.sdk, bestRoute.buyToken, buyToken);
-    await zeroX.quoteForward(bestRoute.minBuyAmount, slippage);
+    await zeroX.quoteForward(bestRoute.buyAmount, slippage);
   
     if (directRoute?.minBuyAmount.gt(zeroX.minBuyAmount)) {
       return [directRoute];
@@ -433,7 +433,7 @@ class Quoter {
 
     const zeroX = new ZeroXSwapNode(Quoter.sdk, sellToken, bestRoute.sellToken);
     await zeroX.quoteForward(sellAmount, slippage);
-    await bestRoute.quoteForward(zeroX.minBuyAmount, slippage);
+    await bestRoute.quoteForward(zeroX.buyAmount, slippage);
 
     if (directRoute?.minBuyAmount.gt(bestRoute.minBuyAmount)) {
       return [directRoute];

@@ -6,7 +6,7 @@ import { FarmFromMode, FarmToMode } from "src/lib/farm";
 import { ERC20Token, NativeToken } from "src/classes/Token";
 import { SwapNode,  ISwapNodeSettable } from "./SwapNode";
 import { ClipboardSettings } from "src/types";
-import { isERC20Token, isNativeToken } from "src/utils/token";
+import { isNativeToken } from "src/utils/token";
 
 /**
  * Abstract class to extend for actions involving ETH, specifically, wrapETH & unwrapETH.
@@ -30,15 +30,6 @@ export abstract class NativeSwapNode extends SwapNode {
   protected validateIsNativeToken(token: ERC20Token | NativeToken) {
     if (!(isNativeToken(token))) {
       throw this.makeErrorWithContext(`Expected Native token but got ${token.symbol}.`);
-    }
-  }
-
-  override validateTokens() {
-    super.validateTokens();
-    if (isERC20Token(this.sellToken)) {
-      this.validateIsNativeToken(this.buyToken);
-    } else {
-      this.validateIsNativeToken(this.sellToken);
     }
   }
 }
@@ -68,7 +59,6 @@ export class UnwrapEthSwapNode extends NativeSwapNode {
   }
 
   buildStep({ fromMode, copySlot }: UnwrapEthBuildParams): StepClass<AdvancedPipePreparedResult> {
-    this.validateTokens();
     this.validateSellAmount();
     this.validateBuyAmount();
 
@@ -111,7 +101,6 @@ export class WrapEthSwapNode extends NativeSwapNode {
   }
 
   buildStep({ toMode }: WrapEthBuildParams): StepClass<AdvancedPipePreparedResult> {
-    this.validateTokens();
     this.validateSellAmount();
     this.validateBuyAmount();
 

@@ -108,13 +108,13 @@ class Builder {
 
       // Last leg of swap
       if (i === maxIndex) {
-        fromMode = FarmFromMode.INTERNAL_TOLERANT;
-        toMode = toMode;
+        fromMode = FarmFromMode.EXTERNAL;
+        toMode = finalToMode;
 
         this.#offloadPipeline(node, recipient, fromMode, toMode, i);
         this.#advFarm.add(this.#advPipe);
 
-        // Add UnwrapETH if last action
+        // // Add UnwrapETH if last action
         if (isUnwrapEthNode(node)) {
           this.#advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
         }
@@ -156,29 +156,31 @@ class Builder {
     if (recipientIsPipeline) return;
 
     const outputToken = node.buyToken;
-    const prevCopySlot = this.#getPrevNodeCopySlot(i);
+    let copySlot: number | undefined;
 
     let approveToken: ERC20Token;
 
     if (isUnwrapEthNode(node)) {
       approveToken = node.sellToken;
+      copySlot = this.#getPrevNodeCopySlot(i);
     } else if (isERC20Node(node)) {
       approveToken = node.buyToken;
+      copySlot = node.amountOutCopySlot;
     } else {
       throw new Error("Error building swap: Cannot determine approval token for transfer.");
     }
 
-    if (prevCopySlot === undefined) {
+    if (copySlot === undefined) {
       throw new Error("Error building swap: Cannot determine copySlot from previous node.");
     }
 
     const prevActionClipboard = {
       tag: node.tag,
-      copySlot: prevCopySlot
+      copySlot: copySlot
     };
 
     const approve = new Builder.sdk.farm.actions.ApproveERC20(
-      outputToken as ERC20Token,
+      approveToken,
       Builder.sdk.contracts.beanstalk.address,
       { ...prevActionClipboard, pasteSlot: 1 }
     );
@@ -253,7 +255,7 @@ class Builder {
    * Returns the copySlot of the previous node in the swap sequence.
    */
   #getPrevNodeCopySlot(i: number) {
-    if (!this.#nodes.length || !i) return undefined;
+    if (!this.#nodes.length || i === 0) return undefined;
 
     const prevNode = this.#nodes[i - 1];
     if (prevNode && isERC20Node(prevNode)) {

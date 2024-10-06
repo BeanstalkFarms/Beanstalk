@@ -171,6 +171,7 @@ export class WellSwapNode extends ERC20SwapNode {
             minBuyAmount: this.minBuyAmount,
             recipient: WellSwapNode.sdk.contracts.pipeline.address,
             copySlot,
+            clipboard: { tag: returnIndexTag, copySlot, pasteSlot: this.amountInPasteSlot }
           })
 
           return {
@@ -267,24 +268,27 @@ export class ZeroXSwapNode extends ERC20SwapNode {
     }
     
     return (_amountInStep, _) => {
-      ZeroXSwapNode.sdk.debug(`>[${this.name}].buildStep()`, {
-        sellToken: this.sellToken,
-        buyToken: this.buyToken,
-        sellAmount: this.sellAmount,
-        buyAmount: this.buyAmount,
-        minBuyAmount: this.minBuyAmount,
-        recipient: WellSwapNode.sdk.contracts.pipeline.address,
-        target: zeroXQuote.allowanceTarget
-      });
+      
       return {
         name: `${this.name}-${this.sellToken.symbol}-${this.buyToken.symbol}`,
         amountOut: this.minBuyAmount.toBigNumber(),
         value: BigNumber.from(0),
-        prepare: () => ({
-          target: zeroXQuote.allowanceTarget,
-          callData: zeroXQuote.data,
-          clipboard: Clipboard.encode([])
-        }),
+        prepare: () => {
+          ZeroXSwapNode.sdk.debug(`>[${this.name}].buildStep()`, {
+            sellToken: this.sellToken,
+            buyToken: this.buyToken,
+            sellAmount: this.sellAmount,
+            buyAmount: this.buyAmount,
+            minBuyAmount: this.minBuyAmount,
+            recipient: WellSwapNode.sdk.contracts.pipeline.address,
+            target: zeroXQuote.allowanceTarget
+          });
+          return {
+            target: zeroXQuote.allowanceTarget,
+            callData: zeroXQuote.data,
+            clipboard: Clipboard.encode([])
+          }
+        },
         decode: () => undefined, // Cannot decode
         decodeResult: () => undefined // Cannot decode
       };
