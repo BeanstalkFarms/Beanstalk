@@ -7,6 +7,8 @@ import TransactionToast from '~/components/Common/TxnToast';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
+import useChainState from '~/hooks/chain/useChainState';
+import { useSwitchChain } from 'wagmi';
 
 
 export default function L2Claim() {
@@ -24,28 +26,26 @@ export default function L2Claim() {
     const account = useAccount();
     const sdk = useSdk();
 
+    const { isArbitrum, isTestnet } = useChainState();
+    const { chains, error, isPending, switchChain } = useSwitchChain();
+
     const hasDeposits = deposits ? Object.keys(deposits).length > 0 : false;
     const hasFert = ferts ? Object.keys(ferts).length > 0 : false;
     const hasPlots = plots ? Object.keys(plots).length > 0 : false;
     const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
 
-    function getEvent() {
-        const event = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](sourceAccount);
-        console.log("event: ", event)
-        if (!event || !event.topics || event.topics.length === 1) return
-        setReceiverApproved(true)
-    };
-
-    function getReceipt() {
-        const ticket = localStorage.getItem("retryableTicket")
+    async function getEvent() {
+        const ticket = localStorage.getItem("retryableTicket");
         if (ticket) {
-            setSourceAccount(JSON.parse(ticket).l1Address);
-        };
+            const { l1Address } = JSON.parse(ticket);
+            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](l1Address);
+            const logs = await sdk.contracts.beanstalk.queryFilter(filter);
+            if (!logs || logs.length === 0) return;
+            setReceiverApproved(true);
+        } else {
+            setReceiverApproved(false);
+        }
     };
-
-    useEffect(() => {
-        getReceipt();
-    }, []);
 
     useEffect(() => {
         async function getMigrationData() {
@@ -59,15 +59,21 @@ export default function L2Claim() {
             setFarmBalance(migrationData.farmBalance)
         };
         getMigrationData();
-    }, [account]);
+    }, [account, sourceAccount]);
 
     useEffect(() => {
         const interval = setInterval(() => {
             getEvent()
         }, 5000);
-
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const ticket = localStorage.getItem("retryableTicket");
+        if (!ticket) return
+        const { l1Address } = JSON.parse(ticket);
+        setSourceAccount(l1Address);
+    }, [])
 
     const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
 
@@ -140,8 +146,8 @@ export default function L2Claim() {
     return (
         <Box sx={{ paddingX: 2 }}>
             <PageHeader
-                title="Delegate Contract Balance for L2 Migration"
-                description="Specify which address your want your Beanstalk assets migrated to on Arbitrum"
+                title="Receive Contract Balance on L2"
+                description="Retrieve the balances delegated to the address specified in the previous step"
             />
             <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
                 <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
@@ -213,24 +219,31 @@ export default function L2Claim() {
                         <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                     </Box>
                     <Button
-                        disabled={!claimEnabled}
+                        disabled={!(!isArbitrum && !isTestnet) || (isArbitrum && !claimEnabled)}
                         sx={{
                             width: "100%",
                             height: 60,
+                            backgroundColor: (!isArbitrum && !isTestnet) ? '#213147' : undefined,
+                            color: (!isArbitrum && !isTestnet) ? '#12ABFF' : undefined,
+                            '&:hover': {
+                                backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
+                            }
                         }}
-                        onClick={() => onSubmit()}
+                        onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
                     >
-                        {!receiverApproved ?
-                            <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
-                                <BeanProgressIcon
-                                    size={16}
-                                    enabled
-                                    variant="indeterminate"
-                                />
-                                Waiting For L2...
-                            </Box>
-                            :
-                            'Receive Assets'
+                        {(!isArbitrum && !isTestnet) ?
+                            'Switch to Arbitrum'
+                            : !receiverApproved ?
+                                <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
+                                    <BeanProgressIcon
+                                        size={16}
+                                        enabled
+                                        variant="indeterminate"
+                                    />
+                                    Awaiting Migration Confirmation...
+                                </Box>
+                                :
+                                'Receive Assets'
                         }
                     </Button>
                 </Box>

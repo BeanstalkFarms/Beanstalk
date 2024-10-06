@@ -12,6 +12,7 @@ import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { useSwitchChain } from 'wagmi';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function L1Delegate() {
@@ -26,7 +27,7 @@ export default function L1Delegate() {
     const sdk = useSdk();
     const beanstalkL2Address = sdk.addresses.BEANSTALK.ARBITRUM_MAINNET;
 
-    const { chains, error, isPending, switchChain } = useSwitchChain();
+    const navigate = useNavigate();
 
     function getReceipt() {
         const ticket = localStorage.getItem("retryableTicket")
@@ -142,14 +143,10 @@ export default function L1Delegate() {
                         sx={{
                             width: "100%",
                             height: 60,
-                            backgroundColor: hasReceipt ? '#213147' : undefined,
-                            '&:hover': {
-                                backgroundColor: hasReceipt ? '#12ABFF' : undefined,
-                            }
                         }}
-                        onClick={() => hasReceipt ? switchChain({ chainId: 1337 }) : onSubmit()}
+                        onClick={() => hasReceipt ? navigate('/l2claim') : onSubmit()}
                     >
-                        {hasReceipt ? 'Switch to Arbitrum' :
+                        {hasReceipt ? 'Next Step' :
                             !isAddressValid ? 'Input Address' : 'Begin L2 Migration'}
                     </Button>
                 </Card>
