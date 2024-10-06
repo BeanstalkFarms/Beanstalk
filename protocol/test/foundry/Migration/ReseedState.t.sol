@@ -92,9 +92,9 @@ contract ReseedStateTest is TestHelper {
         // the number of accounts to parse, for testing purposes
         // the total number of accounts is 3665
         uint256 numAccounts = 10;
-        // offset to start parsing from: 
+        // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
-        uint256 offset = 0; 
+        uint256 offset = 0;
         accountNumber = parseAccounts(numAccounts, offset);
         console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -551,7 +551,7 @@ contract ReseedStateTest is TestHelper {
         bytes memory contractStalk = vm.ffi(inputs);
         return vm.parseUint(vm.toString(contractStalk));
     }
-    
+
     function parseFertAccounts(uint256 numAccounts, uint256 offset) public returns (uint256) {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
