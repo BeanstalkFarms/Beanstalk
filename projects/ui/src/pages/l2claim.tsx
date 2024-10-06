@@ -219,7 +219,7 @@ export default function L2Claim() {
                         <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                     </Box>
                     <Button
-                        disabled={!(!isArbitrum && !isTestnet) || (isArbitrum && !claimEnabled)}
+                        disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
                         sx={{
                             width: "100%",
                             height: 60,
