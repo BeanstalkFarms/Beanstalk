@@ -99,13 +99,13 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
+  const BLOCK_NUMBER = 20895000;
   // Read contract addresses to exclude them from the reseed
   const contractAccountsJson = JSON.parse(
-    fs.readFileSync("./reseed/data/exports/contract-accounts20895000.json", "utf8")
+    fs.readFileSync(`./reseed/data/exports/contract-accounts${BLOCK_NUMBER}.json`, "utf8")
   );
   // Convert all the items in the array to lowercase for comparison
   const contractAccounts = contractAccountsJson.map((address) => address.toLowerCase());
-  const BLOCK_NUMBER = 20895000;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
