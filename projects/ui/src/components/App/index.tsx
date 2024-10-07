@@ -322,10 +322,11 @@ function Arbitrum() {
 
 export default function App() {
   const { isArbitrum, isTestnet } = useChainState();
-  const isDevMode = import.meta.env.DEV;
+  // const isDevMode = import.meta.env.DEV;
   const migrationUnderway = true;
 
-  if (migrationUnderway) {
+  
+  if (migrationUnderway && (!isArbitrum && isTestnet)) {
     return <MigrationGate />;
   }
 
