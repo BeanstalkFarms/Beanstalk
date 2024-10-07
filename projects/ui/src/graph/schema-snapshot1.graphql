@@ -70,6 +70,13 @@ type Item {
   spacesCount: Int
 }
 
+type Label {
+  color: String
+  description: String
+  id: String
+  name: String
+}
+
 type Leaderboard {
   lastVote: Int
   proposalsCount: Int
@@ -173,7 +180,7 @@ type Proposal {
   scores_state: String
   scores_total: Float
   scores_updated: Int
-  snapshot: String
+  snapshot: Int
   space: Space
   start: Int!
   state: String
@@ -309,6 +316,7 @@ type Space {
   guidelines: String
   hibernated: Boolean
   id: String!
+  labels: [Label]
   location: String
   members: [String]
   moderators: [String]

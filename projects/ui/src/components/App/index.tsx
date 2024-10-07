@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
@@ -65,6 +65,9 @@ import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
 import useChainState from '~/hooks/chain/useChainState';
 import EthMainnet from '~/pages/mainnet';
 import { runOnDev } from '~/util/dev';
+import useSdk from '~/hooks/sdk';
+import L2Claim from '~/pages/l2claim';
+import L1Delegate from '~/pages/l1delegate';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -102,13 +105,45 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   </Toaster>
 );
 
-function Mainnet() {
+function MigrationGate() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
   const { isArbitrum } = useChainState();
+
+  const sdk = useSdk();
+  const account = useAccount();
+  const [isContract, setIsContract] = useState<boolean>(false);
+  const [hasReceipt, setHasReceipt] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function contractCheck() {
+      if (!account) {
+        setIsContract(false)
+      } else {
+        const _isContract = await sdk.provider.getCode(account);
+        if (_isContract === "0x") {
+          setIsContract(false);
+        } else {
+          setIsContract(true);
+        }
+      }
+    };
+    contractCheck();
+  }, [account]);
+
+  useEffect(() => {
+    const ticket = localStorage.getItem("retryableTicket")
+    if (ticket) {
+      setHasReceipt(true);
+    } else {
+      setHasReceipt(false);
+    };
+  }, []);
+
   return (
     <>
       <NavBar>{null}</NavBar>
+      <CustomToaster navHeight={navHeight} />
       <Box
         sx={{
           bgcolor: 'background.default',
@@ -126,10 +161,26 @@ function Mainnet() {
             width: '100vw',
             minHeight: `calc(100vh - ${navHeight}px)`,
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: !isContract ? 'center' : 'flex-start',
           }}
         >
-          <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
+          {!isContract ?
+            <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
+            :
+            <Box sx={{ marginTop: 4 }}>
+              <Routes>
+                <Route index element={<L1Delegate />} />
+                <Route path="*" element={<L1Delegate />} />
+                <Route path="/l1delegate" element={<L1Delegate />} />
+                <Route path="/l1" element={<L1Delegate />} />
+                <Route path="/ethereum" element={<L1Delegate />} />
+                <Route path="/l2claim" element={<L2Claim />} />
+                <Route path="/l2" element={<L2Claim />} />
+                <Route path="/arbitrum" element={<L2Claim />} />
+                <Route path="/404" element={<PageNotFound />} />
+              </Routes>
+            </Box>
+          }
           {/* <Routes>
             <Route path="/*" element={<EthMainnet />} />
           </Routes> */}
@@ -258,6 +309,8 @@ function Arbitrum() {
             <Route path="/silo" element={<SiloPage />} />
             <Route path="/silo/:address" element={<SiloTokenPage />} />
             <Route path="/swap" element={<SwapPage />} />
+            <Route path="/l1delegate" element={<L1Delegate />} />
+            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="/404" element={<PageNotFound />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
@@ -269,10 +322,16 @@ function Arbitrum() {
 
 export default function App() {
   const { isArbitrum, isTestnet } = useChainState();
+  // const isDevMode = import.meta.env.DEV;
+  const migrationUnderway = true;
 
-  if (!isArbitrum || (isArbitrum && !isTestnet)) {
-    return <Mainnet />;
+  
+  if (migrationUnderway && (!isArbitrum && isTestnet)) {
+    return <MigrationGate />;
   }
 
+  if (!isArbitrum || (isArbitrum && !isTestnet)) {
+    return <MigrationGate />;
+  }
   return <Arbitrum />;
 }

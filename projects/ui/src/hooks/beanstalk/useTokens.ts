@@ -35,6 +35,13 @@ export type AnyToken =
   | BeanstalkTokenInstance
   | NativeTokenInstance;
 
+export function indexTokens<T extends AnyToken>(tokens: T[]) {
+  return tokens.reduce<TokenMap<T>>((acc, token) => {
+    acc[getTokenIndex(token)] = token;
+    return acc;
+  }, {});
+}
+
 /**
  *
  * @returns all balance tokens from the SDK all ERC20 tokens + ETH
@@ -217,6 +224,19 @@ export const useSupportedBalanceTokens = () => {
     };
   }, [sdk]);
 };
+
+export const useNonWellLPERC20Tokens = () => {
+  const sdk = useSdk();
+
+  return useMemo(() => {
+    
+    
+
+    
+
+
+  }, []);
+}
 
 /**
  * Sort the whitelist by

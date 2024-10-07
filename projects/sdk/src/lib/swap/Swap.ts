@@ -6,6 +6,9 @@ import { SwapOperation } from "./SwapOperation";
 import { getSwapGraph } from "./graph";
 import { StepClass } from "src/classes/Workflow";
 
+/**
+ * @deprecated
+ */
 export class Swap {
   private static sdk: BeanstalkSDK;
   router: Router;

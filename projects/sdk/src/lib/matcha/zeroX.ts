@@ -1,9 +1,32 @@
+import Bottleneck from "bottleneck";
+import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
 import { ZeroExAPIRequestParams, ZeroExQuoteResponse } from "./types";
+import { fetchWithBottleneckLimiter, isRateLimitError } from "./utils";
+
+const RETRY_AFTER_MS = 200;
+
+const MAX_RETRY_COUNT = 3;
+
+type RequestParams = Omit<RequestInit, "headers" | "method">;
 
 export class ZeroX {
+  static sdk: BeanstalkSDK;
+
+  private static limiter: Bottleneck;
+
   readonly swapV1Endpoint = "https://arbitrum.api.0x.org/swap/v1/quote";
 
-  constructor(private _apiKey: string = "") {}
+  constructor(
+    sdk: BeanstalkSDK,
+    private _apiKey: string = ""
+  ) {
+    ZeroX.sdk = sdk;
+
+    // Keep the limiter in memory across instances to avoid request leaks between re-initializations of the SDK
+    if (!ZeroX.limiter) {
+      ZeroX.limiter = ZeroX.initializeLimiter();
+    }
+  }
 
   /**
    * Exposing here to allow other modules to use their own API key if needed
@@ -13,24 +36,41 @@ export class ZeroX {
   }
 
   /**
-   * fetch the quote from the 0x API
-   * @notes defaults:
-   *  - slippagePercentage: In human readable form. 0.01 = 1%. Defaults to 0.001 (0.1%)
-   *  - skipValidation: defaults to true
-   *  - shouldSellEntireBalance: defaults to false
+   * Fetches quotes from the 0x API
+   *
+   * @note Utilizes Bottleneck limiter to prevent rate limiting.
+   * - In the case of a rate limit, it will retry until up to 3 times every 200ms.
+   *
+   * @param args - a single request or an array of requests
+   * @param requestInit - optional request init params
+   * @returns
    */
-  async fetchSwapQuote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
-    args: T,
+  async quote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
+    args: T | T[],
+    requestInit?: RequestParams
+  ): Promise<ZeroExQuoteResponse[]> {
+    this.validateAPIKey();
+
+    const fetchArgs = Array.isArray(args) ? args : [args];
+
+    const requests = fetchArgs.map((params) => {
+      const urlParams = new URLSearchParams(
+        this.generateQuoteParams(params) as unknown as Record<string, string>
+      );
+
+      return {
+        id: this.generateRequestId(params),
+        request: () => this.send0xRequest(urlParams, requestInit)
+      };
+    });
+
+    return fetchWithBottleneckLimiter<ZeroExQuoteResponse>(ZeroX.limiter, requests);
+  }
+
+  private async send0xRequest(
+    urlParams: URLSearchParams,
     requestInit?: Omit<RequestInit, "headers" | "method">
-  ): Promise<ZeroExQuoteResponse> {
-    if (!this._apiKey) {
-      throw new Error("Cannot fetch from 0x without an API key");
-    }
-
-    const fetchParams = new URLSearchParams(
-      this.generateQuoteParams(args) as unknown as Record<string, string>
-    );
-
+  ) {
     const options = {
       ...requestInit,
       method: "GET",
@@ -41,7 +81,7 @@ export class ZeroX {
       })
     };
 
-    const url = `${this.swapV1Endpoint}?${fetchParams.toString()}`;
+    const url = `${this.swapV1Endpoint}?${urlParams.toString()}`;
 
     return fetch(url, options).then((r) => r.json()) as Promise<ZeroExQuoteResponse>;
   }
@@ -89,5 +129,50 @@ export class ZeroX {
     });
 
     return quoteParams;
+  }
+
+  private generateRequestId<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(args: T) {
+    const sellToken = args.sellToken || "";
+    const buyToken = args.buyToken || "";
+    const sellAmount = args.sellAmount || "0";
+    const buyAmount = args.buyAmount || "0";
+    const slippagePercentage = args.slippagePercentage || "0.01";
+    const timestamp = new Date().getTime();
+
+    return `0x-${sellToken}-${buyToken}-${sellAmount}-${buyAmount}-${slippagePercentage}-${timestamp}`;
+  }
+
+  private static initializeLimiter() {
+    // 0x has rate limit of 10 requests per second.
+    // We set the reservoir to 4, so we can make 4 requests per every 500ms, with a minimum of 125ms between each request.
+    const limiter = new Bottleneck({
+      reservoir: 4,
+      reservoirRefreshInterval: 500,
+      reservoirRefreshAmount: 4,
+      maxConcurrent: 4,
+      minTime: 125
+    });
+
+    limiter.on("failed", (error, info) => {
+      // If we are being rate limited, retry after 100ms. We try until we get a successful response
+      if (isRateLimitError(error)) {
+        ZeroX.sdk.debug("[ZeroX Limiter]: quote failed: ... retrying id: ", info.options.id);
+        if (info.retryCount < MAX_RETRY_COUNT) {
+          return RETRY_AFTER_MS;
+        }
+        return null;
+      }
+
+      // Non rate limit errors are not retried
+      return null;
+    });
+
+    return limiter;
+  }
+
+  private validateAPIKey() {
+    if (!this._apiKey) {
+      throw new Error("Cannot fetch from 0x without an API key");
+    }
   }
 }

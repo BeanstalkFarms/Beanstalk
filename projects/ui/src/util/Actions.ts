@@ -1,3 +1,4 @@
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import React from 'react';
 import BigNumber from 'bignumber.js';
 import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
@@ -62,23 +63,23 @@ export type BaseAction = {
 
 export type EndTokenAction = {
   type: ActionType.END_TOKEN;
-  token: Token;
+  token: TokenInstance;
 };
 
 export type SwapAction = {
   type: ActionType.SWAP;
-  tokenIn: Token;
+  tokenIn: TokenInstance;
   source?: FarmFromMode;
   amountsBySource?: AmountsBySource;
   amountIn: BigNumber;
-  tokenOut: Token;
+  tokenOut: TokenInstance;
   amountOut: BigNumber;
 };
 
 export type ReceiveTokenAction = {
   type: ActionType.RECEIVE_TOKEN;
   amount: BigNumber;
-  token: Token;
+  token: TokenInstance;
   destination?: FarmToMode;
   to?: string;
   hideMessage?: boolean;
@@ -88,7 +89,7 @@ export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
   amountsBySource?: AmountsBySource;
-  token: Token;
+  token: TokenInstance;
   source:
     | FarmFromMode.INTERNAL
     | FarmFromMode.EXTERNAL
@@ -100,7 +101,7 @@ export type TransferBalanceAction = {
 /// ////////////////////////////// SILO /////////////////////////////////
 type SiloAction = {
   amount: BigNumber;
-  token: Token;
+  token: TokenInstance;
 };
 
 export type SiloRewardsAction = {

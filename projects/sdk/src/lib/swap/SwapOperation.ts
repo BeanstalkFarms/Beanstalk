@@ -11,6 +11,9 @@ type PathSegment = {
   to: string;
 };
 
+/**
+ * @deprecated
+ */
 export class SwapOperation {
   private static sdk: BeanstalkSDK;
 

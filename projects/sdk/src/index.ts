@@ -11,6 +11,8 @@ export { TokenValue } from "@beanstalk/sdk-core";
 export { Workflow } from "src/classes/Workflow";
 export { DecimalBigNumber } from "src/classes/DecimalBigNumber";
 export { SwapOperation } from "src/lib/swap/SwapOperation";
+export { BeanSwapOperation } from "src/lib/swapV2/BeanSwap";
+export type { BeanSwapNodeQuote } from "src/lib/swapV2/BeanSwap";
 export { EventProcessor } from "src/lib/events/processor";
 export { Pool, BasinWell } from "src/classes/Pool";
 export type { EventManager } from "src/lib/events/EventManager";
