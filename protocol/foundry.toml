@@ -46,6 +46,7 @@ no_storage_caching = false
 [profile.differential]
 match_test = "testDiff"
 no_match_test = "a^"
+no_match_contract = "ReseedStateTest"
 
 [profile.default.rpc_storage_caching]
 chains = 'all'

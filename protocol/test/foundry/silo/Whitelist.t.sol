@@ -16,10 +16,11 @@ import {GaugePointFacet} from "contracts/beanstalk/sun/GaugePoints/GaugePointFac
 import {LiquidityWeightFacet} from "contracts/beanstalk/sun/LiquidityWeightFacet.sol";
 
 contract MockWellToken {
+    address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     function tokens() public returns (IERC20[] memory) {
         IERC20[] memory _tokens = new IERC20[](2);
-        _tokens[0] = IERC20(C.WETH);
-        _tokens[1] = IERC20(C.WETH);
+        _tokens[0] = IERC20(WETH);
+        _tokens[1] = IERC20(WETH);
         return _tokens;
     }
 }

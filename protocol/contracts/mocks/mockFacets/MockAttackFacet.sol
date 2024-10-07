@@ -13,6 +13,7 @@ import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
+import {LibWeth} from "contracts/beanstalk/migration/L1Libraries/LibWeth.sol";
 
 /**
  * @title Mock Attack Facet
@@ -33,7 +34,7 @@ contract MockAttackFacet is Invariable {
 
     function revert_oneOutFlow() external oneOutFlow(s.sys.tokens.bean) {
         BeanstalkERC20(s.sys.tokens.bean).transfer(msg.sender, 1);
-        IERC20(C.WETH).transfer(msg.sender, 1);
+        IERC20(LibWeth.WETH).transfer(msg.sender, 1);
     }
 
     function revert_supplyChange() external noSupplyChange {
@@ -72,7 +73,7 @@ contract MockAttackFacet is Invariable {
     }
 
     function exploitSop() public {
-        s.sys.sop.plentyPerSopToken[C.WETH] = 100_000_000;
+        s.sys.sop.plentyPerSopToken[LibWeth.WETH] = 100_000_000;
     }
 
     function exploitPodOrderBeans() public {

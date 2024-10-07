@@ -105,8 +105,8 @@ contract OracleTest is TestHelper {
         mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 600);
 
         // query price
-        uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(C.WETH, 3600);
-        uint256 tokenUsdPrice = OracleFacet(BEANSTALK).getTokenUsdTwap(C.WETH, 3600);
+        uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(WETH, 3600);
+        uint256 tokenUsdPrice = OracleFacet(BEANSTALK).getTokenUsdTwap(WETH, 3600);
 
         // verify math:
         // 1200 + 1000 + 1100 + 1000 + 900 + 1200 = 6400 / 6 = 1066.666666e6
@@ -125,8 +125,8 @@ contract OracleTest is TestHelper {
         mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 50);
 
         // query price
-        uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(C.WETH, 3600);
-        uint256 tokenUsdPrice = OracleFacet(BEANSTALK).getTokenUsdTwap(C.WETH, 3600);
+        uint256 usdTokenPrice = OracleFacet(BEANSTALK).getUsdTokenTwap(WETH, 3600);
+        uint256 tokenUsdPrice = OracleFacet(BEANSTALK).getTokenUsdTwap(WETH, 3600);
 
         // verify math:
         // (1200 * 600) + (1000 * 1000) + (1100 * 500) + (1000 * 300) + (900 * 1150) + (1200 * 50) / 3600 = 1018.055555 * 1e6
@@ -263,11 +263,11 @@ contract OracleTest is TestHelper {
         );
 
         // token price is number of dollars per token, i.e. 50000 USD for 1 WBTC
-        uint256 tokenPriceEth = OracleFacet(BEANSTALK).getTokenUsdPrice(C.WETH); // 1000e6
+        uint256 tokenPriceEth = OracleFacet(BEANSTALK).getTokenUsdPrice(WETH); // 1000e6
         assertEq(tokenPriceEth, 1000e6, "getTokenUsdPrice eth");
 
         // number of tokens received per dollar
-        uint256 usdPriceEth = OracleFacet(BEANSTALK).getUsdTokenPrice(C.WETH); // 1e15 which is 1e18 (1 eth in wei) / 1000 (weth price 1000), you get 1/1000th of 1 eth for $1
+        uint256 usdPriceEth = OracleFacet(BEANSTALK).getUsdTokenPrice(WETH); // 1e15 which is 1e18 (1 eth in wei) / 1000 (weth price 1000), you get 1/1000th of 1 eth for $1
         assertEq(usdPriceEth, 1e18 / 1000, "getUsdTokenPrice eth");
 
         uint256 tokenPriceWBTC = OracleFacet(BEANSTALK).getTokenUsdPrice(WBTC); // should be 50000e6
@@ -293,7 +293,7 @@ contract OracleTest is TestHelper {
         );
 
         // WETH price is 1000
-        uint256 priceWETH = OracleFacet(BEANSTALK).getUsdTokenPrice(C.WETH);
+        uint256 priceWETH = OracleFacet(BEANSTALK).getUsdTokenPrice(WETH);
         assertEq(priceWETH, 1e15); //  1e18/1e3 = 1e15
 
         // WBTC price is 50000
