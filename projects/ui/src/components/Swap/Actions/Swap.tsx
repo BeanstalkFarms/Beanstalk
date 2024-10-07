@@ -224,8 +224,6 @@ const SwapForm: FC<
   const handleQuote = useCallback<BeanSwapQuoteHandler>(
     async (inputToken, _amountIn, targetToken, { slippage }) => {
       if (!account) throw new Error('Connect a wallet first.');
-      console.log('quoting...');
-
       if (_amountIn.lte(0)) {
         return {
           amountOut: ZERO_BN,
@@ -239,8 +237,11 @@ const SwapForm: FC<
         inputToken.fromHuman(_amountIn.toString()),
         slippage
       );
+      if (!quoteData) {
+        throw new Error('No route found.');
+      }
 
-      const output = new BigNumber(quoteData?.buyAmount.toHuman() || 0);
+      const output = new BigNumber(quoteData.buyAmount.toHuman());
 
       return {
         amountOut: output,
@@ -255,6 +256,7 @@ const SwapForm: FC<
     [values.settings.slippage]
   );
 
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const optimizedFromMode = useMemo(
     () =>
       balanceIn
@@ -833,7 +835,6 @@ function getBeanSwapOperation(
   }
   const formFmountOutTV = tokenOut.fromHuman(amountOut.toString());
   if (!quote.buyAmount.eq(formFmountOutTV)) {
-    console.log(quote.minBuyAmount, amountOut.toNumber());
     throw new Error(
       "Output amount doesn't match quote. Please refresh the quote."
     );
