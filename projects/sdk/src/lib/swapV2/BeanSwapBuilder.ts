@@ -10,9 +10,11 @@ import {
   UnwrapEthSwapNode,
   WellSwapNode,
   WrapEthSwapNode,
+  ZeroXSwapNode,
 } from "./nodes";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { TransferTokenNode } from "./nodes/TransferTokenNode";
+import { WellSyncSwapNode } from "./nodes/ERC20SwapNode";
 
 class Builder {
   private static sdk: BeanstalkSDK;
@@ -111,12 +113,22 @@ class Builder {
 
       // No need to update Farm modes until we offload pipeline.
       if (isERC20Node(node)) {
-        const swap = isWellNode(node)
-          ? node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) })
-          : node.buildStep();
+        let step;
+        if (isWellNode(node)) {
+          step = node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) });
+        } else if (isZeroXNode(node)) {
+          step = node.buildStep();
+        } else if (isWellSyncNode(node)) {
+          step = node.buildStep({ 
+            copySlot: this.#getPrevNodeCopySlot(i),  
+            recipient: Builder.sdk.contracts.pipeline.address
+          });
+        } else {
+          throw new Error("Error building swap: Unknown SwapNode type.");
+        }
 
         this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
-        this.#advPipe.add(swap, { tag: node.tag });
+        this.#advPipe.add(step, { tag: node.tag });
       }
 
       // Last leg of swap
@@ -302,6 +314,12 @@ const isWellNode = (node: SwapNode): node is WellSwapNode => {
 };
 const isTransferTokenNode = (node: SwapNode): node is TransferTokenNode => {
   return node instanceof TransferTokenNode;
+}
+const isZeroXNode = (node: SwapNode): node is ZeroXSwapNode => {
+  return node instanceof ZeroXSwapNode;
+}
+const isWellSyncNode = (node: SwapNode): node is WellSyncSwapNode => {
+  return node instanceof WellSyncSwapNode;
 }
 
 export { Builder as BeanSwapBuilder };

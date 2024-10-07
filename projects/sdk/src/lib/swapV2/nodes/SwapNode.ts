@@ -21,6 +21,8 @@ type BuildStepParams = Partial<{
   toMode: FarmToMode;
 }>;
 
+type ValidBuildStepReturn = StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>;
+
 export abstract class SwapNode implements ISwapNode {
   protected static sdk: BeanstalkSDK;
 
@@ -51,7 +53,8 @@ export abstract class SwapNode implements ISwapNode {
    * Build the swap step
    * @param args copySlot, fromMode, toMode
    */
-  abstract buildStep(args?: BuildStepParams): StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>;
+  abstract buildStep(args?: BuildStepParams): ValidBuildStepReturn | ValidBuildStepReturn[];
+
 
   /**
    * The tag for the amount out for THIS node. Subsequent nodes will copy from this value.
