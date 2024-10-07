@@ -351,7 +351,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsBelowPeg() public {
-        setDeltaBforWell(-1000e6, BEAN_ETH_WELL, C.WETH);
+        setDeltaBforWell(-1000e6, BEAN_ETH_WELL, WETH);
         season.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
@@ -371,7 +371,7 @@ contract FloodTest is TestHelper {
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
             IERC20(BEAN),
-            IERC20(C.WETH),
+            IERC20(WETH),
             uint256(currentDeltaB)
         );
 
@@ -396,7 +396,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            WETH,
             51191151829696906017
         );
 
@@ -407,7 +407,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(BEANSTALK), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -449,7 +449,7 @@ contract FloodTest is TestHelper {
         vm.prank(users[2]);
         bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
-        assertEq(IERC20(C.WETH).balanceOf(users[2]), userCalcPlenty);
+        assertEq(IERC20(WETH).balanceOf(users[2]), userCalcPlenty);
     }
 
     function testMultipleSop() public {
@@ -473,7 +473,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 2, // flood will happen in two seasons
             sopWell,
-            C.WETH,
+            WETH,
             25900501355272002583
         );
 
@@ -485,7 +485,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 77091653184968908600);
+        assertEq(IERC20(WETH).balanceOf(BEANSTALK), 77091653184968908600);
 
         assertEq(reserves[0], 1074099498643);
         assertEq(reserves[1], 1074099498644727997417);
@@ -536,7 +536,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen in two seasons
             sopWell,
-            C.WETH,
+            WETH,
             51191151829696906017
         );
 
@@ -549,7 +549,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(BEANSTALK), 51191151829696906017);
 
         assertEq(reserves[0], 1048808848170);
         assertEq(reserves[1], 1048808848170303093983);
@@ -586,7 +586,7 @@ contract FloodTest is TestHelper {
         vm.prank(users[2]);
         bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
-        assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+        assertEq(IERC20(WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
     function testSopUsingRealSunrise() public {
@@ -602,7 +602,7 @@ contract FloodTest is TestHelper {
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
             IERC20(BEAN),
-            IERC20(C.WETH),
+            IERC20(WETH),
             uint256(currentDeltaB)
         );
 
@@ -718,7 +718,7 @@ contract FloodTest is TestHelper {
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
             IERC20(BEAN),
-            IERC20(C.WETH),
+            IERC20(WETH),
             uint256(currentDeltaB)
         );
 
@@ -736,7 +736,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            WETH,
             51191151829696906017
         );
 
@@ -751,7 +751,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(BEANSTALK), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(BEANSTALK), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -802,7 +802,7 @@ contract FloodTest is TestHelper {
             "balance of plenty not cleared after claim"
         );
         assertEq(
-            IERC20(C.WETH).balanceOf(users[2]),
+            IERC20(WETH).balanceOf(users[2]),
             userCalcPlenty,
             "user balance not correct after claim"
         );
@@ -818,7 +818,7 @@ contract FloodTest is TestHelper {
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
             IERC20(BEAN),
-            IERC20(C.WETH),
+            IERC20(WETH),
             uint256(currentDeltaB)
         );
 
@@ -836,7 +836,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            WETH,
             51191151829696906017
         );
 

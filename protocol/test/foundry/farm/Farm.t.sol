@@ -21,7 +21,7 @@ contract FarmTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 100_000);
+        MockToken(WETH).mint(BEANSTALK, 100_000);
 
         farmers = createUsers(2);
         mintTokensToUsers(farmers, BEAN, 100_000e6);
@@ -96,7 +96,7 @@ contract FarmTest is TestHelper {
 
         farmCalls[1] = abi.encodeWithSelector(
             TokenFacet.transferToken.selector,
-            C.WETH,
+            WETH,
             C.PIPELINE,
             1e18,
             LibTransfer.From.INTERNAL,
@@ -107,7 +107,7 @@ contract FarmTest is TestHelper {
             BEAN_ETH_WELL,
             abi.encodeWithSelector(
                 IWell.swapFrom.selector,
-                C.WETH,
+                WETH,
                 BEAN,
                 1e18,
                 0,
@@ -119,7 +119,7 @@ contract FarmTest is TestHelper {
 
         deal(farmers[0], 1e18);
         vm.prank(C.PIPELINE);
-        IERC20(C.WETH).approve(BEAN_ETH_WELL, type(uint256).max);
+        IERC20(WETH).approve(BEAN_ETH_WELL, type(uint256).max);
 
         vm.prank(farmers[0]);
         bs.farm{value: 1e18}(farmCalls);

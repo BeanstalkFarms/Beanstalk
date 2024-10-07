@@ -1,7 +1,7 @@
 const { to18, to6 } = require("./utils/helpers.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { WETH, BEANSTALK, MAX_UINT256 } = require("./utils/constants");
-const { getWeth } = require("../../utils/contracts.js");
+const { L2_WETH, BEANSTALK, MAX_UINT256 } = require("./utils/constants");
+const { getL2Weth } = require("../../utils/contracts.js");
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
@@ -39,7 +39,7 @@ describe("Token", function () {
     await this.token2.connect(this.user).mint(this.user.address, "1000");
     await this.token2.connect(this.user).approve(beanstalk.address, to18("1000000000000000"));
 
-    this.weth = await getWeth();
+    this.weth = await getL2Weth();
     await this.weth.connect(this.user).approve(beanstalk.address, to18("1000000000000000"));
 
     const MockERC1155Token = await ethers.getContractFactory("MockERC1155");
@@ -639,7 +639,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("deposit WETH to external, not all", async function () {
@@ -650,7 +650,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("deposit WETH to external, not all, farm", async function () {
@@ -665,7 +665,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("withdraw WETH from external", async function () {
@@ -677,10 +677,10 @@ describe("Token", function () {
         to18("-0.999")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
-    it("deposit WETH to external", async function () {
+    it("deposit WETH to internal", async function () {
       const ethBefore = await ethers.provider.getBalance(this.user.address);
       await beanstalk.connect(this.user).wrapEth(to18("1"), INTERNAL, { value: to18("1") });
       expect(ethBefore.sub(await ethers.provider.getBalance(this.user.address))).to.be.within(
@@ -688,10 +688,10 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("1"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("1"));
     });
 
-    it("withdraw WETH from exteranl", async function () {
+    it("withdraw WETH from internal", async function () {
       await beanstalk.connect(this.user).wrapEth(to18("1"), INTERNAL, { value: to18("1") });
       const ethBefore = await ethers.provider.getBalance(this.user.address);
       await beanstalk.connect(this.user).unwrapEth(to18("1"), INTERNAL);
@@ -700,7 +700,7 @@ describe("Token", function () {
         to18("-0.999")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
   });
 
