@@ -268,10 +268,6 @@ const SwapForm: FC<
     [balanceIn, amountIn]
   );
 
-  useEffect(() => {
-    console.log(values.tokenOut);
-  }, [values.tokenOut]);
-
   /// Memoize to prevent infinite loop on useQuote
   const [resultOut, quotingOut, getAmountOut] = useQuoteWithParams<
     ISlippage,
@@ -308,6 +304,14 @@ const SwapForm: FC<
       setFieldValue('tokenOut.amount', undefined);
     }
   }, [amountOut, setFieldValue, amountIn]);
+
+  // If tokenIn or tokenOut changes, recalculate the user's desired input/output
+  useEffect(() => {
+    if (amountIn) {
+      getAmountOut(tokenIn, amountIn, quoterParams);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenIn, tokenOut]);
 
   //
   const handleInputFromMode = useCallback(
@@ -393,22 +397,8 @@ const SwapForm: FC<
       /// Flip destinations.
       setFieldValue('modeIn', modeOut);
       setFieldValue('modeOut', modeIn);
-    } else {
-      setFieldValue('tokensIn.0', {
-        token: tokenOut,
-        amount: amountOut,
-      });
-      setFieldValue('tokenOut.token', tokenIn);
     }
-  }, [
-    modeIn,
-    modeOut,
-    setFieldValue,
-    tokenIn,
-    tokenOut,
-    amountOut,
-    tokensMatch,
-  ]);
+  }, [modeIn, modeOut, setFieldValue, tokensMatch]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -438,14 +428,6 @@ const SwapForm: FC<
     },
     [setFieldValue, handleTokensEqual, tokenSelect, tokenIn, tokenOut]
   );
-
-  // If tokenIn or tokenOut changes, recalculate the user's desired input/output
-  useEffect(() => {
-    if (amountIn) {
-      getAmountOut(tokenIn, amountIn, quoterParams);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIn]);
 
   const handleMax = useCallback(() => {
     setFieldValue('tokensIn.0.amount', balanceInMax);
@@ -555,6 +537,7 @@ const SwapForm: FC<
                 />
               ),
             }}
+            outputOnlyMode
           />
           <FarmModeField
             name="modeOut"
@@ -848,7 +831,9 @@ function getBeanSwapOperation(
       "Input amount doesn't match quote. Please refresh the quote."
     );
   }
-  if (!quote.minBuyAmount.lt(amountOut.toNumber())) {
+  const formFmountOutTV = tokenOut.fromHuman(amountOut.toString());
+  if (!quote.buyAmount.eq(formFmountOutTV)) {
+    console.log(quote.minBuyAmount, amountOut.toNumber());
     throw new Error(
       "Output amount doesn't match quote. Please refresh the quote."
     );
