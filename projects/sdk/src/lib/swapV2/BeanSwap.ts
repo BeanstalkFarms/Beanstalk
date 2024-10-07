@@ -10,8 +10,11 @@ import { SwapNode, ERC20SwapNode } from "./nodes";
 export class BeanSwap {
   private static sdk: BeanstalkSDK;
 
+  readonly quoter: BeanSwapQuoter;
+
   constructor(sdk: BeanstalkSDK) {
     BeanSwap.sdk = sdk;
+    this.quoter = new BeanSwapQuoter(BeanSwap.sdk);
   }
 
   buildSwap(
@@ -24,6 +27,7 @@ export class BeanSwap {
   ) {
     return new BeanSwapOperation(
       BeanSwap.sdk,
+      this.quoter,
       inputToken,
       targetToken,
       recipient,
@@ -44,10 +48,10 @@ export interface BeanSwapNodeQuote {
   slippage: number;
 }
 
-class BeanSwapOperation {
+export class BeanSwapOperation {
   private static sdk: BeanstalkSDK;
 
-  #quoter: BeanSwapQuoter;
+  readonly quoter: BeanSwapQuoter;
 
   #builder: BeanSwapBuilder;
 
@@ -67,6 +71,7 @@ class BeanSwapOperation {
 
   constructor(
     sdk: BeanstalkSDK,
+    quoter: BeanSwapQuoter,
     inputToken: ERC20Token | NativeToken,
     targetToken: ERC20Token | NativeToken,
     recipient: string,
@@ -75,7 +80,7 @@ class BeanSwapOperation {
     toMode?: FarmToMode
   ) {
     BeanSwapOperation.sdk = sdk;
-    this.#quoter = new BeanSwapQuoter(BeanSwapOperation.sdk);
+    this.quoter = quoter;
     this.#builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
 
     this.inputToken = inputToken;
@@ -111,30 +116,57 @@ class BeanSwapOperation {
    * @param force - If true, the reserves and prices will be refreshed regardless of the time since the last refresh.
    */
   async refresh(force?: boolean) {
-    await this.#quoter.refresh(force);
+    await this.quoter.refresh(force);
   }
 
-  async estimate(amount: TokenValue, slippage: number) {
+  /**
+   * Estimates the swap based on the amount and slippage
+   * @param amount 
+   * @param slippage 
+   * @param force 
+   * @returns 
+   */
+  async estimateSwap(amount: TokenValue, slippage: number, force?: boolean) {
     if (amount.lte(0)) return;
 
-    if (this.#shouldFetchQuote(amount, slippage)) {
-      const routeNodes = await this.#quoter.route(this.inputToken, this.targetToken, amount, slippage);
-      this.#quoteData = this.#makeQuote(routeNodes, amount, slippage);
+    if (this.#shouldFetchQuote(amount, slippage) || force === true) {
+      this.#quoteData = await this.quoter.route(this.inputToken, this.targetToken, amount, slippage);
       this.#buildQuoteData();
+      await this.estimate();
     }
 
     return this.#quoteData;
   }
 
-  async estimateGas(amount: TokenValue, slippage: number): Promise<TokenValue> {
-    if (!this.#builder.advancedFarm.length || !this.#quoteData) {
-      throw new Error("Invalid swap configuration. Run estimate first.");
+  /**
+   * Runs estimate on the advanced farm workflow
+   */
+  async estimate() {
+    if (!this.#quoteData) {
+      throw new Error("Cannot estimate without quote data.");
+    };
+    return this.#builder.advancedFarm.estimate(this.#quoteData.sellAmount.toBigNumber());
+  }
+
+  async estimateGas(): Promise<TokenValue> {
+    // run estimate if not already done
+    if (!this.#builder.advancedFarm.length) {
+      await this.estimate();
     }
-    const gas = await this.#builder.advancedFarm.estimateGas(amount.toBigNumber(), { slippage: slippage });
+    if (!this.#builder.advancedFarm.length || !this.#quoteData) {
+      throw new Error("Invalid swap configuration. Cannot estimate gas.");
+    }
+    const gas = await this.#builder.advancedFarm.estimateGas(
+      this.#quoteData.sellAmount.toBigNumber(), { 
+        slippage: this.#quoteData.slippage 
+      });
     return TokenValue.fromBlockchain(gas, 0);
   }
 
   async execute(overrides: CallOverrides = {}) {
+    if (!this.#builder.advancedFarm.length) {
+      await this.estimate();
+    }
     if (!this.#builder.advancedFarm.length || !this.#quoteData) {
       throw new Error("Invalid swap configuration. Run estimate first.");
     }
@@ -158,22 +190,28 @@ class BeanSwapOperation {
     return true;
   }
 
-  #makeQuote( nodes: SwapNode[], sellAmount: TokenValue, slippage: number): BeanSwapNodeQuote {
-    const last = nodes?.[nodes.length - 1];
-    const data: BeanSwapNodeQuote = {
-      sellToken: this.inputToken,
-      buyToken: this.targetToken,
-      sellAmount,
-      buyAmount: last?.buyAmount ?? this.inputToken.fromHuman(0),
-      minBuyAmount: last?.buyAmount ?? this.targetToken.fromHuman(0),
-      slippage,
-      nodes: nodes as ReadonlyArray<SwapNode>
-    };
-
-    if (last && last instanceof ERC20SwapNode) {
-      data.minBuyAmount = last.minBuyAmount;
-    }
-
-    return data;
+  /**
+   * Build a swap operation w/ quote data via Beanswap.quoter.
+   * @param quoteData 
+   * @param caller 
+   * @param recipient 
+   * @param fromMode 
+   * @param toMode 
+   * @returns 
+   */
+  static buildWithQuote(quoteData: BeanSwapNodeQuote, caller: string, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode) {
+    const swap = new BeanSwapOperation(
+      BeanSwapOperation.sdk,
+      BeanSwapOperation.sdk.beanSwap.quoter,
+      quoteData.sellToken,
+      quoteData.buyToken,
+      caller, 
+      recipient,
+      fromMode,
+      toMode,
+    );
+    swap.#quoteData = quoteData;
+    swap.#buildQuoteData();
+    return swap;
   }
 }

@@ -12,6 +12,7 @@ import {
   WrapEthSwapNode,
 } from "./nodes";
 import { TokenValue } from "@beanstalk/sdk-core";
+import { TransferTokenNode } from "./nodes/TransferTokenNode";
 
 class Builder {
   private static sdk: BeanstalkSDK;
@@ -50,7 +51,13 @@ class Builder {
    * - The sellAmount in the first node is the amount to be sold
    * - The buyAmount in the last node is the amount to be bought
    */
-  translateNodesToWorkflow(nodes: readonly SwapNode[], initFromMode: FarmFromMode, finalToMode: FarmToMode, caller: string, recipient: string) {
+  translateNodesToWorkflow(
+    nodes: readonly SwapNode[], 
+    initFromMode: FarmFromMode, 
+    finalToMode: FarmToMode, 
+    caller: string, 
+    recipient: string
+  ) {
     this.#nodes = nodes;
 
     let fromMode = initFromMode;
@@ -73,6 +80,12 @@ class Builder {
       }
       if (isUnwrapEthNode(first)) {
         this.#advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
+        return;
+      }
+      if (isTransferTokenNode(first)) {
+        this.#advFarm.add(
+          first.buildStep({ fromMode, toMode, recipient, copySlot: undefined })
+        );
         return;
       }
     }
@@ -111,7 +124,7 @@ class Builder {
         fromMode = FarmFromMode.EXTERNAL;
         toMode = finalToMode;
 
-        this.#offloadPipeline(node, recipient, fromMode, toMode, i);
+        this.#offloadPipeline(node, recipient, fromMode, finalToMode, i);
         this.#advFarm.add(this.#advPipe);
 
         // // Add UnwrapETH if last action
@@ -287,5 +300,8 @@ const isERC20Node = (node: SwapNode): node is ERC20SwapNode => {
 const isWellNode = (node: SwapNode): node is WellSwapNode => {
   return node instanceof WellSwapNode;
 };
+const isTransferTokenNode = (node: SwapNode): node is TransferTokenNode => {
+  return node instanceof TransferTokenNode;
+}
 
 export { Builder as BeanSwapBuilder };

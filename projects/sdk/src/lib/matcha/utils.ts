@@ -58,7 +58,7 @@ export async function fetchWithBottleneckLimiter<T>(
   if (errors.length > 0) {
     console.error("Some requests failed:", errors);
     if (allowFailure === false) {
-      throw new Error("Swap requests failed:");
+      throw new Error("Swap requests failed. Check console for details.");
     }
   }
 

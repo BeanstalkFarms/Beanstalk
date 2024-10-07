@@ -5,7 +5,7 @@ import { fetchWithBottleneckLimiter, isRateLimitError } from "./utils";
 
 const RETRY_AFTER_MS = 200;
 
-const MAX_RETRY_COUNT = 10;
+const MAX_RETRY_COUNT = 3;
 
 type RequestParams = Omit<RequestInit, "headers" | "method">;
 
@@ -39,7 +39,7 @@ export class ZeroX {
    * Fetches quotes from the 0x API
    *
    * @note Utilizes Bottleneck limiter to prevent rate limiting.
-   * - In the case of a rate limit, it will retry until up to 10 times every 200ms.
+   * - In the case of a rate limit, it will retry until up to 3 times every 200ms.
    *
    * @param args - a single request or an array of requests
    * @param requestInit - optional request init params

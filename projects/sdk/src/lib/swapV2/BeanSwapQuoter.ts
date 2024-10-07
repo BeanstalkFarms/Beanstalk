@@ -10,9 +10,12 @@ import {
   ZeroXSwapNode,
   WrapEthSwapNode,
   SwapNode,
-  UnwrapEthSwapNode
+  UnwrapEthSwapNode,
+  ERC20SwapNode
 } from "./nodes";
 import { isERC20Token } from "src/utils/token";
+import { BeanSwapNodeQuote } from "./BeanSwap";
+import { TransferTokenNode } from "./nodes/TransferTokenNode";
 
 type WellsRouterSummary = {
   directRoute: WellSwapNode | undefined;
@@ -36,45 +39,50 @@ class WellsRouter {
 
   /**
    * Finds the best well routes for a given sellToken and buyToken (ONLY WELLS)
-   * @param sellToken 
-   * @param buyToken 
-   * @param amount 
-   * @param slippage 
+   * @param sellToken
+   * @param buyToken
+   * @param amount
+   * @param slippage
    * @returns undefined if no routes found
-   * 
+   *
    * routes: all routes.
-   * 
+   *
    * directRoute: Quickest route - Only 1 swap hop, but does not necessarily result in the most buyToken out.
-   * 
+   *
    * bestRoute: the route that results in the most buyToken out.
-   * 
+   *
    * How the best route is determined:
    * If we are selling BEAN for X:
    * 1. We perform a well.getSwapOut for all swappable wells in one advancedPipe call to fetch the amount out for each pair token.
    * 2. We sort the routes by the USD value of the amount out from the previous step in descending order.
-   * 
-   * If we are buying BEAN with X: 
+   *
+   * If we are buying BEAN with X:
    * 1. For Each swappable well:
    *    - Approximate a swap output between X & each pairToken via Quoter.approximate0xOut().
    *    - We fetch well.getSwapOut for each well in one advancedPipe call using the approximations as the sellAmount.
    * 2. Sort the routes by the amount of BEAN received in descending order.
-   * 
+   *
    * In the case where directRoute not defined or the best route !== directRoute, combine the best route w/ a non-well swap.
-   * 
+   *
    * For example, given: sellToken=BEAN, buyToken=WETH
    * - directRoute: BEAN -> WETH
    * - bestRoute: BEAN -> wstETH
    * - perform: BEAN -> wstETH -> WETH
-   * 
+   *
    * And vice versa. Given sellToken=WETH, buyToken=BEAN
    * - directRoute: WETH -> BEAN
    * - bestRoute: wstETH -> BEAN
    * - perform: WETH -> wstETH -> BEAN
-   * 
-   * The amounts for the routes that are not direct routes are approximations & make the assumption that the pool will give you a fair price. 
+   *
+   * The amounts for the routes that are not direct routes are approximations & make the assumption that the pool will give you a fair price.
    * Thus, it is important to re-compare the actual amounts out against the direct route after fetching from the swap API.
    */
-  async findWellRoutes(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<WellsRouterSummary | undefined> {
+  async findWellRoutes(
+    sellToken: ERC20Token,
+    buyToken: ERC20Token,
+    amount: TokenValue,
+    slippage: number
+  ): Promise<WellsRouterSummary | undefined> {
     if (!isERC20Token(sellToken) || !isERC20Token(buyToken)) {
       throw new Error("Invalid token types. Cannot quote well routes for non-erc20 tokens");
     }
@@ -86,10 +94,22 @@ class WellsRouter {
 
     const data = this.constructWellGetSwapOutPipeCalls(sellToken, amount, slippage);
     const results = await this.fetchWellGetSwapOutPipeCalls(data.pipeCalls);
-    
-    const routes = sellingBEAN 
-      ? this.decodeDirectWellPipeCalls(this.quoter.wellsWithReserves, results, sellToken, amount, slippage)
-      : this.decodeIndirectWellPipeCalls(this.quoter.wellsWithReserves, results, buyToken, data.swapApproximations, slippage);
+
+    const routes = sellingBEAN
+      ? this.decodeDirectWellPipeCalls(
+          this.quoter.wellsWithReserves,
+          results,
+          sellToken,
+          amount,
+          slippage
+        )
+      : this.decodeIndirectWellPipeCalls(
+          this.quoter.wellsWithReserves,
+          results,
+          buyToken,
+          data.swapApproximations,
+          slippage
+        );
 
     if (!routes.length) {
       return undefined;
@@ -103,17 +123,21 @@ class WellsRouter {
   /**
    * Constructs a summary of the routes found by the WellsRouter
    */
-  private makeSummary(routes: WellSwapNode[], sellToken: ERC20Token, buyToken: ERC20Token): WellsRouterSummary {
+  private makeSummary(
+    routes: WellSwapNode[],
+    sellToken: ERC20Token,
+    buyToken: ERC20Token
+  ): WellsRouterSummary {
     const sellingBEAN = this.isTokenBEAN(sellToken);
 
     const sortByBuyAmount = (a: WellSwapNode, b: WellSwapNode) => {
       return b.buyAmount.sub(a.buyAmount).toNumber();
-    }
+    };
     const sortByUsdOut = (a: WellSwapNode, b: WellSwapNode) => {
       const aUsd = this.quoter.priceCache.getTokenUsd(a.buyToken).mul(a.buyAmount);
       const bUsd = this.quoter.priceCache.getTokenUsd(b.buyToken).mul(b.buyAmount);
       return bUsd.sub(aUsd).toNumber();
-    }
+    };
 
     routes.sort(sellingBEAN ? sortByUsdOut : sortByBuyAmount);
 
@@ -127,12 +151,11 @@ class WellsRouter {
       bestRoute,
       directRoute,
       routes: routes
-    }
+    };
 
     WellsRouter.sdk.debug("[WellsRouter/makeSummary] bestRoute: ", bestRoute);
     WellsRouter.sdk.debug("[WellsRouter/makeSummary] directRoute: ", directRoute);
     WellsRouter.sdk.debug("[WellsRouter/makeSummary] routes: ", routes);
-
 
     return summary;
   }
@@ -142,7 +165,11 @@ class WellsRouter {
    * @returns pipeCalls: The AdvancedPipeCallStructs
    * @returns swapApproximations: The SwapApproximations for indirect routes
    */
-  private constructWellGetSwapOutPipeCalls(sellToken: ERC20Token, sellAmount: TokenValue, slippage: number) {
+  private constructWellGetSwapOutPipeCalls(
+    sellToken: ERC20Token,
+    sellAmount: TokenValue,
+    slippage: number
+  ) {
     const pipeCalls: AdvancedPipeCallStruct[] = [];
     const swapApproximations = new Map<Token, SwapApproximation>();
 
@@ -154,11 +181,11 @@ class WellsRouter {
         // construct well.getSwapOut pairToken -> BEAN
         const beanPair = well.getPairToken(WellsRouter.sdk.tokens.BEAN);
 
-        const approximation = !sellToken.equals(beanPair) 
+        const approximation = !sellToken.equals(beanPair)
           ? this.quoter.approximate0xOut(sellToken, beanPair, sellAmount, slippage)
-          : { 
-              maxBuyAmount: sellAmount, 
-              minBuyAmount: sellAmount 
+          : {
+              maxBuyAmount: sellAmount,
+              minBuyAmount: sellAmount
             };
 
         swapApproximations.set(beanPair, approximation);
@@ -168,7 +195,10 @@ class WellsRouter {
       }
     }
 
-    WellsRouter.sdk.debug("[WellsRouter/constructWellGetSwapOutPipeCalls] Swap Approximations: ", swapApproximations);
+    WellsRouter.sdk.debug(
+      "[WellsRouter/constructWellGetSwapOutPipeCalls] Swap Approximations: ",
+      swapApproximations
+    );
 
     return { pipeCalls, swapApproximations };
   }
@@ -178,14 +208,18 @@ class WellsRouter {
    * @param sellToken the token to sell
    * @param amount the amount of sellToken to sell
    */
-  private getSwapOutAdvancedPipeStruct(well: BasinWell, sellToken: ERC20Token, amount: TokenValue): AdvancedPipeCallStruct {
+  private getSwapOutAdvancedPipeStruct(
+    well: BasinWell,
+    sellToken: ERC20Token,
+    amount: TokenValue
+  ): AdvancedPipeCallStruct {
     const iWell = well.getContract().interface;
 
     return {
       target: well.address,
       callData: iWell.encodeFunctionData("getSwapOut", [
-        sellToken.address, 
-        well.getPairToken(sellToken).address, 
+        sellToken.address,
+        well.getPairToken(sellToken).address,
         amount.toBlockchain()
       ]),
       clipboard: Clipboard.encode([])
@@ -193,7 +227,7 @@ class WellsRouter {
   }
 
   /**
-   * 
+   *
    */
   private async fetchWellGetSwapOutPipeCalls(calls: AdvancedPipeCallStruct[]) {
     return await WellsRouter.sdk.contracts.beanstalk.callStatic.advancedPipe(calls, "0");
@@ -202,8 +236,14 @@ class WellsRouter {
   /**
    * Decodes the result of well.getSwapOut for sell BEAN routes.
    */
-  private decodeDirectWellPipeCalls(wells: BasinWell[], result: string[], sellToken: ERC20Token, sellAmount: TokenValue, slippage: number) {
-    return wells.map((well, i) => 
+  private decodeDirectWellPipeCalls(
+    wells: BasinWell[],
+    result: string[],
+    sellToken: ERC20Token,
+    sellAmount: TokenValue,
+    slippage: number
+  ) {
+    return wells.map((well, i) =>
       this.processDecodedWellGetSwapOut(well, sellToken, sellAmount, result[i], slippage)
     );
   }
@@ -211,7 +251,13 @@ class WellsRouter {
   /**
    * Decodes the result of well.getSwapOut for buy BEAN routes.
    */
-  private decodeIndirectWellPipeCalls(wells: BasinWell[], result: string[], buyToken: ERC20Token, sellAmounts: Map<Token, SwapApproximation>, slippage: number) {
+  private decodeIndirectWellPipeCalls(
+    wells: BasinWell[],
+    result: string[],
+    buyToken: ERC20Token,
+    sellAmounts: Map<Token, SwapApproximation>,
+    slippage: number
+  ) {
     const steps: WellSwapNode[] = [];
 
     for (const [i, well] of wells.entries()) {
@@ -220,7 +266,13 @@ class WellsRouter {
       if (!approximation) continue;
 
       steps.push(
-        this.processDecodedWellGetSwapOut(well, intermediateToken, approximation.minBuyAmount, result[i], slippage)
+        this.processDecodedWellGetSwapOut(
+          well,
+          intermediateToken,
+          approximation.minBuyAmount,
+          result[i],
+          slippage
+        )
       );
     }
 
@@ -230,7 +282,13 @@ class WellsRouter {
   /**
    * Processes the decoded result of well.getSwapOut into a WellSwapStep
    */
-  private processDecodedWellGetSwapOut(well: BasinWell, sellToken: ERC20Token, sellAmount: TokenValue, result: string, slippage: number) {
+  private processDecodedWellGetSwapOut(
+    well: BasinWell,
+    sellToken: ERC20Token,
+    sellAmount: TokenValue,
+    result: string,
+    slippage: number
+  ) {
     const buyToken = well.getPairToken(sellToken);
     const buyAmount = buyToken.fromBlockchain(this.decodeGetSwapOut(well, result));
     const minBuyAmount = buyAmount.subSlippage(slippage);
@@ -292,39 +350,57 @@ class Quoter {
     });
   }
 
-  async route(sellToken: ERC20Token | NativeToken, buyToken: ERC20Token | NativeToken, amount: TokenValue, slippage: number): Promise<SwapNode[]> {
+  async route(
+    sellToken: ERC20Token | NativeToken,
+    buyToken: ERC20Token | NativeToken,
+    amount: TokenValue,
+    slippage: number
+  ): Promise<BeanSwapNodeQuote> {
     const WETH = Quoter.sdk.tokens.WETH;
     const ETH = Quoter.sdk.tokens.ETH;
     const nodes: SwapNode[] = [];
-    
+
     const unwrapEthNode = new UnwrapEthSwapNode(Quoter.sdk);
     const wrapEthNode = new WrapEthSwapNode(Quoter.sdk);
 
     const sellingWETH = WETH.equals(sellToken);
     const buyingWETH = WETH.equals(buyToken);
-    
+
     const wrappingETH = sellToken.equals(ETH);
     const unwrappingETH = buyToken.equals(ETH);
-    
+
     await this.refresh();
+
+    if (isERC20Token(sellToken) && isERC20Token(buyToken)) {
+      if (sellToken.equals(buyToken)) {
+        const transferNode = new TransferTokenNode(Quoter.sdk, sellToken, buyToken);
+        transferNode.setFields({ sellAmount: amount });
+        return this.makeQuote([transferNode], sellToken, buyToken, amount, slippage);
+      }
+    }
 
     // ONLY WETH -> ETH
     if (sellingWETH && unwrappingETH) {
       unwrapEthNode.setFields({ sellAmount: amount });
-      return [unwrapEthNode];
+      return this.makeQuote([unwrapEthNode], sellToken, buyToken, amount, slippage);
     }
 
     // ETH -> X
     if (wrappingETH) {
       wrapEthNode.setFields({ sellAmount: amount });
-      // ONLY ETH -> WETH 
+      // ONLY ETH -> WETH
       if (buyingWETH) {
-        return [wrapEthNode];
+        return this.makeQuote([wrapEthNode], sellToken, buyToken, amount, slippage);
       }
       nodes.push(wrapEthNode);
     }
- 
-    const swapPath = await this.handleERC20OnlyQuote(sellToken, buyToken as ERC20Token, amount, slippage);
+
+    const swapPath = await this.handleERC20OnlyQuote(
+      sellToken,
+      buyToken as ERC20Token,
+      amount,
+      slippage
+    );
     nodes.push(...swapPath);
 
     if (unwrappingETH) {
@@ -333,10 +409,15 @@ class Quoter {
       nodes.push(unwrapEthNode);
     }
 
-    return nodes;
+    return this.makeQuote(nodes, sellToken, buyToken, amount, slippage);
   }
 
-  async handleERC20OnlyQuote(_sellToken: Token, _buyToken: Token, amount: TokenValue, slippage: number) {
+  private async handleERC20OnlyQuote(
+    _sellToken: Token,
+    _buyToken: Token,
+    amount: TokenValue,
+    slippage: number
+  ) {
     const sellToken = this.ensureERC20(_sellToken);
     const buyToken = this.ensureERC20(_buyToken);
 
@@ -352,7 +433,12 @@ class Quoter {
   /// ---------- NON-BEAN SWAP ---------- ///
 
   // TODO: Eventually provide Well1 => BEAN => Well2
-  async quoteNonBeanSwap(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<SwapNode[]> {
+  private async quoteNonBeanSwap(
+    sellToken: ERC20Token,
+    buyToken: ERC20Token,
+    amount: TokenValue,
+    slippage: number
+  ): Promise<SwapNode[]> {
     if (sellToken.equals(buyToken)) {
       throw new Error("Invalid swap path. SellToken and BuyToken cannot be the same");
     }
@@ -364,7 +450,7 @@ class Quoter {
   /// ---------- BEAN SWAP ---------- ///
 
   // prettier-ignore
-  async quoteBeanSwap(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<SwapNode[]> {
+  private async quoteBeanSwap(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<SwapNode[]> {
     const sellingBEAN = this.isTokenBEAN(sellToken);
     const buyingBEAN = this.isTokenBEAN(buyToken);
 
@@ -400,7 +486,11 @@ class Quoter {
    * - direct route: BEAN -> buyToken
    * - best route: BEAN -> otherToken -> buyToken
    */
-  private async finalizeSellBeansRoute(summary: WellsRouterSummary, buyToken: ERC20Token, slippage: number) {
+  private async finalizeSellBeansRoute(
+    summary: WellsRouterSummary,
+    buyToken: ERC20Token,
+    slippage: number
+  ) {
     const { directRoute, bestRoute } = summary;
 
     if (directRoute && directRoute === bestRoute) {
@@ -410,7 +500,7 @@ class Quoter {
 
     const zeroX = new ZeroXSwapNode(Quoter.sdk, bestRoute.buyToken, buyToken);
     await zeroX.quoteForward(bestRoute.buyAmount, slippage);
-  
+
     if (directRoute?.minBuyAmount.gt(zeroX.minBuyAmount)) {
       return [directRoute];
     }
@@ -423,7 +513,12 @@ class Quoter {
    * - direct route: sellToken -> BEAN
    * - best route: sellToken -> otherToken -> BEAN
    */
-  private async finalizeBuyBeansRoute(summary: WellsRouterSummary, sellToken: ERC20Token, sellAmount: TokenValue, slippage: number) {
+  private async finalizeBuyBeansRoute(
+    summary: WellsRouterSummary,
+    sellToken: ERC20Token,
+    sellAmount: TokenValue,
+    slippage: number
+  ) {
     const { directRoute, bestRoute } = summary;
 
     if (directRoute && directRoute === bestRoute) {
@@ -511,6 +606,31 @@ class Quoter {
 
   private isTokenBEAN(token: Token) {
     return Quoter.sdk.tokens.BEAN.equals(token);
+  }
+
+  private makeQuote(
+    nodes: SwapNode[],
+    sellToken: ERC20Token | NativeToken,
+    buyToken: ERC20Token | NativeToken,
+    sellAmount: TokenValue,
+    slippage: number
+  ): BeanSwapNodeQuote {
+    const last = nodes?.[nodes.length - 1];
+    const data: BeanSwapNodeQuote = {
+      sellToken,
+      buyToken,
+      sellAmount,
+      buyAmount: last?.buyAmount ?? sellToken.fromHuman(0),
+      minBuyAmount: last?.buyAmount ?? buyToken.fromHuman(0),
+      slippage,
+      nodes: nodes as ReadonlyArray<SwapNode>
+    };
+
+    if (last && last instanceof ERC20SwapNode) {
+      data.minBuyAmount = last.minBuyAmount;
+    }
+
+    return data;
   }
 }
 
