@@ -35,6 +35,7 @@ interface BaseTokenSeedGaugeQueryInfo {
 }
 
 export interface TokenSeedGaugeInfo extends BaseTokenSeedGaugeQueryInfo {
+  token: Token;
   /**
    * the current percentage of all BDV deposited in the silo
    */
@@ -187,8 +188,12 @@ const useSeedGauge = () => {
       if (values.isAllocatedGP) {
         totalRelevantBdv = totalRelevantBdv.plus(tokenTotalBdv);
       }
+      const token = sdk.tokens.findByAddress(address);
+      if (!token) return;
+
       map[address] = {
         ...tokenSettingMap[address],
+        token,
         totalBdv: tokenTotalBdv,
         currentPctDepositedBdv: ZERO_BN, // filler
       };
@@ -202,7 +207,7 @@ const useSeedGauge = () => {
     });
 
     return map;
-  }, [query.data?.tokenSettings, siloBals]);
+  }, [query.data?.tokenSettings, siloBals, sdk.tokens]);
 
   return useMemo(
     () => ({
