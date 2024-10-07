@@ -114,14 +114,12 @@ const SwapForm: FC<
   FormikProps<SwapFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
-    // handleQuote: DirectionalQuoteHandler;
     tokenList: (ERC20Token | NativeToken)[];
     defaultValues: SwapFormValues;
   }
 > = ({
   values,
   setFieldValue,
-  // handleQuote,
   isSubmitting,
   balances,
   beanstalk,
@@ -674,7 +672,8 @@ const SwapForm: FC<
 
 function useSwapTokens() {
   const sdk = useSdk();
-  return useMemo(() => [
+  return useMemo(
+    () => [
       sdk.tokens.BEAN,
       sdk.tokens.ETH,
       sdk.tokens.WETH,
@@ -683,7 +682,9 @@ function useSwapTokens() {
       sdk.tokens.WBTC,
       sdk.tokens.USDC,
       sdk.tokens.USDT,
-    ], [sdk.tokens]);
+    ],
+    [sdk.tokens]
+  );
 }
 
 const Swap: FC<{}> = () => {
@@ -697,8 +698,7 @@ const Swap: FC<{}> = () => {
     throw new Error('Sdk not initialized');
   }
 
-  /// Token List
-  const { tokenMap, tokenList } = useSwapTokens();
+  const tokenList = useSwapTokens();
 
   /// Farmer
   const farmerBalances = useFarmerBalances();
@@ -740,7 +740,10 @@ const Swap: FC<{}> = () => {
 
       try {
         middleware.before();
-        const { operation, tokenIn, tokenOut } = onSubmitValidate(values, account);
+        const { operation, tokenIn, tokenOut } = getBeanSwapOperation(
+          values,
+          account
+        );
 
         let gas;
         try {
@@ -758,7 +761,7 @@ const Swap: FC<{}> = () => {
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([refetchFarmerBalances()]);
+        await refetchFarmerBalances();
         txToast.success(receipt);
         // formActions.resetForm();
         formActions.setFieldValue('tokensIn.0', {
@@ -798,7 +801,6 @@ const Swap: FC<{}> = () => {
             beanstalk={beanstalk}
             tokenList={tokenList}
             defaultValues={initialValues}
-            // handleQuote={handleQuote}
             {...formikProps}
           />
         </>
@@ -809,8 +811,10 @@ const Swap: FC<{}> = () => {
 
 export default Swap;
 
-
-function onSubmitValidate(values: SwapFormValues, account: string | undefined) {
+function getBeanSwapOperation(
+  values: SwapFormValues,
+  account: string | undefined
+) {
   const stateIn = values.tokensIn[0];
   const stateOut = values.tokenOut;
   const quote = stateOut.beanSwapQuote;
@@ -830,10 +834,14 @@ function onSubmitValidate(values: SwapFormValues, account: string | undefined) {
     throw new Error("Can't swap without a quote.");
   }
   if (!tokenIshEqual(tokenIn, quote.sellToken)) {
-    throw new Error('Input token does not match quote. Please refresh the quote.');
+    throw new Error(
+      'Input token does not match quote. Please refresh the quote.'
+    );
   }
   if (!tokenIshEqual(tokenOut, quote.buyToken)) {
-    throw new Error('Output token does not match quote. Please refresh the quote.');
+    throw new Error(
+      'Output token does not match quote. Please refresh the quote.'
+    );
   }
   if (!quote.sellAmount.eq(amountIn.toNumber())) {
     throw new Error(
@@ -846,9 +854,7 @@ function onSubmitValidate(values: SwapFormValues, account: string | undefined) {
     );
   }
   if (quote.slippage !== formSlippage) {
-    throw new Error(
-      "Slippage doesn't match quote. Please refresh the quote."
-    );
+    throw new Error("Slippage doesn't match quote. Please refresh the quote.");
   }
 
   const operation = BeanSwapOperation.buildWithQuote(
@@ -859,5 +865,5 @@ function onSubmitValidate(values: SwapFormValues, account: string | undefined) {
     values.modeOut
   );
 
-  return { operation, tokenIn, tokenOut }
+  return { operation, tokenIn, tokenOut };
 }
