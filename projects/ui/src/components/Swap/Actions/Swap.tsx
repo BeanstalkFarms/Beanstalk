@@ -57,7 +57,7 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
-import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import { TokenInstance, useSwapTokens } from '~/hooks/beanstalk/useTokens';
 import useQuoteWithParams, {
   QuoteHandlerResultNew,
   QuoteHandlerWithParams,
@@ -654,23 +654,6 @@ const SwapForm: FC<
 };
 
 // ---------------------------------------------------
-
-function useSwapTokens() {
-  const sdk = useSdk();
-  return useMemo(
-    () => [
-      sdk.tokens.BEAN,
-      sdk.tokens.ETH,
-      sdk.tokens.WETH,
-      sdk.tokens.WSTETH,
-      sdk.tokens.WEETH,
-      sdk.tokens.WBTC,
-      sdk.tokens.USDC,
-      sdk.tokens.USDT,
-    ],
-    [sdk.tokens]
-  );
-}
 
 const Swap: FC<{}> = () => {
   /// Ledger

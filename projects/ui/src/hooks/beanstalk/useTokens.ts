@@ -111,6 +111,23 @@ export const useTokens = (): {
   }, [sdk]);
 };
 
+export const useSwapTokens = () => {
+  const sdk = useSdk();
+  return useMemo(
+    () => [
+      sdk.tokens.BEAN,
+      sdk.tokens.ETH,
+      sdk.tokens.WETH,
+      sdk.tokens.WSTETH,
+      sdk.tokens.WEETH,
+      sdk.tokens.WBTC,
+      sdk.tokens.USDC,
+      sdk.tokens.USDT,
+    ],
+    [sdk.tokens]
+  );
+};
+
 /**
  * @returns all beanstalk tokens from the SDK STALK, SEEDS, SPROUTS, rSPROUTS, PODS
  */
@@ -228,15 +245,8 @@ export const useSupportedBalanceTokens = () => {
 export const useNonWellLPERC20Tokens = () => {
   const sdk = useSdk();
 
-  return useMemo(() => {
-    
-    
-
-    
-
-
-  }, []);
-}
+  return useMemo(() => {}, []);
+};
 
 /**
  * Sort the whitelist by

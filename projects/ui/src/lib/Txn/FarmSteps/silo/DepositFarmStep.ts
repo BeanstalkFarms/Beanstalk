@@ -34,7 +34,10 @@ import { makeLocalOnlyStep } from '~/lib/Txn/util';
  */
 
 export class DepositFarmStep extends FarmStep {
-  constructor(_sdk: BeanstalkSDK, private _target: ERC20Token) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _target: ERC20Token
+  ) {
     super(_sdk);
     this._target = _target;
   }
@@ -185,6 +188,15 @@ export class DepositFarmStep extends FarmStep {
     if (!account) {
       throw new Error('Signer required');
     }
+
+    const isTargetBEAN = target.equals(sdk.tokens.BEAN);
+    const isInputBEAN = tokenIn.equals(sdk.tokens.BEAN);
+
+    if (isTargetBEAN && isInputBEAN) {
+      return amountIn;
+    }
+
+    const quoter = sdk.beanSwap.quoter;
 
     const deposit = sdk.silo.buildDeposit(target, account);
     deposit.setInputToken(tokenIn, fromMode);

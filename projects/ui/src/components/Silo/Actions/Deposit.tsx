@@ -4,6 +4,7 @@ import { Formik, FormikHelpers, FormikProps } from 'formik';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
 import {
+  BeanSwapNodeQuote,
   ERC20Token,
   FarmFromMode,
   FarmToMode,
@@ -14,7 +15,8 @@ import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   BalanceFromFragment,
   ClaimBeansFormState,
-  FormStateNew,
+  FormApprovingStateNew,
+  FormTokenStateNew,
   FormTxnsFormState,
   SettingInput,
   TxnSettings,
@@ -57,14 +59,24 @@ import ClaimBeanDrawerContent from '~/components/Common/Form/FormTxn/ClaimBeanDr
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
-import useMigrationNeeded from '~/hooks/farmer/useMigrationNeeded';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 import { selectBdvPerToken } from '~/state/beanstalk/silo';
 
 // -----------------------------------------------------------------------
 
-type DepositFormValues = FormStateNew &
+interface IBeanSwapQuote {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+}
+
+type FormTokenStateWithQuote = FormTokenStateNew & IBeanSwapQuote;
+
+interface FormState {
+  tokens: FormTokenStateWithQuote[];
+  approving?: FormApprovingStateNew;
+}
+
+type DepositFormValues = FormState &
   FormTxnsFormState &
   BalanceFromFragment & {
     settings: {
@@ -108,9 +120,36 @@ const DepositForm: FC<
   setFieldValue,
 }) => {
   const sdk = useSdk();
+  const account = useAccount();
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
   const getLegacyToken = useGetLegacyToken();
+
+  /// Handlers
+  // This handler does not run when _tokenIn = _tokenOut (direct deposit)
+  const quoterHandler = useCallback<
+    QuoteHandlerWithParams<DepositQuoteHandler>
+  >(
+    async (tokenIn, _amountIn, tokenOut, { fromMode }) => {
+      if (!account) {
+        throw new Error('Wallet connection required.');
+      }
+
+      // const swap = await sdk.beanSwap.quoter.route(tokenIn, tokenOut, tokenIn.amount(_amountIn.toString()), 0.1);
+
+      const amountOut = await DepositFarmStep.getAmountOut(
+        sdk,
+        account,
+        tokenIn,
+        tokenIn.amount(_amountIn.toString()),
+        tokenOut, // whitelisted silo token
+        fromMode
+      );
+
+      return tokenValueToBN(amountOut);
+    },
+    [account, sdk]
+  );
 
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
@@ -122,7 +161,6 @@ const DepositForm: FC<
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
 
-  const migrationNeeded = useMigrationNeeded();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const [getAmountsBySource] = useGetBalancesUsedBySource({
     tokens: values.tokens,
@@ -230,14 +268,10 @@ const DepositForm: FC<
               handleQuote={handleQuote}
               balanceFrom={values.balanceFrom}
               params={quoteProviderParams}
-              // FIXME: remove later
-              disabled={migrationNeeded}
             />
           );
         })}
-        {migrationNeeded === true ? null : (
-          <ClaimBeanDrawerToggle actionText="Deposit" />
-        )}
+        {false && <ClaimBeanDrawerToggle actionText="Deposit" />}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -290,7 +324,7 @@ const DepositForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || noAmount || migrationNeeded === true}
+          disabled={isSubmitting || noAmount}
           type="submit"
           variant="contained"
           color="primary"
@@ -327,30 +361,10 @@ const DepositPropProvider: FC<{
   const sdk = useSdk();
   const account = useAccount();
 
-  /// FIXME: name
-  /// FIXME: finish deposit functionality for other tokens
   const middleware = useFormMiddleware();
   const { txnBundler, refetch } = useFormTxnContext();
 
-  // BS3TODO: Add other tokens when swap is complete
-  const initTokenList = useMemo(() => {
-    const tokens = sdk.tokens;
-    if (tokens.BEAN.equals(whitelistedToken)) {
-      return [sdk.tokens.BEAN];
-    }
-    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
-    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
-  }, [sdk, whitelistedToken]);
-
-  // BS3TODO: Add other tokens when swap is complete
-  const priorityList = useMemo(() => {
-    const tokens = sdk.tokens;
-    if (tokens.BEAN.equals(whitelistedToken)) {
-      return [tokens.BEAN];
-    }
-    const pool = sdk.pools.getPoolByLPToken(whitelistedToken);
-    return [sdk.tokens.BEAN, whitelistedToken, ...(pool?.underlying || [])];
-  }, [sdk, whitelistedToken]);
+  const { initTokenList, priorityList } = useDepositTokens(whitelistedToken);
 
   const allAvailableTokens = useTokenMap(initTokenList);
   const priorityListTokens = useTokenMap(priorityList);
@@ -398,6 +412,7 @@ const DepositPropProvider: FC<{
           amount: undefined,
           quoting: false,
           amountOut: undefined,
+          beanSwapQuote: undefined,
         },
       ],
       balanceFrom: BalanceFrom.TOTAL,
@@ -424,6 +439,8 @@ const DepositPropProvider: FC<{
       if (!account) {
         throw new Error('Wallet connection required.');
       }
+
+      // const swap = await sdk.beanSwap.quoter.route(tokenIn, tokenOut, tokenIn.amount(_amountIn.toString()), 0.1);
 
       const amountOut = await DepositFarmStep.getAmountOut(
         sdk,
@@ -589,6 +606,65 @@ const Deposit: FC<{
 );
 
 export default Deposit;
+
+function useDepositTokens(whitelistedToken: ERC20Token) {
+  const sdk = useSdk();
+
+  const initTokenList = useMemo(() => {
+    const tokens = sdk.tokens;
+    if (tokens.BEAN.equals(whitelistedToken)) {
+      return [
+        tokens.BEAN,
+        tokens.ETH,
+        tokens.WETH,
+        tokens.WSTETH,
+        tokens.WBTC,
+        tokens.WEETH,
+        tokens.USDC,
+        tokens.USDT,
+      ];
+    }
+    return [
+      tokens.BEAN,
+      tokens.ETH,
+      tokens.WETH,
+      tokens.WSTETH,
+      whitelistedToken,
+      tokens.WBTC,
+      tokens.WEETH,
+      tokens.USDC,
+      tokens.USDT,
+    ];
+  }, [sdk.tokens, whitelistedToken]);
+
+  const priorityList = useMemo(() => {
+    const tokens = sdk.tokens;
+    if (tokens.BEAN.equals(whitelistedToken)) {
+      return [
+        tokens.BEAN,
+        tokens.ETH,
+        tokens.WETH,
+        tokens.WSTETH,
+        tokens.WBTC,
+        tokens.WEETH,
+        tokens.USDC,
+        tokens.USDT,
+      ];
+    }
+    return [
+      whitelistedToken,
+      tokens.ETH,
+      tokens.WETH,
+      tokens.WSTETH,
+      tokens.BEAN,
+      tokens.DAI,
+      tokens.USDC,
+      tokens.USDT,
+    ];
+  }, [sdk.tokens, whitelistedToken]);
+
+  return { initTokenList, priorityList };
+}
 
 // leaving as reference for any deposit w/o claim & do x
 // const farmDeposit = sdk.silo.buildDeposit(target, account);
