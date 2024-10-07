@@ -303,6 +303,7 @@ export class ZeroXSwapNode extends ERC20SwapNode {
 
 interface WellSyncSwapBuildParams extends WellSwapBuildParams {
   recipient: string;
+  transfer: boolean;
 }
 
 export class WellSyncSwapNode extends ERC20SwapNode {
@@ -342,11 +343,13 @@ export class WellSyncSwapNode extends ERC20SwapNode {
     ).then((result) => this.buyToken.fromBlockchain(result));
 
     const minBuyAmount = buyAmount.subSlippage(this.slippage);
+
     this.setFields({ buyAmount, minBuyAmount });
+
     return this;
   }
 
-  buildStep({ copySlot, recipient }: WellSyncSwapBuildParams): (StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>)[] {
+  buildStep({ copySlot, recipient, transfer }: WellSyncSwapBuildParams): (StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>)[] {
     this.validateAll();
 
     const transferToken: StepFunction<AdvancedPipePreparedResult> = (_amountInStep, runContext) => {
@@ -377,6 +380,10 @@ export class WellSyncSwapNode extends ERC20SwapNode {
       recipient
     );
 
+    if (!transfer) {
+      return [sync];
+    };
+
     return [transferToken, sync];
   }
 
@@ -387,7 +394,7 @@ export class WellSyncSwapNode extends ERC20SwapNode {
     }
 
     if (!this.well.tokens.some((token) => token.equals(this.sellToken))) {
-      throw this.makeErrorWithContext(`Invalid token Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`);
+      throw this.makeErrorWithContext(`Invalid Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`);
     }
   }
 }

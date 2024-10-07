@@ -121,7 +121,8 @@ class Builder {
         } else if (isWellSyncNode(node)) {
           step = node.buildStep({ 
             copySlot: this.#getPrevNodeCopySlot(i),  
-            recipient: Builder.sdk.contracts.pipeline.address
+            recipient: Builder.sdk.contracts.pipeline.address,
+            transfer: true
           });
         } else {
           throw new Error("Error building swap: Unknown SwapNode type.");
