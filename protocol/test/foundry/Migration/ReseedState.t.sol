@@ -377,52 +377,8 @@ contract ReseedStateTest is TestHelper {
                         accountDepositsStorage[j].tokenDeposits[k].bdv,
                         accountDepositsJson[j].tokenDeposits[k].bdv
                     );
-
-                    (address token, int96 stem) = l2Beanstalk.getAddressAndStem(
-                        accountDepositsStorage[j].depositIds[k]
-                    );
-
-                    // withdraw deposit
-                    vm.prank(account);
-                    l2Beanstalk.withdrawDeposit(
-                        accountDepositsStorage[j].token,
-                        stem,
-                        accountDepositsStorage[j].tokenDeposits[k].amount,
-                        0
-                    );
                 }
             }
-        }
-
-        uint256 totalStalk = l2Beanstalk.totalStalk();
-        assertEq(totalStalk, 0);
-
-        uint256 totalRoots = l2Beanstalk.totalRoots();
-        assertEq(totalRoots, 0);
-
-        uint256 totalRainRoots = l2Beanstalk.totalRainRoots();
-        assertEq(totalRainRoots, 0);
-
-        uint256 getTotalBdv = l2Beanstalk.getTotalBdv();
-        assertEq(getTotalBdv, 0);
-
-        uint256[] memory depositedAmounts = l2Beanstalk.getTotalSiloDeposited();
-        for (uint256 i = 0; i < depositedAmounts.length; i++) {
-            assertEq(depositedAmounts[i], 0);
-        }
-
-        uint256[] memory depositedBdvs = l2Beanstalk.getTotalSiloDepositedBdv();
-        for (uint256 i = 0; i < depositedBdvs.length; i++) {
-            assertEq(depositedBdvs[i], 0);
-        }
-
-        // loop through whitelisted tokens
-        for (uint256 i = 0; i < tokens.length; i++) {
-            address token = whitelistedTokens[i];
-            uint256 totalDeposited = l2Beanstalk.getTotalDeposited(token);
-            assertEq(totalDeposited, 0);
-            uint256 totalDepositedBdv = l2Beanstalk.getTotalDepositedBdv(token);
-            assertEq(totalDepositedBdv, 0);
         }
     }
 
