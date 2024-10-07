@@ -6,7 +6,7 @@ function parseExternalHolders(inputFilePath, outputFilePath, contractAccounts) {
     const rows = data.trim().split("\n");
     const result = rows
       .map((row) => row.split(",")) // Split each row by comma to get [address, balance]
-      .filter(([address]) => !contractAccounts.includes(address)) // Exclude contract accounts
+      .filter(([address]) => !contractAccounts.includes(address.toLowerCase())) // Exclude contract accounts, convert all to lowercase for comparison
       .map(([address, balance]) => [address.trim(), balance.trim()]); // Trim any excess spaces
     // Write the result to the output file as JSON
     // Remove the first entry in the array as it is the header

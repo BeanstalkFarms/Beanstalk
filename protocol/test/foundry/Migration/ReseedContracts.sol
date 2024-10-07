@@ -26,6 +26,8 @@ contract L1ReceiverFacetTest is Order, TestHelper {
     address constant L2URBEAN = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
     address constant L2URLP = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
 
+    uint256 constant ARBITRUM_MAX_GAS_PER_TX = 30_000_000;
+
     string constant CONTRACT_ADDRESSES_PATH =
         "./scripts/beanstalk-3/data/inputs/ContractAddresses.txt";
     uint256 constant CONTRACT_ADDRESSES_LENGTH = 47; // should be the number of lines in the file above
@@ -51,10 +53,11 @@ contract L1ReceiverFacetTest is Order, TestHelper {
     }
 
     /**
-     * @notice validates that an account verification works, with the correct data.
+     * @notice validates that an all contract owned deposits can be migrated
      */
     function test_L2MigrateAllDeposits() public {
         // loop through all contracts that have deposits
+        uint256 highestGas = 0;
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
@@ -73,9 +76,26 @@ contract L1ReceiverFacetTest is Order, TestHelper {
                 continue;
             }
 
+            // Start gas metering for each specific withdrawal
+            vm.resumeGasMetering();
+            uint256 gasStart = gasleft();
+
             vm.prank(RECIEVER);
             L1ReceiverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
+
+            uint256 gasUsed = gasStart - gasleft();
+            if (gasUsed > highestGas) {
+                highestGas = gasUsed;
+            }
+            vm.pauseGasMetering();
+            // make sure no withdrawal uses too much gas
+            assertLt(
+                gasUsed,
+                ARBITRUM_MAX_GAS_PER_TX,
+                "issueDeposits exceeded Arbitrum's gas limit"
+            );
         }
+        console.log("Highest gas used for issueDeposits:", highestGas);
     }
 
     function test_L2MigrateAllPlots() public {

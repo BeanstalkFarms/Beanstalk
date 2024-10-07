@@ -1,7 +1,8 @@
 const fs = require("fs");
 const { convertToBigNum } = require("../../utils/read.js");
+const { BigNumber } = require("ethers");
 
-function parseGlobals(inputFilePath, outputFilePath) {
+function parseGlobals(inputFilePath, outputFilePath, smartContractStalk, smartContractRoots) {
   const data = JSON.parse(fs.readFileSync(inputFilePath, "utf8"));
 
   // Sort silo tokens alphabetically
@@ -40,9 +41,9 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.fert?.leftoverBeans ? convertToBigNum(data.fert.leftoverBeans) : "0"
     ],
     // Silo
-    [
-      data.silo?.stalk ? convertToBigNum(data.silo.stalk) : "0",
-      data.silo?.roots ? convertToBigNum(data.silo.roots) : "0",
+    [ // subtract stalk and roots from smart contract accounts from globals, until they have migrated
+      data.silo?.stalk ? BigNumber.from(data.silo.stalk).sub(smartContractStalk).toString() : "0",
+      data.silo?.roots ? BigNumber.from(data.silo.roots).sub(smartContractRoots).toString() : "0",
       data.silo?.earnedBeans ? convertToBigNum(data.silo.earnedBeans) : "0",
       data.orderLockedBeans ? convertToBigNum(data.orderLockedBeans) : "0",
       // all silo tokens
@@ -91,7 +92,6 @@ function parseGlobals(inputFilePath, outputFilePath) {
     [
       data.season?.current ? convertToBigNum(data.season.current) : "0",
       data.season?.lastSop ? convertToBigNum(data.season.lastSop) : "0",
-      data.season?.withdrawSeasons ? convertToBigNum(data.season.withdrawSeasons) : "0",
       data.season?.lastSopSeason ? convertToBigNum(data.season.lastSopSeason) : "0",
       data.season?.rainStart ? convertToBigNum(data.season.rainStart) : "0",
       !!data.season?.raining,
@@ -129,52 +129,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
       data.rain?.roots ? convertToBigNum(data.rain.roots) : "0",
       Array(4).fill("0x0000000000000000000000000000000000000000000000000000000000000000")
     ],
-    // seedGaugeSettings
-    // [
-    //   data.seedGaugeSettings?.maxBeanMaxLpGpPerBdvRatio
-    //     ? convertToBigNum(data.seedGaugeSettings.maxBeanMaxLpGpPerBdvRatio)
-    //     : "0",
-    //   data.seedGaugeSettings?.minBeanMaxLpGpPerBdvRatio
-    //     ? convertToBigNum(data.seedGaugeSettings.minBeanMaxLpGpPerBdvRatio)
-    //     : "0",
-    //   data.seedGaugeSettings?.targetSeasonsToCatchUp
-    //     ? convertToBigNum(data.seedGaugeSettings.targetSeasonsToCatchUp)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateOptimal
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateOptimal)
-    //     : "0",
-    //   data.seedGaugeSettings?.podRateUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.podRateUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.deltaPodDemandLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.deltaPodDemandUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.deltaPodDemandUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioUpperBound
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioUpperBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioOptimal
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioOptimal)
-    //     : "0",
-    //   data.seedGaugeSettings?.lpToSupplyRatioLowerBound
-    //     ? convertToBigNum(data.seedGaugeSettings.lpToSupplyRatioLowerBound)
-    //     : "0",
-    //   data.seedGaugeSettings?.excessivePriceThreshold
-    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-    //     : "0",
-    //   data.seedGaugeSettings?.soilCoefficientHigh
-    //     ? convertToBigNum(data.seedGaugeSettings.soilCoefficientHigh)
-    //     : "0",
-    //   data.seedGaugeSettings?.baseReward ? convertToBigNum(data.seedGaugeSettings.baseReward) : "0",
-    //   data.seedGaugeSettings?.excessivePriceThreshold
-    //     ? convertToBigNum(data.seedGaugeSettings.excessivePriceThreshold)
-    //     : "0"
-    // ],
+    // Evaluation Parameters
     [
       "100000000000000000000",
       "50000000000000000000",
@@ -195,7 +150,7 @@ function parseGlobals(inputFilePath, outputFilePath) {
     // ShipmentRoute
     data.shipmentRoutes.length
       ? data.shipmentRoutes.map((route) => [
-          route.planContract || "0x0000000000000000000000000000000000000000",
+          "0x555555987d98079b9f43CDcDBD52DbB24FfEEef5", // l2 shipment planner
           route.planSelector || "0x00000000",
           route.recipient ? convertToBigNum(route.recipient) : "0",
           route.data || "0x"

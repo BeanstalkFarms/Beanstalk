@@ -7,7 +7,8 @@ const {
   USDC,
   FERTILIZER,
   PRICE,
-  WETH
+  WETH,
+  L2_WETH
 } = require("../test/hardhat/utils/constants");
 
 async function getBeanstalk(contract = BEANSTALK) {
@@ -37,6 +38,10 @@ async function getWeth() {
   return await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", WETH);
 }
 
+async function getL2Weth() {
+  return await ethers.getContractAt("contracts/interfaces/IWETH.sol:IWETH", L2_WETH);
+}
+
 async function getUsdc() {
   return await ethers.getContractAt("IBean", USDC);
 }
@@ -52,6 +57,7 @@ async function getFertilizer() {
 exports.getBeanstalk = getBeanstalk;
 exports.getBean = getBean;
 exports.getWeth = getWeth;
+exports.getL2Weth = getL2Weth;
 exports.getUsdc = getUsdc;
 exports.getPrice = getPrice;
 exports.getBeanstalkAdminControls = getBeanstalkAdminControls;

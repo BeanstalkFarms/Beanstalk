@@ -2,6 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 const { retryOperation } = require("../utils/read.js");
+const { L2_RESEED_FIELD } = require("../test/hardhat/utils/constants.js");
 
 async function reseed3(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -17,10 +18,8 @@ async function reseed3(account, L2Beanstalk, mock, verbose = false) {
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
-  targetEntriesPerChunk = 500;
+  targetEntriesPerChunk = 300;
   plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
-  const InitFacet = await (await ethers.getContractFactory("ReseedField", account)).deploy();
-  await InitFacet.deployed();
   console.log(`Starting to process ${plotChunks.length} chunks...`);
   for (let i = 0; i < plotChunks.length; i++) {
     await updateProgress(i + 1, plotChunks.length);
@@ -33,7 +32,7 @@ async function reseed3(account, L2Beanstalk, mock, verbose = false) {
         diamondAddress: L2Beanstalk,
         facetNames: [],
         initFacetName: "ReseedField",
-        initFacetAddress: InitFacet.address,
+        initFacetAddress: L2_RESEED_FIELD,
         initArgs: [plotChunks[i]],
         bip: false,
         verbose: verbose,
