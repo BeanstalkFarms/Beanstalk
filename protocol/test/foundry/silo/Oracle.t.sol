@@ -408,7 +408,7 @@ contract OracleTest is TestHelper {
         // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            WETH,
+            L1_WETH,
             IMockFBeanstalk.Implementation(
                 ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
                 bytes4(0),
@@ -434,7 +434,7 @@ contract OracleTest is TestHelper {
         // in the case of AAVE/ETH, eth is the token that needs to be looked up against chainlink
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            WETH,
+            L1_WETH,
             IMockFBeanstalk.Implementation(
                 ETH_USD_CHAINLINK_PRICE_AGGREGATOR, // note this is using eth instead of weth
                 bytes4(0),

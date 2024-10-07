@@ -13,7 +13,7 @@ import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibBalance} from "contracts/libraries/Token/LibBalance.sol";
 import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
-import {LibWeth} from "contracts/beanstalk/migration/L1Libraries/LibWeth.sol";
+import {LibWeth} from "contracts/libraries/Token/LibWeth.sol";
 
 /**
  * @title Mock Attack Facet
