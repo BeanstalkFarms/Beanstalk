@@ -8,13 +8,14 @@ import { CallOverrides } from "ethers";
 import { SwapNode, ERC20SwapNode } from "./nodes";
 
 export class BeanSwap {
-  private static sdk: BeanstalkSDK;
+  static sdk: BeanstalkSDK;
 
   readonly quoter: BeanSwapQuoter;
 
   constructor(sdk: BeanstalkSDK) {
     BeanSwap.sdk = sdk;
     this.quoter = new BeanSwapQuoter(BeanSwap.sdk);
+    BeanSwapOperation.sdk = sdk;
   }
 
   buildSwap(
@@ -49,7 +50,7 @@ export interface BeanSwapNodeQuote {
 }
 
 export class BeanSwapOperation {
-  private static sdk: BeanstalkSDK;
+  static sdk: BeanstalkSDK;
 
   readonly quoter: BeanSwapQuoter;
 
@@ -201,8 +202,8 @@ export class BeanSwapOperation {
    */
   static buildWithQuote(quoteData: BeanSwapNodeQuote, caller: string, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode) {
     const swap = new BeanSwapOperation(
-      BeanSwapOperation.sdk,
-      BeanSwapOperation.sdk.beanSwap.quoter,
+      BeanSwap.sdk,
+      BeanSwap.sdk.beanSwap.quoter,
       quoteData.sellToken,
       quoteData.buyToken,
       caller, 
