@@ -241,7 +241,6 @@ const useTableConfig = (
         const ratio = gaugeInfo.gaugePoints.div(totalGaugePoints);
 
         prev.push({
-          token,
           ...gaugeInfo,
           gaugePointRatio: totalGaugePoints.gt(0) ? ratio : ZERO_BN,
         });
@@ -267,7 +266,7 @@ const ExpectedSeedRewardDirection = (row: ISeedGaugeRow) => {
   // seed rewards don't increase if every well has all gauge points
   const maxed = row.gaugePointRatio.eq(1);
 
-  if (!row.gaugePoints || row.gaugePoints.lte(0) || optimal || maxed) {
+  if (!row.gaugePoints || row.gaugePoints.lt(0) || optimal || maxed) {
     return null;
   }
 
@@ -377,8 +376,6 @@ const SeedGaugeTable = ({
   data: ReturnType<typeof useSeedGauge>['data'];
   onToggleAdvancedMode: (v: boolean) => void;
 }) => {
-
-  console.log('data', data);
   const [isAdvanced, setIsAdvanced] = useState(false);
   const rows = useTableConfig(isAdvanced, data);
   const cols = isAdvanced ? advancedViewColumns : basicViewColumns;

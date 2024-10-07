@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { multicall } from '@wagmi/core';
 import { useQuery } from '@tanstack/react-query';
-import { Token } from '@beanstalk/sdk';
+import { ERC20Token, Token } from '@beanstalk/sdk';
 import { BigNumber as BigNumberJS } from 'bignumber.js';
 import { BigNumber as BigNumberEthers } from 'ethers';
 
@@ -35,7 +35,7 @@ interface BaseTokenSeedGaugeQueryInfo {
 }
 
 export interface TokenSeedGaugeInfo extends BaseTokenSeedGaugeQueryInfo {
-  token: Token;
+  token: ERC20Token;
   /**
    * the current percentage of all BDV deposited in the silo
    */
@@ -193,7 +193,7 @@ const useSeedGauge = () => {
 
       map[address] = {
         ...tokenSettingMap[address],
-        token,
+        token: token as ERC20Token,
         totalBdv: tokenTotalBdv,
         currentPctDepositedBdv: ZERO_BN, // filler
       };
