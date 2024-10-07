@@ -36,7 +36,8 @@ const {
   PUBLIUS,
   BEAN_ETH_WELL,
   BCM,
-  L2_BCM
+  L2_BCM,
+  L2_BEANSTALK
 } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
@@ -155,6 +156,40 @@ task("reseedL2", async () => {
     l2owner: l2bcm,
     setState: true
   });
+});
+
+// deploys the L1RecieverFacet with updated merkle roots.
+// To be done after pausing of beanstalk.
+// After deployment, copy the address of the new L1RecieverFacet and update reseed10.js.
+task("deployL1ReceiverFacet", async function () {
+  const mock = true;
+  let deployer;
+  if (mock) {
+    deployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+    await mintEth(deployer.address);
+  } else {
+    deployer = new ethers.Wallet(process.env.DIAMOND_DEPLOYER_PK, ethers.provider);
+    console.log("Deployer address: ", deployer.getAddress());
+  }
+
+  const L1ReceiverFacet = await ethers.getContractFactory("L1ReceiverFacet", {
+    libraries: { // deployed libraries on arb
+      LibSilo: "0xdDe5EF030cC400EF2Ea7c37f0819b59217F6bb34",
+      LibTokenSilo: "0x6C5860E9Fc6B35cfe3C98A4f5Aa686C7cf9F7981"
+    }
+  });
+  const l1ReceiverFacet = await L1ReceiverFacet.deploy();
+  await l1ReceiverFacet.deployed();
+  console.log("L1ReceiverFacet deployed to:", l1ReceiverFacet.address);
+  console.log("Please update reseed10.js with the new L1ReceiverFacet address.");
+});
+
+// Performs the final reseed step, adding all facets to the beanstalk diamond.
+// Used to verify state prior to running the foundry tests after the reseed scripts.
+task("addFacetsToDiamond", async function () {
+  let l2Owner = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+  await mintEth(l2Owner.address);
+  await reseed10(l2Owner, L2_BEANSTALK, true);
 });
 
 // example usage:

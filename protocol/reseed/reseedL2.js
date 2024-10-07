@@ -35,7 +35,7 @@ async function reseedL2({
   end = 11,
   setState = true,
   addLiquidity = true,
-  verbose = false,
+  verbose = false
 }) {
   if (convertData) parseBeanstalkData();
   // delete prev gas report
@@ -99,21 +99,30 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
+  const BLOCK_NUMBER = 20895000;
   // Read contract addresses to exclude them from the reseed
-  const contractAccounts = fs
-    .readFileSync("./scripts/beanstalk-3/data/inputs/ContractAddresses.txt", "utf8")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  const BLOCK_NUMBER = 20736200;
+  const contractAccountsJson = JSON.parse(
+    fs.readFileSync(`./reseed/data/exports/contract-accounts${BLOCK_NUMBER}.json`, "utf8")
+  );
+  // Convert all the items in the array to lowercase for comparison
+  const contractAccounts = contractAccountsJson.map((address) => address.toLowerCase());
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storageSystemPath = `./reseed/data/exports/storage-system${BLOCK_NUMBER}.json`;
   const marketPath = `./reseed/data/exports/market-info${BLOCK_NUMBER}.json`;
-  const externalUnripeHoldersPath = "./reseed/data/exports/externalHolders/unripeBeanHolders.csv";
-  const externalUnripeLpHoldersPath = "./reseed/data/exports/externalHolders/unripeLpHolders.csv";
-  parseGlobals(storageSystemPath, "./reseed/data/global.json");
-  parseAccountStatus(storageAccountsPath, "./reseed/data/r7-account-status.json", contractAccounts);
+  const externalUnripeHoldersPath = `./reseed/data/exports/externalHolders/urbean-holders${BLOCK_NUMBER}.csv`;
+  const externalUnripeLpHoldersPath = `./reseed/data/exports/externalHolders/urlp-holders${BLOCK_NUMBER}.csv`;
+  const [smartContractStalk, smartContractRoots] = parseAccountStatus(
+    storageAccountsPath,
+    "./reseed/data/r7-account-status.json",
+    contractAccounts
+  );
+  parseGlobals(
+    storageSystemPath,
+    "./reseed/data/global.json",
+    smartContractStalk,
+    smartContractRoots
+  );
   parseInternalBalances(
     storageAccountsPath,
     "./reseed/data/r8-internal-balances.json",
@@ -138,7 +147,7 @@ function parseBeanstalkData() {
     contractAccounts
   );
   // Initial supplies and well balances
-  const reserveSupplyJsonPath = `./reseed/data/exports/contract-circulating${BLOCK_NUMBER}.json`;
+  const reserveSupplyJsonPath = `./reseed/data/exports/migrated-tokens${BLOCK_NUMBER}.json`;
   const outputFilePaths = {
     L2_initial_supply: "./reseed/data/r2/L2_initial_supply.json",
     L2_well_balances: "./reseed/data/r2/L2_well_balances.json"

@@ -26,7 +26,7 @@ contract GaugeTest is TestHelper {
 
         // deploy gaugePointPrice contract for WETH, with a price threshold of 500 USD,
         // and a gaugePoint of 10.
-        gpP = new GaugePointPrice(BEANSTALK, C.WETH, 500e6, 10e18);
+        gpP = new GaugePointPrice(BEANSTALK, WETH, 500e6, 10e18);
     }
 
     ////////////////////// BEAN TO MAX LP RATIO //////////////////////

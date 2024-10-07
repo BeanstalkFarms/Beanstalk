@@ -233,7 +233,7 @@ contract TokenFacet is Invariable, IERC1155Receiver, ReentrancyGuard {
     function unwrapEth(
         uint256 amount,
         LibTransfer.From mode
-    ) external payable nonReentrant fundsSafu oneOutFlow(C.WETH) noSupplyChange {
+    ) external payable nonReentrant fundsSafu oneOutFlow(LibWeth.WETH) noSupplyChange {
         LibWeth.unwrap(amount, mode);
     }
 

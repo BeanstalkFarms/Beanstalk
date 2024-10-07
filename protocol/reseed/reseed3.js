@@ -18,7 +18,7 @@ async function reseed3(account, L2Beanstalk, mock, verbose = false) {
   // Read and parse the JSON file
   const accountPlots = JSON.parse(await fs.readFileSync(farmerPlotsPath));
 
-  targetEntriesPerChunk = 500;
+  targetEntriesPerChunk = 300;
   plotChunks = await splitEntriesIntoChunksOptimized(accountPlots, targetEntriesPerChunk);
   console.log(`Starting to process ${plotChunks.length} chunks...`);
   for (let i = 0; i < plotChunks.length; i++) {

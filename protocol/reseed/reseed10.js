@@ -82,6 +82,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
       facetAddresses: facetAddresses,
       verbose: true,
       account: account,
+      object: !mock, // true to save diamond cut json, false to upgrade diamond
       checkGas: true
     });
   });

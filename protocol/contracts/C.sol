@@ -41,7 +41,6 @@ library C {
 
     //////////////////// Contracts ////////////////////
 
-    address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address internal constant PIPELINE = 0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0;
 
     //////////////////// Well ////////////////////

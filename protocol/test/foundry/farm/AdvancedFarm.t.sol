@@ -23,7 +23,7 @@ contract AdvancedFarmTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 100_000);
+        MockToken(WETH).mint(BEANSTALK, 100_000);
 
         farmers = createUsers(2);
         mintTokensToUsers(farmers, BEAN, 100_000e6);
@@ -40,7 +40,7 @@ contract AdvancedFarmTest is TestHelper {
      * @notice Wrap eth, add liquidity from weth, deposit LP into Silo.
      */
     function test_farmAddLiquidityDeposit() public {
-        IERC20(C.WETH).approve(BEAN_ETH_WELL, type(uint256).max);
+        IERC20(WETH).approve(BEAN_ETH_WELL, type(uint256).max);
 
         // advancedFarmCall[0], wrap eth.
         IMockFBeanstalk.AdvancedFarmCall memory wrapEth = IMockFBeanstalk.AdvancedFarmCall(
@@ -52,7 +52,7 @@ contract AdvancedFarmTest is TestHelper {
         IMockFBeanstalk.AdvancedFarmCall memory loadDepot = IMockFBeanstalk.AdvancedFarmCall(
             abi.encodeWithSelector(
                 TokenFacet.transferToken.selector,
-                C.WETH,
+                WETH,
                 C.PIPELINE,
                 1e18,
                 LibTransfer.From.INTERNAL,
@@ -103,7 +103,7 @@ contract AdvancedFarmTest is TestHelper {
         // Simplify by setting up approvals.
         deal(farmers[0], 1e18);
         vm.prank(C.PIPELINE);
-        IERC20(C.WETH).approve(BEAN_ETH_WELL, type(uint256).max);
+        IERC20(WETH).approve(BEAN_ETH_WELL, type(uint256).max);
         vm.prank(farmers[0]);
         IERC20(BEAN_ETH_WELL).approve(address(bs), type(uint256).max);
 

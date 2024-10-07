@@ -18,7 +18,7 @@ contract InvariableTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, true);
-        MockToken(C.WETH).mint(BEANSTALK, 100_000);
+        MockToken(WETH).mint(BEANSTALK, 100_000);
 
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
