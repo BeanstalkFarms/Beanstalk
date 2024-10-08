@@ -80,7 +80,7 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, block: ethere
     hourly.deltaTotalChoppedBdv = hourly.totalChoppedBdv;
     hourly.deltaTotalChoppedBdvReceived = hourly.totalChoppedBdvReceived;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -140,7 +140,7 @@ export function takeUnripeTokenSnapshots(unripeToken: UnripeToken, block: ethere
     daily.deltaTotalChoppedBdv = daily.totalChoppedBdv;
     daily.deltaTotalChoppedBdvReceived = daily.totalChoppedBdvReceived;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 

@@ -52,7 +52,7 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, block: ethereum.Blo
     hourly.deltaWithdrawnAmount = hourly.withdrawnAmount;
     hourly.deltaFarmAmount = hourly.farmAmount;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -84,7 +84,7 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, block: ethereum.Blo
     daily.deltaWithdrawnAmount = daily.withdrawnAmount;
     daily.deltaFarmAmount = daily.farmAmount;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 

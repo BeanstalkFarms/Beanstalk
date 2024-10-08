@@ -73,7 +73,7 @@ export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
     hourly.deltaBeanMints = hourly.beanMints;
     hourly.deltaActiveFarmers = hourly.activeFarmers;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -124,7 +124,7 @@ export function takeSiloSnapshots(silo: Silo, block: ethereum.Block): void {
     daily.deltaBeanMints = daily.beanMints;
     daily.deltaActiveFarmers = daily.activeFarmers;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 

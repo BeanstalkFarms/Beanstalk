@@ -81,7 +81,7 @@ export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: Whitel
     hourly.deltaGaugePoints = hourly.gaugePoints;
     hourly.deltaOptimalPercentDepositedBdv = hourly.optimalPercentDepositedBdv;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -138,7 +138,7 @@ export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: Whitel
     daily.deltaGaugePoints = daily.gaugePoints;
     daily.deltaOptimalPercentDepositedBdv = daily.optimalPercentDepositedBdv;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 

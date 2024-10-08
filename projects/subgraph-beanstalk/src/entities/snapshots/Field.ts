@@ -105,7 +105,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     hourly.seasonBlock = block.number;
     hourly.soilSoldOut = false;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -182,7 +182,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     daily.issuedSoil = field.soil;
     daily.deltaIssuedSoil = field.soil;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 

@@ -84,7 +84,7 @@ export function takeMarketSnapshots(market: PodMarketplace, block: ethereum.Bloc
     hourly.deltaPodVolume = hourly.podVolume;
     hourly.deltaBeanVolume = hourly.beanVolume;
   }
-  hourly.createdAt = hour;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
   hourly.updatedAt = block.timestamp;
   hourly.save();
 
@@ -148,7 +148,7 @@ export function takeMarketSnapshots(market: PodMarketplace, block: ethereum.Bloc
     daily.deltaPodVolume = daily.podVolume;
     daily.deltaBeanVolume = daily.beanVolume;
   }
-  daily.createdAt = day;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
   daily.updatedAt = block.timestamp;
   daily.save();
 
