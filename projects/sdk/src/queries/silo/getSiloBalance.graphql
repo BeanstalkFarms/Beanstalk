@@ -1,4 +1,4 @@
-query getSiloBalance($token: String, $account: ID!, $season: Int!) {
+query getSiloBalance($token: Bytes, $account: ID!, $season: Int!) {
   farmer(id: $account) {
     # Deposited
     deposited: deposits(
