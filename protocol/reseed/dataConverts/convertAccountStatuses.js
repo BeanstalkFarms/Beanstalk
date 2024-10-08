@@ -1,11 +1,14 @@
 const fs = require("fs");
 const { convertToBigNum } = require("../../utils/read.js");
+const { BigNumber } = require("ethers");
 
 function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
   try {
     const data = fs.readFileSync(inputFilePath, "utf8");
     const accounts = JSON.parse(data);
     const result = [];
+    smartContractTotalStalk = BigNumber.from("0");
+    smartContractTotalRoots = BigNumber.from("0");
 
     for (const account in accounts) {
       if (accounts.hasOwnProperty(account)) {
@@ -33,13 +36,30 @@ function parseAccountStatus(inputFilePath, outputFilePath, contractAccounts) {
 
         // do not include contract accounts
         if (!contractAccounts.includes(account.toLowerCase())) {
-          result.push([account, stalk, tokenAddresses, mowStatusArray, lastUpdate, germinatingStalkOdd, germinatingStalkEven]);
+          result.push([
+            account,
+            stalk,
+            tokenAddresses,
+            mowStatusArray,
+            lastUpdate,
+            germinatingStalkOdd,
+            germinatingStalkEven
+          ]);
+        } else {
+          // keep track of contract account stalk and roots
+          let stalkNum = BigNumber.from(stalk);
+          smartContractTotalStalk = smartContractTotalStalk.add(stalkNum);
+          const accountRoots = stalkNum.mul(1e12);
+          smartContractTotalRoots = smartContractTotalRoots.add(accountRoots);
         }
       }
     }
 
     fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
     console.log("Account Status JSON has been written successfully");
+
+    // return the total stalk and roots for contract accounts to exclude them from global stalk and roots
+    return [smartContractTotalStalk, smartContractTotalRoots];
   } catch (err) {
     console.error("Error:", err);
   }

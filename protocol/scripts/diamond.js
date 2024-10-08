@@ -419,24 +419,24 @@ async function deployFacetsAndLibraries({
   // Helper function to deploy a contract
   async function deployContract(name, libraries = {}) {
     if (verbose) console.log(`Deploying: ${name}`);
-    const factory = await ethers.getContractFactory(name, { 
+    const factory = await ethers.getContractFactory(name, {
       libraries: libraries,
-      signer: account 
+      signer: account
     });
     const contract = await factory.deploy();
     await contract.deployed();
-    
+
     if (verify) {
       await run("verify", {
         address: contract.address,
         constructorArguments: []
       });
     }
-    
+
     const receipt = await contract.deployTransaction.wait();
     if (verbose) console.log(`${name} deployed at ${contract.address}`);
     if (verbose) console.log(`${name} deploy gas used: ${receipt.gasUsed.toString()}`);
-    
+
     return contract;
   }
 
@@ -477,10 +477,12 @@ async function upgradeWithDeployedFacets({
   facetAddresses = [],
   selectorsToRemove = [],
   selectorsToAdd = {},
+  initFacetName = undefined,
   initFacetAddress = ethers.constants.AddressZero,
   initArgs = [],
   account = null,
-  verbose = false,
+  object = false,
+  verbose = false
 }) {
   let totalGasUsed = ethers.BigNumber.from("0");
   let initFacetCallGas = ethers.BigNumber.from("0");
@@ -494,7 +496,7 @@ async function upgradeWithDeployedFacets({
   const diamondCut = [];
   const existingFacets = await diamondLoupeFacet.facets();
 
-  if (verbose && facetAddresses.length > 0) console.log("\nProcessing Facets");
+  if (verbose && facetAddresses.length > 0) console.log("\nProcessing Facets...");
 
   if (selectorsToRemove.length > 0) {
     // check if any selectorsToRemove are already gone
@@ -543,6 +545,27 @@ async function upgradeWithDeployedFacets({
     const initFacet = await ethers.getContractAt("IDiamondCut", initFacetAddress);
     functionCall = await initFacet.interface.encodeFunctionData("init", initArgs);
     if (verbose) console.log(`Function call: ${functionCall.toString().substring(0, 100)}`);
+  }
+
+  if (object) {
+    dc = {
+      diamondCut: diamondCut,
+      initFacetAddress: initFacetAddress,
+      functionCall: functionCall
+    };
+    const encodedDiamondCut = await diamondCutFacet.interface.encodeFunctionData(
+      "diamondCut",
+      Object.values(dc)
+    );
+    console.log(JSON.stringify(dc, null, 4));
+    console.log("Encoded: -------------------------------------------------------------");
+    console.log(encodedDiamondCut);
+    const dcName = `diamondCut-${initFacetName}-${Math.floor(Date.now() / 1000)}-${facetNames.length}-facets.json`;
+    await fs.writeFileSync(
+      `./diamondCuts/${dcName}`,
+      JSON.stringify({ diamondCut: dc, encoded: encodedDiamondCut }, null, 4)
+    );
+    return dc;
   }
 
   let result = await diamondCutFacet

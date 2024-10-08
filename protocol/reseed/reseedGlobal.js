@@ -2,6 +2,8 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
+const { L2_RESEED_GLOBAL } = require("../test/hardhat/utils/constants.js");
+
 async function reseedGlobal(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
   console.log("reseedGlobal: reseedGlobal.\n");
@@ -10,19 +12,12 @@ async function reseedGlobal(account, L2Beanstalk, mock) {
   let globalsPath = "./reseed/data/global.json";
   let settings = JSON.parse(await fs.readFileSync(globalsPath));
 
-  // deploy ShipmentPlanner.sol.
-  const ShipmentPlanner = await deployContract("ShipmentPlanner", account, true, [L2Beanstalk]);
-
-  // replace the shipment parameter with the deployed shipment address.
-  settings[9][0][0] = ShipmentPlanner.address;
-  settings[9][1][0] = ShipmentPlanner.address;
-  settings[9][2][0] = ShipmentPlanner.address;
-
   await retryOperation(async () => {
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
       initFacetName: "ReseedGlobal",
+      initFacetAddress: L2_RESEED_GLOBAL,
       initArgs: [settings],
       bip: false,
       verbose: true,

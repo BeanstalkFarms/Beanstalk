@@ -242,12 +242,6 @@ export const useSupportedBalanceTokens = () => {
   }, [sdk]);
 };
 
-export const useNonWellLPERC20Tokens = () => {
-  const sdk = useSdk();
-
-  return useMemo(() => {}, []);
-};
-
 /**
  * Sort the whitelist by
  * [

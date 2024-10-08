@@ -14,6 +14,7 @@ const diamond = require("./diamond.js");
 const {
   impersonateBean,
   impersonateWeth,
+  impersonateL2Weth,
   impersonateUnripe,
   impersonatePrice,
   impersonateChainlinkAggregator,
@@ -427,6 +428,7 @@ async function getFacetData(mock = true) {
  */
 async function impersonateERC20s() {
   await impersonateWeth();
+  await impersonateL2Weth();
 
   // New default ERC20s should be added here.
   tokens = [

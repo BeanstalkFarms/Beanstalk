@@ -29,7 +29,7 @@ function updateInputJsonData(verbose = false) {
   const BLOCK_NUMBER = 20736200;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
-  const storagePodOrdersPath = `./reseed/data/exports/market-info20330000.json`; // update upon mainnet freeze
+  const storagePodOrdersPath = `./reseed/data/exports/market-info${BLOCK_NUMBER}.json`;
 
   // update Deposits.json
   const allDeposits = JSON.parse(fs.readFileSync(storageAccountsPath));

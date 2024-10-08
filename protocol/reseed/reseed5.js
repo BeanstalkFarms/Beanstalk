@@ -2,6 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 const { retryOperation } = require("../utils/read.js");
+const { L2_RESEED_BARN } = require("../test/hardhat/utils/constants.js");
 
 async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -19,8 +20,6 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
   // Keep this lower due to fert id 100663296
   targetEntriesPerChunk = 50;
   fertChunks = await splitEntriesIntoChunksOptimized(fertilizerIds, targetEntriesPerChunk);
-  const InitFacet = await (await ethers.getContractFactory("ReseedBarn", account)).deploy();
-  await InitFacet.deployed();
   for (let i = 0; i < fertChunks.length; i++) {
     await updateProgress(i + 1, fertChunks.length);
     if (verbose) {
@@ -32,7 +31,7 @@ async function reseed5(account, L2Beanstalk, mock, verbose = false) {
         diamondAddress: L2Beanstalk,
         facetNames: [],
         initFacetName: "ReseedBarn",
-        initFacetAddress: InitFacet.address,
+        initFacetAddress: L2_RESEED_BARN,
         initArgs: [fertChunks[i]],
         bip: false,
         verbose: verbose,

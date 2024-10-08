@@ -26,24 +26,21 @@ function parseField(inputFilePath, outputFilePath, contractAccounts) {
               const amount = plots[plotKey];
               return [convertToBigNum(index), convertToBigNum(amount)];
             });
-            
-            // Comment our for chinking problematic accounts
-            // if (problematicAccounts.includes(account)) {
-            //   const chunkSize = 50;
-            //   const chunkedArray = [];
-            //   for (let i = 0; i < plotArray.length; i += chunkSize) {
-            //     chunkedArray.push(plotArray.slice(i, i + chunkSize));
-            //   }
-            //   for (const chunk of chunkedArray) {
-            //     result.push([account, chunk]);
-            //   }
 
-            // do not include contract accounts
-            // do not include problematic accounts
+            // handle problematic accounts and contract accounts
             if (
-              !contractAccounts.includes(account.toLowerCase()) &&
-              !problematicAccounts.includes(account)
+              problematicAccounts.includes(account) &&
+              !contractAccounts.includes(account.toLowerCase())
             ) {
+              const chunkSize = 50;
+              const chunkedArray = [];
+              for (let i = 0; i < plotArray.length; i += chunkSize) {
+                chunkedArray.push(plotArray.slice(i, i + chunkSize));
+              }
+              for (const chunk of chunkedArray) {
+                result.push([account, chunk]);
+              }
+            } else if (!contractAccounts.includes(account.toLowerCase())) {
               result.push([account, plotArray]);
             }
           }
