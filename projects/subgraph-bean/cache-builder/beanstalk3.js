@@ -5,9 +5,10 @@ const url = "https://graph.bean.money/bean_eth";
 const subgraph = new GraphQLClient(url);
 
 (async () => {
+  const block = "block: { number: 20921737 }";
   const l1Values = await subgraph.request(gql`
     {
-      bean(id: "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab") {
+      bean(id: "0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab" ${block}) {
         volume
         volumeUSD
         crosses

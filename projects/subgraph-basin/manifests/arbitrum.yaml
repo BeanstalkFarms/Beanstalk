@@ -57,7 +57,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Beanstalk
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

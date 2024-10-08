@@ -11,7 +11,7 @@ const tokenMap = {
 
 (async () => {
   // for testing purposes. set to empty string to ignore
-  const block = "block: { number: 20736200 }";
+  const block = "block: { number: 20921737 }";
   const l1Values = await subgraph.request(gql`
     {
       beanstalk(id: "beanstalk" ${block}) {

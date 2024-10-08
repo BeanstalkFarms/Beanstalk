@@ -11,8 +11,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 585858585858 # Reseed
-      endBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
+      endBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -33,8 +33,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 585858585858 # Reseed
-      endBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
+      endBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -58,7 +58,7 @@ dataSources:
     source:
       address: "0xBEA0005B8599265D41256905A9B3073D397812E4"
       abi: ERC20
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -83,7 +83,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -115,7 +115,7 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -138,9 +138,9 @@ dataSources:
     name: BeanWETH
     network: arbitrum-one
     source:
-      address: "0xBEA00A3F7aaF99476862533Fe7DcA4b50f6158cB"
+      address: "0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -174,9 +174,9 @@ dataSources:
     name: BeanwstETH
     network: arbitrum-one
     source:
-      address: "0xBEA0093f626Ce32dd6dA19617ba4e7aA0c3228e8"
+      address: "0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -210,9 +210,9 @@ dataSources:
     name: BeanweETH
     network: arbitrum-one
     source:
-      address: "0xBEA00865405A02215B44eaADB853d0d2192Fc29D"
+      address: "0xBeA00Cc9F93E9a8aC0DFdfF2D64Ba38eb9C2e48c"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -246,9 +246,9 @@ dataSources:
     name: BeanWBTC
     network: arbitrum-one
     source:
-      address: "0xBEA008aC57c2bEfe82E87d1D8Fb9f4784d0B73cA"
+      address: "0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -282,9 +282,9 @@ dataSources:
     name: BeanUSDC
     network: arbitrum-one
     source:
-      address: "0xBEA00dAf62D5549D265c5cA6D6BE87eF17881279"
+      address: "0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -318,9 +318,9 @@ dataSources:
     name: BeanUSDT
     network: arbitrum-one
     source:
-      address: "0xBEA00bE150FEF7560A8ff3C68D07387693Ddfd0b"
+      address: "0xbEA00fF437ca7E8354B174339643B4d1814bED33"
       abi: Well
-      startBlock: 585858585858 # Reseed
+      startBlock: 261772156 # Reseed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -359,7 +359,7 @@ dataSources:
     source:
       address: "0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7"
       abi: BeanstalkPrice
-      startBlock: 575757575757 # Reseed Completion
+      startBlock: 575757575 # Reseed Unpause (TODO)
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

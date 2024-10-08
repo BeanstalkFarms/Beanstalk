@@ -9,6 +9,7 @@ import { loadOrCreateToken } from "../entities/Token";
 export function handleBoreWell(event: BoreWell): void {
   let aquifer = loadOrCreateAquifer(event.address);
 
+  // TODO: this needs to account for Well proxies. TBD on how to do this
   Well.create(event.params.well);
 
   let well = createWell(event.params.well, event.params.tokens);

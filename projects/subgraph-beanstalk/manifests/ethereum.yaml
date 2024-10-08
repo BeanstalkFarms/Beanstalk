@@ -396,7 +396,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 15277986 # Replanted (Silo currently has no support for pre-exploit)
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -431,7 +431,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 15277986 # Replanted
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -454,7 +454,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Replanted
       startBlock: 15277986 # Replanted
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -548,7 +548,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 19927634 # SeedGauge
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -572,7 +572,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 19628074
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -606,7 +606,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 19628074
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -636,7 +636,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 12974075 # Field has all-time support
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -703,7 +703,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 14148509 # BIP-11 Pod Marketplace
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -725,7 +725,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 14148509 # BIP-11 Pod Marketplace
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -809,7 +809,7 @@ dataSources:
       address: "0x402c84De2Ce49aF88f5e2eF3710ff89bFED36cB6"
       abi: Fertilizer
       startBlock: 14910573
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -834,7 +834,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 15277986
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -860,7 +860,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 12974075
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -889,7 +889,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: Reseed
       startBlock: 17671557 # SiloV3
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -1000,7 +1000,7 @@ dataSources:
       address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
       abi: SeedGauge
       startBlock: 12974075
-      endBlock: 191919191 # Reseed Pause on L1
+      endBlock: 20921738 # Reseed Pause on L1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

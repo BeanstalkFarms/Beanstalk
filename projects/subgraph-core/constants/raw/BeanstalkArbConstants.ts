@@ -22,19 +22,18 @@ export const USDT = Address.fromString("0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCb
 
 // Contracts
 export const BEANSTALK = Address.fromString("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-////// TODO: These are subject to change. Fertilizer is "Proxy"
 export const FERTILIZER = Address.fromString("0xFEFEFECA5375630d6950F40e564A27f6074845B5");
 export const BEANSTALK_PRICE = Address.fromString("0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7");
-//////
 export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521");
 export const WELL_CP2 = Address.fromString("0xbA1500c28C8965521f47F17Fc21A7829D6E1343e");
 export const WELL_STABLE2 = Address.fromString("0xba150052e11591D0648b17A0E608511874921CBC");
 
 // Milestone
-////// TODO: Set this upon deployment
-export const RESEED_SEASON = BigInt.fromU32(30000);
-export const RESEED_BLOCK = BigInt.fromU64(585858585858);
-//////
+
+// First season to execute on L2
+export const RESEED_SEASON = BigInt.fromU32(25130);
+export const RESEED_BLOCK = BigInt.fromU64(261772156);
+
 // In practice no wells were deployed for months following Aquifer's initial deployment.
 // Therefore there is no need to start indexing from the initial block. The selected block
 // number is arbitrary and slightly prior to the reseed.

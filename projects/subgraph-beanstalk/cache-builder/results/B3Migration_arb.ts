@@ -37,27 +37,27 @@ class UnripeTokenInitialValues {
   totalChoppedBdvReceived: BigInt;
 }
 
-export const SEASON_INITIAL = 24508;
+export const SEASON_INITIAL = 25129;
 
 export const FIELD_INITIAL_VALUES: FieldInitialValues = {
   numberOfSowers: 1640,
-  numberOfSows: 19196,
-  sownBeans: BigInt.fromString("33592460856188"),
+  numberOfSows: 19742,
+  sownBeans: BigInt.fromString("33592461174965"),
   harvestedPods: BigInt.fromString("61126608133951"),
-  podIndex: BigInt.fromString("980532024233292"),
+  podIndex: BigInt.fromString("980532104448065"),
   harvestableIndex: BigInt.fromString("61128909242563"),
-  temperature: 24919
+  temperature: 25147
 };
 
 export const POD_MARKETPLACE_INITIAL_VALUES: PodMarketplaceInitialValues = {
   filledListedPods: BigInt.fromString("49222911145993"),
   expiredListedPods: BigInt.fromString("7065428228776"),
-  cancelledListedPods: BigInt.fromString("60134193309316"),
-  filledOrderBeans: BigInt.fromString("762556935865"),
-  filledOrderedPods: BigInt.fromString("14851692494599"),
+  cancelledListedPods: BigInt.fromString("60188635627948"),
+  filledOrderBeans: BigInt.fromString("763175980418"),
+  filledOrderedPods: BigInt.fromString("14858570767416"),
   cancelledOrderBeans: BigInt.fromString("1308742101463"),
-  podVolume: BigInt.fromString("64074603640592"),
-  beanVolume: BigInt.fromString("6508703985303")
+  podVolume: BigInt.fromString("64081481913409"),
+  beanVolume: BigInt.fromString("6509323029856")
 };
 
 export const FERT_TOKEN_INFO_CACHED: FertilizerTokenInfo[] = [
@@ -690,14 +690,14 @@ export const FERT_TOKEN_INFO_CACHED: FertilizerTokenInfo[] = [
 export const UNRIPE_TOKENS_INITIAL_VALUES: UnripeTokenInitialValues[] = [
   {
     tokenType: "urbean",
-    totalChoppedAmount: BigInt.fromString("24665725897573"),
-    totalChoppedBdv: BigInt.fromString("5882168812974"),
-    totalChoppedBdvReceived: BigInt.fromString("1334001323440")
+    totalChoppedAmount: BigInt.fromString("31430574600088"),
+    totalChoppedBdv: BigInt.fromString("7681791296147"),
+    totalChoppedBdvReceived: BigInt.fromString("1761005164064")
   },
   {
     tokenType: "urlp",
-    totalChoppedAmount: BigInt.fromString("7250545162321"),
-    totalChoppedBdv: BigInt.fromString("2529372423798"),
-    totalChoppedBdvReceived: BigInt.fromString("508153566375")
+    totalChoppedAmount: BigInt.fromString("7261775129631"),
+    totalChoppedBdv: BigInt.fromString("2534281787845"),
+    totalChoppedBdvReceived: BigInt.fromString("509322147556")
   }
 ];
