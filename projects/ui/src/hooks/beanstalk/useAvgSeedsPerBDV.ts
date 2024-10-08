@@ -1,16 +1,16 @@
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useState } from 'react';
 import { DocumentNode, gql } from '@apollo/client';
-import { BeanstalkSDK } from '@beanstalk/sdk';
+import { BeanstalkSDK, ERC20Token } from '@beanstalk/sdk';
 import { Time, Range } from 'lightweight-charts';
 import * as LegacyToken from '~/constants/tokens';
 
 import { ChartQueryData } from '~/components/Analytics/AdvancedChart';
 import useSdk from '~/hooks/sdk';
 import { apolloClient } from '~/graph/client';
-import { toBNWithDecimals, tokenIshEqual } from '~/util';
-import { ZERO_BN } from '~/constants';
-import { TokenInstance } from './useTokens';
+import { toBNWithDecimals } from '~/util';
+import { SupportedChainId, ZERO_BN } from '~/constants';
+import { TokenInstance, useGetNormaliseChainToken } from './useTokens';
 
 type SeasonMap<T> = { [season: number]: T };
 
@@ -45,10 +45,13 @@ const SEED_GAUGE_DEPLOYMENT_SEASON = 21798;
 
 const SEED_GAUGE_DEPLOYMENT_TIMESTAMP = 1716408000;
 
+const L2_MIGRATION_SEASON = 25039;
+
 const apolloFetch = async (
   document: DocumentNode,
   first: number,
-  season: number
+  season: number,
+  subgraph: 'beanstalk_eth' | 'beanstalk'
 ) =>
   apolloClient.query({
     query: document,
@@ -56,7 +59,7 @@ const apolloFetch = async (
     fetchPolicy: 'no-cache',
     notifyOnNetworkStatusChange: true,
     // BS3TODO: Fix me to include L2 silo whitelist
-    context: { subgraph: 'beanstalk_eth' },
+    context: { subgraph: subgraph },
   });
 
 // Main hook with improved error handling and performance
@@ -73,6 +76,8 @@ const useAvgSeedsPerBDV = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const normaliseToken = useGetNormaliseChainToken();
+
   useEffect(() => {
     const iterations = getNumQueries(range);
     setNumQueries((prevNumQueries) => Math.max(prevNumQueries, iterations));
@@ -85,15 +90,31 @@ const useAvgSeedsPerBDV = (
     setError(false);
     setLoading(true);
     console.debug('[useAvgSeedsPerBDV/fetch]: fetching...');
-    const tokens = [
-      LegacyToken.BEAN[1],
-      LegacyToken.BEAN_ETH_WELL_LP[1],
-      LegacyToken.BEAN_WSTETH_WELL_LP[1],
+
+    const l2Tokens = [
+      LegacyToken.BEAN[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_ETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_WSTETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_WEETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_WBTC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_USDC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+      LegacyToken.BEAN_USDT_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
     ];
-    // const tokens = [sdk.tokens.BEAN, ...sdk.tokens.wellLP];
-    const document = createMultiTokenQuery(
-      sdk.contracts.beanstalk.address,
-      tokens
+
+    const l1Tokens = [
+      LegacyToken.BEAN[SupportedChainId.ETH_MAINNET],
+      LegacyToken.BEAN_ETH_WELL_LP[SupportedChainId.ETH_MAINNET],
+      LegacyToken.BEAN_WSTETH_WELL_LP[SupportedChainId.ETH_MAINNET],
+    ];
+
+    const l2Document = createMultiTokenQuery(
+      sdk.addresses.BEANSTALK.get(SupportedChainId.ARBITRUM_MAINNET),
+      l2Tokens
+    );
+
+    const l1Document = createMultiTokenQuery(
+      sdk.addresses.BEANSTALK.get(SupportedChainId.ETH_MAINNET),
+      l1Tokens
     );
 
     const output: SiloTokenDataBySeason = {};
@@ -107,27 +128,54 @@ const useAvgSeedsPerBDV = (
         );
       }
 
-      const fetchData = async (lte: number) =>
-        apolloFetch(document, MAX_DATA_PER_QUERY, lte).then((r) => {
-          earliestSeason = parseResult(r.data, sdk, tokens, output);
+      const firstFetch = await apolloFetch(
+        l2Document,
+        MAX_DATA_PER_QUERY,
+        SEED_GAUGE_DEPLOYMENT_SEASON,
+        'beanstalk'
+      );
+
+      console.log('[useAvgSeedsPerBDV/fetch]: firstFetch', firstFetch);
+
+      const fetchDatas = async (lte: number, chain: SupportedChainId) => {
+        const isL2 = chain === SupportedChainId.ARBITRUM_MAINNET;
+        const subgraph = isL2 ? 'beanstalk' : 'beanstalk_eth';
+        const doc = isL2 ? l2Document : l1Document;
+        const tokens = isL2 ? l2Tokens : l1Tokens;
+
+        return apolloFetch(doc, MAX_DATA_PER_QUERY, lte, subgraph).then((r) => {
+          earliestSeason = parseResult(
+            r.data,
+            sdk,
+            tokens,
+            output,
+            normaliseToken
+          );
         });
+      };
 
-      await fetchData(earliestSeason);
-
-      console.log('output: ', output);
+      await fetchDatas(earliestSeason, SupportedChainId.ARBITRUM_MAINNET);
 
       if (numQueries > 1) {
-        const _seasons: number[] = [];
+        const _seasons: { lte: number; chain: SupportedChainId }[] = [];
         for (let i = 0; i < numQueries - 1; i += 1) {
           const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
           const season_lte = Math.max(0, earliestSeason - offset);
           if (season_lte < SEED_GAUGE_DEPLOYMENT_SEASON) break;
-          _seasons.push(season_lte);
+          _seasons.push({
+            lte: season_lte,
+            chain:
+              season_lte > L2_MIGRATION_SEASON
+                ? SupportedChainId.ARBITRUM_MAINNET
+                : SupportedChainId.ETH_MAINNET,
+          });
         }
 
         const seasons = _seasons.filter(Boolean);
 
-        await Promise.all(seasons.map((season) => fetchData(season)));
+        await Promise.all(
+          seasons.map((season) => fetchDatas(season.lte, season.chain))
+        );
       }
 
       const normalized = normalizeQueryResults(sdk, output);
@@ -145,7 +193,7 @@ const useAvgSeedsPerBDV = (
       console.debug('[useAvgSeedsPerBDV/fetch]: fetch complete...');
       setLoading(false);
     }
-  }, [numQueries, sdk, skip]);
+  }, [numQueries, sdk, skip, normaliseToken]);
 
   useEffect(() => {
     fetch();
@@ -176,7 +224,7 @@ function createMultiTokenQuery(
   tokens: TokenInstance[]
 ) {
   const queryParts = tokens.map(
-    (token) => `seasonsSA_${token.symbol}: siloAssetHourlySnapshots(
+    (token) => `seasonsSA_${token.address}: siloAssetHourlySnapshots(
       first: $first
       orderBy: season
       orderDirection: desc
@@ -194,7 +242,7 @@ function createMultiTokenQuery(
       depositedBDV
       createdAt
     }
-    seasonsWL_${token.symbol}: whitelistTokenHourlySnapshots(
+    seasonsWL_${token.address}: whitelistTokenHourlySnapshots(
       first: $first
       orderBy: season
       orderDirection: desc
@@ -225,14 +273,16 @@ function createMultiTokenQuery(
 }
 
 function processTokenData(
-  token: TokenInstance,
+  _token: TokenInstance,
   sData: SiloAssetsReturn | null,
   wData: WhitelistReturn | null,
   output: SiloTokenDataBySeason,
-  sdk: BeanstalkSDK
+  sdk: BeanstalkSDK,
+  normalizeToken: (token: string) => ERC20Token | undefined
 ) {
   const season = sData?.season || wData?.season;
-  if (!season || season < SEED_GAUGE_DEPLOYMENT_SEASON) return;
+  const token = normalizeToken(_token.address);
+  if (!season || season < SEED_GAUGE_DEPLOYMENT_SEASON || !token) return;
 
   const { BEAN, SEEDS } = sdk.tokens;
   output[season] = output[season] || {};
@@ -264,36 +314,44 @@ function parseResult(
   data: any,
   sdk: BeanstalkSDK,
   tokens: TokenInstance[],
-  output: SiloTokenDataBySeason
+  output: SiloTokenDataBySeason,
+  normalizeToken: (token: string) => ERC20Token | undefined
 ) {
   let earliestSeason = Infinity;
 
   tokens.forEach((token) => {
-    const siloAssets = data[`seasonsSA_${token.symbol}`] as SiloAssetsReturn[];
-    const whitelisted = data[`seasonsWL_${token.symbol}`] as WhitelistReturn[];
+    const siloAssets = data[`seasonsSA_${token.address}`] as SiloAssetsReturn[];
+    const whitelisted = data[`seasonsWL_${token.address}`] as WhitelistReturn[];
 
-    if (!siloAssets || !whitelisted) return;
+    if (!siloAssets?.length || !whitelisted?.length) return;
 
     // Results are sorted in desc order.
     // Find earliest season from the BEAN dataset
-    if (tokenIshEqual(token, sdk.tokens.BEAN)) {
-      earliestSeason = Math.max(
-        siloAssets[siloAssets.length - 1].season,
-        whitelisted[whitelisted.length - 1].season
-      );
-    }
+    // if (tokenIshEqual(token, sdk.tokens.BEAN)) {
+    earliestSeason = Math.max(
+      siloAssets[siloAssets.length - 1].season,
+      whitelisted[whitelisted.length - 1].season
+    );
+    // }
     // Create a map of seasons to whitelisted data for quick lookup
     const whitelistedMap = new Map(whitelisted.map((w) => [w.season, w]));
 
     siloAssets.forEach((sData) => {
       const wData = whitelistedMap.get(sData.season);
-      processTokenData(token, sData, wData || null, output, sdk);
+      processTokenData(
+        token,
+        sData,
+        wData || null,
+        output,
+        sdk,
+        normalizeToken
+      );
       whitelistedMap.delete(sData.season);
     });
 
     // Process any remaining
     whitelistedMap.forEach((wData) => {
-      processTokenData(token, null, wData, output, sdk);
+      processTokenData(token, null, wData, output, sdk, normalizeToken);
     });
   });
 
