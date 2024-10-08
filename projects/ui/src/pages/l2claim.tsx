@@ -9,6 +9,7 @@ import useAccount from '~/hooks/ledger/useAccount';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useChainState from '~/hooks/chain/useChainState';
 import { useSwitchChain } from 'wagmi';
+import { Link } from 'react-router-dom';
 
 
 export default function L2Claim() {
@@ -22,6 +23,8 @@ export default function L2Claim() {
     const [farmBalance, setFarmBalance] = useState<any>(undefined);
 
     const [receiverApproved, setReceiverApproved] = useState<boolean>(false);
+
+    const [claimComplete, setClaimComplete] = useState<boolean>(false);
 
     const account = useAccount();
     const sdk = useSdk();
@@ -68,8 +71,9 @@ export default function L2Claim() {
     useEffect(() => {
         const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
         if (!internalBalanceMigrationData) return
-        const { source } = JSON.parse(internalBalanceMigrationData);
+        const { source, complete } = JSON.parse(internalBalanceMigrationData);
         setSourceAccount(source);
+        setClaimComplete(complete);
     }, [])
 
     const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
@@ -134,6 +138,12 @@ export default function L2Claim() {
             })
             .then((receipt) => {
                 txToast.success(receipt);
+                const internal = localStorage.getItem('internalL2MigrationData');
+                if (internal) {
+                    const internalMigration = JSON.parse(internal);
+                    localStorage.setItem('internalL2MigrationData', JSON.stringify({ destination: internalMigration.destination, source: internalMigration.source, complete: true }))
+                }
+                setClaimComplete(true);
             })
             .catch((err) => {
                 console.error(txToast.error(err.error || err));
@@ -147,103 +157,117 @@ export default function L2Claim() {
                 description="Retrieve the balances delegated to the address specified in the previous step"
             />
             <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
-                <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
-                    {"Receive Delegated Balances from Mainnet"}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box
-                        sx={{
-                            padding: 1,
-                            border: 1,
-                            borderColor: hasDeposits ? '#46B955' : undefined,
-                            backgroundColor: hasDeposits ? '#EDF8EE' : undefined,
-                            borderRadius: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                        }}>
-                        {hasDeposits &&
-                            <CheckIcon sx={{ width: 20, height: 20 }} />
-                        }
-                        <Typography>{hasDeposits ? 'Silo Deposits' : 'No Silo Deposits'}</Typography>
+                {claimComplete ?
+                    <Box sx={{
+                        width: "100%", height: 200, display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'column'
+                    }}>
+                        <Typography variant="h4" textAlign="center">Beanstalk Balance Migration Complete!</Typography>
+                        <Link to={'/'}><Typography>Migrate another address</Typography></Link>
                     </Box>
-                    <Box
-                        sx={{
-                            padding: 1,
-                            border: 1,
-                            borderColor: hasPlots ? '#46B955' : undefined,
-                            backgroundColor: hasPlots ? '#EDF8EE' : undefined,
-                            borderRadius: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                        }}>
-                        {hasPlots &&
-                            <CheckIcon sx={{ width: 20, height: 20 }} />
-                        }
-                        <Typography>{hasPlots ? 'Pods' : 'No Pods'}</Typography>
-                    </Box>
-                    <Box
-                        sx={{
-                            padding: 1,
-                            border: 1,
-                            borderColor: hasFarmBalance ? '#46B955' : undefined,
-                            backgroundColor: hasFarmBalance ? '#EDF8EE' : undefined,
-                            borderRadius: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                        }}>
-                        {hasFarmBalance &&
-                            <CheckIcon sx={{ width: 20, height: 20 }} />
-                        }
-                        <Typography>{hasFarmBalance ? 'Farm Balance' : 'No Farm Balance'}</Typography>
-                    </Box>
-                    <Box
-                        sx={{
-                            padding: 1,
-                            border: 1,
-                            borderColor: hasFert ? '#46B955' : undefined,
-                            backgroundColor: hasFert ? '#EDF8EE' : undefined,
-                            borderRadius: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                        }}>
-                        {hasFert &&
-                            <CheckIcon sx={{ width: 20, height: 20 }} />
-                        }
-                        <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
-                    </Box>
-                    <Button
-                        disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
-                        sx={{
-                            width: "100%",
-                            height: 60,
-                            backgroundColor: (!isArbitrum && !isTestnet) ? '#213147' : undefined,
-                            color: (!isArbitrum && !isTestnet) ? '#12ABFF' : undefined,
-                            '&:hover': {
-                                backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
-                            }
-                        }}
-                        onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
-                    >
-                        {(!isArbitrum && !isTestnet) ?
-                            'Switch to Arbitrum'
-                            : !receiverApproved ?
-                                <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
-                                    <BeanProgressIcon
-                                        size={16}
-                                        enabled
-                                        variant="indeterminate"
-                                    />
-                                    Awaiting Migration Confirmation...
-                                </Box>
-                                :
-                                'Receive Assets'
-                        }
-                    </Button>
-                </Box>
+                    :
+                    <>
+                        <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
+                            {"Receive Delegated Balances from Mainnet"}
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Box
+                                sx={{
+                                    padding: 1,
+                                    border: 1,
+                                    borderColor: hasDeposits ? '#46B955' : undefined,
+                                    backgroundColor: hasDeposits ? '#EDF8EE' : undefined,
+                                    borderRadius: 1,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}>
+                                {hasDeposits &&
+                                    <CheckIcon sx={{ width: 20, height: 20 }} />
+                                }
+                                <Typography>{hasDeposits ? 'Silo Deposits' : 'No Silo Deposits'}</Typography>
+                            </Box>
+                            <Box
+                                sx={{
+                                    padding: 1,
+                                    border: 1,
+                                    borderColor: hasPlots ? '#46B955' : undefined,
+                                    backgroundColor: hasPlots ? '#EDF8EE' : undefined,
+                                    borderRadius: 1,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}>
+                                {hasPlots &&
+                                    <CheckIcon sx={{ width: 20, height: 20 }} />
+                                }
+                                <Typography>{hasPlots ? 'Pods' : 'No Pods'}</Typography>
+                            </Box>
+                            <Box
+                                sx={{
+                                    padding: 1,
+                                    border: 1,
+                                    borderColor: hasFarmBalance ? '#46B955' : undefined,
+                                    backgroundColor: hasFarmBalance ? '#EDF8EE' : undefined,
+                                    borderRadius: 1,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}>
+                                {hasFarmBalance &&
+                                    <CheckIcon sx={{ width: 20, height: 20 }} />
+                                }
+                                <Typography>{hasFarmBalance ? 'Farm Balance' : 'No Farm Balance'}</Typography>
+                            </Box>
+                            <Box
+                                sx={{
+                                    padding: 1,
+                                    border: 1,
+                                    borderColor: hasFert ? '#46B955' : undefined,
+                                    backgroundColor: hasFert ? '#EDF8EE' : undefined,
+                                    borderRadius: 1,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}>
+                                {hasFert &&
+                                    <CheckIcon sx={{ width: 20, height: 20 }} />
+                                }
+                                <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
+                            </Box>
+                            <Button
+                                disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
+                                sx={{
+                                    width: "100%",
+                                    height: 60,
+                                    backgroundColor: (!isArbitrum && !isTestnet) ? '#213147' : undefined,
+                                    color: (!isArbitrum && !isTestnet) ? '#12ABFF' : undefined,
+                                    '&:hover': {
+                                        backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
+                                    }
+                                }}
+                                onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
+                            >
+                                {(!isArbitrum && !isTestnet) ?
+                                    'Switch to Arbitrum'
+                                    : !receiverApproved ?
+                                        <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
+                                            <BeanProgressIcon
+                                                size={16}
+                                                enabled
+                                                variant="indeterminate"
+                                            />
+                                            Awaiting Migration Confirmation...
+                                        </Box>
+                                        :
+                                        'Receive Assets'
+                                }
+                            </Button>
+                        </Box>
+                    </>
+                }
             </Card>
         </Box>
     )

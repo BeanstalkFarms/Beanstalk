@@ -231,9 +231,21 @@ export default function L1Delegate() {
                             <Typography>{ }</Typography>
                         </Box>
                         {readyForNext ? (
-                            <Typography padding={1} fontSize={20} fontWeight={500}>
-                                {destinationAccount}
-                            </Typography>
+                            <>
+                                <Typography padding={1} fontSize={20} fontWeight={500}>
+                                    {destinationAccount}
+                                </Typography>
+                                {(beanBalance.gt(0) && beanComplete) &&
+                                    <Typography padding={1}>
+                                        The specified account will automatically be credited with Circulating Beans once Migration data clears the Arbitrum bridge.
+                                    </Typography>
+                                }
+                                {(migrateInternal && internalComplete) &&
+                                    <Typography padding={1}>
+                                        Smart Contracts must claim their Beanstalk assets on Arbitrum in order to complete the Migration process. Click the button below to continue.
+                                    </Typography>
+                                }
+                            </>
                         ) : (
                             <>
                                 <TextField
