@@ -2,7 +2,6 @@ import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import React from 'react';
 import BigNumber from 'bignumber.js';
 import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
-import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
 import {
@@ -163,7 +162,7 @@ export type BuyBeansAction = {
   type: ActionType.BUY_BEANS;
   beanAmount: BigNumber;
   beanPrice: BigNumber;
-  token: Token;
+  token: TokenInstance;
   tokenAmount: BigNumber;
 };
 

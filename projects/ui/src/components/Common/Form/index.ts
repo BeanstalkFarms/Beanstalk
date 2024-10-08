@@ -3,6 +3,7 @@ import {
   FarmToMode,
   ERC20Token as ERC20TokenNew,
   NativeToken as NativeTokenNew,
+  BeanSwapNodeQuote,
 } from '@beanstalk/sdk';
 import { ERC20Token, NativeToken } from '~/classes/Token';
 import { QuoteHandlerResult } from '~/hooks/ledger/useQuote';
@@ -22,6 +23,11 @@ export type FormState = {
 
 export type FormStateNew = {
   tokens: FormTokenStateNew[];
+  approving?: FormApprovingStateNew;
+};
+
+export type FormStateWithSwapQuote = {
+  tokens: SwapFormTokenState[];
   approving?: FormApprovingStateNew;
 };
 
@@ -47,6 +53,13 @@ export type FormTokenState =
     /** Whether we're currently looking up a quoted `amountOut` for this token. */
     quoting?: boolean;
   } & Partial<QuoteHandlerResult>;
+
+
+type IBeanSwapNodeQuote = {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+};
+
+export type SwapFormTokenState = FormTokenStateNew & IBeanSwapNodeQuote;
 
 /**
  * Fragment: A single Token stored within a form.
