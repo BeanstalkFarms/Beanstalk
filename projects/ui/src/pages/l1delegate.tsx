@@ -22,6 +22,8 @@ import useIsSmartContract from '~/hooks/chain/useIsSmartContract';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import MigrationMessage from '../components/Common/MigrationMessage';
+import useChainId from '~/hooks/chain/useChainId';
+import { useSwitchChain } from 'wagmi';
 
 export default function L1Delegate() {
 
@@ -29,6 +31,9 @@ export default function L1Delegate() {
     const sdk = useSdk();
     const { data: signer } = useSigner();
     const beanstalk = useBeanstalkContract(signer);
+
+    const chainId = useChainId();
+    const { chains, error, isPending, switchChain } = useSwitchChain();
 
     const [destinationAccount, setDestinationAccount] = useState<
         string | undefined
@@ -284,56 +289,70 @@ export default function L1Delegate() {
                             </>
                         )}
                         <Box sx={{ display: 'inline-flex', gap: 1, width: '100%' }}>
-                            {!readyForNext ?
-                                <Box sx={{ display: 'inline-flex', gap: 1, width: '100%' }}>
-                                    {beanBalance.gt(0) &&
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
-                                            <Typography sx={{ padding: 1, color: 'GrayText' }}>
-                                                Beans held in your wallet will be
-                                                migrated and automatically sent to the specified address on Arbitrum.
-                                            </Typography>
-                                            <Button
-                                                disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
-                                                sx={{
-                                                    width: '100%',
-                                                    height: 60,
-                                                }}
-                                                onClick={() => onSubmitBeanMigration()}
-                                            >{beanComplete ? "Migration Complete!" : beanBalance.gt(beanAllowance) ? 'Approve Beans for Migration' : 'Migrate Circulating Beans'}
-                                            </Button>
-                                        </Box>
-                                    }
-                                    {(isContract && migrateInternal) &&
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
-                                            <Typography sx={{ padding: 1, color: 'GrayText' }}>
-                                                Beanstalk balances associated with this contract address will be
-                                                migrated and available to receive on Arbitrum at the address
-                                                specified.
-                                            </Typography>
-                                            <Button
-                                                disabled={(!isAddressValid && !migrateInternal) || !destinationAccount || internalComplete}
-                                                sx={{
-                                                    width: '100%',
-                                                    height: 60,
-                                                }}
-                                                onClick={() => onSubmitFarmMigration()}
-                                            >
-                                                {internalComplete ? "Migration Complete!" : "Migrate Beanstalk Balances"}
-                                            </Button>
-                                        </Box>
-                                    }
-                                </Box>
-                                :
-                                migrateInternal &&
+                            {chainId !== 1 ?
                                 <Button
                                     sx={{
                                         width: '100%',
                                         height: 60,
+                                        backgroundColor: '#7487CF',
+                                        '&:hover': {
+                                            backgroundColor: '#556BC4'
+                                        }
                                     }}
-                                    onClick={() => navigate('/l2claim')}
+                                    onClick={() => switchChain({ chainId: 1 })}
                                 >
-                                    Next Step
+                                    Switch to Ethereum
                                 </Button>
+                                : !readyForNext ?
+                                    <Box sx={{ display: 'inline-flex', gap: 1, width: '100%' }}>
+                                        {beanBalance.gt(0) &&
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
+                                                <Typography sx={{ padding: 1, color: 'GrayText' }}>
+                                                    Beans held in your wallet will be
+                                                    migrated and automatically sent to the specified address on Arbitrum.
+                                                </Typography>
+                                                <Button
+                                                    disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: 60,
+                                                    }}
+                                                    onClick={() => onSubmitBeanMigration()}
+                                                >{beanComplete ? "Migration Complete!" : beanBalance.gt(beanAllowance) ? 'Approve Beans for Migration' : 'Migrate Circulating Beans'}
+                                                </Button>
+                                            </Box>
+                                        }
+                                        {(isContract && migrateInternal) &&
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
+                                                <Typography sx={{ padding: 1, color: 'GrayText' }}>
+                                                    Beanstalk balances associated with this contract address will be
+                                                    migrated and available to receive on Arbitrum at the address
+                                                    specified.
+                                                </Typography>
+                                                <Button
+                                                    disabled={(!isAddressValid && !migrateInternal) || !destinationAccount || internalComplete}
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: 60,
+                                                    }}
+                                                    onClick={() => onSubmitFarmMigration()}
+                                                >
+                                                    {internalComplete ? "Migration Complete!" : "Migrate Beanstalk Balances"}
+                                                </Button>
+                                            </Box>
+                                        }
+                                    </Box>
+                                    :
+                                    migrateInternal &&
+                                    <Button
+                                        sx={{
+                                            width: '100%',
+                                            height: 60,
+                                        }}
+                                        onClick={() => navigate('/l2claim')}
+                                    >
+                                        Next Step
+                                    </Button>
                             }
                         </Box>
                     </Card>
