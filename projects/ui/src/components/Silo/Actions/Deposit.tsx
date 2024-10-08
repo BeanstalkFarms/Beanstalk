@@ -152,6 +152,24 @@ const DepositForm: FC<
     [account, sdk]
   );
 
+  const handleQuoteClaim = useCallback<
+    QuoteHandlerWithParams<{ slippage: number }>
+  >(
+    async (tokenIn, _amountIn, tokenOut, { slippage }) => {
+      if (!account) {
+        throw new Error('Signer Required.');
+      }
+      const deposit = sdk.silo.buildDeposit(tokenOut, account);
+      deposit.setInputToken(tokenIn);
+
+      const est = await deposit.estimate(
+        tokenIn.fromHuman(_amountIn.toString())
+      );
+      return tokenValueToBN(est);
+    },
+    [account, sdk]
+  );
+
   const txnActions = useFarmerFormTxnActions({
     showGraphicOnClaim: sdk.tokens.BEAN.equals(values.tokens[0].token) || false,
     claimBeansState: values.claimableBeans,
@@ -271,7 +289,7 @@ const DepositForm: FC<
             />
           );
         })}
-        <ClaimBeanDrawerToggle actionText="Deposit" />
+        {false && <ClaimBeanDrawerToggle actionText="Deposit" />}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -340,7 +358,7 @@ const DepositForm: FC<
         <ClaimBeanDrawerContent
           quoteProviderProps={{
             name: 'claimableBeans',
-            handleQuote: handleQuote,
+            handleQuote: handleQuoteClaim,
             params: quoteProviderParams,
             tokenOut: whitelistedToken,
             state: values.claimableBeans,

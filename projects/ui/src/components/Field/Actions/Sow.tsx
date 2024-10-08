@@ -69,8 +69,6 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 
-
-
 type SowFormValues = FormStateWithSwapQuote & {
   settings: SlippageSettingsFragment & {
     minTemperature: BigNumber | undefined;
@@ -90,9 +88,12 @@ const defaultFarmActionsFormState = {
   secondary: undefined,
 };
 
-const claimQuoter: QuoteHandlerWithParams<SowFormQuoteParams> = async (_tokenIn, _amountIn) => ({
-    amountOut: _amountIn,
-  })
+const claimQuoter: QuoteHandlerWithParams<SowFormQuoteParams> = async (
+  _tokenIn,
+  _amountIn
+) => ({
+  amountOut: _amountIn,
+});
 
 const SowForm: FC<
   FormikProps<SowFormValues> & {
@@ -120,7 +121,7 @@ const SowForm: FC<
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
 
-    // This handler does not run when _tokenIn = _tokenOut
+  // This handler does not run when _tokenIn = _tokenOut
   // _tokenOut === Bean
   const handleQuote = useCallback<QuoteHandlerWithParams<SowFormQuoteParams>>(
     async (_tokenIn, _amountIn, _tokenOut, { slippage }) => {
@@ -128,16 +129,21 @@ const SowForm: FC<
         throw new Error('Signer Required');
       }
       if ((_tokenOut as ERC20Token).equals(_tokenIn)) {
-        setFieldValue("tokens.0.beanSwapQuote", undefined);
+        setFieldValue('tokens.0.beanSwapQuote', undefined);
         return {
           amountOut: _amountIn,
-        }
+        };
       }
 
       const amountIn = _tokenIn.fromHuman(_amountIn.toString());
-      const quote = await sdk.beanSwap.quoter.route(_tokenIn, sdk.tokens.BEAN, amountIn, slippage);
+      const quote = await sdk.beanSwap.quoter.route(
+        _tokenIn,
+        sdk.tokens.BEAN,
+        amountIn,
+        slippage
+      );
 
-      setFieldValue("tokens.0.beanSwapQuote", quote);
+      setFieldValue('tokens.0.beanSwapQuote', quote);
 
       return {
         amountOut: tokenValueToBN(quote.buyAmount),
@@ -228,7 +234,6 @@ const SowForm: FC<
     [values.settings.slippage]
   );
 
-
   /// FIXME: standardized `maxAmountIn` approach?
   /// When `tokenIn` or `tokenOut` changes, refresh the
   /// max amount that the user can input of `tokenIn`.
@@ -259,8 +264,15 @@ const SowForm: FC<
 
       setFieldValue('tokens.0.maxAmountIn', tokenValueToBN(max));
     })();
-  }, [account, sdk, setFieldValue, soil, tokenIn, tokenList, quoteHandlerParams]);
-
+  }, [
+    account,
+    sdk,
+    setFieldValue,
+    soil,
+    tokenIn,
+    tokenList,
+    quoteHandlerParams,
+  ]);
 
   return (
     <FormWithDrawer autoComplete="off" siblingRef={formRef}>
@@ -294,7 +306,7 @@ const SowForm: FC<
           balanceFrom={values.balanceFrom}
           disableTokenSelect={!hasSoil || !maxAmountIn}
         />
-        {hasSoil && <ClaimBeanDrawerToggle actionText="Sow" />}
+        {false && <ClaimBeanDrawerToggle actionText="Sow" />}
         {!hasSoil ? (
           <Box>
             <WarningAlert sx={{ color: 'black' }}>
@@ -465,7 +477,7 @@ const SowFormContainer: FC<{}> = () => {
       },
       claimableBeans: {
         token: sdk.tokens.BEAN,
-        amount: undefined
+        amount: undefined,
       },
       balanceFrom: BalanceFrom.TOTAL,
     }),
@@ -632,11 +644,10 @@ const Sow: React.FC<{}> = () => (
 
 export default Sow;
 
-
 function getSwapOperation(
   sdk: BeanstalkSDK,
   values: SowFormValues,
-  account: string | undefined,
+  account: string | undefined
 ) {
   if (!account) {
     throw new Error('Signer required');
@@ -658,7 +669,7 @@ function getSwapOperation(
   if (buyToken.equals(sellToken)) {
     return undefined;
   }
-  if (!quoteData) { 
+  if (!quoteData) {
     throw new Error('No quote data');
   }
   if (!amountOut) {
@@ -688,7 +699,7 @@ function getSwapOperation(
       `Buy amount mismatch. Expected: ${amountOut} Got: ${quoteData.buyAmount}`
     );
   }
-  
+
   const operation = BeanSwapOperation.buildWithQuote(
     quoteData,
     account,

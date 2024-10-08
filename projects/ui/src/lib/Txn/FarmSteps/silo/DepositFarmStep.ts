@@ -11,7 +11,6 @@ import {
 import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
 import { makeLocalOnlyStep } from '~/lib/Txn/util';
 
-
 export class DepositFarmStep extends FarmStep {
   constructor(
     _sdk: BeanstalkSDK,
@@ -56,16 +55,14 @@ export class DepositFarmStep extends FarmStep {
     // x -> LP token
     if (operation !== undefined) {
       this.pushInput({
-        input: [
-          ...operation.getFarm().generators,
-        ] as StepGenerator[],
+        input: [...operation.getFarm().generators] as StepGenerator[],
       });
       const deposit = this._sdk.silo.buildDeposit(this._target, account);
       deposit.setInputToken(this._target, FarmFromMode.INTERNAL_TOLERANT);
       this.pushInput({
         input: [...deposit.workflow.generators] as StepGenerator[],
       });
-    // LP -> LP
+      // LP -> LP
     } else {
       const deposit = this._sdk.silo.buildDeposit(this._target, account);
       deposit.setInputToken(tokenIn, fromMode);

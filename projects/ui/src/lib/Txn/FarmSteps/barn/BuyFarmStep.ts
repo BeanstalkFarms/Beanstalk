@@ -31,7 +31,8 @@ export class BuyFertilizerFarmStep extends FarmStep {
     claimAndDoX: ClaimAndDoX,
     ethPrice: TokenValue,
     slippage: number,
-    operation: BeanSwapOperation | undefined
+    operation: BeanSwapOperation | undefined,
+    claimOperation: BeanSwapOperation | undefined
   ) {
     this.clear();
 
@@ -43,38 +44,54 @@ export class BuyFertilizerFarmStep extends FarmStep {
       tokenIn
     );
 
+    const setInput = () => {
+      this.pushInput({
+        input: async (_amountInStep) => {
+          const amountWstETH =
+            this._sdk.tokens.WSTETH.fromBlockchain(_amountInStep);
+          const amountFert = this.getFertFromWstETH(amountWstETH, ethPrice);
+          const minLP = await this.calculateMinLP(amountWstETH, ethPrice);
+
+          return {
+            name: 'mintFertilizer',
+            amountOut: _amountInStep,
+            prepare: () => ({
+              target: beanstalk.address,
+              callData: beanstalk.interface.encodeFunctionData(
+                'mintFertilizer',
+                [
+                  amountWstETH.toBlockchain(), // wstETHAmountIn
+                  amountFert.toBlockchain(), // minFertilizerOut
+                  minLP.subSlippage(slippage).toBlockchain(), // minLPTokensOut (with slippage applied)
+                ]
+              ),
+            }),
+            decode: (data: string) =>
+              beanstalk.interface.decodeFunctionData('mintFertilizer', data),
+            decodeResult: (result: string) =>
+              beanstalk.interface.decodeFunctionResult(
+                'mintFertilizer',
+                result
+              ),
+          };
+        },
+      });
+    };
+
     /// If the user is not using additional BEANs
     if (!wstETHIn && operation) {
       this.pushInput({
-        input: [...operation.getFarm().generators]
-      })
+        input: [...operation.getFarm().generators],
+      });
+      setInput();
     }
 
-    this.pushInput({
-      input: async (_amountInStep) => {
-        const amountWstETH =
-          this._sdk.tokens.WSTETH.fromBlockchain(_amountInStep);
-        const amountFert = this.getFertFromWstETH(amountWstETH, ethPrice);
-        const minLP = await this.calculateMinLP(amountWstETH, ethPrice);
-
-        return {
-          name: 'mintFertilizer',
-          amountOut: _amountInStep,
-          prepare: () => ({
-            target: beanstalk.address,
-            callData: beanstalk.interface.encodeFunctionData('mintFertilizer', [
-              amountWstETH.toBlockchain(), // wstETHAmountIn
-              amountFert.toBlockchain(), // minFertilizerOut
-              minLP.subSlippage(slippage).toBlockchain(), // minLPTokensOut (with slippage applied)
-            ]),
-          }),
-          decode: (data: string) =>
-            beanstalk.interface.decodeFunctionData('mintFertilizer', data),
-          decodeResult: (result: string) =>
-            beanstalk.interface.decodeFunctionResult('mintFertilizer', result),
-        };
-      },
-    });
+    if (claimOperation) {
+      this.pushInput({
+        input: [...claimOperation.getFarm().generators],
+      });
+      setInput();
+    }
 
     this.pushInput(claimAndDoX.getTransferStep(this._account));
 
@@ -131,7 +148,12 @@ export class BuyFertilizerFarmStep extends FarmStep {
   ) {
     BuyFertilizerFarmStep.validateTokenIn(sdk.tokens, tokenList, tokenIn);
 
-    const quote = await sdk.beanSwap.quoter.route(tokenIn as ERC20Token, sdk.tokens.WSTETH, amountIn, slippage);
+    const quote = await sdk.beanSwap.quoter.route(
+      tokenIn as ERC20Token,
+      sdk.tokens.WSTETH,
+      amountIn,
+      slippage
+    );
 
     if (!quote) {
       throw new Error('Unable to build swap.');
@@ -141,7 +163,7 @@ export class BuyFertilizerFarmStep extends FarmStep {
 
     return {
       amountOut,
-      beanSwapQuote: quote
+      beanSwapQuote: quote,
     };
   }
 

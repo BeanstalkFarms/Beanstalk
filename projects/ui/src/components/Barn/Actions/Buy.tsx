@@ -89,7 +89,6 @@ interface FormState {
   approving?: FormApprovingStateNew;
 }
 
-
 type BuyFormValues = FormState &
   BalanceFromFragment &
   FormTxnsFormState & {
@@ -97,7 +96,7 @@ type BuyFormValues = FormState &
       slippage: number;
     };
   } & {
-    claimableBeans: FormTokenStateNew;
+    claimableBeans: FormTokenStateWithQuote;
   };
 
 type BuyQuoteHandlerParams = {
@@ -148,7 +147,7 @@ const BuyForm: FC<
       });
   }, [getWstETHPrice]);
 
-   // Doesn't get called if tokenIn === tokenOut
+  // Doesn't get called if tokenIn === tokenOut
   // aka if the user has selected wstETH as input
   const handleQuote = useCallback<
     QuoteHandlerWithParams<BuyQuoteHandlerParams>
@@ -162,11 +161,34 @@ const BuyForm: FC<
         tokenList,
         tokenIn,
         tokenIn.amount(_amountIn.toString()),
-        slippage,
+        slippage
       );
 
       setFieldValue('tokens.0.beanSwapQuote', quote.beanSwapQuote);
 
+      return tokenValueToBN(quote.amountOut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account, sdk, tokenList, setFieldValue]
+  );
+
+  const handleQuoteClaim = useCallback<
+    QuoteHandlerWithParams<BuyQuoteHandlerParams>
+  >(
+    async (tokenIn, _amountIn, _tokenOut, { slippage }) => {
+      if (!account) {
+        throw new Error('No account connected');
+      }
+
+      const quote = await BuyFertilizerFarmStep.getAmountOut(
+        sdk,
+        tokenList,
+        tokenIn,
+        tokenIn.amount(_amountIn.toString()),
+        slippage
+      );
+
+      setFieldValue('claimableBeans.beanSwapQuote', quote.beanSwapQuote);
 
       return tokenValueToBN(quote.amountOut);
     },
@@ -254,7 +276,7 @@ const BuyForm: FC<
           balanceFrom={values.balanceFrom}
           params={quoteProviderParams}
         />
-        <ClaimBeanDrawerToggle actionText="Buy Fert with" />
+        {false && <ClaimBeanDrawerToggle actionText="Buy Fert with" />}
         {/* Outputs */}
         {fert?.gt(0) ? (
           <>
@@ -368,7 +390,7 @@ const BuyForm: FC<
             name: 'claimableBeans',
             state: values.claimableBeans,
             params: quoteProviderParams,
-            handleQuote: handleQuote,
+            handleQuote: handleQuoteClaim,
           }}
         />
       </FormWithDrawer.Drawer>
@@ -424,6 +446,7 @@ const BuyPropProvider: FC<{}> = () => {
         /// claimable BEAN
         token: sdk.tokens.BEAN,
         amount: undefined,
+        beanSwapQuote: undefined,
       },
       settings: {
         slippage: 0.1,
@@ -467,7 +490,9 @@ const BuyPropProvider: FC<{}> = () => {
         const amountIn = normaliseTV(tokenIn, _amountIn);
         const totalWstETHOut = WSTETH.equals(tokenIn)
           ? amountIn
-          : normaliseTV(WSTETH, _amountOut);
+          : normaliseTV(WSTETH, _amountOut).add(
+              claimData.amountOut?.toNumber() ?? 0
+            );
 
         if (totalWstETHOut.lte(0)) throw new Error('Amount required');
 
@@ -486,7 +511,11 @@ const BuyPropProvider: FC<{}> = () => {
           success: 'Purchase successful.',
         });
 
-        const swapOperation = getSwapOperation(sdk, values, account);
+        const { operation, postClaimOperation } = getSwapOperation(
+          sdk,
+          values,
+          account
+        );
 
         buyTxn.build(
           tokenIn,
@@ -495,7 +524,8 @@ const BuyPropProvider: FC<{}> = () => {
           claimAndDoX,
           wstETHPrice,
           slippage,
-          swapOperation,
+          operation,
+          postClaimOperation
         );
 
         const performed = txnBundler.setFarmSteps(values.farmActions);
@@ -585,8 +615,11 @@ const Buy: React.FC<{}> = () => (
 
 export default Buy;
 
-
-function getSwapOperation(sdk: BeanstalkSDK, values: BuyFormValues, account: string | undefined) {
+function getSwapOperation(
+  sdk: BeanstalkSDK,
+  values: BuyFormValues,
+  account: string | undefined
+) {
   if (!account) {
     throw new Error('Signer required');
   }
@@ -596,6 +629,28 @@ function getSwapOperation(sdk: BeanstalkSDK, values: BuyFormValues, account: str
   const quoteData = state?.beanSwapQuote;
   const amountIn = state?.amount;
   const amountOut = state?.amountOut;
+  const claim = values.claimableBeans;
+  const claimQuote = claim?.beanSwapQuote;
+
+  const operation = quoteData
+    ? BeanSwapOperation.buildWithQuote(
+        quoteData,
+        account,
+        account,
+        balanceFromToMode(values.balanceFrom),
+        FarmToMode.INTERNAL
+      )
+    : undefined;
+
+  const postClaimOperation = claimQuote
+    ? BeanSwapOperation.buildWithQuote(
+        claimQuote,
+        account,
+        account,
+        balanceFromToMode(values.balanceFrom),
+        FarmToMode.INTERNAL
+      )
+    : undefined;
 
   if (!sellToken) {
     throw new Error('No token selected');
@@ -605,10 +660,10 @@ function getSwapOperation(sdk: BeanstalkSDK, values: BuyFormValues, account: str
   }
 
   if (buyToken.equals(sellToken)) {
-    return undefined;
+    return { operation, postClaimOperation };
   }
 
-  if (!quoteData) { 
+  if (!quoteData) {
     throw new Error('No quote data');
   }
   const firstNode = quoteData.nodes[0];
@@ -635,14 +690,5 @@ function getSwapOperation(sdk: BeanstalkSDK, values: BuyFormValues, account: str
     );
   }
 
-  const operation = BeanSwapOperation.buildWithQuote(
-    quoteData, 
-    account,
-    account,
-    balanceFromToMode(values.balanceFrom),
-    FarmToMode.INTERNAL
-  )
-
-  return operation;
-
+  return { operation, postClaimOperation };
 }
