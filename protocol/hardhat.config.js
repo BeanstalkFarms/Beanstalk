@@ -146,16 +146,33 @@ task("reseedL1", async () => {
 
 task("reseedL2", async () => {
   // the account that deploys the new diamond address at nonce 0.
-  let beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
-  // the l2 bcm safe account address.
-  let l2bcm = await impersonateSigner(L2_BCM);
-  await mintEth(beanstalkDeployer.address);
-  await mintEth(l2bcm.address);
+  mock = true;
+  let beanstalkDeployer;
+  if (mock) {
+    beanstalkDeployer = await impersonateSigner("0xe26367ca850da09a478076481535d7c1c67d62f9");
+    await mintEth(beanstalkDeployer.address);
+  } else {
+    beanstalkDeployer = new ethers.Wallet(process.env.DIAMOND_DEPLOYER_PK, ethers.provider);
+    console.log("Deployer address: ", await beanstalkDeployer.getAddress());
+  }
   await reseedL2({
     beanstalkDeployer: beanstalkDeployer,
-    l2owner: l2bcm,
-    setState: true
+    setState: true,
+    addLiquidity: false
   });
+});
+
+// Prior to the last reseed (i.e, adding facets to L2 beanstalk),
+// the beanstalk owner needs to accept ownership of beanstalk.
+// The ownership facet will already be added to the diamond
+// and the deployer will have already proposed the l2 owner as the new owner.
+// After claiming ownership, run this task to get the diamond cut json for the bcm to sign.
+task("reseedL2AddFacets", async () => {
+  const mock = false;
+  let l2bcm = await impersonateSigner(L2_BCM);
+  await mintEth(l2bcm.address);
+  // add selectors to l2 beanstalk from the already deployed facets
+  await reseed10(l2bcm, L2_BEANSTALK, mock);
 });
 
 // deploys the L1RecieverFacet with updated merkle roots.
@@ -173,7 +190,8 @@ task("deployL1ReceiverFacet", async function () {
   }
 
   const L1ReceiverFacet = await ethers.getContractFactory("L1ReceiverFacet", {
-    libraries: { // deployed libraries on arb
+    libraries: {
+      // deployed libraries on arb
       LibSilo: "0xdDe5EF030cC400EF2Ea7c37f0819b59217F6bb34",
       LibTokenSilo: "0x6C5860E9Fc6B35cfe3C98A4f5Aa686C7cf9F7981"
     }
