@@ -61,7 +61,7 @@ const L1NavBar = () => (
 const NavBar: FC<{}> = ({ children }) => {
   const { isArbitrum, isArbMainnet } = useChainState();
 
-  if (!isArbitrum || isArbMainnet) {
+  if (!isArbitrum) {
     return <L1NavBar />;
   }
 
