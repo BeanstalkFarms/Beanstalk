@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { Box, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
@@ -62,12 +62,16 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+
 import useChainState from '~/hooks/chain/useChainState';
 import { runOnDev } from '~/util/dev';
 import useSdk from '~/hooks/sdk';
 import L2Claim from '~/pages/l2claim';
 import L1Delegate from '~/pages/l1delegate';
 import MigrationMessage from '../Common/MigrationMessage';
+
+import MigrationPreview from '../../pages/preview';
+
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -139,7 +143,7 @@ function MigrationGate() {
         >
           <Box sx={{ marginTop: 0 }}>
             <MigrationMessage />
-            {/*<Routes>
+            {/* <Routes>
               <Route index element={<L1Delegate />} />
               <Route path="*" element={<L1Delegate />} />
               <Route path="/l1delegate" element={<L1Delegate />} />
@@ -149,7 +153,7 @@ function MigrationGate() {
               <Route path="/l2" element={<L2Claim />} />
               <Route path="/arbitrum" element={<L2Claim />} />
               <Route path="/404" element={<PageNotFound />} />
-            </Routes>*/}
+            </Routes> */}
           </Box>
         </Stack>
       </Box>
@@ -275,6 +279,8 @@ function Arbitrum() {
             <Route path="governance/vp/:id" element={<VotingPowerPage />} />
             <Route path="/silo" element={<SiloPage />} />
             <Route path="/silo/:address" element={<SiloTokenPage />} />
+            <Route path="/preview" element={<MigrationPreview />} />
+            <Route path="/preview/:address" element={<MigrationPreview />} />
             <Route path="/swap" element={<SwapPage />} />
             <Route path="/l1delegate" element={<L1Delegate />} />
             <Route path="/l2claim" element={<L2Claim />} />
@@ -292,8 +298,7 @@ export default function App() {
   // const isDevMode = import.meta.env.DEV;
   const migrationUnderway = true;
 
-
-  if (migrationUnderway && (!isArbitrum && isTestnet)) {
+  if (migrationUnderway && !isArbitrum && isTestnet) {
     return <MigrationGate />;
   }
 

@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   Box,
   CircularProgress,
+  Link,
   Stack,
   Typography,
 } from '@mui/material';
@@ -25,6 +26,7 @@ import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSumma
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
+
 import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -51,17 +53,38 @@ import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { useUnripe } from '~/state/bean/unripe/updater';
 import { TokenInstance, useUnripeTokens } from '~/hooks/beanstalk/useTokens';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 type ChopFormValues = FormStateNew & {
   destination: FarmToMode | undefined;
+};
+
+const useOptimizedBalanceSource = (
+  token: FormStateNew['tokens'][number]['token'],
+  balances: ReturnType<typeof useFarmerBalances>
+) => {
+  const bal = balances[token.address];
+
+  if (bal && bal.external.gt(bal.internal)) {
+    return BalanceFrom.EXTERNAL;
+  }
+
+  return BalanceFrom.INTERNAL;
 };
 
 const ChopForm: FC<
   FormikProps<ChopFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
+    optimizedBalanceSource: BalanceFrom;
   }
-> = ({ values, setFieldValue, balances, beanstalk }) => {
+> = ({
+  values,
+  setFieldValue,
+  balances,
+  beanstalk,
+  optimizedBalanceSource,
+}) => {
   const sdk = useSdk();
   const getBDV = useBDV();
   const { tokenMap: erc20TokenMap } = useUnripeTokens();
@@ -70,15 +93,16 @@ const ChopForm: FC<
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
   const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
   const [balanceFromIn, setBalanceFromIn] = useState<BalanceFrom>(
-    values.destination === FarmToMode.EXTERNAL
-      ? BalanceFrom.EXTERNAL
-      : BalanceFrom.INTERNAL
+    optimizedBalanceSource
   );
   /// Derived values
   const state = values.tokens[0];
   const inputToken = state.token;
   const tokenBalance = balances[inputToken.address];
   const outputToken = unripeUnderlying[inputToken.address];
+
+  const isUnripeLP =
+    values.tokens[0]?.token.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -170,6 +194,7 @@ const ChopForm: FC<
         <TokenInputField
           token={inputToken}
           balance={tokenBalance || ZERO_BN}
+          balanceFrom={balanceFromIn}
           name="tokens.0.amount"
           // MUI
           fullWidth
@@ -243,6 +268,23 @@ const ChopForm: FC<
             </Box>
           </>
         ) : null}
+        {isUnripeLP ? (
+          <WarningAlert>
+            <Typography>
+              You can get more value by Converting to{' '}
+              {sdk.tokens.UNRIPE_BEAN.symbol} first by Depositing and Converting
+              in the Silo{' '}
+              <Typography
+                component={Link}
+                href={`#/silo/${sdk.tokens.UNRIPE_BEAN_WSTETH.address}?action=deposit`}
+              >
+                here
+              </Typography>
+              . Note that you will have to wait 2 Seasons for your new Deposit
+              to Germinate before Converting.
+            </Typography>
+          </WarningAlert>
+        ) : null}
         <SmartSubmitButton
           type="submit"
           variant="contained"
@@ -298,6 +340,11 @@ const Chop: FC<{}> = () => {
       destination: FarmToMode.INTERNAL,
     }),
     [baseToken]
+  );
+
+  const initialBalanceFrom = useOptimizedBalanceSource(
+    initialValues.tokens[0].token,
+    farmerBalances
   );
 
   /// Handlers
@@ -360,6 +407,7 @@ const Chop: FC<{}> = () => {
         <ChopForm
           balances={farmerBalances}
           beanstalk={beanstalk}
+          optimizedBalanceSource={initialBalanceFrom}
           {...formikProps}
         />
       )}

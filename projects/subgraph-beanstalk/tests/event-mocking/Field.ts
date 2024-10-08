@@ -1,6 +1,5 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { Sow, PlotTransfer, Harvest } from "../../generated/Beanstalk-ABIs/PreReplant";
-import { TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Sow, PlotTransfer, Harvest, TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createWeatherChangeEvent(season: BigInt, caseID: BigInt, change: i32): void {}

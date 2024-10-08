@@ -1,6 +1,14 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { Bean, BeanDailySnapshot, BeanHourlySnapshot, Pool } from "../../generated/schema";
-import { BEAN_ERC20_V1, BEAN_ERC20, BEAN_WETH_V1, BEAN_3CRV_V1, BEAN_LUSD_V1, BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import {
+  BEAN_ERC20_V1,
+  BEAN_ERC20,
+  BEAN_WETH_V1,
+  BEAN_3CRV_V1,
+  BEAN_LUSD_V1,
+  BEANSTALK,
+  NEW_BEAN_TOKEN_BLOCK
+} from "../../../subgraph-core/utils/Constants";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross, getV1Crosses } from "./Cross";
@@ -178,11 +186,11 @@ export function calcLiquidityWeightedBeanPrice(token: string): BigDecimal {
 }
 
 export function getBeanTokenAddress(blockNumber: BigInt): string {
-  return blockNumber < BigInt.fromString("15278082") ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
+  return blockNumber < NEW_BEAN_TOKEN_BLOCK ? BEAN_ERC20_V1.toHexString() : BEAN_ERC20.toHexString();
 }
 
 export function updateBeanSupplyPegPercent(blockNumber: BigInt): void {
-  if (blockNumber < BigInt.fromString("15278082")) {
+  if (blockNumber < NEW_BEAN_TOKEN_BLOCK) {
     let bean = loadBean(BEAN_ERC20_V1.toHexString());
     let lpSupply = ZERO_BD;
 

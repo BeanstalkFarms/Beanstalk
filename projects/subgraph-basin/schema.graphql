@@ -17,6 +17,18 @@ enum SwapEvent {
   SHIFT
 }
 
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
+
 type Token @entity {
   " Smart contract address of the token "
   id: Bytes!

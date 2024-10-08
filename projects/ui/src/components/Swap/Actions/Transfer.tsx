@@ -30,6 +30,7 @@ import {
   WETH,
   ETH,
   BEAN_WSTETH_WELL_LP,
+  WSTETH,
 } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -424,6 +425,7 @@ const SUPPORTED_TOKENS = [
   BEAN,
   ETH,
   WETH,
+  WSTETH,
   BEAN_ETH_WELL_LP,
   BEAN_WSTETH_WELL_LP,
   DAI,

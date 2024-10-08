@@ -169,6 +169,7 @@ type Proposal {
   flagged: Boolean
   id: String!
   ipfs: String
+  labels: [String]!
   link: String
   network: String!
   plugins: Any!

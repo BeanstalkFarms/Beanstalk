@@ -3,7 +3,7 @@
 # the only important part is in the `abis` and `templates` sections.
 #  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
 #  - For templates, it is only the name of the template that is relevant.
-specVersion: 0.0.5
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
@@ -30,7 +30,8 @@ dataSources:
           file: ../abis/barnraise.json
         - name: basin
           file: ../abis/basin.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransferGenesis
-      file: ../src/mappings.ts
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts

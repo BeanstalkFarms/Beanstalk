@@ -1,10 +1,22 @@
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
+
 type BeaNFTUser @entity {
   id: ID!
   barnRaise: [Int!]
   genesis: [Int!]
   winter: [Int!]
   basin: [Int!]
-},
+}
 type CollectionData @entity {
   id: ID!
   minted: [Int!]

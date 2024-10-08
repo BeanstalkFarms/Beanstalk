@@ -60,6 +60,10 @@ export const DefaultConvertForm: FC<Props> = ({
     (_state) => _state._bean.unripe
   );
 
+  const isChoppingLP =
+    isChopping &&
+    values.tokens[0].token.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
+
   const plantCrate = plantAndDoX?.crate?.bn;
 
   /// Extract values from form state
@@ -357,7 +361,7 @@ export const DefaultConvertForm: FC<Props> = ({
                   component="span"
                   display="inline-block"
                 >
-                  You will forfeit {displayBN(chopPercent)}% your claim to
+                  You will forfeit {displayBN(chopPercent)}% of your claim to
                   future Ripe assets through this transaction
                   <br />
                 </Typography>
@@ -464,9 +468,9 @@ export const DefaultConvertForm: FC<Props> = ({
               component="span"
               display="inline-block"
             >
-              This conversion will effectively perform a CHOP opperation. Please
+              This Convert will effectively perform a CHOP operation. Please
               confirm you understand this by typing{' '}
-              <strong>&quot;CHOP MY ASSETS&quot;</strong>below.
+              <strong>&quot;CHOP MY ASSETS&quot;</strong> below.
             </Typography>
             <TextField
               fullWidth
@@ -483,6 +487,12 @@ export const DefaultConvertForm: FC<Props> = ({
               }}
             />
           </Box>
+        )}
+        {isChoppingLP && (
+          <WarningAlert>
+            You can get more value by converting to{' '}
+            {sdk.tokens.UNRIPE_BEAN.symbol} first.
+          </WarningAlert>
         )}
 
         {/* Submit */}

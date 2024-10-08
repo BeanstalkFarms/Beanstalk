@@ -3,7 +3,7 @@
 # the only important part is in the `abis` and `templates` sections.
 #  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
 #  - For templates, it is only the name of the template that is relevant.
-specVersion: 0.0.4
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
@@ -34,8 +34,6 @@ dataSources:
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
         - name: SeedGauge
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
-        - name: UniswapV2Pair
-          file: ../../subgraph-core/abis/UniswapV2Pair.json
         - name: ERC20
           file: ../../subgraph-core/abis/ERC20.json
         - name: CurvePrice
@@ -46,7 +44,8 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: Fertilizer
           file: ../../subgraph-core/abis/Fertilizer.json
-      eventHandlers:
-        - event: AddDeposit(indexed address,indexed address,int96,uint256,uint256)
-          handler: handleAddDeposit_V3
-      file: ../src/SiloHandler.ts
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts

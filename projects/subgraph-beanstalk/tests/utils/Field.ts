@@ -1,9 +1,9 @@
 import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { assert, createMockedFunction } from "matchstick-as/assembly/index";
 import { createHarvestEvent, createPlotTransferEvent, createSowEvent } from "../event-mocking/Field";
-import { handleHarvest, handlePlotTransfer, handleSow } from "../../src/FieldHandler";
+import { handleHarvest, handlePlotTransfer, handleSow } from "../../src/handlers/FieldHandler";
 import { createIncentivizationEvent } from "../event-mocking/Season";
-import { handleIncentive } from "../../src/SeasonHandler";
+import { handleIncentive } from "../../src/handlers/SeasonHandler";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
 

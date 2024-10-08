@@ -1,8 +1,8 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 
-import { WhitelistToken as WhitelistToken_V2, DewhitelistToken } from "../../generated/Beanstalk-ABIs/MarketV2";
+import { WhitelistToken as WhitelistToken_V2 } from "../../generated/Beanstalk-ABIs/Replanted";
 import { WhitelistToken as WhitelistToken_V3 } from "../../generated/Beanstalk-ABIs/SiloV3";
-import { WhitelistToken as WhitelistToken_V4 } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { WhitelistToken, DewhitelistToken } from "../../generated/Beanstalk-ABIs/SeedGauge";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createWhitelistTokenV2Event(token: string, selector: string, seeds: BigInt, stalk: BigInt): WhitelistToken_V2 {
@@ -53,8 +53,8 @@ export function createWhitelistTokenV4Event(
   lwSelector: string,
   gaugePoints: BigInt,
   optimalPercentDepositedBdv: BigInt
-): WhitelistToken_V4 {
-  let event = changetype<WhitelistToken_V4>(mockBeanstalkEvent());
+): WhitelistToken {
+  let event = changetype<WhitelistToken>(mockBeanstalkEvent());
   event.parameters = new Array();
 
   let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
@@ -75,7 +75,7 @@ export function createWhitelistTokenV4Event(
   event.parameters.push(param7);
   event.parameters.push(param8);
 
-  return event as WhitelistToken_V4;
+  return event as WhitelistToken;
 }
 
 export function createDewhitelistTokenEvent(token: string): DewhitelistToken {

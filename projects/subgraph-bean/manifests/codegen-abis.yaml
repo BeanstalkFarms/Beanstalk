@@ -3,7 +3,7 @@
 # the only important part is in the `abis` and `templates` sections.
 #  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
 #  - For templates, it is only the name of the template that is relevant.
-specVersion: 0.0.4
+specVersion: 0.0.9
 schema:
   file: ../schema.graphql
 dataSources:
@@ -43,7 +43,8 @@ dataSources:
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: CalculationsCurve
           file: ../../subgraph-core/abis/CalculationsCurve.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
-      file: ../src/BeanHandler.ts
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/Init.ts

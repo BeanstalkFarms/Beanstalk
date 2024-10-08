@@ -1,5 +1,5 @@
 import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-import { loadBeanstalk } from "../../src/utils/Beanstalk";
+import { loadBeanstalk } from "../../src/entities/Beanstalk";
 
 export function setSeason(season: u32): void {
   let beanstalk = loadBeanstalk(BEANSTALK);

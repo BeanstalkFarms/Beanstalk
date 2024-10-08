@@ -1,5 +1,5 @@
 import { http, createConfig } from 'wagmi';
-import { injected, safe, walletConnect } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { Chain, type Transport } from 'viem';
 import {
   mainnet,
@@ -54,7 +54,7 @@ export const config = createConfig({
     walletConnect({
       projectId: WALLET_CONNECT_PROJECT_ID,
     }),
-    safe(),
+    // safe(),
   ],
 });
 
