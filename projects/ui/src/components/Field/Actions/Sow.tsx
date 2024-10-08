@@ -120,11 +120,6 @@ const SowForm: FC<
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    console.log('[SowForm][0]', values.tokens[0]);
-    console.log('[SowForm][1]', values.tokens[1]);
-  }, [values.tokens]);
-
     // This handler does not run when _tokenIn = _tokenOut
   // _tokenOut === Bean
   const handleQuote = useCallback<QuoteHandlerWithParams<SowFormQuoteParams>>(
