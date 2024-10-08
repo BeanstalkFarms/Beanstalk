@@ -107,7 +107,8 @@ export class DepositFarmStep extends FarmStep {
     _account: string | undefined,
     tokenIn: Token,
     amountIn: TokenValue,
-    target: Token
+    target: Token,
+    slippage: number
   ) {
     const account = _account || (await sdk.getAccount());
 
@@ -125,7 +126,7 @@ export class DepositFarmStep extends FarmStep {
       tokenIn as ERC20Token | NativeToken,
       target as ERC20Token | NativeToken,
       amountIn,
-      0.1
+      slippage
     );
 
     if (!quote) {
