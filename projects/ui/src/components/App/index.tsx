@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -46,7 +46,7 @@ import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
-import "react-day-picker/dist/style.css";
+import 'react-day-picker/dist/style.css';
 
 import { FC } from '~/types';
 
@@ -62,6 +62,7 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+import useSdk from '~/hooks/sdk';
 import MigrationPreview from '../../pages/preview';
 // import Snowflakes from './theme/winter/Snowflakes';
 
@@ -98,10 +99,72 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   </Toaster>
 );
 
+function MigrationInProgress() {
+  const banner = useBanner();
+  const navHeight = useNavHeight(!!banner);
+
+  const sdk = useSdk();
+  const account = useAccount();
+
+  return (
+    <>
+      <NavBar>{null}</NavBar>
+      <CustomToaster navHeight={navHeight} />
+      <Box
+        sx={{
+          bgcolor: 'background.default',
+          backgroundImage: `url(${pageBackground})`,
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'bottom center',
+          backgroundSize: '100%',
+          backgroundRepeat: 'no-repeat',
+          width: '100%',
+          minHeight: `calc(100vh - ${navHeight}px)`,
+        }}
+      >
+        <Stack
+          sx={{
+            width: '100vw',
+            minHeight: `calc(100vh - ${navHeight}px)`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ marginTop: 0 }}>
+            <Box>
+              <Typography variant="h1">{`We're migrating!`}</Typography>
+              <Typography variant="body1" textAlign="center">
+                Please check discord for details.
+              </Typography>
+            </Box>
+            {/* <Routes>
+              <Route index element={<L1Delegate />} />
+              <Route path="*" element={<L1Delegate />} />
+              <Route path="/l1delegate" element={<L1Delegate />} />
+              <Route path="/l1" element={<L1Delegate />} />
+              <Route path="/ethereum" element={<L1Delegate />} />
+              <Route path="/l2claim" element={<L2Claim />} />
+              <Route path="/l2" element={<L2Claim />} />
+              <Route path="/arbitrum" element={<L2Claim />} />
+              <Route path="/404" element={<PageNotFound />} />
+            </Routes> */}
+          </Box>
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+const migrating = true;
+
 export default function App() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
   const account = useAccount();
+  if (migrating) {
+    return <MigrationInProgress />;
+  }
+
   return (
     <>
       {/* -----------------------

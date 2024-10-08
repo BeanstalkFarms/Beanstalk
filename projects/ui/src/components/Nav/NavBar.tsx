@@ -41,8 +41,8 @@ const NavBar: FC<{}> = ({ children }) => {
       >
         {/* Desktop: Left Side */}
         <Row sx={{ flex: 1 }} height="100%" gap={1}>
-          <PriceButton sx={{ height: NAV_ELEM_HEIGHT }} />
-          <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          {false && <PriceButton sx={{ height: NAV_ELEM_HEIGHT }} />}
+          {false && <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />}
           <Row
             sx={{ display: { lg: 'flex', xs: 'none' } }}
             height="100%"
@@ -62,10 +62,10 @@ const NavBar: FC<{}> = ({ children }) => {
         {/* Desktop: Right Side */}
         <Row justifyContent="flex-end" gap={1}>
           <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
-            <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />
+            {false && <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />}
           </Box>
-          <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />
-          <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          {false && <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />}
+          {false && <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />}
         </Row>
       </Row>
     </AppBar>
