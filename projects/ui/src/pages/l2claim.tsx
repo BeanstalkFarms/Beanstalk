@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Button, Card, Typography } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
 import { FontWeight } from '~/components/App/muiTheme';
@@ -34,18 +34,17 @@ export default function L2Claim() {
     const hasPlots = plots ? Object.keys(plots).length > 0 : false;
     const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
 
-    async function getEvent() {
+    const getEvent = useCallback(async () => {
         const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
         if (internalBalanceMigrationData) {
             const { source } = JSON.parse(internalBalanceMigrationData);
             const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](source);
             const logs = await sdk.contracts.beanstalk.queryFilter(filter);
-            if (!logs || logs.length === 0) return;
-            setReceiverApproved(true);
+            setReceiverApproved(logs && logs.length > 0);
         } else {
             setReceiverApproved(false);
         }
-    };
+    }, [sdk.contracts.beanstalk]);
 
     useEffect(() => {
         async function getMigrationData() {
@@ -62,9 +61,7 @@ export default function L2Claim() {
     }, [account, sourceAccount]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            getEvent()
-        }, 5000);
+        const interval = setInterval(getEvent, 5000);
         return () => clearInterval(interval);
     }, []);
 
