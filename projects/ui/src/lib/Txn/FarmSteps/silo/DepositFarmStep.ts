@@ -1,8 +1,12 @@
 import {
   BeanstalkSDK,
+  BeanSwapNodeQuote,
+  BeanSwapOperation,
+  Clipboard,
   ERC20Token,
   FarmFromMode,
   FarmToMode,
+  NativeToken,
   StepGenerator,
   Token,
   TokenValue,
@@ -46,6 +50,7 @@ export class DepositFarmStep extends FarmStep {
     tokenIn: Token,
     amountIn: TokenValue,
     fromMode: FarmFromMode,
+    operation: BeanSwapOperation | undefined,
     account: string,
     claimAndDoX: ClaimAndDoX
   ) {
@@ -54,14 +59,13 @@ export class DepositFarmStep extends FarmStep {
      * TODO: Find a better way to do this... maybe use a graph?
      */
     const { BEAN } = this._sdk.tokens;
-
     if (claimAndDoX.claimedBeansUsed.lte(0) && amountIn.lte(0)) {
       throw new Error('No amount');
     }
 
     // If we're not using claimed Beans or if we are depositing unripe assets,
     // we can just deposit as normal
-    if (claimAndDoX.claimedBeansUsed.lte(0) || tokenIn.isUnripe) {
+    if (tokenIn.isUnripe) {
       if (this._target.isUnripe && !tokenIn.equals(this._target)) {
         throw new Error('Depositing with non-unripe assets is not supported');
       }
@@ -70,90 +74,38 @@ export class DepositFarmStep extends FarmStep {
       this.pushInput({
         input: [...deposit.workflow.generators] as StepGenerator[],
       });
-
-      console.debug('[DepositStrategy][build]: ', this.getFarmInput());
       return this;
     }
 
     const claimedBeansUsed = claimAndDoX.claimedBeansUsed;
-    const isTargetBean = BEAN.equals(this._target);
-    const isInputBean = BEAN.equals(tokenIn);
+    // if we are claiming & depositing, just build 2 deposits
 
-    // If we are depositing into SILO:BEAN
-    if (isTargetBean) {
-      let _from: FarmFromMode = fromMode;
-      // If tokenIn !== BEAN, we need to swap tokenIn => BEAN
-      if (!isInputBean && amountIn.gt(0)) {
-        const swap = this._sdk.swap.buildSwap(
-          tokenIn,
-          this._target,
-          account,
-          _from,
-          FarmToMode.INTERNAL
-        );
-        this.pushInput({
-          input: [...swap.getFarm().generators] as StepGenerator[],
-        });
-        _from = FarmFromMode.INTERNAL_TOLERANT;
-      } else if (_from === FarmFromMode.EXTERNAL) {
-        _from = FarmFromMode.INTERNAL_EXTERNAL;
-      }
-      // fore-run the deposit of claimed beans w/ the claimed Beans used
-      // If the input is BEAN, we add claimableBeansUsed, otherwise we override
-      this.pushInput(
-        makeLocalOnlyStep({
-          name: 'deposit-claimed-beans',
-          amount: {
-            additionalAmount: !isInputBean ? claimedBeansUsed : undefined,
-            overrideAmount: isInputBean
-              ? claimedBeansUsed.add(amountIn)
-              : undefined,
-          },
-        })
-      );
-
-      /// Deposit BEAN into SILO:BEAN
-      /// at this point, we have either swapped tokenIn => BEAN or tokenIn === BEAN
+    // x -> LP token
+    if (operation !== undefined) {
+      this.pushInput({
+        input: [
+          ...operation.builder.advancedFarm.generators,
+        ] as StepGenerator[],
+      });
       const deposit = this._sdk.silo.buildDeposit(this._target, account);
-      deposit.setInputToken(BEAN, _from);
+      deposit.setInputToken(this._target, FarmFromMode.INTERNAL_TOLERANT);
+      this.pushInput({
+        input: [...deposit.workflow.generators] as StepGenerator[],
+      });
+    } else {
+      const deposit = this._sdk.silo.buildDeposit(this._target, account);
+      deposit.setInputToken(tokenIn, fromMode);
       this.pushInput({
         input: [...deposit.workflow.generators] as StepGenerator[],
       });
     }
-    // If the target is NOT BEAN & the input token is BEAN,
-    // we deposit BEAN + cBEAN as a single deposit for the target
-    else if (isInputBean) {
-      const deposit = this._sdk.silo.buildDeposit(this._target, account);
-      deposit.setInputToken(tokenIn, FarmFromMode.INTERNAL_EXTERNAL);
 
-      this.pushInput(
-        makeLocalOnlyStep({
-          name: 'pre-deposit-bean-and-claimed-beans',
-          amount: {
-            overrideAmount: claimedBeansUsed.add(amountIn),
-          },
-        })
+    if (claimAndDoX?.claimedBeansUsed.gt(0) && !tokenIn.isUnripe) {
+      const depositOperation = this._sdk.silo.buildDeposit(
+        this._target,
+        account
       );
-      this.pushInput({
-        input: [...deposit.workflow.generators] as StepGenerator[],
-      });
-    }
-    // If the target is not BEAN, instead of swapping claimed BEAN for CRV3, we opt for 2 deposits
-    else {
-      if (amountIn.gt(0)) {
-        const deposit = this._sdk.silo.buildDeposit(this._target, account);
-        deposit.setInputToken(tokenIn, fromMode);
-        this.pushInput({
-          input: [...deposit.workflow.generators] as StepGenerator[],
-        });
-      }
-
-      const depositClaimed = this._sdk.silo.buildDeposit(this._target, account);
-
-      /// we claim all beans to 'INTERNAL' first
-      depositClaimed.setInputToken(BEAN, FarmFromMode.INTERNAL_TOLERANT);
-
-      // fore-run the deposit of claimed beans w/ the claimed Beans used
+      depositOperation.setInputToken(BEAN, FarmFromMode.INTERNAL_TOLERANT);
       this.pushInput(
         makeLocalOnlyStep({
           name: 'deposit-claimed-beans',
@@ -163,7 +115,7 @@ export class DepositFarmStep extends FarmStep {
         })
       );
       this.pushInput({
-        input: [...depositClaimed.workflow.generators] as StepGenerator[],
+        input: [...depositOperation.workflow.generators] as StepGenerator[],
       });
     }
 
@@ -174,8 +126,73 @@ export class DepositFarmStep extends FarmStep {
     return this;
   }
 
-  // Static methods
-  public static async getAmountOut(
+  private getDeposit(account: string) {
+    const balanceStep = () => {
+      const beanstalk = this._sdk.contracts.beanstalk;
+      return {
+        target: beanstalk.address,
+        callData: beanstalk.interface.encodeFunctionData('getInternalBalance', [
+          account,
+          this._target.address,
+        ]),
+        clipbaord: Clipboard.encode([]),
+      };
+    };
+
+    const depositStep = new this._sdk.farm.actions.Deposit(
+      this._target,
+      FarmFromMode.INTERNAL_TOLERANT,
+      {
+        tag: 'token-balance',
+        copySlot: 0,
+        pasteSlot: 1,
+      }
+    );
+
+    return {
+      balanceStep,
+      balanceTag: 'token-balance',
+      depositStep,
+    };
+  }
+
+  private getSwapOperation(
+    swapQuote: BeanSwapNodeQuote | undefined,
+    sellToken: Token,
+    sellAmount: TokenValue,
+    account: string,
+    fromMode: FarmFromMode
+  ) {
+    if (sellToken.equals(this._target)) {
+      return;
+    }
+    if (!swapQuote) {
+      throw new Error('No Deposit quote found');
+    }
+
+    const lastNode = swapQuote.nodes[swapQuote.nodes.length - 1];
+    if (!lastNode.sellToken.equals(sellToken)) {
+      throw new Error('Token input mismatch');
+    }
+    if (!lastNode.buyToken.equals(this._target)) {
+      throw new Error('Target token mismatch');
+    }
+    if (!sellAmount.eq(swapQuote.sellAmount)) {
+      throw new Error('Sell amount mismatch');
+    }
+
+    const operation = BeanSwapOperation.buildWithQuote(
+      swapQuote,
+      account,
+      account,
+      fromMode,
+      FarmToMode.INTERNAL
+    );
+
+    return operation;
+  }
+
+  public static async quote(
     sdk: BeanstalkSDK,
     _account: string | undefined,
     tokenIn: Token,
@@ -191,25 +208,42 @@ export class DepositFarmStep extends FarmStep {
 
     const isTargetBEAN = target.equals(sdk.tokens.BEAN);
     const isInputBEAN = tokenIn.equals(sdk.tokens.BEAN);
+  }
 
-    if (isTargetBEAN && isInputBEAN) {
-      return amountIn;
+  // Static methods
+  public static async getAmountOut(
+    sdk: BeanstalkSDK,
+    _account: string | undefined,
+    tokenIn: Token,
+    amountIn: TokenValue,
+    target: Token
+  ) {
+    const account = _account || (await sdk.getAccount());
+
+    if (!account) {
+      throw new Error('Signer required');
+    }
+
+    if (tokenIn.equals(target)) {
+      return undefined;
     }
 
     const quoter = sdk.beanSwap.quoter;
 
-    const deposit = sdk.silo.buildDeposit(target, account);
-    deposit.setInputToken(tokenIn, fromMode);
+    const quote = await quoter.route(
+      tokenIn as ERC20Token | NativeToken,
+      target as ERC20Token | NativeToken,
+      amountIn,
+      0.1
+    );
 
-    const estimate = deposit.estimate(amountIn);
-
-    if (!estimate) {
+    if (!quote) {
       throw new Error(
         `Depositing ${target.symbol} to the Silo via ${tokenIn.symbol} is currently unsupported.`
       );
     }
-    console.debug('[DepositFarmStep][getAmoutOut] estimate = ', estimate);
+    console.debug('[DepositFarmStep][getAmoutOut] estimate = ', quote);
 
-    return estimate;
+    return quote;
   }
 }
