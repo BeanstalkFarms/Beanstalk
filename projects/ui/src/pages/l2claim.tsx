@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Button, Card, Typography } from '@mui/material';
+import { Box, Button, Card, Link, Typography } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
 import { FontWeight } from '~/components/App/muiTheme';
 import CheckIcon from '@mui/icons-material/Check';
@@ -9,8 +9,6 @@ import useAccount from '~/hooks/ledger/useAccount';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useChainState from '~/hooks/chain/useChainState';
 import { useSwitchChain } from 'wagmi';
-import { Link } from 'react-router-dom';
-
 
 export default function L2Claim() {
 
@@ -165,7 +163,16 @@ export default function L2Claim() {
                         flexDirection: 'column'
                     }}>
                         <Typography variant="h4" textAlign="center">Beanstalk Balance Migration Complete!</Typography>
-                        <Link to={'/'}><Typography>Migrate another address</Typography></Link>
+                        <Link
+                            color="primary"
+                            display="flex"
+                            flexDirection="row"
+                            gap={1}
+                            alignItems="center"
+                            href={'/'}
+                        >
+                            <Typography variant="h4">Migrate another address</Typography>
+                        </Link>
                     </Box>
                     :
                     <>
