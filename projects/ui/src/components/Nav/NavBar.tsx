@@ -19,6 +19,49 @@ import HoverMenu from './HoverMenu';
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
 
+const L1NavBar = () => (
+  <>
+    <AppBar
+      className="navbar"
+      sx={{
+        position: 'sticky',
+        bgcolor: 'background.default',
+        borderBottom: `${NAV_BORDER_HEIGHT}px solid ${PAGE_BORDER_COLOR}`,
+        zIndex: 80,
+      }}
+    >
+      {/* Desktop: Right Side */}
+      <Row
+        justifyContent="space-between"
+        gap={1}
+        px={1}
+        height={`${NAV_HEIGHT}px`}
+      >
+        <Box px={2} py={1} sx={{ display: 'inline-flex', flexDirection: 'row', gap: 2, alignItems: 'center', height: `${NAV_HEIGHT}px` }}>
+          <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
+          <LinkButton
+            key={'/'}
+            to={'/'}
+            title={'Migrate'}
+          />
+          <LinkButton
+            key={'/withdraw'}
+            to={'/withdraw'}
+            title={'Withdraw'}
+          />
+        </Box>
+        <Row gap={1}>
+          <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
+            <NetworkButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          </Box>
+          <WalletButton sx={{ height: NAV_ELEM_HEIGHT }} />
+          <AboutButton sx={{ height: NAV_ELEM_HEIGHT }} />
+        </Row>
+      </Row>
+    </AppBar>
+  </>
+);
+
 const NavBar: FC<{}> = ({ children }) => {
   const content = (
     <AppBar
