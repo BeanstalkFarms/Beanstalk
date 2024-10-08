@@ -63,7 +63,6 @@ import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
 import useChainState from '~/hooks/chain/useChainState';
-import EthMainnet from '~/pages/mainnet';
 import { runOnDev } from '~/util/dev';
 import useSdk from '~/hooks/sdk';
 import L2Claim from '~/pages/l2claim';
@@ -164,26 +163,19 @@ function MigrationGate() {
             justifyContent: !isContract ? 'center' : 'flex-start',
           }}
         >
-          {!isContract ?
-            <EthMainnet message={isArbitrum ? 'Coming soon' : undefined} />
-            :
-            <Box sx={{ marginTop: 4 }}>
-              <Routes>
-                <Route index element={<L1Delegate />} />
-                <Route path="*" element={<L1Delegate />} />
-                <Route path="/l1delegate" element={<L1Delegate />} />
-                <Route path="/l1" element={<L1Delegate />} />
-                <Route path="/ethereum" element={<L1Delegate />} />
-                <Route path="/l2claim" element={<L2Claim />} />
-                <Route path="/l2" element={<L2Claim />} />
-                <Route path="/arbitrum" element={<L2Claim />} />
-                <Route path="/404" element={<PageNotFound />} />
-              </Routes>
-            </Box>
-          }
-          {/* <Routes>
-            <Route path="/*" element={<EthMainnet />} />
-          </Routes> */}
+          <Box sx={{ marginTop: 4 }}>
+            <Routes>
+              <Route index element={<L1Delegate />} />
+              <Route path="*" element={<L1Delegate />} />
+              <Route path="/l1delegate" element={<L1Delegate />} />
+              <Route path="/l1" element={<L1Delegate />} />
+              <Route path="/ethereum" element={<L1Delegate />} />
+              <Route path="/l2claim" element={<L2Claim />} />
+              <Route path="/l2" element={<L2Claim />} />
+              <Route path="/arbitrum" element={<L2Claim />} />
+              <Route path="/404" element={<PageNotFound />} />
+            </Routes>
+          </Box>
         </Stack>
       </Box>
     </>
@@ -325,7 +317,7 @@ export default function App() {
   // const isDevMode = import.meta.env.DEV;
   const migrationUnderway = true;
 
-  
+
   if (migrationUnderway && (!isArbitrum && isTestnet)) {
     return <MigrationGate />;
   }
