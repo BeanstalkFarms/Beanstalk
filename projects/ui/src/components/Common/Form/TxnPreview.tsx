@@ -349,10 +349,10 @@ const TxnStep: FC<{
         width: '80px',
         height: '100%', // of TXN_PREVIEW_HEIGHT
         textAlign: 'center',
-        '&:first-child': {
+        '&:first-of-type': {
           textAlign: 'left',
         },
-        '&:last-child': {
+        '&:last-of-type': {
           textAlign: 'right',
         },
       }}

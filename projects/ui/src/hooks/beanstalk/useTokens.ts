@@ -334,7 +334,7 @@ const oldTokenMap: Record<string, ChainConstant<LegacyToken> | LegacyToken> = {
 } as const;
 
 export const useGetLegacyToken = () => {
-  const { chainId, fallbackChainId } = useChainState();
+  const { fallbackChainId } = useChainState();
 
   const getLegacyToken = useCallback(
     (token: TokenInstance): LegacyToken => {
@@ -342,9 +342,9 @@ export const useGetLegacyToken = () => {
       const oldToken = oldTokenMap[token.symbol];
 
       if (oldToken instanceof LegacyToken) return oldToken;
-      return oldToken[chainId] || oldToken[fallbackChainId];
+      return oldToken[fallbackChainId];
     },
-    [chainId, fallbackChainId]
+    [fallbackChainId]
   );
 
   return getLegacyToken;

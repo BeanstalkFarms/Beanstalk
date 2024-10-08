@@ -188,8 +188,7 @@ const DepositForm: FC<
     whitelistedToken,
     combinedTokenState,
     getAmountsBySource(),
-    amountToBdv,
-    getLegacyToken
+    amountToBdv
   );
 
   // Memoized params to prevent infinite loop
@@ -497,13 +496,11 @@ const DepositPropProvider: FC<{
           swapQuote,
           tokenIn,
           amountIn,
+          target.fromHuman(amountOut.toString()),
           whitelistedToken,
           account,
           balanceFromToMode(values.balanceFrom)
         );
-
-        console.log('operation: nodes', operation?.quote?.nodes || '');
-        console.log('operation: farm', operation?.getFarm() || '');
 
         txToast = new TransactionToast({
           loading: `Depositing ${displayFullBN(
@@ -521,8 +518,6 @@ const DepositPropProvider: FC<{
           values.farmActions.transferToMode || FarmToMode.INTERNAL
         );
 
-        console.log('claimAndDoX: ', claimAndDoX);
-
         const depositTxn = new DepositFarmStep(sdk, target);
         depositTxn.build(
           tokenIn,
@@ -533,11 +528,7 @@ const DepositPropProvider: FC<{
           claimAndDoX
         );
 
-        console.log('depositTxn: ', depositTxn);
-
         const actionsPerformed = txnBundler.setFarmSteps(values.farmActions);
-        console.log('actionsPerformed: ', actionsPerformed);
-        console.log('bundling...');
         const { execute } = await txnBundler.bundle(
           depositTxn,
           amountIn,
@@ -682,6 +673,7 @@ function getSwapOperation(
   swapQuote: BeanSwapNodeQuote | undefined,
   sellToken: Token,
   sellAmount: TokenValue,
+  buyAmount: TokenValue,
   target: Token,
   account: string,
   fromMode: FarmFromMode
@@ -709,6 +701,11 @@ function getSwapOperation(
       `Sell amount mismatch. Expected: ${sellAmount} Got: ${swapQuote.sellAmount}`
     );
   }
+  if (!buyAmount.eq(swapQuote.buyAmount)) {
+    throw new Error(
+      `Buy amount mismatch. Expected: ${buyAmount} Got: ${swapQuote.buyAmount}`
+    );
+  }
 
   const operation = BeanSwapOperation.buildWithQuote(
     swapQuote,
@@ -720,72 +717,3 @@ function getSwapOperation(
 
   return operation;
 }
-
-// leaving as reference for any deposit w/o claim & do x
-// const farmDeposit = sdk.silo.buildDeposit(target, account);
-// farmDeposit.setInputToken(tokenIn);
-// const aFarm = sdk.farm.createAdvancedFarm();
-
-// aFarm.add([...farmDeposit.workflow.generators] as any[]);
-// await aFarm.estimate(amountIn);
-
-// await farmDeposit.estimate(amountIn);
-
-// const farmDepositTx = await aFarm.execute(amountIn, {
-//   slippage: values.settings.slippage,
-// });
-// const farmDepositReceipt = await farmDepositTx.wait();
-
-// txToast.success(farmDepositReceipt);
-// formActions.resetForm();
-
-// const initTokenList = useMemo(() => {
-//   const tokens = sdk.tokens;
-//   if (tokens.BEAN.equals(whitelistedToken)) {
-//     return [
-//       tokens.BEAN,
-//       tokens.ETH,
-//       tokens.WETH,
-//       tokens.WSTETH,
-//       tokens.DAI,
-//       tokens.USDC,
-//       tokens.USDT,
-//     ];
-//   }
-//   return [
-//     tokens.BEAN,
-//     tokens.ETH,
-//     tokens.WETH,
-//     tokens.WSTETH,
-//     whitelistedToken,
-//     tokens.DAI,
-//     tokens.USDC,
-//     tokens.USDT,
-//   ];
-// }, [sdk.tokens, whitelistedToken]);
-
-// const priorityList = useMemo(() => {
-//   const tokens = sdk.tokens;
-//   if (tokens.BEAN.equals(whitelistedToken)) {
-//     return [
-//       tokens.BEAN,
-//       tokens.ETH,
-//       tokens.WETH,
-//       tokens.WSTETH,
-//       tokens.DAI,
-//       tokens.USDC,
-//       tokens.USDT,
-//     ];
-//   }
-//   return [
-//     whitelistedToken,
-//     tokens.ETH,
-//     tokens.WETH,
-//     tokens.WSTETH,
-//     tokens.BEAN,
-//     tokens.CRV3,
-//     tokens.DAI,
-//     tokens.USDC,
-//     tokens.USDT,
-//   ];
-// }, [sdk.tokens, whitelistedToken]);
