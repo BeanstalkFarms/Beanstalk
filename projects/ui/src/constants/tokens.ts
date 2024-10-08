@@ -233,7 +233,7 @@ export const WSTETH = makeChainToken(WSTETH_ADDRESSES, 18, {
 
 export const WEETH = makeChainToken(WEETH_ADDRESSES, 18, {
   name: 'Wrapped Ether',
-  symbol: 'WEETH',
+  symbol: 'weETH',
   logo: weethIcon,
 });
 
