@@ -129,16 +129,6 @@ export default function L1Delegate() {
         localStorage.setItem('internalL2MigrationData', JSON.stringify(internalMigration))
     };
 
-    const saveBeanBalanceMigrationData = () => {
-        const beanMigration = {
-            destination: destinationAccount,
-            source: account,
-            amount: beanBalance.toString(),
-            complete: false,
-        }
-        localStorage.setItem('beanBalanceL2MigrationData', JSON.stringify(beanMigration))
-    };
-
     const onSubmitBeanMigration = useCallback(async () => {
         if (!destinationAccount) return;
         const approvalNeeded = beanBalance.gt(beanAllowance);
@@ -155,7 +145,7 @@ export default function L1Delegate() {
                 txToast.confirming(txn);
                 await txn.wait();
                 txToast.success();
-                await getBeanData();
+                setBeanAllowance(beanBalance);
             } else if (beanBalance.gt(0)) {
                 const txn = await beanstalk.migrateL2Beans(
                     destinationAccount,
@@ -170,7 +160,6 @@ export default function L1Delegate() {
                 txToast.confirming(txn);
                 await txn.wait();
                 txToast.success();
-                saveBeanBalanceMigrationData();
                 setBeanComplete(true);
             }
         } catch (err) {
@@ -289,37 +278,35 @@ export default function L1Delegate() {
                                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
                                             <Typography sx={{ padding: 1, color: 'GrayText' }}>
                                                 Beans held in your wallet will be
-                                                migrated and available to receive on Arbitrum at the address
-                                                specified.
+                                                migrated and automatically sent to the specified address on Arbitrum.
                                             </Typography>
                                             <Button
-                                                disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount}
+                                                disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
                                                 sx={{
                                                     width: '100%',
                                                     height: 60,
                                                 }}
                                                 onClick={() => onSubmitBeanMigration()}
-                                            >{beanBalance.gt(beanAllowance) ? 'Approve Beans for Migration' : 'Migrate Circulating Beans'}
+                                            >{beanComplete ? "Migration Complete!" : beanBalance.gt(beanAllowance) ? 'Approve Beans for Migration' : 'Migrate Circulating Beans'}
                                             </Button>
                                         </Box>
                                     }
                                     {(isContract && migrateInternal) &&
                                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
                                             <Typography sx={{ padding: 1, color: 'GrayText' }}>
-                                                All Beanstalk balances associated with this contract address
-                                                including Deposits, Pods, Farm Balance and Fertilizer will be
+                                                Beanstalk balances associated with this contract address will be
                                                 migrated and available to receive on Arbitrum at the address
                                                 specified.
                                             </Typography>
                                             <Button
-                                                disabled={(!isAddressValid && !migrateInternal) || !destinationAccount}
+                                                disabled={(!isAddressValid && !migrateInternal) || !destinationAccount || internalComplete}
                                                 sx={{
                                                     width: '100%',
                                                     height: 60,
                                                 }}
                                                 onClick={() => onSubmitFarmMigration()}
                                             >
-                                                Migrate Beanstalk Balances
+                                                {internalComplete ? "Migration Complete!" : "Migrate Beanstalk Balances"}
                                             </Button>
                                         </Box>
                                     }
