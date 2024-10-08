@@ -54,7 +54,7 @@ export class BeanSwapOperation {
 
   readonly quoter: BeanSwapQuoter;
 
-  builder: BeanSwapBuilder;
+  #builder: BeanSwapBuilder;
 
   #quoteData: BeanSwapNodeQuote | undefined = undefined;
 
@@ -82,7 +82,7 @@ export class BeanSwapOperation {
   ) {
     BeanSwapOperation.sdk = sdk;
     this.quoter = quoter;
-    this.builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
+    this.#builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
 
     this.inputToken = inputToken;
     this.targetToken = targetToken;
@@ -99,13 +99,13 @@ export class BeanSwapOperation {
   }
 
   getPath(): Token[] {
-    return this.builder.nodes
+    return this.#builder.nodes
       .map((node, i) => (i === 0 ? [node.sellToken, node.buyToken] : [node.buyToken]))
       .flat();
   }
 
   getFarm() {
-    return this.builder.advancedFarm;
+    return this.#builder.workflow;
   }
 
   get quote() {
@@ -151,18 +151,18 @@ export class BeanSwapOperation {
     if (!this.#quoteData) {
       throw new Error("Cannot estimate without quote data.");
     }
-    return this.builder.advancedFarm.estimate(this.#quoteData.sellAmount.toBigNumber());
+    return this.#builder.workflow.estimate(this.#quoteData.sellAmount.toBigNumber());
   }
 
   async estimateGas(): Promise<TokenValue> {
     // run estimate if not already done
-    if (!this.builder.advancedFarm.length) {
+    if (!this.#builder.workflow.length) {
       await this.estimate();
     }
-    if (!this.builder.advancedFarm.length || !this.#quoteData) {
+    if (!this.#builder.workflow.length || !this.#quoteData) {
       throw new Error("Invalid swap configuration. Cannot estimate gas.");
     }
-    const gas = await this.builder.advancedFarm.estimateGas(
+    const gas = await this.#builder.workflow.estimateGas(
       this.#quoteData.sellAmount.toBigNumber(),
       {
         slippage: this.#quoteData.slippage
@@ -172,13 +172,13 @@ export class BeanSwapOperation {
   }
 
   async execute(overrides: CallOverrides = {}) {
-    if (!this.builder.advancedFarm.length) {
+    if (!this.#builder.workflow.length) {
       await this.estimate();
     }
-    if (!this.builder.advancedFarm.length || !this.#quoteData) {
+    if (!this.#builder.workflow.length || !this.#quoteData) {
       throw new Error("Invalid swap configuration. Run estimate first.");
     }
-    return this.builder.advancedFarm.execute(
+    return this.#builder.workflow.execute(
       this.#quoteData.sellAmount,
       { slippage: this.#quoteData.slippage },
       overrides
@@ -187,7 +187,7 @@ export class BeanSwapOperation {
 
   #buildQuoteData() {
     if (!this.#quoteData) return;
-    this.builder.translateNodesToWorkflow(
+    this.#builder.translateNodesToWorkflow(
       this.#quoteData.nodes,
       this.fromMode,
       this.toMode,

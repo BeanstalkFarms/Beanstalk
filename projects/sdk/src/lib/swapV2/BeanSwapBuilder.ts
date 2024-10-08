@@ -21,7 +21,7 @@ class Builder {
 
   #advPipe: AdvancedPipeWorkflow;
 
-  advFarm: AdvancedFarmWorkflow;
+  #advFarm: AdvancedFarmWorkflow;
 
   #nodes: readonly SwapNode[] = [];
 
@@ -30,8 +30,8 @@ class Builder {
     this.#initWorkFlows();
   }
 
-  get advancedFarm() {
-    return this.advFarm;
+  get workflow() {
+    return this.#advFarm;
   }
 
   get nodes() {
@@ -77,15 +77,15 @@ class Builder {
     // Handle the case where there is only one action in the swap & it is a wrap or unwrap action.
     if (numNodes === 1) {
       if (isWrapEthNode(first)) {
-        this.advFarm.add(this.#getWrapETH(first, toMode, 0), { tag: first.tag });
+        this.#advFarm.add(this.#getWrapETH(first, toMode, 0), { tag: first.tag });
         return;
       }
       if (isUnwrapEthNode(first)) {
-        this.advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
+        this.#advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
         return;
       }
       if (isTransferTokenNode(first)) {
-        this.advFarm.add(first.buildStep({ fromMode, toMode, recipient, copySlot: undefined }));
+        this.#advFarm.add(first.buildStep({ fromMode, toMode, recipient, copySlot: undefined }));
         return;
       }
     }
@@ -97,7 +97,7 @@ class Builder {
 
         // Wrap ETH before loading pipeline
         if (isWrapEthNode(node)) {
-          this.advFarm.add(this.#getWrapETH(node, toMode, i), { tag: node.tag });
+          this.#advFarm.add(this.#getWrapETH(node, toMode, i), { tag: node.tag });
           fromMode = FarmFromMode.INTERNAL_TOLERANT;
         }
 
@@ -139,11 +139,11 @@ class Builder {
         toMode = finalToMode;
 
         this.#offloadPipeline(node, recipient, fromMode, finalToMode, i);
-        this.advFarm.add(this.#advPipe);
+        this.#advFarm.add(this.#advPipe);
 
         // Add UnwrapETH if last action
         if (isUnwrapEthNode(node)) {
-          this.advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
+          this.#advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
         }
       }
     }
@@ -169,7 +169,7 @@ class Builder {
         FarmToMode.EXTERNAL
       );
 
-      this.advFarm.add(transfer);
+      this.#advFarm.add(transfer);
     }
   }
 
@@ -300,7 +300,7 @@ class Builder {
   /// -------------------- Init Utils --------------------
 
   #initWorkFlows(advFarmName?: string, advPipeName?: string) {
-    this.advFarm = Builder.sdk.farm.createAdvancedFarm(advFarmName);
+    this.#advFarm = Builder.sdk.farm.createAdvancedFarm(advFarmName);
     this.#advPipe = Builder.sdk.farm.createAdvancedPipe(advPipeName);
     return this;
   }

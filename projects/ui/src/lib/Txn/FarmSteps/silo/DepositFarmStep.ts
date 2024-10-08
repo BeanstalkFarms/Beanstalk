@@ -84,7 +84,7 @@ export class DepositFarmStep extends FarmStep {
     if (operation !== undefined) {
       this.pushInput({
         input: [
-          ...operation.builder.advancedFarm.generators,
+          ...operation.getFarm().generators,
         ] as StepGenerator[],
       });
       const deposit = this._sdk.silo.buildDeposit(this._target, account);
