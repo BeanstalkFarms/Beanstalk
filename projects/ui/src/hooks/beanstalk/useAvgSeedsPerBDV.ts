@@ -45,7 +45,9 @@ const SEED_GAUGE_DEPLOYMENT_SEASON = 21798;
 
 const SEED_GAUGE_DEPLOYMENT_TIMESTAMP = 1716408000;
 
-const L2_MIGRATION_SEASON = 25039;
+const L2_MIGRATION_SEASON = 25053;
+
+const UNREACHABLE_SEASON = 999999999;
 
 const apolloFetch = async (
   document: DocumentNode,
@@ -118,7 +120,7 @@ const useAvgSeedsPerBDV = (
     );
 
     const output: SiloTokenDataBySeason = {};
-    let earliestSeason = 999999999;
+    let earliestSeason = UNREACHABLE_SEASON;
 
     try {
       if (numQueries === 0) {
@@ -127,15 +129,6 @@ const useAvgSeedsPerBDV = (
           'Avg Seeds Per BDV fetch: Invalid range. Expected numQueries > 0 but got 0.'
         );
       }
-
-      const firstFetch = await apolloFetch(
-        l2Document,
-        MAX_DATA_PER_QUERY,
-        SEED_GAUGE_DEPLOYMENT_SEASON,
-        'beanstalk'
-      );
-
-      console.log('[useAvgSeedsPerBDV/fetch]: firstFetch', firstFetch);
 
       const fetchDatas = async (lte: number, chain: SupportedChainId) => {
         const isL2 = chain === SupportedChainId.ARBITRUM_MAINNET;
@@ -154,13 +147,25 @@ const useAvgSeedsPerBDV = (
         });
       };
 
-      await fetchDatas(earliestSeason, SupportedChainId.ARBITRUM_MAINNET);
+      let chainId = SupportedChainId.ARBITRUM_MAINNET;
+
+      await fetchDatas(earliestSeason, chainId);
+      if (earliestSeason === UNREACHABLE_SEASON) {
+        chainId = SupportedChainId.ETH_MAINNET;
+        await fetchDatas(earliestSeason, chainId);
+      }
 
       if (numQueries > 1) {
         const _seasons: { lte: number; chain: SupportedChainId }[] = [];
         for (let i = 0; i < numQueries - 1; i += 1) {
           const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
           const season_lte = Math.max(0, earliestSeason - offset);
+
+          if (season_lte >= L2_MIGRATION_SEASON) {
+            chainId = SupportedChainId.ARBITRUM_MAINNET;
+          } else {
+            chainId = SupportedChainId.ETH_MAINNET;
+          }
           if (season_lte < SEED_GAUGE_DEPLOYMENT_SEASON) break;
           _seasons.push({
             lte: season_lte,
@@ -273,16 +278,14 @@ function createMultiTokenQuery(
 }
 
 function processTokenData(
-  _token: TokenInstance,
+  token: TokenInstance,
   sData: SiloAssetsReturn | null,
   wData: WhitelistReturn | null,
   output: SiloTokenDataBySeason,
-  sdk: BeanstalkSDK,
-  normalizeToken: (token: string) => ERC20Token | undefined
+  sdk: BeanstalkSDK
 ) {
   const season = sData?.season || wData?.season;
-  const token = normalizeToken(_token.address);
-  if (!season || season < SEED_GAUGE_DEPLOYMENT_SEASON || !token) return;
+  if (!season || season < SEED_GAUGE_DEPLOYMENT_SEASON) return;
 
   const { BEAN, SEEDS } = sdk.tokens;
   output[season] = output[season] || {};
@@ -317,43 +320,44 @@ function parseResult(
   output: SiloTokenDataBySeason,
   normalizeToken: (token: string) => ERC20Token | undefined
 ) {
-  let earliestSeason = Infinity;
+  let earliestSeason = UNREACHABLE_SEASON;
 
-  tokens.forEach((token) => {
-    const siloAssets = data[`seasonsSA_${token.address}`] as SiloAssetsReturn[];
-    const whitelisted = data[`seasonsWL_${token.address}`] as WhitelistReturn[];
+  for (const chainToken of tokens) {
+    const siloAssets = data[
+      `seasonsSA_${chainToken.address}`
+    ] as SiloAssetsReturn[];
+    const whitelisted = data[
+      `seasonsWL_${chainToken.address}`
+    ] as WhitelistReturn[];
 
-    if (!siloAssets?.length || !whitelisted?.length) return;
+    const token = normalizeToken(chainToken.address);
+
+    if (!siloAssets?.length || !whitelisted?.length || !token) {
+      continue;
+    }
 
     // Results are sorted in desc order.
-    // Find earliest season from the BEAN dataset
-    // if (tokenIshEqual(token, sdk.tokens.BEAN)) {
     earliestSeason = Math.max(
-      siloAssets[siloAssets.length - 1].season,
-      whitelisted[whitelisted.length - 1].season
+      earliestSeason,
+      Math.max(
+        siloAssets[siloAssets.length - 1].season,
+        whitelisted[whitelisted.length - 1].season
+      )
     );
-    // }
-    // Create a map of seasons to whitelisted data for quick lookup
+
     const whitelistedMap = new Map(whitelisted.map((w) => [w.season, w]));
 
     siloAssets.forEach((sData) => {
       const wData = whitelistedMap.get(sData.season);
-      processTokenData(
-        token,
-        sData,
-        wData || null,
-        output,
-        sdk,
-        normalizeToken
-      );
+      processTokenData(token, sData, wData || null, output, sdk);
       whitelistedMap.delete(sData.season);
     });
 
     // Process any remaining
     whitelistedMap.forEach((wData) => {
-      processTokenData(token, null, wData, output, sdk, normalizeToken);
+      processTokenData(token, null, wData, output, sdk);
     });
-  });
+  }
 
   return earliestSeason;
 }
