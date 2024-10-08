@@ -45,7 +45,7 @@ const SEED_GAUGE_DEPLOYMENT_SEASON = 21798;
 
 const SEED_GAUGE_DEPLOYMENT_TIMESTAMP = 1716408000;
 
-const L2_MIGRATION_SEASON = 25053;
+const L2_MIGRATION_SEASON = 25133;
 
 const UNREACHABLE_SEASON = 999999999;
 
@@ -60,7 +60,6 @@ const apolloFetch = async (
     variables: { first, season_lte: season },
     fetchPolicy: 'no-cache',
     notifyOnNetworkStatusChange: true,
-    // BS3TODO: Fix me to include L2 silo whitelist
     context: { subgraph: subgraph },
   });
 
@@ -150,6 +149,7 @@ const useAvgSeedsPerBDV = (
       let chainId = SupportedChainId.ARBITRUM_MAINNET;
 
       await fetchDatas(earliestSeason, chainId);
+
       if (earliestSeason === UNREACHABLE_SEASON) {
         chainId = SupportedChainId.ETH_MAINNET;
         await fetchDatas(earliestSeason, chainId);
@@ -161,11 +161,10 @@ const useAvgSeedsPerBDV = (
           const offset = (i + 1) * MAX_DATA_PER_QUERY - MAX_DATA_PER_QUERY;
           const season_lte = Math.max(0, earliestSeason - offset);
 
-          if (season_lte >= L2_MIGRATION_SEASON) {
-            chainId = SupportedChainId.ARBITRUM_MAINNET;
-          } else {
+          if (season_lte <= L2_MIGRATION_SEASON) {
             chainId = SupportedChainId.ETH_MAINNET;
           }
+
           if (season_lte < SEED_GAUGE_DEPLOYMENT_SEASON) break;
           _seasons.push({
             lte: season_lte,
@@ -400,7 +399,7 @@ function normalizeQueryResults(
 
     const value = obj.grownStalkPerBDV.div(obj.depositedBDV);
 
-    const time = Number(obj.createdAt) as Time;
+    const time = (Number(obj.createdAt) * 60 * 60) as Time;
 
     if (value.gt(0) && !timestamps.has(time)) {
       map[season] = {

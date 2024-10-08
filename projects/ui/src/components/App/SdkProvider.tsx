@@ -132,6 +132,12 @@ function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
 
   const isArbTestnet = isArbitrum && isTestnet;
 
+  const beanstalk = sdk.contracts.beanstalk;
+
+  React.useEffect(() => {
+    console.log('[BeanstalkSDKProvider/beanstalk]', beanstalk.address);
+  }, [beanstalk.address, sdk.chainId]);
+
   // only run this on arbitrum dev
   const ready = useDynamicSeeds(sdk, isArbTestnet);
 
