@@ -71,8 +71,9 @@ const GovernanceSpaces: React.FC<{}> = () => {
           if (t === 0 && oldBips) {
             const onchainBips = [...oldBips];
             onchainBips.reverse();
+            //@ts-ignore
             const withOldBips = output.concat(onchainBips);
-
+            //@ts-ignore
             return withOldBips as Proposal[];
           };
 
@@ -81,11 +82,12 @@ const GovernanceSpaces: React.FC<{}> = () => {
             ebipList.reverse();
             return ebipList as Proposal[];
           };
-
+          //@ts-ignore
           return output as Proposal[];
         }
 
         if (t === 999) {
+          //@ts-ignore
           return data.proposals.filter(
             (p) =>
               p !== null &&

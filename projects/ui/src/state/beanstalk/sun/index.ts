@@ -71,7 +71,7 @@ export const parseSeasonResult = (
 ): Sun['season'] => ({
   current: bigNumberResult(result.current), /// The current Season in Beanstalk.
   lastSop: bigNumberResult(result.lastSop), /// The Season in which the most recent consecutive series of Seasons of Plenty started.
-  withdrawSeasons: bigNumberResult(result.withdrawSeasons), /// The number of Seasons required to Withdraw a Deposit.
+  withdrawSeasons: bigNumberResult(1), /// The number of Seasons required to Withdraw a Deposit.
   lastSopSeason: bigNumberResult(result.lastSopSeason), /// The Season in which the most recent consecutive series of Seasons of Plenty ended.
   rainStart: bigNumberResult(result.rainStart), /// The most recent Season in which Rain started.
   raining: result.raining, /// True if it is Raining (P > 1, Pod Rate Excessively Low).
