@@ -8,7 +8,7 @@ export default function MigrationMessage({ message }: { message?: string }) {
   return (
     <Box>
       <Typography variant="h1">
-        {message || isArbitrum ? "We're migrating!" : "We're migrating!"}
+        {message || isArbitrum ? "We're migrating!" : "We're on Arbitrum!"}
       </Typography>
       <Typography variant="body1" textAlign="center">
         Please check Discord for details.
