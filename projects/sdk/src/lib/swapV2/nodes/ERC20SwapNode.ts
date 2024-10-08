@@ -301,9 +301,8 @@ export class ZeroXSwapNode extends ERC20SwapNode {
   }
 }
 
-interface WellSyncSwapBuildParams extends WellSwapBuildParams {
+interface WellSyncSwapBuildParams {
   recipient: string;
-  transfer: boolean;
 }
 
 export class WellSyncSwapNode extends ERC20SwapNode {
@@ -334,6 +333,7 @@ export class WellSyncSwapNode extends ERC20SwapNode {
     const contract = this.well.getContract();
 
     const amountsIn = [this.sellAmount, TokenValue.ZERO];
+
     if (!this.sellToken.equals(this.well.tokens[0])) {
       amountsIn.reverse();
     }
@@ -349,9 +349,18 @@ export class WellSyncSwapNode extends ERC20SwapNode {
     return this;
   }
 
-  buildStep({ copySlot, recipient, transfer }: WellSyncSwapBuildParams): (StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>)[] {
+  buildStep({ recipient }: WellSyncSwapBuildParams): StepClass<AdvancedPipePreparedResult> {
     this.validateAll();
+    const sync = new WellSyncSwapNode.sdk.farm.actions.WellSync(
+      this.well, 
+      this.sellToken, 
+      recipient
+    );
 
+    return sync;
+  }
+
+  transferStep({ copySlot }: { copySlot: number | undefined}) {
     const transferToken: StepFunction<AdvancedPipePreparedResult> = (_amountInStep, runContext) => {
       const contract = this.sellToken.getContract();
 
@@ -363,7 +372,7 @@ export class WellSyncSwapNode extends ERC20SwapNode {
           return {
             target: this.sellToken.address,
             callData: contract.interface.encodeFunctionData("transfer", [
-              recipient,
+              this.well.address,
               this.sellAmount.toBlockchain()
             ]),
             clipboard: this.getClipboard(runContext, this.returnIndexTag, copySlot, this.transferAmountInPasteSlot)
@@ -373,18 +382,8 @@ export class WellSyncSwapNode extends ERC20SwapNode {
         decodeResult: (data: string) => contract.interface.decodeFunctionResult("transfer", data)
       }
     };
-    
-    const sync = new WellSyncSwapNode.sdk.farm.actions.WellSync(
-      this.well, 
-      this.sellToken, 
-      recipient
-    );
 
-    if (!transfer) {
-      return [sync];
-    };
-
-    return [transferToken, sync];
+    return transferToken;
   }
 
   override validateTokens() {

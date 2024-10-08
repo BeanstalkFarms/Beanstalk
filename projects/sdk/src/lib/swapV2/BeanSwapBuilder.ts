@@ -10,7 +10,7 @@ import {
   UnwrapEthSwapNode,
   WellSwapNode,
   WrapEthSwapNode,
-  ZeroXSwapNode,
+  ZeroXSwapNode
 } from "./nodes";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { TransferTokenNode } from "./nodes/TransferTokenNode";
@@ -21,7 +21,7 @@ class Builder {
 
   #advPipe: AdvancedPipeWorkflow;
 
-  #advFarm: AdvancedFarmWorkflow;
+  advFarm: AdvancedFarmWorkflow;
 
   #nodes: readonly SwapNode[] = [];
 
@@ -31,7 +31,7 @@ class Builder {
   }
 
   get advancedFarm() {
-    return this.#advFarm;
+    return this.advFarm;
   }
 
   get nodes() {
@@ -54,10 +54,10 @@ class Builder {
    * - The buyAmount in the last node is the amount to be bought
    */
   translateNodesToWorkflow(
-    nodes: readonly SwapNode[], 
-    initFromMode: FarmFromMode, 
-    finalToMode: FarmToMode, 
-    caller: string, 
+    nodes: readonly SwapNode[],
+    initFromMode: FarmFromMode,
+    finalToMode: FarmToMode,
+    caller: string,
     recipient: string
   ) {
     this.#nodes = nodes;
@@ -77,17 +77,15 @@ class Builder {
     // Handle the case where there is only one action in the swap & it is a wrap or unwrap action.
     if (numNodes === 1) {
       if (isWrapEthNode(first)) {
-        this.#advFarm.add(this.#getWrapETH(first, toMode, 0), { tag: first.tag });
+        this.advFarm.add(this.#getWrapETH(first, toMode, 0), { tag: first.tag });
         return;
       }
       if (isUnwrapEthNode(first)) {
-        this.#advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
+        this.advFarm.add(this.#getUnwrapETH(first, fromMode, 0), { tag: first.tag });
         return;
       }
       if (isTransferTokenNode(first)) {
-        this.#advFarm.add(
-          first.buildStep({ fromMode, toMode, recipient, copySlot: undefined })
-        );
+        this.advFarm.add(first.buildStep({ fromMode, toMode, recipient, copySlot: undefined }));
         return;
       }
     }
@@ -99,7 +97,7 @@ class Builder {
 
         // Wrap ETH before loading pipeline
         if (isWrapEthNode(node)) {
-          this.#advFarm.add(this.#getWrapETH(node, toMode, i), { tag: node.tag });
+          this.advFarm.add(this.#getWrapETH(node, toMode, i), { tag: node.tag });
           fromMode = FarmFromMode.INTERNAL_TOLERANT;
         }
 
@@ -113,23 +111,26 @@ class Builder {
 
       // No need to update Farm modes until we offload pipeline.
       if (isERC20Node(node)) {
-        let step;
         if (isWellNode(node)) {
-          step = node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) });
+          this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
+          this.#advPipe.add(
+            node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) }),
+            { tag: node.tag }
+          );
         } else if (isZeroXNode(node)) {
-          step = node.buildStep();
+          this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
+          this.#advPipe.add(node.buildStep(), { tag: node.tag });
         } else if (isWellSyncNode(node)) {
-          step = node.buildStep({ 
-            copySlot: this.#getPrevNodeCopySlot(i),  
-            recipient: Builder.sdk.contracts.pipeline.address,
-            transfer: true
-          });
+          this.#advPipe.add(
+            node.transferStep({ copySlot: this.#getPrevNodeCopySlot(i) })
+          );
+          this.#advPipe.add(
+            node.buildStep({ recipient: Builder.sdk.contracts.pipeline.address }),
+            { tag: node.tag }
+          );
         } else {
           throw new Error("Error building swap: Unknown SwapNode type.");
         }
-
-        this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
-        this.#advPipe.add(step, { tag: node.tag });
       }
 
       // Last leg of swap
@@ -138,11 +139,11 @@ class Builder {
         toMode = finalToMode;
 
         this.#offloadPipeline(node, recipient, fromMode, finalToMode, i);
-        this.#advFarm.add(this.#advPipe);
+        this.advFarm.add(this.#advPipe);
 
-        // // Add UnwrapETH if last action
+        // Add UnwrapETH if last action
         if (isUnwrapEthNode(node)) {
-          this.#advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
+          this.advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
         }
       }
     }
@@ -168,7 +169,7 @@ class Builder {
         FarmToMode.EXTERNAL
       );
 
-      this.#advFarm.add(transfer);
+      this.advFarm.add(transfer);
     }
   }
 
@@ -176,7 +177,13 @@ class Builder {
    * Adds approve Beanstalk & transferToken to advancedPipe.
    * Transfer to the recipient is conditional on the recipient not being pipeline.
    */
-  #offloadPipeline(node: SwapNode, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode, i: number) {
+  #offloadPipeline(
+    node: SwapNode,
+    recipient: string,
+    fromMode: FarmFromMode,
+    toMode: FarmToMode,
+    i: number
+  ) {
     const recipientIsPipeline =
       recipient.toLowerCase() === Builder.sdk.contracts.pipeline.address.toLowerCase();
     if (recipientIsPipeline) return;
@@ -293,7 +300,7 @@ class Builder {
   /// -------------------- Init Utils --------------------
 
   #initWorkFlows(advFarmName?: string, advPipeName?: string) {
-    this.#advFarm = Builder.sdk.farm.createAdvancedFarm(advFarmName);
+    this.advFarm = Builder.sdk.farm.createAdvancedFarm(advFarmName);
     this.#advPipe = Builder.sdk.farm.createAdvancedPipe(advPipeName);
     return this;
   }
@@ -315,12 +322,12 @@ const isWellNode = (node: SwapNode): node is WellSwapNode => {
 };
 const isTransferTokenNode = (node: SwapNode): node is TransferTokenNode => {
   return node instanceof TransferTokenNode;
-}
+};
 const isZeroXNode = (node: SwapNode): node is ZeroXSwapNode => {
   return node instanceof ZeroXSwapNode;
-}
+};
 const isWellSyncNode = (node: SwapNode): node is WellSyncSwapNode => {
   return node instanceof WellSyncSwapNode;
-}
+};
 
 export { Builder as BeanSwapBuilder };

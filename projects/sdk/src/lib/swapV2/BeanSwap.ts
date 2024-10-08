@@ -43,7 +43,7 @@ export interface BeanSwapNodeQuote {
   sellToken: ERC20Token | NativeToken;
   buyToken: ERC20Token | NativeToken;
   sellAmount: TokenValue;
-  buyAmount: TokenValue; 
+  buyAmount: TokenValue;
   minBuyAmount: TokenValue;
   nodes: ReadonlyArray<SwapNode>;
   slippage: number;
@@ -54,7 +54,7 @@ export class BeanSwapOperation {
 
   readonly quoter: BeanSwapQuoter;
 
-  #builder: BeanSwapBuilder;
+  builder: BeanSwapBuilder;
 
   #quoteData: BeanSwapNodeQuote | undefined = undefined;
 
@@ -82,7 +82,7 @@ export class BeanSwapOperation {
   ) {
     BeanSwapOperation.sdk = sdk;
     this.quoter = quoter;
-    this.#builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
+    this.builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
 
     this.inputToken = inputToken;
     this.targetToken = targetToken;
@@ -99,13 +99,13 @@ export class BeanSwapOperation {
   }
 
   getPath(): Token[] {
-    return this.#builder.nodes
+    return this.builder.nodes
       .map((node, i) => (i === 0 ? [node.sellToken, node.buyToken] : [node.buyToken]))
       .flat();
   }
 
   getFarm() {
-    return this.#builder.advancedFarm;
+    return this.builder.advancedFarm;
   }
 
   get quote() {
@@ -122,16 +122,21 @@ export class BeanSwapOperation {
 
   /**
    * Estimates the swap based on the amount and slippage
-   * @param amount 
-   * @param slippage 
-   * @param force 
-   * @returns 
+   * @param amount
+   * @param slippage
+   * @param force
+   * @returns
    */
   async estimateSwap(amount: TokenValue, slippage: number, force?: boolean) {
     if (amount.lte(0)) return;
 
     if (this.#shouldFetchQuote(amount, slippage) || force === true) {
-      this.#quoteData = await this.quoter.route(this.inputToken, this.targetToken, amount, slippage);
+      this.#quoteData = await this.quoter.route(
+        this.inputToken,
+        this.targetToken,
+        amount,
+        slippage
+      );
       this.#buildQuoteData();
       await this.estimate();
     }
@@ -145,33 +150,35 @@ export class BeanSwapOperation {
   async estimate() {
     if (!this.#quoteData) {
       throw new Error("Cannot estimate without quote data.");
-    };
-    return this.#builder.advancedFarm.estimate(this.#quoteData.sellAmount.toBigNumber());
+    }
+    return this.builder.advancedFarm.estimate(this.#quoteData.sellAmount.toBigNumber());
   }
 
   async estimateGas(): Promise<TokenValue> {
     // run estimate if not already done
-    if (!this.#builder.advancedFarm.length) {
+    if (!this.builder.advancedFarm.length) {
       await this.estimate();
     }
-    if (!this.#builder.advancedFarm.length || !this.#quoteData) {
+    if (!this.builder.advancedFarm.length || !this.#quoteData) {
       throw new Error("Invalid swap configuration. Cannot estimate gas.");
     }
-    const gas = await this.#builder.advancedFarm.estimateGas(
-      this.#quoteData.sellAmount.toBigNumber(), { 
-        slippage: this.#quoteData.slippage 
-      });
+    const gas = await this.builder.advancedFarm.estimateGas(
+      this.#quoteData.sellAmount.toBigNumber(),
+      {
+        slippage: this.#quoteData.slippage
+      }
+    );
     return TokenValue.fromBlockchain(gas, 0);
   }
 
   async execute(overrides: CallOverrides = {}) {
-    if (!this.#builder.advancedFarm.length) {
+    if (!this.builder.advancedFarm.length) {
       await this.estimate();
     }
-    if (!this.#builder.advancedFarm.length || !this.#quoteData) {
+    if (!this.builder.advancedFarm.length || !this.#quoteData) {
       throw new Error("Invalid swap configuration. Run estimate first.");
     }
-    return this.#builder.advancedFarm.execute(
+    return this.builder.advancedFarm.execute(
       this.#quoteData.sellAmount,
       { slippage: this.#quoteData.slippage },
       overrides
@@ -180,7 +187,13 @@ export class BeanSwapOperation {
 
   #buildQuoteData() {
     if (!this.#quoteData) return;
-    this.#builder.translateNodesToWorkflow(this.#quoteData.nodes, this.fromMode, this.toMode, this.caller, this.recipient);
+    this.builder.translateNodesToWorkflow(
+      this.#quoteData.nodes,
+      this.fromMode,
+      this.toMode,
+      this.caller,
+      this.recipient
+    );
   }
 
   #shouldFetchQuote(amount: TokenValue, slippage: number) {
@@ -193,23 +206,29 @@ export class BeanSwapOperation {
 
   /**
    * Build a swap operation w/ quote data via Beanswap.quoter.
-   * @param quoteData 
-   * @param caller 
-   * @param recipient 
-   * @param fromMode 
-   * @param toMode 
-   * @returns 
+   * @param quoteData
+   * @param caller
+   * @param recipient
+   * @param fromMode
+   * @param toMode
+   * @returns
    */
-  static buildWithQuote(quoteData: BeanSwapNodeQuote, caller: string, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode) {
+  static buildWithQuote(
+    quoteData: BeanSwapNodeQuote,
+    caller: string,
+    recipient: string,
+    fromMode: FarmFromMode,
+    toMode: FarmToMode
+  ) {
     const swap = new BeanSwapOperation(
       BeanSwap.sdk,
       BeanSwap.sdk.beanSwap.quoter,
       quoteData.sellToken,
       quoteData.buyToken,
-      caller, 
+      caller,
       recipient,
       fromMode,
-      toMode,
+      toMode
     );
     swap.#quoteData = quoteData;
     swap.#buildQuoteData();

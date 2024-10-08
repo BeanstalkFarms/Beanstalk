@@ -49,26 +49,29 @@ class WellsRouter {
 
   /**
    * Divides the routes into swap and sync routes for a given sellToken and buyToken
-   * @param sellToken 
-   * @param buyToken 
-   * @returns 
+   * @param sellToken
+   * @param buyToken
+   * @returns
    */
-  splitSwapsAndSync(sellToken: ERC20Token, buyToken: ERC20Token): {
-    swap: QuoteSourceFragment | undefined,
-    sync: SyncQuoteSourceFragment | undefined
+  splitSwapsAndSync(
+    sellToken: ERC20Token,
+    buyToken: ERC20Token
+  ): {
+    swap: QuoteSourceFragment | undefined;
+    sync: SyncQuoteSourceFragment | undefined;
   } {
     if (!isERC20Token(sellToken) || !isERC20Token(buyToken)) {
       throw new Error("Invalid token types. Cannot quote well routes for non-erc20 tokens");
     }
 
-    const routes: { 
-      swap: QuoteSourceFragment | undefined, 
-      sync: SyncQuoteSourceFragment | undefined 
-    } = { swap: undefined, sync: undefined }
+    const routes: {
+      swap: QuoteSourceFragment | undefined;
+      sync: SyncQuoteSourceFragment | undefined;
+    } = { swap: undefined, sync: undefined };
 
-    const inputSwap: QuoteSourceFragment = { 
-      sellToken, 
-      buyToken 
+    const inputSwap: QuoteSourceFragment = {
+      sellToken,
+      buyToken
     };
 
     if (!buyToken.isLP) {
@@ -80,27 +83,33 @@ class WellsRouter {
     if (!well) {
       throw new Error(`Well with LP Token ${buyToken.symbol} not found`);
     }
-    
-    const wellHasReserves = !!this.quoter.wellsWithReserves.find((well) => well.lpToken.equals(buyToken));
+
+    const wellHasReserves = !!this.quoter.wellsWithReserves.find((well) =>
+      well.lpToken.equals(buyToken)
+    );
     if (!wellHasReserves) {
-      throw new Error(`Cannot add single sided liquidity to well ${well.name}. Well has 0 reserves.`);
+      throw new Error(
+        `Cannot add single sided liquidity to well ${well.name}. Well has 0 reserves.`
+      );
     }
 
     // handle BEAN -> LP
     if (this.isTokenBEAN(sellToken)) {
       routes.sync = { ...inputSwap, well };
-    } 
+    }
     // handle NON-BEAN -> LP underlying NON-BEAN -> LP
     else {
       const intermediateToken = well.getPairToken(WellsRouter.sdk.tokens.BEAN);
-      routes.swap = {
-        sellToken,
-        buyToken: intermediateToken
-      };
+      if (!sellToken.equals(intermediateToken)) {
+        routes.swap = {
+          sellToken,
+          buyToken: intermediateToken
+        };
+      }
       routes.sync = {
         sellToken: intermediateToken,
         buyToken,
-        well,
+        well
       };
     }
 
@@ -760,4 +769,3 @@ class Quoter {
 }
 
 export { Quoter as BeanSwapQuoter };
-
