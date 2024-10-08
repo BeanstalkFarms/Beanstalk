@@ -10,9 +10,11 @@ import {
   UnwrapEthSwapNode,
   WellSwapNode,
   WrapEthSwapNode,
+  ZeroXSwapNode,
+  TransferTokenNode,
+  WellSyncSwapNode
 } from "./nodes";
 import { TokenValue } from "@beanstalk/sdk-core";
-import { TransferTokenNode } from "./nodes/TransferTokenNode";
 
 class Builder {
   private static sdk: BeanstalkSDK;
@@ -111,12 +113,26 @@ class Builder {
 
       // No need to update Farm modes until we offload pipeline.
       if (isERC20Node(node)) {
-        const swap = isWellNode(node)
-          ? node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) })
-          : node.buildStep();
-
-        this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
-        this.#advPipe.add(swap, { tag: node.tag });
+        if (isWellNode(node)) {
+          this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
+          this.#advPipe.add(
+            node.buildStep({ copySlot: this.#getPrevNodeCopySlot(i) }),
+            { tag: node.tag }
+          );
+        } else if (isZeroXNode(node)) {
+          this.#advPipe.add(this.#getApproveERC20MaxAllowance(node));
+          this.#advPipe.add(node.buildStep(), { tag: node.tag });
+        } else if (isWellSyncNode(node)) {
+          this.#advPipe.add(
+            node.transferStep({ copySlot: this.#getPrevNodeCopySlot(i) })
+          );
+          this.#advPipe.add(
+            node.buildStep({ recipient: Builder.sdk.contracts.pipeline.address }),
+            { tag: node.tag }
+          );
+        } else {
+          throw new Error("Error building swap: Unknown SwapNode type.");
+        }
       }
 
       // Last leg of swap
@@ -303,5 +319,11 @@ const isWellNode = (node: SwapNode): node is WellSwapNode => {
 const isTransferTokenNode = (node: SwapNode): node is TransferTokenNode => {
   return node instanceof TransferTokenNode;
 }
+const isZeroXNode = (node: SwapNode): node is ZeroXSwapNode => {
+  return node instanceof ZeroXSwapNode;
+};
+const isWellSyncNode = (node: SwapNode): node is WellSyncSwapNode => {
+  return node instanceof WellSyncSwapNode;
+};
 
 export { Builder as BeanSwapBuilder };

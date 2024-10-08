@@ -19,6 +19,7 @@ type BuildStepParams = Partial<{
   copySlot: number;
   fromMode: FarmFromMode;
   toMode: FarmToMode;
+  recipient: string;
 }>;
 
 export abstract class SwapNode implements ISwapNode {

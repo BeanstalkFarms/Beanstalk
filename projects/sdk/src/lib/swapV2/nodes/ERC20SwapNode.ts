@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { TokenValue } from "@beanstalk/sdk-core";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { StepFunction, RunContext } from "src/classes/Workflow";
+import { StepFunction, RunContext, StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { ERC20Token } from "src/classes/Token";
 import { Clipboard } from "src/lib/depot";
@@ -101,6 +101,24 @@ export abstract class ERC20SwapNode extends SwapNode implements IERC20SwapNode {
     this.validateBuyAmount();
     this.validateMinBuyAmount();
   }
+
+  protected getClipboard(runContext: RunContext, tag: string, copySlot: number | undefined, pasteSlot: number) {
+    let clipboard: string = Clipboard.encode([]);
+
+    try {
+      if (copySlot !== undefined && copySlot !== null) {
+        const copyIndex = runContext.step.findTag(tag);
+        if (copyIndex !== undefined && copyIndex !== null) {
+          clipboard = Clipboard.encodeSlot(copyIndex, copySlot, pasteSlot);
+        }
+      }
+    } catch (e) {
+      WellSwapNode.sdk.debug(`[WellSwapNode/getClipboardFromContext]: no clipboard found for ${tag}`);
+      // do nothing else. We only want to check the existence of the tag
+    }
+
+    return clipboard;
+  }
 }
 
 interface WellSwapBuildParams {
@@ -123,13 +141,11 @@ export class WellSwapNode extends ERC20SwapNode {
     this.well = well;
     this.name = `SwapNode: Well ${this.well.name}`;
     this.allowanceTarget = this.well.address;
-    this.validateWellHasTokens();
   }
 
   async quoteForward(sellAmount: TokenValue, slippage: number) {
     this.setFields({ sellAmount, slippage })
     this.validateQuoteForward();
-    this.validateWellHasTokens();
 
     const contract = this.well.getContract();
 
@@ -154,7 +170,6 @@ export class WellSwapNode extends ERC20SwapNode {
   
   buildStep({ copySlot }: WellSwapBuildParams): StepFunction<AdvancedPipePreparedResult> {
     this.validateAll();
-    this.validateWellHasTokens();
 
     return (_amountInStep, runContext) => {
       const returnIndexTag = this.returnIndexTag;
@@ -184,7 +199,7 @@ export class WellSwapNode extends ERC20SwapNode {
               WellSwapNode.sdk.contracts.pipeline.address,
               TokenValue.MAX_UINT256.toBlockchain()
             ]),
-            clipboard: this.getClipboard(runContext, returnIndexTag, copySlot)
+            clipboard: this.getClipboard(runContext, returnIndexTag, copySlot, this.amountInPasteSlot)
           };
         },
         decode: (data: string) => this.well.getContract().interface.decodeFunctionResult("swapFrom", data),
@@ -193,34 +208,15 @@ export class WellSwapNode extends ERC20SwapNode {
     }
   }
 
-  private getClipboard(runContext: RunContext, tag: string, copySlot: number | undefined) {
-    let clipboard: string = Clipboard.encode([]);
-
-    try {
-      if (copySlot !== undefined && copySlot !== null) {
-        const copyIndex = runContext.step.findTag(tag);
-        if (copyIndex !== undefined && copyIndex !== null) {
-          clipboard = Clipboard.encodeSlot(copyIndex, copySlot, this.amountInPasteSlot);
-        }
-      }
-    } catch (e) {
-      WellSwapNode.sdk.debug(`[WellSwapNode/getClipboardFromContext]: no clipboard found for ${tag}`);
-      // do nothing else. We only want to check the existence of the tag
-    }
-
-    return clipboard;
-  }
-
-  validateWellHasTokens() {
+  override validateTokens() {
+    super.validateTokens();
     if (this.well.tokens.length !== 2) {
       throw this.makeErrorWithContext("Cannot configure well swap with non-pair wells");
     }
-    const [t0, t1] = this.well.tokens;
-    if (!t0.equals(this.sellToken) && !t1.equals(this.sellToken)) {
-      throw this.makeErrorWithContext(`Invalid token Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`);
-    }
-    if (!t0.equals(this.buyToken) && !t1.equals(this.buyToken)) {
-      throw this.makeErrorWithContext(`Invalid token Sell Token. Well ${this.well.name} does not contain ${this.buyToken.symbol}`);
+    if (!this.well.tokens.some((token) => token.equals(this.sellToken))) {
+      throw this.makeErrorWithContext(
+        `Invalid token Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`
+      );
     }
   }
 }
@@ -298,6 +294,104 @@ export class ZeroXSwapNode extends ERC20SwapNode {
   private validateTokenIsNotBEAN (token: ERC20Token) {
     if (token.equals(ZeroXSwapNode.sdk.tokens.BEAN)) {
       throw this.makeErrorWithContext("Cannot swap BEAN tokens via 0x. For BEAN quotes, use WELLS instead.");
+    }
+  }
+}
+
+
+interface WellSyncSwapBuildParams {
+  recipient: string;
+}
+
+export class WellSyncSwapNode extends ERC20SwapNode {
+  name: string = "SwapNode: WellSync";
+
+  well: BasinWell;
+
+  readonly sellToken: ERC20Token;
+
+  readonly buyToken: ERC20Token;
+
+  readonly amountOutCopySlot: number = 0;
+
+  readonly transferAmountInPasteSlot = 1;
+
+  readonly allowanceTarget: string;
+
+  constructor(sdk: BeanstalkSDK, well: BasinWell, sellToken: ERC20Token, buyToken: ERC20Token = well.lpToken) {
+    super(sdk, sellToken, buyToken);
+    this.well = well;
+    this.allowanceTarget = this.well.address;
+  }
+
+  async quoteForward(sellAmount: TokenValue, slippage: number) {
+    this.setFields({ sellAmount, slippage });
+    this.validateQuoteForward();
+
+    const contract = this.well.getContract();
+
+    const amountsIn = [this.sellAmount, TokenValue.ZERO];
+
+    if (!this.sellToken.equals(this.well.tokens[0])) {
+      amountsIn.reverse();
+    }
+
+    const buyAmount = await contract.callStatic.getAddLiquidityOut(
+      amountsIn.map((amount) => amount.toBlockchain())
+    ).then((result) => this.buyToken.fromBlockchain(result));
+
+    const minBuyAmount = buyAmount.subSlippage(this.slippage);
+
+    this.setFields({ buyAmount, minBuyAmount });
+
+    return this;
+  }
+
+  buildStep({ recipient }: WellSyncSwapBuildParams): StepClass<AdvancedPipePreparedResult> {
+    this.validateAll();
+    const sync = new WellSyncSwapNode.sdk.farm.actions.WellSync(
+      this.well, 
+      this.sellToken, 
+      recipient
+    );
+
+    return sync;
+  }
+
+  transferStep({ copySlot }: { copySlot: number | undefined}) {
+    const transferToken: StepFunction<AdvancedPipePreparedResult> = (_amountInStep, runContext) => {
+      const contract = this.sellToken.getContract();
+
+      return {
+        name: `transfer-token-${this.sellToken.symbol}-${this.buyToken.symbol}`,
+        amountOut: this.sellAmount.toBigNumber(),
+        value: BigNumber.from(0),
+        prepare: () => {
+          return {
+            target: this.sellToken.address,
+            callData: contract.interface.encodeFunctionData("transfer", [
+              this.well.address,
+              this.sellAmount.toBlockchain()
+            ]),
+            clipboard: this.getClipboard(runContext, this.returnIndexTag, copySlot, this.transferAmountInPasteSlot)
+          }
+        },
+        decode: (data: string) => contract.interface.decodeFunctionData("transfer", data),
+        decodeResult: (data: string) => contract.interface.decodeFunctionResult("transfer", data)
+      }
+    };
+
+    return transferToken;
+  }
+
+  override validateTokens() {
+    super.validateTokens();
+    if (!this.buyToken.equals(this.well.lpToken)) {
+      throw this.makeErrorWithContext(`WellSyncSwapNode can only swap to the well's LP token, but got ${this.buyToken.symbol}`);
+    }
+
+    if (!this.well.tokens.some((token) => token.equals(this.sellToken))) {
+      throw this.makeErrorWithContext(`Invalid Sell Token. Well ${this.well.name} does not contain ${this.sellToken.symbol}`);
     }
   }
 }
