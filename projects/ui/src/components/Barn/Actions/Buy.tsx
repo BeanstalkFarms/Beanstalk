@@ -14,16 +14,17 @@ import {
   ERC20Token,
   NativeToken,
   BeanstalkSDK,
-  FarmFromMode,
   FarmToMode,
   TokenValue,
+  BeanSwapNodeQuote,
+  BeanSwapOperation,
 } from '@beanstalk/sdk';
 import { useSelector } from 'react-redux';
 
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import {
   BalanceFromFragment,
-  FormStateNew,
+  FormApprovingStateNew,
   FormTokenStateNew,
   FormTxnsFormState,
   SettingInput,
@@ -77,7 +78,19 @@ import FertilizerItem from '../FertilizerItem';
 
 // ---------------------------------------------------
 
-type BuyFormValues = FormStateNew &
+interface IBeanSwapQuote {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+}
+
+type FormTokenStateWithQuote = FormTokenStateNew & IBeanSwapQuote;
+
+interface FormState {
+  tokens: FormTokenStateWithQuote[];
+  approving?: FormApprovingStateNew;
+}
+
+
+type BuyFormValues = FormState &
   BalanceFromFragment &
   FormTxnsFormState & {
     settings: {
@@ -88,7 +101,8 @@ type BuyFormValues = FormStateNew &
   };
 
 type BuyQuoteHandlerParams = {
-  fromMode: FarmFromMode;
+  // fromMode: FarmFromMode;
+  slippage: number;
 };
 
 const defaultFarmActionsFormState = {
@@ -101,7 +115,6 @@ const defaultFarmActionsFormState = {
 
 const BuyForm: FC<
   FormikProps<BuyFormValues> & {
-    handleQuote: QuoteHandlerWithParams<BuyQuoteHandlerParams>;
     balances: FarmerBalances;
     tokenOut: ERC20Token;
     tokenList: (ERC20Token | NativeToken)[];
@@ -114,12 +127,12 @@ const BuyForm: FC<
   setFieldValue,
   isSubmitting,
   // Custom
-  handleQuote,
   tokenList,
   balances,
   tokenOut: token,
   sdk,
 }) => {
+  const account = useAccount();
   const formRef = useRef<HTMLDivElement>(null);
   const getWstETHPrice = useWstETHPriceFromBeanstalk();
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
@@ -134,6 +147,32 @@ const BuyForm: FC<
         console.log('Error getting wstETH price: ', e);
       });
   }, [getWstETHPrice]);
+
+   // Doesn't get called if tokenIn === tokenOut
+  // aka if the user has selected wstETH as input
+  const handleQuote = useCallback<
+    QuoteHandlerWithParams<BuyQuoteHandlerParams>
+  >(
+    async (tokenIn, _amountIn, _tokenOut, { slippage }) => {
+      if (!account) {
+        throw new Error('No account connected');
+      }
+      const quote = await BuyFertilizerFarmStep.getAmountOut(
+        sdk,
+        tokenList,
+        tokenIn,
+        tokenIn.amount(_amountIn.toString()),
+        slippage,
+      );
+
+      setFieldValue('tokens.0.beanSwapQuote', quote.beanSwapQuote);
+
+
+      return tokenValueToBN(quote.amountOut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account, sdk, tokenList, setFieldValue]
+  );
 
   const combinedTokenState = [...values.tokens, values.claimableBeans];
 
@@ -177,10 +216,10 @@ const BuyForm: FC<
   // Memoized to prevent infinite re-rendering loop
   const quoteProviderParams = useMemo(() => {
     const _params = {
-      fromMode: balanceFromToMode(values.balanceFrom),
+      slippage: values.settings.slippage,
     };
     return _params;
-  }, [values.balanceFrom]);
+  }, [values.settings.slippage]);
 
   /// Approval Checks
   const shouldApprove =
@@ -372,6 +411,7 @@ const BuyPropProvider: FC<{}> = () => {
         {
           token: baseToken as ERC20Token | NativeToken,
           amount: undefined,
+          beanSwapQuote: undefined,
         },
       ],
       balanceFrom: BalanceFrom.TOTAL,
@@ -393,28 +433,6 @@ const BuyPropProvider: FC<{}> = () => {
   );
 
   /// Handlers
-  // Doesn't get called if tokenIn === tokenOut
-  // aka if the user has selected wstETH as input
-  const handleQuote = useCallback<
-    QuoteHandlerWithParams<BuyQuoteHandlerParams>
-  >(
-    async (tokenIn, _amountIn, _tokenOut, { fromMode: _fromMode }) => {
-      if (!account) {
-        throw new Error('No account connected');
-      }
-      const estimate = await BuyFertilizerFarmStep.getAmountOut(
-        sdk,
-        tokenList,
-        tokenIn,
-        tokenIn.amount(_amountIn.toString()),
-        _fromMode,
-        account
-      );
-
-      return tokenValueToBN(estimate.amountOut);
-    },
-    [account, sdk, tokenList]
-  );
 
   const onSubmit = useCallback(
     async (
@@ -468,13 +486,16 @@ const BuyPropProvider: FC<{}> = () => {
           success: 'Purchase successful.',
         });
 
+        const swapOperation = getSwapOperation(sdk, values, account);
+
         buyTxn.build(
           tokenIn,
           amountIn,
           balanceFromToMode(values.balanceFrom),
           claimAndDoX,
           wstETHPrice,
-          slippage
+          slippage,
+          swapOperation,
         );
 
         const performed = txnBundler.setFarmSteps(values.farmActions);
@@ -543,7 +564,6 @@ const BuyPropProvider: FC<{}> = () => {
             />
           </TxnSettings>
           <BuyForm
-            handleQuote={handleQuote}
             balances={balances}
             tokenOut={tokenOut}
             tokenList={tokenList}
@@ -564,3 +584,65 @@ const Buy: React.FC<{}> = () => (
 );
 
 export default Buy;
+
+
+function getSwapOperation(sdk: BeanstalkSDK, values: BuyFormValues, account: string | undefined) {
+  if (!account) {
+    throw new Error('Signer required');
+  }
+  const state = values.tokens[0];
+  const sellToken = state?.token;
+  const buyToken = sdk.tokens.WSTETH;
+  const quoteData = state?.beanSwapQuote;
+  const amountIn = state?.amount;
+  const amountOut = state?.amountOut;
+
+  if (!sellToken) {
+    throw new Error('No token selected');
+  }
+  if (!amountIn || !amountOut) {
+    throw new Error('No amounts detected');
+  }
+
+  if (buyToken.equals(sellToken)) {
+    return undefined;
+  }
+
+  if (!quoteData) { 
+    throw new Error('No quote data');
+  }
+  const firstNode = quoteData.nodes[0];
+  const lastNode = quoteData.nodes[quoteData.nodes.length - 1];
+
+  if (!firstNode.sellToken.equals(sellToken)) {
+    throw new Error(
+      `Token input mismatch. Expected: ${sellToken} Got: ${firstNode.sellToken}`
+    );
+  }
+  if (!lastNode.buyToken.equals(buyToken)) {
+    throw new Error(
+      `Target token mismatch. Expected: ${buyToken} Got: ${lastNode.buyToken}`
+    );
+  }
+  if (!quoteData.sellAmount.eq(sellToken.fromHuman(amountIn.toString()))) {
+    throw new Error(
+      `Sell amount mismatch. Expected: ${amountIn} Got: ${quoteData.sellAmount}`
+    );
+  }
+  if (!quoteData.buyAmount.eq(buyToken.fromHuman(amountOut.toString()))) {
+    throw new Error(
+      `Buy amount mismatch. Expected: ${amountOut} Got: ${quoteData.buyAmount}`
+    );
+  }
+
+  const operation = BeanSwapOperation.buildWithQuote(
+    quoteData, 
+    account,
+    account,
+    balanceFromToMode(values.balanceFrom),
+    FarmToMode.INTERNAL
+  )
+
+  return operation;
+
+}

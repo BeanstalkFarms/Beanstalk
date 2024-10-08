@@ -1,10 +1,9 @@
 import {
   BeanstalkSDK,
+  BeanSwapOperation,
   ERC20Token,
   FarmFromMode,
-  FarmToMode,
   NativeToken,
-  StepGenerator,
   Token,
   TokenValue,
 } from '@beanstalk/sdk';
@@ -31,7 +30,8 @@ export class BuyFertilizerFarmStep extends FarmStep {
     _fromMode: FarmFromMode,
     claimAndDoX: ClaimAndDoX,
     ethPrice: TokenValue,
-    slippage: number
+    slippage: number,
+    operation: BeanSwapOperation | undefined
   ) {
     this.clear();
 
@@ -43,20 +43,11 @@ export class BuyFertilizerFarmStep extends FarmStep {
       tokenIn
     );
 
-    let fromMode = _fromMode;
-
     /// If the user is not using additional BEANs
-    if (!wstETHIn) {
+    if (!wstETHIn && operation) {
       this.pushInput({
-        ...BuyFertilizerFarmStep.getSwap(
-          this._sdk,
-          tokenIn,
-          this._sdk.tokens.WSTETH,
-          this._account,
-          fromMode
-        ),
-      });
-      fromMode = FarmFromMode.INTERNAL_TOLERANT;
+        input: [...operation.getFarm().generators]
+      })
     }
 
     this.pushInput({
@@ -129,27 +120,6 @@ export class BuyFertilizerFarmStep extends FarmStep {
     return lpEstimate;
   }
 
-  private static getSwap(
-    sdk: BeanstalkSDK,
-    tokenIn: Token,
-    tokenOut: Token,
-    account: string,
-    fromMode: FarmFromMode
-  ) {
-    const swap = sdk.swap.buildSwap(
-      tokenIn,
-      tokenOut,
-      account,
-      fromMode,
-      FarmToMode.EXTERNAL
-    );
-
-    return {
-      swap,
-      input: [...swap.getFarm().generators] as StepGenerator[],
-    };
-  }
-
   /// Static Methods
 
   public static async getAmountOut(
@@ -157,24 +127,21 @@ export class BuyFertilizerFarmStep extends FarmStep {
     tokenList: Token[],
     tokenIn: Token,
     amountIn: TokenValue,
-    _fromMode: FarmFromMode,
-    account: string
+    slippage: number
   ) {
     BuyFertilizerFarmStep.validateTokenIn(sdk.tokens, tokenList, tokenIn);
 
-    const { swap, input } = BuyFertilizerFarmStep.getSwap(
-      sdk,
-      tokenIn,
-      sdk.tokens.WSTETH,
-      account,
-      _fromMode
-    );
+    const quote = await sdk.beanSwap.quoter.route(tokenIn as ERC20Token, sdk.tokens.WSTETH, amountIn, slippage);
 
-    const estimate = await swap.estimate(amountIn);
+    if (!quote) {
+      throw new Error('Unable to build swap.');
+    }
+
+    const amountOut = quote.buyAmount;
 
     return {
-      amountOut: estimate,
-      input,
+      amountOut,
+      beanSwapQuote: quote
     };
   }
 
@@ -185,15 +152,15 @@ export class BuyFertilizerFarmStep extends FarmStep {
   }
 
   public static getPreferredTokens(tokens: BeanstalkSDK['tokens']) {
-    const { BEAN, ETH, WETH, CRV3, DAI, USDC, USDT, WSTETH } = tokens;
+    const { BEAN, ETH, WETH, WSTETH, WEETH, WBTC, USDC, USDT } = tokens;
 
     return [
-      { token: WSTETH, minimum: new BigNumber(0.01) },
+      { token: WSTETH, minimum: new BigNumber(0.008) },
       { token: WETH, minimum: new BigNumber(0.01) },
       { token: ETH, minimum: new BigNumber(0.01) },
+      { token: WEETH, minimum: new BigNumber(0.01) },
+      { token: WBTC, minimum: new BigNumber(0.00005) },
       { token: BEAN, minimum: new BigNumber(1) },
-      { token: CRV3, minimum: new BigNumber(1) },
-      { token: DAI, minimum: new BigNumber(1) },
       { token: USDC, minimum: new BigNumber(1) },
       { token: USDT, minimum: new BigNumber(1) },
     ];
