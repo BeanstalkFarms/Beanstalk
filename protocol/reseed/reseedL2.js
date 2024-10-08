@@ -85,7 +85,7 @@ async function printStage(i, end, mock, log) {
 }
 
 function parseBeanstalkData() {
-  const BLOCK_NUMBER = 20895000;
+  const BLOCK_NUMBER = 20921737;
   // Read contract addresses to exclude them from the reseed
   const contractAccountsJson = JSON.parse(
     fs.readFileSync(`./reseed/data/exports/contract-accounts${BLOCK_NUMBER}.json`, "utf8")
