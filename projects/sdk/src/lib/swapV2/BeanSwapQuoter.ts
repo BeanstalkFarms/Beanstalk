@@ -11,7 +11,8 @@ import {
   WrapEthSwapNode,
   SwapNode,
   UnwrapEthSwapNode,
-  ERC20SwapNode
+  ERC20SwapNode,
+  WellSyncSwapNode
 } from "./nodes";
 import { isERC20Token } from "src/utils/token";
 import { BeanSwapNodeQuote } from "./BeanSwap";
@@ -28,6 +29,16 @@ interface SwapApproximation {
   maxBuyAmount: TokenValue;
 }
 
+
+interface QuoteSourceFragment {
+  sellToken: ERC20Token;
+  buyToken: ERC20Token;
+}
+
+interface SyncQuoteSourceFragment extends QuoteSourceFragment {
+  well: BasinWell;
+}
+
 class WellsRouter {
   static sdk: BeanstalkSDK;
   private quoter: Quoter;
@@ -36,6 +47,76 @@ class WellsRouter {
     WellsRouter.sdk = sdk;
     this.quoter = quoter;
   }
+
+   /**
+   * Divides the routes into swap and sync routes for a given sellToken and buyToken
+   * @param sellToken
+   * @param buyToken
+   * @returns
+   */
+   splitSwapsAndSync(
+    sellToken: ERC20Token,
+    buyToken: ERC20Token
+  ): {
+    swap: QuoteSourceFragment | undefined;
+    sync: SyncQuoteSourceFragment | undefined;
+  } {
+    if (!isERC20Token(sellToken) || !isERC20Token(buyToken)) {
+      throw new Error("Invalid token types. Cannot quote well routes for non-erc20 tokens");
+    }
+
+    const routes: {
+      swap: QuoteSourceFragment | undefined;
+      sync: SyncQuoteSourceFragment | undefined;
+    } = { swap: undefined, sync: undefined };
+
+    const inputSwap: QuoteSourceFragment = {
+      sellToken,
+      buyToken
+    };
+
+    if (!buyToken.isLP) {
+      routes.swap = inputSwap;
+      return routes;
+    }
+
+    const well = WellsRouter.sdk.pools.getWellByLPToken(buyToken);
+    if (!well) {
+      throw new Error(`Well with LP Token ${buyToken.symbol} not found`);
+    }
+
+    const wellHasReserves = !!this.quoter.wellsWithReserves.find((well) =>
+      well.lpToken.equals(buyToken)
+    );
+    if (!wellHasReserves) {
+      throw new Error(
+        `Cannot add single sided liquidity to well ${well.name}. Well has 0 reserves.`
+      );
+    }
+
+    // handle BEAN -> LP
+    if (this.isTokenBEAN(sellToken)) {
+      routes.sync = { ...inputSwap, well };
+    }
+    // handle NON-BEAN -> LP underlying NON-BEAN -> LP
+    else {
+      const intermediateToken = well.getPairToken(WellsRouter.sdk.tokens.BEAN);
+      if (!sellToken.equals(intermediateToken)) {
+        routes.swap = {
+          sellToken,
+          buyToken: intermediateToken
+        };
+      }
+      routes.sync = {
+        sellToken: intermediateToken,
+        buyToken,
+        well
+      };
+    }
+
+    return routes;
+  }
+
 
   /**
    * Finds the best well routes for a given sellToken and buyToken (ONLY WELLS)
@@ -413,21 +494,58 @@ class Quoter {
   }
 
   private async handleERC20OnlyQuote(
-    _sellToken: Token,
-    _buyToken: Token,
+    _sellToken: ERC20Token | NativeToken,
+    _buyToken: ERC20Token | NativeToken,
     amount: TokenValue,
     slippage: number
   ) {
     const sellToken = this.ensureERC20(_sellToken);
     const buyToken = this.ensureERC20(_buyToken);
 
-    if (sellToken.equals(buyToken)) return [] as SwapNode[];
+    if (sellToken.equals(buyToken)) {
+      const transferNode = new TransferTokenNode(Quoter.sdk, sellToken, buyToken);
+      transferNode.setFields({ sellAmount: amount });
+      return [transferNode]
+    }
 
+    const { swap: swapFragment, sync: syncFragment } = this.#wellsRouter.splitSwapsAndSync(sellToken, buyToken);
+
+    const nodes: SwapNode[] = [];
+
+    if (swapFragment) {
+      const nonLPQuote = await this.getNonLPNodes(swapFragment, amount, slippage);
+      nodes.push(...nonLPQuote);
+    }
+
+    if (syncFragment) {
+      const lastNode = swapFragment && nodes.length ? nodes[nodes.length - 1] : undefined;
+      const addLiquidityIn = !lastNode ? amount : lastNode.buyAmount;
+      const syncNode = await this.getWellLPSyncNodes(syncFragment, addLiquidityIn, slippage);
+      if (syncNode) {
+        nodes.push(syncNode);
+      }
+    }
+
+    return nodes;
+  }
+
+  private async getNonLPNodes({ sellToken, buyToken }: QuoteSourceFragment, amount: TokenValue, slippage: number) {
     if (this.isTokenBEAN(buyToken) || this.isTokenBEAN(sellToken)) {
       return this.quoteBeanSwap(sellToken, buyToken, amount, slippage);
     }
 
     return this.quoteNonBeanSwap(sellToken, buyToken, amount, slippage);
+  }
+
+  private async getWellLPSyncNodes(fragment: SyncQuoteSourceFragment, amount: TokenValue, slippage: number) {
+    const { sellToken, buyToken, well } = fragment;
+    if (!buyToken.isLP) {
+      return undefined;
+    }
+
+    const node = new WellSyncSwapNode(Quoter.sdk, well, sellToken);
+    await node.quoteForward(amount, slippage);
+    return node;
   }
 
   /// ---------- NON-BEAN SWAP ---------- ///
@@ -449,7 +567,9 @@ class Quoter {
 
   /// ---------- BEAN SWAP ---------- ///
 
-  // prettier-ignore
+  /**
+   * Used to quote any ERC20 tokens BEAN <-> Non LP ERC20
+   */
   private async quoteBeanSwap(sellToken: ERC20Token, buyToken: ERC20Token, amount: TokenValue, slippage: number): Promise<SwapNode[]> {
     const sellingBEAN = this.isTokenBEAN(sellToken);
     const buyingBEAN = this.isTokenBEAN(buyToken);

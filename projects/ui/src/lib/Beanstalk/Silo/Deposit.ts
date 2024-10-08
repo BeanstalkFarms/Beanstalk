@@ -5,14 +5,12 @@ import { Action, ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
 import { tokenValueToBN } from '~/util';
 import { AmountsBySource } from '~/hooks/beanstalk/useBalancesUsedBySource';
-import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
 
 export function depositSummary(
   to: Token,
   tokens: FormStateNew['tokens'],
   amountsBySource: AmountsBySource[],
   amountToBDV: (amount: BigNumber) => BigNumber,
-  getLegacyToken: ReturnType<typeof useGetLegacyToken>
 ) {
   const summary = tokens.reduce(
     (agg, curr, idx) => {
@@ -52,8 +50,8 @@ export function depositSummary(
           agg.actions.push({
             type: ActionType.SWAP,
             amountsBySource: bySource,
-            tokenIn: getLegacyToken(curr.token),
-            tokenOut: getLegacyToken(to),
+            tokenIn: curr.token,
+            tokenOut: to,
             amountIn: curr.amount,
             amountOut: curr.amountOut,
           });
@@ -76,7 +74,7 @@ export function depositSummary(
     type: ActionType.DEPOSIT,
     amount: summary.amount,
     // from the perspective of the deposit, the token is "coming in".
-    token: getLegacyToken(to),
+    token: to,
   });
   summary.actions.push({
     type: ActionType.UPDATE_SILO_REWARDS,

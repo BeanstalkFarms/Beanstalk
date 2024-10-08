@@ -122,10 +122,10 @@ export class BeanSwapOperation {
 
   /**
    * Estimates the swap based on the amount and slippage
-   * @param amount 
-   * @param slippage 
-   * @param force 
-   * @returns 
+   * @param amount
+   * @param slippage
+   * @param force
+   * @returns
    */
   async estimateSwap(amount: TokenValue, slippage: number, force?: boolean) {
     if (amount.lte(0)) return;
@@ -193,14 +193,20 @@ export class BeanSwapOperation {
 
   /**
    * Build a swap operation w/ quote data via Beanswap.quoter.
-   * @param quoteData 
-   * @param caller 
-   * @param recipient 
-   * @param fromMode 
-   * @param toMode 
-   * @returns 
+   * @param quoteData
+   * @param caller
+   * @param recipient
+   * @param fromMode
+   * @param toMode
+   * @returns
    */
-  static buildWithQuote(quoteData: BeanSwapNodeQuote, caller: string, recipient: string, fromMode: FarmFromMode, toMode: FarmToMode) {
+  static buildWithQuote(
+    quoteData: BeanSwapNodeQuote, 
+    caller: string, 
+    recipient: string, 
+    fromMode: FarmFromMode, 
+    toMode: FarmToMode
+  ) {
     const swap = new BeanSwapOperation(
       BeanSwap.sdk,
       BeanSwap.sdk.beanSwap.quoter,
