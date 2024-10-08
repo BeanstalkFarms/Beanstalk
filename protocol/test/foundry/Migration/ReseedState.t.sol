@@ -95,11 +95,23 @@ contract ReseedStateTest is TestHelper {
         // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
         uint256 offset = 0;
-        accountNumber = parseAccounts(numAccounts, offset);
-        console.log("Number of accounts: ", accountNumber);
+        // accountNumber = parseAccounts(numAccounts, offset);
+        // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
-        uint256 fertAccountNumber = parseFertAccounts(numAccounts, offset);
-        console.log("Number of fert accounts: ", fertAccountNumber);
+        // uint256 fertAccountNumber = parseFertAccounts(numAccounts, offset);
+        // console.log("Number of fert accounts: ", fertAccountNumber);
+    }
+
+    function test_WhitelistingState() public {
+        // address L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
+        // IMockFBeanstalk l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+
+        // get AssetSettings of L2BEAN
+        IMockFBeanstalk.AssetSettings memory assetSettings = l2Beanstalk.tokenSettings(L2BEAN);
+
+        // log milestone stem and season
+        console.log("Milestone stem: ", assetSettings.milestoneStem);
+        console.log("Milestone season: ", assetSettings.milestoneSeason);
     }
 
     ////////////////// WhiteListed Tokens //////////////////

@@ -30,7 +30,7 @@ contract L1ReceiverFacetTest is Order, TestHelper {
 
     string constant CONTRACT_ADDRESSES_PATH =
         "./scripts/beanstalk-3/data/inputs/ContractAddresses.txt";
-    uint256 constant CONTRACT_ADDRESSES_LENGTH = 47; // should be the number of lines in the file above
+    uint256 constant CONTRACT_ADDRESSES_LENGTH = 71; // should be the number of lines in the file above
 
     address OWNER;
     address RECIEVER;
@@ -44,12 +44,12 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         bs.mockWhitelistToken(L2URLP, IMockFBeanstalk.unripeLPToBDV.selector, 10000000000, 1);
 
         // set the milestone stem for BEAN
-        bs.mockSetMilestoneStem(L2BEAN, 36462179909);
-        bs.mockSetMilestoneSeason(L2BEAN, bs.season());
-        bs.mockSetMilestoneStem(L2URBEAN, 0);
-        bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
-        bs.mockSetMilestoneStem(L2URLP, 0);
-        bs.mockSetMilestoneSeason(L2URLP, bs.season());
+        // bs.mockSetMilestoneStem(L2BEAN, 36462179909);
+        // bs.mockSetMilestoneSeason(L2BEAN, bs.season());
+        // bs.mockSetMilestoneStem(L2URBEAN, 0);
+        // bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
+        // bs.mockSetMilestoneStem(L2URLP, 0);
+        // bs.mockSetMilestoneSeason(L2URLP, bs.season());
     }
 
     /**
@@ -80,6 +80,7 @@ contract L1ReceiverFacetTest is Order, TestHelper {
             vm.resumeGasMetering();
             uint256 gasStart = gasleft();
 
+            console.log("Issuing deposits for account:", OWNER);
             vm.prank(RECIEVER);
             L1ReceiverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
 

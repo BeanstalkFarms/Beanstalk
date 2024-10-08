@@ -19,6 +19,7 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import "forge-std/console.sol";
 
 /**
  * @title LibTokenSilo
@@ -496,6 +497,12 @@ library LibTokenSilo {
      */
     function stemTipForToken(address token) internal view returns (int96 _stemTip) {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        console.log("stem tip for token: ", token);
+        console.log("milestone stem: ");
+        console.logInt(s.sys.silo.assetSettings[token].milestoneStem);
+        console.log("milestone season: ");
+        console.log(s.sys.silo.assetSettings[token].milestoneSeason);
+        console.log("season: ", s.sys.season.current);
         // Will not over/underflow because all casted variables are types smaller that int96.
         _stemTip =
             s.sys.silo.assetSettings[token].milestoneStem +

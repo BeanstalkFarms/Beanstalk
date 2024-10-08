@@ -22,6 +22,7 @@ import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -40,13 +41,13 @@ contract L1ReceiverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0xe8c85107aea17dd6d4330a7a996c8ec23d62aa22f3feb4c97cdd5368e1fa756b;
+        0x0c27945355ee41f0b93923bb70581b7dea29034183026aaa7c7dcb3edd38349e;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x8d60edfd9ab5f687b1d92f441b577b43d2ad8cb22e66779e6c37e3dc3b91f3e1;
+        0xa5e13f055d0ec9db32aeb6fc55df89eda4c0a1ce2660e9a24060a275e4e107db;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0x3b6f4a3ceb1dc34f3a00414b79dcc5c16756093de2e4062e726ec22afd36741c;
+        0xa3f8aa1737eb885b5bada4bf550a69a775f87bb3d76ded62116753ed88758806;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0x6329fea484065f1f62d989fbf443406e3487276c4397ad36e0370f60ffbaa2e5;
+        0x5819d7a6b10bfd421d78835493ed50442b4d658d0e9022caa4507c9c0ef54a97;
     // bytes32 internal constant POD_ORDER_MERKLE_ROOT =
     // 0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
@@ -431,10 +432,17 @@ contract L1ReceiverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         uint256[] calldata bdvs
     ) internal returns (uint256 stalk) {
+        console.log("add migrated deposits to account: ", receiver);
         for (uint i; i < depositIds.length; i++) {
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
             uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             int96 stemTip = LibTokenSilo.stemTipForToken(token);
+            console.log("stemTip: ");
+            console.logInt(stemTip);
+            console.log("stem: ");
+            console.logInt(stem);
+            console.log("amounts[i]: ", amounts[i]);
+            console.log("bdvs[i]: ", bdvs[i]);
             LibTokenSilo.addDepositToAccount(
                 receiver,
                 token,
@@ -443,9 +451,25 @@ contract L1ReceiverFacet is ReentrancyGuard {
                 bdvs[i],
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-
             // calculate the stalk assoicated with the deposit and increment.
+            console.log("stalk: ");
+            console.logUint(stalk);
+            console.log("bdvs[i] * stalkIssuedPerBdv: ");
+            console.logUint(bdvs[i] * stalkIssuedPerBdv);
+            console.log("stemTip: ");
+            console.logInt(stemTip);
+            console.log("stem: ");
+            console.logInt(stem);
+            console.log("uint256(uint96(stemTip - stem)): ");
+            console.logUint(uint256(uint96(stemTip - stem)));
+            console.log("bdvs[i]: ");
+            console.logUint(bdvs[i]);
+            console.log(
+                "add amount: ",
+                (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i])
+            );
             stalk += (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i]);
+            console.log("done calculating stalk: ", stalk);
         }
     }
 
