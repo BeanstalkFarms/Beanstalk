@@ -67,6 +67,7 @@ import { runOnDev } from '~/util/dev';
 import useSdk from '~/hooks/sdk';
 import L2Claim from '~/pages/l2claim';
 import L1Delegate from '~/pages/l1delegate';
+import MigrationMessage from '../Common/MigrationMessage';
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
@@ -111,33 +112,6 @@ function MigrationGate() {
 
   const sdk = useSdk();
   const account = useAccount();
-  const [isContract, setIsContract] = useState<boolean>(false);
-  const [hasReceipt, setHasReceipt] = useState<boolean>(false);
-
-  useEffect(() => {
-    async function contractCheck() {
-      if (!account) {
-        setIsContract(false)
-      } else {
-        const _isContract = await sdk.provider.getCode(account);
-        if (_isContract === "0x") {
-          setIsContract(false);
-        } else {
-          setIsContract(true);
-        }
-      }
-    };
-    contractCheck();
-  }, [account]);
-
-  useEffect(() => {
-    const ticket = localStorage.getItem("retryableTicket")
-    if (ticket) {
-      setHasReceipt(true);
-    } else {
-      setHasReceipt(false);
-    };
-  }, []);
 
   return (
     <>
@@ -160,11 +134,12 @@ function MigrationGate() {
             width: '100vw',
             minHeight: `calc(100vh - ${navHeight}px)`,
             alignItems: 'center',
-            justifyContent: !isContract ? 'center' : 'flex-start',
+            justifyContent: 'center',
           }}
         >
-          <Box sx={{ marginTop: 4 }}>
-            <Routes>
+          <Box sx={{ marginTop: 0 }}>
+            <MigrationMessage />
+            {/*<Routes>
               <Route index element={<L1Delegate />} />
               <Route path="*" element={<L1Delegate />} />
               <Route path="/l1delegate" element={<L1Delegate />} />
@@ -174,7 +149,7 @@ function MigrationGate() {
               <Route path="/l2" element={<L2Claim />} />
               <Route path="/arbitrum" element={<L2Claim />} />
               <Route path="/404" element={<PageNotFound />} />
-            </Routes>
+            </Routes>*/}
           </Box>
         </Stack>
       </Box>
