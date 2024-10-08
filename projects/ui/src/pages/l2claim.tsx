@@ -35,10 +35,10 @@ export default function L2Claim() {
     const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
 
     async function getEvent() {
-        const ticket = localStorage.getItem("retryableTicket");
-        if (ticket) {
-            const { l1Address } = JSON.parse(ticket);
-            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](l1Address);
+        const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
+        if (internalBalanceMigrationData) {
+            const { source } = JSON.parse(internalBalanceMigrationData);
+            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](source);
             const logs = await sdk.contracts.beanstalk.queryFilter(filter);
             if (!logs || logs.length === 0) return;
             setReceiverApproved(true);

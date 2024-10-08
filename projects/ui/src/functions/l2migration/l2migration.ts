@@ -63,6 +63,10 @@ const _handler: Handler = async (event) => {
         proofs: plotsMerkle ? plotsMerkle[1] : []
     }
 
+    function isEmpty(myObject: any) {
+        return Object.keys(myObject).length === 0;
+    }
+
     return {
         statusCode: 200,
         headers: {
@@ -70,11 +74,11 @@ const _handler: Handler = async (event) => {
         },
         body: JSON.stringify({
             account: accountNoCase,
-            needsManualMigration: (deposit.depositIds.length > 0 || fert.fertIds.length > 0 || farmBal.tokens.length > 0 || plot.index.length > 0),
-            deposits: deposit,
-            fertilizer: fert,
-            farmBalance: farmBal,
-            plots: plot
+            needsManualMigration: !isEmpty(deposit) || !isEmpty(farmBal) || !isEmpty(fert) || !isEmpty(plot),
+            deposits: deposit ? deposit : '',
+            fertilizer: fert ? fert : '',
+            farmBalance: farmBal ? farmBal : '',
+            plots: plot ? plot : ''
         }),
     };
 };
