@@ -69,10 +69,10 @@ export default function L2Claim() {
     }, []);
 
     useEffect(() => {
-        const ticket = localStorage.getItem("retryableTicket");
-        if (!ticket) return
-        const { l1Address } = JSON.parse(ticket);
-        setSourceAccount(l1Address);
+        const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
+        if (!internalBalanceMigrationData) return
+        const { source } = JSON.parse(internalBalanceMigrationData);
+        setSourceAccount(source);
     }, [])
 
     const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
