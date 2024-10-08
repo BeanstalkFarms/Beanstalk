@@ -39,10 +39,13 @@ import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { useSigner } from '~/hooks/ledger/useSigner';
+<<<<<<< HEAD
 import { useDynamicSeeds } from '~/hooks/sdk';
 import useChainState from '~/hooks/chain/useChainState';
 import useChainId from '~/hooks/chain/useChainId';
 import { ChainResolver } from '@beanstalk/sdk-core';
+=======
+>>>>>>> 395143b8d (feat: fix message v3)
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
@@ -131,12 +134,6 @@ function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const { isArbitrum, isTestnet } = useChainState();
 
   const isArbTestnet = isArbitrum && isTestnet;
-
-  const beanstalk = sdk.contracts.beanstalk;
-
-  React.useEffect(() => {
-    console.log('[BeanstalkSDKProvider/beanstalk]', beanstalk.address);
-  }, [beanstalk.address, sdk.chainId]);
 
   // only run this on arbitrum dev
   const ready = useDynamicSeeds(sdk, isArbTestnet);
