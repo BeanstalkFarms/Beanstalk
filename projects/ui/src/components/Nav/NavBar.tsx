@@ -38,8 +38,13 @@ const L1NavBar = () => (
         px={1}
         height={`${NAV_HEIGHT}px`}
       >
-        <Box px={2} py={1}>
+        <Box px={2} height={`${NAV_HEIGHT}px`} sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center' }}>
           <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
+          <LinkButton
+            key={'/'}
+            to={'/'}
+            title={'Migration'}
+          />
         </Box>
         <Row gap={1}>
           <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
