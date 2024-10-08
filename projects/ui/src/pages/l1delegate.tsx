@@ -293,7 +293,7 @@ export default function L1Delegate() {
                                                 specified.
                                             </Typography>
                                             <Button
-                                                disabled={!isAddressValid && beanBalance.eq(0)}
+                                                disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount}
                                                 sx={{
                                                     width: '100%',
                                                     height: 60,
@@ -312,7 +312,7 @@ export default function L1Delegate() {
                                                 specified.
                                             </Typography>
                                             <Button
-                                                disabled={!isAddressValid && !migrateInternal}
+                                                disabled={(!isAddressValid && !migrateInternal) || !destinationAccount}
                                                 sx={{
                                                     width: '100%',
                                                     height: 60,
