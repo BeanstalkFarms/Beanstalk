@@ -195,13 +195,13 @@ const Bean2MaxLPRatio = ({ data }: IBean2MaxLPRatio) => {
 
   const maxLP = useMemo(() => {
     if (!data?.gaugeData) return;
-    const arr = Object.entries(data.gaugeData);
-    const sorted = [...arr].sort(([_ak, a], [_bk, b]) => {
-      const diff = Number(
-        b.gaugePointsPerBdv.minus(a.gaugePointsPerBdv).toString()
-      );
-      return diff;
-    });
+    const arr = Object.entries(data.gaugeData).filter(
+      ([_, v]) => !v.token.equals(sdk.tokens.BEAN)
+    );
+
+    const sorted = [...arr].sort(([_aAddress, a], [_bAddress, b]) =>
+      b.gaugePointsPerBdv.minus(a.gaugePointsPerBdv).toNumber()
+    );
 
     return sdk.tokens.findByAddress(sorted[0][0] || '');
   }, [data?.gaugeData, sdk]);

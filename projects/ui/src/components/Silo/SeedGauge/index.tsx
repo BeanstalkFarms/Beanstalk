@@ -139,7 +139,7 @@ const SeedGaugeSelect = ({
       for (const token of [...sdk.tokens.siloWhitelist]) {
         const setting = data.gaugeData[token.address];
         if (setting?.optimalPctDepositedBdv?.gt(0)) {
-          tokensWithGP.push({ token: token, ...setting });
+          tokensWithGP.push(setting);
         }
       }
       // sort by optimalPercentDepositedBdv
