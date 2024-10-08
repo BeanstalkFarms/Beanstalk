@@ -23,16 +23,11 @@ export class Convert {
     Convert.sdk = sdk;
 
     this.paths = new Map<Token, ERC20Token[]>();
-
+    
     // BEAN<>LP
     this.paths.set(Convert.sdk.tokens.BEAN, [
       Convert.sdk.tokens.BEAN,
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP,
-      Convert.sdk.tokens.BEAN_ETH_WELL_LP,
-      Convert.sdk.tokens.BEAN_WBTC_WELL_LP,
-      Convert.sdk.tokens.BEAN_WEETH_WELL_LP,
-      Convert.sdk.tokens.BEAN_USDC_WELL_LP,
-      Convert.sdk.tokens.BEAN_USDT_WELL_LP
+      ...(Convert.sdk.tokens.wellLP as Set<ERC20Token>)
     ]);
 
     this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [
@@ -171,8 +166,8 @@ export class Convert {
 
   // TODO: use this.paths to determine encoding
   calculateEncoding(
-    fromToken: Token,
-    toToken: Token,
+    _fromToken: Token,
+    _toToken: Token,
     amountIn: TokenValue,
     minAmountOut: TokenValue
   ) {
@@ -180,17 +175,20 @@ export class Convert {
 
     const tks = Convert.sdk.tokens;
 
-    const deprecatedLPs = new Set([Convert.sdk.tokens.BEAN_CRV3_LP]);
+    // Ensure token instances.
+    const fromToken = Convert.sdk.tokens.findByAddress(_fromToken.address);
+    const toToken = Convert.sdk.tokens.findByAddress(_toToken.address);
+  
+    if (!fromToken || !toToken) {
+      throw new Error(`Unknown token ${_fromToken.address} or ${_toToken.address}`);
+    }
 
-    const whitelistedWellLPs = new Set([
-      Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase()
-    ]);
-    const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
-    const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
+    const deprecatedLPs = new Set<Token>([Convert.sdk.tokens.BEAN_CRV3_LP]);
+    const isFromWlLP = Convert.sdk.tokens.wellLP.has(fromToken);
+    const isToWlLP = Convert.sdk.tokens.wellLP.has(toToken);
 
-    if (deprecatedLPs.has(fromToken as ERC20Token) || deprecatedLPs.has(toToken as ERC20Token)) {
-      throw new Error("SDK: Deprecated conversion pathway");
+    if (deprecatedLPs.has(fromToken) || deprecatedLPs.has(toToken)) {
+      throw new Error(`Deprecated LP conversion pathway: ${fromToken.address} -> ${toToken.address}`);
     }
 
     if (fromToken.equals(toToken)) {
@@ -260,7 +258,7 @@ export class Convert {
         fromToken.address // unRipe Token
       );
     } else {
-      throw new Error("SDK: Unknown conversion pathway");
+      throw new Error(`Unknown conversion pathway ${fromToken.address} -> ${toToken.address}`);
     }
 
     return encoding;
