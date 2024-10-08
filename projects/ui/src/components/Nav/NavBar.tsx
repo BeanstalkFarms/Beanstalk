@@ -17,6 +17,7 @@ import ROUTES from './routes';
 import HoverMenu from './HoverMenu';
 
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
+import BeanProgressIcon from '../Common/BeanProgressIcon';
 
 const NavBar: FC<{}> = ({ children }) => {
   const content = (
@@ -39,26 +40,29 @@ const NavBar: FC<{}> = ({ children }) => {
         px={1}
         gap={1}
       >
+        <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
         {/* Desktop: Left Side */}
-        <Row sx={{ flex: 1 }} height="100%" gap={1}>
-          {false && <PriceButton sx={{ height: NAV_ELEM_HEIGHT }} />}
-          {false && <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />}
-          <Row
-            sx={{ display: { lg: 'flex', xs: 'none' } }}
-            height="100%"
-            data-cy="Navbar-links"
-          >
-            {ROUTES.top.map((item) => (
-              <LinkButton
-                key={item.path}
-                to={item.path}
-                title={item.title}
-                tag={item.tag}
-              />
-            ))}
-            <HoverMenu items={ROUTES.more}>More</HoverMenu>
+        {false && (
+          <Row sx={{ flex: 1 }} height="100%" gap={1}>
+            {false && <PriceButton sx={{ height: NAV_ELEM_HEIGHT }} />}
+            {false && <SunButton sx={{ height: NAV_ELEM_HEIGHT }} />}
+            <Row
+              sx={{ display: { lg: 'flex', xs: 'none' } }}
+              height="100%"
+              data-cy="Navbar-links"
+            >
+              {ROUTES.top.map((item) => (
+                <LinkButton
+                  key={item.path}
+                  to={item.path}
+                  title={item.title}
+                  tag={item.tag}
+                />
+              ))}
+              <HoverMenu items={ROUTES.more}>More</HoverMenu>
+            </Row>
           </Row>
-        </Row>
+        )}
         {/* Desktop: Right Side */}
         <Row justifyContent="flex-end" gap={1}>
           <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
