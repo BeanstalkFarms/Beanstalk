@@ -11,7 +11,7 @@ export default function MigrationMessage({ message }: { message?: string }) {
         {message || isArbitrum ? "We're migrating!" : "We're migrating!"}
       </Typography>
       <Typography variant="body1" textAlign="center">
-        Please check discord for details.
+        Please check Discord for details.
       </Typography>
     </Box>
   );
