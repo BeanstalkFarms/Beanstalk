@@ -27,14 +27,13 @@ const { L2_BEANSTALK } = require("../test/hardhat/utils/constants.js");
 let reseeds;
 async function reseedL2({
   beanstalkDeployer,
-  l2owner,
   mock = false,
   convertData = true,
   log = false,
   start = 0,
-  end = 11,
+  end = 10,
   setState = true,
-  addLiquidity = true,
+  addLiquidity = false,
   verbose = false
 }) {
   if (convertData) parseBeanstalkData();
@@ -49,8 +48,7 @@ async function reseedL2({
     reseed6, // reseed silo
     reseed7, // reseed account status
     reseed8, // reseed internal balances
-    reseed9, // reseed whitelist
-    reseed10 // add selectors to l2
+    reseed9 // reseed whitelist
   ];
   console.clear();
   await printBeanstalk();
@@ -61,18 +59,6 @@ async function reseedL2({
     if (setState == true) {
       await reseeds[i](beanstalkDeployer, L2_BEANSTALK, mock, verbose);
       continue;
-    }
-
-    // Prior to the last reseed (i.e, adding facets to L2 beanstalk),
-    // the beanstalk owner needs to accept ownership of beanstalk.
-    // The ownership facet will already be added to the diamond
-    // and the deployer will have already proposed the l2 owner as the new owner.
-    if (i == reseeds.length - 1) {
-      // claim ownership of beanstalk:
-      console.log("Claiming ownership of beanstalk.");
-      await (await getBeanstalk(L2_BEANSTALK)).connect(l2owner).claimOwnership();
-      // add selectors to l2 beanstalk from the already deployed facets
-      await reseed10(l2owner, L2_BEANSTALK, mock);
     }
   }
   // adds liquidity to wells and transfer well LP tokens to l2 beanstalk:

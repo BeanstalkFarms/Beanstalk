@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { convertToBigNum } = require("../../utils/read.js"); // Assuming you have a conversion utility function
+const { convertToBigNum } = require("../../utils/read.js");
 
 function parseTokens(inputFilePath, outputFilePaths) {
   try {
@@ -17,7 +17,7 @@ function parseTokens(inputFilePath, outputFilePaths) {
     const L2_well_balances = [
       [data.pools.beanweth.bean, data.pools.beanweth.weth],
       [data.pools.beanwsteth.bean, data.pools.beanwsteth.wsteth],
-      [data.pools.bean3crv.bean, data.pools.bean3crv["3crv"]]
+      [data.pools.bean3crv.bean, data.pools.bean3crv.usdc],
     ];
 
     // Write the JSON files to the specified output paths
