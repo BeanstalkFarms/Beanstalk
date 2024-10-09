@@ -19,20 +19,39 @@ const useFarmerSiloHistory = (
 ) => {
   const breakdown = useFarmerBalancesBreakdown();
 
-  /// Data
   const siloRewardsQuery = useFarmerSiloRewardsQuery({
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
+  // const siloRewardsQueryL1 = useFarmerSiloRewardsQuery({
+  //   variables: { account: account || '' },
+  //   skip: !account,
+  //   fetchPolicy: 'cache-first',
+  //   context: {
+  //     subgraph: 'beanstalk_eth',
+  //   }
+  // });
   const siloAssetsQuery = useFarmerSiloAssetSnapshotsQuery({
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
   });
+  const siloAssetsQueryL1 = useFarmerSiloAssetSnapshotsQuery({
+    variables: { account: account || '' },
+    skip: !account,
+    fetchPolicy: 'cache-first',
+    context: {
+      subgraph: 'beanstalk_eth',
+    },
+  });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
     fetchPolicy: 'cache-and-network',
   });
+  // const seedsPerTokenQueryL1 = useWhitelistTokenRewardsQuery({
+  //   fetchPolicy: 'cache-and-network',
+  //   context: { subgraph: 'beanstalk_eth' },
+  // });
 
   const queryConfig = useMemo(
     () => ({
@@ -45,7 +64,8 @@ const useFarmerSiloHistory = (
   const priceQuery = useSeasonsQuery(
     SeasonalInstantPriceDocument,
     SeasonRange.ALL,
-    queryConfig
+    queryConfig,
+    'both'
   );
 
   /// Interpolate
@@ -54,6 +74,17 @@ const useFarmerSiloHistory = (
     priceQuery,
     itemizeByToken
   );
+  // const depositDataL1 = useInterpolateDeposits(
+  //   siloAssetsQueryL1,
+  //   priceQuery,
+  //   itemizeByToken
+  // )
+  // const [stalkDataL1, seedsDataL1, grownStalkDataL1] = useInterpolateStalk(
+  //   siloRewardsQueryL1,
+  //   seedsPerTokenQueryL1,
+  //   !includeStalk
+  // )
+
   const [stalkData, seedsData, grownStalkData] = useInterpolateStalk(
     siloRewardsQuery,
     seedsPerTokenQuery,
