@@ -24,7 +24,17 @@ import {
 } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
 import { formatUnits } from 'viem';
-import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+import {
+  BEAN,
+  BEAN_CRV3_LP,
+  BEAN_CRV3_V1_LP,
+  BEAN_ETH_UNIV2_LP,
+  BEAN_ETH_WELL_LP,
+  BEAN_LUSD_LP,
+  BEAN_WSTETH_WELL_LP,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_WSTETH,
+} from '~/constants/tokens';
 import { DocumentNode } from 'graphql';
 import { OperationVariables, QueryOptions } from '@apollo/client';
 import { Typography } from '@mui/material';
@@ -125,19 +135,19 @@ export function useChartSetupData() {
     const stalk = sdk.tokens.STALK;
 
     const depositedTokensToChart = [
-      sdk.tokens.BEAN,
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN_ETH_WELL_LP,
-      sdk.tokens.BEAN_WSTETH_WELL_LP,
-      sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WSTETH,
+      BEAN[1],
+      BEAN_CRV3_LP[1],
+      BEAN_ETH_WELL_LP[1],
+      BEAN_WSTETH_WELL_LP[1],
+      UNRIPE_BEAN[1],
+      UNRIPE_BEAN_WSTETH[1],
     ];
 
     const lpTokensToChart = [
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN_ETH_WELL_LP,
-      sdk.tokens.BEAN_WSTETH_WELL_LP,
-      sdk.tokens.BEAN_ETH_UNIV2_LP,
+      BEAN_CRV3_LP[1],
+      BEAN_ETH_WELL_LP[1],
+      BEAN_WSTETH_WELL_LP[1],
+      BEAN_ETH_UNIV2_LP[1],
       BEAN_LUSD_LP[1],
       BEAN_CRV3_V1_LP[1],
     ];
