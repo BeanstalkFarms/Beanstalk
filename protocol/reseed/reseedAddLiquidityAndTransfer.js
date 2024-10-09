@@ -49,9 +49,6 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   [balancesInBeanEthWell, balancesInBeanWstEthWell, balancesInBeanStableWell] = JSON.parse(
     await fs.readFileSync(INIT_WELL_BALANCES)
   );
-
-  // divide balancesInBeanStableWell[1] by 1e12:
-  balancesInBeanStableWell[1] = Math.floor(balancesInBeanStableWell[1] / 1e12).toString();
   const slots = [
     51, // WETH
     1, // wstETH
@@ -88,38 +85,38 @@ async function reseedAddLiquidityAndTransfer(account, L2Beanstalk, mock = true, 
   // get the % of the total LP token supply that each well has:
   // note: the bean3crv was manually calculated given the migration to the well.
   // small buffer to avoid rounding errors.
-  const beanEthLpTokenSupplyPercentage =
-    L1_beanstalkBalances[0] / (beanEthLpTokenSupply * (1 - 0.000001));
-  const beanWstEthLpTokenSupplyPercentage =
-    L1_beanstalkBalances[1] / (beanWstEthLpTokenSupply * (1 - 0.000001));
-  const beanStableLpTokenSupplyPercentage = 0.998832;
+  // const beanEthLpTokenSupplyPercentage =
+  //   L1_beanstalkBalances[0] / (beanEthLpTokenSupply * (1 - 0.000001));
+  // const beanWstEthLpTokenSupplyPercentage =
+  //   L1_beanstalkBalances[1] / (beanWstEthLpTokenSupply * (1 - 0.000001));
+  // const beanStableLpTokenSupplyPercentage = 0.998832;
 
   const scaleFactor = to18("1"); // Scale factor to avoid decimals
 
   // Convert percentages to BigNumber with scaling
-  const beanEthLpTokenSupplyPercentageBN = toBN((beanEthLpTokenSupplyPercentage * 1e18).toString());
-  const beanWstEthLpTokenSupplyPercentageBN = toBN(
-    (beanWstEthLpTokenSupplyPercentage * 1e18).toString()
-  );
-  const beanStableLpTokenSupplyPercentageBN = toBN(
-    (beanStableLpTokenSupplyPercentage * 1e18).toString()
-  );
+  // const beanEthLpTokenSupplyPercentageBN = toBN((beanEthLpTokenSupplyPercentage * 1e18).toString());
+  // const beanWstEthLpTokenSupplyPercentageBN = toBN(
+  //   (beanWstEthLpTokenSupplyPercentage * 1e18).toString()
+  // );
+  // const beanStableLpTokenSupplyPercentageBN = toBN(
+  //   (beanStableLpTokenSupplyPercentage * 1e18).toString()
+  // );
 
   // Scale balances using the percentages
-  balancesInBeanEthWell = await balancesInBeanEthWell.map((balance) => {
-    const balanceBN = toBN(balance.toString());
-    return balanceBN.mul(beanEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
-  });
+  // balancesInBeanEthWell = await balancesInBeanEthWell.map((balance) => {
+  //   const balanceBN = toBN(balance.toString());
+  //   return balanceBN.mul(beanEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  // });
 
-  balancesInBeanWstEthWell = await balancesInBeanWstEthWell.map((balance) => {
-    const balanceBN = toBN(balance.toString());
-    return balanceBN.mul(beanWstEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
-  });
+  // balancesInBeanWstEthWell = await balancesInBeanWstEthWell.map((balance) => {
+  //   const balanceBN = toBN(balance.toString());
+  //   return balanceBN.mul(beanWstEthLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  // });
 
-  balancesInBeanStableWell = await balancesInBeanStableWell.map((balance) => {
-    const balanceBN = toBN(balance.toString());
-    return balanceBN.mul(beanStableLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
-  });
+  // balancesInBeanStableWell = await balancesInBeanStableWell.map((balance) => {
+  //   const balanceBN = toBN(balance.toString());
+  //   return balanceBN.mul(beanStableLpTokenSupplyPercentageBN).div(scaleFactor).toString(); // Scale down
+  // });
 
   const nonBeanAmounts = [
     balancesInBeanEthWell[1], // BEAN/WETH

@@ -2,7 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const { deployContract } = require("../scripts/contracts");
 const fs = require("fs");
 const { retryOperation } = require("../utils/read.js");
-const { L2_RESEED_GLOBAL } = require("../test/hardhat/utils/constants.js");
+const { L2_RESEED_GLOBAL_REVISED } = require("../test/hardhat/utils/constants.js");
 
 async function reseedGlobal(account, L2Beanstalk, mock) {
   console.log("-----------------------------------");
@@ -16,8 +16,8 @@ async function reseedGlobal(account, L2Beanstalk, mock) {
     await upgradeWithNewFacets({
       diamondAddress: L2Beanstalk,
       facetNames: [],
-      initFacetName: "ReseedGlobal",
-      initFacetAddress: L2_RESEED_GLOBAL,
+      initFacetName: "ReseedGlobalRevised",
+      initFacetAddress: L2_RESEED_GLOBAL_REVISED,
       initArgs: [settings],
       bip: false,
       verbose: true,

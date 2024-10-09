@@ -31,7 +31,7 @@ async function reseedL2({
   convertData = true,
   log = false,
   start = 0,
-  end = 10,
+  end = 4,
   setState = true,
   addLiquidity = false,
   verbose = false
@@ -40,15 +40,15 @@ async function reseedL2({
   // delete prev gas report
   if (fs.existsSync("./reseed/data/gas-report.csv")) fs.unlinkSync("./reseed/data/gas-report.csv");
   reseeds = [
-    reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
+    // reseed2, // reseedbean + deploy wells and fertilizer proxy on l2
     reseedGlobal, // reseed global variables
-    reseed3, // reseed field
-    reseed4, // reseed pod marketplace
-    reseed5, // reseed barn (fert)
+    // reseed3, // reseed field
+    // reseed4, // reseed pod marketplace
+    // reseed5, // reseed barn (fert)
     reseed6, // reseed silo
     reseed7, // reseed account status
-    reseed8, // reseed internal balances
-    reseed9 // reseed whitelist
+    reseed8 // reseed internal balances
+    // reseed9 // reseed whitelist
   ];
   console.clear();
   await printBeanstalk();

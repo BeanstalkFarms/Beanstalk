@@ -1066,6 +1066,11 @@ interface IMockFBeanstalk {
         address account
     ) external view returns (TokenDepositId[] memory deposits);
 
+    function getDepositsForAccount(
+        address account,
+        address[] calldata tokens
+    ) external view returns (TokenDepositId[] memory deposits);
+
     function getEndBpf() external view returns (uint128 endBpf);
 
     function getEvenGerminating(address token) external view returns (uint256, uint256);

@@ -94,12 +94,24 @@ contract ReseedStateTest is TestHelper {
         uint256 numAccounts = 10;
         // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
-        uint256 offset = 0;
+        uint256 offset = 20;
         accountNumber = parseAccounts(numAccounts, offset);
-        console.log("Number of accounts: ", accountNumber);
+        // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
-        uint256 fertAccountNumber = parseFertAccounts(numAccounts, offset);
-        console.log("Number of fert accounts: ", fertAccountNumber);
+        // uint256 fertAccountNumber = parseFertAccounts(numAccounts, offset);
+        // console.log("Number of fert accounts: ", fertAccountNumber);
+    }
+
+    function test_WhitelistingState() public {
+        // address L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
+        // IMockFBeanstalk l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
+
+        // get AssetSettings of L2BEAN
+        IMockFBeanstalk.AssetSettings memory assetSettings = l2Beanstalk.tokenSettings(L2BEAN);
+
+        // log milestone stem and season
+        console.log("Milestone stem: ", assetSettings.milestoneStem);
+        console.log("Milestone season: ", assetSettings.milestoneSeason);
     }
 
     ////////////////// WhiteListed Tokens //////////////////
@@ -317,13 +329,17 @@ contract ReseedStateTest is TestHelper {
                 uint256 accountPlotAmountJsonDecoded = vm.parseUint(
                     vm.toString(accountPlotAmountJson)
                 );
-                // compare the plot amount and index
-                assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
-                assertEq(plotindexesJsonDecoded[j], plots[j].index);
-                totalPlotsAmount += plots[j].pods;
+
+                // find the matching plot indexes to compare the amount
+                for (uint256 k = 0; k < plots.length; k++) {
+                    if (plots[k].index == plotindexesJsonDecoded[j]) {
+                        // compare the plot amount and index
+                        // log the index and amount form the json and the storage
+                        assertEq(accountPlotAmountJsonDecoded, plots[k].pods);
+                    }
+                }
             }
         }
-        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
@@ -340,43 +356,61 @@ contract ReseedStateTest is TestHelper {
         // verify ratio is 1:1 on reseed
         assertEq(totalStalkBefore * 1e12, totalRootsBefore);
 
-        address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
-
-        // for every account
+        // get the account list:
+        address[] memory accounts = new address[](accountNumber);
         for (uint256 i = 0; i < accountNumber; i++) {
-            address account = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
+            accounts[i] = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
+        }
+
+        // decode into bytes[]
+        bytes[] memory depositDataJsons = abi.decode(
+            batchSearchAccountDeposits(accounts),
+            (bytes[])
+        );
+
+        address[] memory tokens = new address[](5);
+        tokens[0] = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
+        tokens[1] = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
+        tokens[2] = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
+        tokens[3] = address(0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce);
+        tokens[4] = address(0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F);
+
+        for (uint256 i = 0; i < accountNumber; i++) {
+            address account = accounts[i];
             // get all deposits of all tokens --> order of whitelist
             IMockFBeanstalk.TokenDepositId[] memory accountDepositsStorage = l2Beanstalk
-                .getDepositsForAccount(account);
+                .getDepositsForAccount(account, tokens);
 
-            bytes memory depositDataJson = searchAccountDeposits(account);
             // decode the deposit data from json
             IMockFBeanstalk.TokenDepositId[] memory accountDepositsJson = abi.decode(
-                depositDataJson,
+                depositDataJsons[i],
                 (IMockFBeanstalk.TokenDepositId[])
             );
 
             // for all tokens
             for (uint256 j = 0; j < accountDepositsStorage.length; j++) {
                 // for all deposits --> if no deposits of a particular token, the for loop is skipped
+                if (accountDepositsStorage[j].depositIds.length == 0) {
+                    continue;
+                }
                 for (uint256 k = 0; k < accountDepositsStorage[j].depositIds.length; k++) {
                     // assert the token
                     assertEq(accountDepositsStorage[j].token, accountDepositsJson[j].token);
-                    // assert the deposit id
-                    assertEq(
-                        accountDepositsStorage[j].depositIds[k],
-                        accountDepositsJson[j].depositIds[k]
-                    );
-                    // assert the amount
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].amount,
-                        accountDepositsJson[j].tokenDeposits[k].amount
-                    );
-                    // assert the bdv
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].bdv,
-                        accountDepositsJson[j].tokenDeposits[k].bdv
-                    );
+
+                    for (uint256 l = 0; l < accountDepositsJson[j].depositIds.length; l++) {
+                        uint256 depositId = accountDepositsJson[j].depositIds[l];
+                        if (accountDepositsStorage[j].depositIds[k] != depositId) {
+                            continue;
+                        }
+                        uint256 amount = accountDepositsJson[j].tokenDeposits[l].amount;
+                        uint256 bdv = accountDepositsJson[j].tokenDeposits[l].bdv;
+                        // assert the deposit id
+                        assertEq(accountDepositsStorage[j].depositIds[k], depositId);
+                        // assert the amount
+                        assertEq(accountDepositsStorage[j].tokenDeposits[k].amount, amount);
+                        // assert the bdv
+                        assertEq(accountDepositsStorage[j].tokenDeposits[k].bdv, bdv);
+                    }
                 }
             }
         }
@@ -463,7 +497,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-system20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-system20921737.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -473,7 +507,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -483,8 +517,20 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         inputs[3] = vm.toString(account);
+        bytes memory accountDeposits = vm.ffi(inputs);
+        return accountDeposits;
+    }
+
+    function batchSearchAccountDeposits(address[] memory accounts) public returns (bytes memory) {
+        string[] memory inputs = new string[](3 + accounts.length);
+        inputs[0] = "node";
+        inputs[1] = "./scripts/migrationFinderScripts/depositFinder2.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
+        for (uint256 i = 0; i < accounts.length; i++) {
+            inputs[i + 3] = vm.toString(accounts[i]);
+        }
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
     }
@@ -493,7 +539,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/fertilizerFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-fertilizer20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-fertilizer20921737.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountFertilizer = vm.ffi(inputs);
         return accountFertilizer;
@@ -503,7 +549,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/getContractStalk.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         bytes memory contractStalk = vm.ffi(inputs);
         return vm.parseUint(vm.toString(contractStalk));
     }

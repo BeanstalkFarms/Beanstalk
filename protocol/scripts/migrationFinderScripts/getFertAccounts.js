@@ -3,13 +3,13 @@ const { ethers } = require("ethers");
 const { BigNumber } = require("ethers");
 
 // Define the paths as variables
-const jsonFilePath = "./reseed/data/exports/storage-fertilizer20895000.json";
+const jsonFilePath = "./reseed/data/exports/storage-fertilizer20921737.json";
 const outputFilePath = "./test/foundry/Migration/data/fert_accounts.txt";
 
 function extractFertAccountAddresses(jsonFilePath, outputFilePath, numAccounts = null, offset = 0) {
   // Read contract addresses to exclude them from the reseed
   const contractAccountsJson = JSON.parse(
-    fs.readFileSync("./reseed/data/exports/contract-accounts20895000.json", "utf8")
+    fs.readFileSync("./reseed/data/exports/contract-accounts20921737.json", "utf8")
   );
   // Convert all the items in the array to lowercase for comparison
   const contractAccounts = contractAccountsJson.map((address) => address.toLowerCase());
@@ -37,14 +37,12 @@ function extractFertAccountAddresses(jsonFilePath, outputFilePath, numAccounts =
     const filteredAccountAddresses = limitedAccountAddresses.filter(
       (address) => !contractAccounts.includes(address.toLowerCase())
     );
-    
+
     // Write the addresses to the output text file, each on a new line
     fs.writeFileSync(outputFilePath, filteredAccountAddresses.join("\n"), "utf8");
 
     // Log the number of addresses written in hexadecimal format
-    console.log(
-      ethers.utils.hexlify(BigNumber.from(filteredAccountAddresses.length))
-    );
+    console.log(ethers.utils.hexlify(BigNumber.from(filteredAccountAddresses.length)));
   } catch (error) {
     console.error(`Error processing the JSON file: ${error.message}`);
   }
