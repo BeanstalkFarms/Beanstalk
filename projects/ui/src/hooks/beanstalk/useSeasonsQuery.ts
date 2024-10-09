@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react';
-import { DocumentNode, QueryOptions, gql, useLazyQuery } from '@apollo/client';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  DocumentNode,
+  LazyQueryHookExecOptions,
+  OperationVariables,
+  QueryOptions,
+  gql,
+  useLazyQuery,
+} from '@apollo/client';
 import { apolloClient } from '~/graph/client';
 
 const PAGE_SIZE = 1000;
+
+const SEASON_IN_MONTH = 720;
 
 export enum SeasonAggregation {
   HOUR = 0,
@@ -45,6 +54,26 @@ export type MinimumViableSnapshotQuery = {
 export type SnapshotData<T extends MinimumViableSnapshotQuery> =
   T['seasons'][number];
 
+export type SeasonsQueryDynamicConfig = (
+  subgraph: 'l1' | 'l2'
+) => Partial<QueryOptions>;
+
+const getEthSubgraphConfig = <T extends MinimumViableSnapshotQuery>(
+  config: LazyQueryHookExecOptions<T, OperationVariables>
+): LazyQueryHookExecOptions<T, OperationVariables> => {
+  const subgraph = config.context?.subgraph ?? 'beanstalk';
+  const ethSubgraph = subgraph === 'beanstalk' ? 'beanstalk_eth' : 'bean_eth';
+
+  const _config = {
+    ...config,
+    context: {
+      ...config.context,
+      subgraph: ethSubgraph,
+    },
+  };
+  return _config;
+};
+
 /**
  * Iteratively query entities that have a `season` entity.
  * This allows for loading of full datasets when the user
@@ -56,53 +85,143 @@ export type SnapshotData<T extends MinimumViableSnapshotQuery> =
  * @returns QueryDocument
  */
 const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
-  document: DocumentNode = gql`query MyQuery { _meta { hasIndexingErrors } }`,
+  document: DocumentNode = gql`
+    query MyQuery {
+      _meta {
+        hasIndexingErrors
+      }
+    }
+  `,
   range: SeasonRange,
-  queryConfig?: Partial<QueryOptions>
+  queryConfig?: Partial<QueryOptions> | SeasonsQueryDynamicConfig,
+  fetchType: 'l1-only' | 'l2-only' | 'both' = 'both'
 ) => {
   /// Custom loading prop
   const [loading, setLoading] = useState(false);
 
+  const initConfig = useMemo(() => {
+    const _queryConfig =
+      (typeof queryConfig === 'function' ? queryConfig('l2') : queryConfig) ??
+      {};
+
+    const config: LazyQueryHookExecOptions<T, OperationVariables> = {
+      ..._queryConfig,
+      variables: _queryConfig.variables ?? {},
+      context: {
+        subgraph: _queryConfig.context?.subgraph ?? 'beanstalk',
+      },
+    };
+    return config;
+  }, [queryConfig]);
+
   /// Execute generic lazy query
-  const [get, query] = useLazyQuery<T>(document, {
-    variables: queryConfig?.variables ?? {},
-    context: { subgraph: queryConfig?.context?.subgraph ?? 'beanstalk' },
-  });
+  const [get, query] = useLazyQuery<T>(document, initConfig);
 
   /// Output used when user requests all data
   const [allSeasonsOutput, setAllSeasonsOutput] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
+      // const initQueryConfig = (typeof queryConfig === "function" ? queryConfig("l2") : queryConfig) ?? {};
+
       console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
       try {
         if (range !== SeasonRange.ALL) {
           // data.seasons is sorted by season, descending.
           const variables = {
-            ...queryConfig?.variables,
+            ...initConfig?.variables,
             first: SEASON_RANGE_TO_COUNT[range],
             season_lte: 999999999,
           };
           console.debug('[useSeasonsQuery] run', { variables });
-          await get({
-            ...queryConfig,
+          const config: LazyQueryHookExecOptions<T, OperationVariables> = {
+            ...initConfig,
             variables,
             fetchPolicy: 'cache-first',
-          });
+          };
+
+          const fetchL1 = fetchType !== 'l2-only';
+          const fetchL2 = fetchType === 'l1-only';
+          let data;
+
+          if (fetchL2) {
+            data = await get(config).catch((e) => {
+              console.error(e);
+              return { data: { seasons: [] } };
+            });
+          } else {
+            data = { data: { seasons: [] } };
+          }
+
+          if (
+            !data.data ||
+            (data?.data?.seasons?.length < SEASON_IN_MONTH && fetchL1)
+          ) {
+            const _config =
+              typeof queryConfig === 'function'
+                ? queryConfig('l1')
+                : getEthSubgraphConfig(config);
+            const l1Config: LazyQueryHookExecOptions<T, OperationVariables> = {
+              ..._config,
+              variables: {
+                ...config.variables,
+                ..._config.variables,
+              },
+            };
+            // Try x_eth subgraph if not enough data is available. Apollo will auto merge
+            await get(l1Config);
+          }
         } else {
           // Initialize Season data with a call to the first set of Seasons.
           const variables = {
-            ...queryConfig?.variables,
+            ...initConfig?.variables,
             first: undefined,
             season_lte: 999999999,
           };
           console.debug('[useSeasonsQuery] run', { variables });
-
-          const init = await get({
+          const config: LazyQueryHookExecOptions<T, OperationVariables> = {
             ...queryConfig,
             variables,
-          });
-          console.debug('[useSeasonsQuery] init: data = ', init.data);
+          };
+
+          const firstFetch = await get(config);
+          console.debug('[useSeasonsQuery] init: data = ', firstFetch.data);
+
+          // if (!firstFetch.data) {
+          //   console.error(firstFetch);
+          //   throw new Error('missing data');
+          // }
+          const l2Config =
+            typeof queryConfig === 'function'
+              ? queryConfig('l2')
+              : getEthSubgraphConfig(config);
+          const l2ConfigWithVars: LazyQueryHookExecOptions<
+            T,
+            OperationVariables
+          > = {
+            ...l2Config,
+            variables: {
+              ...variables,
+              ...l2Config.variables,
+            },
+          };
+
+          const config2 = {
+            ...initConfig,
+            variables,
+            fetchPolicy: 'cache-first',
+          };
+
+          const init = await get(
+            getEthSubgraphConfig({
+              ...config2,
+              fetchPolicy: 'cache-first',
+              context: {
+                subgraph: 'beanstalk_eth',
+              },
+              variables: variables,
+            })
+          );
 
           if (!init.data) {
             console.error(init);
@@ -132,7 +251,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
            */
           const numQueries = Math.ceil(
             /// If `season_gt` is provided, we only query back to that season.
-            (latestSubgraphSeason - (queryConfig?.variables?.season_gt || 0)) /
+            (latestSubgraphSeason -
+              (l2ConfigWithVars?.variables?.season_gt || 0)) /
               PAGE_SIZE
           );
           const promises = [];
@@ -147,7 +267,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               latestSubgraphSeason - i * PAGE_SIZE
             );
             const thisVariables = {
-              ...queryConfig?.variables,
+              ...l2ConfigWithVars?.variables,
               first: season < 1000 ? season - 1 : 1000,
               season_lte: season,
             };
@@ -187,7 +307,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         console.error(e);
       }
     })();
-  }, [range, get, queryConfig, document]);
+  }, [range, get, document, initConfig, queryConfig, fetchType]);
 
   if (range === SeasonRange.ALL) {
     return {
