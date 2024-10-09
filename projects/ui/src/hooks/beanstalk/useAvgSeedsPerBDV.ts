@@ -399,7 +399,7 @@ function normalizeQueryResults(
 
     const value = obj.grownStalkPerBDV.div(obj.depositedBDV);
 
-    const time = (Number(obj.createdAt) * 60 * 60) as Time;
+    const time = Number(obj.createdAt) as Time;
 
     if (value.gt(0) && !timestamps.has(time)) {
       map[season] = {
