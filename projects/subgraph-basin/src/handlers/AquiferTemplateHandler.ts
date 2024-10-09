@@ -1,18 +1,20 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { Bytes } from "@graphprotocol/graph-ts";
 import { BoreWell } from "../../generated/Basin-ABIs/Aquifer";
 import { Well } from "../../generated/templates";
 import { loadOrCreatePump } from "../entities/Pump";
 import { loadOrCreateAquifer } from "../entities/Aquifer";
 import { createWell, loadOrCreateWellFunction } from "../entities/Well";
 import { loadOrCreateToken } from "../entities/Token";
+import { getActualWell } from "../utils/UpgradeableMapping";
 
 export function handleBoreWell(event: BoreWell): void {
   let aquifer = loadOrCreateAquifer(event.address);
 
-  // TODO: this needs to account for Well proxies. TBD on how to do this
-  Well.create(event.params.well);
+  // Accounts for well proxies here
+  const actualAddress = getActualWell(event.params.well);
+  Well.create(actualAddress);
 
-  let well = createWell(event.params.well, event.params.tokens);
+  let well = createWell(actualAddress, event.params.tokens);
   well.aquifer = event.address;
 
   const tokens: Bytes[] = [];
@@ -23,7 +25,7 @@ export function handleBoreWell(event: BoreWell): void {
   well.tokenOrder = tokens;
 
   for (let i = 0; i < event.params.pumps.length; i++) {
-    loadOrCreatePump(event.params.pumps[i], event.params.well);
+    loadOrCreatePump(event.params.pumps[i], actualAddress);
   }
 
   const wellFn = loadOrCreateWellFunction(event.params.wellFunction.target);
@@ -37,7 +39,7 @@ export function handleBoreWell(event: BoreWell): void {
   well.save();
 
   let wells = aquifer.wells;
-  wells.push(event.params.well);
+  wells.push(actualAddress);
   aquifer.wells = wells;
   aquifer.save();
 }
