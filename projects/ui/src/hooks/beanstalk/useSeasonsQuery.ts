@@ -121,9 +121,10 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   const [allSeasonsOutput, setAllSeasonsOutput] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
-      // const initQueryConfig = (typeof queryConfig === "function" ? queryConfig("l2") : queryConfig) ?? {};
+    const fetchL1 = fetchType !== 'l2-only';
+    const fetchL2 = fetchType === 'l1-only';
 
+    (async () => {
       console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
       try {
         if (range !== SeasonRange.ALL) {
@@ -139,11 +140,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             variables,
             fetchPolicy: 'cache-first',
           };
-
-          const fetchL1 = fetchType !== 'l2-only';
-          const fetchL2 = fetchType === 'l1-only';
           let data;
-
           if (fetchL2) {
             data = await get(config).catch((e) => {
               console.error(e);
@@ -161,15 +158,14 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               typeof queryConfig === 'function'
                 ? queryConfig('l1')
                 : getEthSubgraphConfig(config);
-            const l1Config: LazyQueryHookExecOptions<T, OperationVariables> = {
+            // Try x_eth subgraph if not enough data is available. Apollo will auto merge
+            await get({
               ..._config,
               variables: {
                 ...config.variables,
                 ..._config.variables,
               },
-            };
-            // Try x_eth subgraph if not enough data is available. Apollo will auto merge
-            await get(l1Config);
+            });
           }
         } else {
           // Initialize Season data with a call to the first set of Seasons.
@@ -184,44 +180,31 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             variables,
           };
 
-          const firstFetch = await get(config);
-          console.debug('[useSeasonsQuery] init: data = ', firstFetch.data);
+          let data;
 
-          // if (!firstFetch.data) {
-          //   console.error(firstFetch);
-          //   throw new Error('missing data');
-          // }
-          const l2Config =
+          if (fetchL2) {
+            data = await get(config).catch((e) => {
+              console.error(e);
+              return { data: { seasons: [] } };
+            });
+          } else {
+            data = { data: { seasons: [] } };
+          }
+
+          console.debug('[useSeasonsQuery] init: data = ', data.data);
+          const _l1Config =
             typeof queryConfig === 'function'
               ? queryConfig('l2')
               : getEthSubgraphConfig(config);
-          const l2ConfigWithVars: LazyQueryHookExecOptions<
-            T,
-            OperationVariables
-          > = {
-            ...l2Config,
+          const l1Config: any = {
+            ..._l1Config,
             variables: {
               ...variables,
-              ...l2Config.variables,
+              ..._l1Config.variables,
             },
           };
 
-          const config2 = {
-            ...initConfig,
-            variables,
-            fetchPolicy: 'cache-first',
-          };
-
-          const init = await get(
-            getEthSubgraphConfig({
-              ...config2,
-              fetchPolicy: 'cache-first',
-              context: {
-                subgraph: 'beanstalk_eth',
-              },
-              variables: variables,
-            })
-          );
+          const init = await get(l1Config);
 
           if (!init.data) {
             console.error(init);
@@ -251,8 +234,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
            */
           const numQueries = Math.ceil(
             /// If `season_gt` is provided, we only query back to that season.
-            (latestSubgraphSeason -
-              (l2ConfigWithVars?.variables?.season_gt || 0)) /
+            (latestSubgraphSeason - (l1Config?.variables?.season_gt || 0)) /
               PAGE_SIZE
           );
           const promises = [];
@@ -267,14 +249,14 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               latestSubgraphSeason - i * PAGE_SIZE
             );
             const thisVariables = {
-              ...l2ConfigWithVars?.variables,
+              ...l1Config?.variables,
               first: season < 1000 ? season - 1 : 1000,
               season_lte: season,
             };
             promises.push(
               apolloClient
                 .query({
-                  ...queryConfig,
+                  ...l1Config,
                   query: document,
                   variables: thisVariables,
                   notifyOnNetworkStatusChange: true,
