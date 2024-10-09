@@ -2,7 +2,7 @@ const { upgradeWithNewFacets } = require("../scripts/diamond.js");
 const fs = require("fs");
 const { splitEntriesIntoChunksOptimized, updateProgress } = require("../utils/read.js");
 const { retryOperation } = require("../utils/read.js");
-const { L2_RESEED_SILO } = require("../test/hardhat/utils/constants.js");
+const { L2_RESEED_SILO_REVISED } = require("../test/hardhat/utils/constants.js");
 
 async function reseed6(account, L2Beanstalk, mock, verbose = false) {
   console.log("-----------------------------------");
@@ -29,8 +29,8 @@ async function reseed6(account, L2Beanstalk, mock, verbose = false) {
       await upgradeWithNewFacets({
         diamondAddress: L2Beanstalk,
         facetNames: [],
-        initFacetName: "ReseedSilo",
-        initFacetAddress: L2_RESEED_SILO,
+        initFacetName: "ReseedSiloRevised",
+        initFacetAddress: L2_RESEED_SILO_REVISED,
         initArgs: [depositChunks[i]],
         bip: false,
         verbose: verbose,
