@@ -32,8 +32,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  **/
 
 contract L1ReceiverFacet is ReentrancyGuard {
-    // todo: update with correct external beans once L1 Beanstalk has been paused.
-    uint256 constant EXTERNAL_L1_BEANS = 1000000e6;
+    uint256 constant EXTERNAL_L1_BEANS = 2724979038345;
 
     address constant BRIDGE = address(0x4200000000000000000000000000000000000007);
     address constant L1BEANSTALK = address(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
