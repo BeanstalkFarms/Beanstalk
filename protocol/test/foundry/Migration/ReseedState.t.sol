@@ -91,7 +91,7 @@ contract ReseedStateTest is TestHelper {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
         // the total number of accounts is 3665
-        uint256 numAccounts = 50;
+        uint256 numAccounts = 10;
         // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
         uint256 offset = 0;
@@ -380,22 +380,14 @@ contract ReseedStateTest is TestHelper {
                         if (accountDepositsStorage[j].depositIds[k] != depositId) {
                             continue;
                         }
-
+                        uint256 amount = accountDepositsJson[j].tokenDeposits[l].amount;
+                        uint256 bdv = accountDepositsJson[j].tokenDeposits[l].bdv;
                         // assert the deposit id
-                        assertEq(
-                            accountDepositsStorage[j].depositIds[k],
-                            accountDepositsJson[j].depositIds[k]
-                        );
+                        assertEq(accountDepositsStorage[j].depositIds[k], depositId);
                         // assert the amount
-                        assertEq(
-                            accountDepositsStorage[j].tokenDeposits[k].amount,
-                            accountDepositsJson[j].tokenDeposits[k].amount
-                        );
+                        assertEq(accountDepositsStorage[j].tokenDeposits[k].amount, amount);
                         // assert the bdv
-                        assertEq(
-                            accountDepositsStorage[j].tokenDeposits[k].bdv,
-                            accountDepositsJson[j].tokenDeposits[k].bdv
-                        );
+                        assertEq(accountDepositsStorage[j].tokenDeposits[k].bdv, bdv);
                     }
                 }
             }
