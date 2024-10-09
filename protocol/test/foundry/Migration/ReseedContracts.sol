@@ -22,8 +22,11 @@ Running this fork test against arbitrum requires the following steps:
 1. anvil --fork-url https://arbitrum.gateway.tenderly.co/your_key --port 8545 --chain-id 1337
 2. node scripts/beanstalk-3/beanstalk-3-Contracts.js
 3. Update merkles in L1ReceiverFacet
-4. Modifying foundr.toml to remove the exclusions
-5. forge t --fork-url http://127.0.0.1:8545 --match-contract L1ReceiverFacetForkTest
+4. Modifying foundry.toml to remove the exclusions
+5. npx hardhat compile && npx hardhat deployL1ReceiverFacet --network localhost
+6. Update L1ReceiverFacet address in reseed10.js
+7. npx hardhat addFacetsToDiamond --network localhost
+8. forge t --fork-url http://127.0.0.1:8545 --match-contract L1ReceiverFacetForkTest
 */
 
 contract L1ReceiverFacetForkTest is Order, TestHelper {
