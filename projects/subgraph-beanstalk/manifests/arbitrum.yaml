@@ -6,13 +6,44 @@ dataSources:
   # L1 -> L2 MIGRATION
   ###
   - kind: ethereum/contract
-    name: ReseedMigration
+    name: ReseedMigration1
     network: arbitrum-one
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
       startBlock: 261772156 # Reseed
-      endBlock: 261790807 # Reseed Completion
+      endBlock: 261778676 # Prior to the start of reseed6. Reseed6-8 initial implementation was bugged.
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Plot
+      abis:
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
+      eventHandlers:
+        - event: AddMigratedDeposit(indexed address,indexed address,int96,uint256,uint256)
+          handler: handleAddMigratedDeposit
+        - event: MigratedAccountStatus(indexed address,uint256,uint256)
+          handler: handleMigratedAccountStatus
+        - event: MigratedPlot(indexed address,indexed uint256,uint256)
+          handler: handleMigratedPlot
+        - event: MigratedPodListing(indexed address,uint256,uint256,uint256,uint256,uint24,uint256,uint256,uint8)
+          handler: handleMigratedPodListing
+        - event: MigratedPodOrder(indexed address,bytes32,uint256,uint256,uint24,uint256,uint256)
+          handler: handleMigratedPodOrder
+        - event: InternalBalanceMigrated(indexed address,indexed address,int256)
+          handler: handleInternalBalanceMigrated
+      file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
+  - kind: ethereum/contract
+    name: ReseedMigration2
+    network: arbitrum-one
+    source:
+      address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
+      abi: Reseed
+      startBlock: 261790785 # After the end of reseed8. Reseed6-8 initial implementation was bugged.
+      endBlock: 300000000 # Corrected reseed8 completed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
