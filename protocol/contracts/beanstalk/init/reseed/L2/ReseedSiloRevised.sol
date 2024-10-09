@@ -13,7 +13,8 @@ import {C} from "contracts/C.sol";
 /**
  * @author Brean, Deadmanwalking
  * @notice ReseedSilo re-initializes the Silo.
- * @dev Deposits are re-issued to each holder. Silo is set to L1 state.
+ * @dev revised such that the deposit Id list is not updated, and the transfer single event is emitted,
+ * if the current deposit amount is not equal to the amount in the deposit.
  */
 contract ReseedSilo {
     using LibBytes for uint256;

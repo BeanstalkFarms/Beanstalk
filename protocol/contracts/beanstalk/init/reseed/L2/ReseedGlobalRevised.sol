@@ -13,10 +13,10 @@ import {Distribution} from "contracts/beanstalk/sun/SeasonFacet/Distribution.sol
 
 /**
  * @author Brean
- * @notice ReseedGlobal sets the global state of Beanstalk.
- * @dev Pod Orders and Listings are ommited and are set in a seperate reseed contract.
+ * @notice ReseedGlobalRevised sets the global state of Beanstalk.
+ * @dev Sets only the the internal balances and deposits.
  */
-contract ReseedGlobal is Distribution {
+contract ReseedGlobalRevised is Distribution {
     /**
      * @param system contains the global state of Beanstalk.
      * 1) replaces mappings with arrays, so that the state can be re-initialized.
