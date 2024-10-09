@@ -6,7 +6,6 @@ import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/Te
 import {L1ReceiverFacet} from "contracts/beanstalk/migration/L1ReceiverFacet.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
-import "forge-std/console.sol";
 
 /**
  * @notice Tests the functionality of the L1ReceiverFacet.
@@ -38,12 +37,12 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         bs.mockWhitelistToken(L2URLP, IMockFBeanstalk.unripeLPToBDV.selector, 10000000000, 1);
 
         // set the milestone stem for BEAN
-        // bs.mockSetMilestoneStem(L2BEAN, 36462179909);
-        // bs.mockSetMilestoneSeason(L2BEAN, bs.season());
-        // bs.mockSetMilestoneStem(L2URBEAN, 0);
-        // bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
-        // bs.mockSetMilestoneStem(L2URLP, 0);
-        // bs.mockSetMilestoneSeason(L2URLP, bs.season());
+        bs.mockSetMilestoneStem(L2BEAN, 36462179909);
+        bs.mockSetMilestoneSeason(L2BEAN, bs.season());
+        bs.mockSetMilestoneStem(L2URBEAN, 0);
+        bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
+        bs.mockSetMilestoneStem(L2URLP, 0);
+        bs.mockSetMilestoneSeason(L2URLP, bs.season());
     }
 
     /**

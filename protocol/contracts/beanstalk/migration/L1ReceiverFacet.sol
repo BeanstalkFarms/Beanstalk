@@ -22,7 +22,6 @@ import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 import {Order} from "contracts/beanstalk/market/MarketplaceFacet/Order.sol";
 import {Listing} from "contracts/beanstalk/market/MarketplaceFacet/Listing.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "forge-std/console.sol";
 
 /**
  * @author Brean
@@ -432,17 +431,10 @@ contract L1ReceiverFacet is ReentrancyGuard {
         uint256[] calldata amounts,
         uint256[] calldata bdvs
     ) internal returns (uint256 stalk) {
-        console.log("add migrated deposits to account: ", receiver);
         for (uint i; i < depositIds.length; i++) {
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[i]);
             uint256 stalkIssuedPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
             int96 stemTip = LibTokenSilo.stemTipForToken(token);
-            console.log("stemTip: ");
-            console.logInt(stemTip);
-            console.log("stem: ");
-            console.logInt(stem);
-            console.log("amounts[i]: ", amounts[i]);
-            console.log("bdvs[i]: ", bdvs[i]);
             LibTokenSilo.addDepositToAccount(
                 receiver,
                 token,
@@ -452,24 +444,7 @@ contract L1ReceiverFacet is ReentrancyGuard {
                 LibTokenSilo.Transfer.emitTransferSingle
             );
             // calculate the stalk assoicated with the deposit and increment.
-            console.log("stalk: ");
-            console.logUint(stalk);
-            console.log("bdvs[i] * stalkIssuedPerBdv: ");
-            console.logUint(bdvs[i] * stalkIssuedPerBdv);
-            console.log("stemTip: ");
-            console.logInt(stemTip);
-            console.log("stem: ");
-            console.logInt(stem);
-            console.log("uint256(uint96(stemTip - stem)): ");
-            console.logUint(uint256(uint96(stemTip - stem)));
-            console.log("bdvs[i]: ");
-            console.logUint(bdvs[i]);
-            console.log(
-                "add amount: ",
-                (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i])
-            );
             stalk += (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i]);
-            console.log("done calculating stalk: ", stalk);
         }
     }
 
