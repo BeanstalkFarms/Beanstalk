@@ -94,7 +94,7 @@ contract ReseedStateTest is TestHelper {
         uint256 numAccounts = 10;
         // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
-        uint256 offset = 0;
+        uint256 offset = 20;
         accountNumber = parseAccounts(numAccounts, offset);
         // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
@@ -352,25 +352,43 @@ contract ReseedStateTest is TestHelper {
         // verify ratio is 1:1 on reseed
         assertEq(totalStalkBefore * 1e12, totalRootsBefore);
 
-        address[] memory tokens = l2Beanstalk.getWhitelistedTokens();
-
-        // for every account
+        // get the account list:
+        address[] memory accounts = new address[](accountNumber);
         for (uint256 i = 0; i < accountNumber; i++) {
-            address account = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
+            accounts[i] = vm.parseAddress(vm.readLine(ACCOUNTS_PATH));
+        }
+
+        // decode into bytes[]
+        bytes[] memory depositDataJsons = abi.decode(
+            batchSearchAccountDeposits(accounts),
+            (bytes[])
+        );
+
+        address[] memory tokens = new address[](5);
+        tokens[0] = address(0xBEA0005B8599265D41256905A9B3073D397812E4);
+        tokens[1] = address(0x1BEA054dddBca12889e07B3E076f511Bf1d27543);
+        tokens[2] = address(0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788);
+        tokens[3] = address(0xBeA00Aa8130aCaD047E137ec68693C005f8736Ce);
+        tokens[4] = address(0xBEa00BbE8b5da39a3F57824a1a13Ec2a8848D74F);
+
+        for (uint256 i = 0; i < accountNumber; i++) {
+            address account = accounts[i];
             // get all deposits of all tokens --> order of whitelist
             IMockFBeanstalk.TokenDepositId[] memory accountDepositsStorage = l2Beanstalk
-                .getDepositsForAccount(account);
+                .getDepositsForAccount(account, tokens);
 
-            bytes memory depositDataJson = searchAccountDeposits(account);
             // decode the deposit data from json
             IMockFBeanstalk.TokenDepositId[] memory accountDepositsJson = abi.decode(
-                depositDataJson,
+                depositDataJsons[i],
                 (IMockFBeanstalk.TokenDepositId[])
             );
 
             // for all tokens
             for (uint256 j = 0; j < accountDepositsStorage.length; j++) {
                 // for all deposits --> if no deposits of a particular token, the for loop is skipped
+                if (accountDepositsStorage[j].depositIds.length == 0) {
+                    continue;
+                }
                 for (uint256 k = 0; k < accountDepositsStorage[j].depositIds.length; k++) {
                     // assert the token
                     assertEq(accountDepositsStorage[j].token, accountDepositsJson[j].token);
@@ -497,6 +515,18 @@ contract ReseedStateTest is TestHelper {
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
         inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         inputs[3] = vm.toString(account);
+        bytes memory accountDeposits = vm.ffi(inputs);
+        return accountDeposits;
+    }
+
+    function batchSearchAccountDeposits(address[] memory accounts) public returns (bytes memory) {
+        string[] memory inputs = new string[](3 + accounts.length);
+        inputs[0] = "node";
+        inputs[1] = "./scripts/migrationFinderScripts/depositFinder2.js"; // script
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
+        for (uint256 i = 0; i < accounts.length; i++) {
+            inputs[i + 3] = vm.toString(accounts[i]);
+        }
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
     }
