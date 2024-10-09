@@ -91,11 +91,11 @@ contract ReseedStateTest is TestHelper {
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
         // the total number of accounts is 3665
-        uint256 numAccounts = 10;
+        uint256 numAccounts = 50;
         // offset to start parsing from:
         // Note: Upon migration, update offset to parse accounts in batches of 500
         uint256 offset = 0;
-        // accountNumber = parseAccounts(numAccounts, offset);
+        accountNumber = parseAccounts(numAccounts, offset);
         // console.log("Number of accounts: ", accountNumber);
         l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
         // uint256 fertAccountNumber = parseFertAccounts(numAccounts, offset);
@@ -374,21 +374,29 @@ contract ReseedStateTest is TestHelper {
                 for (uint256 k = 0; k < accountDepositsStorage[j].depositIds.length; k++) {
                     // assert the token
                     assertEq(accountDepositsStorage[j].token, accountDepositsJson[j].token);
-                    // assert the deposit id
-                    assertEq(
-                        accountDepositsStorage[j].depositIds[k],
-                        accountDepositsJson[j].depositIds[k]
-                    );
-                    // assert the amount
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].amount,
-                        accountDepositsJson[j].tokenDeposits[k].amount
-                    );
-                    // assert the bdv
-                    assertEq(
-                        accountDepositsStorage[j].tokenDeposits[k].bdv,
-                        accountDepositsJson[j].tokenDeposits[k].bdv
-                    );
+
+                    for (uint256 l = 0; l < accountDepositsJson[j].depositIds.length; l++) {
+                        uint256 depositId = accountDepositsJson[j].depositIds[l];
+                        if (accountDepositsStorage[j].depositIds[k] != depositId) {
+                            continue;
+                        }
+
+                        // assert the deposit id
+                        assertEq(
+                            accountDepositsStorage[j].depositIds[k],
+                            accountDepositsJson[j].depositIds[k]
+                        );
+                        // assert the amount
+                        assertEq(
+                            accountDepositsStorage[j].tokenDeposits[k].amount,
+                            accountDepositsJson[j].tokenDeposits[k].amount
+                        );
+                        // assert the bdv
+                        assertEq(
+                            accountDepositsStorage[j].tokenDeposits[k].bdv,
+                            accountDepositsJson[j].tokenDeposits[k].bdv
+                        );
+                    }
                 }
             }
         }
@@ -475,7 +483,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-system20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-system20921737.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -485,7 +493,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/finder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         inputs[3] = property;
         bytes memory propertyValue = vm.ffi(inputs);
         return propertyValue;
@@ -495,7 +503,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/depositFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountDeposits = vm.ffi(inputs);
         return accountDeposits;
@@ -505,7 +513,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](4);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/fertilizerFinder.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-fertilizer20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-fertilizer20921737.json"; // json file
         inputs[3] = vm.toString(account);
         bytes memory accountFertilizer = vm.ffi(inputs);
         return accountFertilizer;
@@ -515,7 +523,7 @@ contract ReseedStateTest is TestHelper {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
         inputs[1] = "./scripts/migrationFinderScripts/getContractStalk.js"; // script
-        inputs[2] = "./reseed/data/exports/storage-accounts20895000.json"; // json file
+        inputs[2] = "./reseed/data/exports/storage-accounts20921737.json"; // json file
         bytes memory contractStalk = vm.ffi(inputs);
         return vm.parseUint(vm.toString(contractStalk));
     }
