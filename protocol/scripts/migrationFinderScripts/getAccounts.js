@@ -3,13 +3,13 @@ const { ethers } = require("ethers");
 const { BigNumber } = require("ethers");
 
 // Define the paths as variables
-const jsonFilePath = "./reseed/data/exports/storage-accounts20895000.json"; 
+const jsonFilePath = "./reseed/data/exports/storage-accounts20921737.json";
 const outputFilePath = "./test/foundry/Migration/data/accounts.txt";
 
 function extractAccountAddresses(jsonFilePath, outputFilePath, numAccounts, offset) {
   // Read contract addresses to exclude them from the reseed
   const contractAccountsJson = JSON.parse(
-    fs.readFileSync(`./reseed/data/exports/contract-accounts20895000.json`, "utf8")
+    fs.readFileSync(`./reseed/data/exports/contract-accounts20921737.json`, "utf8")
   );
   // Convert all the items in the array to lowercase for comparison
   const contractAccounts = contractAccountsJson.map((address) => address.toLowerCase());
