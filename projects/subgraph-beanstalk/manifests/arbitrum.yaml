@@ -43,7 +43,7 @@ dataSources:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
       startBlock: 261790785 # After the end of reseed8. Reseed6-8 initial implementation was bugged.
-      endBlock: 300000000 # Corrected reseed8 completed
+      endBlock: 262071461 # After Corrected reseed8 completed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -140,8 +140,8 @@ dataSources:
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
       abi: Reseed
-      startBlock: 261790807 # Reseed Completion TOOD: corrected completion?
-      endBlock: 261790807 # Reseed Completion TOOD: corrected completion?
+      startBlock: 262071461 # After Corrected reseed8 completed
+      endBlock: 262071461 # After Corrected reseed8 completed
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
