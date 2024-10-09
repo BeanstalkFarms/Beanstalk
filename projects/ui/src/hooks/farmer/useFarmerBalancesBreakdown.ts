@@ -4,9 +4,7 @@ import { AddressMap, ZERO_BN } from '~/constants';
 import { useAppSelector } from '~/state';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
-import { L1_SILO_WHITELIST } from '~/constants/tokens';
 import useSiloTokenToFiat from '../beanstalk/useSiloTokenToFiat';
-import useTokenMap from '../chain/useTokenMap';
 
 // -----------------
 // Types and Helpers
@@ -150,82 +148,6 @@ export default function useFarmerBalancesBreakdown() {
         });
       }
     });
-
-    return prev;
-  }, [whitelist, addresses, siloBalances, tokenBalances, getUSD]);
-}
-
-// BS3TODO: Fix me to use new whitelist
-export function useFarmerBalancesL1Breakdown() {
-  /// Constants
-  const whitelist = useTokenMap(L1_SILO_WHITELIST);
-  const addresses = useMemo(() => Object.keys(whitelist), [whitelist]);
-
-  /// Balances
-  const siloBalances = useAppSelector((s) => s._farmer.silo.balances);
-  const tokenBalances = useAppSelector((s) => s._farmer.balances);
-
-  /// Helpers
-  const getUSD = useSiloTokenToFiat();
-
-  return useMemo(() => {
-    const prev = {
-      totalValue: ZERO_BN,
-      states: {
-        deposited: _initState(addresses),
-        withdrawn: _initState(addresses),
-        claimable: _initState(addresses),
-        farm: _initState(addresses), // FIXME: not a Silo state
-        circulating: _initState(addresses), // FIXME: not a Silo state
-      },
-    };
-
-    /// Silo whitelist
-    addresses.forEach((address) => {
-      const token = whitelist[address];
-      const siloBalance = siloBalances[address];
-      const tokenBalance = tokenBalances[address] || {
-        internal: ZERO_BN,
-        external: ZERO_BN,
-      };
-
-      // Ensure we've loaded a Silo Balance for this token.
-      if (siloBalance) {
-        const amountByState = {
-          deposited: siloBalance.deposited?.amount,
-          withdrawn: siloBalance.withdrawn?.amount,
-          // claimable needs to be removed. source is empty
-          claimable: siloBalance.claimable?.amount,
-          farm: tokenBalance.internal,
-          circulating: tokenBalance.external,
-        };
-        const usdValueByState = {
-          deposited: getUSD(token, siloBalance.deposited?.amount),
-          withdrawn: getUSD(token, siloBalance.withdrawn?.amount),
-          claimable: getUSD(token, siloBalance.claimable?.amount),
-          farm: getUSD(token, tokenBalance.internal),
-          circulating: getUSD(token, tokenBalance.external),
-        };
-
-        // Aggregate value of all states.
-        prev.totalValue = prev.totalValue.plus(
-          STATE_IDS.reduce((p, c) => p.plus(usdValueByState[c]), ZERO_BN)
-        );
-
-        // Aggregate amounts of each State
-        STATE_IDS.forEach((s) => {
-          prev.states[s].value = prev.states[s].value.plus(usdValueByState[s]);
-          prev.states[s].byToken[address].amount = prev.states[s].byToken[
-            address
-          ].amount.plus(amountByState[s]);
-          prev.states[s].byToken[address].value = prev.states[s].byToken[
-            address
-          ].value.plus(usdValueByState[s]);
-        });
-      }
-    });
-
-    console.log('useFarmersBalancesL1Breakdown', prev);
 
     return prev;
   }, [whitelist, addresses, siloBalances, tokenBalances, getUSD]);

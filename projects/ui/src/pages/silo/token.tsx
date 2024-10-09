@@ -273,14 +273,16 @@ const TokenLambdasView = ({ token }: Props) => {
           background: 'background.main',
         }}
       >
-        <ToggleTabGroup<SiloTokenSlug>
-          selected={slug}
-          setSelected={(v) => setSlug(v, clear)}
-          options={[
-            { label: 'My Deposits', value: 'lambda' },
-            { label: "Other's Deposits", value: 'anti-lambda' },
-          ]}
-        />
+        {false && (
+          <ToggleTabGroup<SiloTokenSlug>
+            selected={slug}
+            setSelected={(v) => setSlug(v, clear)}
+            options={[
+              { label: 'My Deposits', value: 'lambda' },
+              { label: "Other's Deposits", value: 'anti-lambda' },
+            ]}
+          />
+        )}
       </Box>
       {slug === 'lambda' && (
         <LambdaConvertContent
