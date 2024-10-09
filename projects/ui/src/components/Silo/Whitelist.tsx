@@ -190,6 +190,7 @@ const Whitelist: FC<{
               const underlyingToken = isUnripe
                 ? unripeUnderlyingTokens[token.address]
                 : null;
+
               const pctUnderlyingDeposited = isUnripe
                 ? (
                     beanstalkSilo.balances[token.address]?.deposited.amount ||
@@ -493,7 +494,7 @@ const Whitelist: FC<{
                                 <Fiat
                                   token={underlyingToken!}
                                   amount={pctUnderlyingDeposited.times(
-                                    unripeTokens[token.address]?.underlying ||
+                                    unripeTokens[token.address]?.underlying ??
                                       ZERO_BN
                                   )}
                                   truncate
