@@ -2,8 +2,7 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 
 export enum ChainIdError {
   INCORRECT = "INCORRECT",
-  INVALID = "UNKNOWN",
-  WELL_WRONG_NETWORK = "WELL_WRONG_NETWORK"
+  INVALID = "UNKNOWN"
 }
 
 const chainErrAtomn = atom<ChainIdError | null>(null);

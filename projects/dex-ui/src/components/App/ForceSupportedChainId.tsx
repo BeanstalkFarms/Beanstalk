@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { ConnectKitButton } from "connectkit";
+import { ConnectKitButton, useModal } from "connectkit";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
@@ -75,6 +75,8 @@ export const ForceSupportedChainId = () => {
   const chainId = useSdkChainId();
   const chainIdErr = useChainErr();
 
+  const { openSwitchNetworks, setOpen } = useModal();
+
   const handleStayOnCurrentNetwork = () => {
     navigate(getNavigateUrl(chainId, location, false));
   };
@@ -89,6 +91,7 @@ export const ForceSupportedChainId = () => {
     if (chainId !== urlChainId) return;
     if (navLink) {
       const url = navLink;
+      setOpen(false);
       setNavLink(null);
       navigate(url);
     }
@@ -121,7 +124,7 @@ export const ForceSupportedChainId = () => {
         <Modal.Content noTitle>
           <ModalContentWrapper $fullWidth $alignItems="center">
             <Flex $gap={2}>
-              <Flex $direction="row" $gap={1} $alignItems="center">
+              <Flex $direction="row" $gap={0.5} $alignItems="center">
                 <Logo width={24} height={24} />
                 <Brand>BASIN</Brand>
               </Flex>
@@ -147,13 +150,13 @@ export const ForceSupportedChainId = () => {
               </Flex>
               <Flex $gap={1}>
                 <ConnectKitButton.Custom>
-                  {({ show }) => {
+                  {() => {
                     return (
                       <ButtonPrimary
                         onClick={(e) => {
                           e.preventDefault();
+                          openSwitchNetworks();
                           handleSetSwitchNetworkUrl();
-                          show?.();
                         }}
                       >
                         Switch Network
@@ -176,8 +179,8 @@ export const ForceSupportedChainId = () => {
 };
 
 const ModalContentWrapper = styled(Flex)`
-  max-width: 310px;
-  min-width: 310px;
+  max-width: 290px;
+  min-width: 290px;
   width: 100%;
 
   ${theme.media.query.sm.only} {
@@ -190,5 +193,5 @@ const ModalContentWrapper = styled(Flex)`
 const Brand = styled.div`
   text-transform: uppercase;
   ${LinksNav};
-  margin-bottom: -4px;
+  margin-bottom: -6px;
 `;
