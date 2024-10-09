@@ -86,6 +86,10 @@ export class BuyFertilizerFarmStep extends FarmStep {
       setInput();
     }
 
+    if (wstETHIn && !operation) {
+      setInput();
+    }
+
     if (claimOperation) {
       this.pushInput({
         input: [...claimOperation.getFarm().generators],

@@ -655,12 +655,15 @@ function getSwapOperation(
   if (!sellToken) {
     throw new Error('No token selected');
   }
-  if (!amountIn || !amountOut) {
+  if (!amountIn) {
     throw new Error('No amounts detected');
   }
 
   if (buyToken.equals(sellToken)) {
     return { operation, postClaimOperation };
+  }
+  if (!amountIn || !amountOut) {
+    throw new Error('No amounts detected');
   }
 
   if (!quoteData) {
