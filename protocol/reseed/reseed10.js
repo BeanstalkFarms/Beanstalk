@@ -71,7 +71,7 @@ async function reseed10(account, L2Beanstalk, mock, verbose = true) {
     "0x87F1FB2CF1CDC19103739F7cdb0068b203184354", // UnripeFacet
     "0x3AF703FACA14A0201E5aa98D91cA1Dbb10a8f110", // EnrootFacet
     "0x926CFCe66aa8A0CC29470dA28095D88CF24ABE16", // PauseFacet
-    "0x7ae90B0c59D120A9F3193a5f2368837353e72459" // L1ReceiverFacet
+    "0xEf10E3A2aa42A03C1B9670c5F74fd8935E753b97" // L1ReceiverFacet
   ];
 
   // link all facets to beanstalk diamond:
