@@ -14,9 +14,9 @@ import {C} from "contracts/C.sol";
  * @author Brean, Deadmanwalking
  * @notice ReseedSilo re-initializes the Silo.
  * @dev revised such that the deposit Id list is not updated, and the transfer single event is emitted,
- * if the current deposit amount is not equal to the amount in the deposit.
+ * if the current deposit amount is not equal to the current amount.
  */
-contract ReseedSilo {
+contract ReseedSiloRevised {
     using LibBytes for uint256;
 
     /**
