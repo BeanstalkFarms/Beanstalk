@@ -23,35 +23,17 @@ const useFarmerSiloHistory = (
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
+    context: { subgraph: 'beanstalk_eth' },
   });
-  // const siloRewardsQueryL1 = useFarmerSiloRewardsQuery({
-  //   variables: { account: account || '' },
-  //   skip: !account,
-  //   fetchPolicy: 'cache-first',
-  //   context: {
-  //     subgraph: 'beanstalk_eth',
-  //   }
-  // });
   const siloAssetsQuery = useFarmerSiloAssetSnapshotsQuery({
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
-  });
-  const siloAssetsQueryL1 = useFarmerSiloAssetSnapshotsQuery({
-    variables: { account: account || '' },
-    skip: !account,
-    fetchPolicy: 'cache-first',
-    context: {
-      subgraph: 'beanstalk_eth',
-    },
+    context: { subgraph: 'beanstalk_eth' },
   });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
     fetchPolicy: 'cache-and-network',
   });
-  // const seedsPerTokenQueryL1 = useWhitelistTokenRewardsQuery({
-  //   fetchPolicy: 'cache-and-network',
-  //   context: { subgraph: 'beanstalk_eth' },
-  // });
 
   const queryConfig = useMemo(
     () => ({
