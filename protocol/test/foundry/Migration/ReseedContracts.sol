@@ -17,7 +17,19 @@ interface IERC1555 {
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract L1ReceiverFacetTest is Order, TestHelper {
+/*
+Running this fork test against arbitrum requires the following steps:
+1. anvil --fork-url https://arbitrum.gateway.tenderly.co/your_key --port 8545 --chain-id 1337
+2. node scripts/beanstalk-3/beanstalk-3-Contracts.js
+3. Update merkles in L1ReceiverFacet
+4. Modifying foundry.toml to remove the exclusions
+5. npx hardhat compile && npx hardhat deployL1ReceiverFacet --network localhost
+6. Update L1ReceiverFacet address in reseed10.js
+7. npx hardhat addFacetsToDiamond --network localhost
+8. forge t --fork-url http://127.0.0.1:8545 --match-contract L1ReceiverFacetForkTest
+*/
+
+contract L1ReceiverFacetForkTest is Order, TestHelper {
     using Strings for string;
     // Offset arbitrum uses for corresponding L2 address
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
@@ -30,26 +42,15 @@ contract L1ReceiverFacetTest is Order, TestHelper {
 
     string constant CONTRACT_ADDRESSES_PATH =
         "./scripts/beanstalk-3/data/inputs/ContractAddresses.txt";
-    uint256 constant CONTRACT_ADDRESSES_LENGTH = 47; // should be the number of lines in the file above
+    uint256 constant CONTRACT_ADDRESSES_LENGTH = 71; // should be the number of lines in the file above
+
+    address constant L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
 
     address OWNER;
     address RECIEVER;
 
     function setUp() public {
-        initializeBeanstalkTestState(true, false);
-
-        // setup basic whitelisting for testing
-        bs.mockWhitelistToken(L2BEAN, IMockFBeanstalk.beanToBDV.selector, 10000000000, 1);
-        bs.mockWhitelistToken(L2URBEAN, IMockFBeanstalk.unripeBeanToBDV.selector, 10000000000, 1);
-        bs.mockWhitelistToken(L2URLP, IMockFBeanstalk.unripeLPToBDV.selector, 10000000000, 1);
-
-        // set the milestone stem for BEAN
-        bs.mockSetMilestoneStem(L2BEAN, 36462179909);
-        bs.mockSetMilestoneSeason(L2BEAN, bs.season());
-        bs.mockSetMilestoneStem(L2URBEAN, 0);
-        bs.mockSetMilestoneSeason(L2URBEAN, bs.season());
-        bs.mockSetMilestoneStem(L2URLP, 0);
-        bs.mockSetMilestoneSeason(L2URLP, bs.season());
+        bs = IMockFBeanstalk(L2_BEANSTALK);
     }
 
     /**
@@ -61,7 +62,11 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setReceiverForL1Migration(OWNER, RECIEVER);
+
+            // prank beanstalk diamond owner
+            vm.prank(applyL1ToL2Alias(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+            bs.approveReceiver(OWNER, RECIEVER);
+
             (
                 uint256[] memory depositIds,
                 uint256[] memory amounts,
@@ -81,7 +86,8 @@ contract L1ReceiverFacetTest is Order, TestHelper {
             uint256 gasStart = gasleft();
 
             vm.prank(RECIEVER);
-            L1ReceiverFacet(BEANSTALK).issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
+
+            bs.issueDeposits(OWNER, depositIds, amounts, bdvs, proof);
 
             uint256 gasUsed = gasStart - gasleft();
             if (gasUsed > highestGas) {
@@ -102,7 +108,9 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setReceiverForL1Migration(OWNER, RECIEVER);
+            vm.prank(applyL1ToL2Alias(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+            bs.approveReceiver(OWNER, RECIEVER);
+
             (uint256[] memory index, uint256[] memory pods) = getPlotData(OWNER);
 
             bytes32[] memory proof = getPlotsProofForAccount(OWNER);
@@ -114,9 +122,11 @@ contract L1ReceiverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
+
             // start measuring gas
             uint256 gasBefore = gasleft();
-            L1ReceiverFacet(BEANSTALK).issuePlots(OWNER, index, pods, proof);
+
+            bs.issuePlots(OWNER, index, pods, proof);
 
             //stop measuring gas
             uint256 gasAfter = gasleft();
@@ -128,7 +138,8 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setReceiverForL1Migration(OWNER, RECIEVER);
+            vm.prank(applyL1ToL2Alias(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+            bs.approveReceiver(OWNER, RECIEVER);
             (address[] memory _tokens, uint256[] memory _amounts) = getInternalBalanceData(OWNER);
 
             bytes32[] memory _proof = getInternalBalancesProofForAccount(OWNER);
@@ -140,7 +151,7 @@ contract L1ReceiverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
-            L1ReceiverFacet(BEANSTALK).issueInternalBalances(OWNER, _tokens, _amounts, _proof);
+            bs.issueInternalBalances(OWNER, _tokens, _amounts, _proof);
         }
     }
 
@@ -148,7 +159,9 @@ contract L1ReceiverFacetTest is Order, TestHelper {
         for (uint i; i < CONTRACT_ADDRESSES_LENGTH; i++) {
             OWNER = vm.parseAddress(vm.readLine(CONTRACT_ADDRESSES_PATH));
             RECIEVER = applyL1ToL2Alias(OWNER);
-            bs.setReceiverForL1Migration(OWNER, RECIEVER);
+            vm.prank(applyL1ToL2Alias(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5));
+            bs.approveReceiver(OWNER, RECIEVER);
+
             (uint256[] memory fertIds, uint128[] memory _amounts, uint128 lastBpf) = getFertData(
                 OWNER
             );
@@ -162,7 +175,7 @@ contract L1ReceiverFacetTest is Order, TestHelper {
             }
 
             vm.prank(RECIEVER);
-            L1ReceiverFacet(BEANSTALK).issueFertilizer(OWNER, fertIds, _amounts, lastBpf, proof);
+            bs.issueFertilizer(OWNER, fertIds, _amounts, lastBpf, proof);
         }
     }
 

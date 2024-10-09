@@ -40,13 +40,13 @@ contract L1ReceiverFacet is ReentrancyGuard {
 
     // todo: update with correct merkle roots once once L1 Beanstalk has been paused.
     bytes32 internal constant DEPOSIT_MERKLE_ROOT =
-        0xe8c85107aea17dd6d4330a7a996c8ec23d62aa22f3feb4c97cdd5368e1fa756b;
+        0xeb066652d7a4697ff79e41b89a3c0687bff9b2eca24abae3ce2227353c0f7fa2;
     bytes32 internal constant PLOT_MERKLE_ROOT =
-        0x8d60edfd9ab5f687b1d92f441b577b43d2ad8cb22e66779e6c37e3dc3b91f3e1;
+        0x77468b9d2123fccf86470df51a08fe459e39d534d5db5fd389b9094f855c3159;
     bytes32 internal constant INTERNAL_BALANCE_MERKLE_ROOT =
-        0x3b6f4a3ceb1dc34f3a00414b79dcc5c16756093de2e4062e726ec22afd36741c;
+        0xa3f8aa1737eb885b5bada4bf550a69a775f87bb3d76ded62116753ed88758806;
     bytes32 internal constant FERTILIZER_MERKLE_ROOT =
-        0x6329fea484065f1f62d989fbf443406e3487276c4397ad36e0370f60ffbaa2e5;
+        0x5819d7a6b10bfd421d78835493ed50442b4d658d0e9022caa4507c9c0ef54a97;
     // bytes32 internal constant POD_ORDER_MERKLE_ROOT =
     // 0x4a000e44e0820fdb1ef4194538de1404629221d77e7c920fa8c000ce5902d503;
 
@@ -443,7 +443,6 @@ contract L1ReceiverFacet is ReentrancyGuard {
                 bdvs[i],
                 LibTokenSilo.Transfer.emitTransferSingle
             );
-
             // calculate the stalk assoicated with the deposit and increment.
             stalk += (bdvs[i] * stalkIssuedPerBdv) + (uint256(uint96(stemTip - stem)) * bdvs[i]);
         }

@@ -26,7 +26,7 @@ function updateInputJsonData(verbose = false) {
 
   console.log("Contract Addresses:", contractAddresses);
 
-  const BLOCK_NUMBER = 20736200;
+  const BLOCK_NUMBER = 20921737;
   const storageAccountsPath = `./reseed/data/exports/storage-accounts${BLOCK_NUMBER}.json`;
   const storageFertPath = `./reseed/data/exports/storage-fertilizer${BLOCK_NUMBER}.json`;
   const storagePodOrdersPath = `./reseed/data/exports/market-info${BLOCK_NUMBER}.json`;

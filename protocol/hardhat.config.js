@@ -37,7 +37,8 @@ const {
   BEAN_ETH_WELL,
   BCM,
   L2_BCM,
-  L2_BEANSTALK
+  L2_BEANSTALK,
+  BEAN
 } = require("./test/hardhat/utils/constants.js");
 const { to6 } = require("./test/hardhat/utils/helpers.js");
 //const { replant } = require("./replant/replant.js")
@@ -130,6 +131,12 @@ task("sunriseArb", async function () {
 task("getTime", async function () {
   beanstalk = await ethers.getContractAt("SeasonFacet", BEANSTALK);
   console.log("Current time: ", await this.seasonGetter.time());
+});
+
+task("tokenSettings", async function () {
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  const tokenSettings = await beanstalk.tokenSettings("0xBEA0005B8599265D41256905A9B3073D397812E4");
+  console.log(tokenSettings);
 });
 
 /*task('replant', async () => {
