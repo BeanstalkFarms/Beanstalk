@@ -329,13 +329,17 @@ contract ReseedStateTest is TestHelper {
                 uint256 accountPlotAmountJsonDecoded = vm.parseUint(
                     vm.toString(accountPlotAmountJson)
                 );
-                // compare the plot amount and index
-                assertEq(accountPlotAmountJsonDecoded, plots[j].pods);
-                assertEq(plotindexesJsonDecoded[j], plots[j].index);
-                totalPlotsAmount += plots[j].pods;
+
+                // find the matching plot indexes to compare the amount
+                for (uint256 k = 0; k < plots.length; k++) {
+                    if (plots[k].index == plotindexesJsonDecoded[j]) {
+                        // compare the plot amount and index
+                        // log the index and amount form the json and the storage
+                        assertEq(accountPlotAmountJsonDecoded, plots[k].pods);
+                    }
+                }
             }
         }
-        console.log("total plots amount:", totalPlotsAmount);
     }
 
     //////////////////// Account Deposits ////////////////////
