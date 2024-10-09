@@ -10,6 +10,7 @@ export const TabButton = styled.button<{
   bold?: boolean;
   justify?: boolean;
   hover?: boolean;
+  zIndex?: number;
 }>`
   display: flex;
   flex-direction: row;
@@ -27,6 +28,7 @@ export const TabButton = styled.button<{
   outline-offset: -0.5px;
   background-color: ${({ active }) => (active ? "#fff" : "#F9F8F6")};
   cursor: pointer;
+  z-index: ${({ zIndex }) => zIndex || 0};
 
   ${({ hover }) =>
     hover &&

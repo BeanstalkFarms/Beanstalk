@@ -18,6 +18,7 @@ import {
   MyWellPositionRow
 } from "src/components/Well/Table/MyWellPositionRow";
 import { WellDetailLoadingRow, WellDetailRow } from "src/components/Well/Table/WellDetailRow";
+import { useChainErrExists } from "src/state/atoms/chain.atoms";
 import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { BasinAPIResponse } from "src/types";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";
@@ -34,6 +35,7 @@ export const Wells = () => {
   const { data: wells, isLoading, error } = useWells();
   const { data: wellStats = [] } = useBasinStats();
   const sdk = useSdk();
+  const chainErrExists = useChainErrExists();
 
   const [tab, showTab] = useState<number>(0);
 
@@ -55,7 +57,7 @@ export const Wells = () => {
       wellNamesLoading
   );
 
-  if (error) {
+  if (error && !chainErrExists) {
     return <Error message={error?.message} errorOnly />;
   }
 
@@ -100,7 +102,7 @@ export const Wells = () => {
           </THead>
         )}
         <TBody>
-          {loading || !tableData.length ? (
+          {loading || !tableData.length || chainErrExists ? (
             <>
               {Array(5)
                 .fill(null)
@@ -158,6 +160,14 @@ export const Wells = () => {
       <MobileBottomNudge />
     </Page>
   );
+};
+
+const loadingRows = Array.from({ length: 5 });
+
+const WellsLoadingRows = () => {
+  return loadingRows.map((_, idx) => (
+    <WellDetailLoadingRow key={`well-detail-loading-row-${idx}`} />
+  ));
 };
 
 const makeTableData = (

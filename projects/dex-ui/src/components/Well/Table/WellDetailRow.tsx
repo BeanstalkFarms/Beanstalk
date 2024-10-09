@@ -11,6 +11,7 @@ import { Item } from "src/components/Layout";
 import { Skeleton } from "src/components/Skeleton";
 import { Row, Td } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
+import { useResolvedChainId } from "src/utils/chain";
 import { formatNum } from "src/utils/format";
 
 import { WellYieldWithTooltip } from "../WellYieldWithTooltip";
@@ -34,8 +35,9 @@ export const WellDetailRow: FC<{
 }> = ({ well, liquidity, functionName, price, volume }) => {
   const navigate = useNavigate();
   const tokens = well?.tokens || [];
+  const resolvedChainId = useResolvedChainId();
 
-  const gotoWell = () => navigate(`/wells/${well?.address}`);
+  const gotoWell = () => navigate(`/wells/${resolvedChainId}/${well?.address}`);
 
   const renderTokenSymbols = () => {
     return tokens

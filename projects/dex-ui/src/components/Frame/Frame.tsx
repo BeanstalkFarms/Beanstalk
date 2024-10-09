@@ -10,6 +10,7 @@ import wellsIcon from "src/assets/images/navbar/wells.svg";
 import { WalletButton } from "src/components/Wallet";
 import { Settings } from "src/settings";
 import { FC } from "src/types";
+import { useSdkChainId } from "src/utils/chain";
 import { theme } from "src/utils/ui/theme";
 
 import { Footer } from "./Footer";
@@ -22,7 +23,7 @@ import { LinksNav } from "../Typography";
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const chain = useChainId();
+  const resolvedcid = useSdkChainId();
 
   return (
     <Container id="frame">
@@ -41,7 +42,7 @@ export const Frame: FC<{}> = ({ children }) => {
               <NavLink to="/build" hovericon={buildIcon}>
                 Build
               </NavLink>
-              <NavLink to="/wells" hovericon={wellsIcon}>
+              <NavLink to={`/wells/${resolvedcid}`} hovericon={wellsIcon}>
                 Liquidity
               </NavLink>
               <NavLink to="/swap" hovericon={swapIcon}>
@@ -66,7 +67,11 @@ export const Frame: FC<{}> = ({ children }) => {
             <MobileNavLink $bold to="/swap" onClick={() => setMobileMenuOpen(false)}>
               Swap
             </MobileNavLink>
-            <MobileNavLink $bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavLink
+              $bold
+              to={`/wells/${resolvedcid}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Wells
             </MobileNavLink>
             <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>

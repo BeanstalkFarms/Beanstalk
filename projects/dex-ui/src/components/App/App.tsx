@@ -14,23 +14,27 @@ import { Well } from "src/pages/Well";
 import { Wells } from "src/pages/Wells";
 import { Settings } from "src/settings";
 
+import { ForceSupportedChainId } from "./ForceSupportedChainId";
+
 export const App = ({}) => {
   const isNotProd = !Settings.PRODUCTION;
 
   return (
-    <Frame>
-      <Routes>
-        <Route index element={<Home />} />
-        <Route path="/wells" element={<Wells />} />
-        <Route path="/wells/:address" element={<Well />} />
-        <Route path="/wells/:address/liquidity" element={<Liquidity />} />
-        <Route path="/swap" element={<Swap />} />
-        <Route path="/build" element={<Build />} />
-        <Route path="/create" element={<Create />} />
-        {isNotProd && <Route path="/dev" element={<Dev />} />}
-        <Route path="*" element={<NotFound />} />
-        {false && <></>}
-      </Routes>
-    </Frame>
+    <>
+      <ForceSupportedChainId />
+      <Frame>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="/wells/:cid" element={<Wells />} />
+          <Route path="/wells/:cid/:address" element={<Well />} />
+          <Route path="/wells/:cid/:address/liquidity" element={<Liquidity />} />
+          <Route path="/swap" element={<Swap />} />
+          <Route path="/build" element={<Build />} />
+          <Route path="/create" element={<Create />} />
+          {isNotProd && <Route path="/dev" element={<Dev />} />}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Frame>
+    </>
   );
 };

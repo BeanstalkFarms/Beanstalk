@@ -1,3 +1,5 @@
+import { ChainResolver } from "@beanstalk/sdk-core";
+
 import useSdk from "./sdk/useSdk";
 
 /**
@@ -8,4 +10,10 @@ import useSdk from "./sdk/useSdk";
  */
 export function useSdkChainId() {
   return useSdk().chainId;
+}
+
+export function useResolvedChainId() {
+  const sdkChainId = useSdkChainId();
+
+  return ChainResolver.resolveToMainnetChainId(sdkChainId);
 }

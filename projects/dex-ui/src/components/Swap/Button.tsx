@@ -47,6 +47,7 @@ type ButtonProps = {
   $width: string;
   secondary: boolean;
   margin: string;
+  $zIndex?: number;
 };
 
 const StyledButton = styled.button<ButtonProps>`
@@ -63,6 +64,7 @@ const StyledButton = styled.button<ButtonProps>`
   color: ${({ secondary }) => (secondary ? "#000" : "#FFF")};
   width: ${({ $width }) => $width};
   margin: ${({ margin }) => margin};
+  z-index: ${({ $zIndex }) => $zIndex ?? 0};
 
   font-weight: 600;
   font-size: 16px;

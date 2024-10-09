@@ -27,12 +27,12 @@ import { LiquidityBox } from "src/components/Well/LiquidityBox";
 import { OtherSection } from "src/components/Well/OtherSection";
 import { Reserves } from "src/components/Well/Reserves";
 import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
+import { useChainErrExists } from "src/state/atoms/chain.atoms";
 import { getPrice } from "src/utils/price/usePrice";
 import useSdk from "src/utils/sdk/useSdk";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
-import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
 import { useWellWithParams } from "src/wells/useWellWithParams";
 
@@ -40,11 +40,9 @@ export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
-  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+  const chainIdErr = useChainErrExists();
 
-  const isWhitelistedWell = getIsWhitelisted(well);
-
-  const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
+  const loading = useLagLoading(dataLoading || apysLoading || twaLoading) || chainIdErr;
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -64,7 +62,7 @@ export const Well = () => {
   }, [open]);
 
   useEffect(() => {
-    if (!well?.tokens) return;
+    if (!well?.tokens || chainIdErr) return;
 
     const run = async () => {
       if (well.tokens) {
@@ -79,7 +77,7 @@ export const Well = () => {
     };
 
     run();
-  }, [sdk, well]);
+  }, [sdk, well, chainIdErr]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
   const logos: ReactNode[] = (well?.tokens || []).map((token) => (
@@ -151,7 +149,7 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (error) return <Error message={error?.message} errorOnly />;
+  if (error && !chainIdErr) return <Error message={error?.message} errorOnly />;
 
   return (
     <Page>
