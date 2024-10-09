@@ -39,7 +39,7 @@ type Bean {
   hourlySnapshot(first: Int = 100, orderBy: BeanHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanHourlySnapshot_filter): [BeanHourlySnapshot!]!
 
   """Contract address of the Bean token"""
-  id: ID!
+  id: Bytes!
 
   """Last timestamp a cross was seen"""
   lastCross: BigInt!
@@ -894,14 +894,16 @@ input Bean_filter {
   dewhitelistedPools_not_contains: [String!]
   dewhitelistedPools_not_contains_nocase: [String!]
   hourlySnapshot_: BeanHourlySnapshot_filter
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastCross: BigInt
   lastCross_gt: BigInt
   lastCross_gte: BigInt
@@ -1049,7 +1051,7 @@ type Pool {
   """Instantaneous deltaB"""
   deltaBeans: BigInt!
   hourlySnapshot(first: Int = 100, orderBy: PoolHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHourlySnapshot_filter): [PoolHourlySnapshot!]!
-  id: ID!
+  id: Bytes!
 
   """Last timestamp a cross was seen for this pool"""
   lastCross: BigInt!
@@ -1799,14 +1801,16 @@ input Pool_filter {
   deltaBeans_not: BigInt
   deltaBeans_not_in: [BigInt!]
   hourlySnapshot_: PoolHourlySnapshot_filter
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastCross: BigInt
   lastCross_gt: BigInt
   lastCross_gte: BigInt
@@ -2537,7 +2541,7 @@ type Token {
   decimals: BigInt!
 
   """Smart contract address of the token"""
-  id: ID!
+  id: Bytes!
 
   """
   Last USD price calculated. Isn't calculated for all tokens, in those cases will be zero.
@@ -2560,14 +2564,16 @@ input Token_filter {
   decimals_lte: BigInt
   decimals_not: BigInt
   decimals_not_in: [BigInt!]
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastPriceUSD: BigDecimal
   lastPriceUSD_gt: BigDecimal
   lastPriceUSD_gte: BigDecimal
@@ -2613,7 +2619,7 @@ type TwaOracle {
   cumulativeWellReservesPrevBlock: BigInt!
   cumulativeWellReservesPrevTime: BigInt!
   cumulativeWellReservesTime: BigInt!
-  id: ID!
+  id: Bytes!
   lastBalances: [BigInt!]!
   lastSun: BigInt!
   lastUpdated: BigInt!
@@ -2678,14 +2684,16 @@ input TwaOracle_filter {
   cumulativeWellReserves_not: Bytes
   cumulativeWellReserves_not_contains: Bytes
   cumulativeWellReserves_not_in: [Bytes!]
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastBalances: [BigInt!]
   lastBalances_contains: [BigInt!]
   lastBalances_contains_nocase: [BigInt!]
@@ -2776,6 +2784,9 @@ type Version {
   """= 'subgraph'"""
   id: ID!
 
+  """Address of Beanstalk protocol"""
+  protocolAddress: Bytes!
+
   """= 'beanstalk'"""
   subgraphName: String!
 
@@ -2816,6 +2827,16 @@ input Version_filter {
   id_not: ID
   id_not_in: [ID!]
   or: [Version_filter]
+  protocolAddress: Bytes
+  protocolAddress_contains: Bytes
+  protocolAddress_gt: Bytes
+  protocolAddress_gte: Bytes
+  protocolAddress_in: [Bytes!]
+  protocolAddress_lt: Bytes
+  protocolAddress_lte: Bytes
+  protocolAddress_not: Bytes
+  protocolAddress_not_contains: Bytes
+  protocolAddress_not_in: [Bytes!]
   subgraphName: String
   subgraphName_contains: String
   subgraphName_contains_nocase: String
@@ -2861,6 +2882,7 @@ input Version_filter {
 enum Version_orderBy {
   chain
   id
+  protocolAddress
   subgraphName
   versionNumber
 }

@@ -153,6 +153,11 @@ type Metrics {
   total: Int
 }
 
+type Option {
+  name: String
+  value: String
+}
+
 enum OrderDirection {
   asc
   desc
@@ -252,6 +257,7 @@ type Query {
   leaderboards(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: LeaderboardsWhere): [Leaderboard]
   messages(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: MessageWhere): [Message]
   networks: [Item]
+  options: [Option]
   plugins: [Item]
   proposal(id: String!): Proposal
   proposals(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: ProposalWhere): [Proposal]

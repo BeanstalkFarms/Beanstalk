@@ -6,18 +6,17 @@ import stalkIcon from '~/img/beanstalk/stalk-icon-winter.svg';
 import seedIcon from '~/img/beanstalk/seed-icon-winter.svg';
 import { NEW_BN } from '~/constants';
 import { FarmerSiloRewards } from '~/state/farmer/silo';
+import Row from '~/components/Common/Row';
+import { FC } from '~/types';
+import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
 import RewardItem from './RewardItem';
 import { ClaimRewardsAction } from '../../util/Farm';
 import { hoverMap } from '../../constants/silo';
-import Row from '~/components/Common/Row';
-
-import { FC } from '~/types';
-import useFarmerSiloVesting from '~/hooks/farmer/useFarmerSiloVesting';
 
 export type RewardsBarProps = {
   beans: FarmerSiloRewards['beans'];
   stalk: FarmerSiloRewards['stalk'];
-  seeds: FarmerSiloRewards['seeds'];
+  seeds: FarmerSiloRewards['grownStalkPerSeaason'];
   /// TEMP
   revitalizedStalk?: BigNumber;
   revitalizedSeeds?: BigNumber;
@@ -63,12 +62,12 @@ const RewardsSummary: FC<RewardsBarProps & { compact?: boolean }> = ({
       <Row gap={{ xs: GAP_XS, md: GAP_MD, lg: GAP_LG }}>
         <RewardItem
           title="Earned Beans"
-          tooltip={
-            `The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. 
-            ${vesting.amount
+          tooltip={`The number of Beans earned since your last Plant. Upon Plant, Earned Beans are Deposited. 
+            ${
+              vesting.amount
                 ? vesting.amount.gt(0) && vesting.isVesting
-                  // TODO: Needs 'Beans in Vesting Period' function
-                  ? ``// `You have ${displayBN(vesting.amount)} Vesting Beans.`
+                  ? // TODO: Needs 'Beans in Vesting Period' function
+                    `` // `You have ${displayBN(vesting.amount)} Vesting Beans.`
                   : ``
                 : vesting.isVesting
                   ? `It is currently the Vesting Period.`
