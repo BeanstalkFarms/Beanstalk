@@ -9,26 +9,25 @@ import {
   TokenYield,
   UnripeToken
 } from "../../generated/schema";
-import { BEANSTALK, UNRIPE_BEAN, UNRIPE_LP } from "../../../subgraph-core/utils/Constants";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { getTokenDecimals, getUnripeUnderlying } from "../utils/Constants";
+import { getTokenDecimals, getUnripeUnderlying } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
 
 /* ===== Base Silo Entities ===== */
 
 export function loadSilo(account: Address): Silo {
-  let silo = Silo.load(account.toHexString());
+  let silo = Silo.load(account);
   if (silo == null) {
-    silo = new Silo(account.toHexString());
-    silo.beanstalk = BEANSTALK.toHexString();
-    if (account !== BEANSTALK) {
-      silo.farmer = account.toHexString();
+    silo = new Silo(account);
+    silo.beanstalk = "beanstalk";
+    if (account !== v().protocolAddress) {
+      silo.farmer = account;
     }
     silo.whitelistedTokens = [];
     silo.dewhitelistedTokens = [];
     silo.depositedBDV = ZERO_BI;
     silo.stalk = ZERO_BI;
     silo.plantableStalk = ZERO_BI;
-    silo.seeds = ZERO_BI;
     silo.grownStalkPerSeason = ZERO_BI;
     silo.roots = ZERO_BI;
     silo.germinatingStalk = ZERO_BI;
@@ -47,8 +46,8 @@ export function loadSiloAsset(account: Address, token: Address): SiloAsset {
 
   if (asset == null) {
     asset = new SiloAsset(id);
-    asset.silo = account.toHexString();
-    asset.token = token.toHexString();
+    asset.silo = account;
+    asset.token = token;
     asset.depositedBDV = ZERO_BI;
     asset.depositedAmount = ZERO_BI;
     asset.withdrawnAmount = ZERO_BI;
@@ -63,7 +62,7 @@ export function loadSiloAsset(account: Address, token: Address): SiloAsset {
 export function addToSiloWhitelist(siloAddress: Address, token: Address): void {
   let silo = loadSilo(siloAddress);
   let currentList = silo.whitelistedTokens;
-  currentList.push(token.toHexString());
+  currentList.push(token);
   silo.whitelistedTokens = currentList;
   silo.save();
 }
@@ -76,17 +75,9 @@ export function loadWhitelistTokenSetting(token: Address): WhitelistTokenSetting
     setting.stalkEarnedPerSeason = ZERO_BI;
     setting.stalkIssuedPerBdv = ZERO_BI;
     setting.milestoneSeason = 0;
-    setting.decimals = getTokenDecimals(token);
+    setting.isGaugeEnabled = false;
+    setting.decimals = getTokenDecimals(v(), token);
     setting.updatedAt = ZERO_BI;
-
-    // Check token addresses and set replant seeds/stalk for Unripe due to event timing.
-    if (token == UNRIPE_BEAN) {
-      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-      setting.stalkEarnedPerSeason = BigInt.fromI32(2000000);
-    } else if (token == UNRIPE_LP) {
-      setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
-      setting.stalkEarnedPerSeason = BigInt.fromI32(4000000);
-    }
     setting.save();
   }
   return setting as WhitelistTokenSetting;
@@ -98,7 +89,7 @@ export function loadUnripeToken(token: Address): UnripeToken {
   let unripe = UnripeToken.load(token);
   if (unripe == null) {
     unripe = new UnripeToken(token);
-    unripe.underlyingToken = getUnripeUnderlying(token, ZERO_BI);
+    unripe.underlyingToken = getUnripeUnderlying(v(), token, ZERO_BI);
     unripe.totalUnderlying = ZERO_BI;
     unripe.amountUnderlyingOne = ZERO_BI;
     unripe.bdvUnderlyingOne = ZERO_BI;
@@ -132,8 +123,8 @@ export function loadSiloDeposit(depositId: SiloDepositID): SiloDeposit {
   let deposit = SiloDeposit.load(id);
   if (deposit == null) {
     deposit = new SiloDeposit(id);
-    deposit.farmer = depositId.account.toHexString();
-    deposit.token = depositId.token.toHexString();
+    deposit.farmer = depositId.account;
+    deposit.token = depositId.token;
     deposit.depositVersion = depositId.depositVersion.toString();
     if (depositId.season !== null) {
       deposit.season = depositId.season!.toU32();
@@ -161,7 +152,7 @@ export function updateDeposit(deposit: SiloDeposit, deltaAmount: BigInt, deltaBd
   }
   deposit.depositedBDV = deposit.depositedBDV.plus(deltaBdv);
   let depositHashes = deposit.hashes;
-  depositHashes.push(event.transaction.hash.toHexString());
+  depositHashes.push(event.transaction.hash);
   deposit.hashes = depositHashes;
   deposit.createdBlock = deposit.createdBlock == ZERO_BI ? event.block.number : deposit.createdBlock;
   deposit.createdAt = deposit.createdAt == ZERO_BI ? event.block.timestamp : deposit.createdAt;
@@ -177,8 +168,8 @@ export function loadSiloWithdraw(account: Address, token: Address, season: i32):
   let withdraw = SiloWithdraw.load(id);
   if (withdraw == null) {
     withdraw = new SiloWithdraw(id);
-    withdraw.farmer = account.toHexString();
-    withdraw.token = token.toHexString();
+    withdraw.farmer = account;
+    withdraw.token = token;
     withdraw.withdrawSeason = season;
     withdraw.claimableSeason = season + 1;
     withdraw.claimed = false;
@@ -230,7 +221,7 @@ export function loadTokenYield(token: Address, season: i32, window: i32): TokenY
   return tokenYield as TokenYield;
 }
 
-export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: string): i32 {
+export function SiloAsset_findIndex_token(a: SiloAsset[], targetToken: Address): i32 {
   for (let j = 0; j < a.length; j++) {
     if (a[j].token == targetToken) {
       return j;

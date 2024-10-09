@@ -1,15 +1,14 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-import { loadField } from "./Field";
 import { PodFill, PodListing, PodMarketplace, PodOrder } from "../../generated/schema";
 import { ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { getCurrentSeason } from "./Beanstalk";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
 
-export function loadPodMarketplace(protocol: Address): PodMarketplace {
-  let marketplace = PodMarketplace.load(protocol.toHexString());
+export function loadPodMarketplace(): PodMarketplace {
+  let marketplace = PodMarketplace.load("0");
   if (marketplace == null) {
-    let field = loadField(protocol);
-    marketplace = new PodMarketplace(protocol.toHexString());
-    marketplace.season = field.season;
+    marketplace = new PodMarketplace("0");
+    marketplace.season = getCurrentSeason();
     marketplace.activeListings = [];
     marketplace.activeOrders = [];
     marketplace.listedPods = ZERO_BI;
@@ -34,10 +33,10 @@ export function loadPodFill(protocol: Address, index: BigInt, hash: String): Pod
   let fill = PodFill.load(id);
   if (fill == null) {
     fill = new PodFill(id);
-    fill.podMarketplace = protocol.toHexString();
+    fill.podMarketplace = "0";
     fill.createdAt = ZERO_BI;
-    fill.fromFarmer = "";
-    fill.toFarmer = "";
+    fill.fromFarmer = ADDRESS_ZERO;
+    fill.toFarmer = ADDRESS_ZERO;
     fill.placeInLine = ZERO_BI;
     fill.amount = ZERO_BI;
     fill.index = ZERO_BI;
@@ -53,10 +52,10 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
   let listing = PodListing.load(id);
   if (listing == null) {
     listing = new PodListing(id);
-    listing.podMarketplace = BEANSTALK.toHexString();
+    listing.podMarketplace = "0";
     listing.historyID = "";
     listing.plot = index.toString();
-    listing.farmer = account.toHexString();
+    listing.farmer = account;
     listing.index = index;
     listing.start = ZERO_BI;
     listing.mode = 0;
@@ -71,7 +70,7 @@ export function loadPodListing(account: Address, index: BigInt): PodListing {
     listing.filledAmount = ZERO_BI;
     listing.status = "ACTIVE";
     listing.createdAt = ZERO_BI;
-    listing.creationHash = "";
+    listing.creationHash = ADDRESS_ZERO;
     listing.updatedAt = ZERO_BI;
     listing.save();
   }
@@ -117,9 +116,9 @@ export function loadPodOrder(orderID: Bytes): PodOrder {
   let order = PodOrder.load(orderID.toHexString());
   if (order == null) {
     order = new PodOrder(orderID.toHexString());
-    order.podMarketplace = BEANSTALK.toHexString();
+    order.podMarketplace = "0";
     order.historyID = "";
-    order.farmer = "";
+    order.farmer = ADDRESS_ZERO;
     order.createdAt = ZERO_BI;
     order.updatedAt = ZERO_BI;
     order.status = "";
@@ -129,7 +128,7 @@ export function loadPodOrder(orderID: Bytes): PodOrder {
     order.minFillAmount = ZERO_BI;
     order.maxPlaceInLine = ZERO_BI;
     order.pricePerPod = 0;
-    order.creationHash = "";
+    order.creationHash = ADDRESS_ZERO;
     order.fills = [];
     order.save();
   }

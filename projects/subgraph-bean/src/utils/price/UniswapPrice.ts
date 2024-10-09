@@ -1,16 +1,18 @@
-import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { BD_10, BI_10, ONE_BI, pow, sqrt, toDecimal, ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
-import { Pool, Token } from "../../../generated/schema";
-import { loadOrCreateToken } from "../Token";
-import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
-import { BEANSTALK, WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/utils/Constants";
-import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
+import { WETH, WETH_USDC_PAIR } from "../../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { DeltaBAndPrice, DeltaBPriceLiquidity, TWAType } from "./Types";
 import { setPoolTwa } from "../Pool";
 import { getTWAPrices } from "./TwaOracle";
+import { loadOrCreateToken } from "../../entities/Token";
+import { UniswapV2Pair } from "../../../generated/Bean-ABIs/UniswapV2Pair";
+import { Pool } from "../../../generated/schema";
+import { PreReplant } from "../../../generated/Bean-ABIs/PreReplant";
+import { toAddress } from "../../../../subgraph-core/utils/Bytes";
+import { v } from "../constants/Version";
 
 export function updatePreReplantPriceETH(): BigDecimal {
-  let token = loadOrCreateToken(WETH.toHexString());
+  let token = loadOrCreateToken(WETH);
   let price = getPreReplantPriceETH();
   if (price.lt(ZERO_BD)) {
     return token.lastPriceUSD;
@@ -73,11 +75,11 @@ export function uniswapV2DeltaB(beanReserves: BigDecimal, token2Reserves: BigDec
 }
 
 // Calculates and sets the TWA on the pool hourly/daily snapshots
-export function setUniswapV2Twa(poolAddress: string, timestamp: BigInt, blockNumber: BigInt): void {
-  const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, timestamp);
-  const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, blockNumber);
+export function setUniswapV2Twa(poolAddress: Address, block: ethereum.Block): void {
+  const twaPrices = getTWAPrices(poolAddress, TWAType.UNISWAP, block.timestamp);
+  const twaResult = uniswapTwaDeltaBAndPrice(twaPrices, block.number);
 
-  setPoolTwa(poolAddress, twaResult, timestamp, blockNumber);
+  setPoolTwa(poolAddress, twaResult, block);
 }
 
 export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp: BigInt): BigInt {
@@ -97,7 +99,8 @@ export function uniswapCumulativePrice(pool: Address, tokenIndex: u32, timestamp
 }
 
 export function uniswapTwaDeltaBAndPrice(prices: BigInt[], blockNumber: BigInt): DeltaBAndPrice {
-  let beanstalk = PreReplant.bind(BEANSTALK);
+  const protocol = toAddress(v().protocolAddress);
+  let beanstalk = PreReplant.bind(protocol);
   let reserves: BigInt[];
   // After BIP-9, reserves calculation changes
   if (blockNumber.lt(BigInt.fromU64(13953949))) {

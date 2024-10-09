@@ -1,15 +1,9 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
-import { BEANSTALK_FARMS } from "../../../subgraph-core/utils/Constants";
-import { loadField } from "../entities/Field";
 import { harvest, plotTransfer, sow, temperatureChanged } from "../utils/Field";
-import { Sow, Harvest, PlotTransfer, TemperatureChange } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Sow, Harvest, PlotTransfer, TemperatureChange } from "../../generated/Beanstalk-ABIs/Reseed";
+import { legacySowAmount } from "../utils/legacy/LegacyField";
 
 export function handleSow(event: Sow): void {
-  let sownOverride: BigInt | null = null;
-  if (event.params.account == BEANSTALK_FARMS) {
-    let startingField = loadField(event.address);
-    sownOverride = startingField.soil;
-  }
+  let sownOverride = legacySowAmount(event.address, event.params.account);
   sow({
     event,
     account: event.params.account,
@@ -36,8 +30,8 @@ export function handlePlotTransfer(event: PlotTransfer): void {
     from: event.params.from,
     to: event.params.to,
     fieldId: null,
-    index: event.params.id,
-    amount: event.params.pods
+    index: event.params.index,
+    amount: event.params.amount
   });
 }
 

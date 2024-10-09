@@ -1,17 +1,14 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { WhitelistTokenSetting, WhitelistTokenHourlySnapshot, WhitelistTokenDailySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
-export function takeWhitelistTokenSettingSnapshots(
-  whitelistTokenSetting: WhitelistTokenSetting,
-  protocol: Address,
-  timestamp: BigInt
-): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeWhitelistTokenSettingSnapshots(whitelistTokenSetting: WhitelistTokenSetting, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = whitelistTokenSetting.id.toHexString() + "-" + currentSeason.toString();
@@ -35,11 +32,10 @@ export function takeWhitelistTokenSettingSnapshots(
   hourly.season = currentSeason;
   hourly.token = whitelistTokenSetting.id;
   hourly.selector = whitelistTokenSetting.selector;
-  hourly.gpSelector = whitelistTokenSetting.gpSelector;
-  hourly.lwSelector = whitelistTokenSetting.lwSelector;
   hourly.stalkEarnedPerSeason = whitelistTokenSetting.stalkEarnedPerSeason;
   hourly.stalkIssuedPerBdv = whitelistTokenSetting.stalkIssuedPerBdv;
   hourly.milestoneSeason = whitelistTokenSetting.milestoneSeason;
+  hourly.isGaugeEnabled = whitelistTokenSetting.isGaugeEnabled;
   hourly.gaugePoints = whitelistTokenSetting.gaugePoints;
   hourly.optimalPercentDepositedBdv = whitelistTokenSetting.optimalPercentDepositedBdv;
 
@@ -48,6 +44,7 @@ export function takeWhitelistTokenSettingSnapshots(
     hourly.deltaStalkEarnedPerSeason = hourly.stalkEarnedPerSeason.minus(baseHourly.stalkEarnedPerSeason);
     hourly.deltaStalkIssuedPerBdv = hourly.stalkIssuedPerBdv.minus(baseHourly.stalkIssuedPerBdv);
     hourly.deltaMilestoneSeason = hourly.milestoneSeason - baseHourly.milestoneSeason;
+    hourly.deltaIsGaugeEnabled = hourly.isGaugeEnabled != baseHourly.isGaugeEnabled;
     if (hourly.gaugePoints !== null) {
       if (baseHourly.gaugePoints !== null) {
         hourly.deltaGaugePoints = hourly.gaugePoints!.minus(baseHourly.gaugePoints!);
@@ -68,6 +65,7 @@ export function takeWhitelistTokenSettingSnapshots(
       hourly.deltaStalkEarnedPerSeason = hourly.deltaStalkEarnedPerSeason.plus(baseHourly.deltaStalkEarnedPerSeason);
       hourly.deltaStalkIssuedPerBdv = hourly.deltaStalkIssuedPerBdv.plus(baseHourly.deltaStalkIssuedPerBdv);
       hourly.deltaMilestoneSeason = hourly.deltaMilestoneSeason + baseHourly.deltaMilestoneSeason;
+      hourly.deltaIsGaugeEnabled = hourly.deltaIsGaugeEnabled != baseHourly.deltaIsGaugeEnabled;
       if (hourly.deltaGaugePoints !== null && baseHourly.deltaGaugePoints !== null) {
         hourly.deltaGaugePoints = hourly.deltaGaugePoints!.plus(baseHourly.deltaGaugePoints!);
       }
@@ -79,11 +77,12 @@ export function takeWhitelistTokenSettingSnapshots(
     hourly.deltaStalkEarnedPerSeason = hourly.stalkEarnedPerSeason;
     hourly.deltaStalkIssuedPerBdv = hourly.stalkIssuedPerBdv;
     hourly.deltaMilestoneSeason = hourly.milestoneSeason;
+    hourly.deltaIsGaugeEnabled = hourly.isGaugeEnabled;
     hourly.deltaGaugePoints = hourly.gaugePoints;
     hourly.deltaOptimalPercentDepositedBdv = hourly.optimalPercentDepositedBdv;
   }
-  hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -92,17 +91,17 @@ export function takeWhitelistTokenSettingSnapshots(
   daily.season = currentSeason;
   daily.token = whitelistTokenSetting.id;
   daily.selector = whitelistTokenSetting.selector;
-  daily.gpSelector = whitelistTokenSetting.gpSelector;
-  daily.lwSelector = whitelistTokenSetting.lwSelector;
   daily.stalkEarnedPerSeason = whitelistTokenSetting.stalkEarnedPerSeason;
   daily.stalkIssuedPerBdv = whitelistTokenSetting.stalkIssuedPerBdv;
   daily.milestoneSeason = whitelistTokenSetting.milestoneSeason;
+  daily.isGaugeEnabled = whitelistTokenSetting.isGaugeEnabled;
   daily.gaugePoints = whitelistTokenSetting.gaugePoints;
   daily.optimalPercentDepositedBdv = whitelistTokenSetting.optimalPercentDepositedBdv;
   if (baseDaily !== null) {
     daily.deltaStalkEarnedPerSeason = daily.stalkEarnedPerSeason.minus(baseDaily.stalkEarnedPerSeason);
     daily.deltaStalkIssuedPerBdv = daily.stalkIssuedPerBdv.minus(baseDaily.stalkIssuedPerBdv);
     daily.deltaMilestoneSeason = daily.milestoneSeason - baseDaily.milestoneSeason;
+    daily.deltaIsGaugeEnabled = daily.isGaugeEnabled != baseDaily.isGaugeEnabled;
     if (daily.gaugePoints !== null) {
       if (baseDaily.gaugePoints !== null) {
         daily.deltaGaugePoints = daily.gaugePoints!.minus(baseDaily.gaugePoints!);
@@ -123,6 +122,7 @@ export function takeWhitelistTokenSettingSnapshots(
       daily.deltaStalkEarnedPerSeason = daily.deltaStalkEarnedPerSeason.plus(baseDaily.deltaStalkEarnedPerSeason);
       daily.deltaStalkIssuedPerBdv = daily.deltaStalkIssuedPerBdv.plus(baseDaily.deltaStalkIssuedPerBdv);
       daily.deltaMilestoneSeason = daily.deltaMilestoneSeason + baseDaily.deltaMilestoneSeason;
+      daily.deltaIsGaugeEnabled = daily.deltaIsGaugeEnabled != baseDaily.deltaIsGaugeEnabled;
       if (daily.deltaGaugePoints !== null && baseDaily.deltaGaugePoints !== null) {
         daily.deltaGaugePoints = daily.deltaGaugePoints!.plus(baseDaily.deltaGaugePoints!);
       }
@@ -134,15 +134,43 @@ export function takeWhitelistTokenSettingSnapshots(
     daily.deltaStalkEarnedPerSeason = daily.stalkEarnedPerSeason;
     daily.deltaStalkIssuedPerBdv = daily.stalkIssuedPerBdv;
     daily.deltaMilestoneSeason = daily.milestoneSeason;
+    daily.deltaIsGaugeEnabled = daily.isGaugeEnabled;
     daily.deltaGaugePoints = daily.gaugePoints;
     daily.deltaOptimalPercentDepositedBdv = daily.optimalPercentDepositedBdv;
   }
-  daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   whitelistTokenSetting.lastHourlySnapshotSeason = currentSeason;
   whitelistTokenSetting.lastDailySnapshotDay = day;
+}
+
+export function clearWhitelistTokenSettingDeltas(whitelistTokenSetting: WhitelistTokenSetting, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = WhitelistTokenHourlySnapshot.load(whitelistTokenSetting.id.toHexString() + "-" + currentSeason.toString());
+  const daily = WhitelistTokenDailySnapshot.load(whitelistTokenSetting.id.toHexString() + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaStalkEarnedPerSeason = ZERO_BI;
+    hourly.deltaStalkIssuedPerBdv = ZERO_BI;
+    hourly.deltaMilestoneSeason = 0;
+    hourly.deltaGaugePoints = ZERO_BI;
+    if (hourly.deltaOptimalPercentDepositedBdv != null) {
+      hourly.deltaOptimalPercentDepositedBdv = ZERO_BI;
+    }
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaStalkEarnedPerSeason = ZERO_BI;
+    daily.deltaStalkIssuedPerBdv = ZERO_BI;
+    daily.deltaMilestoneSeason = 0;
+    daily.deltaGaugePoints = ZERO_BI;
+    if (daily.deltaOptimalPercentDepositedBdv != null) {
+      daily.deltaOptimalPercentDepositedBdv = ZERO_BI;
+    }
+    daily.save();
+  }
 }
 
 // Set bdv on hourly and daily. Snapshots must have already been created.

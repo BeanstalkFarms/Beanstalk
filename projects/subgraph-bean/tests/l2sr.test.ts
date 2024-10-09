@@ -1,7 +1,7 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
-import { loadBean } from "../src/utils/Bean";
 import {
+  BEAN_3CRV,
   BEAN_ERC20,
   BEAN_WETH_CP2_WELL,
   BEAN_WETH_CP2_WELL_BLOCK,
@@ -9,7 +9,7 @@ import {
   GAUGE_BIP45_BLOCK,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   mockGetRecapPaidPercent,
@@ -17,19 +17,23 @@ import {
   mockSeedGaugeLockedBeans,
   mockSeedGaugeLockedBeansReverts
 } from "./call-mocking/Beanstalk";
-import { handleChop } from "../src/BeanstalkHandler";
 import { mockBeanstalkEvent } from "../../subgraph-core/tests/event-mocking/Util";
-import { Chop } from "../generated/Bean-ABIs/Beanstalk";
-import { loadOrCreatePool } from "../src/utils/Pool";
+import { Chop } from "../generated/Bean-ABIs/Reseed";
 import { calcLockedBeans, LibLockedUnderlying_getPercentLockedUnderlying } from "../src/utils/LockedBeans";
 import { mockERC20TokenSupply } from "../../subgraph-core/tests/event-mocking/Tokens";
-import { loadOrCreateTwaOracle } from "../src/utils/price/TwaOracle";
 import { TwaOracle } from "../generated/schema";
+import { loadOrCreateTwaOracle } from "../src/entities/TwaOracle";
+import { loadOrCreatePool } from "../src/entities/Pool";
+import { loadBean } from "../src/entities/Bean";
+import { handleChop, handleConvert } from "../src/handlers/BeanstalkHandler";
+import { createConvertEvent } from "./event-mocking/Beanstalk";
+import { initL1Version } from "./entity-mocking/MockVersion";
+import { ADDRESS_ZERO } from "../../subgraph-core/utils/Bytes";
 
 const mockReserves = Bytes.fromHexString("0xabcdef");
 const mockReservesTime = BigInt.fromString("123456");
 const mockTwaOracle = (): TwaOracle => {
-  let twaOracle = loadOrCreateTwaOracle(BEAN_WETH_CP2_WELL.toHexString());
+  let twaOracle = loadOrCreateTwaOracle(BEAN_WETH_CP2_WELL);
   twaOracle.cumulativeWellReserves = mockReserves;
   twaOracle.cumulativeWellReservesTime = mockReservesTime;
   twaOracle.save();
@@ -37,6 +41,9 @@ const mockTwaOracle = (): TwaOracle => {
 };
 
 describe("L2SR", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     mockSeedGaugeLockedBeansReverts(mockReserves, mockReservesTime);
     clearStore();
@@ -54,7 +61,7 @@ describe("L2SR", () => {
       assert.assertTrue(lockedUnderlyingBean.equals(BigDecimal.fromString("0.6620572696973799")));
       assert.assertTrue(lockedUnderlyingLp.equals(BigDecimal.fromString("0.6620572696973799")));
 
-      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
+      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, BEAN_WETH_UNRIPE_MIGRATION_BLOCK);
       pool.reserves = [BigInt.fromString("14544448316811"), BigInt.fromString("4511715111212845829348")];
       pool.save();
 
@@ -70,11 +77,11 @@ describe("L2SR", () => {
 
   describe("Post-Replant", () => {
     beforeEach(() => {
-      let bean = loadBean(BEAN_ERC20.toHexString());
+      let bean = loadBean(BEAN_ERC20);
       bean.supply = BigInt.fromString("5000").times(BI_10.pow(6));
       bean.save();
 
-      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL.toHexString(), BEAN_WETH_CP2_WELL_BLOCK);
+      let pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, BEAN_WETH_CP2_WELL_BLOCK);
       pool.reserves = [BigInt.fromString("1000").times(BI_10.pow(6)), ONE_BI];
       pool.save();
     });
@@ -103,6 +110,22 @@ describe("L2SR", () => {
 
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
       assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "supplyInPegLP", "0.5");
+    });
+
+    test("Chop convert updates Locked Beans", () => {
+      const lockedBeans = BigInt.fromString("3000").times(BI_10.pow(6));
+      let twaOracle = mockTwaOracle();
+      mockSeedGaugeLockedBeans(twaOracle.cumulativeWellReserves, twaOracle.cumulativeWellReservesTime, lockedBeans);
+
+      const event = createConvertEvent(ADDRESS_ZERO, BEAN_3CRV, BEAN_ERC20, ONE_BI, ONE_BI);
+      event.block.number = GAUGE_BIP45_BLOCK;
+      handleConvert(event);
+      assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", "0");
+
+      const event2 = createConvertEvent(ADDRESS_ZERO, UNRIPE_BEAN, BEAN_ERC20, ONE_BI, ONE_BI);
+      event2.block.number = GAUGE_BIP45_BLOCK;
+      handleConvert(event2);
+      assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lockedBeans", lockedBeans.toString());
     });
 
     // Its unclear how to mock a specific amount of locked beans. The Pre-gauge calculation is verified above

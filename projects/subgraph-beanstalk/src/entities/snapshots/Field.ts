@@ -1,24 +1,25 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
-export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: BigInt, blockNumber: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
-  const hourlyId = field.id + "-" + currentSeason.toString();
-  const dailyId = field.id + "-" + day.toString();
+  const hourlyId = field.id.toHexString() + "-" + currentSeason.toString();
+  const dailyId = field.id.toHexString() + "-" + day.toString();
   let baseHourly = FieldHourlySnapshot.load(hourlyId);
   let baseDaily = FieldDailySnapshot.load(dailyId);
   if (baseHourly == null && field.lastHourlySnapshotSeason !== 0) {
-    baseHourly = FieldHourlySnapshot.load(field.id + "-" + field.lastHourlySnapshotSeason.toString());
+    baseHourly = FieldHourlySnapshot.load(field.id.toHexString() + "-" + field.lastHourlySnapshotSeason.toString());
   }
   if (baseDaily == null && field.lastDailySnapshotDay !== null) {
-    baseDaily = FieldDailySnapshot.load(field.id + "-" + field.lastDailySnapshotDay!.toString());
+    baseDaily = FieldDailySnapshot.load(field.id.toHexString() + "-" + field.lastDailySnapshotDay!.toString());
   }
   const hourly = new FieldHourlySnapshot(hourlyId);
   const daily = new FieldDailySnapshot(dailyId);
@@ -37,6 +38,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
   hourly.soil = field.soil;
   // issuedSoil set below, on initial snapshot
   hourly.podIndex = field.podIndex;
+  hourly.harvestableIndex = field.harvestableIndex;
   hourly.podRate = field.podRate;
 
   // Set deltas
@@ -52,6 +54,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     hourly.deltaSoil = hourly.soil.minus(baseHourly.soil);
     // deltaIssuedSoil set below, on initial snapshot
     hourly.deltaPodIndex = hourly.podIndex.minus(baseHourly.podIndex);
+    hourly.deltaHarvestableIndex = hourly.harvestableIndex.minus(baseHourly.harvestableIndex);
     hourly.deltaPodRate = hourly.podRate.minus(baseHourly.podRate);
 
     if (hourly.id == baseHourly.id) {
@@ -66,6 +69,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
       hourly.deltaHarvestedPods = hourly.deltaHarvestedPods.plus(baseHourly.deltaHarvestedPods);
       hourly.deltaSoil = hourly.deltaSoil.plus(baseHourly.deltaSoil);
       hourly.deltaPodIndex = hourly.deltaPodIndex.plus(baseHourly.deltaPodIndex);
+      hourly.deltaHarvestableIndex = hourly.deltaHarvestableIndex.plus(baseHourly.deltaHarvestableIndex);
       hourly.deltaPodRate = hourly.deltaPodRate.plus(baseHourly.deltaPodRate);
       // Carry over unset values that would otherwise get erased
       hourly.issuedSoil = baseHourly.issuedSoil;
@@ -78,7 +82,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
       // Sets initial creation values
       hourly.issuedSoil = field.soil;
       hourly.deltaIssuedSoil = field.soil.minus(baseHourly.issuedSoil);
-      hourly.seasonBlock = blockNumber;
+      hourly.seasonBlock = block.number;
       hourly.soilSoldOut = false;
     }
   } else {
@@ -92,16 +96,17 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     hourly.deltaHarvestedPods = hourly.harvestedPods;
     hourly.deltaSoil = hourly.soil;
     hourly.deltaPodIndex = hourly.podIndex;
+    hourly.deltaHarvestableIndex = hourly.harvestableIndex;
     hourly.deltaPodRate = hourly.podRate;
 
     // Sets initial creation values
     hourly.issuedSoil = field.soil;
     hourly.deltaIssuedSoil = field.soil;
-    hourly.seasonBlock = blockNumber;
+    hourly.seasonBlock = block.number;
     hourly.soilSoldOut = false;
   }
-  hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -120,6 +125,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
   daily.soil = field.soil;
   // issuedSoil set below, on initial snapshot
   daily.podIndex = field.podIndex;
+  daily.harvestableIndex = field.harvestableIndex;
   daily.podRate = field.podRate;
   if (baseDaily !== null) {
     daily.deltaTemperature = daily.temperature - baseDaily.temperature;
@@ -133,6 +139,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     daily.deltaSoil = daily.soil.minus(baseDaily.soil);
     // deltaIssuedSoil set below, on initial snapshot
     daily.deltaPodIndex = daily.podIndex.minus(baseDaily.podIndex);
+    daily.deltaHarvestableIndex = daily.harvestableIndex.minus(baseDaily.harvestableIndex);
     daily.deltaPodRate = daily.podRate.minus(baseDaily.podRate);
 
     if (daily.id == baseDaily.id) {
@@ -147,6 +154,7 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
       daily.deltaHarvestedPods = daily.deltaHarvestedPods.plus(baseDaily.deltaHarvestedPods);
       daily.deltaSoil = daily.deltaSoil.plus(baseDaily.deltaSoil);
       daily.deltaPodIndex = daily.deltaPodIndex.plus(baseDaily.deltaPodIndex);
+      daily.deltaHarvestableIndex = daily.deltaHarvestableIndex.plus(baseDaily.deltaHarvestableIndex);
       daily.deltaPodRate = daily.deltaPodRate.plus(baseDaily.deltaPodRate);
       // Carry over existing values
       daily.issuedSoil = baseDaily.issuedSoil;
@@ -167,30 +175,70 @@ export function takeFieldSnapshots(field: Field, protocol: Address, timestamp: B
     daily.deltaHarvestedPods = daily.harvestedPods;
     daily.deltaSoil = daily.soil;
     daily.deltaPodIndex = daily.podIndex;
+    daily.deltaHarvestableIndex = daily.harvestableIndex;
     daily.deltaPodRate = daily.podRate;
 
     // Sets issued soil here since this is the initial creation
     daily.issuedSoil = field.soil;
     daily.deltaIssuedSoil = field.soil;
   }
-  daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   field.lastHourlySnapshotSeason = currentSeason;
   field.lastDailySnapshotDay = day;
 }
 
+export function clearFieldDeltas(field: Field, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = FieldHourlySnapshot.load(field.id.toHexString() + "-" + currentSeason.toString());
+  const daily = FieldDailySnapshot.load(field.id.toHexString() + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaTemperature = 0;
+    hourly.deltaRealRateOfReturn = ZERO_BD;
+    hourly.deltaNumberOfSowers = 0;
+    hourly.deltaNumberOfSows = 0;
+    hourly.deltaSownBeans = ZERO_BI;
+    hourly.deltaUnharvestablePods = ZERO_BI;
+    hourly.deltaHarvestablePods = ZERO_BI;
+    hourly.deltaHarvestedPods = ZERO_BI;
+    hourly.deltaSoil = ZERO_BI;
+    hourly.deltaPodIndex = ZERO_BI;
+    hourly.deltaHarvestableIndex = ZERO_BI;
+    hourly.deltaPodRate = ZERO_BD;
+    hourly.deltaIssuedSoil = ZERO_BI;
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaTemperature = 0;
+    daily.deltaRealRateOfReturn = ZERO_BD;
+    daily.deltaNumberOfSowers = 0;
+    daily.deltaNumberOfSows = 0;
+    daily.deltaSownBeans = ZERO_BI;
+    daily.deltaUnharvestablePods = ZERO_BI;
+    daily.deltaHarvestablePods = ZERO_BI;
+    daily.deltaHarvestedPods = ZERO_BI;
+    daily.deltaSoil = ZERO_BI;
+    daily.deltaPodIndex = ZERO_BI;
+    daily.deltaHarvestableIndex = ZERO_BI;
+    daily.deltaPodRate = ZERO_BD;
+    daily.deltaIssuedSoil = ZERO_BI;
+    daily.save();
+  }
+}
+
 // Set case id on hourly. Snapshot must have already been created.
 export function setFieldHourlyCaseId(caseId: BigInt, field: Field): void {
-  const hourly = FieldHourlySnapshot.load(field.id + "-" + field.lastHourlySnapshotSeason.toString())!;
+  const hourly = FieldHourlySnapshot.load(field.id.toHexString() + "-" + field.lastHourlySnapshotSeason.toString())!;
   hourly.caseId = caseId;
   hourly.save();
 }
 
 // Set soil sold out info on the hourly. Snapshot must have already been created.
 export function setHourlySoilSoldOut(soldOutBlock: BigInt, field: Field): void {
-  const hourly = FieldHourlySnapshot.load(field.id + "-" + field.lastHourlySnapshotSeason.toString())!;
+  const hourly = FieldHourlySnapshot.load(field.id.toHexString() + "-" + field.lastHourlySnapshotSeason.toString())!;
   hourly.blocksToSoldOutSoil = soldOutBlock.minus(hourly.seasonBlock);
   hourly.soilSoldOut = true;
   hourly.save();

@@ -27606,7 +27606,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^6.0.0":
+"graphql-request@npm:^6.0.0, graphql-request@npm:^6.1.0":
   version: 6.1.0
   resolution: "graphql-request@npm:6.1.0"
   dependencies:
@@ -41768,6 +41768,7 @@ __metadata:
   dependencies:
     "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
+    graphql-request: "npm:^6.1.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
@@ -41778,6 +41779,7 @@ __metadata:
   dependencies:
     "@graphprotocol/graph-cli": "npm:0.79.2"
     "@graphprotocol/graph-ts": "npm:0.34.0"
+    graphql-request: "npm:^6.1.0"
     matchstick-as: "npm:^0.6.0"
   languageName: unknown
   linkType: soft

@@ -1,4 +1,4 @@
-import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
+import { afterEach, beforeEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { log } from "matchstick-as/assembly/log";
 import { BigInt } from "@graphprotocol/graph-ts";
 import {
@@ -6,17 +6,14 @@ import {
   handleGaugePointChange,
   handleUpdateAverageStalkPerBdvPerSeason,
   handleFarmerGerminatingStalkBalanceChanged,
-  handleTotalGerminatingBalanceChanged,
-  handleUpdateGaugeSettings,
   handleTotalGerminatingStalkChanged,
   handleTotalStalkChangedFromGermination
 } from "../src/handlers/GaugeHandler";
-import { BEAN_ERC20, BEANSTALK } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, BEANSTALK } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import {
   createBeanToMaxLpGpPerBdvRatioChangeEvent,
   createFarmerGerminatingStalkBalanceChangedEvent,
   createGaugePointChangeEvent,
-  createTotalGerminatingBalanceChangedEvent,
   createTotalGerminatingStalkChangedEvent,
   createTotalStalkChangedFromGerminationEvent,
   createUpdateAverageStalkPerBdvPerSeasonEvent,
@@ -29,14 +26,20 @@ import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { setSeason } from "./utils/Season";
 import { dayFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { loadSilo } from "../src/entities/Silo";
-import { handleWhitelistToken } from "../src/handlers/SiloHandler";
-import { handleTemperatureChange } from "../src/handlers/FieldHandler";
+import { initL1Version } from "./entity-mocking/MockVersion";
+import { handleTemperatureChange_v1 } from "../src/handlers/legacy/LegacyFieldHandler";
+import { handleWhitelistToken_v4 } from "../src/handlers/legacy/LegacySiloHandler";
+import { handleUpdateGaugeSettings } from "../src/handlers/legacy/LegacyGaugeHandler";
+import { BI_10 } from "../../subgraph-core/utils/Decimals";
 
 const ANVIL_ADDR_1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase();
 
 const ratioDecimals = BigInt.fromU32(10).pow(18);
 
 describe("Seed Gauge", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     log.debug("clearing the store", []);
     clearStore();
@@ -47,10 +50,10 @@ describe("Seed Gauge", () => {
       simpleMockPrice(1, 1);
 
       // Temperature inits to 1
-      handleTemperatureChange(createTemperatureChangeEvent(BigInt.fromU32(1), BigInt.fromU32(15), 5));
+      handleTemperatureChange_v1(createTemperatureChangeEvent(BigInt.fromU32(1), BigInt.fromU32(15), 5));
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "temperature", "6");
       assert.fieldEquals("FieldHourlySnapshot", BEANSTALK.toHexString() + "-1", "caseId", "15");
-      handleTemperatureChange(createTemperatureChangeEvent(BigInt.fromU32(2), BigInt.fromU32(25), 2));
+      handleTemperatureChange_v1(createTemperatureChangeEvent(BigInt.fromU32(2), BigInt.fromU32(25), 2));
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "temperature", "8");
       assert.fieldEquals("FieldHourlySnapshot", BEANSTALK.toHexString() + "-2", "caseId", "25");
     });
@@ -97,7 +100,7 @@ describe("Seed Gauge", () => {
 
     test("event: UpdateAverageStalkPerBdvPerSeason", () => {
       const initialSilo = loadSilo(BEANSTALK);
-      initialSilo.depositedBDV = BigInt.fromU32(1000);
+      initialSilo.depositedBDV = BigInt.fromU32(1000).times(BI_10.pow(6));
       initialSilo.save();
 
       handleUpdateAverageStalkPerBdvPerSeason(createUpdateAverageStalkPerBdvPerSeasonEvent(BigInt.fromU32(3456)));
@@ -175,7 +178,7 @@ describe("Seed Gauge", () => {
 
   describe("Owner Configuration", () => {
     test("event: WhitelistToken", () => {
-      handleWhitelistToken(
+      handleWhitelistToken_v4(
         createWhitelistTokenV4Event(
           BEAN_ERC20.toHexString(),
           "0x12345678",
@@ -190,8 +193,7 @@ describe("Seed Gauge", () => {
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "selector", "0x12345678");
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkEarnedPerSeason", BigInt.fromU64(35000000000).toString());
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "stalkIssuedPerBdv", BigInt.fromU64(10000000000).toString());
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "0xabcdabcd");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "true");
       assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gaugePoints", BigInt.fromU32(12345).toString());
       assert.fieldEquals(
         "WhitelistTokenSetting",
@@ -205,8 +207,7 @@ describe("Seed Gauge", () => {
       handleUpdateGaugeSettings(
         createUpdateGaugeSettingsEvent(BEAN_ERC20.toHexString(), "0x12341234", "0xabcabcde", BigInt.fromU32(66).times(ratioDecimals))
       );
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "0x12341234");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "0xabcabcde");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "true");
       assert.fieldEquals(
         "WhitelistTokenSetting",
         BEAN_ERC20.toHexString(),
@@ -218,8 +219,7 @@ describe("Seed Gauge", () => {
       handleUpdateGaugeSettings(
         createUpdateGaugeSettingsEvent(BEAN_ERC20.toHexString(), "0x00000000", "0x00000000", BigInt.fromU32(66).times(ratioDecimals))
       );
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "gpSelector", "null");
-      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "lwSelector", "null");
+      assert.fieldEquals("WhitelistTokenSetting", BEAN_ERC20.toHexString(), "isGaugeEnabled", "false");
     });
 
     test("WhitelistToken Snapshots Get Created", () => {
@@ -237,8 +237,8 @@ describe("Seed Gauge", () => {
       event.block = mockBlock(BigInt.fromU32(19628585), timestamp);
       handleUpdateGaugeSettings(event);
 
-      assert.fieldEquals("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1", "gpSelector", "0x12341234");
-      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString(), "gpSelector", "0x12341234");
+      assert.fieldEquals("WhitelistTokenHourlySnapshot", BEAN_ERC20.toHexString() + "-1", "isGaugeEnabled", "true");
+      assert.fieldEquals("WhitelistTokenDailySnapshot", BEAN_ERC20.toHexString() + "-" + day.toString(), "isGaugeEnabled", "true");
     });
   });
 });

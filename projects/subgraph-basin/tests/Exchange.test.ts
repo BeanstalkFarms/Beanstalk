@@ -1,6 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadWell } from "../src/utils/Well";
+import { loadWell } from "../src/entities/Well";
 import {
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
@@ -17,10 +17,12 @@ import { mockShift, mockSwap } from "./helpers/Swap";
 import { mockAddLiquidity } from "./helpers/Liquidity";
 import { dayFromTimestamp, hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BEAN_ERC20 } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20 } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Well Entity: Exchange Tests", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

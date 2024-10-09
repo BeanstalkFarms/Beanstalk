@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { BI_10, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import {
   loadSilo,
   loadSiloAsset,
@@ -14,9 +14,10 @@ import { calculateAPYPreGauge } from "./legacy/LegacyYield";
 import { getGerminatingBdvs } from "../entities/Germinating";
 import { getCurrentSeason, getRewardMinted, loadBeanstalk } from "../entities/Beanstalk";
 import { loadFertilizer, loadFertilizerYield } from "../entities/Fertilizer";
-import { getProtocolFertilizer } from "./Constants";
-import { REPLANT_SEASON } from "../../../subgraph-core/utils/Constants";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { Reseed } from "../../generated/Beanstalk-ABIs/Reseed";
+import { getProtocolFertilizer, minEMASeason, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 const ROLLING_24_WINDOW = 24;
 const ROLLING_7_DAY_WINDOW = 168;
@@ -28,7 +29,7 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
   updateWindowEMA(protocol, timestamp, ROLLING_7_DAY_WINDOW);
   updateWindowEMA(protocol, timestamp, ROLLING_30_DAY_WINDOW);
 
-  if (getCurrentSeason(protocol) > 20_000) {
+  if (getCurrentSeason() > 20_000) {
     // Earlier values were set by cache
     updateSiloVAPYs(protocol, timestamp, ROLLING_24_WINDOW);
     updateSiloVAPYs(protocol, timestamp, ROLLING_7_DAY_WINDOW);
@@ -41,7 +42,9 @@ export function updateBeanEMA(protocol: Address, timestamp: BigInt): void {
 }
 
 function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): void {
-  const t = getCurrentSeason(protocol);
+  const minStartSeason = minEMASeason(v());
+
+  const t = getCurrentSeason();
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
 
@@ -54,7 +57,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   // When less then window data points are available,
   // smooth over whatever is available. Otherwise use the full window.
-  siloYield.u = t - 6074 < window ? t - 6074 : window;
+  siloYield.u = t - (minStartSeason - 1) < window ? t - (minStartSeason - 1) : window;
   siloYield.whitelistedTokens = silo.whitelistedTokens;
 
   // Calculate the current beta value
@@ -66,7 +69,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 
   if (siloYield.u < window) {
     // Recalculate EMA from initial season since beta has changed
-    for (let i = REPLANT_SEASON.toI32(); i <= t; i++) {
+    for (let i = minStartSeason; i <= t; i++) {
       let rewardMint = getRewardMinted(i);
       currentEMA = toDecimal(rewardMint).minus(priorEMA).times(siloYield.beta).plus(priorEMA);
       priorEMA = currentEMA;
@@ -86,7 +89,7 @@ function updateWindowEMA(protocol: Address, timestamp: BigInt, window: i32): voi
 }
 
 export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i32): void {
-  const beanstalk = loadBeanstalk(protocol);
+  const beanstalk = loadBeanstalk();
   const t = beanstalk.lastSeason;
   let silo = loadSilo(protocol);
   let siloYield = loadSiloYield(t, window);
@@ -98,11 +101,11 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
   let gaugeSettings: Array<WhitelistTokenSetting | null> = [];
   let isGaugeLive = false;
   for (let i = 0; i < siloYield.whitelistedTokens.length; ++i) {
-    let token = Address.fromString(siloYield.whitelistedTokens[i]);
+    let token = toAddress(siloYield.whitelistedTokens[i]);
     let tokenSetting = loadWhitelistTokenSetting(token);
 
     whitelistSettings.push(tokenSetting);
-    if (tokenSetting.gpSelector !== null) {
+    if (tokenSetting.isGaugeEnabled) {
       gaugeSettings.push(tokenSetting);
       isGaugeLive = true;
     } else {
@@ -114,14 +117,14 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
   // Chooses which apy calculation to use
   if (!isGaugeLive) {
-    const beanGrownStalk = loadWhitelistTokenSetting(Address.fromString(beanstalk.token)).stalkEarnedPerSeason;
+    const beanGrownStalk = loadWhitelistTokenSetting(toAddress(beanstalk.token)).stalkEarnedPerSeason;
     for (let i = 0; i < whitelistSettings.length; ++i) {
       const tokenAPY = calculateAPYPreGauge(
         currentEMA,
         toDecimal(whitelistSettings[i].stalkEarnedPerSeason),
         toDecimal(beanGrownStalk),
         silo.stalk,
-        silo.seeds
+        silo.grownStalkPerSeason
       );
       apys.push(tokenAPY);
     }
@@ -135,8 +138,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     let depositedBeanBdv = ZERO_BD;
 
     let initialR = toDecimal(silo.beanToMaxLpGpPerBdvRatio!, 20);
-    // Stalk has 10 decimals
-    let siloStalk = toDecimal(silo.stalk, 10);
+    let siloStalk = toDecimal(silo.stalk, stalkDecimals(v()));
 
     let germinatingBeanBdv: BigDecimal[] = [];
     let germinatingGaugeLpBdv: BigDecimal[][] = [];
@@ -148,7 +150,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     const siloTokens = siloYield.whitelistedTokens.concat(silo.dewhitelistedTokens);
     const depositedAssets: SiloAsset[] = [];
     for (let i = 0; i < siloTokens.length; ++i) {
-      depositedAssets.push(loadSiloAsset(protocol, Address.fromString(siloTokens[i])));
+      depositedAssets.push(loadSiloAsset(protocol, toAddress(siloTokens[i])));
     }
 
     // .load() is not supported on graph-node v0.30.0. Instead the above derivation of depositedAssets is used
@@ -156,7 +158,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
     for (let i = 0; i < whitelistSettings.length; ++i) {
       // Get the total deposited bdv of this asset. Remove whitelsited assets from the list as they are encountered
-      const depositedIndex = SiloAsset_findIndex_token(depositedAssets, whitelistSettings[i].id.toHexString());
+      const depositedIndex = SiloAsset_findIndex_token(depositedAssets, toAddress(whitelistSettings[i].id));
       const depositedAsset = depositedAssets.splice(depositedIndex, 1)[0];
       const depositedBdv = toDecimal(depositedAsset.depositedBDV);
 
@@ -170,7 +172,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
         germinatingGaugeLpBdv.push(germinating);
         staticSeeds.push(null);
       } else {
-        if (whitelistSettings[i].id == Address.fromString(beanstalk.token)) {
+        if (whitelistSettings[i].id == toAddress(beanstalk.token)) {
           tokens.push(-1);
           depositedBeanBdv = depositedBdv;
           germinatingBeanBdv = germinating;
@@ -201,7 +203,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
       depositedBeanBdv,
       siloStalk,
       CATCH_UP_RATE,
-      BigInt.fromU32(getCurrentSeason(protocol)),
+      BigInt.fromU32(getCurrentSeason()),
       germinatingBeanBdv,
       germinatingGaugeLpBdv,
       germinatingNonGaugeBdv,
@@ -414,17 +416,17 @@ function updateGaugePoints(gaugePoints: f64, currentPercent: f64, optimalPercent
 }
 
 function updateFertAPY(protocol: Address, timestamp: BigInt, window: i32): void {
-  const fertAddress = getProtocolFertilizer(protocol);
+  const fertAddress = getProtocolFertilizer(v());
   if (fertAddress === null) {
     return;
   }
 
-  const beanstalk = loadBeanstalk(protocol);
+  const beanstalk = loadBeanstalk();
   const t = beanstalk.lastSeason;
   let siloYield = loadSiloYield(t, window);
   let fertilizerYield = loadFertilizerYield(t, window);
   let fertilizer = loadFertilizer(fertAddress);
-  let contract = SeedGauge.bind(protocol);
+  let contract = Reseed.bind(protocol);
   if (t < 6534) {
     let currentFertHumidity = contract.try_getCurrentHumidity();
     fertilizerYield.humidity = BigDecimal.fromString(currentFertHumidity.reverted ? "500" : currentFertHumidity.value.toString()).div(

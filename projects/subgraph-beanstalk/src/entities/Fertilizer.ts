@@ -1,36 +1,30 @@
-import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Farmer, Fertilizer, FertilizerBalance, FertilizerToken, FertilizerYield } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
-import { SeedGauge } from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { getFertilizerProtocol } from "../utils/Constants";
+import { getFertilizerInfo } from "../utils/Barn";
 
 export function loadFertilizer(fertilizerAddress: Address): Fertilizer {
-  let fertilizer = Fertilizer.load(fertilizerAddress.toHexString());
+  let fertilizer = Fertilizer.load(fertilizerAddress);
   if (fertilizer == null) {
-    fertilizer = new Fertilizer(fertilizerAddress.toHexString());
-    fertilizer.beanstalk = getFertilizerProtocol(fertilizerAddress).toHexString();
+    fertilizer = new Fertilizer(fertilizerAddress);
+    fertilizer.beanstalk = "beanstalk";
     fertilizer.supply = ZERO_BI;
     fertilizer.save();
   }
   return fertilizer;
 }
 
-export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNumber: BigInt): FertilizerToken {
+export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt): FertilizerToken {
   let fertilizerToken = FertilizerToken.load(id.toString());
   if (fertilizerToken == null) {
-    const beanstalkContract = SeedGauge.bind(Address.fromString(fertilizer.beanstalk));
     fertilizerToken = new FertilizerToken(id.toString());
     fertilizerToken.fertilizer = fertilizer.id;
-    if (blockNumber.gt(BigInt.fromString("15278963"))) {
-      fertilizerToken.humidity = BigDecimal.fromString(beanstalkContract.getCurrentHumidity().toString()).div(BigDecimal.fromString("10"));
-      fertilizerToken.season = beanstalkContract.season().toI32();
-      fertilizerToken.startBpf = beanstalkContract.beansPerFertilizer();
-    } else {
-      fertilizerToken.humidity = BigDecimal.fromString("500");
-      fertilizerToken.season = 6074;
-      fertilizerToken.startBpf = ZERO_BI;
-    }
+
+    const fertInfo = getFertilizerInfo(id);
+    fertilizerToken.humidity = fertInfo.humidity;
+    fertilizerToken.season = fertInfo.season;
+    fertilizerToken.startBpf = fertInfo.startBpf;
+
     fertilizerToken.endBpf = id;
     fertilizerToken.supply = ZERO_BI;
     fertilizerToken.save();
@@ -39,7 +33,7 @@ export function loadFertilizerToken(fertilizer: Fertilizer, id: BigInt, blockNum
 }
 
 export function loadFertilizerBalance(fertilizerToken: FertilizerToken, farmer: Farmer): FertilizerBalance {
-  const id = `${fertilizerToken.id}-${farmer.id}`;
+  const id = `${fertilizerToken.id}-${farmer.id.toHexString()}`;
   let fertilizerBalance = FertilizerBalance.load(id);
   if (fertilizerBalance == null) {
     fertilizerBalance = new FertilizerBalance(id);

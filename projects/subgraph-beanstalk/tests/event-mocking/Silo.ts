@@ -7,16 +7,9 @@ import {
   RemoveWithdrawal,
   RemoveWithdrawals
 } from "../../generated/Beanstalk-ABIs/Replanted";
-import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import {
-  AddDeposit,
-  RemoveDeposits,
-  RemoveDeposit,
-  SeedsBalanceChanged,
-  StalkBalanceChanged,
-  Plant
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { AddDeposit, RemoveDeposits, RemoveDeposit, StalkBalanceChanged, Plant } from "../../generated/Beanstalk-ABIs/Reseed";
+import { SeedsBalanceChanged } from "../../generated/Beanstalk-ABIs/SeedGauge";
 export function createAddDepositV2Event(
   account: string,
   token: string,
@@ -34,10 +27,7 @@ export function createAddDepositV2Event(
     "amount",
     ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(amount).times(BigInt.fromI32(10 ** tokenDecimals)))
   );
-  let bdvParam = new ethereum.EventParam(
-    "bdv",
-    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** BEAN_DECIMALS)))
-  );
+  let bdvParam = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** 6))));
 
   addDepositEvent.parameters.push(accountParam);
   addDepositEvent.parameters.push(tokenParam);
@@ -65,10 +55,7 @@ export function createAddDepositV3Event(
     "amount",
     ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(amount).times(BigInt.fromI32(10 ** tokenDecimals)))
   );
-  let bdvParam = new ethereum.EventParam(
-    "bdv",
-    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** BEAN_DECIMALS)))
-  );
+  let bdvParam = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** 6))));
 
   addDepositEvent.parameters.push(accountParam);
   addDepositEvent.parameters.push(tokenParam);

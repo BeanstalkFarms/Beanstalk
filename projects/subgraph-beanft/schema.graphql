@@ -6,6 +6,8 @@ type Version @entity {
   subgraphName: String!
   "Verison number of the subgraph"
   versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
   "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
   chain: String!
 }

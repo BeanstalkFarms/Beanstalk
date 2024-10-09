@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { afterEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
+import { afterEach, beforeEach, assert, clearStore, describe, test } from "matchstick-as/assembly/index";
 import {
   BEAN_3CRV,
   BEAN_ERC20,
@@ -9,7 +9,7 @@ import {
   LUSD_3POOL,
   UNRIPE_BEAN,
   UNRIPE_LP
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import {
   createAddDepositV2Event,
   createAddDepositV3Event,
@@ -30,9 +30,13 @@ import {
   handleWhitelistToken_v3
 } from "../src/handlers/legacy/LegacySiloHandler";
 import { handleAddDeposit, handleDewhitelistToken, handleRemoveDeposit } from "../src/handlers/SiloHandler";
-import { stemFromSeason } from "../src/utils/contracts/SiloCalculations";
+import { initL1Version } from "./entity-mocking/MockVersion";
+import { stemFromSeason } from "../src/utils/legacy/LegacySilo";
 
 describe("Silo Events", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
     clearStore();
   });

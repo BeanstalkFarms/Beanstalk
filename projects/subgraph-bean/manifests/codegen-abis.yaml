@@ -31,12 +31,10 @@ dataSources:
           file: ../../subgraph-core/abis/Well.json
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-        - name: Beanstalk
+        - name: Replanted
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
-        - name: BIP37
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP37.json
-        - name: SeedGauge
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP45.json
+        - name: Reseed
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
         - name: CurvePrice
@@ -47,4 +45,4 @@ dataSources:
         - handler: handleInitVersion
           filter:
             kind: once
-      file: ../src/utils/Init.ts
+      file: ../src/utils/constants/Version.ts

@@ -1,12 +1,11 @@
 import { Address, BigInt, BigDecimal, ethereum } from "@graphprotocol/graph-ts";
-import { CurvePrice } from "../../generated/Beanstalk-ABIs/CurvePrice";
-import { BeanstalkPrice_try_price } from "./contracts/BeanstalkPrice";
-import { CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
+import { BeanstalkPrice_priceOnly } from "./contracts/BeanstalkPrice";
 import { BI_10, ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { setFieldHourlyCaseId, setHourlySoilSoldOut, takeFieldSnapshots } from "../entities/snapshots/Field";
 import { getCurrentSeason, getHarvestableIndex, loadBeanstalk, loadFarmer, loadSeason } from "../entities/Beanstalk";
 import { loadField, loadPlot } from "../entities/Field";
 import { expirePodListingIfExists } from "./Marketplace";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
 class SowParams {
   event: ethereum.Event;
@@ -44,19 +43,7 @@ class TemperatureChangedParams {
 export function sow(params: SowParams): void {
   const protocol = params.event.address;
   let sownBeans = params.beans;
-  // Update Farmer Totals
-  updateFieldTotals(
-    protocol,
-    params.account,
-    ZERO_BI,
-    sownBeans,
-    params.pods,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    params.event.block.timestamp,
-    params.event.block.number
-  );
+  updateFieldTotals(protocol, params.account, ZERO_BI, sownBeans, params.pods, ZERO_BI, ZERO_BI, ZERO_BI, params.event.block);
 
   let field = loadField(protocol);
   loadFarmer(params.account);
@@ -67,11 +54,11 @@ export function sow(params: SowParams): void {
   field.plotIndexes = newIndexes;
   field.save();
 
-  plot.farmer = params.account.toHexString();
+  plot.farmer = params.account;
   plot.source = "SOW";
-  plot.sourceHash = params.event.transaction.hash.toHexString();
+  plot.sourceHash = params.event.transaction.hash;
   plot.season = field.season;
-  plot.creationHash = params.event.transaction.hash.toHexString();
+  plot.creationHash = params.event.transaction.hash;
   plot.createdAt = params.event.block.timestamp;
   plot.updatedAt = params.event.block.timestamp;
   plot.updatedAtBlock = params.event.block.number;
@@ -79,55 +66,32 @@ export function sow(params: SowParams): void {
   plot.beansPerPod = params.beans.times(BI_10.pow(6)).div(plot.pods);
   plot.save();
 
-  incrementSows(protocol, params.account, params.event.block.timestamp, params.event.block.number);
+  incrementSows(protocol, params.account, params.event.block);
 }
 
 export function harvest(params: HarvestParams): void {
   const protocol = params.event.address;
-  let beanstalk = loadBeanstalk(protocol);
-  let season = loadSeason(protocol, BigInt.fromI32(beanstalk.lastSeason));
+  let beanstalk = loadBeanstalk();
 
   let remainingIndex = ZERO_BI;
   for (let i = 0; i < params.plots.length; i++) {
     // Plot should exist
     let plot = loadPlot(protocol, params.plots[i]);
 
-    expirePodListingIfExists(protocol, plot.farmer, plot.index, params.event.block.timestamp);
+    expirePodListingIfExists(toAddress(plot.farmer), plot.index, params.event.block);
 
-    let harvestablePods = season.harvestableIndex.minus(plot.index);
+    let harvestablePods = getHarvestableIndex().minus(plot.index);
 
     if (harvestablePods >= plot.pods) {
       // Plot fully harvests
-      updateFieldTotals(
-        protocol,
-        params.account,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        plot.pods,
-        params.event.block.timestamp,
-        params.event.block.number
-      );
+      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, plot.pods, params.event.block);
 
       plot.harvestedPods = plot.pods;
       plot.fullyHarvested = true;
       plot.save();
     } else {
       // Plot partially harvests
-      updateFieldTotals(
-        protocol,
-        params.account,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        ZERO_BI,
-        harvestablePods,
-        params.event.block.timestamp,
-        params.event.block.number
-      );
+      updateFieldTotals(protocol, params.account, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, harvestablePods, params.event.block);
 
       remainingIndex = plot.index.plus(harvestablePods);
       let remainingPods = plot.pods.minus(harvestablePods);
@@ -137,7 +101,7 @@ export function harvest(params: HarvestParams): void {
       remainingPlot.source = plot.source;
       remainingPlot.sourceHash = plot.sourceHash;
       remainingPlot.season = beanstalk.lastSeason;
-      remainingPlot.creationHash = params.event.transaction.hash.toHexString();
+      remainingPlot.creationHash = params.event.transaction.hash;
       remainingPlot.createdAt = params.event.block.timestamp;
       remainingPlot.updatedAt = params.event.block.timestamp;
       remainingPlot.updatedAtBlock = params.event.block.number;
@@ -170,39 +134,11 @@ export function harvest(params: HarvestParams): void {
 
 export function plotTransfer(params: PlotTransferParams): void {
   const protocol = params.event.address;
-  const currentHarvestable = getHarvestableIndex(protocol);
+  const currentHarvestable = getHarvestableIndex();
 
   // Ensure both farmer entites exist
   loadFarmer(params.from);
   loadFarmer(params.to);
-
-  // Update farmer field data
-  updateFieldTotals(
-    protocol,
-    params.from,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI.minus(params.amount),
-    ZERO_BI,
-    ZERO_BI,
-    params.event.block.timestamp,
-    params.event.block.number,
-    false
-  );
-  updateFieldTotals(
-    protocol,
-    params.to,
-    ZERO_BI,
-    ZERO_BI,
-    ZERO_BI,
-    params.amount,
-    ZERO_BI,
-    ZERO_BI,
-    params.event.block.timestamp,
-    params.event.block.number,
-    false
-  );
 
   let field = loadField(protocol);
   let sortedPlots = field.plotIndexes.sort();
@@ -249,13 +185,13 @@ export function plotTransfer(params: PlotTransferParams): void {
   // Actually transfer the plots
   if (sourcePlot.pods == params.amount) {
     // Sending full plot
-    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       sourcePlot.source = "TRANSFER";
-      sourcePlot.sourceHash = params.event.transaction.hash.toHexString();
+      sourcePlot.sourceHash = params.event.transaction.hash;
       sourcePlot.beansPerPod = sourcePlot.beansPerPod;
     }
-    sourcePlot.farmer = params.to.toHexString();
+    sourcePlot.farmer = params.to;
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
     sourcePlot.save();
@@ -266,7 +202,7 @@ export function plotTransfer(params: PlotTransferParams): void {
     let remainderPlot = loadPlot(protocol, remainderIndex);
     sortedPlots.push(remainderIndex);
 
-    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = sourcePlot.source == "MARKET" && sourcePlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       // When sending the start of the plot via market, these cannot be derived from sourcePlot.
       remainderPlot.source = sourcePlot.source;
@@ -274,19 +210,19 @@ export function plotTransfer(params: PlotTransferParams): void {
       remainderPlot.beansPerPod = sourcePlot.beansPerPod;
 
       sourcePlot.source = "TRANSFER";
-      sourcePlot.sourceHash = params.event.transaction.hash.toHexString();
+      sourcePlot.sourceHash = params.event.transaction.hash;
       sourcePlot.beansPerPod = sourcePlot.beansPerPod;
     }
-    sourcePlot.farmer = params.to.toHexString();
+    sourcePlot.farmer = params.to;
     sourcePlot.updatedAt = params.event.block.timestamp;
     sourcePlot.updatedAtBlock = params.event.block.number;
     sourcePlot.pods = params.amount;
     sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, currentHarvestable);
     sourcePlot.save();
 
-    remainderPlot.farmer = params.from.toHexString();
+    remainderPlot.farmer = params.from;
     remainderPlot.season = field.season;
-    remainderPlot.creationHash = params.event.transaction.hash.toHexString();
+    remainderPlot.creationHash = params.event.transaction.hash;
     remainderPlot.createdAt = params.event.block.timestamp;
     remainderPlot.updatedAt = params.event.block.timestamp;
     remainderPlot.updatedAtBlock = params.event.block.number;
@@ -306,15 +242,15 @@ export function plotTransfer(params: PlotTransferParams): void {
     sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, currentHarvestable);
     sourcePlot.save();
 
-    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       toPlot.source = "TRANSFER";
-      toPlot.sourceHash = params.event.transaction.hash.toHexString();
+      toPlot.sourceHash = params.event.transaction.hash;
       toPlot.beansPerPod = sourcePlot.beansPerPod;
     }
-    toPlot.farmer = params.to.toHexString();
+    toPlot.farmer = params.to;
     toPlot.season = field.season;
-    toPlot.creationHash = params.event.transaction.hash.toHexString();
+    toPlot.creationHash = params.event.transaction.hash;
     toPlot.createdAt = params.event.block.timestamp;
     toPlot.updatedAt = params.event.block.timestamp;
     toPlot.updatedAtBlock = params.event.block.number;
@@ -337,15 +273,15 @@ export function plotTransfer(params: PlotTransferParams): void {
     sourcePlot.harvestablePods = calcHarvestable(sourcePlot.index, sourcePlot.pods, currentHarvestable);
     sourcePlot.save();
 
-    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash.toHexString();
+    const isMarket = toPlot.source == "MARKET" && toPlot.sourceHash == params.event.transaction.hash;
     if (!isMarket) {
       toPlot.source = "TRANSFER";
-      toPlot.sourceHash = params.event.transaction.hash.toHexString();
+      toPlot.sourceHash = params.event.transaction.hash;
       toPlot.beansPerPod = sourcePlot.beansPerPod;
     }
-    toPlot.farmer = params.to.toHexString();
+    toPlot.farmer = params.to;
     toPlot.season = field.season;
-    toPlot.creationHash = params.event.transaction.hash.toHexString();
+    toPlot.creationHash = params.event.transaction.hash;
     toPlot.createdAt = params.event.block.timestamp;
     toPlot.updatedAt = params.event.block.timestamp;
     toPlot.updatedAtBlock = params.event.block.number;
@@ -354,11 +290,11 @@ export function plotTransfer(params: PlotTransferParams): void {
     toPlot.harvestablePods = calcHarvestable(toPlot.index, toPlot.pods, currentHarvestable);
     toPlot.save();
 
-    remainderPlot.farmer = params.from.toHexString();
+    remainderPlot.farmer = params.from;
     remainderPlot.source = sourcePlot.source;
     remainderPlot.sourceHash = sourcePlot.sourceHash;
     remainderPlot.season = field.season;
-    remainderPlot.creationHash = params.event.transaction.hash.toHexString();
+    remainderPlot.creationHash = params.event.transaction.hash;
     remainderPlot.createdAt = params.event.block.timestamp;
     remainderPlot.updatedAt = params.event.block.timestamp;
     remainderPlot.updatedAtBlock = params.event.block.number;
@@ -372,36 +308,32 @@ export function plotTransfer(params: PlotTransferParams): void {
   field.plotIndexes = sortedPlots;
   field.save();
 
-  // Update any harvestable pod amounts
+  // Decrements the sender's unharvestable/harvestable and adds the same values to the receiver's field.
   // No need to shift beanstalk field, only the farmer fields.
-  if (transferredHarvestable != ZERO_BI) {
-    updateFieldTotals(
-      protocol,
-      params.from,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI.minus(transferredHarvestable),
-      ZERO_BI,
-      params.event.block.timestamp,
-      params.event.block.number,
-      false
-    );
-    updateFieldTotals(
-      protocol,
-      params.to,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      transferredHarvestable,
-      ZERO_BI,
-      params.event.block.timestamp,
-      params.event.block.number,
-      false
-    );
-  }
+  updateFieldTotals(
+    protocol,
+    params.from,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI.minus(params.amount),
+    ZERO_BI.minus(transferredHarvestable),
+    ZERO_BI,
+    params.event.block,
+    false
+  );
+  updateFieldTotals(
+    protocol,
+    params.to,
+    ZERO_BI,
+    ZERO_BI,
+    ZERO_BI,
+    params.amount,
+    transferredHarvestable,
+    ZERO_BI,
+    params.event.block,
+    false
+  );
 }
 
 // This function is for handling both the WeatherChange and TemperatureChange events.
@@ -411,30 +343,24 @@ export function temperatureChanged(params: TemperatureChangedParams): void {
   let field = loadField(protocol);
   field.temperature += params.absChange;
 
-  let seasonEntity = loadSeason(protocol, params.season);
+  let seasonEntity = loadSeason(params.season);
   let currentPrice = ZERO_BD;
   if (seasonEntity.price != ZERO_BD) {
     currentPrice = seasonEntity.price;
   } else {
-    // Attempt to pull from Beanstalk Price contract first
-    let beanstalkQuery = BeanstalkPrice_try_price(protocol, params.event.block.number);
-    if (beanstalkQuery.reverted) {
-      let curvePrice = CurvePrice.bind(CURVE_PRICE);
-      currentPrice = toDecimal(curvePrice.getCurve().price);
-    } else {
-      currentPrice = toDecimal(beanstalkQuery.value.price);
-    }
+    currentPrice = toDecimal(BeanstalkPrice_priceOnly(params.event.block.number));
   }
 
   field.realRateOfReturn = ONE_BD.plus(BigDecimal.fromString((field.temperature / 100).toString())).div(currentPrice);
 
-  takeFieldSnapshots(field, protocol, params.event.block.timestamp, params.event.block.number);
+  takeFieldSnapshots(field, params.event.block);
   field.save();
 
   // Set caseId on the hourly snapshot
   setFieldHourlyCaseId(params.caseId, field);
 }
 
+// Harvestable pods are removed from field.unharvestablePods and harvested pods are removed from field.harvestablePods
 export function updateFieldTotals(
   protocol: Address,
   account: Address,
@@ -444,44 +370,34 @@ export function updateFieldTotals(
   transferredPods: BigInt,
   harvestablePods: BigInt,
   harvestedPods: BigInt,
-  timestamp: BigInt,
-  blockNumber: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    updateFieldTotals(
-      protocol,
-      protocol,
-      soil,
-      sownBeans,
-      sownPods,
-      transferredPods,
-      harvestablePods,
-      harvestedPods,
-      timestamp,
-      blockNumber
-    );
+    updateFieldTotals(protocol, protocol, soil, sownBeans, sownPods, transferredPods, harvestablePods, harvestedPods, block);
   }
   let field = loadField(account);
 
-  field.season = getCurrentSeason(protocol);
-  field.soil = field.soil.plus(soil).minus(sownBeans);
+  field.season = getCurrentSeason();
   field.sownBeans = field.sownBeans.plus(sownBeans);
   field.unharvestablePods = field.unharvestablePods.plus(sownPods).minus(harvestablePods).plus(transferredPods);
-  field.harvestablePods = field.harvestablePods.plus(harvestablePods);
+  field.harvestablePods = field.harvestablePods.plus(harvestablePods).minus(harvestedPods);
   field.harvestedPods = field.harvestedPods.plus(harvestedPods);
-  field.podIndex = field.podIndex.plus(sownPods);
+  if (account == protocol) {
+    field.soil = field.soil.plus(soil).minus(sownBeans);
+    field.podIndex = field.podIndex.plus(sownPods);
+  }
 
-  takeFieldSnapshots(field, protocol, timestamp, blockNumber);
+  takeFieldSnapshots(field, block);
   field.save();
 
   // Set extra info on the hourly snapshot
-  if (field.soil == ZERO_BI) {
-    setHourlySoilSoldOut(blockNumber, field);
+  if (account == protocol && field.soil == ZERO_BI) {
+    setHourlySoilSoldOut(block.number, field);
   }
 }
 
-export function updateHarvestablePlots(protocol: Address, harvestableIndex: BigInt, timestamp: BigInt, blockNumber: BigInt): void {
+export function updateHarvestablePlots(protocol: Address, harvestableIndex: BigInt, block: ethereum.Block): void {
   let field = loadField(protocol);
   let sortedIndexes = field.plotIndexes.sort();
 
@@ -503,42 +419,31 @@ export function updateHarvestablePlots(protocol: Address, harvestableIndex: BigI
 
     let deltaHarvestablePods = oldHarvestablePods == ZERO_BI ? plot.harvestablePods : plot.harvestablePods.minus(oldHarvestablePods);
 
-    updateFieldTotals(
-      protocol,
-      Address.fromString(plot.farmer),
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      ZERO_BI,
-      deltaHarvestablePods,
-      ZERO_BI,
-      timestamp,
-      blockNumber
-    );
+    updateFieldTotals(protocol, toAddress(plot.farmer), ZERO_BI, ZERO_BI, ZERO_BI, ZERO_BI, deltaHarvestablePods, ZERO_BI, block);
   }
 }
 
 // Increment number of unique sowers (protocol only)
-function incrementSowers(protocol: Address, timestamp: BigInt, blockNumber: BigInt): void {
+function incrementSowers(protocol: Address, block: ethereum.Block): void {
   let field = loadField(protocol);
   field.numberOfSowers += 1;
-  takeFieldSnapshots(field, protocol, timestamp, blockNumber);
+  takeFieldSnapshots(field, block);
   field.save();
 }
 
 // Increment total number of sows for either an account or the protocol
-function incrementSows(protocol: Address, account: Address, timestamp: BigInt, blockNumber: BigInt, recurs: boolean = true): void {
+function incrementSows(protocol: Address, account: Address, block: ethereum.Block, recurs: boolean = true): void {
   if (recurs && account != protocol) {
-    incrementSows(protocol, protocol, timestamp, blockNumber);
+    incrementSows(protocol, protocol, block);
   }
 
   let field = loadField(account);
   field.numberOfSows += 1;
-  takeFieldSnapshots(field, protocol, timestamp, blockNumber);
+  takeFieldSnapshots(field, block);
   field.save();
 
   // Add to protocol numberOfSowers if this is the first time this account has sown
-  if (account != protocol && field.numberOfSows == 0) {
-    incrementSowers(protocol, timestamp, blockNumber);
+  if (account != protocol && field.numberOfSows == 1) {
+    incrementSowers(protocol, block);
   }
 }
