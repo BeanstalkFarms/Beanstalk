@@ -16,7 +16,7 @@ import { hoverMap } from '../../constants/silo';
 export type RewardsBarProps = {
   beans: FarmerSiloRewards['beans'];
   stalk: FarmerSiloRewards['stalk'];
-  seeds: FarmerSiloRewards['grownStalkPerSeaason'];
+  seeds: FarmerSiloRewards['seeds'];
   /// TEMP
   revitalizedStalk?: BigNumber;
   revitalizedSeeds?: BigNumber;

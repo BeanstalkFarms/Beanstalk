@@ -42,7 +42,7 @@ export const addBufferSeasons = (
   points: BaseDataPoint[],
   num: number = 24,
   whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist'],
-  itemizeByToken: boolean = false,
+  itemizeByToken: boolean = false
 ) => {
   if (points.length === 0) return [];
   const d = DateTime.fromJSDate(points[0].date);
@@ -129,8 +129,14 @@ export const interpolateFarmerStalk = (
       // Reached a data point for which we have a snapshot.
       // Use the corresponding total stalk value.
       currStalk = toTokenUnitsBN(snapshots[j].stalk, STALK.decimals);
-      currSeeds = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
-      lastSeedsSnapshot = toTokenUnitsBN(snapshots[j].seeds, SEEDS.decimals);
+      currSeeds = toTokenUnitsBN(
+        snapshots[j].grownStalkPerSeason,
+        SEEDS.decimals
+      );
+      lastSeedsSnapshot = toTokenUnitsBN(
+        snapshots[j].grownStalkPerSeason,
+        SEEDS.decimals
+      );
       currGrownStalk = toTokenUnitsBN(BigNumber(0), STALK.decimals);
       currTimestamp = DateTime.fromJSDate(
         secondsToDate(snapshots[j].createdAt)
@@ -278,5 +284,10 @@ export const interpolateFarmerDepositedValue = (
     currBDV = thisBDV;
   }
 
-  return addBufferSeasons(points, bufferSeasons, whitelist, Boolean(currBDVByToken));
+  return addBufferSeasons(
+    points,
+    bufferSeasons,
+    whitelist,
+    Boolean(currBDVByToken)
+  );
 };
