@@ -91,11 +91,6 @@ contract ReseedSilo {
                     .deposits[accountDeposits[i].dd[j].depositId]
                     .amount;
 
-                // if the current amount is equal to the amount in the deposit, skip.
-                // this deposit has already been processed.
-                if (currentAmount == accountDeposits[i].dd[j].amount) {
-                    continue;
-                }
                 // add deposit to account.
                 s
                     .accts[accountDeposits[i].account]
@@ -128,15 +123,17 @@ contract ReseedSilo {
                     accountDeposits[i].dd[j].bdv
                 );
 
-                // emit the difference between the current amount and the amount in the deposit,
-                // in order to remain compliant with ERC1155.
-                emit TransferSingle(
-                    accountDeposits[i].account, // operator
-                    address(0), // from
-                    accountDeposits[i].account, // to
-                    accountDeposits[i].dd[j].depositId, // depositID
-                    accountDeposits[i].dd[j].amount - currentAmount // delta
-                );
+                // if the current amount is not equal to the amount in the deposit,
+                // emit a transfer event equal to the difference in order to remain compliant with ERC1155.
+                if (currentAmount != accountDeposits[i].dd[j].amount) {
+                    emit TransferSingle(
+                        accountDeposits[i].account, // operator
+                        address(0), // from
+                        accountDeposits[i].account, // to
+                        accountDeposits[i].dd[j].depositId, // depositID
+                        accountDeposits[i].dd[j].amount - currentAmount // delta
+                    );
+                }
             }
         }
     }
