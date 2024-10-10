@@ -304,7 +304,7 @@ export class LibCases {
 
     const soilNotSoldOutSeconds = new BigNumber(SECONDS_PER_SEASON + 1);
     const thisSowTime = ts.soilSoldOut ? ts.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) : soilNotSoldOutSeconds;    
-    const lastSowTime = ts.soilSoldOut ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) : soilNotSoldOutSeconds; 
+    const lastSowTime = ls.soilSoldOut ? ls.blocksToSoldOutSoil.times(SECONDS_PER_BLOCK) : soilNotSoldOutSeconds;
     
     let deltaPodDemand: BigNumber = ZERO_BN;    
 
