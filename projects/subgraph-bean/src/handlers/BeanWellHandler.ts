@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../../generated/Bean-ABIs/Well";
-import { deltaBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { subBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadOrCreatePool } from "../entities/Pool";
 import { BeanstalkPrice_try_price, getPoolPrice } from "../utils/price/BeanstalkPrice";
 import { getPoolLiquidityUSD, setPoolReserves, updatePoolPrice, updatePoolValues } from "../utils/Pool";
@@ -31,7 +31,7 @@ export function handleRemoveLiquidityOneToken(event: RemoveLiquidityOneToken): v
 export function handleSync(event: Sync): void {
   let pool = loadOrCreatePool(event.address, event.block.number);
 
-  let deltaReserves = deltaBigIntArray(event.params.reserves, pool.reserves);
+  let deltaReserves = subBigIntArray(event.params.reserves, pool.reserves);
 
   handleLiquidityChange(event.address, deltaReserves[0], deltaReserves[1], false, event.block);
 }
@@ -43,7 +43,7 @@ export function handleSwap(event: Swap): void {
 export function handleShift(event: Shift): void {
   let pool = loadOrCreatePool(event.address, event.block.number);
 
-  let deltaReserves = deltaBigIntArray(event.params.reserves, pool.reserves);
+  let deltaReserves = subBigIntArray(event.params.reserves, pool.reserves);
 
   handleSwapEvent(
     event.address,

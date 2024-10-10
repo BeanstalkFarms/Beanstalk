@@ -23,6 +23,7 @@ import { loadOrCreateWellFunction, loadWell } from "../src/entities/Well";
 import { calcLiquidityVolume } from "../src/utils/Volume";
 import { toAddress } from "../../subgraph-core/utils/Bytes";
 import { mockWellLpTokenUnderlying } from "../../subgraph-core/tests/event-mocking/Tokens";
+import { deprecated_calcLiquidityVolume } from "../src/utils/legacy/CP2";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);
@@ -341,4 +342,17 @@ describe("Well Entity: Liquidity Event Tests", () => {
     assert.bigIntEquals(BigInt.fromString("1102633404"), tokenTradeVolume[0]);
     assert.bigIntEquals(BigInt.fromString("-581138830084189666"), tokenTradeVolume[1]);
   });
+  // test("Deprecated liquidity vol test", () => {
+  //   const result = deprecated_calcLiquidityVolume(
+  //     [BigInt.fromString('1500000000'), BigInt.fromString('9000000000000000000')],
+  //     [BigInt.fromString('-1500000000'), BigInt.fromString('-1000000000000000000')]
+  //   );
+  //   log.info("{} {}", [result[0].toString(), result[1].toString()]);
+  //
+  //   const result2 = deprecated_calcLiquidityVolume(
+  //     [BigInt.fromString('3000000000'), BigInt.fromString('1000000000000000000')],
+  //     [BigInt.fromString('1500000000'), BigInt.fromString('0')]
+  //   );
+  //   log.info("{} {}", [result2[0].toString(), result2[1].toString()]);
+  // });
 });

@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
-import { BI_10, deltaBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
+import { BI_10, subBigIntArray, emptyBigIntArray, toBigInt, toDecimal, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 // Retroactive replacement functionality for well function `calcRates` - did not exist in CP2 1.0
 export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
@@ -37,7 +37,7 @@ export function calcRates(reserves: BigInt[], tokenDecimals: u32[]): BigInt[] {
  */
 export function deprecated_calcLiquidityVolume(currentReserves: BigInt[], addedReserves: BigInt[]): BigInt[] {
   // Reserves prior to adding liquidity
-  const initialReserves = deltaBigIntArray(currentReserves, addedReserves);
+  const initialReserves = subBigIntArray(currentReserves, addedReserves);
   const initialCp = initialReserves[0].times(initialReserves[1]);
   const currentCp = currentReserves[0].times(currentReserves[1]);
 

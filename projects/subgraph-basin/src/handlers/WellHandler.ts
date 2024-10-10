@@ -1,6 +1,6 @@
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { AddLiquidity, RemoveLiquidity, RemoveLiquidityOneToken, Shift, Swap, Sync } from "../../generated/Basin-ABIs/Well";
-import { deltaBigIntArray, emptyBigIntArray, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { subBigIntArray, emptyBigIntArray, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import {
   incrementWellDeposit,
   incrementWellSwap,
@@ -52,7 +52,7 @@ export function handleSync(event: Sync): void {
 
   let well = loadWell(event.address);
 
-  let deltaReserves = deltaBigIntArray(event.params.reserves, well.reserves);
+  let deltaReserves = subBigIntArray(event.params.reserves, well.reserves);
   updateWellReserves(event.address, deltaReserves, event.block);
   updateWellLiquidityTokenBalance(event.address, event.params.lpAmountOut, event.block);
 
@@ -91,7 +91,7 @@ export function handleRemoveLiquidity(event: RemoveLiquidity): void {
   updateWellVolumesAfterLiquidity(
     event.address,
     well.tokens.map<Address>((b) => toAddress(b)),
-    event.params.tokenAmountsOut,
+    subBigIntArray([ZERO_BI, ZERO_BI], event.params.tokenAmountsOut),
     event.params.lpAmountIn.neg(),
     event.block
   );
@@ -171,7 +171,7 @@ export function handleShift(event: Shift): void {
   let fromTokenIndex = well.tokens.indexOf(event.params.toToken) == 0 ? 1 : 0;
   let fromToken = toAddress(well.tokens[fromTokenIndex]);
 
-  let deltaReserves = deltaBigIntArray(event.params.reserves, well.reserves);
+  let deltaReserves = subBigIntArray(event.params.reserves, well.reserves);
   let amountIn = deltaReserves[fromTokenIndex];
 
   updateWellReserves(event.address, deltaReserves, event.block);

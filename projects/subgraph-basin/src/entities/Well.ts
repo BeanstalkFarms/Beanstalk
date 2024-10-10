@@ -2,8 +2,8 @@ import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import {
-  deltaBigDecimalArray,
-  deltaBigIntArray,
+  subBigDecimalArray,
+  subBigIntArray,
   emptyBigDecimalArray,
   emptyBigIntArray,
   ZERO_BD,
@@ -232,24 +232,24 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, block: e
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
 
-  newSnapshot.deltaTradeVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTradeVolumeReserves,
     priorSnapshot.cumulativeTradeVolumeReserves
   );
-  newSnapshot.deltaTradeVolumeReservesUSD = deltaBigDecimalArray(
+  newSnapshot.deltaTradeVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTradeVolumeReservesUSD,
     priorSnapshot.cumulativeTradeVolumeReservesUSD
   );
   newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
-  newSnapshot.deltaBiTradeVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaBiTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeBiTradeVolumeReserves,
     priorSnapshot.cumulativeBiTradeVolumeReserves
   );
-  newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaTransferVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTransferVolumeReserves,
     priorSnapshot.cumulativeTransferVolumeReserves
   );
-  newSnapshot.deltaTransferVolumeReservesUSD = deltaBigDecimalArray(
+  newSnapshot.deltaTransferVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTransferVolumeReservesUSD,
     priorSnapshot.cumulativeTransferVolumeReservesUSD
   );
@@ -276,24 +276,24 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
   newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
 
-  newSnapshot.deltaTradeVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTradeVolumeReserves,
     priorSnapshot.cumulativeTradeVolumeReserves
   );
-  newSnapshot.deltaTradeVolumeReservesUSD = deltaBigDecimalArray(
+  newSnapshot.deltaTradeVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTradeVolumeReservesUSD,
     priorSnapshot.cumulativeTradeVolumeReservesUSD
   );
   newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
-  newSnapshot.deltaBiTradeVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaBiTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeBiTradeVolumeReserves,
     priorSnapshot.cumulativeBiTradeVolumeReserves
   );
-  newSnapshot.deltaTransferVolumeReserves = deltaBigIntArray(
+  newSnapshot.deltaTransferVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTransferVolumeReserves,
     priorSnapshot.cumulativeTransferVolumeReserves
   );
-  newSnapshot.deltaTransferVolumeReservesUSD = deltaBigDecimalArray(
+  newSnapshot.deltaTransferVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTransferVolumeReservesUSD,
     priorSnapshot.cumulativeTransferVolumeReservesUSD
   );
@@ -311,38 +311,38 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
   let oldest24h = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 24));
   let oldest7d = WellHourlySnapshot.load(wellAddress.concatI32(hourID - 168));
   if (oldest24h != null) {
-    well.rollingDailyTradeVolumeReserves = deltaBigIntArray(well.rollingDailyTradeVolumeReserves, oldest24h.deltaTradeVolumeReserves);
-    well.rollingDailyTradeVolumeReservesUSD = deltaBigDecimalArray(
+    well.rollingDailyTradeVolumeReserves = subBigIntArray(well.rollingDailyTradeVolumeReserves, oldest24h.deltaTradeVolumeReserves);
+    well.rollingDailyTradeVolumeReservesUSD = subBigDecimalArray(
       well.rollingDailyTradeVolumeReservesUSD,
       oldest24h.deltaTradeVolumeReservesUSD
     );
     well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD);
-    well.rollingDailyBiTradeVolumeReserves = deltaBigIntArray(well.rollingDailyBiTradeVolumeReserves, oldest24h.deltaBiTradeVolumeReserves);
-    well.rollingDailyTransferVolumeReserves = deltaBigIntArray(
+    well.rollingDailyBiTradeVolumeReserves = subBigIntArray(well.rollingDailyBiTradeVolumeReserves, oldest24h.deltaBiTradeVolumeReserves);
+    well.rollingDailyTransferVolumeReserves = subBigIntArray(
       well.rollingDailyTransferVolumeReserves,
       oldest24h.deltaTransferVolumeReserves
     );
-    well.rollingDailyTransferVolumeReservesUSD = deltaBigDecimalArray(
+    well.rollingDailyTransferVolumeReservesUSD = subBigDecimalArray(
       well.rollingDailyTransferVolumeReservesUSD,
       oldest24h.deltaTransferVolumeReservesUSD
     );
     well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.minus(oldest24h.deltaTransferVolumeUSD);
     if (oldest7d != null) {
-      well.rollingWeeklyTradeVolumeReserves = deltaBigIntArray(well.rollingWeeklyTradeVolumeReserves, oldest7d.deltaTradeVolumeReserves);
-      well.rollingWeeklyTradeVolumeReservesUSD = deltaBigDecimalArray(
+      well.rollingWeeklyTradeVolumeReserves = subBigIntArray(well.rollingWeeklyTradeVolumeReserves, oldest7d.deltaTradeVolumeReserves);
+      well.rollingWeeklyTradeVolumeReservesUSD = subBigDecimalArray(
         well.rollingWeeklyTradeVolumeReservesUSD,
         oldest7d.deltaTradeVolumeReservesUSD
       );
       well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD);
-      well.rollingWeeklyBiTradeVolumeReserves = deltaBigIntArray(
+      well.rollingWeeklyBiTradeVolumeReserves = subBigIntArray(
         well.rollingWeeklyBiTradeVolumeReserves,
         oldest7d.deltaBiTradeVolumeReserves
       );
-      well.rollingWeeklyTransferVolumeReserves = deltaBigIntArray(
+      well.rollingWeeklyTransferVolumeReserves = subBigIntArray(
         well.rollingWeeklyTransferVolumeReserves,
         oldest7d.deltaTransferVolumeReserves
       );
-      well.rollingWeeklyTransferVolumeReservesUSD = deltaBigDecimalArray(
+      well.rollingWeeklyTransferVolumeReservesUSD = subBigDecimalArray(
         well.rollingWeeklyTransferVolumeReservesUSD,
         oldest7d.deltaTransferVolumeReservesUSD
       );

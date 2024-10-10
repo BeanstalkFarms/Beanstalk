@@ -1,5 +1,5 @@
 import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
-import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI, subBigIntArray } from "../../../subgraph-core/utils/Decimals";
 import { Well } from "../../generated/schema";
 import { loadOrCreateWellFunction, loadWell } from "../entities/Well";
 import { loadToken } from "../entities/Token";
@@ -69,11 +69,22 @@ export function updateWellVolumesAfterLiquidity(
  * @returns a list of tokens and the amount bought of each. the purchased token is positive, the sold token negative.
  */
 export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
+  if (well.lpTokenSupply == ZERO_BI) {
+    return [ZERO_BI, ZERO_BI];
+  }
   const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
   const wellFnContract = WellFunction.bind(toAddress(wellFn.id));
-  const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
 
-  const tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];
+  let tokenAmountBought: BigInt[];
+  if (deltaLpSupply.gt(ZERO_BI)) {
+    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
+    tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];
+  } else {
+    const prevReserves = subBigIntArray(well.reserves, deltaReserves);
+    const prevLpSupply = well.lpTokenSupply.minus(deltaLpSupply);
+    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), prevReserves, prevLpSupply, wellFn.data);
+    tokenAmountBought = [deltaReserves[0].abs().minus(doubleSided[0]), deltaReserves[1].abs().minus(doubleSided[1])];
+  }
   return tokenAmountBought;
 }
 
