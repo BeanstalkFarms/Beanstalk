@@ -128,14 +128,12 @@ const useBeanstalkSdkContext = () => {
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const sdk = useBeanstalkSdkContext();
-  const { isArbitrum, isTestnet } = useChainState();
-
-  const isArbTestnet = isArbitrum && isTestnet;
+  const { isArbitrum } = useChainState();
 
   // only run this on arbitrum dev
-  const ready = useDynamicSeeds(sdk, isArbTestnet);
+  const ready = useDynamicSeeds(sdk, isArbitrum);
 
-  if (isArbTestnet && !ready) {
+  if (isArbitrum && !ready) {
     return null;
   }
 
