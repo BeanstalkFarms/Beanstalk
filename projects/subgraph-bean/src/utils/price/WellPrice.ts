@@ -63,6 +63,7 @@ function wellTwaDeltaBAndPrice(twaBalances: BigInt[], twaDeltaB: BigInt): DeltaB
 
   return {
     deltaB: twaDeltaB,
+    // TODO: solution for twa price on general well functions
     price: constantProductPrice(toDecimal(twaBalances[0]), toDecimal(twaBalances[1], 18), twaEthPrice),
     token2Price: twaEthPrice
   };

@@ -113,3 +113,12 @@ export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window
 export function BigDecimal_round(value: BigDecimal): BigDecimal {
   return value.plus(BigDecimal.fromString("0.5")).truncate(0);
 }
+
+export function allNonzero_BI(a: BigInt[]): boolean {
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] == ZERO_BI) {
+      return false;
+    }
+  }
+  return true;
+}

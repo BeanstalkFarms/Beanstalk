@@ -70,7 +70,7 @@ export function updateWellVolumesAfterLiquidity(
  */
 export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLpSupply: BigInt): BigInt[] {
   if (well.lpTokenSupply == ZERO_BI) {
-    return [ZERO_BI, ZERO_BI];
+    return emptyBigIntArray(well.reserves.length);
   }
   const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
   const wellFnContract = WellFunction.bind(toAddress(wellFn.id));

@@ -1,6 +1,15 @@
 import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
-import { BI_10, emptyBigDecimalArray, getBigDecimalArrayTotal, ONE_BI, toDecimal, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import {
+  allNonzero_BI,
+  BI_10,
+  emptyBigDecimalArray,
+  emptyBigIntArray,
+  getBigDecimalArrayTotal,
+  ONE_BI,
+  toDecimal,
+  ZERO_BI
+} from "../../../subgraph-core/utils/Decimals";
 import { loadOrCreateWellFunction, loadWell, takeWellDailySnapshot, takeWellHourlySnapshot } from "../entities/Well";
 import { getTokenDecimals, updateTokenUSD } from "./Token";
 import { getProtocolToken, isStable2WellFn, wellFnSupportsRate } from "../../../subgraph-core/constants/RuntimeConstants";
@@ -22,6 +31,9 @@ export function getCalculatedReserveUSDValues(tokens: Bytes[], reserves: BigInt[
 
 export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigInt): void {
   let well = loadWell(wellAddress);
+  if (!allNonzero_BI(well.reserves)) {
+    return;
+  }
 
   // Update the BEAN price first as it is the reference for other USD calculations
   const beanToken = getProtocolToken(v(), blockNumber);
@@ -50,6 +62,10 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
 
 // Value at index i is how much of token i is received in exchange for one of token 1 - i.
 export function getTokenPrices(well: Well): BigInt[] {
+  if (!allNonzero_BI(well.reserves)) {
+    return emptyBigIntArray(well.reserves.length);
+  }
+
   const wellFn = loadOrCreateWellFunction(toAddress(well.wellFunction));
   const wellFnAddress = toAddress(wellFn.id);
   const wellFnContract = WellFunction.bind(wellFnAddress);

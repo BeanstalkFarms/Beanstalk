@@ -3,7 +3,13 @@ import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 // import { log } from "matchstick-as/assembly/log";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mocking/Beanstalk";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  CRV3_POOL,
+  GAUGE_BIP45_BLOCK
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
@@ -155,6 +161,10 @@ describe("DeltaB", () => {
     });
 
     test("WellOracle", () => {
+      const pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, GAUGE_BIP45_BLOCK);
+      pool.reserves = [BigInt.fromString("2000000000"), BigInt.fromString("1000000000000000000")];
+      pool.save();
+
       // 2 consecutive seasons used for test
       // https://etherscan.io/tx/0xe62ebdb74a9908760f709408944ab2d50f0bc4fd95614a05dcc053a7117e6b33#eventlog
       const event1 = createWellOracleEvent(
