@@ -23,7 +23,7 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import MigrationMessage from '../components/Common/MigrationMessage';
 import useChainId from '~/hooks/chain/useChainId';
-import { useSwitchChain } from 'wagmi';
+import { useContractReads, useReadContracts, useSwitchChain } from 'wagmi';
 
 export default function L1Delegate() {
 
@@ -59,9 +59,54 @@ export default function L1Delegate() {
     const isContract = useIsSmartContract();
     const navigate = useNavigate();
 
+    const beanstalkL1MiniAbi = new ethers.utils.Interface([
+        "function getExternalBalance(address account, address token) public view returns (uint256 balance)",
+        "function tokenAllowance(address account, address spender, address token) public view returns (uint256)"
+    ])
+
+    const l1ReadResults = useReadContracts({
+        contracts: [
+            {
+                address: beanstalkL1Address as `0x${string}`,
+                abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
+                functionName: "getExternalBalance",
+                // @ts-ignore
+                args: [account, beanL1Address]
+            },
+            {
+                address: beanstalkL1Address as `0x${string}`,
+                abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
+                functionName: "tokenAllowance",
+                // @ts-ignore
+                args: [account, beanstalkL1Address, beanL1Address]
+            },
+        ],
+        query: {
+            enabled: Boolean(account),
+            refetchInterval: 10000
+        }
+    }).data;
+
+    useEffect(() => {
+        if (!l1ReadResults) {
+            setBeanBalance(BigNumber.from(0));
+            setBeanAllowance(BigNumber.from(0));
+        } else {
+            if (l1ReadResults[0].result) {
+                setBeanBalance(BigNumber.from((l1ReadResults[0].result as bigint)))
+            } else {
+                setBeanBalance(BigNumber.from(0));
+            }
+            if (l1ReadResults[1].result) {
+                setBeanAllowance(BigNumber.from((l1ReadResults[1].result as bigint)))
+            } else {
+                setBeanAllowance(BigNumber.from(0));
+            }
+        };
+    }, [l1ReadResults])
+
     useEffect(() => {
         getReceipt();
-        getBeanData();
         getMigrationData();
     }, [account, sdk]);
 
@@ -91,27 +136,6 @@ export default function L1Delegate() {
         const isValid = ethers.utils.isAddress(address);
         setDestinationAccount(address);
         setIsAddressValid(isValid);
-    };
-
-    const getBeanData = async () => {
-        if (!account || !sdk) return;
-
-        try {
-            const balance = await sdk.contracts.beanstalk.getExternalBalance(
-                account,
-                beanL1Address
-            );
-            setBeanBalance(BigNumber.from(balance || 0));
-
-            const allowance = await sdk.contracts.beanstalk.tokenAllowance(
-                account,
-                beanstalkL1Address,
-                beanL1Address
-            );
-            setBeanAllowance(BigNumber.from(allowance || 0));
-        } catch (error) {
-            console.error('Error fetching bean data:', error);
-        }
     };
 
     const getMigrationData = async () => {
@@ -152,7 +176,8 @@ export default function L1Delegate() {
                 txToast.success();
                 setBeanAllowance(beanBalance);
             } else if (beanBalance.gt(0)) {
-                const txn = await beanstalk.migrateL2Beans(
+                const beanstalkL1 = new ethers.Contract(beanstalkL1Address, ['function migrateL2Beans(address receiver, address L2Beanstalk, uint256 amount, uint8 toMode, uint256 maxSubmissionCost, uint256 maxGas, uint256 gasPriceBid) external payable returns (uint256 ticketID)'], signer);
+                const txn = await beanstalkL1.migrateL2Beans(
                     destinationAccount,
                     beanstalkL2Address,
                     beanBalance,
