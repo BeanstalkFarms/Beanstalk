@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useChainId } from "wagmi";
 
 import { mediaQuery, size } from "src/breakpoints";
 import { Error } from "src/components/Error";
@@ -25,6 +26,7 @@ import { useWellWithParams } from "src/wells/useWellWithParams";
 export const Liquidity = () => {
   const { well, loading, error } = useWellWithParams();
   const navigate = useNavigate();
+  const chainId = useChainId();
 
   const [tab, setTab] = useState(0);
 
@@ -64,7 +66,7 @@ export const Liquidity = () => {
               label="← Back To Well Details"
               width={"100%"}
               margin={"0px"}
-              onClick={() => navigate(`../wells/${well?.address || ""}`)}
+              onClick={() => navigate(`../wells/${chainId.toString()}/${well?.address || ""}`)}
             />
           </LoadingItem>
           <LiquidityBox well={well} loading={loading} />
