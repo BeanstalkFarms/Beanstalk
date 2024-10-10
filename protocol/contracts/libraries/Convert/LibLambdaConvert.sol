@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {LibConvertData} from "./LibConvertData.sol";
 
@@ -11,33 +10,32 @@ import {LibConvertData} from "./LibConvertData.sol";
  */
 library LibLambdaConvert {
     using LibConvertData for bytes;
-    
+
     /**
      * @notice This function returns the full input for use in lambda convert
      * In lambda convert, the account converts from and to the same token.
-    */
-    function convert(bytes memory convertData)
+     */
+    function convert(
+        bytes memory convertData
+    )
         internal
         pure
-        returns (
-            address tokenOut,
-            address tokenIn,
-            uint256 amountOut,
-            uint256 amountIn
-        )
+        returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn)
     {
         (amountIn, tokenIn) = convertData.lambdaConvert();
         tokenOut = tokenIn;
         amountOut = amountIn;
     }
 
-    /** 
+    /**
      * @notice This function returns the full input for use in anti-lamda convert
-     * In anti lamda convert, any user can convert on behalf of an account 
+     * In anti lamda convert, any user can convert on behalf of an account
      * to update a deposit's bdv.
      * This is why the additional 'account' parameter is returned.
-    */
-    function antiConvert(bytes memory convertData)
+     */
+    function antiConvert(
+        bytes memory convertData
+    )
         internal
         pure
         returns (

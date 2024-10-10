@@ -1,22 +1,13 @@
 //SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "./CurvePrice.sol";
-import {WellPrice, C, SafeMath} from "./WellPrice.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {WellPrice, P, C} from "./WellPrice.sol";
 
-interface IWhitelistFacet {
-    function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
-}
+contract BeanstalkPrice is WellPrice {
+    using LibRedundantMath256 for uint256;
 
-contract BeanstalkPrice is CurvePrice, WellPrice {
-    using SafeMath for uint256;
-
-    address immutable _beanstalk;
-
-    constructor(address beanstalk) {
-        _beanstalk = beanstalk;
-    }
+    constructor(address beanstalk) WellPrice(beanstalk) {}
 
     struct Prices {
         uint256 price;
@@ -27,21 +18,14 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
 
     /**
      * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
-     * Bean in the following liquidity pools:
-     * - Curve Bean:3Crv Metapool
-     * - Constant Product Bean:Eth Well
-     * - Constant Product Bean:Wsteth Well
-     * NOTE: Assumes all whitelisted Wells are CP2 wells. Needs to be updated if this changes.
+     * Bean in all whitelisted liquidity pools.
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
-    **/
+     **/
     function price() external view returns (Prices memory p) {
-
-        address[] memory wells = IWhitelistFacet(_beanstalk).getWhitelistedWellLpTokens();
-        p.ps = new P.Pool[](1 + wells.length);
-        p.ps[0] = getCurve();
+        address[] memory wells = beanstalk.getWhitelistedWellLpTokens();
+        p.ps = new P.Pool[](wells.length);
         for (uint256 i = 0; i < wells.length; i++) {
-            // Assume all Wells are CP2 wells.
-            p.ps[i + 1] = getConstantProductWell(wells[i]);
+            p.ps[i] = getWell(wells[i]);
         }
 
         // assumes that liquidity and prices on all pools uses the same precision.
@@ -50,6 +34,6 @@ contract BeanstalkPrice is CurvePrice, WellPrice {
             p.liquidity += p.ps[i].liquidity;
             p.deltaB += p.ps[i].deltaB;
         }
-        p.price =  p.price.div(p.liquidity);
+        p.price = p.price.div(p.liquidity);
     }
 }

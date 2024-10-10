@@ -24,10 +24,21 @@ import {
 } from '~/generated/graphql';
 import useSdk from '~/hooks/sdk';
 import { formatUnits } from 'viem';
-import { BEAN_CRV3_V1_LP, BEAN_LUSD_LP } from '~/constants/tokens';
+import {
+  BEAN,
+  BEAN_CRV3_LP,
+  BEAN_CRV3_V1_LP,
+  BEAN_ETH_UNIV2_LP,
+  BEAN_ETH_WELL_LP,
+  BEAN_LUSD_LP,
+  BEAN_WSTETH_WELL_LP,
+  UNRIPE_BEAN,
+  UNRIPE_BEAN_WSTETH,
+} from '~/constants/tokens';
 import { DocumentNode } from 'graphql';
 import { OperationVariables, QueryOptions } from '@apollo/client';
 import { Typography } from '@mui/material';
+import { SupportedChainId } from '~/constants';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -118,23 +129,25 @@ export function useChartSetupData() {
   const sdk = useSdk();
 
   return useMemo(() => {
-    const beanstalkAddress = sdk.addresses.BEANSTALK.MAINNET;
+    const beanstalkAddress = sdk.addresses.BEANSTALK.get(
+      SupportedChainId.ETH_MAINNET
+    );
     const stalk = sdk.tokens.STALK;
 
     const depositedTokensToChart = [
-      sdk.tokens.BEAN,
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN_ETH_WELL_LP,
-      sdk.tokens.BEAN_WSTETH_WELL_LP,
-      sdk.tokens.UNRIPE_BEAN,
-      sdk.tokens.UNRIPE_BEAN_WSTETH,
+      BEAN[1],
+      BEAN_CRV3_LP[1],
+      BEAN_ETH_WELL_LP[1],
+      BEAN_WSTETH_WELL_LP[1],
+      UNRIPE_BEAN[1],
+      UNRIPE_BEAN_WSTETH[1],
     ];
 
     const lpTokensToChart = [
-      sdk.tokens.BEAN_CRV3_LP,
-      sdk.tokens.BEAN_ETH_WELL_LP,
-      sdk.tokens.BEAN_WSTETH_WELL_LP,
-      sdk.tokens.BEAN_ETH_UNIV2_LP,
+      BEAN_CRV3_LP[1],
+      BEAN_ETH_WELL_LP[1],
+      BEAN_WSTETH_WELL_LP[1],
+      BEAN_ETH_UNIV2_LP[1],
       BEAN_LUSD_LP[1],
       BEAN_CRV3_V1_LP[1],
     ];
@@ -173,6 +186,7 @@ export function useChartSetupData() {
             season_gt: 6073,
             siloAsset: `${beanstalkAddress.toLowerCase()}-${token.address}`,
           },
+          context: { subgraph: 'beanstalk_eth' },
         },
         valueFormatter: (value: any) =>
           Number(formatUnits(value, token.decimals)),
@@ -220,7 +234,7 @@ export function useChartSetupData() {
         valueAxisType: 'usdLiquidity',
         queryConfig: {
           variables: { pool: token.address },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
@@ -246,7 +260,7 @@ export function useChartSetupData() {
         valueAxisType: 'BEAN_price',
         queryConfig: {
           variables: { season_gte: 1 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
@@ -264,7 +278,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         valueAxisType: 'volume',
         queryConfig: {
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
@@ -284,7 +298,7 @@ export function useChartSetupData() {
         valueAxisType: 'usdLiquidity',
         queryConfig: {
           variables: { season_gt: 1 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
@@ -302,7 +316,7 @@ export function useChartSetupData() {
         valueAxisType: 'marketCap',
         document: SeasonalMarketCapDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
@@ -318,7 +332,7 @@ export function useChartSetupData() {
         valueAxisType: 'BEAN_amount',
         document: SeasonalSupplyDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
@@ -335,7 +349,7 @@ export function useChartSetupData() {
         document: SeasonalCrossesDocument,
         documentEntity: 'seasons',
         queryConfig: {
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanAmount,
@@ -355,7 +369,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: {
           variables: { season_gte: 1 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
@@ -375,7 +389,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: {
           variables: { season_gte: 1 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
@@ -395,7 +409,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: {
           variables: { season_gte: 1 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
@@ -436,7 +450,7 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         queryConfig: {
           variables: { season_gt: 0 },
-          context: { subgraph: 'bean' },
+          context: { subgraph: 'bean_eth' },
         },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
@@ -460,6 +474,7 @@ export function useChartSetupData() {
           variables: {
             season_gt: 6073,
           },
+          context: { subgraph: 'beanstalk_eth' },
         },
         valueFormatter: (value: any) =>
           Number(formatUnits(value, stalk.decimals)),
@@ -482,7 +497,7 @@ export function useChartSetupData() {
         valueAxisType: 'RRoR',
         document: SeasonalRRoRDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -499,7 +514,7 @@ export function useChartSetupData() {
         valueAxisType: 'maxTemp',
         document: SeasonalTemperatureDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -515,7 +530,7 @@ export function useChartSetupData() {
         valueAxisType: 'PODS_amount',
         document: SeasonalPodsDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
@@ -532,7 +547,7 @@ export function useChartSetupData() {
         valueAxisType: 'podRate',
         document: SeasonalPodRateDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -548,7 +563,7 @@ export function useChartSetupData() {
         valueAxisType: 'BEAN_amount',
         document: SeasonalSownDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
@@ -564,7 +579,7 @@ export function useChartSetupData() {
         valueAxisType: 'PODS_amount',
         document: SeasonalHarvestedPodsDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
@@ -580,7 +595,7 @@ export function useChartSetupData() {
         valueAxisType: 'totalSowers',
         document: SeasonalTotalSowersDocument,
         documentEntity: 'seasons',
-        queryConfig: undefined,
+        queryConfig: { context: { subgraph: 'beanstalk_eth' } },
         valueFormatter: (v: string) => Number(v),
         tickFormatter: (v: number) => v.toFixed(0).toString(),
         shortTickFormatter: (v: number) => v.toFixed(0).toString(),

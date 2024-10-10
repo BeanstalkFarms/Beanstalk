@@ -50,7 +50,11 @@ export default function usePreferredToken(
       const useStoredBalance = !isBalanceValid && localBalances;
 
       const bal = useStoredBalance ? localBalances[key] : balances[key];
-      return (useStoredBalance ? BigNumber(bal.total).gte(min) : bal?.total?.gte(min)) || false;
+      return (
+        (useStoredBalance
+          ? BigNumber(bal?.total || 0).gte(min)
+          : bal?.total?.gte(min)) || false
+      );
     });
     // console.debug(`[hooks/usePreferredToken] found a preferred token: ${index}`);
     if (index > -1) return getChainToken(list[index].token);

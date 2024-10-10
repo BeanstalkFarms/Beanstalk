@@ -15,11 +15,7 @@ describe("Silo Transfer", function () {
   });
 
   const transfer = new Transfer(sdk);
-  // remove bean_crv3_lp
-  const removeTokens = new Set([sdk.tokens.BEAN_CRV3_LP.address]);
-  const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist).filter(
-    (tk) => !removeTokens.has(tk.address)
-  );
+  const whiteListedTokens = Array.from(sdk.tokens.siloWhitelist);
 
   const testDestination = ACCOUNTS[1][1];
 

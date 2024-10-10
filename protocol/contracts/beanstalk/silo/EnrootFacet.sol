@@ -2,22 +2,21 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import "contracts/libraries/Silo/LibSilo.sol";
 import "contracts/libraries/Silo/LibTokenSilo.sol";
-import "./SiloFacet/Silo.sol";
-import "contracts/libraries/LibSafeMath32.sol";
+import "contracts/libraries/LibRedundantMath32.sol";
 import "../ReentrancyGuard.sol";
-
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
 
 /**
  * @author Publius
  * @title Enroot Facet handles enrooting Update Deposits
  **/
-contract EnrootFacet is ReentrancyGuard {
-    using SafeMath for uint256;
+contract EnrootFacet is Invariable, ReentrancyGuard {
+    using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
     event RemoveDeposit(
@@ -36,7 +35,7 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 amount,
         uint256[] bdvs
     );
-    
+
     /**
      * @notice EnrootData is a struct that holds data needed for enrooting a token.
      */
@@ -46,11 +45,11 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 stalkAdded;
         uint256 bdvAdded;
         int96 stemTip;
-        uint32 stalkPerBdv;
+        uint48 stalkPerBdv;
     }
 
     modifier mowSender(address token) {
-       LibSilo._mow(msg.sender, token);
+        LibSilo._mow(LibTractor._user(), token);
         _;
     }
 
@@ -66,58 +65,88 @@ contract EnrootFacet is ReentrancyGuard {
      *
      * Gas optimization: We neglect to check if `token` is whitelisted. If a
      * token is not whitelisted, it cannot be Deposited, and thus cannot be Removed.
-     * 
+     *
      * {LibTokenSilo-removeDepositFromAccount} should revert if there isn't
      * enough balance of `token` to remove.
-     * Because the amount and the stem of an Deposit does not change, 
+     * Because the amount and the stem of an Deposit does not change,
      * an ERC1155 event does not need to be emitted.
-     * 
+     *
      */
     function enrootDeposit(
         address token,
         int96 stem,
         uint256 amount
-    ) external payable nonReentrant mowSender(token) {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
-
-        // remove Deposit and Redeposit with new BDV
-        uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
-            msg.sender,
-            token,
-            stem,
-            amount
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
+        require(
+            s.sys.silo.unripeSettings[token].underlyingToken != address(0),
+            "Silo: token not unripe"
         );
 
-        // Remove Deposit does not emit an event, while Add Deposit does.
-        emit RemoveDeposit(msg.sender, token, stem, amount, ogBDV); 
+        uint256 deltaBDV;
+        {
+            // remove Deposit and Redeposit with new BDV
+            uint256 ogBDV = LibTokenSilo.removeDepositFromAccount(
+                LibTractor._user(),
+                token,
+                stem,
+                amount
+            );
 
-        // Calculate the current BDV for `amount` of `token` and add a Deposit.
-        uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
+            // Remove Deposit does not emit an event, while Add Deposit does.
+            emit RemoveDeposit(LibTractor._user(), token, stem, amount, ogBDV);
 
-        LibTokenSilo.addDepositToAccount(
-            msg.sender, 
-            token, 
-            stem, 
-            amount,
-            newBDV,
-            LibTokenSilo.Transfer.noEmitTransferSingle
-        ); // emits AddDeposit event
+            // Calculate the current BDV for `amount` of `token` and add a Deposit.
+            uint256 newBDV = LibTokenSilo.beanDenominatedValue(token, amount);
 
-        // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
-        uint256 deltaBDV = newBDV.sub(ogBDV);
+            LibTokenSilo.addDepositToAccount(
+                LibTractor._user(),
+                token,
+                stem,
+                amount,
+                newBDV,
+                LibTokenSilo.Transfer.noEmitTransferSingle
+            ); // emits AddDeposit event
+
+            // Calculate the difference in BDV. Reverts if `ogBDV > newBDV`.
+            deltaBDV = newBDV.sub(ogBDV);
+        }
 
         LibTokenSilo.incrementTotalDepositedBdv(token, deltaBDV);
 
         // enroots should mint active stalk,
         // as unripe assets have been in the system for at least 1 season.
-        uint256 deltaStalk = deltaBDV.mul(s.ss[token].stalkIssuedPerBdv).add(
+        uint256 deltaStalk = deltaBDV.mul(s.sys.silo.assetSettings[token].stalkIssuedPerBdv).add(
             LibSilo.stalkReward(stem, LibTokenSilo.stemTipForToken(token), uint128(deltaBDV))
         );
 
-        LibSilo.mintActiveStalk(msg.sender, deltaStalk.toUint128());
+        LibSilo.mintActiveStalk(LibTractor._user(), deltaStalk);
     }
 
-    /** 
+    function balanceOfRevitalizedStalk(
+        address account,
+        address[] calldata tokens,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) external view returns (uint256 stalk) {
+        uint256 ogBDV;
+        uint256 newBDV;
+        uint256 deltaBDV;
+        for (uint256 i; i < tokens.length; i++) {
+            ogBDV = s.accts[account].deposits[LibBytes.packAddressAndStem(tokens[i], stems[i])].bdv;
+            newBDV = LibTokenSilo.beanDenominatedValue(tokens[i], amounts[i]);
+            deltaBDV = newBDV.sub(ogBDV);
+
+            stalk += deltaBDV.mul(s.sys.silo.assetSettings[tokens[i]].stalkIssuedPerBdv).add(
+                LibSilo.stalkReward(
+                    stems[i],
+                    LibTokenSilo.stemTipForToken(tokens[i]),
+                    uint128(deltaBDV)
+                )
+            );
+        }
+    }
+
+    /**
      * @notice Update the BDV of Unripe Deposits. Allows the user to claim Stalk
      * as the BDV of Unripe tokens increases during the Barn Raise.
      * This was introduced as a part of the Replant.
@@ -134,14 +163,17 @@ contract EnrootFacet is ReentrancyGuard {
         address token,
         int96[] calldata stems,
         uint256[] calldata amounts
-    ) external payable nonReentrant mowSender(token) {
-        require(s.u[token].underlyingToken != address(0), "Silo: token not unripe");
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant mowSender(token) {
+        require(
+            s.sys.silo.unripeSettings[token].underlyingToken != address(0),
+            "Silo: token not unripe"
+        );
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
-            msg.sender, 
-            token, 
-            stems, 
+            LibTractor._user(),
+            token,
+            stems,
             amounts,
             LibSilo.ERC1155Event.NO_EMIT_BATCH_EVENT
         );
@@ -152,9 +184,8 @@ contract EnrootFacet is ReentrancyGuard {
         // Iterate through all stems, redeposit the tokens with new BDV and
         // summate new Stalk.
         for (uint256 i; i < stems.length; ++i) {
-
             uint256 depositBdv;
-            if (i+1 == stems.length) {
+            if (i + 1 == stems.length) {
                 // Ensure that a rounding error does not occur by using the
                 // remainder BDV for the last Deposit
                 depositBdv = enrootData.newTotalBdv.sub(enrootData.bdvAdded);
@@ -181,24 +212,19 @@ contract EnrootFacet is ReentrancyGuard {
         }
 
         // increment bdv and mint stalk.
-        // bdv and stalk from enrooting does not germinate 
+        // bdv and stalk from enrooting does not germinate
         // given that the assets are unripe.
         // reverts if bdvAdded < bdvRemoved.
         LibTokenSilo.incrementTotalDepositedBdv(
-            token, 
-            enrootData.bdvAdded.sub(
-                ar.active.bdv
-                    .add(ar.even.bdv)
-                    .add(ar.odd.bdv)
-            )
+            token,
+            enrootData.bdvAdded.sub(ar.active.bdv.add(ar.even.bdv).add(ar.odd.bdv))
         );
         LibSilo.mintActiveStalk(
-            msg.sender, 
+            LibTractor._user(),
             enrootData.stalkAdded.sub(
-                ar.active.stalk
-                .add(ar.even.stalk)
-                .add(ar.odd.stalk)
-                .add(ar.grownStalkFromGermDeposits)
+                ar.active.stalk.add(ar.even.stalk).add(ar.odd.stalk).add(
+                    ar.grownStalkFromGermDeposits
+                )
             )
         );
     }
@@ -214,22 +240,17 @@ contract EnrootFacet is ReentrancyGuard {
         // get the new total bdv.
         enrootData.newTotalBdv = LibTokenSilo.beanDenominatedValue(
             token,
-            ar.active.tokens
-                .add(ar.odd.tokens)
-                .add(ar.even.tokens)
+            ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens)
         );
         // summate the total amount removed.
-        enrootData.totalAmountRemoved = 
-            ar.active.tokens
-                .add(ar.odd.tokens)
-                .add(ar.even.tokens);
-        
+        enrootData.totalAmountRemoved = ar.active.tokens.add(ar.odd.tokens).add(ar.even.tokens);
+
         // get the stemTip and stalkPerBdv.
         enrootData.stemTip = LibTokenSilo.stemTipForToken(token);
         // get the stalk per BDV.
-        enrootData.stalkPerBdv = s.ss[token].stalkIssuedPerBdv;
+        enrootData.stalkPerBdv = s.sys.silo.assetSettings[token].stalkIssuedPerBdv;
     }
-    
+
     /**
      * @notice Adds a deposit to the account and calculates the stalk added.
      * @dev Placed in a function for stack overflow reasons.
@@ -240,10 +261,10 @@ contract EnrootFacet is ReentrancyGuard {
         uint256 amount,
         uint256 bdv,
         int96 stemTip,
-        uint32 stalkPerBdv
+        uint48 stalkPerBdv
     ) private returns (uint256 stalkAdded) {
         LibTokenSilo.addDepositToAccount(
-            msg.sender,
+            LibTractor._user(),
             token,
             stem,
             amount,
@@ -251,13 +272,13 @@ contract EnrootFacet is ReentrancyGuard {
             LibTokenSilo.Transfer.noEmitTransferSingle
         );
 
-        return bdv.mul(stalkPerBdv).add(
-            LibSilo.stalkReward(
-                stem,
-                stemTip,
-                bdv.toUint128()
-            )
-        );
+        return
+            bdv.mul(stalkPerBdv).add(
+                LibSilo.stalkReward(
+                    stem,
+                    stemTip,
+                    uint128(bdv) // safeCast not needed because bdv is already uint128.
+                )
+            );
     }
-
 }

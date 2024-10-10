@@ -1,32 +1,24 @@
 import { createReducer } from '@reduxjs/toolkit';
 import { NEW_BN } from '~/constants';
-import {
-  getDiffNow,
-  getNextExpectedBlockUpdate,
-  getNextExpectedSunrise,
-  Sun,
-} from '.';
+import { getNextMorningIntervalUpdate, getNextExpectedSunrise, Sun } from '.';
 import {
   setNextSunrise,
-  setRemainingUntilSunrise,
   setAwaitingSunrise,
   updateSeasonTime,
   resetSun,
   updateSeasonResult,
-  setRemainingUntilBlockUpdate,
   setMorning,
   updateCurrentSeason,
 } from './actions';
 
 const getInitialState = () => {
   const nextSunrise = getNextExpectedSunrise();
-  const nextBlockUpdate = getNextExpectedBlockUpdate();
+  const nextMorningIntervalUpdate = getNextMorningIntervalUpdate();
   return {
     seasonTime: NEW_BN,
     sunrise: {
       awaiting: false,
       next: nextSunrise,
-      remaining: nextSunrise.diffNow(),
     },
     season: {
       current: NEW_BN,
@@ -41,18 +33,12 @@ const getInitialState = () => {
       start: NEW_BN,
       period: NEW_BN,
       timestamp: nextSunrise.minus({ hour: 1 }),
-      beanEthStartMintingSeason: 0, // TODO: remove
     },
     morning: {
       isMorning: false,
       blockNumber: NEW_BN,
       index: NEW_BN,
-    },
-    morningTime: {
-      awaiting: false,
-      next: nextBlockUpdate,
-      remaining: getDiffNow(nextBlockUpdate),
-      endTime: nextSunrise.plus({ minutes: 5 }),
+      next: nextMorningIntervalUpdate,
     },
   };
 };
@@ -77,14 +63,7 @@ export default createReducer(initialState, (builder) =>
     .addCase(setNextSunrise, (state, { payload }) => {
       state.sunrise.next = payload;
     })
-    .addCase(setRemainingUntilSunrise, (state, { payload }) => {
-      state.sunrise.remaining = payload;
-    })
     .addCase(setMorning, (state, { payload }) => {
-      state.morning = payload.morning;
-      state.morningTime = payload.morningTime;
-    })
-    .addCase(setRemainingUntilBlockUpdate, (state, { payload }) => {
-      state.morningTime.remaining = payload;
+      state.morning = payload;
     })
 );

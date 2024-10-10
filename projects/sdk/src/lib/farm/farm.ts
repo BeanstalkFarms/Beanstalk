@@ -16,7 +16,9 @@ type FarmPreparedResult = { callData: string };
  * FarmWorkflow
  * => `beanstalk.farm()`.
  */
-export class FarmWorkflow<RunData extends { slippage: number } = { slippage: number }> extends Workflow<
+export class FarmWorkflow<
+  RunData extends { slippage: number } = { slippage: number }
+> extends Workflow<
   string, // EncodedResult
   FarmPreparedResult, // PreparedResult
   RunData // RunData
@@ -24,7 +26,11 @@ export class FarmWorkflow<RunData extends { slippage: number } = { slippage: num
   public readonly FUNCTION_NAME = "farm";
   private contract: Beanstalk | Depot;
 
-  constructor(sdk: BeanstalkSDK, public name: string = "Farm", using: "beanstalk" | "depot" = "beanstalk") {
+  constructor(
+    sdk: BeanstalkSDK,
+    public name: string = "Farm",
+    using: "beanstalk" | "depot" = "beanstalk"
+  ) {
     super(sdk, name);
     this.contract = Workflow.sdk.contracts[using]; // use beanstalk or depot
   }
@@ -56,7 +62,11 @@ export class FarmWorkflow<RunData extends { slippage: number } = { slippage: num
 
   ////////// Parent Behavior //////////
 
-  async execute(amountIn: ethers.BigNumber | TokenValue, data: RunData, overrides?: CallOverrides): Promise<ethers.ContractTransaction> {
+  async execute(
+    amountIn: ethers.BigNumber | TokenValue,
+    data: RunData,
+    overrides?: CallOverrides
+  ): Promise<ethers.ContractTransaction> {
     const encodedSteps = await this.estimateAndEncodeSteps(amountIn, RunMode.Execute, data);
     if (overrides) {
       overrides.value = this.value;
@@ -64,6 +74,7 @@ export class FarmWorkflow<RunData extends { slippage: number } = { slippage: num
       overrides = { value: this.value };
     }
     Workflow.sdk.debug(`[Workflow][${this.name}][execute]`, encodedSteps, overrides);
+    //@ts-ignore
     return this.contract.farm(encodedSteps, overrides);
   }
 
@@ -72,7 +83,10 @@ export class FarmWorkflow<RunData extends { slippage: number } = { slippage: num
     return this.contract.callStatic.farm(encodedSteps, { value: this.value });
   }
 
-  async estimateGas(amountIn: ethers.BigNumber | TokenValue, data: RunData): Promise<ethers.BigNumber> {
+  async estimateGas(
+    amountIn: ethers.BigNumber | TokenValue,
+    data: RunData
+  ): Promise<ethers.BigNumber> {
     const encodedSteps = await this.estimateAndEncodeSteps(amountIn, RunMode.EstimateGas, data);
     return this.contract.estimateGas.farm(encodedSteps, { value: this.value });
   }
@@ -86,15 +100,16 @@ type AdvancedFarmPreparedResult = {
   callData: string;
   clipboard?: string;
 };
-export class AdvancedFarmWorkflow<RunData extends { slippage: number } = { slippage: number }> extends Workflow<
-  AdvancedFarmCallStruct,
-  AdvancedFarmPreparedResult,
-  RunData
-> {
+export class AdvancedFarmWorkflow<
+  RunData extends { slippage: number } = { slippage: number }
+> extends Workflow<AdvancedFarmCallStruct, AdvancedFarmPreparedResult, RunData> {
   public readonly FUNCTION_NAME = "advancedFarm";
   private contract: Beanstalk;
 
-  constructor(protected sdk: BeanstalkSDK, public name: string = "AdvancedFarm") {
+  constructor(
+    protected sdk: BeanstalkSDK,
+    public name: string = "AdvancedFarm"
+  ) {
     super(sdk, name);
     this.contract = Workflow.sdk.contracts.beanstalk; // ?
   }
@@ -128,7 +143,11 @@ export class AdvancedFarmWorkflow<RunData extends { slippage: number } = { slipp
 
   ////////// Parent Behavior //////////
 
-  async execute(amountIn: ethers.BigNumber | TokenValue, data: RunData, overrides?: CallOverrides): Promise<ethers.ContractTransaction> {
+  async execute(
+    amountIn: ethers.BigNumber | TokenValue,
+    data: RunData,
+    overrides?: CallOverrides
+  ): Promise<ethers.ContractTransaction> {
     const encoded = await this.estimateAndEncodeSteps(amountIn, RunMode.Execute, data);
     if (overrides) {
       overrides.value = this.value;
@@ -136,6 +155,7 @@ export class AdvancedFarmWorkflow<RunData extends { slippage: number } = { slipp
       overrides = { value: this.value };
     }
     Workflow.sdk.debug(`[Workflow][${this.name}][execute]`, encoded, overrides);
+    //@ts-ignore
     return this.contract.advancedFarm(encoded, overrides);
   }
 
@@ -144,7 +164,10 @@ export class AdvancedFarmWorkflow<RunData extends { slippage: number } = { slipp
     return this.contract.callStatic.advancedFarm(encoded, { value: this.value });
   }
 
-  async estimateGas(amountIn: ethers.BigNumber | TokenValue, data: RunData): Promise<ethers.BigNumber> {
+  async estimateGas(
+    amountIn: ethers.BigNumber | TokenValue,
+    data: RunData
+  ): Promise<ethers.BigNumber> {
     const encoded = await this.estimateAndEncodeSteps(amountIn, RunMode.EstimateGas, data);
     return this.contract.estimateGas.advancedFarm(encoded, { value: this.value });
   }
@@ -164,7 +187,10 @@ export class Farm {
     this.presets = new LibraryPresets(Farm.sdk);
   }
 
-  create<T = Record<string, any>>(name?: string, using: "beanstalk" | "depot" = "beanstalk"): FarmWorkflow<{ slippage: number } & T> {
+  create<T = Record<string, any>>(
+    name?: string,
+    using: "beanstalk" | "depot" = "beanstalk"
+  ): FarmWorkflow<{ slippage: number } & T> {
     return new FarmWorkflow(Farm.sdk, name, using);
   }
 

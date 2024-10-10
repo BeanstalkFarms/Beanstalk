@@ -2,23 +2,23 @@
  * SPDX-License-Identifier: MIT
  */
 
-pragma solidity 0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {MerkleProof} from "@openzeppelin/contracts/cryptography/MerkleProof.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {IBean} from "contracts/interfaces/IBean.sol";
-import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {C} from "contracts/C.sol";
-import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
-import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 import {LibChop} from "contracts/libraries/LibChop.sol";
+import {LibUnripe} from "contracts/libraries/LibUnripe.sol";
+import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {Invariable} from "contracts/beanstalk/Invariable.sol";
+import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
+import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title UnripeFacet
@@ -27,10 +27,10 @@ import {LibBarnRaise} from "contracts/libraries/LibBarnRaise.sol";
  * managing Unripe Tokens. Also, contains view functions to fetch Unripe Token data.
  */
 
-contract UnripeFacet is ReentrancyGuard {
+contract UnripeFacet is Invariable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using LibTransfer for IERC20;
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
     /**
      * @notice Emitted when a new unripe token is added to Beanstalk.
@@ -81,10 +81,10 @@ contract UnripeFacet is ReentrancyGuard {
         uint256 amount,
         LibTransfer.From fromMode,
         LibTransfer.To toMode
-    ) external payable nonReentrant returns (uint256) {
-        // burn the token from the msg.sender address
+    ) external payable fundsSafu noSupplyChange nonReentrant returns (uint256) {
+        // burn the token from the user address
         uint256 supply = IBean(unripeToken).totalSupply();
-        amount = LibTransfer.burnToken(IBean(unripeToken), amount, msg.sender, fromMode);
+        amount = LibTransfer.burnToken(IBean(unripeToken), amount, LibTractor._user(), fromMode);
         // get ripe address and ripe amount
         (address underlyingToken, uint256 underlyingAmount) = LibChop.chop(
             unripeToken,
@@ -93,46 +93,10 @@ contract UnripeFacet is ReentrancyGuard {
         );
         // send the corresponding amount of ripe token to the user address
         require(underlyingAmount > 0, "Chop: no underlying");
-        IERC20(underlyingToken).sendToken(underlyingAmount, msg.sender, toMode);
+        IERC20(underlyingToken).sendToken(underlyingAmount, LibTractor._user(), toMode);
         // emit the event
-        emit Chop(msg.sender, unripeToken, amount, underlyingAmount);
+        emit Chop(LibTractor._user(), unripeToken, amount, underlyingAmount);
         return underlyingAmount;
-    }
-
-    /**
-     * @notice Picks a Farmer's Pickable Unripe Tokens.
-     * @dev Pickable Unripe Tokens were distributed to all non-Deposited pre-exploit Bean and Bean LP Tokens.
-     * @param token The Unripe Token address to Pick.
-     * @param amount The amount of Unripe Tokens to Pick.
-     * @param proof The merkle proof used to validate that the Pick is valid.
-     * @param mode The destination balance that the Unripe Tokens are sent to.
-     */
-    function pick(
-        address token,
-        uint256 amount,
-        bytes32[] memory proof,
-        LibTransfer.To mode
-    ) external payable nonReentrant {
-        bytes32 root = s.u[token].merkleRoot;
-        require(root != bytes32(0), "UnripeClaim: invalid token");
-        require(!picked(msg.sender, token), "UnripeClaim: already picked");
-
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
-        require(MerkleProof.verify(proof, root, leaf), "UnripeClaim: invalid proof");
-        s.unripeClaimed[token][msg.sender] = true;
-
-        LibTransfer.sendToken(IERC20(token), amount, msg.sender, mode);
-
-        emit Pick(msg.sender, token, amount);
-    }
-
-    /**
-     * @notice Returns whether a given `account` has picked a given `token`.
-     * @param account The address of the account to check.
-     * @param token The address of the Unripe Token to check.
-     */
-    function picked(address account, address token) public view returns (bool) {
-        return s.unripeClaimed[token][account];
     }
 
     /**
@@ -171,7 +135,8 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         uint256 amount
     ) public view returns (uint256 redeem) {
-        return LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
+        return
+            LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
     /**
@@ -216,9 +181,9 @@ contract UnripeFacet is ReentrancyGuard {
      * @return percent The recap % of the token.
      */
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return LibUnripe.percentBeansRecapped();
-        } else if (unripeToken == C.UNRIPE_LP) {
+        } else if (unripeToken == s.sys.tokens.urLp) {
             return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");
@@ -231,18 +196,21 @@ contract UnripeFacet is ReentrancyGuard {
      * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        if (unripeToken == C.UNRIPE_BEAN) { 
-            return LibUnripe.getPenalizedUnderlying(
-                unripeToken,
-                LibUnripe.DECIMALS,
-                IERC20(unripeToken).totalSupply()
-            );
+        if (unripeToken == s.sys.tokens.urBean) {
+            return
+                LibUnripe.getPenalizedUnderlying(
+                    unripeToken,
+                    LibUnripe.DECIMALS,
+                    IERC20(unripeToken).totalSupply()
+                );
         }
-        
-        if (unripeToken == C.UNRIPE_LP) { 
-            return LibUnripe.getTotalRecapitalizedPercent()
-                .mul(LibUnripe.getTotalRecapitalizedPercent())
-                .div(LibUnripe.DECIMALS);
+
+        if (unripeToken == s.sys.tokens.urLp) {
+            return
+                LibUnripe
+                    .getTotalRecapitalizedPercent()
+                    .mul(LibUnripe.getTotalRecapitalizedPercent())
+                    .div(LibUnripe.DECIMALS);
         }
     }
 
@@ -258,15 +226,15 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the amount of Ripe Tokens that underly a single Unripe Token.
      * @dev has 6 decimals of precision.
      * @param unripeToken The address of the unripe token.
-     * @return underlyingPerToken The underlying ripe token per unripe token. 
+     * @return underlyingPerToken The underlying ripe token per unripe token.
      */
-    function getUnderlyingPerUnripeToken(address unripeToken)
-        external
-        view
-        returns (uint256 underlyingPerToken)
-    {
+    function getUnderlyingPerUnripeToken(
+        address unripeToken
+    ) external view returns (uint256 underlyingPerToken) {
         underlyingPerToken = s
-            .u[unripeToken]
+            .sys
+            .silo
+            .unripeSettings[unripeToken]
             .balanceOfUnderlying
             .mul(LibUnripe.DECIMALS)
             .div(IERC20(unripeToken).totalSupply());
@@ -275,16 +243,11 @@ contract UnripeFacet is ReentrancyGuard {
     /**
      * @notice Returns the total amount of Ripe Tokens for a given Unripe Token.
      * @param unripeToken The address of the unripe token.
-     * @return underlying The total balance of the token. 
+     * @return underlying The total balance of the token.
      */
-    function getTotalUnderlying(address unripeToken)
-        external
-        view
-        returns (uint256 underlying)
-    {
-        return s.u[unripeToken].balanceOfUnderlying;
+    function getTotalUnderlying(address unripeToken) external view returns (uint256 underlying) {
+        return s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying;
     }
-
 
     /**
      * @notice Adds an Unripe Token to Beanstalk.
@@ -296,10 +259,9 @@ contract UnripeFacet is ReentrancyGuard {
         address unripeToken,
         address underlyingToken,
         bytes32 root
-    ) external payable nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsOwnerOrContract();
-        s.u[unripeToken].underlyingToken = underlyingToken;
-        s.u[unripeToken].merkleRoot = root;
+        s.sys.silo.unripeSettings[unripeToken].underlyingToken = underlyingToken;
         emit AddUnripeToken(unripeToken, underlyingToken, root);
     }
 
@@ -308,12 +270,10 @@ contract UnripeFacet is ReentrancyGuard {
      * @param unripeToken The address of the Unripe Token.
      * @return underlyingToken The address of the Ripe Token.
      */
-    function getUnderlyingToken(address unripeToken)
-        external
-        view
-        returns (address underlyingToken)
-    {
-        return s.u[unripeToken].underlyingToken;
+    function getUnderlyingToken(
+        address unripeToken
+    ) external view returns (address underlyingToken) {
+        return LibUnripe._getUnderlyingToken(unripeToken);
     }
 
     /////////////// UNDERLYING TOKEN MIGRATION //////////////////
@@ -328,10 +288,10 @@ contract UnripeFacet is ReentrancyGuard {
     function addMigratedUnderlying(
         address unripeToken,
         uint256 amount
-    ) external payable nonReentrant {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
-        IERC20(s.u[unripeToken].underlyingToken).safeTransferFrom(
-            msg.sender,
+        IERC20(s.sys.silo.unripeSettings[unripeToken].underlyingToken).safeTransferFrom(
+            LibTractor._user(),
             address(this),
             amount
         );
@@ -342,14 +302,17 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Switches the Ripe Token of an Unripe Token.
      * @param unripeToken The Unripe Token to switch the Ripe Token of.
      * @param newUnderlyingToken The new Ripe Token to switch to.
-     * @dev `s.u[unripeToken].balanceOfUnderlying` must be 0.
+     * @dev `s.silo.unripeSettings[unripeToken].balanceOfUnderlying` must be 0.
      */
     function switchUnderlyingToken(
         address unripeToken,
         address newUnderlyingToken
-    ) external payable {
+    ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
-        require(s.u[unripeToken].balanceOfUnderlying == 0, "Unripe: Underlying balance > 0");
+        require(
+            s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,
+            "Unripe: Underlying balance > 0"
+        );
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
 
@@ -359,22 +322,8 @@ contract UnripeFacet is ReentrancyGuard {
      * Tokens.
      */
     function getLockedBeans() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
-        return LibUnripe.getLockedBeans(twaReserves);
-    }
-
-    /**
-     * @notice returns the locked beans given the cumulative reserves and timestamp.
-     */
-    function getLockedBeansFromTwaReserves(
-        bytes memory cumulativeReserves,
-        uint40 timestamp
-    ) external view returns (uint256) {
-        address underlyingUrLpWell = s.u[C.UNRIPE_LP].underlyingToken;
         uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
-            underlyingUrLpWell,
-            cumulativeReserves,
-            timestamp
+            LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeans(twaReserves);
     }
@@ -383,24 +332,42 @@ contract UnripeFacet is ReentrancyGuard {
      * @notice Returns the number of Beans that are locked underneath the Unripe Bean token.
      */
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
-        return LibLockedUnderlying.getLockedUnderlying(
-            C.UNRIPE_BEAN,
-            LibUnripe.getTotalRecapitalizedPercent()
-        );
+        return
+            LibLockedUnderlying.getLockedUnderlying(
+                s.sys.tokens.urBean,
+                LibUnripe.getTotalRecapitalizedPercent()
+            );
     }
 
     /**
      * @notice Returns the number of Beans that are locked underneath the Unripe LP Token.
      */
     function getLockedBeansUnderlyingUnripeLP() external view returns (uint256) {
-        uint256[] memory twaReserves = LibWell.getTwaReservesFromBeanstalkPump(LibBarnRaise.getBarnRaiseWell());
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
+            LibBarnRaise.getBarnRaiseWell()
+        );
         return LibUnripe.getLockedBeansFromLP(twaReserves);
+    }
+
+    /**
+     * @notice Returns the locked beans given the cumulative reserves and timestamp.
+     */
+    function getLockedBeansFromTwaReserves(
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) external view returns (uint256) {
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
+            LibBarnRaise.getBarnRaiseWell(),
+            cumulativeReserves,
+            timestamp
+        );
+        return LibUnripe.getLockedBeans(twaReserves);
     }
 
     /**
      * @notice returns the amount of dollars recapitalized in the barn raise.
      */
     function getRecapitalized() external view returns (uint256) {
-        return s.recapitalized;
+        return s.sys.fert.recapitalized;
     }
 }

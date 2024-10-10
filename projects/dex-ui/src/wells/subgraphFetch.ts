@@ -1,20 +1,31 @@
-import request from "graphql-request";
 import { type TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { Settings } from "src/settings";
+import request from "graphql-request";
 
-type AdditionalSubgraphFetchOptions = {
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
+
+import { Settings, SubgraphDexSettings } from "src/settings";
+
+interface AdditionalSubgraphFetchOptions {
   useBeanstalkSubgraph?: boolean;
+}
+
+const getEndpoint = (chainId: ChainId, options?: AdditionalSubgraphFetchOptions) => {
+  const base = `${options?.useBeanstalkSubgraph ? "BEANSTALK_" : ""}SUBGRAPH_URL`;
+  const key = `${base}${ChainResolver.isL2Chain(chainId) ? "" : "_ETH"}`;
+
+  if (key in Settings) {
+    return Settings[key as keyof SubgraphDexSettings];
+  }
+
+  throw new Error(`${key} is not a key of DexSettings. Unable to determine the subgraph URL`);
 };
 
 export function fetchFromSubgraphRequest<TResult, TVariables>(
   document: TypedDocumentNode<TResult, TVariables>,
   variables: TVariables extends Record<string, never> ? undefined : TVariables,
+  chainId: ChainId,
   options?: AdditionalSubgraphFetchOptions
 ): () => Promise<TResult> {
   return async () =>
-    request(
-      options?.useBeanstalkSubgraph ? Settings.BEANSTALK_SUBGRAPH_URL : Settings.SUBGRAPH_URL,
-      document,
-      variables ? variables : undefined
-    );
+    request(getEndpoint(chainId, options), document, variables ? variables : undefined);
 }

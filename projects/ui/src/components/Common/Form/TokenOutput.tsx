@@ -6,7 +6,6 @@ import { Token, TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import EmbeddedCard from '../EmbeddedCard';
 import {
   BeanstalkPalette,
   FontSize,
@@ -14,6 +13,7 @@ import {
   IconSize,
 } from '~/components/App/muiTheme';
 import { displayFullBN, tokenValueToBN } from '~/util';
+import EmbeddedCard from '../EmbeddedCard';
 import IconWrapper from '../IconWrapper';
 import Row from '../Row';
 import TokenIcon from '../TokenIcon';
@@ -67,7 +67,7 @@ const formatBN = (value?: BigNumber, _decimals?: number, suffix?: string) => {
   const prefix = value ? (value.gt(0) ? '+' : value.lt(0) ? '-' : '') : '';
   if (value.abs().lt(0.01) && value.abs().gt(0)) {
     return `${prefix} <0.01${suffix || ''}`;
-  };
+  }
   return `${prefix} ${displayFullBN(value.abs(), decimals, decimals)}${
     suffix || ''
   }`;
@@ -182,4 +182,134 @@ function TokenOutputRow({
   );
 }
 
+type TokenOutputMultiRowProps = {
+  label?: string;
+  token: Token;
+  amount: BigNumber | TokenValue;
+  amountTooltip?: string | JSX.Element;
+  amountSuffix?: string;
+  below?: {
+    description?: string;
+    descriptionTooltip?: string;
+    delta?: BigNumber | TokenValue | string;
+    deltaSuffix?: string;
+  }[];
+  size?: 'small' | 'medium';
+  hideIfZero?: boolean;
+};
+
+const MultiOutputRow = ({
+  label,
+  token,
+  amount,
+  amountSuffix,
+  amountTooltip,
+  below,
+  size = 'medium',
+  hideIfZero = false,
+}: TokenOutputMultiRowProps) => {
+  const isMedium = size === 'medium';
+  const boxSize = isMedium ? IconSize.medium : IconSize.small;
+
+  const labelSx = {
+    fontSize: isMedium ? FontSize.lg : FontSize.sm,
+    lineHeight: isMedium ? FontSize.lg : FontSize.sm,
+    fontWeight: isMedium ? FontWeight.normal : FontWeight.medium,
+  };
+
+  const descriptionSx = {
+    fontSize: isMedium ? FontSize.sm : FontSize.xs,
+    lineHeight: isMedium ? FontSize.sm : FontSize.xs,
+    fontWeight: isMedium ? FontWeight.medium : FontWeight.normal,
+  };
+
+  if (hideIfZero && amount.eq(0)) return null;
+
+  return (
+    <Stack width="100%" gap={0}>
+      <Row width="100%" justifyContent="space-between">
+        <Row gap={0.5}>
+          <IconWrapper boxSize={boxSize}>
+            <TokenIcon
+              token={token}
+              css={{
+                height: size === 'small' ? IconSize.xs : undefined,
+              }}
+            />
+          </IconWrapper>
+          <Typography color="text.primary" sx={labelSx}>
+            {label || token.symbol}
+          </Typography>
+        </Row>
+        <Tooltip title={amountTooltip || ''}>
+          <Typography
+            sx={{
+              color: amount.lt(0) ? BeanstalkPalette.trueRed : 'text.secondary',
+              textAlign: 'right',
+              ...labelSx,
+            }}
+          >
+            {formatBN(
+              tokenValueToBN(amount),
+              token.displayDecimals,
+              amountSuffix
+            )}
+          </Typography>
+        </Tooltip>
+      </Row>
+      {below?.length
+        ? below.map(
+            ({ description, descriptionTooltip, delta, deltaSuffix }, i) => (
+              <Row
+                width="100%"
+                justifyContent="space-between"
+                key={`desc-row-${label}-${i}`}
+              >
+                <Row gap={0.5}>
+                  <Box
+                    sx={{
+                      width:
+                        size === 'medium' ? IconSize.medium : IconSize.small,
+                      height: size === 'medium' ? FontSize.lg : FontSize.sm,
+                    }}
+                  />
+                  {description ? (
+                    <Typography
+                      color="text.secondary"
+                      textAlign="right"
+                      sx={descriptionSx}
+                    >
+                      {description}
+                      {descriptionTooltip ? (
+                        <Tooltip title={descriptionTooltip || ''}>
+                          <HelpOutlineIcon
+                            sx={{
+                              ml: 0.1,
+                              color: 'text.secondary',
+                              display: 'inline',
+                              mb: 0.2,
+                              fontSize: '11px',
+                            }}
+                          />
+                        </Tooltip>
+                      ) : null}
+                    </Typography>
+                  ) : null}
+                </Row>
+                {delta ? (
+                  <Typography color="text.tertiary" sx={descriptionSx}>
+                    {typeof delta === 'string'
+                      ? delta
+                      : formatBN(tokenValueToBN(delta), 2, deltaSuffix)}
+                  </Typography>
+                ) : null}
+              </Row>
+            )
+          )
+        : null}
+    </Stack>
+  );
+};
+
 TokenOutput.Row = TokenOutputRow;
+TokenOutput.MultiRow = MultiOutputRow;

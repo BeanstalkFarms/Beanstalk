@@ -356,14 +356,30 @@ dataSources:
       abis:
         - name: PreReplant
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Pre-Replant.json
-      blockHandlers:
-        - handler: handleInitVersion
-          filter:
-            kind: once
-      file: ../src/utils/Init.ts
-  ###
-  # EXPLOIT
-  ###
+        - name: UniswapV2Pair
+          file: ../../subgraph-core/abis/UniswapV2Pair.json
+        - name: ERC20
+          file: ../../subgraph-core/abis/ERC20.json
+        - name: CurvePrice
+          file: ../../subgraph-core/abis/CurvePrice.json
+        - name: BeanstalkPrice
+          file: ../../subgraph-core/abis/BeanstalkPrice.json
+      eventHandlers:
+        - event: WeatherChange(indexed uint256,uint256,int8)
+          handler: handleWeatherChange
+        - event: Sow(indexed address,uint256,uint256,uint256)
+          handler: handleSow
+        - event: Harvest(indexed address,uint256[],uint256)
+          handler: handleHarvest
+        - event: PlotTransfer(indexed address,indexed address,indexed uint256,uint256)
+          handler: handlePlotTransfer
+        - event: SupplyIncrease(indexed uint256,uint256,uint256,uint256,int256)
+          handler: handleSupplyIncrease
+        - event: SupplyDecrease(indexed uint256,uint256,int256)
+          handler: handleSupplyDecrease
+        - event: SupplyNeutral(indexed uint256,int256)
+          handler: handleSupplyNeutral
+      file: ./src/FieldHandler.ts
   - kind: ethereum/contract
     name: Exploit
     network: mainnet

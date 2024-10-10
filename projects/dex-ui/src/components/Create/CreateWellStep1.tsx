@@ -1,13 +1,15 @@
 import React from "react";
-import { Flex } from "src/components/Layout";
-import { Text } from "src/components/Typography";
 
 import { FormProvider, useForm } from "react-hook-form";
+import styled from "styled-components";
+
+import { Flex } from "src/components/Layout";
+import { Text } from "src/components/Typography";
+import { theme } from "src/utils/ui/theme";
+
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
 import { ComponentInputWithCustom } from "./shared/ComponentInputWithCustom";
 import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
-import styled from "styled-components";
-import { theme } from "src/utils/ui/theme";
 import { StyledForm } from "../Form";
 
 type FormValues = CreateWellStepProps["step1"];

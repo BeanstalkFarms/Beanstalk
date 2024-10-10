@@ -15,7 +15,10 @@ import { ethers } from 'ethers';
 import { toStringBaseUnitBN, tokenValueToBN } from '~/util';
 
 export class BuyPlotsFarmStep extends FarmStep {
-  constructor(_sdk: BeanstalkSDK, private _account: string) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _account: string
+  ) {
     super(_sdk);
     this._account = _account;
   }
@@ -47,10 +50,14 @@ export class BuyPlotsFarmStep extends FarmStep {
       prepare: () => ({
         target: beanstalk.address,
         callData: beanstalk.interface.encodeFunctionData('createPodOrder', [
+          {
+            orderer: this._account,
+            fieldId: '0',
+            pricePerPod: BEAN[1].stringify(pricePerPod),
+            maxPlaceInLine: BEAN[1].stringify(placeInLine),
+            minFillAmount: toStringBaseUnitBN(new BigNumber(1), PODS.decimals),
+          },
           BEAN[1].stringify(tokenValueToBN(beanAmountOut)),
-          BEAN[1].stringify(pricePerPod),
-          BEAN[1].stringify(placeInLine),
-          toStringBaseUnitBN(new BigNumber(1), PODS.decimals),
           FarmFromMode.INTERNAL_TOLERANT,
         ]),
       }),

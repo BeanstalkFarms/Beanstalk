@@ -7,7 +7,6 @@ import wEthIconCircled from '~/img/tokens/weth-logo-circled.svg';
 
 // Bean Images
 import beanCircleLogo from '~/img/tokens/bean-logo-circled.svg';
-import beanCrv3LpLogo from '~/img/tokens/bean-crv3-logo.svg';
 
 // Beanstalk Token Logos
 import stalkLogo from '~/img/beanstalk/stalk-icon-winter.svg';
@@ -18,6 +17,10 @@ import rinsableSproutLogo from '~/img/beanstalk/rinsable-sprout-icon.svg';
 import beanEthLpLogo from '~/img/tokens/bean-eth-lp-logo.svg';
 import beanEthWellLpLogo from '~/img/tokens/bean-eth-well-lp-logo.svg';
 import beathWstethWellLPLogo from '~/img/tokens/bean-wsteth-logo.svg';
+import beanUsdcWellLpLogo from '~/img/tokens/bean-usdc-well-lp-logo.svg';
+import beanWbtcWellLpLogo from '~/img/tokens/bean-wbtc-well-lp-logo.svg';
+import beanUsdtWellLpLogo from '~/img/tokens/bean-usdt-well-lp-logo.svg';
+import beanWeethWellLpLogo from '~/img/tokens/bean-weeth-well-lp-logo.svg';
 
 // ERC-20 Token Images
 import crv3Logo from '~/img/tokens/crv3-logo.png';
@@ -29,10 +32,17 @@ import stethLogo from '~/img/tokens/steth-logo.svg';
 import wstethLogo from '~/img/tokens/wsteth-logo.svg';
 import unripeBeanLogo from '~/img/tokens/unripe-bean-logo-circled.svg';
 import unripeBeanWstethLogoUrl from '~/img/tokens/unripe-bean-wsteth-logo.svg';
+import arbitrumLogo from '~/img/tokens/arbitrum-logo.svg';
+import weethLogo from '~/img/tokens/weeth-logo.png';
+import wbtcLogo from '~/img/tokens/wbtc-logo.svg';
 import useSetting from '~/hooks/app/useSetting';
 import { SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
 import { useSigner } from '~/hooks/ledger/useSigner';
+import { useDynamicSeeds } from '~/hooks/sdk';
+import useChainState from '~/hooks/chain/useChainState';
+import useChainId from '~/hooks/chain/useChainId';
+import { ChainResolver } from '@beanstalk/sdk-core';
 
 const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
 
@@ -50,14 +60,18 @@ const setTokenMetadatas = (sdk: BeanstalkSDK) => {
   sdk.tokens.WETH.setMetadata({ logo: wEthIconCircled });
   sdk.tokens.STETH.setMetadata({ logo: stethLogo });
   sdk.tokens.WSTETH.setMetadata({ logo: wstethLogo });
+  sdk.tokens.WEETH.setMetadata({ logo: weethLogo });
 
   // ERC-20 LP tokens
-  sdk.tokens.BEAN_CRV3_LP.setMetadata({ logo: beanCrv3LpLogo });
   sdk.tokens.BEAN_ETH_WELL_LP.setMetadata({ logo: beanEthWellLpLogo });
   sdk.tokens.BEAN_WSTETH_WELL_LP.setMetadata({
     logo: beathWstethWellLPLogo,
   });
   sdk.tokens.UNRIPE_BEAN_WSTETH.setMetadata({ logo: unripeBeanWstethLogoUrl });
+  sdk.tokens.BEAN_WEETH_WELL_LP.setMetadata({ logo: beanWeethWellLpLogo });
+  sdk.tokens.BEAN_WBTC_WELL_LP.setMetadata({ logo: beanWbtcWellLpLogo });
+  sdk.tokens.BEAN_USDC_WELL_LP.setMetadata({ logo: beanUsdcWellLpLogo });
+  sdk.tokens.BEAN_USDT_WELL_LP.setMetadata({ logo: beanUsdtWellLpLogo });
 
   // ERC-20 tokens
   sdk.tokens.BEAN.setMetadata({ logo: beanCircleLogo });
@@ -67,23 +81,33 @@ const setTokenMetadatas = (sdk: BeanstalkSDK) => {
   sdk.tokens.USDC.setMetadata({ logo: usdcLogo });
   sdk.tokens.USDT.setMetadata({ logo: usdtLogo });
   sdk.tokens.LUSD.setMetadata({ logo: lusdLogo });
+  sdk.tokens.ARB.setMetadata({ logo: arbitrumLogo });
+  sdk.tokens.WBTC.setMetadata({ logo: wbtcLogo });
 };
+
+export const BeanstalkSDKContext = createContext<BeanstalkSDK | undefined>(
+  undefined
+);
 
 const useBeanstalkSdkContext = () => {
   const { data: signer } = useSigner();
   const provider = useEthersProvider();
+  const chainId = useChainId();
 
   const [datasource] = useSetting('datasource');
   const [subgraphEnv] = useSetting('subgraphEnv');
 
   const subgraphUrl =
-    SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.beanstalk;
+    SUBGRAPH_ENVIRONMENTS?.[subgraphEnv]?.subgraphs?.[
+      ChainResolver.isL2Chain(chainId) ? 'beanstalk' : 'beanstalk_eth'
+    ];
 
   return useMemo(() => {
     console.debug(`Instantiating BeanstalkSDK`, {
       provider,
       signer,
       datasource,
+      chainId,
       subgraphUrl,
     });
 
@@ -93,29 +117,33 @@ const useBeanstalkSdkContext = () => {
       signer: signer ?? undefined,
       source: datasource,
       DEBUG: IS_DEVELOPMENT_ENV,
+      zeroXApiKey: import.meta.env.VITE_ZERO_X_API_KEY,
       ...(subgraphUrl ? { subgraphUrl } : {}),
     });
 
     setTokenMetadatas(sdk);
     return sdk;
-  }, [datasource, provider, signer, subgraphUrl]);
+  }, [datasource, provider, signer, subgraphUrl, chainId]);
 };
-
-export const BeanstalkSDKContext = createContext<
-  ReturnType<typeof useBeanstalkSdkContext> | undefined
->(undefined);
 
 function BeanstalkSDKProvider({ children }: { children: React.ReactNode }) {
   const sdk = useBeanstalkSdkContext();
-  // const ready = useDynamicSeeds(sdk);
+  const { isArbitrum, isTestnet } = useChainState();
+
+  const isArbTestnet = isArbitrum && isTestnet;
+
+  // only run this on arbitrum dev
+  const ready = useDynamicSeeds(sdk, isArbTestnet);
+
+  if (isArbTestnet && !ready) {
+    return null;
+  }
 
   return (
     <>
-      {/* {ready && ( */}
       <BeanstalkSDKContext.Provider value={sdk}>
         {children}
       </BeanstalkSDKContext.Provider>
-      {/* )} */}
     </>
   );
 }

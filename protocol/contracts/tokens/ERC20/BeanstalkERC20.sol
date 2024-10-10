@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import {ERC20Permit} from "./ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /**
  * @dev {ERC20} token, including:
@@ -23,7 +22,11 @@ import {ERC20Permit} from "./ERC20Permit.sol";
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
  */
-contract BeanstalkERC20 is ERC20Permit, ERC20Burnable, AccessControl { // removed Context,
+contract BeanstalkERC20 is
+    ERC20Permit,
+    ERC20Burnable,
+    AccessControl // removed Context,
+{
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /**
@@ -31,12 +34,13 @@ contract BeanstalkERC20 is ERC20Permit, ERC20Burnable, AccessControl { // remove
      * account that deploys the contract.
      * See {ERC20-constructor}.
      */
-    constructor(address admin, string memory name, string memory symbol) 
-        ERC20(name, symbol) 
-        ERC20Permit(name) 
-    {
-        _setupRole(DEFAULT_ADMIN_ROLE, admin);
-        _setupRole(MINTER_ROLE, admin);
+    constructor(
+        address admin,
+        string memory name,
+        string memory symbol
+    ) ERC20(name, symbol) ERC20Permit(name) {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(MINTER_ROLE, admin);
     }
 
     /**

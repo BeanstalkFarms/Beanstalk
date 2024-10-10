@@ -2,23 +2,23 @@
  SPDX-License-Identifier: MIT
 */
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/SafeCast.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
-import {LibSafeMath128} from "./LibSafeMath128.sol";
+import {LibRedundantMath128} from "./LibRedundantMath128.sol";
 import {C} from "../C.sol";
 import {LibUnripe} from "./LibUnripe.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibBarnRaise} from "./LibBarnRaise.sol";
 import {LibDiamond} from "contracts/libraries/LibDiamond.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
-
+import {LibTractor} from "contracts/libraries/LibTractor.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Publius
@@ -26,8 +26,8 @@ import {LibUsdOracle} from "contracts/libraries/Oracle/LibUsdOracle.sol";
  **/
 
 library LibFertilizer {
-    using SafeMath for uint256;
-    using LibSafeMath128 for uint128;
+    using LibRedundantMath256 for uint256;
+    using LibRedundantMath128 for uint128;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
     using LibWell for address;
@@ -43,8 +43,9 @@ library LibFertilizer {
 
     /**
      * @dev Adds a new fertilizer to Beanstalk, updates global state,
-     * the season queue, and returns the corresponding fertilizer id.  
+     * the season queue, and returns the corresponding fertilizer id.
      * @param season The season the fertilizer is added.
+     * @param tokenAmountIn The amount of barnRaiseToken being used to purchase Fertilizer.
      * @param fertilizerAmount The amount of Fertilizer to add.
      * @param minLP The minimum amount of LP to add.
      * @return id The id of the Fertilizer.
@@ -61,18 +62,16 @@ library LibFertilizer {
 
         // Calculate Beans Per Fertilizer and add to total owed
         uint128 bpf = getBpf(season);
-        s.unfertilizedIndex = s.unfertilizedIndex.add(
-            fertilizerAmount.mul(bpf)
-        );
+        s.sys.fert.unfertilizedIndex = s.sys.fert.unfertilizedIndex.add(fertilizerAmount.mul(bpf));
         // Get id
-        id = s.bpf.add(bpf);
+        id = s.sys.fert.bpf.add(bpf);
         // Update Total and Season supply
-        s.fertilizer[id] = s.fertilizer[id].add(fertilizerAmount128);
-        s.activeFertilizer = s.activeFertilizer.add(fertilizerAmount);
+        s.sys.fert.fertilizer[id] = s.sys.fert.fertilizer[id].add(fertilizerAmount128);
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.add(fertilizerAmount);
         // Add underlying to Unripe Beans and Unripe LP
         addUnderlying(tokenAmountIn, fertilizerAmount.mul(DECIMALS), minLP);
         // If not first time adding Fertilizer with this id, return
-        if (s.fertilizer[id] > fertilizerAmount128) return id;
+        if (s.sys.fert.fertilizer[id] > fertilizerAmount128) return id;
         // If first time, log end Beans Per Fertilizer and add to Season queue.
         push(id);
         emit SetFertilizer(id, bpf);
@@ -104,59 +103,54 @@ library LibFertilizer {
     }
 
     /**
-     * @dev Any token contributions should already be transferred to the Barn Raise Well to allow for a gas efficient liquidity
-     * addition through the use of `sync`. See {FertilizerFacet.mintFertilizer} for an example.
+     * @dev Transfers `tokenAmountIn` of `barnRaiseToken` to the Barn Raise Well, mints and
+     * adds corresponding Bean liquidity.
      */
-    function addUnderlying(uint256 tokenAmountIn, uint256 usdAmount, uint256 minAmountOut) internal {
+    function addUnderlying(
+        uint256 tokenAmountIn,
+        uint256 usdAmount,
+        uint256 minAmountOut
+    ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         // Calculate how many new Deposited Beans will be minted
-        uint256 percentToFill = usdAmount.mul(C.precision()).div(
-            remainingRecapitalization()
-        );
+        uint256 percentToFill = usdAmount.mul(C.precision()).div(remainingRecapitalization());
 
         uint256 newDepositedBeans;
-        if (C.unripeBean().totalSupply() > s.u[C.UNRIPE_BEAN].balanceOfUnderlying) {
-            newDepositedBeans = (C.unripeBean().totalSupply()).sub(
-                s.u[C.UNRIPE_BEAN].balanceOfUnderlying
+        if (
+            IERC20(s.sys.tokens.urBean).totalSupply() >
+            s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying
+        ) {
+            newDepositedBeans = (IERC20(s.sys.tokens.urBean).totalSupply()).sub(
+                s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying
             );
-            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(
-                C.precision()
-            );
+            newDepositedBeans = newDepositedBeans.mul(percentToFill).div(C.precision());
         }
         // Calculate how many Beans to add as LP
-        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(
-            DECIMALS
-        );
+        uint256 newDepositedLPBeans = usdAmount.mul(C.exploitAddLPRatio()).div(DECIMALS);
 
         // Mint the Deposited Beans to Beanstalk.
-        C.bean().mint(
-            address(this),
-            newDepositedBeans
-        );
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), newDepositedBeans);
 
         // Mint the LP Beans and add liquidity to the well.
         address barnRaiseWell = LibBarnRaise.getBarnRaiseWell();
         address barnRaiseToken = LibBarnRaise.getBarnRaiseToken();
 
-        C.bean().mint(
-            address(this),
-            newDepositedLPBeans
-        );
+        BeanstalkERC20(s.sys.tokens.bean).mint(address(this), newDepositedLPBeans);
 
         IERC20(barnRaiseToken).transferFrom(
-            msg.sender,
+            LibTractor._user(),
             address(this),
             uint256(tokenAmountIn)
         );
 
         IERC20(barnRaiseToken).approve(barnRaiseWell, uint256(tokenAmountIn));
-        C.bean().approve(barnRaiseWell, newDepositedLPBeans);
+        BeanstalkERC20(s.sys.tokens.bean).approve(barnRaiseWell, newDepositedLPBeans);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         IERC20[] memory tokens = IWell(barnRaiseWell).tokens();
-        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == C.bean() ?
-            (newDepositedLPBeans, tokenAmountIn) :
-            (tokenAmountIn, newDepositedLPBeans);
+        (tokenAmountsIn[0], tokenAmountsIn[1]) = tokens[0] == BeanstalkERC20(s.sys.tokens.bean)
+            ? (newDepositedLPBeans, tokenAmountIn)
+            : (tokenAmountIn, newDepositedLPBeans);
 
         uint256 newLP = IWell(barnRaiseWell).addLiquidity(
             tokenAmountsIn,
@@ -166,38 +160,38 @@ library LibFertilizer {
         );
 
         // Increment underlying balances of Unripe Tokens
-        LibUnripe.incrementUnderlying(C.UNRIPE_BEAN, newDepositedBeans);
-        LibUnripe.incrementUnderlying(C.UNRIPE_LP, newLP);
+        LibUnripe.incrementUnderlying(s.sys.tokens.urBean, newDepositedBeans);
+        LibUnripe.incrementUnderlying(s.sys.tokens.urLp, newLP);
 
-        s.recapitalized = s.recapitalized.add(usdAmount);
+        s.sys.fert.recapitalized = s.sys.fert.recapitalized.add(usdAmount);
     }
 
     /**
      * @dev Adds a fertilizer id in the queue.
      * fFirst is the lowest active Fertilizer Id (see AppStorage)
      * (start of linked list that is stored by nextFid).
-     *  The highest active Fertilizer Id 
-     * (end of linked list that is stored by nextFid). 
+     *  The highest active Fertilizer Id
+     * (end of linked list that is stored by nextFid).
      * @param id The id of the fertilizer.
      */
     function push(uint128 id) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        if (s.fFirst == 0) {
+        if (s.sys.fert.fertFirst == 0) {
             // Queue is empty
-            s.season.fertilizing = true;
-            s.fLast = id;
-            s.fFirst = id;
-        } else if (id <= s.fFirst) {
+            s.sys.season.fertilizing = true;
+            s.sys.fert.fertLast = id;
+            s.sys.fert.fertFirst = id;
+        } else if (id <= s.sys.fert.fertFirst) {
             // Add to front of queue
-            setNext(id, s.fFirst);
-            s.fFirst = id;
-        } else if (id >= s.fLast) {
+            setNext(id, s.sys.fert.fertFirst);
+            s.sys.fert.fertFirst = id;
+        } else if (id >= s.sys.fert.fertLast) {
             // Add to back of queue
-            setNext(s.fLast, id);
-            s.fLast = id;
+            setNext(s.sys.fert.fertLast, id);
+            s.sys.fert.fertLast = id;
         } else {
             // Add to middle of queue
-            uint128 prev = s.fFirst;
+            uint128 prev = s.sys.fert.fertFirst;
             uint128 next = getNext(prev);
             // Search for proper place in line
             while (id > next) {
@@ -213,23 +207,20 @@ library LibFertilizer {
      * @dev Returns the dollar amount remaining for beanstalk to recapitalize.
      * @return remaining The dollar amount remaining.
      */
-    function remainingRecapitalization()
-        internal
-        view
-        returns (uint256 remaining)
-    {
+    function remainingRecapitalization() internal view returns (uint256 remaining) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 totalDollars = getTotalRecapDollarsNeeded();
-        if (s.recapitalized >= totalDollars) return 0;
-        return totalDollars.sub(s.recapitalized);
+        if (s.sys.fert.recapitalized >= totalDollars) return 0;
+        return totalDollars.sub(s.sys.fert.recapitalized);
     }
 
     /**
      * @dev Returns the total dollar amount needed to recapitalize Beanstalk.
      * @return totalDollars The total dollar amount.
      */
-    function getTotalRecapDollarsNeeded() internal view returns(uint256) {
-        return getTotalRecapDollarsNeeded(C.unripeLP().totalSupply());
+    function getTotalRecapDollarsNeeded() internal view returns (uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        return getTotalRecapDollarsNeeded(IERC20(s.sys.tokens.urLp).totalSupply());
     }
 
     /**
@@ -238,15 +229,12 @@ library LibFertilizer {
      * @param urLPsupply The supply of Unripe LP.
      * @return totalDollars The total dollar amount.
      */
-    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal pure returns(uint256) {
-	    uint256 totalDollars = C
-            .dollarPerUnripeLP()
-            .mul(urLPsupply)
-            .div(DECIMALS);
-        totalDollars = totalDollars / 1e6 * 1e6; // round down to nearest USDC
+    function getTotalRecapDollarsNeeded(uint256 urLPsupply) internal pure returns (uint256) {
+        uint256 totalDollars = C.dollarPerUnripeLP().mul(urLPsupply).div(DECIMALS);
+        totalDollars = (totalDollars / 1e6) * 1e6; // round down to nearest USDC
         return totalDollars;
     }
-    
+
     /**
      * @dev Removes the first fertilizer id in the queue.
      * fFirst is the lowest active Fertilizer Id (see AppStorage)
@@ -255,18 +243,18 @@ library LibFertilizer {
      */
     function pop() internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint128 first = s.fFirst;
-        s.activeFertilizer = s.activeFertilizer.sub(getAmount(first));
+        uint128 first = s.sys.fert.fertFirst;
+        s.sys.fert.activeFertilizer = s.sys.fert.activeFertilizer.sub(getAmount(first));
         uint128 next = getNext(first);
         if (next == 0) {
             // If all Unfertilized Beans have been fertilized, delete line.
-            require(s.activeFertilizer == 0, "Still active fertilizer");
-            s.fFirst = 0;
-            s.fLast = 0;
-            s.season.fertilizing = false;
+            require(s.sys.fert.activeFertilizer == 0, "Still active fertilizer");
+            s.sys.fert.fertFirst = 0;
+            s.sys.fert.fertLast = 0;
+            s.sys.season.fertilizing = false;
             return false;
         }
-        s.fFirst = getNext(first);
+        s.sys.fert.fertFirst = getNext(first);
         return true;
     }
 
@@ -276,7 +264,7 @@ library LibFertilizer {
      */
     function getAmount(uint128 id) internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.fertilizer[id];
+        return s.sys.fert.fertilizer[id];
     }
 
     /**
@@ -286,7 +274,7 @@ library LibFertilizer {
      */
     function getNext(uint128 id) internal view returns (uint128) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return s.nextFid[id];
+        return s.sys.fert.nextFid[id];
     }
 
     /**
@@ -297,7 +285,7 @@ library LibFertilizer {
      */
     function setNext(uint128 id, uint128 next) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.nextFid[id] = next;
+        s.sys.fert.nextFid[id] = next;
     }
 
     function beginBarnRaiseMigration(address well) internal {
@@ -309,18 +297,56 @@ library LibFertilizer {
         IERC20[] memory tokens = IWell(well).tokens();
         require(tokens.length == 2, "Fertilizer: Well must have 2 tokens.");
         require(
-            tokens[0] == C.bean() || tokens[1] == C.bean(),
+            tokens[0] == BeanstalkERC20(s.sys.tokens.bean) ||
+                tokens[1] == BeanstalkERC20(s.sys.tokens.bean),
             "Fertilizer: Well must have BEAN."
         );
         // Check that Lib Usd Oracle supports the non-Bean token in the Well.
-        LibUsdOracle.getTokenPrice(address(tokens[tokens[0] == C.bean() ? 1 : 0]));
+        require(
+            LibUsdOracle.getTokenPrice(
+                address(tokens[tokens[0] == BeanstalkERC20(s.sys.tokens.bean) ? 1 : 0])
+            ) != 0
+        );
 
-        uint256 balanceOfUnderlying = s.u[C.UNRIPE_LP].balanceOfUnderlying;
-        IERC20(s.u[C.UNRIPE_LP].underlyingToken).safeTransfer(
+        uint256 balanceOfUnderlying = s
+            .sys
+            .silo
+            .unripeSettings[s.sys.tokens.urLp]
+            .balanceOfUnderlying;
+        IERC20(s.sys.silo.unripeSettings[s.sys.tokens.urLp].underlyingToken).safeTransfer(
             LibDiamond.diamondStorage().contractOwner,
             balanceOfUnderlying
         );
-        LibUnripe.decrementUnderlying(C.UNRIPE_LP, balanceOfUnderlying);
-        LibUnripe.switchUnderlyingToken(C.UNRIPE_LP, well);
+        LibUnripe.decrementUnderlying(s.sys.tokens.urLp, balanceOfUnderlying);
+        LibUnripe.switchUnderlyingToken(s.sys.tokens.urLp, well);
+    }
+
+    /**
+     * Taken from previous versions of OpenZeppelin Library.
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }

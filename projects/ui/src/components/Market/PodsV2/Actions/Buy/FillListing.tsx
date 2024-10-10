@@ -23,7 +23,7 @@ const FillListing: React.FC<{}> = () => {
       (async () => {
         try {
           const _listing = await beanstalk
-            .podListing(listingID.toString())
+            .getPodListing('0', listingID.toString())
             .then(bigNumberResult);
           console.debug('[pages/listing] listing = ', _listing);
           setListingValid(_listing?.gt(0));

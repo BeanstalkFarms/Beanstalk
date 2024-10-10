@@ -1,12 +1,16 @@
-const glob = import.meta.glob("src/assets/images/tokens/*.svg", {
-  eager: true,
-  as: "url"
-  // import: "default"
-});
+const glob = import.meta.glob(
+  ["src/assets/images/tokens/*.svg", "src/assets/images/tokens/*.png"],
+  {
+    eager: true,
+    as: "url"
+  }
+);
 
 export const images: Record<string, string> = {};
 
 for (const key of Object.keys(glob)) {
-  let symbol = key.replace("/src/assets/images/tokens/", "").replace(".svg", "");
+  const parts = key.split("/");
+  const filename = parts[parts.length - 1];
+  const symbol = filename.replace(/\.(svg|png)$/, "");
   images[symbol] = glob[key];
 }

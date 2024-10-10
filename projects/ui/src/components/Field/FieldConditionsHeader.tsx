@@ -5,7 +5,7 @@ import { Box, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { FontWeight } from '~/components/App/muiTheme';
 import useSeason from '~/hooks/beanstalk/useSeason';
-import { BLOCKS_PER_MORNING } from '~/state/beanstalk/sun/morning';
+import { INTERVALS_PER_MORNING } from '~/state/beanstalk/sun/morning';
 import { AppState } from '~/state';
 import { Sun } from '~/state/beanstalk/sun';
 import Row from '~/components/Common/Row';
@@ -26,7 +26,7 @@ const FieldConditionsHeader: React.FC<{
     return (
       <Stack gap={0.2}>
         <Typography variant="h4" fontWeight={FontWeight.bold}>
-          🌤️ Morning: Block {interval} of {BLOCKS_PER_MORNING}, Season
+          🌤️ Morning: Block {interval} of {INTERVALS_PER_MORNING}, Season
           <Typography
             variant="inherit"
             component="span"
@@ -46,7 +46,7 @@ const FieldConditionsHeader: React.FC<{
   return (
     <Row gap={0.2} width="100%" justifyContent="space-between">
       <Typography variant="h4" fontWeight={FontWeight.bold}>
-        {isMobile 
+        {isMobile
           ? '🌤️ Field Conditions'
           : `🌤️ Field Conditions, Season ${season.gt(0) && season.toString()}`}
       </Typography>

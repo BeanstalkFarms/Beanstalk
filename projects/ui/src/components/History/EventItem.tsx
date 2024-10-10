@@ -6,10 +6,10 @@ import Token from '~/classes/Token';
 import { displayBN, toTokenUnitsBN } from '~/util';
 import { BEAN, PODS, SILO_WHITELIST } from '~/constants/tokens';
 import { SupportedChainId } from '~/constants/chains';
-import TokenIcon from '../Common/TokenIcon';
-import useTokenMap from '../../hooks/chain/useTokenMap';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
+import TokenIcon from '../Common/TokenIcon';
+import useTokenMap from '../../hooks/chain/useTokenMap';
 
 export interface EventItemProps {
   event: EventManager.Event;
@@ -108,12 +108,12 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     case 'Sow': {
       const pods = toTokenUnitsBN(
         event.args?.pods.toString(),
-        BEAN[SupportedChainId.MAINNET].decimals
+        BEAN[SupportedChainId.ARBITRUM_MAINNET].decimals
       );
       if (event.args?.beans.toString() !== undefined) {
         const beans = toTokenUnitsBN(
           event.args?.beans.toString(),
-          BEAN[SupportedChainId.MAINNET].decimals
+          BEAN[SupportedChainId.ARBITRUM_MAINNET].decimals
         );
 
         const weather = pods
@@ -126,7 +126,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
         amountOut = (
           <TokenDisplay
             color="red"
-            input={[beans, BEAN[SupportedChainId.MAINNET]]}
+            input={[beans, BEAN[SupportedChainId.ARBITRUM_MAINNET]]}
           />
         );
         amountIn = <TokenDisplay color="green" input={[pods, PODS]} />;
@@ -139,7 +139,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     case 'Harvest': {
       const beans = toTokenUnitsBN(
         new BigNumberJS(event.args?.beans.toString()),
-        BEAN[SupportedChainId.MAINNET].decimals
+        BEAN[SupportedChainId.ARBITRUM_MAINNET].decimals
       );
 
       eventTitle = 'Pod Harvest';
@@ -147,7 +147,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
       amountIn = (
         <TokenDisplay
           color="green"
-          input={[beans, BEAN[SupportedChainId.MAINNET]]}
+          input={[beans, BEAN[SupportedChainId.ARBITRUM_MAINNET]]}
         />
       );
       break;
@@ -174,7 +174,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
     case 'PlotTransfer': {
       const pods = toTokenUnitsBN(
         new BigNumberJS(event.args?.pods.toString()),
-        BEAN[SupportedChainId.MAINNET].decimals
+        BEAN[SupportedChainId.ARBITRUM_MAINNET].decimals
       );
       if (event.args?.from.toString().toLowerCase() === account) {
         eventTitle = 'Transfer Plot';

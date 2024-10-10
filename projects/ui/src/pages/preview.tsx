@@ -27,7 +27,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import useAccount from '../hooks/ledger/useAccount';
 import PageHeader from '~/components/Common/PageHeader';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
@@ -42,6 +41,7 @@ import {
 } from '~/components/Common/Dialog';
 import TokenIcon from '~/components/Common/TokenIcon';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
+import useAccount from '../hooks/ledger/useAccount';
 
 const MigrationPreview: FC<{}> = () => {
   const connectedAccount = useAccount();
@@ -67,6 +67,7 @@ const MigrationPreview: FC<{}> = () => {
       validateAddress(accountUrl);
       getMigrationData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function validateAddress(address: string) {
@@ -79,7 +80,7 @@ const MigrationPreview: FC<{}> = () => {
     }
   }
 
-  function useConnectedWallet() {
+  function getConnectedWallet() {
     if (!connectedAccount) return;
     validateAddress(connectedAccount);
     getMigrationData();
@@ -291,7 +292,7 @@ const MigrationPreview: FC<{}> = () => {
                   size="large"
                   fullWidth
                   disabled={!connectedAccount}
-                  onClick={() => useConnectedWallet()}
+                  onClick={() => getConnectedWallet()}
                 >
                   Use Connected Wallet
                 </Button>
@@ -342,7 +343,7 @@ const MigrationPreview: FC<{}> = () => {
                         Silo V2 Withdrawals
                       </b>{' '}
                       are put into the respective{' '}
-                      <b>accounts' Farm Balances.</b>
+                      <b>{`accounts' Farm Balances.`}</b>
                     </li>
                   </ul>
                 </div>
@@ -355,9 +356,9 @@ const MigrationPreview: FC<{}> = () => {
                     {` ${new Date(data.meta.timestamp * 1000).toLocaleString()}`}
                     ).{' '}
                   </b>
-                  You should cross reference this with your balances in the rest
+                  {`You should cross reference this with your balances in the rest
                   of the Beanstalk UI (assuming your balances haven't changed
-                  since block {data.meta.block}).
+                  since block ${data.meta.block}).`}
                 </div>
                 <div>
                   Note that{' '}
@@ -413,8 +414,8 @@ const MigrationPreview: FC<{}> = () => {
                       >
                         <Typography fontSize={18}>Earned Beans</Typography>
                         <Tooltip
-                          title={'Earned Beans will be automatically Planted.'}
-                          placement={'right'}
+                          title="Earned Beans will be automatically Planted."
+                          placement="right"
                         >
                           <HelpOutlineIcon
                             sx={{
@@ -490,7 +491,7 @@ const MigrationPreview: FC<{}> = () => {
                                       {tokenData.token.displayName}
                                     </Typography>
                                   </Box>
-                                  <Typography fontSize={20} variant={'h4'}>
+                                  <Typography fontSize={20} variant="h4">
                                     {tokenData.amount.toHuman('short')}
                                   </Typography>
                                 </Box>
@@ -504,7 +505,7 @@ const MigrationPreview: FC<{}> = () => {
                   {data.silo.deposits.length > 0 && (
                     <Accordion
                       variant="elevation"
-                      key={'siloMigration'}
+                      key="siloMigration"
                       sx={{
                         '::before': { display: 'none' },
                         border: `1px solid ${BeanstalkPalette.blue}`,
@@ -656,7 +657,7 @@ const MigrationPreview: FC<{}> = () => {
                   {data.field.plots.length > 0 && (
                     <Accordion
                       variant="elevation"
-                      key={'fieldMigration'}
+                      key="fieldMigration"
                       sx={{
                         '::before': { display: 'none' },
                         border: `1px solid ${BeanstalkPalette.blue}`,
@@ -775,10 +776,8 @@ const MigrationPreview: FC<{}> = () => {
                       >
                         <Typography fontSize={18}>Rinsable Sprouts</Typography>
                         <Tooltip
-                          title={
-                            'Rinsable Sprouts will be sent to Farm Balance.'
-                          }
-                          placement={'right'}
+                          title="Rinsable Sprouts will be sent to Farm Balance."
+                          placement="right"
                         >
                           <HelpOutlineIcon
                             sx={{
@@ -790,7 +789,7 @@ const MigrationPreview: FC<{}> = () => {
                           />
                         </Tooltip>
                       </Box>
-                      <Typography fontSize={18}></Typography>
+                      <Typography fontSize={18} />
                       <Typography fontSize={20} variant="h4">
                         {data.barn.totalRinsable.toHuman('short')}
                       </Typography>
@@ -805,7 +804,7 @@ const MigrationPreview: FC<{}> = () => {
                   {data.barn.fert.length > 0 && (
                     <Accordion
                       variant="elevation"
-                      key={'barnMigration'}
+                      key="barnMigration"
                       sx={{
                         '::before': { display: 'none' },
                         border: `1px solid ${BeanstalkPalette.blue}`,
@@ -935,55 +934,53 @@ const MigrationPreview: FC<{}> = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {data.farm.map((farmData: any, i: number) => {
-                          return (
-                            <TableRow
-                              key={`fert-${i}`}
+                        {data.farm.map((farmData: any, i: number) => (
+                          <TableRow
+                            key={`fert-${i}`}
+                            sx={{
+                              'td, th': {
+                                borderBottom: 0.5,
+                                borderColor: BeanstalkPalette.blue,
+                              },
+                              '&:last-child td, &:last-child th': {
+                                border: 0,
+                              },
+                            }}
+                          >
+                            <TableCell
+                              component="th"
+                              scope="row"
                               sx={{
-                                'td, th': {
-                                  borderBottom: 0.5,
-                                  borderColor: BeanstalkPalette.blue,
-                                },
-                                '&:last-child td, &:last-child th': {
-                                  border: 0,
-                                },
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 0.75,
                               }}
                             >
-                              <TableCell
-                                component="th"
-                                scope="row"
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  gap: 0.75,
-                                }}
-                              >
-                                <TokenIcon token={farmData.token} />
-                                <div>{farmData.token.displayName}</div>
-                              </TableCell>
-                              <TableCell align="right">
-                                {farmData.currentInternal.toHuman('short')}
-                              </TableCell>
-                              <TableCell align="right">
-                                {farmData.withdrawn.toHuman('short')}
-                              </TableCell>
-                              <TableCell align="right">
-                                {farmData.token.isUnripe
-                                  ? farmData.unpicked.toHuman('short')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell align="right">
-                                {farmData.token.displayName === 'Bean'
-                                  ? farmData.rinsable.toHuman('short')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell align="right">
-                                {farmData.total.toHuman('short')}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                              <TokenIcon token={farmData.token} />
+                              <div>{farmData.token.displayName}</div>
+                            </TableCell>
+                            <TableCell align="right">
+                              {farmData.currentInternal.toHuman('short')}
+                            </TableCell>
+                            <TableCell align="right">
+                              {farmData.withdrawn.toHuman('short')}
+                            </TableCell>
+                            <TableCell align="right">
+                              {farmData.token.isUnripe
+                                ? farmData.unpicked.toHuman('short')
+                                : '-'}
+                            </TableCell>
+                            <TableCell align="right">
+                              {farmData.token.displayName === 'Bean'
+                                ? farmData.rinsable.toHuman('short')
+                                : '-'}
+                            </TableCell>
+                            <TableCell align="right">
+                              {farmData.total.toHuman('short')}
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </TableContainer>

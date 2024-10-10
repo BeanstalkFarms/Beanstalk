@@ -2,15 +2,15 @@ import { useCallback, useState } from 'react';
 import { FarmToMode } from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
-import { useBeanstalkContract } from '../../ledger/useContract';
-import useFormMiddleware from '../../ledger/useFormMiddleware';
 import { BEAN, PODS } from '~/constants/tokens';
-import useChainConstant from '../../chain/useChainConstant';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { PodOrder } from '~/state/farmer/market';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
+import useChainConstant from '../../chain/useChainConstant';
+import useFormMiddleware from '../../ledger/useFormMiddleware';
+import { useBeanstalkContract } from '../../ledger/useContract';
 
 export default function useFarmerMarketCancelTxn() {
   /// Helpers
@@ -45,7 +45,7 @@ export default function useFarmerMarketCancelTxn() {
           setLoading(true);
           middleware.before();
 
-          const txn = await beanstalk.cancelPodListing(listingId);
+          const txn = await beanstalk.cancelPodListing('0', listingId);
           txToast.confirming(txn);
 
           const receipt = await txn.wait();
@@ -87,10 +87,19 @@ export default function useFarmerMarketCancelTxn() {
           // Check: Verify these params actually hash to an on-chain order
           // This prevents invalid orders from getting cancelled and emitting
           // a bogus PodOrderCancelled event.
-          const verify = await beanstalk.podOrder(account, ...params);
+          const verify = await beanstalk.getPodOrder(order.id);
           if (!verify || verify.eq(0)) throw new Error('Order not found');
 
-          const txn = await beanstalk.cancelPodOrder(...params, destination);
+          const txn = await beanstalk.cancelPodOrder(
+            {
+              orderer: account,
+              fieldId: '0',
+              pricePerPod: Bean.stringify(order.pricePerPod),
+              maxPlaceInLine: Bean.stringify(order.maxPlaceInLine),
+              minFillAmount: PODS.stringify(order.minFillAmount || 0),
+            },
+            destination
+          );
           txToast.confirming(txn);
 
           const receipt = await txn.wait();

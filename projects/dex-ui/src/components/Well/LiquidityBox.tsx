@@ -1,23 +1,23 @@
 import React from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
 
 import { TokenValue } from "@beanstalk/sdk";
 
 import { mediaQuery } from "src/breakpoints";
-import { BodyCaps, BodyS, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { Info } from "src/components/Icons";
 import { InfoBox } from "src/components/InfoBox";
+import { LoadingItem } from "src/components/LoadingItem";
 import { TokenLogo } from "src/components/TokenLogo";
 import { Tooltip } from "src/components/Tooltip";
+import { BodyCaps, BodyS, BodyXS, LinksButtonText, TextNudge } from "src/components/Typography";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
 import { FC } from "src/types";
 import { formatUSD } from "src/utils/format";
-
-import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
-import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
-import { LoadingItem } from "src/components/LoadingItem";
-import { Well } from "@beanstalk/sdk/Wells";
-import { Info } from "src/components/Icons";
 import useSdk from "src/utils/sdk/useSdk";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 
 type Props = {
   well: Well | undefined;

@@ -19,7 +19,8 @@ export class DepositOperation {
   route: Route;
 
   constructor(sdk: BeanstalkSDK, router: Router, targetToken: Token, account: string) {
-    if (!sdk.tokens.siloWhitelist.has(targetToken)) throw new Error(`Cannot deposit ${targetToken.symbol}, not on whitelist.`);
+    if (!sdk.tokens.siloWhitelist.has(targetToken))
+      throw new Error(`Cannot deposit ${targetToken.symbol}, not on whitelist.`);
 
     DepositOperation.sdk = sdk;
     this.router = router;
@@ -38,8 +39,8 @@ export class DepositOperation {
   buildWorkflow() {
     this.route = this.router.getRoute(this.inputToken.symbol, `${this.targetToken.symbol}:SILO`);
 
-    const isInputWhitelistedLP = DepositOperation.sdk.tokens.getIsWhitelistedWellLPToken(this.inputToken);
-    const isTargetWhitelistedLP = DepositOperation.sdk.tokens.getIsWhitelistedWellLPToken(this.targetToken);
+    const isInputWhitelistedLP = DepositOperation.sdk.tokens.isWellLP(this.inputToken);
+    const isTargetWhitelistedLP = DepositOperation.sdk.tokens.isWellLP(this.targetToken);
 
     // if the input token is NOT a whitelisted LP token like BEAN_ETH_WELL_LP, we need to use the advanced farm workflow
     // so that we can utilize pipeline to swap to the target token
@@ -98,7 +99,10 @@ export class DepositOperation {
       });
     }
 
-    const depositBDV = await DepositOperation.sdk.bean.getBDV(toToken, toToken.fromBlockchain(depositStep.amountOut));
+    const depositBDV = await DepositOperation.sdk.bean.getBDV(
+      toToken,
+      toToken.fromBlockchain(depositStep.amountOut)
+    );
 
     summary.push({
       type: ActionType.DEPOSIT,
@@ -123,7 +127,11 @@ export class DepositOperation {
     return this.targetToken.fromBlockchain(est);
   }
 
-  async execute(amountIn: TokenValue, slippage: number, overrides: PayableOverrides = {}): Promise<ContractTransaction> {
+  async execute(
+    amountIn: TokenValue,
+    slippage: number,
+    overrides: PayableOverrides = {}
+  ): Promise<ContractTransaction> {
     this.validate();
 
     this.lastAmountIn = amountIn;

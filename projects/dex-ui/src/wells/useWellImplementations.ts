@@ -1,9 +1,11 @@
 import { multicall } from "@wagmi/core";
-import { useQuery } from "@tanstack/react-query";
-import { config } from "src/utils/wagmi/config";
-import { useWells } from "./useWells";
+
 import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import { config } from "src/utils/wagmi/config";
+
 import { useAquifer } from "./aquifer/aquifer";
+import { useWells } from "./useWells";
 
 const aquiferAbiSnippet = [
   {
@@ -30,7 +32,7 @@ export const useWellImplementations = () => {
 
   const addresses = (wells || []).map((well) => well.address);
 
-  const query = useQuery({
+  const query = useChainScopedQuery({
     queryKey: queryKeys.wellImplementations(addresses),
     queryFn: async () => {
       if (!wells || !wells.length) return [];

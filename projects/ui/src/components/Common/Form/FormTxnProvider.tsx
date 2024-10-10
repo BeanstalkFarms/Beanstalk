@@ -14,7 +14,6 @@ import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerSilo } from '~/state/farmer/silo/updater';
 import {
   FormTxnBundler,
-  ClaimFarmStep,
   EnrootFarmStep,
   HarvestFarmStep,
   MowFarmStep,
@@ -39,7 +38,6 @@ const refetchMapping: Record<FormTxn, FormTxnRefetchFn[]> = {
   [FormTxn.MOW]: ['farmerSilo'],
   [FormTxn.PLANT]: ['farmerSilo'],
   [FormTxn.ENROOT]: ['farmerSilo', 'beanstalkSilo'],
-  [FormTxn.CLAIM]: ['farmerSilo', 'farmerBalances'],
   [FormTxn.HARVEST]: ['farmerBalances', 'farmerField'],
   [FormTxn.RINSE]: ['farmerBalances', 'farmerBarn'],
 };
@@ -104,18 +102,19 @@ const useInitFormTxnContext = () => {
     );
     const claimable = farmerSilo.balances[sdk.tokens.BEAN.address]?.claimable;
     const seasons = claimable?.crates.map((c) => c.season.toString());
-   
+
     const tokensWithStalk: Map<Token, TokenValue> = new Map();
-    farmerSilo.stalk.grownByToken.forEach((value, token) => { 
+    farmerSilo.stalk.grownByToken.forEach((value, token) => {
       if (value.gt(0)) {
         tokensWithStalk.set(token, value);
-      };
+      }
     });
 
     const farmSteps = {
-      [FormTxn.MOW]: account && tokensWithStalk.size > 0
-        ? new MowFarmStep(sdk, account, tokensWithStalk).build()
-        : undefined,
+      [FormTxn.MOW]:
+        account && tokensWithStalk.size > 0
+          ? new MowFarmStep(sdk, account, tokensWithStalk).build()
+          : undefined,
       [FormTxn.PLANT]: earnedBeans.gt(0)
         ? new PlantFarmStep(sdk).build()
         : undefined,
@@ -126,10 +125,11 @@ const useInitFormTxnContext = () => {
         ? new HarvestFarmStep(sdk, plotIds).build()
         : undefined,
       [FormTxn.RINSE]: rinsable.gt(0)
-        ? new RinseFarmStep(sdk, fertilizerIds, destination || FarmToMode.INTERNAL).build()
-        : undefined,
-      [FormTxn.CLAIM]: seasons?.length
-        ? new ClaimFarmStep(sdk, BEAN, seasons).build(BEAN)
+        ? new RinseFarmStep(
+            sdk,
+            fertilizerIds,
+            destination || FarmToMode.INTERNAL
+          ).build()
         : undefined,
     };
     console.debug('[FormTxnProvider] updating txn bundler...', farmSteps);
@@ -144,7 +144,7 @@ const useInitFormTxnContext = () => {
     farmerSilo.stalk.grownByToken,
     getBDV,
     sdk,
-    destination
+    destination,
   ]);
 
   useEffect(() => {
@@ -206,7 +206,7 @@ const useInitFormTxnContext = () => {
     txnBundler,
     plantAndDoX,
     refetch,
-    setDestination
+    setDestination,
   } as const;
 };
 

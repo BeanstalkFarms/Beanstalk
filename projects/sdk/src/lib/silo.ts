@@ -2,7 +2,6 @@ import { BigNumber, ContractTransaction } from "ethers";
 import type { PayableOverrides } from "ethers";
 import { Token } from "src/classes/Token";
 import { BeanstalkSDK, DataSource } from "./BeanstalkSDK";
-import { EventProcessor } from "src/lib/events/processor";
 import { EIP712TypedData } from "./permit";
 import * as utils from "./silo/utils";
 import * as permitUtils from "./silo/utils.permit";
@@ -29,7 +28,7 @@ export class Silo {
 
   // 1 Seed grows 1 / 10_000 Stalk per Season.
   // 1/10_000 = 1E-4
-  // FIXME
+  // BS3TODO: FIXME.
   static STALK_PER_SEED_PER_SEASON = TokenValue.fromHuman(1e-4, 10);
 
   constructor(sdk: BeanstalkSDK) {
@@ -196,6 +195,7 @@ export class Silo {
   }
 
   /**
+   *
    * Return the Farmer's balance of a single whitelisted token.
    */
   public async getBalance(
@@ -219,9 +219,11 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      const events = await Silo.sdk.events.get("silo", [account, { token: _token }]);
-      const processor = new EventProcessor(Silo.sdk, account);
-      const { deposits: depositsByToken } = processor.ingestAll(events);
+      const farmerDeposits = await Silo.sdk.contracts.beanstalk.getTokenDepositsForAccount(
+        account,
+        _token.address
+      );
+      const depositsByToken = utils.parseDepositsByToken(Silo.sdk, [farmerDeposits]);
 
       // The processor's return schema assumes we might have wanted to grab
       // multiple tokens, so we have to grab the one we want
@@ -230,6 +232,7 @@ export class Silo {
       for (let stem in deposits) {
         utils.applyDeposit(balance, _token, stemTip, {
           stem,
+          id: deposits[stem].id,
           amount: deposits[stem].amount,
           bdv: deposits[stem].bdv,
           germinatingStem
@@ -253,14 +256,17 @@ export class Silo {
       if (!query.farmer) return balance;
       const { deposited } = query.farmer;
 
-      deposited.forEach((deposit) =>
+      deposited.forEach((deposit) => {
+        if (!deposit.stem) return;
+
         utils.applyDeposit(balance, _token, stemTip, {
-          stem: deposit.stem, // FIXME
+          stem: deposit.stem,
+          id: utils.packAddressAndStem(_token.address, BigNumber.from(deposit.stem)),
           amount: deposit.depositedAmount,
           bdv: deposit.depositedBDV,
           germinatingStem
-        })
-      );
+        });
+      });
 
       return balance;
     }
@@ -293,7 +299,7 @@ export class Silo {
     const [account, currentSeason, stemTips, germinatingStemsRaw] = await Promise.all([
       Silo.sdk.getAccount(_account),
       Silo.sdk.sun.getSeason(),
-      this.getStemTips([...Silo.sdk.tokens.siloWhitelist]),
+      this.getStemTips(),
       Silo.sdk.contracts.beanstalk.getGerminatingStems(whiteListTokens.map((t) => t.address))
     ]);
 
@@ -305,9 +311,8 @@ export class Silo {
 
     /// LEDGER
     if (source === DataSource.LEDGER) {
-      const events = await Silo.sdk.events.get("silo", [account]);
-      const processor = new EventProcessor(Silo.sdk, account);
-      const { deposits: depositsByToken } = processor.ingestAll(events);
+      const farmerDeposits = await Silo.sdk.contracts.beanstalk.getDepositsForAccount(account);
+      const depositsByToken = utils.parseDepositsByToken(Silo.sdk, farmerDeposits);
 
       // Handle deposits.
       // Attach stalk & seed counts for each crate.
@@ -329,6 +334,7 @@ export class Silo {
           if (deposits[stem].amount.toString() !== "1") {
             utils.applyDeposit(balance, token, stemTip, {
               stem,
+              id: deposits[stem].id,
               amount: deposits[stem].amount,
               bdv: deposits[stem].bdv,
               germinatingStem
@@ -372,8 +378,11 @@ export class Silo {
 
         // Filter dust crates - should help with crate balance too low errors
         if (BigNumber.from(deposit.depositedAmount).toString() !== "1") {
+          if (!deposit.stem) return;
+
           utils.applyDeposit(balance, token, stemTip, {
-            stem: deposit.stem || deposit.season,
+            stem: deposit.stem,
+            id: utils.packAddressAndStem(token.address, BigNumber.from(deposit.stem)),
             amount: deposit.depositedAmount,
             bdv: deposit.depositedBDV,
             germinatingStem
@@ -425,9 +434,8 @@ export class Silo {
    */
   async getSeeds(_account?: string) {
     const account = await Silo.sdk.getAccount(_account);
-    return Silo.sdk.contracts.beanstalk
-      .balanceOfLegacySeeds(account)
-      .then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
+    return Silo.sdk.tokens.SEEDS.fromHuman(1);
+    // return Silo.sdk.contracts.beanstalk.balanceOfLegacySeeds(account).then((v) => Silo.sdk.tokens.SEEDS.fromBlockchain(v));
   }
 
   /**
@@ -483,8 +491,6 @@ export class Silo {
 
   /**
    * TODO: Cache stemStartSeason and calculate tip using Season?
-   * TODO: TokenValue?
-   * TODO: Check if whitelisted?
    */
   async getStemTip(token: Token): Promise<BigNumber> {
     return Silo.sdk.contracts.beanstalk.stemTipForToken(token.address);
@@ -492,13 +498,16 @@ export class Silo {
 
   /**
    * TODO: Cache stemStartSeason and calculate tip using Season?
-   * TODO: multicall?
-   * TODO: Check if whitelisted?
    */
-  async getStemTips(tokens: Token[]) {
-    return Promise.all(
-      tokens.map((token) => this.getStemTip(token).then((tip) => [token.address, tip] as const))
-    ).then((tips) => new Map<String, BigNumber>(tips));
+  async getStemTips() {
+    const [wlTokens, stemTips] = await Promise.all([
+      Silo.sdk.contracts.beanstalk.getWhitelistedTokens(),
+      Silo.sdk.contracts.beanstalk.getStemTips()
+    ]);
+
+    return new Map<string, BigNumber>(
+      wlTokens.map((tokenAddress, i) => [tokenAddress.toLowerCase(), stemTips[i]] as const)
+    );
   }
 
   /**

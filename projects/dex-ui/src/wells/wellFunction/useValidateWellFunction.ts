@@ -1,13 +1,20 @@
-import { multicall } from "@wagmi/core";
 import { useCallback } from "react";
-import { useWellFunctions } from "./useWellFunctions";
+
+import { multicall } from "@wagmi/core";
+import { BigNumber } from "ethers";
+
+import { BeanstalkSDK } from "@beanstalk/sdk";
 import { WellFunction } from "@beanstalk/sdk-wells";
+
+import { queryKeys } from "src/utils/query/queryKeys";
+import {
+  useGetChainScopedQueryData,
+  useSetChainScopedQueryData
+} from "src/utils/query/useChainScopedQuery";
 import useSdk from "src/utils/sdk/useSdk";
 import { config } from "src/utils/wagmi/config";
-import { BigNumber } from "ethers";
-import { BeanstalkSDK } from "@beanstalk/sdk";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "src/utils/query/queryKeys";
+
+import { useWellFunctions } from "./useWellFunctions";
 
 const getWellFunctionCalls = (wellFunction: WellFunction) => {
   const address = wellFunction.address as `0x${string}`;
@@ -80,14 +87,15 @@ export const useValidateWellFunction = () => {
   const wellFunctions = useWellFunctions();
   const sdk = useSdk();
 
-  const queryClient = useQueryClient();
+  const setQueryData = useSetChainScopedQueryData();
+  const getQueryData = useGetChainScopedQueryData();
 
   const validate = useCallback(
     async ({ address, data, wellFunction }: ValidateWellFunctionParams) => {
       const queryKey = queryKeys.wellFunctionValid(address || "no-address", data || "no-data");
       try {
         // check the queryClientCache first
-        const cachedWellFunction = queryClient.getQueryData(queryKey) as CachedWellFunctionData;
+        const cachedWellFunction = getQueryData(queryKey) as CachedWellFunctionData;
         if (cachedWellFunction) {
           if (typeof cachedWellFunction === "string") return undefined;
           return cachedWellFunction;
@@ -100,15 +108,20 @@ export const useValidateWellFunction = () => {
         });
 
         // set the queryClientCache for future use.
-        queryClient.setQueryData(queryKey, result || invalidWellFunctionData);
+        setQueryData(queryKey, () => {
+          return result || invalidWellFunctionData;
+        });
+
         return result;
       } catch (e) {
         // set the queryClientCache for future use.
-        queryClient.setQueryData(queryKey, invalidWellFunctionData);
+        setQueryData(queryKey, () => {
+          return invalidWellFunctionData;
+        });
         return undefined;
       }
     },
-    [wellFunctions, sdk, queryClient]
+    [wellFunctions, sdk, setQueryData, getQueryData]
   );
 
   return [validate] as const;

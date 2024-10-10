@@ -75,21 +75,23 @@ const GovernanceSpaces: React.FC<{}> = () => {
           if (t === 0 && oldBips) {
             const onchainBips = [...oldBips];
             onchainBips.reverse();
-            const withOldBips = output.concat(onchainBips as any);
-
-            return withOldBips as unknown as Proposal[];
+            // @ts-ignore
+            const withOldBips = output.concat(onchainBips);
+            // @ts-ignore
+            return withOldBips as Proposal[];
           }
 
           if (t === 99 && ebips) {
             const ebipList = [...ebips];
             ebipList.reverse();
-            return ebipList as unknown as Proposal[];
+            return ebipList as Proposal[];
           }
-
-          return output as unknown as Proposal[];
+          // @ts-ignore
+          return output as Proposal[];
         }
 
         if (t === 999) {
+          // @ts-ignore
           return data.proposals.filter(
             (p) =>
               p !== null &&

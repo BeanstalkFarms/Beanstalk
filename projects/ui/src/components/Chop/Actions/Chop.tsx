@@ -11,9 +11,9 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { FarmToMode } from '@beanstalk/sdk';
+import { FarmToMode, ERC20Token } from '@beanstalk/sdk';
 import {
-  FormState,
+  FormStateNew,
   SmartSubmitButton,
   TokenAdornment,
   TokenOutputField,
@@ -26,15 +26,12 @@ import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSumma
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import Token, { ERC20Token } from '~/classes/Token';
+
 import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import useTokenMap from '~/hooks/chain/useTokenMap';
 import useAccount from '~/hooks/ledger/useAccount';
-import usePreferredToken, {
-  PreferredToken,
-} from '~/hooks/farmer/usePreferredToken';
+import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import { ActionType } from '~/util/Actions';
 import {
   displayBN,
@@ -42,11 +39,7 @@ import {
   optimizeFromMode,
   toStringBaseUnitBN,
 } from '~/util';
-import {
-  UNRIPE_BEAN,
-  UNRIPE_BEAN_WSTETH,
-  UNRIPE_TOKENS,
-} from '~/constants/tokens';
+
 import { ZERO_BN } from '~/constants';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { AppState } from '~/state';
@@ -59,14 +52,15 @@ import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { useUnripe } from '~/state/bean/unripe/updater';
+import { TokenInstance, useUnripeTokens } from '~/hooks/beanstalk/useTokens';
 import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
-type ChopFormValues = FormState & {
+type ChopFormValues = FormStateNew & {
   destination: FarmToMode | undefined;
 };
 
 const useOptimizedBalanceSource = (
-  token: FormState['tokens'][number]['token'],
+  token: FormStateNew['tokens'][number]['token'],
   balances: ReturnType<typeof useFarmerBalances>
 ) => {
   const bal = balances[token.address];
@@ -93,7 +87,7 @@ const ChopForm: FC<
 }) => {
   const sdk = useSdk();
   const getBDV = useBDV();
-  const erc20TokenMap = useTokenMap<ERC20Token>(UNRIPE_TOKENS);
+  const { tokenMap: erc20TokenMap } = useUnripeTokens();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const unripeUnderlying = useUnripeUnderlyingMap();
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
@@ -152,7 +146,7 @@ const ChopForm: FC<
 
   ///
   const handleSelectTokens = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       // If the user has typed some existing values in,
       // save them. Add new tokens to the end of the list.
       // FIXME: match sorting of erc20TokenList
@@ -308,18 +302,16 @@ const ChopForm: FC<
   );
 };
 
-// ---------------------------------------------------
-
-const PREFERRED_TOKENS: PreferredToken[] = [
-  {
-    token: UNRIPE_BEAN,
-    minimum: new BigNumber(1),
-  },
-  {
-    token: UNRIPE_BEAN_WSTETH,
-    minimum: new BigNumber(1),
-  },
-];
+const usePreferredUnripeTokenConfig = () => {
+  const { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } = useUnripeTokens();
+  return useMemo(
+    () => [
+      { token: UNRIPE_BEAN, minimum: new BigNumber(1) },
+      { token: UNRIPE_BEAN_WSTETH, minimum: new BigNumber(1) },
+    ],
+    [UNRIPE_BEAN, UNRIPE_BEAN_WSTETH]
+  );
+};
 
 const Chop: FC<{}> = () => {
   /// Ledger
@@ -328,13 +320,15 @@ const Chop: FC<{}> = () => {
   const beanstalk = sdk.contracts.beanstalk;
   const [refetchUnripe] = useUnripe();
 
+  const preferredUnripeTokenConfig = usePreferredUnripeTokenConfig();
+
   /// Farmer
   const farmerBalances = useFarmerBalances();
   const [refetchFarmerBalances] = useFetchFarmerBalances();
 
   /// Form
   const middleware = useFormMiddleware();
-  const baseToken = usePreferredToken(PREFERRED_TOKENS, 'use-best');
+  const baseToken = usePreferredToken(preferredUnripeTokenConfig, 'use-best');
   const initialValues: ChopFormValues = useMemo(
     () => ({
       tokens: [

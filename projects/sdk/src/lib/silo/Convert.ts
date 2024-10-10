@@ -4,7 +4,7 @@ import { ERC20Token, Token } from "src/classes/Token";
 import { BeanstalkSDK } from "../BeanstalkSDK";
 import { ConvertEncoder } from "./ConvertEncoder";
 import { Deposit } from "./types";
-import { pickCrates, sortCratesByBDVRatio, sortCratesByStem } from "./utils";
+import { normaliseERC20, pickCrates, sortCratesByBDVRatio, sortCratesByStem } from "./utils";
 
 export type ConvertDetails = {
   amount: TokenValue;
@@ -17,35 +17,43 @@ export type ConvertDetails = {
 
 export class Convert {
   static sdk: BeanstalkSDK;
-  Bean: Token;
-  BeanCrv3: Token;
-  BeanEth: Token;
-  beanWstETH: Token;
-  urBean: Token;
-  urBeanWstETH: Token;
-  paths: Map<Token, ERC20Token[]>;
+  readonly paths: Map<Token, ERC20Token[]>;
 
   constructor(sdk: BeanstalkSDK) {
     Convert.sdk = sdk;
-    this.Bean = Convert.sdk.tokens.BEAN;
-    this.BeanCrv3 = Convert.sdk.tokens.BEAN_CRV3_LP;
-    this.BeanEth = Convert.sdk.tokens.BEAN_ETH_WELL_LP;
-    this.beanWstETH = Convert.sdk.tokens.BEAN_WSTETH_WELL_LP;
-    this.urBean = Convert.sdk.tokens.UNRIPE_BEAN;
-    this.urBeanWstETH = Convert.sdk.tokens.UNRIPE_BEAN_WSTETH;
 
-    // TODO: Update me for lambda to lambda converts
     this.paths = new Map<Token, ERC20Token[]>();
-
+    
     // BEAN<>LP
     this.paths.set(Convert.sdk.tokens.BEAN, [
-      // Convert.sdk.tokens.BEAN_CRV3_LP, // Deprecated.
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP,
+      Convert.sdk.tokens.BEAN,
+      ...(Convert.sdk.tokens.wellLP as Set<ERC20Token>)
+    ]);
+
+    this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
       Convert.sdk.tokens.BEAN_ETH_WELL_LP
     ]);
-    this.paths.set(Convert.sdk.tokens.BEAN_CRV3_LP, [Convert.sdk.tokens.BEAN]);
-    this.paths.set(Convert.sdk.tokens.BEAN_ETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
-    this.paths.set(Convert.sdk.tokens.BEAN_WSTETH_WELL_LP, [Convert.sdk.tokens.BEAN]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WSTETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WBTC_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WBTC_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_WEETH_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_WEETH_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDC_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_USDC_WELL_LP
+    ]);
+    this.paths.set(Convert.sdk.tokens.BEAN_USDT_WELL_LP, [
+      Convert.sdk.tokens.BEAN,
+      Convert.sdk.tokens.BEAN_USDT_WELL_LP
+    ]);
 
     // URBEAN<>(URBEAN_WSTETH_LP & RIPE BEAN)
     this.paths.set(Convert.sdk.tokens.UNRIPE_BEAN, [
@@ -132,16 +140,17 @@ export class Convert {
     currentSeason: number
   ): ConvertDetails {
     if (deposits.length === 0) throw new Error("No crates to withdraw from");
-    const sortedCrates = toToken.isLP
-      ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
-        /// on both sides of the convert, but having more seeds in older crates
-        /// allows you to accrue stalk faster after convert.
-        /// Note that during this convert, BDV is approx. equal after the convert.
-        sortCratesByStem(deposits, "asc")
-      : /// LP -> BEAN: use the crates with the lowest [BDV/Amount] ratio first.
-        /// Since LP deposits can have varying BDV, the best option for the Farmer
-        /// is to increase the BDV of their existing lowest-BDV crates.
-        sortCratesByBDVRatio(deposits, "asc");
+    const sortedCrates =
+      !fromToken.isLP && toToken.isLP
+        ? /// BEAN -> LP: oldest crates are best. Grown stalk is equivalent
+          /// on both sides of the convert, but having more seeds in older crates
+          /// allows you to accrue stalk faster after convert.
+          /// Note that during this convert, BDV is approx. equal after the convert.
+          sortCratesByStem(deposits, "asc")
+        : /// X -> LP: use the crates with the lowest [BDV/Amount] ratio first.
+          /// Since LP deposits can have varying BDV, the best option for the Farmer
+          /// is to increase the BDV of their existing lowest-BDV crates.
+          sortCratesByBDVRatio(deposits, "asc");
 
     const pickedCrates = pickCrates(sortedCrates, fromAmount, fromToken, currentSeason);
 
@@ -157,8 +166,8 @@ export class Convert {
 
   // TODO: use this.paths to determine encoding
   calculateEncoding(
-    fromToken: Token,
-    toToken: Token,
+    _fromToken: Token,
+    _toToken: Token,
     amountIn: TokenValue,
     minAmountOut: TokenValue
   ) {
@@ -166,30 +175,55 @@ export class Convert {
 
     const tks = Convert.sdk.tokens;
 
-    const whitelistedWellLPs = new Set([
-      Convert.sdk.tokens.BEAN_ETH_WELL_LP.address.toLowerCase(),
-      Convert.sdk.tokens.BEAN_WSTETH_WELL_LP.address.toLowerCase(),
-    ]);
-    const isFromWlLP = Boolean(whitelistedWellLPs.has(fromToken.address.toLowerCase()));
-    const isToWlLP = Boolean(whitelistedWellLPs.has(toToken.address.toLowerCase()));
+    // Ensure token instances.
+    const fromToken = Convert.sdk.tokens.findByAddress(_fromToken.address);
+    const toToken = Convert.sdk.tokens.findByAddress(_toToken.address);
+  
+    if (!fromToken || !toToken) {
+      throw new Error(`Unknown token ${_fromToken.address} or ${_toToken.address}`);
+    }
 
-    if (fromToken.address === tks.UNRIPE_BEAN.address && toToken.address === tks.UNRIPE_BEAN_WSTETH.address) {
+    const deprecatedLPs = new Set<Token>([Convert.sdk.tokens.BEAN_CRV3_LP]);
+    const isFromWlLP = Convert.sdk.tokens.wellLP.has(fromToken);
+    const isToWlLP = Convert.sdk.tokens.wellLP.has(toToken);
+
+    if (deprecatedLPs.has(fromToken) || deprecatedLPs.has(toToken)) {
+      throw new Error(`Deprecated LP conversion pathway: ${fromToken.address} -> ${toToken.address}`);
+    }
+
+    if (fromToken.equals(toToken)) {
+      return ConvertEncoder.lambdaLambda(amountIn.toBlockchain(), fromToken.address);
+    }
+
+    if (
+      fromToken.address === tks.UNRIPE_BEAN.address &&
+      toToken.address === tks.UNRIPE_BEAN_WSTETH.address
+    ) {
       encoding = ConvertEncoder.unripeBeansToLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain() // minLP
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN_WSTETH.address && toToken.address === tks.UNRIPE_BEAN.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN_WSTETH.address &&
+      toToken.address === tks.UNRIPE_BEAN.address
+    ) {
       encoding = ConvertEncoder.unripeLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain() // minBeans
       );
-    } else if (fromToken.address === tks.BEAN.address && toToken.address === tks.BEAN_CRV3_LP.address) {
+    } else if (
+      fromToken.address === tks.BEAN.address &&
+      toToken.address === tks.BEAN_CRV3_LP.address
+    ) {
       encoding = ConvertEncoder.beansToCurveLP(
         amountIn.toBlockchain(), // amountBeans
         minAmountOut.toBlockchain(), // minLP
         toToken.address // output token address = pool address
       );
-    } else if (fromToken.address === tks.BEAN_CRV3_LP.address && toToken.address === tks.BEAN.address) {
+    } else if (
+      fromToken.address === tks.BEAN_CRV3_LP.address &&
+      toToken.address === tks.BEAN.address
+    ) {
       encoding = ConvertEncoder.curveLPToBeans(
         amountIn.toBlockchain(), // amountLP
         minAmountOut.toBlockchain(), // minBeans
@@ -207,34 +241,39 @@ export class Convert {
         minAmountOut.toBlockchain(), // minBeans
         fromToken.address // output token address = pool address
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN.address && toToken.address === tks.BEAN.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN.address &&
+      toToken.address === tks.BEAN.address
+    ) {
       encoding = ConvertEncoder.unripeToRipe(
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
       );
-    } else if (fromToken.address === tks.UNRIPE_BEAN_WSTETH.address && toToken.address === tks.BEAN_WSTETH_WELL_LP.address) {
+    } else if (
+      fromToken.address === tks.UNRIPE_BEAN_WSTETH.address &&
+      toToken.address === tks.BEAN_WSTETH_WELL_LP.address
+    ) {
       encoding = ConvertEncoder.unripeToRipe(
         amountIn.toBlockchain(), // unRipe Amount
         fromToken.address // unRipe Token
       );
     } else {
-      throw new Error("SDK: Unknown conversion pathway");
+      throw new Error(`Unknown conversion pathway ${fromToken.address} -> ${toToken.address}`);
     }
 
     return encoding;
   }
 
-  async validateTokens(fromToken: Token, toToken: Token) {
+  async validateTokens(_fromToken: Token, _toToken: Token) {
+    const fromToken = normaliseERC20(_fromToken, Convert.sdk);
+    const toToken = normaliseERC20(_toToken, Convert.sdk);
+
     if (!Convert.sdk.tokens.isWhitelisted(fromToken)) {
       throw new Error("fromToken is not whitelisted");
     }
 
     if (!Convert.sdk.tokens.isWhitelisted(toToken)) {
       throw new Error("toToken is not whitelisted");
-    }
-
-    if (fromToken.equals(toToken)) {
-      throw new Error("Cannot convert between the same token");
     }
 
     const path = this.getConversionPaths(fromToken as ERC20Token);

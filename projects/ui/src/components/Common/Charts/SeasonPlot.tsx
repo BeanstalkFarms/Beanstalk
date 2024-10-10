@@ -64,6 +64,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
+    fetchType?: 'l1-only' | 'l2-only' | 'both';
   };
 
 /**
@@ -83,6 +84,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   queryConfig,
   stackedArea,
   statsRowFullWidth,
+  fetchType = 'both',
 }: SeasonPlotFinalProps<T>) {
   const timeTabParams = useTimeTabState();
   const getDisplayValue = useCallback((v?: BaseDataPoint[]) => {
@@ -94,7 +96,8 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   const seasonsQuery = useSeasonsQuery<T>(
     document,
     timeTabParams[0][1],
-    queryConfig
+    queryConfig,
+    fetchType
   );
 
   const queryParams = useMemo(

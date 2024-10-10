@@ -6,7 +6,27 @@ on:
       - "protocol/**"
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - run: yarn add prettier
+      - run: yarn add prettier-plugin-solidity
+      - run: shopt -s globstar; yarn prettier --write --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol || true
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: prettier auto formatting changes
+          branch: ${{ github.head_ref }}
+      - name: check format
+        run: shopt -s globstar; yarn prettier --check --config .prettierrc --plugin=prettier-plugin-solidity protocol/**/*.sol
   test:
+    needs: format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -25,12 +45,8 @@ jobs:
 
       - name: Install Dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: yarn install --no-immutable
-
-      - name: Generate (with cache)
-        id: generate-with-cache
-        continue-on-error: true
-        run: yarn generate
+        run: yarn install --immutable
+      - run: yarn generate
         working-directory: protocol
 
       - name: Clear cache and reinstall on generate failure

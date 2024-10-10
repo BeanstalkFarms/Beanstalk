@@ -2,48 +2,43 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "contracts/beanstalk/AppStorage.sol";
-import "contracts/interfaces/IBean.sol";
-import "contracts/libraries/LibSafeMath32.sol";
-import "contracts/beanstalk/ReentrancyGuard.sol";
-import "contracts/C.sol";
+import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
+import {LibDibbler} from "contracts/libraries/LibDibbler.sol";
+import {C} from "contracts/C.sol";
 
 /**
- * @author Publius
+ * @author Publius, Brean
  * @title Pod Transfer
  **/
- 
-contract PodTransfer is ReentrancyGuard {
-    
-    using SafeMath for uint256;
-    using LibSafeMath32 for uint32;
 
+contract PodTransfer is ReentrancyGuard {
     event PlotTransfer(
         address indexed from,
         address indexed to,
-        uint256 indexed id,
-        uint256 pods
+        uint256 fieldId,
+        uint256 indexed index,
+        uint256 amount
     );
+
     event PodApproval(
         address indexed owner,
         address indexed spender,
-        uint256 pods
+        uint256 fieldId,
+        uint256 amount
     );
 
     /**
      * Getters
      **/
 
-    function allowancePods(address owner, address spender)
-        public
-        view
-        returns (uint256)
-    {
-        return s.a[owner].field.podAllowances[spender];
+    function allowancePods(
+        address owner,
+        address spender,
+        uint256 fieldId
+    ) public view returns (uint256) {
+        return s.accts[owner].fields[fieldId].podAllowances[spender];
     }
 
     /**
@@ -53,56 +48,71 @@ contract PodTransfer is ReentrancyGuard {
     function _transferPlot(
         address from,
         address to,
+        uint256 fieldId,
         uint256 index,
         uint256 start,
         uint256 amount
     ) internal {
         require(from != to, "Field: Cannot transfer Pods to oneself.");
         require(amount > 0, "Marketplace: amount must be > 0.");
-        insertPlot(to, index.add(start), amount);
-        removePlot(from, index, start, amount.add(start));
-        emit PlotTransfer(from, to, index.add(start), amount);
+        insertPlot(to, fieldId, index + start, amount);
+        removePlot(from, fieldId, index, start, amount + start);
+        emit PlotTransfer(from, to, fieldId, index + start, amount);
     }
 
-    function insertPlot(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) internal {
-        s.a[account].field.plots[id] = amount;
+    function insertPlot(address account, uint256 fieldId, uint256 index, uint256 amount) internal {
+        s.accts[account].fields[fieldId].plots[index] = amount;
+        s.accts[account].fields[fieldId].plotIndexes.push(index);
+        s.accts[account].fields[fieldId].piIndex[index] =
+            s.accts[account].fields[fieldId].plotIndexes.length -
+            1;
     }
 
     function removePlot(
         address account,
-        uint256 id,
+        uint256 fieldId,
+        uint256 index,
         uint256 start,
         uint256 end
     ) internal {
-        uint256 amount = s.a[account].field.plots[id];
-        if (start == 0) delete s.a[account].field.plots[id];
-        else s.a[account].field.plots[id] = start;
-        if (end != amount)
-            s.a[account].field.plots[id.add(end)] = amount.sub(end);
+        uint256 amountAfterEnd = s.accts[account].fields[fieldId].plots[index] - end;
+
+        if (start > 0) {
+            s.accts[account].fields[fieldId].plots[index] = start;
+        } else {
+            delete s.accts[account].fields[fieldId].plots[index];
+            LibDibbler.removePlotIndexFromAccount(account, fieldId, index);
+        }
+
+        if (amountAfterEnd > 0) {
+            uint256 newIndex = index + end;
+            s.accts[account].fields[fieldId].plots[newIndex] = amountAfterEnd;
+            s.accts[account].fields[fieldId].plotIndexes.push(newIndex);
+            s.accts[account].fields[fieldId].piIndex[newIndex] =
+                s.accts[account].fields[fieldId].plotIndexes.length -
+                1;
+        }
     }
 
     function decrementAllowancePods(
         address owner,
         address spender,
+        uint256 fieldId,
         uint256 amount
     ) internal {
-        uint256 currentAllowance = allowancePods(owner, spender);
-        setAllowancePods(
-            owner,
-            spender,
-            currentAllowance.sub(amount, "Field: Insufficient approval.")
-            );
+        uint256 currentAllowance = allowancePods(owner, spender, fieldId);
+        if (currentAllowance < amount) {
+            revert("Field: Insufficient approval.");
+        }
+        setAllowancePods(owner, spender, fieldId, currentAllowance - amount);
     }
 
     function setAllowancePods(
         address owner,
         address spender,
+        uint256 fieldId,
         uint256 amount
     ) internal {
-        s.a[owner].field.podAllowances[spender] = amount;
+        s.accts[owner].fields[fieldId].podAllowances[spender] = amount;
     }
 }

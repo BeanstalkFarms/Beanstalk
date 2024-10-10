@@ -1,10 +1,10 @@
-const { BEANSTALK, BEAN_WSTETH_WELL, BEAN } = require("../test/utils/constants");
+const { BEANSTALK, BEAN_WSTETH_WELL, BEAN } = require("../test/hardhat/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, impersonateSigner } = require("../utils");
 const { deployContract } = require("./contracts");
 const { upgradeWithNewFacets } = require("./diamond");
 const { impersonatePipeline, deployPipeline } = require("./pipeline");
-const { to6, to18 } = require('../test/utils/helpers.js');
-const { impersonateBeanWstethWell } = require('../utils/well.js');
+const { to6, to18 } = require("../test/hardhat/utils/helpers.js");
+const { impersonateBeanWstethWell } = require("../utils/well.js");
 
 async function bip30(mock = true, account = undefined) {
   if (account == undefined) {
@@ -61,7 +61,6 @@ async function bipMorningAuction(mock = true, account = undefined) {
     account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
   }
-
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
@@ -194,7 +193,6 @@ async function bipMigrateUnripeBean3CrvToBeanEth(
       "ConvertGettersFacet",
       "FertilizerFacet",
       "MetadataFacet",
-      "MigrationFacet",
       "UnripeFacet"
     ],
     libraryNames: ["LibConvert", "LibLockedUnderlying"],
@@ -216,6 +214,23 @@ async function bipMigrateUnripeBean3CrvToBeanEth(
     await mintEth(oracleAccount.address);
   }
   await deployContract("UsdOracle", oracleAccount, verbose);
+}
+
+async function bipInitTractor(mock = true, account = undefined, verbose = true) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: BEANSTALK,
+    initFacetName: "InitTractor",
+    bip: false,
+    object: !mock,
+    verbose: verbose,
+    account: account,
+    verify: false
+  });
 }
 
 async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
@@ -256,22 +271,14 @@ async function bipSeedGauge(mock = true, account = undefined, verbose = true) {
       "LibLockedUnderlying",
       "LibIncentive",
       "LibGerminate",
-      "LibWellMinting",
       "LibSilo"
     ],
     facetLibraries: {
-      SeasonFacet: [
-        "LibGauge",
-        "LibIncentive",
-        "LibLockedUnderlying",
-        "LibGerminate",
-        "LibWellMinting"
-      ],
-      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+      SeasonFacet: ["LibGauge", "LibIncentive", "LibLockedUnderlying", "LibGerminate"],
+      SeasonGettersFacet: ["LibLockedUnderlying"],
       ConvertFacet: ["LibConvert"],
       UnripeFacet: ["LibLockedUnderlying"],
-      SiloFacet: ["LibSilo"],
-      EnrootFacet: ["LibSilo"]
+      SiloFacet: ["LibSilo"]
     },
     bip: false,
     object: !mock,
@@ -288,20 +295,20 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
   oracleAccount = undefined
 ) {
   if (account == undefined) {
-    account = await impersonateBeanstalkOwner();
     await mintEth(account.address);
+    account = await impersonateBeanstalkOwner();
   }
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: [
       "BDVFacet",
-      "ConvertFacet",
       "ConvertGettersFacet",
+      "ConvertFacet",
       "EnrootFacet",
       "FertilizerFacet",
-      "MetadataFacet",
       "SeasonFacet",
+      "MetadataFacet",
       "SeasonGettersFacet",
       "UnripeFacet",
       "WhitelistFacet" // update whitelist abilities.
@@ -312,25 +319,17 @@ async function bipMigrateUnripeBeanEthToBeanSteth(
       "LibConvert",
       "LibLockedUnderlying",
       "LibWellMinting",
-      "LibGerminate",
-      "LibSilo"
+      "LibGerminate"
     ],
     facetLibraries: {
-      ConvertFacet: ["LibConvert"],
-      UnripeFacet: ["LibLockedUnderlying"],
-      SeasonFacet: [
-        "LibGauge",
-        "LibIncentive",
-        "LibLockedUnderlying",
-        "LibWellMinting",
-        "LibGerminate"
-      ],
-      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-      EnrootFacet: ["LibSilo"]
+      UnripeFacet: ["LibConvert"],
+      ConvertFacet: ["LibLockedUnderlying"],
+      SeasonFacet: ["LibGauge", "LibIncentive", "LibLockedUnderlying", "LibWellMinting"],
+      SeasonGettersFacet: ["LibWellMinting", "LibLockedUnderlying", "LibGerminate"]
     },
     initFacetName: "InitMigrateUnripeBeanEthToBeanSteth",
-    selectorsToRemove: ['0x208c2c98', '0xbb02e10b'],
     bip: false,
+    selectorsToRemove: [],
     object: !mock,
     verbose: verbose,
     account: account,
@@ -367,17 +366,23 @@ async function bipMiscellaneousImprovements(mock = true, account = undefined, ve
       "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
-      "LibConvert"
+      "LibConvert",
+      "LibPipelineConvert",
+      "LibSilo",
+      "LibShipping",
+      "LibFlood"
     ],
     facetLibraries: {
       UnripeFacet: ["LibLockedUnderlying"],
-      ConvertFacet: ["LibConvert"],
+      ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
       SeasonFacet: [
         "LibGauge",
         "LibIncentive",
         "LibLockedUnderlying",
         "LibWellMinting",
-        "LibGerminate"
+        "LibGerminate",
+        "LibShipping",
+        "LibFlood"
       ],
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"]
     },
@@ -399,5 +404,6 @@ exports.bipBasinIntegration = bipBasinIntegration;
 exports.bipSeedGauge = bipSeedGauge;
 exports.mockBeanstalkAdmin = mockBeanstalkAdmin;
 exports.bipMigrateUnripeBean3CrvToBeanEth = bipMigrateUnripeBean3CrvToBeanEth;
+exports.bipInitTractor = bipInitTractor;
 exports.bipMigrateUnripeBeanEthToBeanSteth = bipMigrateUnripeBeanEthToBeanSteth;
 exports.bipMiscellaneousImprovements = bipMiscellaneousImprovements;
