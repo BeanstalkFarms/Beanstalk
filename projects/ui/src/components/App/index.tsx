@@ -110,11 +110,6 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
 function MigrationGate() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
-  const { isArbitrum } = useChainState();
-
-  if (!isArbitrum) {
-    return null;
-  }
 
   return (
     <>
