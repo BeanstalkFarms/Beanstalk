@@ -162,8 +162,81 @@ const tokenMap = {
       }
     ];
 
-    // These events were not emitted on chain, need to be hardcoded and manually calculated here
-    export const WHITELIST_INITIAL: WhitelistTokenEvent[] = [/*TODO*/];
+    // These events were not emitted on chain, need to be hardcoded and manually triggered
+    export const WHITELIST_INITIAL: WhitelistTokenEvent[] = [
+      {
+        token: Address.fromString('0xbea0005b8599265d41256905a9b3073d397812e4'),
+        selector: Bytes.fromHexString('0x5a049a47'),
+        stalkEarnedPerSeason: BigInt.fromString('5658594'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('0'),
+        optimalPercentDepositedBdv: BigInt.fromString('0')
+      },
+      {
+        token: Address.fromString('0x1bea054dddbca12889e07b3e076f511bf1d27543'),
+        selector: Bytes.fromHexString('0xc8cda2a0'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('0'),
+        optimalPercentDepositedBdv: BigInt.fromString('0')
+      },
+      {
+        token: Address.fromString('0x1bea059c3ea15f6c10be1c53d70c75fd1266d788'),
+        selector: Bytes.fromHexString('0xb0c22bb1'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('0'),
+        optimalPercentDepositedBdv: BigInt.fromString('0')
+      },
+      {
+        token: Address.fromString('0xbea00aa8130acad047e137ec68693c005f8736ce'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('1000000000000000000000'),
+        optimalPercentDepositedBdv: BigInt.fromString('16000000')
+      },
+      {
+        token: Address.fromString('0xbea00bbe8b5da39a3f57824a1a13ec2a8848d74f'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('5658594'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('0'),
+        optimalPercentDepositedBdv: BigInt.fromString('26000000')
+      },
+      {
+        token: Address.fromString('0xbea00cc9f93e9a8ac0dfdff2d64ba38eb9c2e48c'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('1000000000000000000000'),
+        optimalPercentDepositedBdv: BigInt.fromString('14000000')
+      },
+      {
+        token: Address.fromString('0xbea00dde4b34acdcb1a30442bd2b39ca8be1b09c'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('1000000000000000000000'),
+        optimalPercentDepositedBdv: BigInt.fromString('20000000')
+      },
+      {
+        token: Address.fromString('0xbea00ee04d8289aed04f92ea122a96dc76a91bd7'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('1000000000000000000000'),
+        optimalPercentDepositedBdv: BigInt.fromString('12000000')
+      },
+      {
+        token: Address.fromString('0xbea00ff437ca7e8354b174339643b4d1814bed33'),
+        selector: Bytes.fromHexString('0xc84c7727'),
+        stalkEarnedPerSeason: BigInt.fromString('1'),
+        stalkIssuedPerBdv: BigInt.fromString('10000000000'),
+        gaugePoints: BigInt.fromString('1000000000000000000000'),
+        optimalPercentDepositedBdv: BigInt.fromString('12000000')
+      }
+    ];
     `
   );
   console.log(`Wrote beanstalk 3 initial values to ${outFile}`);
