@@ -17,7 +17,7 @@ query SunButton($season_lte: Int!) {
   fields: fieldHourlySnapshots(
     first: 25
     where: {
-      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
+      field: "0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70"
       season_lte: $season_lte
       caseId_not: null
     }
@@ -38,7 +38,11 @@ query SunButton($season_lte: Int!) {
     first: 25
     orderBy: season
     orderDirection: desc
-    where: { season_lte: $season_lte, beanToMaxLpGpPerBdvRatio_gt: 0 }
+    where: {
+      silo: "0xd1a0060ba708bc4bcd3da6c37efa8dedf015fb70"
+      season_lte: $season_lte
+      beanToMaxLpGpPerBdvRatio_gt: 0
+    }
   ) {
     id
     season
