@@ -109,5 +109,5 @@ export function wellFnSupportsRate(wellFnAddress: Address): boolean {
 }
 
 export function isStable2WellFn(wellFnAddress: Address): boolean {
-  return wellFnAddress === WELL_STABLE2;
+  return wellFnAddress == WELL_STABLE2;
 }
