@@ -114,6 +114,11 @@ export default function L1Delegate() {
         }
     };
 
+    useEffect(() => {
+        const interval = setInterval(getBeanData, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getMigrationData = async () => {
         if (!account) return;
         try {
