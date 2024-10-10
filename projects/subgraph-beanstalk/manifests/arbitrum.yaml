@@ -372,6 +372,8 @@ dataSources:
         - name: BeanstalkPrice
           file: ../../subgraph-core/abis/BeanstalkPrice.json
       eventHandlers:
+        - event: Sunrise(indexed uint256)
+          handler: handleSunrise
         - event: Shipped(indexed uint32,uint256)
           handler: handleShipped
         - event: Receipt(indexed uint8,uint256,bytes)
