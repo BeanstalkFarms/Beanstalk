@@ -3,10 +3,14 @@ import { useCallback, useMemo } from 'react';
 
 import { TokenMap, ZERO_BN } from '~/constants';
 import { ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { getTokenIndex } from '~/util';
+import {
+  TokenInstance,
+  useSupportedBalanceTokens,
+} from '../beanstalk/useTokens';
 import useDataFeedTokenPrices from '../beanstalk/useDataFeedTokenPrices';
 import useFarmerBalances from './useFarmerBalances';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
-import { useSupportedBalanceTokens } from '../beanstalk/useTokens';
 
 const sortMap = {
   BEAN: 0,
@@ -58,9 +62,9 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
 
   // helpers
   const getBalances = useCallback(
-    (addr: string) => ({
-      farm: farmerBalances?.[addr]?.internal ?? ZERO_BN,
-      circulating: farmerBalances?.[addr]?.external ?? ZERO_BN,
+    (token: TokenInstance) => ({
+      farm: farmerBalances?.[getTokenIndex(token)]?.internal ?? ZERO_BN,
+      circulating: farmerBalances?.[getTokenIndex(token)]?.external ?? ZERO_BN,
     }),
     [farmerBalances]
   );
@@ -70,17 +74,17 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
     const external: TokenMap<TokenBalanceWithFiatValue> = {};
 
     tokens.forEach((token) => {
-      const balance = getBalances(token.address);
-      const value = tokenPrices[token.address] ?? ZERO_BN;
+      const balance = getBalances(token);
+      const value = tokenPrices[getTokenIndex(token)] ?? ZERO_BN;
       if (balance.farm?.gt(0) || includeZero) {
-        internal[token.address] = {
+        internal[getTokenIndex(token)] = {
           token,
           amount: balance.farm,
           value: balance.farm.multipliedBy(value),
         };
       }
       if (balance.circulating?.gt(0) || includeZero) {
-        external[token.address] = {
+        external[getTokenIndex(token)] = {
           token,
           amount: balance.circulating,
           value: balance.circulating.multipliedBy(value),
@@ -95,17 +99,17 @@ export default function useFarmerBalancesWithFiatValue(includeZero?: boolean) {
       const token = tokenMap[addr];
       if (!token) return;
       if (amount?.gt(0) || includeZero) {
-        internal[addr] = {
+        internal[getTokenIndex(token)] = {
           token,
           amount,
           value,
         };
       }
-      if (circulating[addr]?.amount?.gt(0) || includeZero) {
-        external[addr] = {
+      if (circulating[getTokenIndex(token)]?.amount?.gt(0) || includeZero) {
+        external[getTokenIndex(token)] = {
           token,
-          amount: circulating[addr]?.amount ?? ZERO_BN,
-          value: circulating[addr]?.value ?? ZERO_BN,
+          amount: circulating[getTokenIndex(token)]?.amount ?? ZERO_BN,
+          value: circulating[getTokenIndex(token)]?.value ?? ZERO_BN,
         };
       }
     });

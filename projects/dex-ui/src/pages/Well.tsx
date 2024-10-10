@@ -2,6 +2,7 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } f
 
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useChainId } from "wagmi";
 
 import { TokenValue } from "@beanstalk/sdk";
 
@@ -41,6 +42,7 @@ export const Well = () => {
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
   const chainIdErr = useChainErrExists();
+  const chainId = useChainId();
 
   const loading = useLagLoading(dataLoading || apysLoading || twaLoading) || chainIdErr;
 
@@ -156,7 +158,7 @@ export const Well = () => {
       <ContentWrapper>
         <StyledTitle
           title={title}
-          parent={{ title: "Liquidity", path: "/wells" }}
+          parent={{ title: "Liquidity", path: `/wells/${chainId}` }}
           fontWeight="550"
           center
         />

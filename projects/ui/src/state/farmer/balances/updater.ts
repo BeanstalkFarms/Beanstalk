@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import flatMap from 'lodash/flatMap';
 import { ZERO_BN } from '~/constants';
-import { tokenResult } from '~/util';
+import { tokenResult, getTokenIndex } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -76,7 +76,7 @@ export const useFetchFarmerBalances = () => {
 
         const localBalances = balances.reduce(
           (obj, elem) =>
-            Object.assign(obj, { [elem.token.address]: elem.balance }),
+            Object.assign(obj, { [getTokenIndex(elem.token)]: elem.balance }),
           {}
         );
         localStorage.setItem('farmerBalances', JSON.stringify(localBalances));
