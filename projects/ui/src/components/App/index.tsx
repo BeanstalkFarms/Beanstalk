@@ -188,12 +188,7 @@ function Arbitrum() {
       <MorningUpdater />
       <MorningFieldUpdater />
       <BeanstalkCaseUpdater />
-
-      {false && (
-        <>
-          <GovernanceUpdater />
-        </>
-      )}
+      <GovernanceUpdater />
 
       {/* -----------------------
        * Farmer Updaters
