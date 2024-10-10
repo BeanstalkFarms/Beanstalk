@@ -113,6 +113,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
     }
   }
 
+  let calculatedTokens: Address[] = [];
   let apys: BigDecimal[][] = [];
 
   // Chooses which apy calculation to use
@@ -126,6 +127,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
         silo.stalk,
         silo.grownStalkPerSeason
       );
+      calculatedTokens.push(toAddress(whitelistSettings[i].id));
       apys.push(tokenAPY);
     }
   } else {
@@ -161,6 +163,12 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
       const depositedIndex = SiloAsset_findIndex_token(depositedAssets, toAddress(whitelistSettings[i].id));
       const depositedAsset = depositedAssets.splice(depositedIndex, 1)[0];
       const depositedBdv = toDecimal(depositedAsset.depositedBDV);
+
+      if (depositedBdv == ZERO_BD) {
+        // Do not calculate yields on tokens with no deposits
+        continue;
+      }
+      calculatedTokens.push(toAddress(whitelistSettings[i].id));
 
       const germinating = getGerminatingBdvs(Address.fromBytes(whitelistSettings[i].id));
 
@@ -213,7 +221,7 @@ export function updateSiloVAPYs(protocol: Address, timestamp: BigInt, window: i3
 
   // Save the apys
   for (let i = 0; i < apys.length; ++i) {
-    let tokenYield = loadTokenYield(Address.fromBytes(whitelistSettings[i].id), t, window);
+    let tokenYield = loadTokenYield(calculatedTokens[i], t, window);
     tokenYield.beanAPY = apys[i][0];
     tokenYield.stalkAPY = apys[i][1];
     tokenYield.createdAt = timestamp;
