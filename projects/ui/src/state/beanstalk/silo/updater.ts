@@ -126,9 +126,6 @@ export const useFetchBeanstalkSilo = () => {
           deposited: {
             amount: curr.deposited,
           },
-          withdrawn: {
-            amount: ZERO_BN,
-          },
           germinating: {
             amount: curr.totalGerminating,
           },
@@ -291,62 +288,3 @@ function buildBeanstalkSiloMultiCall(beanstalkAddress: string): CallParams[] {
     },
   ];
 }
-
-// const [
-//   // 0
-//   _stalkTotal,
-//   _bdvTotal,
-//   _rootsTotal,
-//   _earnedBeansTotal,
-//   // 4
-//   _whitelistedAssetTotals,
-//   // 5
-//   _stemTips,
-// ] = await Promise.all([
-//   // 0
-//   beanstalk.totalStalk().then(tokenResult(STALK)), // Does NOT include Grown Stalk
-//   new BigNumberJS(0), //
-//   beanstalk.totalRoots().then(bigNumberResult), //
-//   beanstalk.totalEarnedBeans().then(tokenResult(BEAN)),
-
-//   // 4
-//   // FIXME: Could save a lot of network requests by moving this to the Subgraph
-//   Promise.all(
-//     [...sdk.tokens.siloWhitelist].map((token) =>
-//       Promise.all([
-//         // FIXME: duplicate tokenResult optimization
-//         beanstalk
-//           .getTotalDeposited(token.address)
-//           .then((v) => transform(v, 'bnjs', token)),
-//         // BEAN will always have a fixed BDV of 1, skip to save a network request
-//         tokenIshEqual(token, BEAN)
-//           ? ONE_BN
-//           : beanstalk
-//               .bdv(token.address, token.amount(1).toBlockchain())
-//               .then(tokenResult(BEAN))
-//               .catch((err) => {
-//                 console.error(`Failed to fetch BDV: ${token.address}`);
-//                 console.error(err);
-//                 throw err;
-//               }),
-//         sdk.silo.getStemTip(token),
-//         beanstalk
-//           .getTotalDepositedBdv(token.address)
-//           .then(tokenResult(BEAN)),
-//         beanstalk
-//           .getGerminatingTotalDeposited(token.address)
-//           .then((v) => transform(v, 'bnjs', token)),
-//       ]).then((data) => ({
-//         address: token.address.toLowerCase(),
-//         deposited: data[0],
-//         bdvPerToken: data[1],
-//         stemTip: data[2],
-//         depositedBdv: data[3],
-//         totalGerminating: data[4],
-//       }))
-//     )
-//   ),
-
-//   //   // 5
-//   sdk.silo.getStemTips(),
-// ] as const);

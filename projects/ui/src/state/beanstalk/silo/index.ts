@@ -20,11 +20,6 @@ export type BeanstalkSiloBalance = {
   };
   /** the total amount of this Token that is deposited (deposited & germinating)  */
   TVD: BigNumber;
-  /** @deprecated */
-  withdrawn?: {
-    /** The total amount of this Token currently in the Withdrawn state. */
-    amount: BigNumber;
-  };
 };
 
 /**

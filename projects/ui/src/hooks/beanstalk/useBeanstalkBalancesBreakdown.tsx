@@ -27,12 +27,12 @@ export const STATE_CONFIG = {
     colors.chart.yellow,
     (name: string) => `${name} that are Deposited in the Silo.`,
   ],
-  withdrawn: [
-    'Claimable',
-    colors.chart.yellowLight,
-    (name: string) =>
-      `Legacy Claimable ${name === 'Beans' ? 'Bean' : name} Withdrawals from before Silo V3.`,
-  ],
+  // withdrawn: [
+  //   'Claimable',
+  //   colors.chart.yellowLight,
+  //   (name: string) =>
+  //     `Legacy Claimable ${name === 'Beans' ? 'Bean' : name} Withdrawals from before Silo V3.`,
+  // ],
   farmable: [
     'Farm & Circulating',
     colors.chart.green,
@@ -170,9 +170,9 @@ export default function useBeanstalkSiloBreakdown() {
             if (unripeToRipe[address]) {
               const unripeToken = unripeTokenState[address];
               if (unripeToken) {
-                farmable = unripeToken.supply
-                  .minus(siloBalance.deposited.amount)
-                  .minus(siloBalance.withdrawn?.amount || ZERO_BN);
+                farmable = unripeToken.supply.minus(
+                  siloBalance.deposited.amount
+                );
               }
             }
 
@@ -201,24 +201,18 @@ export default function useBeanstalkSiloBreakdown() {
                 // .minus(budget)
                 .minus(totalPooled)
                 .minus(ripe || ZERO_BN)
-                .minus(siloBalance.deposited.amount)
-                .minus(siloBalance.withdrawn?.amount || ZERO_BN);
+                .minus(siloBalance.deposited.amount);
             }
 
             // Handle: LP Tokens
             if (poolState[address]) {
               farmable = poolState[address].supply
                 .minus(siloBalance.deposited.amount)
-                .minus(siloBalance.withdrawn?.amount || ZERO_BN)
                 .minus(ripe || ZERO_BN);
             }
 
             const amountByState = {
               deposited: siloBalance.deposited?.amount,
-              withdrawn:
-                TOKEN === BeanWstETH
-                  ? undefined
-                  : siloBalance.withdrawn?.amount,
               pooled: pooled,
               ripePooled: ripePooled,
               ripe: ripe,
@@ -227,10 +221,6 @@ export default function useBeanstalkSiloBreakdown() {
             };
             const usdValueByState = {
               deposited: getUSD(TOKEN, siloBalance.deposited.amount),
-              withdrawn:
-                TOKEN === BeanWstETH
-                  ? undefined
-                  : getUSD(TOKEN, siloBalance.withdrawn?.amount || ZERO_BN),
               pooled: pooled ? getUSD(TOKEN, pooled) : undefined,
               ripePooled: ripePooled ? getUSD(TOKEN, ripePooled) : undefined,
               ripe: ripe ? getUSD(TOKEN, ripe) : undefined,
