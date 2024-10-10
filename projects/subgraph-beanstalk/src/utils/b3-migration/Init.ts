@@ -5,6 +5,7 @@ import {
   FIELD_INITIAL_VALUES,
   POD_MARKETPLACE_INITIAL_VALUES,
   SEASON_INITIAL,
+  SILO_INITIAL_VALUES,
   UNRIPE_TOKENS_INITIAL_VALUES
 } from "../../../cache-builder/results/B3Migration_arb";
 import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
@@ -20,11 +21,16 @@ export function init(block: ethereum.Block): void {
   let beanstalk = loadBeanstalk();
   beanstalk.lastSeason = SEASON_INITIAL;
   beanstalk.save();
+
   let field = loadField(v().protocolAddress);
   field.podIndex = FIELD_INITIAL_VALUES.podIndex;
   field.harvestableIndex = FIELD_INITIAL_VALUES.harvestableIndex;
   field.temperature = FIELD_INITIAL_VALUES.temperature;
   field.save();
+
+  let silo = loadSilo(v().protocolAddress);
+  silo.beanToMaxLpGpPerBdvRatio = SILO_INITIAL_VALUES.beanToMaxLpGpPerBdvRatio;
+  silo.save();
 }
 
 // Carries over cumulative data from L1 -> L2 subgraph. See cache-builder/beanstalk3.js for the input source.

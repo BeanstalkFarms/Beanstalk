@@ -17,6 +17,9 @@ const tokenMap = {
       beanstalk(id: "beanstalk" ${block}) {
         lastSeason
       }
+      silo(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" ${block}) {
+        beanToMaxLpGpPerBdvRatio
+      }
       field(id: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5" ${block}) {
         numberOfSowers
         numberOfSows
@@ -67,6 +70,10 @@ const tokenMap = {
 
     import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
+    class SiloInitialValues {
+      beanToMaxLpGpPerBdvRatio: BigInt;
+    }
+
     class FieldInitialValues {
       numberOfSowers: i32;
       numberOfSows: i32;
@@ -103,6 +110,10 @@ const tokenMap = {
     }
 
     export const SEASON_INITIAL = ${l1Values.beanstalk.lastSeason};
+
+    export const SILO_INITIAL_VALUES: SiloInitialValues = {
+      beanToMaxLpGpPerBdvRatio: BigInt.fromString('${l1Values.silo.beanToMaxLpGpPerBdvRatio}')
+    };
 
     export const FIELD_INITIAL_VALUES: FieldInitialValues = {
       numberOfSowers: ${l1Values.field.numberOfSowers},

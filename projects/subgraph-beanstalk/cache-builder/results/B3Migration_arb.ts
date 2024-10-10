@@ -2,6 +2,10 @@
 
 import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
 
+class SiloInitialValues {
+  beanToMaxLpGpPerBdvRatio: BigInt;
+}
+
 class FieldInitialValues {
   numberOfSowers: i32;
   numberOfSows: i32;
@@ -38,6 +42,10 @@ class UnripeTokenInitialValues {
 }
 
 export const SEASON_INITIAL = 25129;
+
+export const SILO_INITIAL_VALUES: SiloInitialValues = {
+  beanToMaxLpGpPerBdvRatio: BigInt.fromString("100000000000000000000")
+};
 
 export const FIELD_INITIAL_VALUES: FieldInitialValues = {
   numberOfSowers: 1640,

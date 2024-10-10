@@ -14,6 +14,7 @@ import {
   FIELD_INITIAL_VALUES,
   POD_MARKETPLACE_INITIAL_VALUES,
   SEASON_INITIAL,
+  SILO_INITIAL_VALUES,
   UNRIPE_TOKENS_INITIAL_VALUES
 } from "../cache-builder/results/B3Migration_arb";
 import {
@@ -53,6 +54,15 @@ describe("Beanstalk 3 Migration", () => {
   });
 
   describe("Initial entity data carry-over", () => {
+    test("Silo entity initialization", () => {
+      assert.fieldEquals(
+        "Silo",
+        BEANSTALK.toHexString(),
+        "beanToMaxLpGpPerBdvRatio",
+        SILO_INITIAL_VALUES.beanToMaxLpGpPerBdvRatio.toString()
+      );
+    });
+
     test("Field entity initialization", () => {
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "numberOfSowers", FIELD_INITIAL_VALUES.numberOfSowers.toString());
       assert.fieldEquals("Field", BEANSTALK.toHexString(), "sownBeans", FIELD_INITIAL_VALUES.sownBeans.toString());
