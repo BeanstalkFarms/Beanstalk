@@ -189,7 +189,7 @@ export function updateStalkBalances(
   silo.save();
 }
 
-export function setWhitelistTokenSettings(params: WhitelistTokenParams): void {
+export function setWhitelistTokenSettings(params: WhitelistTokenParams, forceEnableGauge: boolean = false): void {
   let siloSettings = loadWhitelistTokenSetting(params.token);
 
   siloSettings.selector = params.selector;
@@ -198,6 +198,9 @@ export function setWhitelistTokenSettings(params: WhitelistTokenParams): void {
   siloSettings.gaugePoints = params.gaugePoints;
   siloSettings.optimalPercentDepositedBdv = params.optimalPercentDepositedBdv;
   siloSettings.updatedAt = params.block.timestamp;
+  if (forceEnableGauge) {
+    siloSettings.isGaugeEnabled = true;
+  }
 
   takeWhitelistTokenSettingSnapshots(siloSettings, params.block);
   siloSettings.save();

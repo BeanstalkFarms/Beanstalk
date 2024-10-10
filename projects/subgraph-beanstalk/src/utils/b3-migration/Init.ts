@@ -81,14 +81,17 @@ export function preUnpause(block: ethereum.Block): void {
   // Also add whitelisted token info here. These events were not emitted during the reseed.
   for (let i = 0; i < WHITELIST_INITIAL.length; ++i) {
     addToSiloWhitelist(v().protocolAddress, WHITELIST_INITIAL[i].token);
-    setWhitelistTokenSettings({
-      token: WHITELIST_INITIAL[i].token,
-      selector: WHITELIST_INITIAL[i].selector,
-      stalkEarnedPerSeason: WHITELIST_INITIAL[i].stalkEarnedPerSeason,
-      stalkIssuedPerBdv: WHITELIST_INITIAL[i].stalkIssuedPerBdv,
-      gaugePoints: WHITELIST_INITIAL[i].gaugePoints,
-      optimalPercentDepositedBdv: WHITELIST_INITIAL[i].optimalPercentDepositedBdv,
-      block: block
-    });
+    setWhitelistTokenSettings(
+      {
+        token: WHITELIST_INITIAL[i].token,
+        selector: WHITELIST_INITIAL[i].selector,
+        stalkEarnedPerSeason: WHITELIST_INITIAL[i].stalkEarnedPerSeason,
+        stalkIssuedPerBdv: WHITELIST_INITIAL[i].stalkIssuedPerBdv,
+        gaugePoints: WHITELIST_INITIAL[i].gaugePoints,
+        optimalPercentDepositedBdv: WHITELIST_INITIAL[i].optimalPercentDepositedBdv,
+        block: block
+      },
+      WHITELIST_INITIAL[i].isWell
+    );
   }
 }

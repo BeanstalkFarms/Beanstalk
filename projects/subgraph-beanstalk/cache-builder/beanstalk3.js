@@ -116,6 +116,7 @@ const tokenMap = {
       stalkIssuedPerBdv: BigInt;
       gaugePoints: BigInt;
       optimalPercentDepositedBdv: BigInt;
+      isWell: boolean;
     }
 
     export const SEASON_INITIAL = ${l1Values.beanstalk.lastSeason};
@@ -170,7 +171,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('5658594'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('0'),
-        optimalPercentDepositedBdv: BigInt.fromString('0')
+        optimalPercentDepositedBdv: BigInt.fromString('0'),
+        isWell: false
       },
       {
         token: Address.fromString('0x1bea054dddbca12889e07b3e076f511bf1d27543'),
@@ -178,7 +180,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('0'),
-        optimalPercentDepositedBdv: BigInt.fromString('0')
+        optimalPercentDepositedBdv: BigInt.fromString('0'),
+        isWell: false
       },
       {
         token: Address.fromString('0x1bea059c3ea15f6c10be1c53d70c75fd1266d788'),
@@ -186,7 +189,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('0'),
-        optimalPercentDepositedBdv: BigInt.fromString('0')
+        optimalPercentDepositedBdv: BigInt.fromString('0'),
+        isWell: false
       },
       {
         token: Address.fromString('0xbea00aa8130acad047e137ec68693c005f8736ce'),
@@ -194,7 +198,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('1000000000000000000000'),
-        optimalPercentDepositedBdv: BigInt.fromString('16000000')
+        optimalPercentDepositedBdv: BigInt.fromString('16000000'),
+        isWell: true
       },
       {
         token: Address.fromString('0xbea00bbe8b5da39a3f57824a1a13ec2a8848d74f'),
@@ -202,7 +207,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('5658594'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('0'),
-        optimalPercentDepositedBdv: BigInt.fromString('26000000')
+        optimalPercentDepositedBdv: BigInt.fromString('26000000'),
+        isWell: true
       },
       {
         token: Address.fromString('0xbea00cc9f93e9a8ac0dfdff2d64ba38eb9c2e48c'),
@@ -210,7 +216,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('1000000000000000000000'),
-        optimalPercentDepositedBdv: BigInt.fromString('14000000')
+        optimalPercentDepositedBdv: BigInt.fromString('14000000'),
+        isWell: true
       },
       {
         token: Address.fromString('0xbea00dde4b34acdcb1a30442bd2b39ca8be1b09c'),
@@ -218,7 +225,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('1000000000000000000000'),
-        optimalPercentDepositedBdv: BigInt.fromString('20000000')
+        optimalPercentDepositedBdv: BigInt.fromString('20000000'),
+        isWell: true
       },
       {
         token: Address.fromString('0xbea00ee04d8289aed04f92ea122a96dc76a91bd7'),
@@ -226,7 +234,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('1000000000000000000000'),
-        optimalPercentDepositedBdv: BigInt.fromString('12000000')
+        optimalPercentDepositedBdv: BigInt.fromString('12000000'),
+        isWell: true
       },
       {
         token: Address.fromString('0xbea00ff437ca7e8354b174339643b4d1814bed33'),
@@ -234,7 +243,8 @@ const tokenMap = {
         stalkEarnedPerSeason: BigInt.fromString('1'),
         stalkIssuedPerBdv: BigInt.fromString('10000000000'),
         gaugePoints: BigInt.fromString('1000000000000000000000'),
-        optimalPercentDepositedBdv: BigInt.fromString('12000000')
+        optimalPercentDepositedBdv: BigInt.fromString('12000000'),
+        isWell: true
       }
     ];
     `
