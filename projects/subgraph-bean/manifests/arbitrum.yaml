@@ -359,7 +359,7 @@ dataSources:
     source:
       address: "0xC218F5a782b0913931DCF502FA2aA959b36Ac9E7"
       abi: BeanstalkPrice
-      startBlock: 575757575 # Reseed Unpause (TODO)
+      startBlock: 262211594 # Reseed Unpause +1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
