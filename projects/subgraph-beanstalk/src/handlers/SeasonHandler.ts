@@ -37,7 +37,7 @@ export function handleWellOracle(event: WellOracle): void {
   season.deltaB = season.deltaB.plus(event.params.deltaB);
   if (isGaugeDeployed(v(), event.block.number) && season.price == ZERO_BD) {
     let beanstalkPrice = getBeanstalkPrice(event.block.number);
-    let beanstalkQuery = beanstalkPrice.getConstantProductWell(event.params.well);
+    let beanstalkQuery = beanstalkPrice.price();
     season.price = toDecimal(beanstalkQuery.price);
   }
   season.save();
