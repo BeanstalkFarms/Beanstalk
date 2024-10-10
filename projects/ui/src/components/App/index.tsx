@@ -65,10 +65,8 @@ import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
 
 import useChainState from '~/hooks/chain/useChainState';
 import { runOnDev } from '~/util/dev';
-import useSdk from '~/hooks/sdk';
 import L2Claim from '~/pages/l2claim';
 import L1Delegate from '~/pages/l1delegate';
-import MigrationMessage from '../Common/MigrationMessage';
 
 import MigrationPreview from '../../pages/preview';
 
@@ -114,8 +112,9 @@ function MigrationGate() {
   const navHeight = useNavHeight(!!banner);
   const { isArbitrum } = useChainState();
 
-  const sdk = useSdk();
-  const account = useAccount();
+  if (!isArbitrum) {
+    return null;
+  }
 
   return (
     <>
@@ -142,8 +141,8 @@ function MigrationGate() {
           }}
         >
           <Box sx={{ marginTop: 0 }}>
-            <MigrationMessage />
-            {/* <Routes>
+            {/* <MigrationMessage /> */}
+            <Routes>
               <Route index element={<L1Delegate />} />
               <Route path="*" element={<L1Delegate />} />
               <Route path="/l1delegate" element={<L1Delegate />} />
@@ -153,7 +152,7 @@ function MigrationGate() {
               <Route path="/l2" element={<L2Claim />} />
               <Route path="/arbitrum" element={<L2Claim />} />
               <Route path="/404" element={<PageNotFound />} />
-            </Routes> */}
+            </Routes>
           </Box>
         </Stack>
       </Box>
@@ -289,16 +288,11 @@ function Arbitrum() {
 }
 
 export default function App() {
-  const { isArbitrum, isTestnet } = useChainState();
-  // const isDevMode = import.meta.env.DEV;
-  const migrationUnderway = true;
+  const { isArbitrum } = useChainState();
 
-  if (migrationUnderway && !isArbitrum && isTestnet) {
+  if (!isArbitrum) {
     return <MigrationGate />;
   }
 
-  if (!isArbitrum || (isArbitrum && !isTestnet)) {
-    return <MigrationGate />;
-  }
   return <Arbitrum />;
 }
