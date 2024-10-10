@@ -72,8 +72,6 @@ export const useFetchFarmerBalances = () => {
         );
         const balances = await promises;
 
-        console.log('balances: ', balances);
-
         console.debug('[farmer/updater/useFetchBalances] RESULT: ', balances);
 
         const localBalances = balances.reduce(
