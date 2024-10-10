@@ -279,6 +279,8 @@ function Arbitrum() {
             <Route path="/l1delegate" element={<L1Delegate />} />
             <Route path="/l2claim" element={<L2Claim />} />
             <Route path="/404" element={<PageNotFound />} />
+            <Route path="/l1delegate" element={<L1Delegate />} />
+            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Box>
