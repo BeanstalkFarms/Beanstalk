@@ -6,12 +6,14 @@ import {
   POD_MARKETPLACE_INITIAL_VALUES,
   SEASON_INITIAL,
   SILO_INITIAL_VALUES,
-  UNRIPE_TOKENS_INITIAL_VALUES
+  UNRIPE_TOKENS_INITIAL_VALUES,
+  WHITELIST_INITIAL
 } from "../../../cache-builder/results/B3Migration_arb";
 import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
 import { loadPodMarketplace } from "../../entities/PodMarketplace";
 import { clearMarketDeltas, takeMarketSnapshots } from "../../entities/snapshots/Marketplace";
-import { loadSilo, loadUnripeToken } from "../../entities/Silo";
+import { setWhitelistTokenSettings } from "../Silo";
+import { addToSiloWhitelist, loadSilo, loadUnripeToken } from "../../entities/Silo";
 import { getUnripeBeanAddr, getUnripeLpAddr } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { clearUnripeTokenDeltas, takeUnripeTokenSnapshots } from "../../entities/snapshots/UnripeToken";
 import { loadBeanstalk } from "../../entities/Beanstalk";
@@ -75,4 +77,18 @@ export function preUnpause(block: ethereum.Block): void {
   const silo = loadSilo(v().protocolAddress);
   clearSiloDeltas(silo, block);
   // No need to clear silo assets/whitelisted tokens, since all of these are technically new to the silo
+
+  // Also add whitelisted token info here. These events were not emitted during the reseed.
+  for (let i = 0; i < WHITELIST_INITIAL.length; ++i) {
+    addToSiloWhitelist(v().protocolAddress, WHITELIST_INITIAL[i].token);
+    setWhitelistTokenSettings({
+      token: WHITELIST_INITIAL[i].token,
+      selector: WHITELIST_INITIAL[i].selector,
+      stalkEarnedPerSeason: WHITELIST_INITIAL[i].stalkEarnedPerSeason,
+      stalkIssuedPerBdv: WHITELIST_INITIAL[i].stalkIssuedPerBdv,
+      gaugePoints: WHITELIST_INITIAL[i].gaugePoints,
+      optimalPercentDepositedBdv: WHITELIST_INITIAL[i].optimalPercentDepositedBdv,
+      block: block
+    });
+  }
 }

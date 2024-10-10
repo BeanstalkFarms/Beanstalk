@@ -1,4 +1,4 @@
-import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum, Bytes, log } from "@graphprotocol/graph-ts";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
@@ -7,6 +7,7 @@ import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
 import { stemFromSeason } from "./legacy/LegacySilo";
 import { beanDecimals, isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
+import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -17,6 +18,16 @@ class AddRemoveDepositsParams {
   amounts: BigInt[];
   bdvs: BigInt[] | null; // bdv not present in v2 removal
   depositVersion: String;
+}
+
+class WhitelistTokenParams {
+  token: Address;
+  selector: Bytes;
+  stalkEarnedPerSeason: BigInt;
+  stalkIssuedPerBdv: BigInt;
+  gaugePoints: BigInt;
+  optimalPercentDepositedBdv: BigInt;
+  block: ethereum.Block;
 }
 
 export function addDeposits(params: AddRemoveDepositsParams): void {
@@ -176,4 +187,18 @@ export function updateStalkBalances(
     }
   }
   silo.save();
+}
+
+export function setWhitelistTokenSettings(params: WhitelistTokenParams): void {
+  let siloSettings = loadWhitelistTokenSetting(params.token);
+
+  siloSettings.selector = params.selector;
+  siloSettings.stalkEarnedPerSeason = params.stalkEarnedPerSeason;
+  siloSettings.stalkIssuedPerBdv = params.stalkIssuedPerBdv;
+  siloSettings.gaugePoints = params.gaugePoints;
+  siloSettings.optimalPercentDepositedBdv = params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = params.block.timestamp;
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, params.block);
+  siloSettings.save();
 }

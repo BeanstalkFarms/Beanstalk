@@ -1,4 +1,4 @@
-import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
+import { addDeposits, removeDeposits, setWhitelistTokenSettings, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
 import { addToSiloWhitelist, loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
@@ -109,18 +109,15 @@ export function handlePlant(event: Plant): void {
 
 export function handleWhitelistToken(event: WhitelistToken): void {
   addToSiloWhitelist(event.address, event.params.token);
-
-  let siloSettings = loadWhitelistTokenSetting(event.params.token);
-
-  siloSettings.selector = event.params.selector;
-  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
-  siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
-  siloSettings.updatedAt = event.block.timestamp;
-
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
-  siloSettings.save();
+  setWhitelistTokenSettings({
+    token: event.params.token,
+    selector: event.params.selector,
+    stalkEarnedPerSeason: event.params.stalkEarnedPerSeason,
+    stalkIssuedPerBdv: event.params.stalkIssuedPerBdv,
+    gaugePoints: event.params.gaugePoints,
+    optimalPercentDepositedBdv: event.params.optimalPercentDepositedBdv,
+    block: event.block
+  });
 }
 
 export function handleUpdateWhitelistStatus(event: UpdateWhitelistStatus): void {

@@ -68,7 +68,7 @@ const tokenMap = {
     outFile,
     `/* This is a generated file */
 
-    import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+    import { BigInt, BigDecimal, Bytes, Address } from "@graphprotocol/graph-ts";
 
     class SiloInitialValues {
       beanToMaxLpGpPerBdvRatio: BigInt;
@@ -107,6 +107,15 @@ const tokenMap = {
       totalChoppedAmount: BigInt;
       totalChoppedBdv: BigInt;
       totalChoppedBdvReceived: BigInt;
+    }
+
+    class WhitelistTokenEvent {
+      token: Address;
+      selector: Bytes;
+      stalkEarnedPerSeason: BigInt;
+      stalkIssuedPerBdv: BigInt;
+      gaugePoints: BigInt;
+      optimalPercentDepositedBdv: BigInt;
     }
 
     export const SEASON_INITIAL = ${l1Values.beanstalk.lastSeason};
@@ -152,6 +161,9 @@ const tokenMap = {
         totalChoppedBdvReceived: BigInt.fromString('${l1Values.unripeTokens[1].totalChoppedBdvReceived}')
       }
     ];
+
+    // These events were not emitted on chain, need to be hardcoded and manually calculated here
+    export const WHITELIST_INITIAL: WhitelistTokenEvent[] = [/*TODO*/];
     `
   );
   console.log(`Wrote beanstalk 3 initial values to ${outFile}`);

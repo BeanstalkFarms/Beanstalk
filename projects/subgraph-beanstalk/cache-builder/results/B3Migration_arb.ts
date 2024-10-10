@@ -1,6 +1,6 @@
 /* This is a generated file */
 
-import { BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { BigInt, BigDecimal, Bytes, Address } from "@graphprotocol/graph-ts";
 
 class SiloInitialValues {
   beanToMaxLpGpPerBdvRatio: BigInt;
@@ -39,6 +39,15 @@ class UnripeTokenInitialValues {
   totalChoppedAmount: BigInt;
   totalChoppedBdv: BigInt;
   totalChoppedBdvReceived: BigInt;
+}
+
+class WhitelistTokenEvent {
+  token: Address;
+  selector: Bytes;
+  stalkEarnedPerSeason: BigInt;
+  stalkIssuedPerBdv: BigInt;
+  gaugePoints: BigInt;
+  optimalPercentDepositedBdv: BigInt;
 }
 
 export const SEASON_INITIAL = 25129;
@@ -708,4 +717,9 @@ export const UNRIPE_TOKENS_INITIAL_VALUES: UnripeTokenInitialValues[] = [
     totalChoppedBdv: BigInt.fromString("2534281787845"),
     totalChoppedBdvReceived: BigInt.fromString("509322147556")
   }
+];
+
+// These events were not emitted on chain, need to be hardcoded and manually calculated here
+export const WHITELIST_INITIAL: WhitelistTokenEvent[] = [
+  /*TODO*/
 ];

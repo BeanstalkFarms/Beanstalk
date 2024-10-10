@@ -15,7 +15,8 @@ import {
   POD_MARKETPLACE_INITIAL_VALUES,
   SEASON_INITIAL,
   SILO_INITIAL_VALUES,
-  UNRIPE_TOKENS_INITIAL_VALUES
+  UNRIPE_TOKENS_INITIAL_VALUES,
+  WHITELIST_INITIAL
 } from "../cache-builder/results/B3Migration_arb";
 import {
   handleAddMigratedDeposit,
@@ -40,6 +41,7 @@ import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { handleTransferSingle } from "../src/handlers/BarnHandler";
 import { createTransferSingleEvent } from "./event-mocking/Barn";
 import { ADDRESS_ZERO } from "../../subgraph-core/utils/Bytes";
+import { loadSilo } from "../src/entities/Silo";
 
 const account = AQUIFER;
 
@@ -61,6 +63,8 @@ describe("Beanstalk 3 Migration", () => {
         "beanToMaxLpGpPerBdvRatio",
         SILO_INITIAL_VALUES.beanToMaxLpGpPerBdvRatio.toString()
       );
+      const silo = loadSilo(BEANSTALK);
+      assert.assertTrue(silo.whitelistedTokens.length > 0 && silo.whitelistedTokens.length == WHITELIST_INITIAL.length);
     });
 
     test("Field entity initialization", () => {
