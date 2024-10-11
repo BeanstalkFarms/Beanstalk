@@ -34,17 +34,17 @@ const L1NavBar = () => (
       {/* Desktop: Right Side */}
       <Row
         justifyContent="space-between"
-        gap={1}
-        px={1}
+        gap={0.5}
+        px={0.5}
         height={`${NAV_HEIGHT}px`}
       >
         <Box
-          px={2}
+          px={0.5}
           height={`${NAV_HEIGHT}px`}
           sx={{
             display: 'flex',
             flexDirection: 'row',
-            gap: 2,
+            gap: 0.5,
             alignItems: 'center',
           }}
         >
