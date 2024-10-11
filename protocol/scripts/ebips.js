@@ -247,6 +247,7 @@ async function ebip19(mock = true, account = undefined) {
     diamondAddress: L2_BEANSTALK,
     facetNames: [
       "SeasonGettersFacet",
+      "SeasonFacet",
       "ConvertGettersFacet",
       "FieldFacet",
       "ConvertFacet",
@@ -258,12 +259,31 @@ async function ebip19(mock = true, account = undefined) {
       "LibPipelineConvert",
       "LibConvert",
       "LibSilo",
-      "LibTokenSilo"
+      "LibTokenSilo",
+      "LibEvaluate",
+      "LibGauge",
+      "LibIncentive",
+      "LibShipping",
+      "LibFlood",
+      "LibGerminate",
+      "LibWellMinting"
     ],
     facetLibraries: {
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+      SeasonFacet: [
+        "LibEvaluate",
+        "LibGauge",
+        "LibIncentive",
+        "LibShipping",
+        "LibFlood",
+        "LibGerminate",
+        "LibWellMinting"
+      ],
       ConvertFacet: ["LibPipelineConvert", "LibConvert", "LibSilo", "LibTokenSilo"],
       PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"]
+    },
+    linkedLibraries: {
+      LibEvaluate: ["LibLockedUnderlying"]
     },
     bip: false,
     object: !mock,

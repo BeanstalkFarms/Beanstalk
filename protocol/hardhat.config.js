@@ -54,6 +54,7 @@ const {
   bipMiscellaneousImprovements
 } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19 } = require("./scripts/ebips.js");
+const { impersonateMockArbitrumSys } = require("./scripts/impersonate.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -492,7 +493,9 @@ task("ebip19", async function () {
   await ebip19();
 });
 
-task("verifyEBIP19", async function () {
+task("verify-ebip19", async function () {
+  // due to hardhats inability to impersonate precompiles, a mock is used instead.
+  await impersonateMockArbitrumSys();
   let beanstalk = await getBeanstalk(L2_BEANSTALK);
   let before = await beanstalk.getAmountOut(
     "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
@@ -506,6 +509,8 @@ task("verifyEBIP19", async function () {
     "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
     1000000
   );
+  let block = await beanstalk.l2BlockNumber();
+  console.log("block", block);
   console.log("view redeem after", after);
 });
 
