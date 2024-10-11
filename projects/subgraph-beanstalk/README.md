@@ -11,14 +11,16 @@
 
 ### Subgraphs
 
-All currently used subgraphs live on a centralized host controlled by beanstalk farms.
-
-- [Testing Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk-testing)
-  - Used during local development for debugging and rapid iteration.
-- [Dev Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk-dev)
-  - Used for testing fixes or improvements made in the testing subgraph.
-- [Canonical Subgraph](https://graph.node.bean.money/subgraphs/name/beanstalk)
+- [Testing Subgraph](https://graph.bean.money/beanstalk-testing)
+  - The bleeding edge. Used for debugging and rapid iteration.
+- [Dev Subgraph](https://graph.bean.money/beanstalk-dev)
+  - Used for testing fixes or improvements made in the testing subgraph before going live.
+- [Canonical Subgraph](https://graph.bean.money/beanstalk)
   - Stable deployment and current source of truth for UI and other production processes.
+
+All subgraphs are hosted on a mix of Alchemy and Graph Network, with responses served from a proxy api managed by Beanstalk Farms. Read more about the advantages of the proxy here: https://github.com/BeanstalkFarms/Subgraph-Proxy.
+
+Looking to analyze data from when Beanstalk was on Ethereum? Append "\_eth" to each of the above links.
 
 ### Testing
 
