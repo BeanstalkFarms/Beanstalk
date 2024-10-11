@@ -126,6 +126,7 @@ enum Beanstalk_orderBy {
   field__sownBeans
   field__temperature
   field__unharvestablePods
+  field__unmigratedL1Pods
   id
   lastSeason
   seasons
@@ -142,6 +143,7 @@ enum Beanstalk_orderBy {
   silo__plantableStalk
   silo__roots
   silo__stalk
+  silo__unmigratedL1DepositedBdv
   token
 }
 
@@ -453,6 +455,7 @@ enum Farmer_orderBy {
   field__sownBeans
   field__temperature
   field__unharvestablePods
+  field__unmigratedL1Pods
   fills
   id
   listings
@@ -471,6 +474,7 @@ enum Farmer_orderBy {
   silo__plantableStalk
   silo__roots
   silo__stalk
+  silo__unmigratedL1DepositedBdv
   withdraws
 }
 
@@ -484,6 +488,9 @@ type Fertilizer {
   """Total overall suppy of fert tokens"""
   supply: BigInt!
   tokens(first: Int = 100, orderBy: FertilizerToken_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: FertilizerToken_filter): [FertilizerToken!]!
+
+  """Supply from L1 which has not been minted on L2 yet"""
+  unmigratedL1Supply: BigInt
 }
 
 type FertilizerBalance {
@@ -682,6 +689,7 @@ enum FertilizerToken_orderBy {
   fertilizer__beanstalk
   fertilizer__id
   fertilizer__supply
+  fertilizer__unmigratedL1Supply
   humidity
   id
   season
@@ -849,6 +857,14 @@ input Fertilizer_filter {
   supply_not: BigInt
   supply_not_in: [BigInt!]
   tokens_: FertilizerToken_filter
+  unmigratedL1Supply: BigInt
+  unmigratedL1Supply_gt: BigInt
+  unmigratedL1Supply_gte: BigInt
+  unmigratedL1Supply_in: [BigInt!]
+  unmigratedL1Supply_lt: BigInt
+  unmigratedL1Supply_lte: BigInt
+  unmigratedL1Supply_not: BigInt
+  unmigratedL1Supply_not_in: [BigInt!]
 }
 
 enum Fertilizer_orderBy {
@@ -856,6 +872,7 @@ enum Fertilizer_orderBy {
   id
   supply
   tokens
+  unmigratedL1Supply
 }
 
 type Field {
@@ -921,6 +938,9 @@ type Field {
 
   """Current outstanding non-harvestable pods"""
   unharvestablePods: BigInt!
+
+  """Pods from L1 which has not been minted on L2 yet"""
+  unmigratedL1Pods: BigInt
 }
 
 type FieldDailySnapshot {
@@ -1292,6 +1312,7 @@ enum FieldDailySnapshot_orderBy {
   field__sownBeans
   field__temperature
   field__unharvestablePods
+  field__unmigratedL1Pods
   harvestableIndex
   harvestablePods
   harvestedPods
@@ -1721,6 +1742,7 @@ enum FieldHourlySnapshot_orderBy {
   field__sownBeans
   field__temperature
   field__unharvestablePods
+  field__unmigratedL1Pods
   harvestableIndex
   harvestablePods
   harvestedPods
@@ -1926,6 +1948,14 @@ input Field_filter {
   unharvestablePods_lte: BigInt
   unharvestablePods_not: BigInt
   unharvestablePods_not_in: [BigInt!]
+  unmigratedL1Pods: BigInt
+  unmigratedL1Pods_gt: BigInt
+  unmigratedL1Pods_gte: BigInt
+  unmigratedL1Pods_in: [BigInt!]
+  unmigratedL1Pods_lt: BigInt
+  unmigratedL1Pods_lte: BigInt
+  unmigratedL1Pods_not: BigInt
+  unmigratedL1Pods_not_in: [BigInt!]
 }
 
 enum Field_orderBy {
@@ -1955,6 +1985,7 @@ enum Field_orderBy {
   sownBeans
   temperature
   unharvestablePods
+  unmigratedL1Pods
 }
 
 type Germinating {
@@ -2435,6 +2466,7 @@ enum Plot_orderBy {
   field__sownBeans
   field__temperature
   field__unharvestablePods
+  field__unmigratedL1Pods
   fullyHarvested
   harvestablePods
   harvestedPods
@@ -6823,6 +6855,9 @@ type Season {
 
   """Block in which the season start was triggered by the sunrise call"""
   sunriseBlock: BigInt!
+
+  """Beans from L1 which have not migrated yet"""
+  unmigratedL1Beans: BigInt
 }
 
 input Season_filter {
@@ -6939,6 +6974,14 @@ input Season_filter {
   sunriseBlock_lte: BigInt
   sunriseBlock_not: BigInt
   sunriseBlock_not_in: [BigInt!]
+  unmigratedL1Beans: BigInt
+  unmigratedL1Beans_gt: BigInt
+  unmigratedL1Beans_gte: BigInt
+  unmigratedL1Beans_in: [BigInt!]
+  unmigratedL1Beans_lt: BigInt
+  unmigratedL1Beans_lte: BigInt
+  unmigratedL1Beans_not: BigInt
+  unmigratedL1Beans_not_in: [BigInt!]
 }
 
 enum Season_orderBy {
@@ -6958,6 +7001,7 @@ enum Season_orderBy {
   rewardBeans
   season
   sunriseBlock
+  unmigratedL1Beans
 }
 
 type Silo {
@@ -7014,6 +7058,9 @@ type Silo {
 
   """Current stalk balance"""
   stalk: BigInt!
+
+  """Deposited BDV from L1 which has not migrated yet"""
+  unmigratedL1DepositedBdv: BigInt
 
   """Tokens whitelisted for deposit within the silo"""
   whitelistedTokens: [Bytes!]!
@@ -7534,6 +7581,7 @@ enum SiloAsset_orderBy {
   silo__plantableStalk
   silo__roots
   silo__stalk
+  silo__unmigratedL1DepositedBdv
   token
   withdrawnAmount
 }
@@ -7821,6 +7869,7 @@ enum SiloDailySnapshot_orderBy {
   silo__plantableStalk
   silo__roots
   silo__stalk
+  silo__unmigratedL1DepositedBdv
   stalk
   updatedAt
 }
@@ -8332,6 +8381,7 @@ enum SiloHourlySnapshot_orderBy {
   silo__plantableStalk
   silo__roots
   silo__stalk
+  silo__unmigratedL1DepositedBdv
   stalk
   updatedAt
 }
@@ -8717,6 +8767,14 @@ input Silo_filter {
   stalk_lte: BigInt
   stalk_not: BigInt
   stalk_not_in: [BigInt!]
+  unmigratedL1DepositedBdv: BigInt
+  unmigratedL1DepositedBdv_gt: BigInt
+  unmigratedL1DepositedBdv_gte: BigInt
+  unmigratedL1DepositedBdv_in: [BigInt!]
+  unmigratedL1DepositedBdv_lt: BigInt
+  unmigratedL1DepositedBdv_lte: BigInt
+  unmigratedL1DepositedBdv_not: BigInt
+  unmigratedL1DepositedBdv_not_in: [BigInt!]
   whitelistedTokens: [Bytes!]
   whitelistedTokens_contains: [Bytes!]
   whitelistedTokens_contains_nocase: [Bytes!]
@@ -8749,6 +8807,7 @@ enum Silo_orderBy {
   plantableStalk
   roots
   stalk
+  unmigratedL1DepositedBdv
   whitelistedTokens
 }
 
