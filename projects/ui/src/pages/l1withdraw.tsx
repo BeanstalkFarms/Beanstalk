@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, Box, Card, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Button, Card, Stack, Typography } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
@@ -10,7 +10,6 @@ import { FontWeight, IconSize } from '~/components/App/muiTheme';
 import IconWrapper from '~/components/Common/IconWrapper';
 import {
   FormTokenState,
-  SmartSubmitButton,
   TokenAdornment,
   TokenSelectDialog,
   TxnPreview,
@@ -22,14 +21,10 @@ import { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
 import {
-  BEAN,
-  BEAN_ETH_WELL_LP,
   DAI,
   USDC,
   USDT,
   WETH,
-  ETH,
-  BEAN_WSTETH_WELL_LP,
   WSTETH,
 } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -40,7 +35,6 @@ import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useAccount from '~/hooks/ledger/useAccount';
 import { toStringBaseUnitBN, transform } from '~/util';
 import TransactionToast from '~/components/Common/TxnToast';
-import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import { ActionType } from '~/util/Actions';
 import { FC } from '~/types';
@@ -53,7 +47,6 @@ import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import PageHeader from '~/components/Common/PageHeader';
 import useSdk from '~/hooks/sdk';
 import BigNumber from 'bignumber.js';
-import { Sdk } from '@beanstalk/sdk/dist/types/constants/generated-gql/graphql';
 
 /// ---------------------------------------------------------------
 
@@ -91,9 +84,14 @@ const beanstalkL1MiniAbi = new ethers.utils.Interface([
   "function tokenAllowance(address account, address spender, address token) public view returns (uint256)",
 ]);
 
+const erc20MiniAbi = new ethers.utils.Interface([
+  "function allowance(address owner, address spender) returns (uint256)"
+]);
+
 const TransferForm: FC<
   FormikProps<TransferFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
+    allowances: { [x: string]: BigNumber };
     beanstalk: Beanstalk;
     sdk: BeanstalkSDK,
     tokenList: (ERC20Token | NativeToken)[];
@@ -104,7 +102,7 @@ const TransferForm: FC<
   setFieldValue,
   isSubmitting,
   balances,
-  beanstalk,
+  allowances,
   sdk,
   tokenList,
   defaultValues,
@@ -122,18 +120,7 @@ const TransferForm: FC<
     const amount = stateIn.amount;
     const destination = values.destination;
 
-    const beanstalkL1Address = sdk.addresses.BEANSTALK.ETH_MAINNET;
-    const tokenAllowance = useReadContract({
-      address: beanstalkL1Address as `0x${string}`,
-      abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
-      functionName: "tokenAllowance",
-      // @ts-ignore
-      args: [account, beanstalkL1Address, ""],
-      query: {
-        enabled: false,
-        refetchInterval: 10000
-      }
-    });
+    const tokenAllowanceBN = allowances[tokenIn.address];
 
     const balanceInMax = useMemo(() => {
       const _balanceIn = balances[tokenIn.address];
@@ -280,10 +267,14 @@ const TransferForm: FC<
     }, [handleSetBalanceFrom, account, toMode]);
 
     /// Approval Checks
-    const shouldApprove =
-      fromMode === FarmFromMode.EXTERNAL ||
+    const shouldApprove = useMemo(() =>
+      amount?.gt(tokenAllowanceBN) && fromMode === FarmFromMode.EXTERNAL ||
       (fromMode === FarmFromMode.INTERNAL_EXTERNAL &&
-        amount?.gt(balances[tokenIn.address]?.internal));
+        amount?.gt(balances[tokenIn.address]?.internal)), [amount, tokenAllowanceBN, fromMode])
+
+    useEffect(() => {
+      shouldApprove ? handleApprovalMode(true) : handleApprovalMode(false);
+    }, [shouldApprove])
 
     const amountsCheck = amount?.gt(0);
     const enoughBalanceCheck = amount
@@ -316,12 +307,12 @@ const TransferForm: FC<
       (ethTransferCheck ? ethTransferModeCheck : true);
 
     return (
-      <>
+      <Box sx={{ padding: 1, maxWidth: 600, minWidth: 300 }}>
         <PageHeader
           title="Transfer assets from L1 Beanstalk"
           description="Transfer non-Beanstalk assets that were not automatically migrated"
         />
-        <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
+        <Card sx={{ padding: 1, marginTop: 2 }}>
           <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
             L1 Beanstalk Transfer
           </Typography>
@@ -333,9 +324,8 @@ const TransferForm: FC<
               handleSubmit={handleTokenSelectSubmit} //
               selected={selectedTokens}
               balances={balances}
-              balanceFrom={BalanceFrom.INTERNAL}
+              balanceFrom={values.balanceFrom}
               setBalanceFrom={handleSetBalanceFrom}
-              balanceFromOptions={[BalanceFrom.INTERNAL]}
               tokenList={tokenList}
               mode={TokenSelectMode.SINGLE}
             />
@@ -431,28 +421,23 @@ const TransferForm: FC<
                   will be lost.
                 </Warning>
               )}
-              <SmartSubmitButton
+              <Button
                 type="submit"
                 variant="contained"
                 color="primary"
                 size="large"
-                loading={isSubmitting}
                 disabled={!isValid || isSubmitting}
-                contract={beanstalk}
-                tokens={shouldApprove ? values.tokensIn : []}
-                mode="auto"
-                nowApproving={handleApprovalMode}
               >
                 {noBalance
                   ? 'Nothing to transfer'
-                  : // : !enoughBalanceCheck
-                  // ? 'Not enough to transfer'
-                  'Transfer'}
-              </SmartSubmitButton>
+                  : values.approving ? `Approve ${tokenIn.symbol}` // : !enoughBalanceCheck
+                    // ? 'Not enough to transfer'
+                    : 'Transfer'}
+              </Button>
             </Stack>
           </Form>
         </Card>
-      </>
+      </Box>
     );
   };
 
@@ -474,7 +459,7 @@ const L1Withdraw: FC<{}> = () => {
 
   /// Tokens
   const getChainToken = useGetChainToken();
-  const Bean = getChainToken(BEAN);
+  const weth = getChainToken(WETH);
 
   /// Token List
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
@@ -486,7 +471,7 @@ const L1Withdraw: FC<{}> = () => {
     () => ({
       tokensIn: [
         {
-          token: Bean,
+          token: weth,
           amount: undefined,
         },
       ],
@@ -496,11 +481,12 @@ const L1Withdraw: FC<{}> = () => {
       destination: '',
       approving: false,
     }),
-    [Bean]
+    [weth]
   );
 
   const sdk = useSdk();
   const beanstalkL1Address = sdk.addresses.BEANSTALK.ETH_MAINNET;
+  const beanstalkL1 = new ethers.Contract(beanstalkL1Address, beanstalkL1MiniAbi, signer)
 
   const supportedAddresses = Object.keys(tokenMap);
 
@@ -527,7 +513,27 @@ const L1Withdraw: FC<{}> = () => {
     return acc;
   }, {})
 
-  console.log("tokenbalances: ", tokenBalances)
+  const allowanceCalls = supportedAddresses.map((tokenAddress) => {
+    return {
+      address: tokenAddress as `0x${string}`,
+      abi: JSON.parse(erc20MiniAbi.format(ethers.utils.FormatTypes.json) as string),
+      functionName: "allowance",
+      args: [account, beanstalkL1Address],
+    }
+  })
+  const tokenAllowances = useReadContracts({
+    contracts: allowanceCalls,
+    query: {
+      enabled: Boolean(account),
+      refetchInterval: 10000
+    }
+  });
+  const tokenAllowancesData = tokenAllowances.data as Array<{ result: bigint, status: string }>
+  const allowances = supportedAddresses.reduce((acc, address, index) => {
+    // @ts-ignore
+    acc[address] = transform(TokenValue.fromBlockchain(tokenAllowancesData ? tokenAllowancesData[index].result : 0n, tokenMap[address].decimals), 'bnjs')
+    return acc;
+  }, {})
 
   const onSubmit = useCallback(
     async (
@@ -557,7 +563,19 @@ const L1Withdraw: FC<{}> = () => {
         if (!account) throw new Error('Connect a wallet first.');
         if (!recipient) throw new Error('Enter an address to transfer to.');
         if (!signer) throw new Error('Signer not found.');
-        if (approving) return;
+        if (approving) {
+          txToast = new TransactionToast({
+            loading: `Approving ${tokenIn.token.symbol}...`,
+            success: `Success. The L1 Beanstalk contract can now transact with your ${tokenIn.token.name}.`,
+          });
+          const erc20 = new ethers.Contract(tokenIn.token.address, ['function approve(address spender, uint256 value) returns(bool)'], signer);
+          const txn = await erc20.functions.approve(beanstalkL1Address, amount);
+          txToast.confirming(txn);
+          await txn.wait();
+          txToast.success();
+          await tokenAllowances.refetch();
+          return
+        };
 
         txToast = new TransactionToast({
           loading: 'Transferring...',
@@ -571,7 +589,6 @@ const L1Withdraw: FC<{}> = () => {
             value: amount,
           });
         } else {
-          const beanstalkL1 = new ethers.Contract(beanstalkL1Address, beanstalkL1MiniAbi, signer)
           txn = await beanstalkL1.transferToken(
             tokenAddress,
             recipient,
@@ -613,6 +630,7 @@ const L1Withdraw: FC<{}> = () => {
         <>
           <TransferForm
             balances={tokenData}
+            allowances={allowances}
             beanstalk={beanstalk}
             sdk={sdk}
             tokenList={tokenList}
