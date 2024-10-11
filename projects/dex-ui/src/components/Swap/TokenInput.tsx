@@ -7,6 +7,7 @@ import { Token, TokenValue } from "@beanstalk/sdk";
 
 import { size } from "src/breakpoints";
 import { useTokenBalance } from "src/tokens/useTokenBalance";
+import { getTokenIndex } from "src/tokens/utils";
 import { FC } from "src/types";
 
 import { BasicInput } from "./BasicInput";
@@ -130,7 +131,7 @@ export const TokenInput: FC<TokenInput> = ({
         <BalanceRow>
           <Balance onClick={handleClickMax}>
             {balanceLabel}:{" "}
-            {isBalanceLoading ? <Spinner size={12} /> : balance?.[token.address]?.toHuman("short")}
+            {isBalanceLoading ? <Spinner size={12} /> : balance?.[getTokenIndex(token)]?.toHuman("short")}
           </Balance>
         </BalanceRow>
       )}

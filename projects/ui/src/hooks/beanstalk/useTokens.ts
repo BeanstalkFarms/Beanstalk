@@ -42,11 +42,7 @@ export function indexTokens<T extends AnyToken>(tokens: T[]) {
   }, {});
 }
 
-/**
- *
- * @returns all balance tokens from the SDK all ERC20 tokens + ETH
- */
-export const useTokens = (): {
+export interface BalanceTokens {
   ETH: NativeToken;
   WETH: ERC20Token;
   WSTETH: ERC20Token;
@@ -55,8 +51,6 @@ export const useTokens = (): {
   BEAN: ERC20Token;
   USDC: ERC20Token;
   USDT: ERC20Token;
-  DAI: ERC20Token;
-  ARB: ERC20Token;
   UNRIPE_BEAN: ERC20Token;
   UNRIPE_BEAN_WSTETH: ERC20Token;
   BEAN_ETH_WELL_LP: ERC20Token;
@@ -65,6 +59,45 @@ export const useTokens = (): {
   BEAN_WBTC_WELL_LP: ERC20Token;
   BEAN_USDC_WELL_LP: ERC20Token;
   BEAN_USDT_WELL_LP: ERC20Token;
+}
+
+export const useBalanceTokens = (): BalanceTokens => {
+  const sdk = useSdk();
+
+  return useMemo(() => {
+    const tokens = sdk.tokens;
+    const balanceTokens = {
+      ETH: tokens.ETH,
+      WETH: tokens.WETH,
+      WSTETH: tokens.WSTETH,
+      WEETH: tokens.WEETH,
+      WBTC: tokens.WBTC,
+      BEAN: tokens.BEAN,
+      USDC: tokens.USDC,
+      USDT: tokens.USDT,
+      UNRIPE_BEAN: tokens.UNRIPE_BEAN,
+      UNRIPE_BEAN_WSTETH: tokens.UNRIPE_BEAN_WSTETH,
+      BEAN_ETH_WELL_LP: tokens.BEAN_ETH_WELL_LP,
+      BEAN_WSTETH_WELL_LP: tokens.BEAN_WSTETH_WELL_LP,
+      BEAN_WEETH_WELL_LP: tokens.BEAN_WEETH_WELL_LP,
+      BEAN_WBTC_WELL_LP: tokens.BEAN_WBTC_WELL_LP,
+      BEAN_USDC_WELL_LP: tokens.BEAN_USDC_WELL_LP,
+      BEAN_USDT_WELL_LP: tokens.BEAN_USDT_WELL_LP,
+    };
+
+    return {
+      ...balanceTokens,
+    };
+  }, [sdk.tokens]);
+};
+
+/**
+ *
+ * @returns all balance tokens from the SDK all ERC20 tokens + ETH
+ */
+export const useTokens = (): BalanceTokens & {
+  DAI: ERC20Token;
+  ARB: ERC20Token;
   erc20TokenMap: TokenMap<ERC20Token>;
   erc20Tokens: ERC20Token[];
   addresses: string[];
@@ -127,7 +160,6 @@ export const useSwapTokens = () => {
     [sdk.tokens]
   );
 };
-
 
 /**
  * @returns all beanstalk tokens from the SDK STALK, SEEDS, SPROUTS, rSPROUTS, PODS
