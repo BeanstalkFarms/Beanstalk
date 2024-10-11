@@ -134,36 +134,6 @@ task("getTime", async function () {
   console.log("Current time: ", await this.seasonGetter.time());
 });
 
-task("tokenSettings", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const tokenSettings = await beanstalk.tokenSettings("0xBEA0005B8599265D41256905A9B3073D397812E4");
-  console.log(tokenSettings);
-});
-
-task("l2BlockNumber", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const l2BlockNumber = await beanstalk.l2BlockNumber();
-  console.log(l2BlockNumber);
-});
-
-task("totalSoil", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const totalSoil = await beanstalk.totalSoil();
-  console.log(totalSoil);
-});
-
-task("temperature", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const temperature = await beanstalk.temperature();
-  console.log(temperature);
-});
-
-task("next-block", "Advances to the next block").setAction(async (taskArgs, hre) => {
-  await hre.network.provider.send("evm_mine");
-  const blockNumber = await hre.ethers.provider.getBlockNumber();
-  console.log(`Advanced to block number: ${blockNumber}`);
-});
-
 task("advance-blocks", "Advances the blockchain by a specified number of blocks")
   .addParam("number", "The number of blocks to advance")
   .setAction(async (taskArgs, hre) => {
@@ -229,23 +199,6 @@ task("send-custom-tx", "Sends a custom transaction with specified from, to, and 
     } catch (error) {
       console.error("Error sending transaction:", error.message);
     }
-  });
-
-// task for getOverallConvertCapacity
-task("getOverallConvertCapacity", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const overallCappedDeltaB = await beanstalk.getOverallConvertCapacity();
-  console.log(overallCappedDeltaB);
-});
-
-task("getUsedConvertCapacity", "Gets the used convert capacity at a specific block")
-  .addParam("block", "The block number to query")
-  .setAction(async (taskArgs) => {
-    const blockNumber = parseInt(taskArgs.block);
-    beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-
-    const usedConvertCapacities = await beanstalk.getUsedConvertCapacity(blockNumber);
-    console.log(usedConvertCapacities);
   });
 
 /*task('replant', async () => {
