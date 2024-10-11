@@ -50,6 +50,7 @@ const L1NavBar = () => (
         >
           <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
           <LinkButton key="/" to="/" title="Migration" />
+          <LinkButton key="/l1transfer" to="/l1transfer" title="Transfer" />
         </Box>
         <Row gap={1}>
           <Box sx={{ display: { sm: 'block', xs: 'none' } }}>

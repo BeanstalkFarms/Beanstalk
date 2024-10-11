@@ -451,7 +451,7 @@ const SUPPORTED_TOKENS = [
   USDT,
 ];
 
-const L1Withdraw: FC<{}> = () => {
+const L1Transfer: FC<{}> = () => {
   /// Ledger
   const account = useAccount();
   const { data: signer } = useSigner();
@@ -643,4 +643,4 @@ const L1Withdraw: FC<{}> = () => {
   );
 };
 
-export default L1Withdraw;
+export default L1Transfer;
