@@ -50,6 +50,7 @@ export function loadSeason(id: BigInt): Season {
     let lastSeason = Season.load(id.minus(ONE_BI).toString());
     if (lastSeason != null) {
       season.beans = lastSeason.beans;
+      season.unmigratedL1Beans = lastSeason.unmigratedL1Beans;
     }
     season.save();
 

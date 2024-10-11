@@ -30,8 +30,8 @@ export function sunrise(protocol: Address, season: BigInt, block: ethereum.Block
   // -- Field level totals
   field.season = currentSeason;
   let unharvestablePods = field.unharvestablePods;
-  if (field.unmigratedL1Pods != null) {
-    unharvestablePods = unharvestablePods.plus(field.unmigratedL1Pods);
+  if (field.unmigratedL1Pods !== null) {
+    unharvestablePods = unharvestablePods.plus(field.unmigratedL1Pods!);
   }
   field.podRate = seasonEntity.beans == ZERO_BI ? ZERO_BD : toDecimal(unharvestablePods).div(toDecimal(seasonEntity.beans));
 
