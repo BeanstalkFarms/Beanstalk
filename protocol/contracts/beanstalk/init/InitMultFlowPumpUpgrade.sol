@@ -53,6 +53,8 @@ contract InitMultiFlowPumpUpgrade {
 
             // upgrade the well to the new implementation
             IWellUpgradeable(wells[i]).upgradeTo(minimalProxyWell);
+            // call add liquidity to start the pump.
+            well.sync(address(this), 0);
 
             // delete the well Oracle snapshot.
             delete s.sys.wellOracleSnapshots[wells[i]];
