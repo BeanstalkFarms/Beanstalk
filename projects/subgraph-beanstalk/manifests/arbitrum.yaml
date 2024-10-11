@@ -68,7 +68,7 @@ dataSources:
           handler: handleInternalBalanceMigrated
       file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
   - kind: ethereum/contract
-    name: ReseedContractMigration
+    name: PostReseedMigration
     network: arbitrum-one
     source:
       address: "0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70"
@@ -84,8 +84,14 @@ dataSources:
         - name: Reseed
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
+        - event: L1BeansMigrated
+          handler: handleL1BeansMigrated
+        - event: L1DepositsMigrated
+          handler: handleL1DepositsMigrated
         - event: L1PlotsMigrated(indexed address,indexed address,uint256[],uint256[])
           handler: handleL1PlotsMigrated
+        - event: L1FertilizerMigrated
+          handler: handleL1FertilizerMigrated
       file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
   ###
   # INITIALIZATION

@@ -163,6 +163,12 @@ const tokenMap = {
       }
     ];
 
+    // These are hardcoded according to the output from Reseed.
+    export const UNMIGRATED_L1_BEANS = BigInt.fromString('2724979038345');
+    export const UNMIGRATED_SILO_BDV = BigInt.fromString('3348123368427');
+    export const UNMIGRATED_PODS = BigInt.fromString('25206618581873');
+    export const UNMIGRATED_FERTILIZER = BigInt.fromString('9036754');
+
     // These events were not emitted on chain, need to be hardcoded and manually triggered
     export const WHITELIST_INITIAL: WhitelistTokenEvent[] = [
       {

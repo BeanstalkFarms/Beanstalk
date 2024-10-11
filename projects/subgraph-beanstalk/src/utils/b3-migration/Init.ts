@@ -1,4 +1,4 @@
-import { ethereum } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { v } from "../constants/Version";
 import { loadField } from "../../entities/Field";
 import {
@@ -6,6 +6,10 @@ import {
   POD_MARKETPLACE_INITIAL_VALUES,
   SEASON_INITIAL,
   SILO_INITIAL_VALUES,
+  UNMIGRATED_FERTILIZER,
+  UNMIGRATED_L1_BEANS,
+  UNMIGRATED_PODS,
+  UNMIGRATED_SILO_BDV,
   UNRIPE_TOKENS_INITIAL_VALUES,
   WHITELIST_INITIAL
 } from "../../../cache-builder/results/B3Migration_arb";
@@ -14,25 +18,36 @@ import { loadPodMarketplace } from "../../entities/PodMarketplace";
 import { clearMarketDeltas, takeMarketSnapshots } from "../../entities/snapshots/Marketplace";
 import { setWhitelistTokenSettings } from "../Silo";
 import { addToSiloWhitelist, loadSilo, loadUnripeToken } from "../../entities/Silo";
-import { getUnripeBeanAddr, getUnripeLpAddr } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { getProtocolFertilizer, getUnripeBeanAddr, getUnripeLpAddr } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { clearUnripeTokenDeltas, takeUnripeTokenSnapshots } from "../../entities/snapshots/UnripeToken";
-import { loadBeanstalk } from "../../entities/Beanstalk";
+import { loadBeanstalk, loadSeason } from "../../entities/Beanstalk";
 import { clearSiloDeltas } from "../../entities/snapshots/Silo";
+import { loadFertilizer } from "../../entities/Fertilizer";
 
 export function init(block: ethereum.Block): void {
   let beanstalk = loadBeanstalk();
   beanstalk.lastSeason = SEASON_INITIAL;
   beanstalk.save();
 
+  const season = loadSeason(BigInt.fromU32(SEASON_INITIAL));
+  season.unmigratedL1Beans = UNMIGRATED_L1_BEANS;
+  season.save();
+
+  let silo = loadSilo(v().protocolAddress);
+  silo.beanToMaxLpGpPerBdvRatio = SILO_INITIAL_VALUES.beanToMaxLpGpPerBdvRatio;
+  silo.unmigratedL1DepositedBdv = UNMIGRATED_SILO_BDV;
+  silo.save();
+
   let field = loadField(v().protocolAddress);
   field.podIndex = FIELD_INITIAL_VALUES.podIndex;
   field.harvestableIndex = FIELD_INITIAL_VALUES.harvestableIndex;
   field.temperature = FIELD_INITIAL_VALUES.temperature;
+  field.unmigratedL1Pods = UNMIGRATED_PODS;
   field.save();
 
-  let silo = loadSilo(v().protocolAddress);
-  silo.beanToMaxLpGpPerBdvRatio = SILO_INITIAL_VALUES.beanToMaxLpGpPerBdvRatio;
-  silo.save();
+  const fert = loadFertilizer(getProtocolFertilizer(v())!);
+  fert.unmigratedL1Supply = UNMIGRATED_FERTILIZER;
+  fert.save();
 }
 
 // Carries over cumulative data from L1 -> L2 subgraph. See cache-builder/beanstalk3.js for the input source.

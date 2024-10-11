@@ -71,6 +71,8 @@ type Season @entity {
   price: BigDecimal!
   "Total Bean supply"
   beans: BigInt!
+  "Beans from L1 which have not migrated yet"
+  unmigratedL1Beans: BigInt
   "Bean Market Cap"
   marketCap: BigDecimal!
   "Time weighted deltaB"
@@ -98,6 +100,8 @@ type Silo @entity {
   assets: [SiloAsset!]! @derivedFrom(field: "silo")
   "Current BDV of all deposited assets"
   depositedBDV: BigInt!
+  "Deposited BDV from L1 which has not migrated yet"
+  unmigratedL1DepositedBdv: BigInt
   "Current stalk balance"
   stalk: BigInt!
   "Current plantable stalk for bean seigniorage not yet claimed"
@@ -471,6 +475,8 @@ type Field @entity {
   harvestablePods: BigInt!
   "Cumulative harvested pods"
   harvestedPods: BigInt!
+  "Pods from L1 which has not been minted on L2 yet"
+  unmigratedL1Pods: BigInt
   "Current amount of soil available"
   soil: BigInt!
   "Current pod index"
@@ -1175,6 +1181,8 @@ type Fertilizer @entity {
   beanstalk: String!
   "Total overall suppy of fert tokens"
   supply: BigInt!
+  "Supply from L1 which has not been minted on L2 yet"
+  unmigratedL1Supply: BigInt
   tokens: [FertilizerToken!]! @derivedFrom(field: "fertilizer")
 }
 

@@ -3,18 +3,25 @@ import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddMigratedDeposit,
   InternalBalanceMigrated,
+  L1BeansMigrated,
+  L1DepositsMigrated,
+  L1FertilizerMigrated,
   L1PlotsMigrated,
   MigratedAccountStatus,
   MigratedPlot,
   MigratedPodListing,
   MigratedPodOrder
 } from "../../../generated/Beanstalk-ABIs/Reseed";
-import { getHarvestableIndex, loadFarmer } from "../../entities/Beanstalk";
+import { getCurrentSeason, getHarvestableIndex, loadFarmer, loadSeason } from "../../entities/Beanstalk";
 import { loadField, loadPlot } from "../../entities/Field";
 import { clearFieldDeltas, takeFieldSnapshots } from "../../entities/snapshots/Field";
 import { updateFarmTotals } from "../../utils/Farm";
 import { podListingCreated, podOrderCreated } from "../../utils/Marketplace";
 import { addDeposits, updateStalkBalances } from "../../utils/Silo";
+import { loadFertilizer } from "../../entities/Fertilizer";
+import { getProtocolFertilizer } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../../utils/constants/Version";
+import { loadSilo } from "../../entities/Silo";
 
 export function handleAddMigratedDeposit(event: AddMigratedDeposit): void {
   addDeposits({
@@ -36,13 +43,6 @@ export function handleMigratedAccountStatus(event: MigratedAccountStatus): void 
 // Executed upon Reseed
 export function handleMigratedPlot(event: MigratedPlot): void {
   addMigratedPlot(event.params.account, event.params.plotIndex, event.params.pods, event, true);
-}
-
-// Executed upon contract balances migrated to L2
-export function handleL1PlotsMigrated(event: L1PlotsMigrated): void {
-  for (let i = 0; i < event.params.index.length; ++i) {
-    addMigratedPlot(event.params.receiver, event.params.index[i], event.params.pods[i], event, false);
-  }
 }
 
 export function handleMigratedPodListing(event: MigratedPodListing): void {
@@ -138,11 +138,47 @@ function addMigratedPlot(account: Address, index: BigInt, amount: BigInt, event:
   plot.save();
 }
 
+/// Migration events that did not get emitted during the Reseed ///
+
+export function handleL1BeansMigrated(event: L1BeansMigrated): void {
+  const season = loadSeason(BigInt.fromU32(getCurrentSeason()));
+  season.unmigratedL1Beans!.minus(event.params.amount);
+  season.save();
+}
+
+export function handleL1DepositsMigrated(event: L1DepositsMigrated): void {
+  let migratedBdv = ZERO_BI;
+  for (let i = 0; i < event.params.amounts.length; ++i) {
+    migratedBdv = migratedBdv.plus(event.params.amounts[i]);
+  }
+  const silo = loadSilo(event.address);
+  silo.unmigratedL1DepositedBdv!.minus(migratedBdv);
+  silo.save();
+}
+
+export function handleL1PlotsMigrated(event: L1PlotsMigrated): void {
+  let migratedPods = ZERO_BI;
+  for (let i = 0; i < event.params.index.length; ++i) {
+    addMigratedPlot(event.params.receiver, event.params.index[i], event.params.pods[i], event, false);
+    migratedPods = migratedPods.plus(event.params.pods[i]);
+  }
+  const field = loadField(event.address);
+  field.unmigratedL1Pods!.minus(migratedPods);
+  field.save();
+}
+
+export function handleL1FertilizerMigrated(event: L1FertilizerMigrated): void {
+  let migratedFert = ZERO_BI;
+  for (let i = 0; i < event.params.amounts.length; ++i) {
+    migratedFert = migratedFert.plus(event.params.amounts[i]);
+  }
+  const fert = loadFertilizer(getProtocolFertilizer(v())!);
+  fert.unmigratedL1Supply!.minus(migratedFert);
+  fert.save();
+}
+
 // Not currently necessary to handle the below. They are appropriately accounted for by the other events
 //// Reseed:
 // FertilizerMigrated - TransferSingle events on fertilizer mints
 //// L1ReceiverFacet (Contract migration):
-// L1BeansMigrated - ERC20 mint suffices
-// L1FertilizerMigrated - TransferSingle events on fertilizer mints
-// L1DepositsMigrated - AddDeposit is emitted
 // L1InternalBalancesMigrated - InternalBalanceChanged is emitted
