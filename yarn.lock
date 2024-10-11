@@ -26143,21 +26143,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "graphql-request@npm:5.0.0"
-  dependencies:
-    "@graphql-typed-document-node/core": "npm:^3.1.1"
-    cross-fetch: "npm:^3.1.5"
-    extract-files: "npm:^9.0.0"
-    form-data: "npm:^3.0.0"
-  peerDependencies:
-    graphql: 14 - 16
-  checksum: 10/bf9e52d1d6af434bae77ef1a6ebdc419c5f6756bc3ad36f7ef45f48394b021045d31a48f6e9526df1484b1dfa110bc7a6706dbc2b7599873aac9b039b1a013fb
-  languageName: node
-  linkType: hard
-
-"graphql-request@npm:^6.0.0
+"graphql-request@npm:^6.0.0, graphql-request@npm:^6.1.0":
   version: 6.1.0
   resolution: "graphql-request@npm:6.1.0"
   dependencies:
