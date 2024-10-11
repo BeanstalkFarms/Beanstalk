@@ -3,18 +3,21 @@ import axios from 'axios';
 import middy from 'middy';
 import { cors, rateLimit } from '~/functions/middleware';
 
-/// https://docs.etherscan.io/api-endpoints/gas-tracker#get-gas-oracle
-type EtherscanGasOracleResponse = {
-  LastBlock: string;
-  SafeGasPrice: string;
-  ProposeGasPrice: string;
-  FastGasPrice: string;
-  suggestBaseFee: string;
-  gasUsedRatio: string;
-};
+// export type EthPriceResponse = {
+//   block: string;
+//   gas: {
+//     safe: string;
+//     propose: string;
+//     fast: string;
+//     suggestBaseFee: string;
+//   };
+//   ethusd: string;
+//   ethusdTimestamp: string;
+//   lastRefreshed: string;
+// };
 
-/// https://docs.etherscan.io/api-endpoints/stats-1#get-ether-last-price
-type EtherscanEthPriceResponse = {
+/// https://docs.arbiscan.io/api-endpoints/stats-1#get-ether-last-price
+export type ArbiscanEthPriceResponse = {
   ethbtc: string;
   ethbtc_timestamp: string;
   ethusd: string;
@@ -22,13 +25,6 @@ type EtherscanEthPriceResponse = {
 };
 
 export type EthPriceResponse = {
-  block: string;
-  gas: {
-    safe: string;
-    propose: string;
-    fast: string;
-    suggestBaseFee: string;
-  };
   ethusd: string;
   ethusdTimestamp: string;
   lastRefreshed: string;
@@ -70,29 +66,15 @@ const _handler: Handler = async (event) => {
 
   if (expired) {
     try {
-      const [gasoracle, ethprice] = await Promise.all([
-        axios
-          .get<{ result: EtherscanGasOracleResponse }>(
-            `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env.ETHERSCAN_API_KEY}`
-          )
-          .then((r) => r.data.result),
-        axios
-          .get<{ result: EtherscanEthPriceResponse }>(
-            `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${process.env.ETHERSCAN_API_KEY}`
-          )
-          .then((r) => r.data.result),
+      const [arbEthPrice] = await Promise.all([
+        axios.get<{ result: ArbiscanEthPriceResponse }>(
+          `https://api.arbiscan.io/api?module=stats&action=ethprice&apikey=${process.env.VITE_ARBISCAN_API_KEY}`
+        ),
       ]);
       lastRefreshed = new Date().getTime();
       data = {
-        block: gasoracle.LastBlock,
-        gas: {
-          safe: gasoracle.SafeGasPrice,
-          propose: gasoracle.ProposeGasPrice,
-          fast: gasoracle.FastGasPrice,
-          suggestBaseFee: gasoracle.suggestBaseFee,
-        },
-        ethusd: ethprice.ethusd,
-        ethusdTimestamp: ethprice.ethusd_timestamp,
+        ethusd: arbEthPrice.data.result.ethusd,
+        ethusdTimestamp: arbEthPrice.data.result.ethusd_timestamp,
         lastRefreshed: lastRefreshed.toString(),
       };
     } catch (e) {

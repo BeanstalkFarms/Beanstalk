@@ -30,22 +30,7 @@ interface ImportMetaEnv {
   /**
    *
    */
-  readonly VITE_TENDERLY_ACCOUNT_SLUG: string;
-
-  /**
-   *
-   */
-  readonly VITE_TENDERLY_PROJECT_SLUG: string;
-
-  /**
-   *
-   */
-  readonly VITE_TENDERLY_ACCESS_KEY: string;
-
-  /**
-   * Tenderly Virtual Network ID for testnet
-   */
-  readonly VITE_TENDERLY_VNET_ID?: string;
+  readonly VITE_ARBISCAN_API_KEY: string;
 }
 
 interface ImportMeta {
