@@ -224,7 +224,7 @@ export const apolloClient = new ApolloClient({
           snapshotLabsLink, // true
           ApolloLink.split(
             // BS3TODO: Do we need to keep beaNFT support?
-            ({ getContext }) => getContext().subgraph === 'beanft',
+            ({ getContext }) => getContext().subgraph === 'beanft_eth',
             beanftLink, // true
             ApolloLink.split(
               ({ getContext }) => getContext().subgraph === 'bean',
