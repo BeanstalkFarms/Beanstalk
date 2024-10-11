@@ -287,6 +287,7 @@ async function ebip19(mock = true, account = undefined) {
     linkedLibraries: {
       LibEvaluate: ["LibLockedUnderlying"]
     },
+    initFacetName: "InitMultFlowPumpUpgrade",
     bip: false,
     object: !mock,
     verbose: true,
