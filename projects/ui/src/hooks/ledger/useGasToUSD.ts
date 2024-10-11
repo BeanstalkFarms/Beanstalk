@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { AppState } from '~/state';
+import { AppState, useAppSelector } from '~/state';
 import { useBalanceTokens } from '../beanstalk/useTokens';
 
 /**
@@ -17,25 +17,25 @@ const useGasToUSD = () => {
     (state) => state.app.ethPrices
   );
   const { ETH } = useBalanceTokens();
+  const ethPrice = useAppSelector((s) => s._beanstalk.tokenPrices.eth);
 
   return useCallback(
     (gasLimit?: BigNumber) => {
       const baseFee = prices?.baseFeePerGas;
       const gasPrice = prices?.gasPrice;
-      const ethUsd = prices?.ethusd;
 
-      if (!baseFee || !gasPrice || !ethUsd || !gasLimit) return null;
+      if (!baseFee || !gasPrice || !gasLimit || !ethPrice) return null;
 
       const l1Fee = baseFee.times(gasLimit);
       const totalFee = l1Fee.plus(gasPrice);
       const _ttlFee = new BigNumber(
         ETH.fromBlockchain(totalFee.toString()).toHuman()
       );
-      const usd = _ttlFee.times(ethUsd.toNumber());
+      const usd = _ttlFee.times(ethPrice);
 
       return usd;
     },
-    [prices?.baseFeePerGas, prices?.gasPrice, prices?.ethusd, ETH]
+    [prices?.baseFeePerGas, prices?.gasPrice, ETH, ethPrice]
   );
 };
 

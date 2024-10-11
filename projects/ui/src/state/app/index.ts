@@ -14,9 +14,6 @@ export type Globals = {
 };
 
 export interface EthGasPrices {
-  ethusd: BigNumber;
-  ethUsdTimestamp: string;
-  lastRefreshed: string;
   gasPrice: BigNumber;
   baseFeePerGas: BigNumber;
 }

@@ -26,11 +26,6 @@ interface ImportMetaEnv {
    * API key for used for ZeroX Swap API
    */
   readonly VITE_ZERO_X_API_KEY: string;
-
-  /**
-   *
-   */
-  readonly VITE_ARBISCAN_API_KEY: string;
 }
 
 interface ImportMeta {

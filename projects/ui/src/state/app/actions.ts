@@ -5,8 +5,8 @@ import { EthGasPrices, Globals, Settings } from '.';
 //   'app/setAlmanacView'
 // );
 
-export const setEthPrices = createAction<EthGasPrices | null>(
-  'app/setEthGasPrices'
+export const setGasPrices = createAction<EthGasPrices | null>(
+  'app/setGasPrices'
 );
 
 type SettingsPayload<T extends keyof Settings> = {

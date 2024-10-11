@@ -3,7 +3,7 @@ import { DataSource } from '@beanstalk/sdk';
 import { SGEnvironments } from '~/graph/endpoints';
 import { persistedState } from '~/state/persist';
 import { App } from '.';
-import { setEthPrices, setGlobal, updateSetting } from './actions';
+import { setGasPrices, setGlobal, updateSetting } from './actions';
 
 export const initialState: App = {
   ethPrices: null,
@@ -21,7 +21,7 @@ export const initialState: App = {
 
 export default createReducer(initialState, (builder) =>
   builder
-    .addCase(setEthPrices, (state, { payload }) => {
+    .addCase(setGasPrices, (state, { payload }) => {
       state.ethPrices = payload;
     })
     .addCase(updateSetting, (state, { payload }) => {

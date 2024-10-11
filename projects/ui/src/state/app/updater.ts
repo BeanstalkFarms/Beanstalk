@@ -8,7 +8,7 @@ import useSetting from '~/hooks/app/useSetting';
 import useSdk from '~/hooks/sdk';
 import { ChainResolver } from '@beanstalk/sdk-core';
 import BigNumber from 'bignumber.js';
-import { setEthPrices, updateSetting } from './actions';
+import { setGasPrices, updateSetting } from './actions';
 
 export const useEthPrices = () => {
   const dispatch = useDispatch();
@@ -21,10 +21,8 @@ export const useEthPrices = () => {
       }
       try {
         console.debug('[useEthPrices/fetch] fetching...');
-        const query = await fetch('/.netlify/functions/ethprice');
 
-        const [ethprice, ethGasPrice, ethL1BaseFee] = await Promise.all([
-          query.json(),
+        const [ethGasPrice, ethL1BaseFee] = await Promise.all([
           sdk.provider.getGasPrice(),
           sdk.provider
             .getBlock('latest')
@@ -32,15 +30,12 @@ export const useEthPrices = () => {
         ]);
 
         console.debug('[useEthPrices/fetch] RESULT: ', {
-          ethprice,
           ethGasPrice,
           ethL1BaseFee,
         });
 
         dispatch(
-          setEthPrices({
-            ...ethprice,
-            ethusd: new BigNumber(ethprice?.ethusd || '0'),
+          setGasPrices({
             gasPrice: new BigNumber(ethGasPrice?.toString() || '0'),
             baseFeePerGas: new BigNumber(ethL1BaseFee?.toString() || '0'),
           })

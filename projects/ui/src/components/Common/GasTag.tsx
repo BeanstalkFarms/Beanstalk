@@ -1,10 +1,9 @@
 import React from 'react';
 import BigNumber from 'bignumber.js';
-import { Box, Divider, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { DateTime } from 'luxon';
 import useGasToUSD from '~/hooks/ledger/useGasToUSD';
-import { AppState } from '~/state';
+import { AppState, useAppSelector } from '~/state';
 import { displayFullBN, displayUSD } from '~/util';
 
 import { FC } from '~/types';
@@ -20,6 +19,7 @@ const GasTag: FC<{
   const prices = useSelector<AppState, AppState['app']['ethPrices']>(
     (state) => state.app.ethPrices
   );
+  const ethPrice = useAppSelector((state) => state._beanstalk.tokenPrices.eth);
   const getGasUSD = useGasToUSD();
   const gasUSD = gasLimit ? getGasUSD(gasLimit) : null;
 
@@ -39,19 +39,8 @@ const GasTag: FC<{
               : '?'}
           </StatHorizontal>
           <StatHorizontal label="ETH price">
-            {prices?.ethusd ? `$${prices.ethusd}` : '?'}
+            {ethPrice ? `$${ethPrice.toFormat(2, BigNumber.ROUND_DOWN)}` : '?'}
           </StatHorizontal>
-          {prices?.lastRefreshed && (
-            <>
-              <Divider color="secondary" sx={{ my: 1 }} />
-              <Typography variant="bodySmall" color="gray">
-                Refreshed at{' '}
-                {DateTime.fromMillis(
-                  parseInt(prices.lastRefreshed, 10)
-                ).toLocaleString(DateTime.TIME_24_WITH_SHORT_OFFSET)}
-              </Typography>
-            </>
-          )}
         </>
       }
     >
