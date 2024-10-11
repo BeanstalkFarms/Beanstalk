@@ -206,32 +206,36 @@ const Transfer: FC<{}> = () => {
             success: 'Plot Transfer successful.',
           });
 
-          const call = beanstalk.transferPlot(
+          // @ts-ignore
+          const call = _beanstalk.transferPlot(
             account,
             to.toString(),
             toStringBaseUnitBN(index, PODS.decimals),
             toStringBaseUnitBN(start, PODS.decimals),
             toStringBaseUnitBN(end, PODS.decimals)
           );
+
           txn = await call;
         } else {
-          for (let i = 0; i < values.selectedPlots.length; i++) {
-            let index = values.selectedPlots[i].index!;
-            let start = values.selectedPlots[i].start!;
-            let end = values.selectedPlots[i].end!;
-            let data: StepGenerator = (_amountInStep) => ({
+          for (let i = 0; i < values.selectedPlots.length; i += 1) {
+            const _index = values.selectedPlots[i].index!;
+            const _start = values.selectedPlots[i].start!;
+            const _end = values.selectedPlots[i].end!;
+
+            const _data: StepGenerator = (_amountInStep) => ({
               name: 'transferPlot',
               amountOut: _amountInStep,
               prepare: () => ({
                 target: _beanstalk.address,
                 callData: _beanstalk.interface.encodeFunctionData(
-                  'transferPlot',
+                  // @ts-ignore
+                  'transferPlots',
                   [
                     account,
                     to.toString(),
-                    toStringBaseUnitBN(index, PODS.decimals),
-                    toStringBaseUnitBN(start, PODS.decimals),
-                    toStringBaseUnitBN(end, PODS.decimals),
+                    toStringBaseUnitBN(_index, PODS.decimals),
+                    toStringBaseUnitBN(_start, PODS.decimals),
+                    toStringBaseUnitBN(_end, PODS.decimals),
                   ]
                 ),
               }),
@@ -243,7 +247,7 @@ const Transfer: FC<{}> = () => {
                   result
                 ),
             });
-            workflow.add(data);
+            workflow.add(_data);
           }
 
           txToast = new TransactionToast({
@@ -264,7 +268,7 @@ const Transfer: FC<{}> = () => {
 
         txToast.confirming(txn);
 
-        const receipt = await txn.wait();
+        const receipt = await txn?.wait();
         await Promise.all([refetchFarmerField()]);
 
         txToast.success(receipt);
@@ -279,7 +283,7 @@ const Transfer: FC<{}> = () => {
         }
       }
     },
-    [account, beanstalk, refetchFarmerField, middleware]
+    [middleware, account, refetchFarmerField, _beanstalk, workflow]
   );
 
   return (

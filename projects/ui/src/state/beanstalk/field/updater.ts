@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { bigNumberResult, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetBeanstalkField, updateBeanstalkField } from './actions';
 
 export const useFetchBeanstalkField = () => {
@@ -14,6 +15,7 @@ export const useFetchBeanstalkField = () => {
     if (beanstalk) {
       console.debug('[beanstalk/field/useBeanstalkField] FETCH');
 
+      // TODO: multicall?
       const [
         harvestableIndex,
         podIndex,
@@ -22,11 +24,11 @@ export const useFetchBeanstalkField = () => {
         adjustedTemperature,
         maxTemperature,
       ] = await Promise.all([
-        beanstalk.harvestableIndex().then(tokenResult(BEAN)), // FIXME
-        beanstalk.podIndex().then(tokenResult(BEAN)),
+        beanstalk.harvestableIndex('0').then(tokenResult(BEAN)), // FIXME
+        beanstalk.podIndex('0').then(tokenResult(BEAN)),
         beanstalk.totalSoil().then(tokenResult(BEAN)),
         beanstalk.weather().then((_weather) => ({
-          lastDSoil: tokenResult(BEAN)(_weather.lastDSoil),
+          lastDSoil: tokenResult(BEAN)(_weather.lastDeltaSoil),
           lastSowTime: bigNumberResult(_weather.lastSowTime),
           thisSowTime: bigNumberResult(_weather.thisSowTime),
         })),
@@ -72,7 +74,7 @@ export const useFetchBeanstalkField = () => {
 const FieldUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkField();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [clear, fetch]);

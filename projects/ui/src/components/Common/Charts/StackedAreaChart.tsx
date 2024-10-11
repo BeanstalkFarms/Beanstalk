@@ -31,9 +31,7 @@ type Props = {
   ProviderChartProps;
 
 const Graph = (props: Props) => {
-  const siloTokens = useTokenMap(
-    props.useCustomTokenList || SILO_WHITELIST
-  );
+  const siloTokens = useTokenMap(props.useCustomTokenList || SILO_WHITELIST);
   const {
     // Chart sizing
     width,
@@ -97,10 +95,11 @@ const Graph = (props: Props) => {
   }, [data, series, width]);
 
   // tooltip
-  const { containerRef, containerBounds, forceRefreshBounds } = useTooltipInPortal({
-    scroll: true,
-    detectBounds: true,
-  });
+  const { containerRef, containerBounds, forceRefreshBounds } =
+    useTooltipInPortal({
+      scroll: true,
+      detectBounds: true,
+    });
 
   const {
     showTooltip,
@@ -374,8 +373,8 @@ const Graph = (props: Props) => {
                           const seasonFilter = props.tokenPerSeasonFilter;
                           if (
                             !seasonFilter ||
-                            (tooltipData.season >= seasonFilter[key].from &&
-                              tooltipData.season <= seasonFilter[key].to)
+                            (tooltipData.season >= seasonFilter[key]?.from &&
+                              tooltipData.season <= seasonFilter[key]?.to)
                           ) {
                             return (
                               <Row
@@ -401,7 +400,9 @@ const Graph = (props: Props) => {
                                     }}
                                   />
                                   <Typography>
-                                    {useCustomTooltipNames ? useCustomTooltipNames[key] : siloTokens[key]?.symbol}
+                                    {useCustomTooltipNames
+                                      ? useCustomTooltipNames[key]
+                                      : siloTokens[key]?.symbol}
                                   </Typography>
                                 </Row>
                                 <Typography textAlign="right">

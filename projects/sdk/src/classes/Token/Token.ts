@@ -1,7 +1,7 @@
 import { TokenValue, Token as CoreToken } from "@beanstalk/sdk-core";
 import { BigNumber, ContractTransaction } from "ethers";
 
-const STALK_DECIMALS = 10;
+const STALK_DECIMALS = 16;
 const SEED_DECIMALS = 6;
 
 declare module "@beanstalk/sdk-core" {

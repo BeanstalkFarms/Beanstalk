@@ -1,18 +1,103 @@
-import { Address } from "@beanstalk/sdk-core";
+import { Address, ChainId } from "@beanstalk/sdk-core";
 
 export const addresses = {
   // Tokens
-  BEAN: Address.make("0xbea0000029ad1c77d3d5d23ba2d8893db9d1efab"),
-  WETH: Address.make("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
-  USDC: Address.make("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
-  DAI: Address.make("0x6b175474e89094c44da98b954eedeac495271d0f"),
-  USDT: Address.make("0xdac17f958d2ee523a2206206994597c13d831ec7"),
-  STETH: Address.make("0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"),
-  WSTETH: Address.make("0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"),
+  BEAN: Address.make({
+    [ChainId.ETH_MAINNET]: "0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab",
+    [ChainId.ARBITRUM_MAINNET]: "0xBEA0005B8599265D41256905A9B3073D397812E4"
+  }),
+  WETH: Address.make({
+    [ChainId.ETH_MAINNET]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    [ChainId.ARBITRUM_MAINNET]: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+  }),
+  WSTETH: Address.make({
+    [ChainId.ETH_MAINNET]: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+    [ChainId.ARBITRUM_MAINNET]: "0x5979D7b546E38E414F7E9822514be443A4800529"
+  }),
+  WEETH: Address.make({
+    [ChainId.ETH_MAINNET]: "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
+    [ChainId.ARBITRUM_MAINNET]: "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe"
+  }),
+  WBTC: Address.make({
+    [ChainId.ETH_MAINNET]: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    [ChainId.ARBITRUM_MAINNET]: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"
+  }),
+  USDC: Address.make({
+    [ChainId.ETH_MAINNET]: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    [ChainId.ARBITRUM_MAINNET]: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+  }),
+  USDT: Address.make({
+    [ChainId.ETH_MAINNET]: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    [ChainId.ARBITRUM_MAINNET]: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
+  }),
+  DAI: Address.make({
+    [ChainId.ETH_MAINNET]: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    [ChainId.ARBITRUM_MAINNET]: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+  }),
+  STETH: Address.make({
+    [ChainId.ETH_MAINNET]: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+  }),
+  ARB: Address.make({
+    [ChainId.ETH_MAINNET]: "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
+    [ChainId.ARBITRUM_MAINNET]: "0x912CE59144191C1204E64559FE8253a0e49E6548"
+  }),
 
   // Contracts
-  DEPOT: Address.make("0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2"),
-  PIPELINE: Address.make("0xb1bE0000C6B3C62749b5F0c92480146452D15423"),
-  WETH9: Address.make("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
-  UNWRAP_AND_SEND_JUNCTION: Address.make("0x737cad465b75cdc4c11b3e312eb3fe5bef793d96")
+  DEPOT: Address.make({
+    [ChainId.ETH_MAINNET]: "0xDEb0f00071497a5cc9b4A6B96068277e57A82Ae2",
+    [ChainId.ARBITRUM_MAINNET]: "0xDEb0f0dEEc1A29ab97ABf65E537452D1B00A619c"
+  }),
+  PIPELINE: Address.make({
+    [ChainId.ETH_MAINNET]: "0xb1bE0000C6B3C62749b5F0c92480146452D15423",
+    [ChainId.ARBITRUM_MAINNET]: "0xb1bE000644bD25996b0d9C2F7a6D6BA3954c91B0"
+  }),
+  WETH9: Address.make({
+    [ChainId.ETH_MAINNET]: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    [ChainId.ARBITRUM_MAINNET]: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+  }),
+  UNWRAP_AND_SEND_JUNCTION: Address.make({
+    [ChainId.ETH_MAINNET]: "0x737Cad465B75CDc4c11B3E312Eb3fe5bEF793d96",
+    [ChainId.ARBITRUM_MAINNET]: "0xD6Fc4a63d7E93267c3007eA176081052369A4749"
+  }),
+
+  // ---- Well Components ----
+  // Pumps
+  MULTI_FLOW_PUMP_V1_1: Address.make({
+    [ChainId.ETH_MAINNET]: "0xBA51AaaAa95bA1d5efB3cB1A3f50a09165315A17",
+    [ChainId.ARBITRUM_MAINNET]: "0xBA150000D1E90C3a1FC4CC385bB43C403b4a006c"
+  }),
+
+  // Well Functions
+  CONSTANT_PRODUCT_2_V2: Address.make({
+    [ChainId.ETH_MAINNET]: "0xBA150C2ae0f8450D4B832beeFa3338d4b5982d26",
+    [ChainId.ARBITRUM_MAINNET]: "0xbA1500c28C8965521f47F17Fc21A7829D6E1343e"
+  }),
+  STABLE2: Address.make({
+    [ChainId.ARBITRUM_MAINNET]: "0xba150052e11591D0648b17A0E608511874921CBC"
+  }),
+
+  // Well Implementations
+  WELL_DOT_SOL: Address.make({
+    [ChainId.ETH_MAINNET]: "0xba510e11eeb387fad877812108a3406ca3f43a4b",
+    [ChainId.ARBITRUM_MAINNET]: "0xBA5106bd62b342afAcB93f1078fe60177A62d1a9"
+  }),
+
+  STABLE2_LOOKUP: Address.make({
+    [ChainId.ARBITRUM_MAINNET]: "0xBA51055dAD14d3920e1798D2e8A152d91CaDb461"
+  }),
+
+  /**
+   * @deprecated
+   * @note Use `MULTI_FLOW_PUMP_V1_1` for new wells instead
+   */
+  MULTI_FLOW_PUMP_V1: Address.make({
+    [ChainId.ETH_MAINNET]: "0xBA510f10E3095B83a0F33aa9ad2544E22570a87C"
+  }),
+  /**
+   * @deprecated
+   * @note Use `CONSTANT_PRODUCT_2_V2` for new wells instead
+   */
+  CONSTANT_PRODUCT_2_V1: Address.make({
+    [ChainId.ETH_MAINNET]: "0xba510c20fd2c52e4cb0d23cfc3ccd092f9165a6e"
+  })
 };

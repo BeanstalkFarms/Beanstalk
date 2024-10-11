@@ -6,6 +6,8 @@ import { toTokenUnitsBN } from './Tokens';
 
 export const BN = (v: BignumberJS.Value) => new BignumberJS(v);
 
+BignumberJS.config({ EXPONENTIAL_AT: 1e9 });
+
 // @ts-ignore
 // BigNumber.prototype.toJSON = function toJSON() {
 //   return {
@@ -42,6 +44,9 @@ export function normalizeBN(
   return value && value.gt(_gt || 0) ? value : ZERO_BN;
 }
 
+export const isBigInt = (value: NumberInputInstance): value is bigint =>
+  typeof value === 'bigint';
+
 // ////////////// Transformers ////////////////
 
 export function tokenValueToBN(value: TokenValue | BignumberJS) {
@@ -54,7 +59,7 @@ export function bnToTokenValue(token: Token, value: TokenValue | BignumberJS) {
   return token.amount(value.toString());
 }
 
-type NumberInputInstance = TokenValue | BignumberJS | ethers.BigNumber;
+type NumberInputInstance = TokenValue | BignumberJS | ethers.BigNumber | BigInt;
 type OutputClassMap = {
   bnjs: BignumberJS;
   ethers: ethers.BigNumber;
@@ -77,6 +82,23 @@ export function transform<O extends OutputOptions, R = OutputClassMap[O]>(
 ): R {
   if (typeof value === 'string') {
     value = ethers.BigNumber.from(value);
+  }
+
+  if (isBigInt(value)) {
+    if (out === 'tokenValue') {
+      if (!token) {
+        throw new Error("Can't transform bigint to TokenValue without token");
+      }
+      return token.fromBlockchain(value) as R;
+    }
+    if (out === 'bnjs') {
+      return token
+        ? (new BignumberJS(token.fromBlockchain(value).toHuman()) as R)
+        : (new BignumberJS(value.toString()) as R);
+    }
+    if (out === 'ethers') {
+      return ethers.BigNumber.from(value) as R;
+    }
   }
 
   if (value instanceof TokenValue) {

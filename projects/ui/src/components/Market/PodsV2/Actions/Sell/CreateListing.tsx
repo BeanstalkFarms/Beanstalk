@@ -37,6 +37,7 @@ import FieldWrapper from '~/components/Common/Form/FieldWrapper';
 import { FC } from '~/types';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import { useFetchFarmerMarketItems } from '~/hooks/farmer/market/useFarmerMarket2';
+import useAccount from '~/hooks/ledger/useAccount';
 
 export type CreateListingFormValues = {
   plot: PlotFragment;
@@ -201,6 +202,8 @@ const CreateListingV2: FC<{}> = () => {
   /// Tokens
   const getChainToken = useGetChainToken();
 
+  const account = useAccount();
+
   /// Ledger
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
@@ -279,15 +282,28 @@ const CreateListingV2: FC<{}> = () => {
         /// expiresAt is relative (ie 0 = front of pod line)
         /// add harvestableIndex to make it absolute
         const maxHarvestableIndex = expiresAt.plus(harvestableIndex);
-        const txn = await beanstalk.createPodListing(
-          toStringBaseUnitBN(index, Bean.decimals), // absolute plot index
-          toStringBaseUnitBN(start, Bean.decimals), // relative start index
-          toStringBaseUnitBN(amount, Bean.decimals), // relative amount
-          toStringBaseUnitBN(pricePerPod, Bean.decimals), // price per pod
-          toStringBaseUnitBN(maxHarvestableIndex, Bean.decimals), // absolute index of expiry
-          toStringBaseUnitBN(new BigNumber(1), Bean.decimals), // minFillAmount is measured in Beans
-          destination
-        );
+        const txn = await beanstalk.createPodListing({
+          lister: account || '',
+          fieldId: '0',
+          index: toStringBaseUnitBN(index, Bean.decimals), // absolute plot index
+          start: toStringBaseUnitBN(start, Bean.decimals), // relative start index
+          podAmount: toStringBaseUnitBN(amount, Bean.decimals), // relative amount
+          pricePerPod: toStringBaseUnitBN(pricePerPod, Bean.decimals), // price per pod
+          maxHarvestableIndex: toStringBaseUnitBN(
+            maxHarvestableIndex,
+            Bean.decimals
+          ), // absolute index of expiry
+          minFillAmount: toStringBaseUnitBN(new BigNumber(1), Bean.decimals), // minFillAmount is measured in Beans
+          mode: destination,
+        });
+
+        // toStringBaseUnitBN(start, Bean.decimals), // relative start index
+        // toStringBaseUnitBN(amount, Bean.decimals), // relative amount
+        // toStringBaseUnitBN(pricePerPod, Bean.decimals), // price per pod
+        // toStringBaseUnitBN(maxHarvestableIndex, Bean.decimals), // absolute index of expiry
+        // toStringBaseUnitBN(new BigNumber(1), Bean.decimals), // minFillAmount is measured in Beans
+        // destination
+        // );
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
@@ -306,12 +322,13 @@ const CreateListingV2: FC<{}> = () => {
       }
     },
     [
+      getChainToken,
       middleware,
       plots,
       harvestableIndex,
       beanstalk,
+      account,
       refetchFarmerMarketItems,
-      getChainToken,
     ]
   );
 

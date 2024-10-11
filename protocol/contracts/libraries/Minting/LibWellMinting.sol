@@ -2,18 +2,19 @@
  * SPDX-License-Identifier: MIT
  **/
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
-import {LibAppStorage, AppStorage} from "../LibAppStorage.sol";
-import {SafeMath, C, LibMinting} from "./LibMinting.sol";
+import {LibAppStorage} from "../LibAppStorage.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibMinting} from "./LibMinting.sol";
+import {C} from "contracts/C.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
+import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSigned256.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {SignedSafeMath} from "@openzeppelin/contracts/math/SignedSafeMath.sol";
-import {LibEthUsdOracle} from "contracts/libraries/Oracle/LibEthUsdOracle.sol";
 import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneousPump.sol";
 
 /**
@@ -23,14 +24,16 @@ import {IInstantaneousPump} from "contracts/interfaces/basin/pumps/IInstantaneou
  * for a given Well.
  *
  * @dev
- * The Oracle uses the Season timestamp stored in `s.season.timestamp` to determine how many seconds
+ * The Oracle uses the Season timestamp stored in `s.sys.season.timestamp` to determine how many seconds
  * it has been since the last Season instead of storing its own for efficiency purposes.
  * Each Capture stores the encoded cumulative reserves returned by the Pump in `s.wellOracleSnapshots[well]`.
  **/
 
 library LibWellMinting {
+    using LibRedundantMathSigned256 for int256;
+    using LibRedundantMath256 for uint256;
 
-    using SignedSafeMath for int256;
+    uint256 internal constant ZERO_LOOKBACK = 0;
 
     /**
      * @notice Emitted when a Well Minting Oracle is captured.
@@ -39,14 +42,7 @@ library LibWellMinting {
      * @param deltaB The time weighted average delta B computed during the Oracle capture.
      * @param cumulativeReserves The encoded cumulative reserves that were snapshotted most by the Oracle capture.
      */
-    event WellOracle(
-        uint32 indexed season,
-        address well,
-        int256 deltaB,
-        bytes cumulativeReserves
-    );
-
-    using SafeMath for uint256;
+    event WellOracle(uint32 indexed season, address well, int256 deltaB, bytes cumulativeReserves);
 
     //////////////////// CHECK ////////////////////
 
@@ -55,12 +51,8 @@ library LibWellMinting {
      * since the last Sunrise.
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
-    function check(
-        address well
-    ) external view returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage
-            .diamondStorage()
-            .wellOracleSnapshots[well];
+    function check(address well) external view returns (int256 deltaB) {
+        bytes memory lastSnapshot = LibAppStorage.diamondStorage().sys.wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
@@ -77,12 +69,8 @@ library LibWellMinting {
      * since the last Sunrise and snapshots the current cumulative reserves.
      * @return deltaB The time weighted average delta B balance since the last `capture` call.
      */
-    function capture(
-        address well
-    ) external returns (int256 deltaB) {
-        bytes memory lastSnapshot = LibAppStorage
-            .diamondStorage()
-            .wellOracleSnapshots[well];
+    function capture(address well) external returns (int256 deltaB) {
+        bytes memory lastSnapshot = LibAppStorage.diamondStorage().sys.wellOracleSnapshots[well];
         // If the length of the stored Snapshot for a given Well is 0,
         // then the Oracle is not initialized.
         if (lastSnapshot.length > 0) {
@@ -103,17 +91,16 @@ library LibWellMinting {
     function initializeOracle(address well) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        // If pump has not been initialized for `well`, `readCumulativeReserves` will revert. 
+        // If pump has not been initialized for `well`, `readCumulativeReserves` will revert.
         // Need to handle failure gracefully, so Sunrise does not revert.
         Call[] memory pumps = IWell(well).pumps();
-        try ICumulativePump(pumps[0].target).readCumulativeReserves(
-            well,
-            pumps[0].data
-        ) returns (bytes memory lastSnapshot) {
-            s.wellOracleSnapshots[well] = lastSnapshot;
-            emit WellOracle(s.season.current, well, 0, lastSnapshot);
+        try ICumulativePump(pumps[0].target).readCumulativeReserves(well, pumps[0].data) returns (
+            bytes memory lastSnapshot
+        ) {
+            s.sys.wellOracleSnapshots[well] = lastSnapshot;
+            emit WellOracle(s.sys.season.current, well, 0, lastSnapshot);
         } catch {
-            emit WellOracle(s.season.current, well, 0, new bytes(0));
+            emit WellOracle(s.sys.season.current, well, 0, new bytes(0));
         }
     }
 
@@ -128,41 +115,36 @@ library LibWellMinting {
         AppStorage storage s = LibAppStorage.diamondStorage();
         uint256[] memory twaReserves;
         uint256[] memory ratios;
-        (deltaB, s.wellOracleSnapshots[well], twaReserves, ratios) = twaDeltaB(
+        (deltaB, s.sys.wellOracleSnapshots[well], twaReserves, ratios) = twaDeltaB(
             well,
             lastSnapshot
         );
 
-        // Set the Well reserves in storage, so that it can be read when
-        // 1) set the USD price of the non bean token so that it can be read when
-        //    calculating the price of Bean. See {LibEvaluate.evalPrice}.
-        // 2) When calculating the Bean reward for calling the Season (Bean:Eth Only).
-        //    See {LibIncentive.determineReward}.
+        // Set the Well reserves in storage, so that it can be read when calculating the
+        // twa liquidty of the well when calculating the L2SR.
+        // set the USD price of the non bean token so that it can be read when
+        // calculating the price of Bean. See {LibEvaluate.evalPrice}.
         LibWell.setTwaReservesForWell(well, twaReserves);
         LibWell.setUsdTokenPriceForWell(well, ratios);
-
-        emit WellOracle(
-            s.season.current,
-            well,
-            deltaB,
-            s.wellOracleSnapshots[well]
-        );
+        emit WellOracle(s.sys.season.current, well, deltaB, s.sys.wellOracleSnapshots[well]);
     }
-    
+
     /**
      * @dev Calculates the delta B of a given well for a given set of well state parameters.
      * Designed to work for instantaneous and twa delta B calculations.
      */
-    function getDeltaBInfoFromWell(address well, uint[] memory reserves, bytes memory snapshot, uint256 lookback
+    function getDeltaBInfoFromWell(
+        address well,
+        uint[] memory reserves,
+        bytes memory snapshot,
+        uint256 lookback
     ) internal view returns (int256, bytes memory, uint256[] memory, uint256[] memory) {
-
         // get well tokens
         IERC20[] memory tokens = IWell(well).tokens();
-        (
-            uint256[] memory ratios,
-            uint256 beanIndex,
-            bool success
-        ) = LibWell.getRatiosAndBeanIndex(tokens, lookback);
+        (uint256[] memory ratios, uint256 beanIndex, bool success) = LibWell.getRatiosAndBeanIndex(
+            tokens,
+            lookback
+        );
 
         // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
@@ -176,22 +158,32 @@ library LibWellMinting {
 
         int256 deltaB = calculateDeltaBAtBeanIndex(well, reserves, ratios, beanIndex);
 
-        return (deltaB, snapshot, reserves, ratios);    
+        return (deltaB, snapshot, reserves, ratios);
     }
 
     /**
      * @dev Calculates the delta B at a given Bean index for a given Well address
      * based on the current well reserves, well ratios and well function.
      */
-    function calculateDeltaBAtBeanIndex(address well, uint[] memory reserves, uint256[] memory ratios, uint256 beanIndex
+    function calculateDeltaBAtBeanIndex(
+        address well,
+        uint[] memory reserves,
+        uint256[] memory ratios,
+        uint256 beanIndex
     ) internal view returns (int256) {
         Call memory wellFunction = IWell(well).wellFunction();
-        return int256(IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-            reserves,
-            beanIndex,
-            ratios,
-            wellFunction.data
-        )).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserveAtRatioSwap) {
+            return int256(reserveAtRatioSwap).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 
     /**
@@ -206,16 +198,24 @@ library LibWellMinting {
         // Try to call `readTwaReserves` and handle failure gracefully, so Sunrise does not revert.
         // On failure, reset the Oracle by returning an empty snapshot and a delta B of 0.
         Call[] memory pumps = IWell(well).pumps();
-        try ICumulativePump(pumps[0].target).readTwaReserves(
-            well,
-            lastSnapshot,
-            uint40(s.season.timestamp),
-            pumps[0].data
-        ) returns (uint[] memory twaReserves, bytes memory snapshot) {
-                                // well, reserves, snapshot  lookback
-            return (getDeltaBInfoFromWell(well, twaReserves, snapshot, block.timestamp.sub(s.season.timestamp)));
-        }
-        catch {
+        try
+            ICumulativePump(pumps[0].target).readTwaReserves(
+                well,
+                lastSnapshot,
+                uint40(s.sys.season.timestamp),
+                pumps[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory snapshot) {
+            // well, reserves, snapshot  lookback
+            return (
+                getDeltaBInfoFromWell(
+                    well,
+                    twaReserves,
+                    snapshot,
+                    block.timestamp.sub(s.sys.season.timestamp)
+                )
+            );
+        } catch {
             // if the pump fails, return all 0s to avoid the sunrise reverting.
             return (0, new bytes(0), new uint256[](0), new uint256[](0));
         }
@@ -228,14 +228,18 @@ library LibWellMinting {
      */
     function instantaneousDeltaB(address well) internal view returns (int256) {
         Call[] memory pumps = IWell(well).pumps();
-        try IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well,pumps[0].data)
-         returns (uint[] memory instReserves) {
+        try
+            IInstantaneousPump(pumps[0].target).readInstantaneousReserves(well, pumps[0].data)
+        returns (uint[] memory instReserves) {
+            // if well is not initialized, return 0.
+            if (instReserves.length == 0) {
+                return 0;
+            }
             //                                          well, reserves,   snapshot,  lookback
-            (int256 deltaB, , ,) = getDeltaBInfoFromWell(well, instReserves, new bytes(0) , 0);
+            (int256 deltaB, , , ) = getDeltaBInfoFromWell(well, instReserves, new bytes(0), 0);
             return (deltaB);
         } catch {
             return 0;
         }
     }
-
 }

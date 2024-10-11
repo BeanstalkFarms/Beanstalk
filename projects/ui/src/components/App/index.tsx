@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { ToastBar, Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -32,7 +32,7 @@ import GovernancePage from '~/pages/governance';
 import ProposalPage from '~/pages/governance/proposal';
 import FarmerDelegatePage from '~/pages/governance/delegate';
 import TransactionHistoryPage from '~/pages/history';
-import NFTPage from '~/pages/nft';
+// import NFTPage from '~/pages/nft';
 import SiloPage from '~/pages/silo';
 import SiloTokenPage from '~/pages/silo/token';
 import SwapPage from '~/pages/swap';
@@ -46,7 +46,7 @@ import pageBackground from '~/img/beanstalk/interface/bg/spring.png';
 import EnforceNetwork from '~/components/App/EnforceNetwork';
 import useAccount from '~/hooks/ledger/useAccount';
 import './App.css';
-import "react-day-picker/dist/style.css";
+import 'react-day-picker/dist/style.css';
 
 import { FC } from '~/types';
 
@@ -62,10 +62,19 @@ import VotingPowerPage from '~/pages/governance/votingPower';
 import MorningUpdater from '~/state/beanstalk/sun/morning';
 import MorningFieldUpdater from '~/state/beanstalk/field/morning';
 import BeanstalkCaseUpdater from '~/state/beanstalk/case/updater';
+
+import useChainState from '~/hooks/chain/useChainState';
+import { runOnDev } from '~/util/dev';
+import L2Claim from '~/pages/l2claim';
+import L1Delegate from '~/pages/l1delegate';
+
 import MigrationPreview from '../../pages/preview';
+
 // import Snowflakes from './theme/winter/Snowflakes';
 
 BigNumber.set({ EXPONENTIAL_AT: [-12, 20] });
+
+runOnDev();
 
 const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   <Toaster
@@ -98,10 +107,59 @@ const CustomToaster: FC<{ navHeight: number }> = ({ navHeight }) => (
   </Toaster>
 );
 
-export default function App() {
+function MigrationGate() {
+  const banner = useBanner();
+  const navHeight = useNavHeight(!!banner);
+
+  return (
+    <>
+      <NavBar>{null}</NavBar>
+      <CustomToaster navHeight={navHeight} />
+      <Box
+        sx={{
+          bgcolor: 'background.default',
+          backgroundImage: `url(${pageBackground})`,
+          backgroundAttachment: 'fixed',
+          backgroundPosition: 'bottom center',
+          backgroundSize: '100%',
+          backgroundRepeat: 'no-repeat',
+          width: '100%',
+          minHeight: `calc(100vh - ${navHeight}px)`,
+        }}
+      >
+        <Stack
+          sx={{
+            width: '100vw',
+            minHeight: `calc(100vh - ${navHeight}px)`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ marginTop: 0 }}>
+            {/* <MigrationMessage /> */}
+            <Routes>
+              <Route index element={<L1Delegate />} />
+              <Route path="*" element={<L1Delegate />} />
+              <Route path="/l1delegate" element={<L1Delegate />} />
+              <Route path="/l1" element={<L1Delegate />} />
+              <Route path="/ethereum" element={<L1Delegate />} />
+              <Route path="/l2claim" element={<L2Claim />} />
+              <Route path="/l2" element={<L2Claim />} />
+              <Route path="/arbitrum" element={<L2Claim />} />
+              <Route path="/404" element={<PageNotFound />} />
+            </Routes>
+          </Box>
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+function Arbitrum() {
   const banner = useBanner();
   const navHeight = useNavHeight(!!banner);
   const account = useAccount();
+
   return (
     <>
       {/* -----------------------
@@ -113,17 +171,19 @@ export default function App() {
        * ----------------------- */}
       <PoolsUpdater />
       <UnripeUpdater />
+
       {/* -----------------------
        * Beanstalk Updaters
        * ----------------------- */}
       <SiloUpdater />
       <FieldUpdater />
-      <BarnUpdater />
       <SunUpdater />
+      <BarnUpdater />
       <MorningUpdater />
       <MorningFieldUpdater />
-      <GovernanceUpdater />
       <BeanstalkCaseUpdater />
+      <GovernanceUpdater />
+
       {/* -----------------------
        * Farmer Updaters
        * ----------------------- */}
@@ -132,7 +192,11 @@ export default function App() {
       <FarmerBarnUpdater />
       <FarmerBalancesUpdater />
       <FarmerMarketUpdater />
-      <FarmerDelegationsUpdater />
+      {false && (
+        <>
+          <FarmerDelegationsUpdater />
+        </>
+      )}
       {/* -----------------------
        * Routes & Content
        * ----------------------- */}
@@ -195,7 +259,7 @@ export default function App() {
                 element={<Navigate to="/market/sell/:orderID" />}
               />
             </Route>
-            <Route path="/nft" element={<NFTPage />} />
+            {/* <Route path="/nft" element={<NFTPage />} /> */}
             <Route path="/governance/:id" element={<ProposalPage />} />
             <Route
               path="/governance/delegate/:type"
@@ -207,29 +271,25 @@ export default function App() {
             <Route path="/preview" element={<MigrationPreview />} />
             <Route path="/preview/:address" element={<MigrationPreview />} />
             <Route path="/swap" element={<SwapPage />} />
+            <Route path="/l1delegate" element={<L1Delegate />} />
+            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="/404" element={<PageNotFound />} />
+            <Route path="/l1delegate" element={<L1Delegate />} />
+            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-          {/*
-          <Box
-            sx={{
-              position: 'fixed',
-              bottom: 0,
-              right: 0,
-              pr: 1,
-              pb: 0.4,
-              opacity: 0.6,
-              display: { xs: 'none', lg: 'block' },
-            }}
-          >
-            <Typography fontSize="small">
-              {(import.meta.env.VITE_COMMIT_HASH || '0.0.0').substring(0, 6)}{' '}
-              &middot; {sgEnvKey}
-            </Typography>
-          </Box>
-          */}
         </Box>
       </Box>
     </>
   );
+}
+
+export default function App() {
+  const { isArbitrum } = useChainState();
+
+  if (!isArbitrum) {
+    return <MigrationGate />;
+  }
+
+  return <Arbitrum />;
 }

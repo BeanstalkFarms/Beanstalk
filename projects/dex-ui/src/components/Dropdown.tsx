@@ -1,9 +1,12 @@
 import React from "react";
+
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import styled from "styled-components";
+
 import { theme } from "src/utils/ui/theme";
-import { Flex } from "./Layout";
 import useElementDimensions from "src/utils/ui/useDimensions";
+
+import { Flex } from "./Layout";
 
 export type DropdownProps = {
   open: boolean;
@@ -21,8 +24,8 @@ const Dropdown = ({ open, children, trigger, offset, setOpen }: DropdownProps) =
       <TriggerContainer ref={ref}>
         <DropdownMenu.Trigger
           asChild
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={(e) => e.preventDefault()}
+          onMouseDown={(e: any) => e.preventDefault()}
+          onClick={(e: any) => e.preventDefault()}
         >
           {trigger}
         </DropdownMenu.Trigger>
@@ -31,7 +34,7 @@ const Dropdown = ({ open, children, trigger, offset, setOpen }: DropdownProps) =
         <StyledContent
           $width={dimensions.width}
           sideOffset={offset}
-          onFocus={(e) => e.preventDefault()}
+          onFocus={(e: any) => e.preventDefault()}
         >
           <>{children}</>
         </StyledContent>

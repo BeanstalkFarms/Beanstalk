@@ -8,9 +8,7 @@ module.exports = {
     './libraries/LibSafeMath128.sol',
     './libraries/Decimal.sol',
     './libraries/LibDiamond.sol',
-    './facets/DiamondLoupeFacet.sol',
-    './libraries/Convert/LibPlainCurveConvert.sol',
-    './libraries/Curve/LibBeanLUSDCurve.sol'
+    './facets/DiamondLoupeFacet.sol'
   ]
 
 };

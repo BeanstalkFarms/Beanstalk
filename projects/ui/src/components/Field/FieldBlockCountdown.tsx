@@ -1,8 +1,8 @@
 import React from 'react';
-import { useAppSelector } from '~/state';
+import { useRemainingUntilNextMorningInterval } from '~/state/beanstalk/sun/morning';
 
 const FieldBlockCountdown: React.FC<{}> = () => {
-  const { remaining } = useAppSelector((s) => s._beanstalk.sun.morningTime);
+  const remaining = useRemainingUntilNextMorningInterval();
 
   return <>{remaining.toFormat('s')} seconds</>;
 };

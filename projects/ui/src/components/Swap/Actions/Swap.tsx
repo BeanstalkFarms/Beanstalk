@@ -10,14 +10,20 @@ import {
 } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ethers } from 'ethers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useConnect } from 'wagmi';
 import BigNumber from 'bignumber.js';
-import { SwapOperation, FarmFromMode, FarmToMode } from '@beanstalk/sdk';
+import {
+  FarmFromMode,
+  FarmToMode,
+  ERC20Token,
+  NativeToken,
+  BeanSwapNodeQuote,
+  BeanSwapOperation,
+} from '@beanstalk/sdk';
 import {
   FormApprovingState,
-  FormTokenState,
+  FormTokenStateNew as FormTokenState,
   SettingInput,
   SlippageSettingsFragment,
   SmartSubmitButton,
@@ -29,32 +35,17 @@ import {
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
 import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
-import {
-  BEAN,
-  CRV3,
-  DAI,
-  ETH,
-  USDC,
-  USDT,
-  WETH,
-  WSTETH,
-} from '~/constants/tokens';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import useTokenMap from '~/hooks/chain/useTokenMap';
 import { useSigner } from '~/hooks/ledger/useSigner';
 
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import useQuote, { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useAccount from '~/hooks/ledger/useAccount';
-import { toStringBaseUnitBN, toTokenUnitsBN, MinBN } from '~/util';
+import { MinBN, tokenIshEqual } from '~/util';
 import { IconSize } from '~/components/App/muiTheme';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
-import useChainConstant from '~/hooks/chain/useChainConstant';
 import { optimizeFromMode } from '~/util/Farm';
 import copy from '~/constants/copy';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
@@ -66,6 +57,11 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
+import { TokenInstance, useSwapTokens } from '~/hooks/beanstalk/useTokens';
+import useQuoteWithParams, {
+  QuoteHandlerResultNew,
+  QuoteHandlerWithParams,
+} from '~/hooks/ledger/useQuoteWithParams';
 
 /// ---------------------------------------------------------------
 
@@ -74,23 +70,33 @@ type ValidModesIn =
   | FarmFromMode.EXTERNAL
   | FarmFromMode.INTERNAL_EXTERNAL;
 
+type IBeanSwapQuote = {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+};
+
+type TokenOutFromState = FormTokenState & IBeanSwapQuote;
+
 type SwapFormValues = {
   /** Multiple tokens can (eventually) be swapped into tokenOut */
   tokensIn: FormTokenState[];
   modeIn: ValidModesIn;
   /** One output token can be selected */
-  tokenOut: FormTokenState;
+  tokenOut: TokenOutFromState;
   modeOut: FarmToMode;
   approving?: FormApprovingState;
   /** */
   settings: SlippageSettingsFragment;
-  swapOperation: SwapOperation;
 };
 
-type DirectionalQuoteHandler = (
-  direction: 'forward' | 'backward',
-  swapOperation: SwapOperation
-) => QuoteHandler;
+type ISlippage = {
+  slippage: number;
+};
+
+type QuoteResult = QuoteHandlerResultNew & {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+};
+
+type BeanSwapQuoteHandler = QuoteHandlerWithParams<ISlippage, QuoteResult>;
 
 const QUOTE_SETTINGS = {
   ignoreSameToken: false,
@@ -108,14 +114,12 @@ const SwapForm: FC<
   FormikProps<SwapFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
-    handleQuote: DirectionalQuoteHandler;
     tokenList: (ERC20Token | NativeToken)[];
     defaultValues: SwapFormValues;
   }
 > = ({
   values,
   setFieldValue,
-  handleQuote,
   isSubmitting,
   balances,
   beanstalk,
@@ -124,11 +128,9 @@ const SwapForm: FC<
   submitForm,
 }) => {
   /// Tokens
-  const Eth = useChainConstant(ETH);
   const { status } = useConnect();
   const account = useAccount();
   const sdk = useSdk();
-
   // This controls what options are show on the tokenin picker (All Balances, circulating, farm).
   const [fromOptions, setFromOptions] = useState<BalanceFrom[]>([
     BalanceFrom.TOTAL,
@@ -142,7 +144,6 @@ const SwapForm: FC<
     BalanceFrom.EXTERNAL
   );
   // This tracks whether this is an exact input or an exact output swap
-  const [userInputMode, setUserInputMode] = useState<string>('');
 
   /// Derived values
   const stateIn = values.tokensIn[0];
@@ -154,10 +155,12 @@ const SwapForm: FC<
   const modeOut = values.modeOut;
   const amountOut = stateOut.amount;
   const tokensMatch = tokenIn === tokenOut;
+
   const noBalancesFound = useMemo(
     () => Object.keys(balances).length === 0,
     [balances]
   );
+
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
     const _balanceIn = balances[tokenIn.address];
     if (tokensMatch) {
@@ -218,37 +221,42 @@ const SwapForm: FC<
       expectedFromMode === FarmFromMode.EXTERNAL ||
       expectedFromMode === FarmFromMode.INTERNAL_EXTERNAL;
 
-  const buildSwapHelper = useCallback(
-    (
-      uiTokenIn: Token,
-      uiTokenOut: Token,
-      farmFrom: FarmFromMode,
-      farmTo: FarmToMode
-    ) => {
-      const sdkTokenIn = sdk.tokens.findByAddress(uiTokenIn.address);
-      if (!sdkTokenIn) {
-        throw new Error(
-          `Address of ${uiTokenIn.symbol} was not found in SDK tokens.`
-        );
-      }
-      const sdkTokenOut = sdk.tokens.findByAddress(uiTokenOut.address);
-      if (!sdkTokenOut) {
-        throw new Error(
-          `Address of ${uiTokenOut.symbol} was not found in SDK tokens.`
-        );
+  const handleQuote = useCallback<BeanSwapQuoteHandler>(
+    async (inputToken, _amountIn, targetToken, { slippage }) => {
+      if (!account) throw new Error('Connect a wallet first.');
+      if (_amountIn.lte(0)) {
+        return {
+          amountOut: ZERO_BN,
+          beanSwapQuote: undefined,
+        };
       }
 
-      return sdk.swap.buildSwap(
-        sdkTokenIn,
-        sdkTokenOut,
-        account!,
-        farmFrom,
-        farmTo
+      const quoteData = await sdk.beanSwap.quoter.route(
+        inputToken,
+        targetToken,
+        inputToken.fromHuman(_amountIn.toString()),
+        slippage
       );
+      if (!quoteData) {
+        throw new Error('No route found.');
+      }
+
+      const output = new BigNumber(quoteData.buyAmount.toHuman());
+
+      return {
+        amountOut: output,
+        beanSwapQuote: quoteData,
+      };
     },
-    [sdk.tokens, sdk.swap, account]
+    [account, sdk]
   );
 
+  const quoterParams = useMemo(
+    () => ({ slippage: values.settings.slippage }),
+    [values.settings.slippage]
+  );
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const optimizedFromMode = useMemo(
     () =>
       balanceIn
@@ -262,42 +270,20 @@ const SwapForm: FC<
     [balanceIn, amountIn]
   );
 
-  const swapOperation = useMemo(() => {
-    // If we are swapping the same token (ie, transfering between farm and circulating)
-    // then we don't want to use the optimizedFromMode, we want to use the modeIn
-    // that the user selected.
-    const from = tokenIn.equals(tokenOut) ? modeIn : optimizedFromMode;
-    return buildSwapHelper(tokenIn, tokenOut, from, modeOut);
-  }, [buildSwapHelper, optimizedFromMode, tokenIn, tokenOut, modeIn, modeOut]);
-
   /// Memoize to prevent infinite loop on useQuote
-  const handleBackward = useMemo(
-    () => handleQuote('backward', swapOperation),
-    [handleQuote, swapOperation]
-  );
-  const handleForward = useMemo(
-    () => handleQuote('forward', swapOperation),
-    [handleQuote, swapOperation]
-  );
-  const [resultIn, quotingIn, getMinAmountIn] = useQuote(
-    tokenIn,
-    handleBackward,
-    QUOTE_SETTINGS
-  );
-  const [resultOut, quotingOut, getAmountOut] = useQuote(
-    tokenOut,
-    handleForward,
-    QUOTE_SETTINGS
-  );
+  const [resultOut, quotingOut, getAmountOut] = useQuoteWithParams<
+    ISlippage,
+    QuoteResult
+  >(tokenOut, handleQuote, QUOTE_SETTINGS);
 
   const handleSetDefault = useCallback(() => {
     setFieldValue('modeIn', defaultValues.modeIn);
     setFieldValue('modeOut', defaultValues.modeOut);
     setFieldValue('tokensIn.0', { ...defaultValues.tokensIn[0] });
+    setFieldValue('tokensIn.0.beanSwapQuote', undefined);
     setFieldValue('tokenOut', { ...defaultValues.tokenOut });
     setBalanceFromIn(BalanceFrom.TOTAL);
     setFromOptions([BalanceFrom.TOTAL]);
-    setUserInputMode('');
   }, [defaultValues, setFieldValue]);
 
   /// reset to default values when user switches wallet addresses or disconnects
@@ -307,15 +293,27 @@ const SwapForm: FC<
   }, [account, status]);
 
   /// When receiving new results from quote handlers, update
-  /// the respective form fields.
-  useEffect(() => {
-    console.debug('[TokenInput] got new resultIn', resultIn);
-    setFieldValue('tokensIn.0.amount', resultIn?.amountOut);
-  }, [setFieldValue, resultIn]);
   useEffect(() => {
     console.debug('[TokenInput] got new resultOut', resultOut);
     setFieldValue('tokenOut.amount', resultOut?.amountOut);
+    setFieldValue('tokenOut.beanSwapQuote', resultOut?.beanSwapQuote);
   }, [setFieldValue, resultOut]);
+
+  // If there is no amountIn for the tokenIn, reset the amountOut
+  useEffect(() => {
+    if (!amountOut) return;
+    if (!amountIn || amountIn.eq(0)) {
+      setFieldValue('tokenOut.amount', undefined);
+    }
+  }, [amountOut, setFieldValue, amountIn]);
+
+  // If tokenIn or tokenOut changes, recalculate the user's desired input/output
+  useEffect(() => {
+    if (amountIn) {
+      getAmountOut(tokenIn, amountIn, quoterParams);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenIn, tokenOut]);
 
   //
   const handleInputFromMode = useCallback(
@@ -360,29 +358,12 @@ const SwapForm: FC<
     (_amountInClamped: BigNumber | undefined) => {
       console.debug('[TokenInput] handleChangeAmountIn', _amountInClamped);
       if (_amountInClamped && !_amountInClamped?.isNaN()) {
-        getAmountOut(tokenIn, _amountInClamped);
+        getAmountOut(tokenIn, _amountInClamped, quoterParams);
       } else {
         setFieldValue('tokenOut.amount', undefined);
       }
-      setUserInputMode('exact-input');
     },
-    [tokenIn, getAmountOut, setFieldValue]
-  );
-  const handleChangeAmountOut = useCallback(
-    (_amountOutClamped: BigNumber | undefined) => {
-      console.debug('[TokenInput] handleChangeAmountOut', _amountOutClamped);
-      if (_amountOutClamped && !_amountOutClamped?.isNaN()) {
-        console.debug('[TokenInput] getMinAmountIn', [
-          tokenOut,
-          _amountOutClamped,
-        ]);
-        getMinAmountIn(tokenOut, _amountOutClamped);
-      } else {
-        setFieldValue('tokensIn.0.amount', undefined);
-      }
-      setUserInputMode('exact-output');
-    },
-    [tokenOut, getMinAmountIn, setFieldValue]
+    [tokenIn, quoterParams, getAmountOut, setFieldValue]
   );
 
   /// Token Select
@@ -418,22 +399,8 @@ const SwapForm: FC<
       /// Flip destinations.
       setFieldValue('modeIn', modeOut);
       setFieldValue('modeOut', modeIn);
-    } else {
-      setFieldValue('tokensIn.0', {
-        token: tokenOut,
-        amount: amountOut,
-      });
-      setFieldValue('tokenOut.token', tokenIn);
     }
-  }, [
-    modeIn,
-    modeOut,
-    setFieldValue,
-    tokenIn,
-    tokenOut,
-    amountOut,
-    tokensMatch,
-  ]);
+  }, [modeIn, modeOut, setFieldValue, tokensMatch]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -450,7 +417,7 @@ const SwapForm: FC<
   }, [noBalancesFound, handleReverse, handleSetDefault, setInitialModes]);
 
   const handleTokenSelectSubmit = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
         setFieldValue('tokenOut.token', newTokenOut);
@@ -464,26 +431,16 @@ const SwapForm: FC<
     [setFieldValue, handleTokensEqual, tokenSelect, tokenIn, tokenOut]
   );
 
-  // If tokenIn or tokenOut changes, recalculate the user's desired input/output
-  useEffect(() => {
-    if (userInputMode === 'exact-input' && amountIn) {
-      getAmountOut(tokenIn, amountIn);
-    } else if (userInputMode === 'exact-output' && amountOut) {
-      getMinAmountIn(tokenOut, amountOut);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIn, tokenOut]);
-
   const handleMax = useCallback(() => {
     setFieldValue('tokensIn.0.amount', balanceInMax);
-    getAmountOut(tokenIn, balanceInMax);
-  }, [balanceInMax, getAmountOut, setFieldValue, tokenIn]);
+    getAmountOut(tokenIn, balanceInMax, quoterParams);
+  }, [balanceInMax, quoterParams, getAmountOut, setFieldValue, tokenIn]);
 
   /// Checks
-  const isQuoting = quotingIn || quotingOut;
+  const isQuoting = quotingOut;
   const ethModeCheck =
     /// If ETH is selected as an output, the only possible destination is EXTERNAL.
-    tokenOut === Eth ? modeOut === FarmToMode.EXTERNAL : true;
+    tokenOut.equals(sdk.tokens.ETH) ? modeOut === FarmToMode.EXTERNAL : true;
   const amountsCheck = amountIn?.gt(0) && amountOut?.gt(0);
   const diffModeCheck = tokensMatch
     ? modeIn.valueOf() !== modeOut.valueOf() // compare string enum vals
@@ -498,10 +455,10 @@ const SwapForm: FC<
     (e: React.FormEvent) => {
       // Note: We need to wrap the formik handler to set the swapOperation form value first
       e.preventDefault();
-      setFieldValue('swapOperation', swapOperation);
+      // setFieldValue('swapOperation', swapOperation);
       submitForm();
     },
-    [setFieldValue, swapOperation, submitForm]
+    [submitForm]
   );
 
   return (
@@ -556,10 +513,6 @@ const SwapForm: FC<
                 : undefined
             }
             balance={balanceInInput}
-            disabled={
-              quotingIn
-              // || !pathwayCheck
-            }
             quote={quotingOut ? Quoting : undefined}
             onChange={handleChangeAmountIn}
             error={!noBalance && !enoughBalanceCheck}
@@ -586,17 +539,7 @@ const SwapForm: FC<
                 />
               ),
             }}
-            disabled={
-              /// Disable while quoting an `amount` for the output.
-              quotingOut ||
-              /// Can't type into the output field if
-              /// user has no balance of the input.
-              noBalance
-              /// No way to quote for this pathway
-              // || !pathwayCheck
-            }
-            quote={quotingIn ? Quoting : undefined}
-            onChange={handleChangeAmountOut}
+            outputOnlyMode
           />
           <FarmModeField
             name="modeOut"
@@ -712,41 +655,6 @@ const SwapForm: FC<
 
 // ---------------------------------------------------
 
-const SUPPORTED_TOKENS = [BEAN, ETH, WETH, CRV3, DAI, USDC, USDT, WSTETH];
-
-/**
- * SWAP
- * Implementation notes
- *
- * BEAN + ETH
- * ---------------
- * BEAN   -> ETH      exchange_underlying(BEAN, USDT) => exchange(USDT, WETH) => unwrapEth
- * BEAN   -> WETH     exchange_underlying(BEAN, USDT) => exchange(USDT, WETH)
- * ETH    -> BEAN     wrapEth => exchange(WETH, USDT) => exchange_underlying(USDT, BEAN)
- * WETH   -> BEAN     exchange(WETH, USDT) => exchange_underlying(USDT, BEAN)
- *
- * BEAN + Stables
- * ---------------------
- * BEAN   -> DAI      exchange_underlying(BEAN, DAI, BEAN_METAPOOL)
- * BEAN   -> USDT     exchange_underlying(BEAN, USDT, BEAN_METAPOOL)
- * BEAN   -> USDC     exchange_underlying(BEAN, USDC, BEAN_METAPOOL)
- * BEAN   -> 3CRV     exchange(BEAN, 3CRV, BEAN_METAPOOL)
- * DAI    -> BEAN     exchange_underlying(DAI,  BEAN, BEAN_METAPOOL)
- * USDT   -> BEAN     exchange_underlying(BEAN, USDT, BEAN_METAPOOL)
- * USDC   -> BEAN     exchange_underlying(BEAN, USDC, BEAN_METAPOOL)
- * 3CRV   -> BEAN     exchange(3CRV, BEAN, BEAN_METAPOOL)
- *
- * Internal <-> External
- * ---------------------
- * TOK-i  -> TOK-e    transferToken(TOK, self, amount, INTERNAL, EXTERNAL)
- * TOK-e  -> TOK-i    transferToken(TOK, self, amount, EXTERNAL, INTERNAL)
- *
- * Stables
- * ---------------------
- * USDC   -> USDT     exchange(USDC, USDT, 3POOL)
- * ...etc
- */
-
 const Swap: FC<{}> = () => {
   /// Ledger
   const { data: signer } = useSigner();
@@ -758,14 +666,7 @@ const Swap: FC<{}> = () => {
     throw new Error('Sdk not initialized');
   }
 
-  /// Tokens
-  const getChainToken = useGetChainToken();
-  const Eth = getChainToken(ETH);
-  const Bean = getChainToken(BEAN);
-
-  /// Token List
-  const tokenMap = useTokenMap<ERC20Token | NativeToken>(SUPPORTED_TOKENS);
-  const tokenList = useMemo(() => Object.values(tokenMap), [tokenMap]);
+  const tokenList = useSwapTokens();
 
   /// Farmer
   const farmerBalances = useFarmerBalances();
@@ -777,64 +678,22 @@ const Swap: FC<{}> = () => {
     () => ({
       tokensIn: [
         {
-          token: Eth,
+          token: sdk.tokens.ETH,
           amount: undefined,
         },
       ],
       modeIn: FarmFromMode.EXTERNAL,
       tokenOut: {
-        token: Bean,
+        token: sdk.tokens.BEAN,
+        beanSwapQuote: undefined,
         amount: undefined,
       },
       modeOut: FarmToMode.EXTERNAL,
       settings: {
         slippage: 0.1,
       },
-      swapOperation: sdk.swap.buildSwap(
-        sdk.tokens.ETH,
-        sdk.tokens.BEAN,
-        account!,
-        FarmFromMode.EXTERNAL,
-        FarmToMode.EXTERNAL
-      ),
     }),
-    [Bean, Eth, account, sdk.swap, sdk.tokens]
-  );
-
-  /// Handlers
-  const handleQuote = useCallback<DirectionalQuoteHandler>(
-    (direction, swapOperation) => async (__tokenIn, _amountIn, __tokenOut) => {
-      console.debug('[handleQuoteWithSdk] ', {
-        direction,
-        _amountIn,
-        swapOperationPath: swapOperation.getDisplay(),
-      });
-      if (!account) throw new Error('Connect a wallet first.');
-
-      const forward: Boolean = direction === 'forward';
-
-      const amountIn = forward
-        ? ethers.BigNumber.from(
-            toStringBaseUnitBN(_amountIn, swapOperation.tokenIn.decimals)
-          )
-        : ethers.BigNumber.from(
-            toStringBaseUnitBN(_amountIn, swapOperation.tokenOut.decimals)
-          );
-
-      const estimate = forward
-        ? await swapOperation.estimate(amountIn)
-        : await swapOperation.estimateReversed(amountIn);
-
-      return {
-        amountOut: toTokenUnitsBN(
-          estimate.toBlockchain(),
-          forward
-            ? swapOperation.tokenOut.decimals
-            : swapOperation.tokenIn.decimals
-        ),
-      };
-    },
-    [account]
+    [sdk.tokens]
   );
 
   const onSubmit = useCallback(
@@ -842,29 +701,21 @@ const Swap: FC<{}> = () => {
       values: SwapFormValues,
       formActions: FormikHelpers<SwapFormValues>
     ) => {
-      let txToast;
+      const txToast = new TransactionToast({
+        loading: 'Swapping...',
+        success: 'Swap successful.',
+      });
+
       try {
         middleware.before();
-        const stateIn = values.tokensIn[0];
-        const tokenIn = stateIn.token;
-        const stateOut = values.tokenOut;
-        const tokenOut = stateOut.token;
-        if (!stateIn.amount) throw new Error('No input amount set.');
-        if (!account) throw new Error('Connect a wallet first.');
-        const amountIn = ethers.BigNumber.from(
-          stateIn.token.stringify(stateIn.amount)
+        const { operation, tokenIn, tokenOut } = getBeanSwapOperation(
+          values,
+          account
         );
 
-        txToast = new TransactionToast({
-          loading: 'Swapping...',
-          success: 'Swap successful.',
-        });
         let gas;
         try {
-          gas = await values.swapOperation.estimateGas(
-            amountIn,
-            values.settings.slippage
-          );
+          gas = await operation.estimateGas();
         } catch (err) {
           console.warn(
             'Failed to estimate gas: ',
@@ -872,15 +723,13 @@ const Swap: FC<{}> = () => {
           );
         }
 
-        const txn = await values.swapOperation.execute(
-          amountIn,
-          values.settings.slippage,
-          { gasLimit: gas?.mul(1.1).toBigNumber() }
-        );
+        const txn = await operation.execute({
+          gasLimit: gas?.mul(1.1).toBigNumber(),
+        });
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([refetchFarmerBalances()]);
+        await refetchFarmerBalances();
         txToast.success(receipt);
         // formActions.resetForm();
         formActions.setFieldValue('tokensIn.0', {
@@ -890,14 +739,10 @@ const Swap: FC<{}> = () => {
         formActions.setFieldValue('tokenOut', {
           token: tokenOut,
           amount: undefined,
+          beanSwapQuote: undefined,
         });
       } catch (err) {
-        if (txToast) {
-          txToast.error(err);
-        } else {
-          const errorToast = new TransactionToast({});
-          errorToast.error(err);
-        }
+        txToast.error(err);
         formActions.setSubmitting(false);
       }
     },
@@ -924,7 +769,6 @@ const Swap: FC<{}> = () => {
             beanstalk={beanstalk}
             tokenList={tokenList}
             defaultValues={initialValues}
-            handleQuote={handleQuote}
             {...formikProps}
           />
         </>
@@ -934,3 +778,61 @@ const Swap: FC<{}> = () => {
 };
 
 export default Swap;
+
+function getBeanSwapOperation(
+  values: SwapFormValues,
+  account: string | undefined
+) {
+  const stateIn = values.tokensIn[0];
+  const stateOut = values.tokenOut;
+  const quote = stateOut.beanSwapQuote;
+
+  const tokenIn = stateIn.token;
+  const tokenOut = stateOut.token;
+  const amountIn = stateIn.amount;
+  const amountOut = stateOut.amount;
+  const formSlippage = values.settings.slippage;
+
+  if (!account) throw new Error('Connect a wallet first.');
+  if (!amountIn) throw new Error('No input amount set.');
+  if (!amountOut) {
+    throw new Error('Error w/ quote. No output amount set.');
+  }
+  if (!quote) {
+    throw new Error("Can't swap without a quote.");
+  }
+  if (!tokenIshEqual(tokenIn, quote.sellToken)) {
+    throw new Error(
+      'Input token does not match quote. Please refresh the quote.'
+    );
+  }
+  if (!tokenIshEqual(tokenOut, quote.buyToken)) {
+    throw new Error(
+      'Output token does not match quote. Please refresh the quote.'
+    );
+  }
+  if (!quote.sellAmount.eq(amountIn.toNumber())) {
+    throw new Error(
+      "Input amount doesn't match quote. Please refresh the quote."
+    );
+  }
+  const formFmountOutTV = tokenOut.fromHuman(amountOut.toString());
+  if (!quote.buyAmount.eq(formFmountOutTV)) {
+    throw new Error(
+      "Output amount doesn't match quote. Please refresh the quote."
+    );
+  }
+  if (quote.slippage !== formSlippage) {
+    throw new Error("Slippage doesn't match quote. Please refresh the quote.");
+  }
+
+  const operation = BeanSwapOperation.buildWithQuote(
+    quote,
+    account,
+    account,
+    values.modeIn,
+    values.modeOut
+  );
+
+  return { operation, tokenIn, tokenOut };
+}

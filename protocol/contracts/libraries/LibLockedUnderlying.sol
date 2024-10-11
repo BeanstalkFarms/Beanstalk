@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity =0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 
 /**
@@ -14,9 +13,9 @@ import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
  * the Unripe Tokens are Chopped.
  */
 library LibLockedUnderlying {
-    using SafeMath for uint256;
+    using LibRedundantMath256 for uint256;
 
-    uint256 constant DECIMALS = 1e6; 
+    uint256 constant DECIMALS = 1e6;
 
     /**
      * @notice Return the amount of Underlying Tokens that would be locked if all of the Unripe Tokens
@@ -29,7 +28,9 @@ library LibLockedUnderlying {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
             s
-                .u[unripeToken]
+                .sys
+                .silo
+                .unripeSettings[unripeToken]
                 .balanceOfUnderlying
                 .mul(getPercentLockedUnderlying(unripeToken, recapPercentPaid))
                 .div(1e18);
@@ -53,8 +54,8 @@ library LibLockedUnderlying {
      * The equation is solved by using a lookup table of N_{⌈U/i⌉} values for different values of
      * U and R (The solution is independent of N) as solving iteratively is too computationally
      * expensive and there is no more efficient way to solve the equation.
-     * 
-     * The lookup threshold assumes no decimal precision. This library only supports 
+     *
+     * The lookup threshold assumes no decimal precision. This library only supports
      * unripe tokens with 6 decimals.
      */
     function getPercentLockedUnderlying(
@@ -266,9 +267,11 @@ library LibLockedUnderlying {
                 } else if (recapPercentPaid > 0.01e6) {
                     if (recapPercentPaid > 0.015e6) {
                         return 0.9431133124739901e18; // 10,000,000, 0.02
-                    } else if (recapPercentPaid > 0.01e6) {
+                    } else {
                         return 0.956746537865208e18; // 10,000,000, 0.015
-                    } else if (recapPercentPaid > 0.005e6) {
+                    }
+                } else {
+                    if (recapPercentPaid > 0.005e6) {
                         return 0.970761430644659e18; // 10,000,000, 0.01
                     } else {
                         return 0.9851737226151924e18; // 10,000,000, 0.005
@@ -371,9 +374,11 @@ library LibLockedUnderlying {
                 } else if (recapPercentPaid > 0.01e6) {
                     if (recapPercentPaid > 0.015e6) {
                         return 0.9549574715005937e18; // 1,000,000, 0.02
-                    } else if (recapPercentPaid > 0.01e6) {
+                    } else {
                         return 0.9659746571972349e18; // 1,000,000, 0.015
-                    } else if (recapPercentPaid > 0.005e6) {
+                    }
+                } else {
+                    if (recapPercentPaid > 0.005e6) {
                         return 0.9771524700936202e18; // 1,000,000, 0.01
                     } else {
                         return 0.988493406058558e18; // 1,000,000, 0.005

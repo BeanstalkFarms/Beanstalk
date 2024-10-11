@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+
 import { ToastBar, Toaster } from "react-hot-toast";
-import { Error, Success } from "../Icons";
+
 import { size } from "src/breakpoints";
+
+import { Error, Success } from "../Icons";
 
 function useMedia(query: string) {
   const [matches, setMatches] = useState(window.matchMedia(query).matches);
