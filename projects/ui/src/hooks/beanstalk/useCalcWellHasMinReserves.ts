@@ -1,4 +1,4 @@
-import { ERC20Token } from '@beanstalk/sdk';
+import { Token } from '@beanstalk/sdk';
 import { useCallback } from 'react';
 import { useAppSelector } from '~/state';
 import { getTokenIndex } from '~/util';
@@ -21,7 +21,8 @@ export const useCalcWellHasMinReserves = () => {
   const pools = useAppSelector((state) => state._bean.pools);
 
   const getHasMinReserves = useCallback(
-    (token: ERC20Token) => {
+    (token: Token | undefined) => {
+      if (!token) return true;
       if (token.equals(BEAN)) return true;
 
       const well = sdk.pools.getWellByLPToken(token);
