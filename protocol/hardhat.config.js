@@ -140,6 +140,114 @@ task("tokenSettings", async function () {
   console.log(tokenSettings);
 });
 
+task("l2BlockNumber", async function () {
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  const l2BlockNumber = await beanstalk.l2BlockNumber();
+  console.log(l2BlockNumber);
+});
+
+task("totalSoil", async function () {
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  const totalSoil = await beanstalk.totalSoil();
+  console.log(totalSoil);
+});
+
+task("temperature", async function () {
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  const temperature = await beanstalk.temperature();
+  console.log(temperature);
+});
+
+task("next-block", "Advances to the next block").setAction(async (taskArgs, hre) => {
+  await hre.network.provider.send("evm_mine");
+  const blockNumber = await hre.ethers.provider.getBlockNumber();
+  console.log(`Advanced to block number: ${blockNumber}`);
+});
+
+task("advance-blocks", "Advances the blockchain by a specified number of blocks")
+  .addParam("number", "The number of blocks to advance")
+  .setAction(async (taskArgs, hre) => {
+    const numBlocks = parseInt(taskArgs.number);
+
+    if (isNaN(numBlocks) || numBlocks <= 0) {
+      console.error("Please provide a valid positive number of blocks to advance.");
+      return;
+    }
+
+    const startBlock = await hre.ethers.provider.getBlockNumber();
+
+    for (let i = 0; i < numBlocks; i++) {
+      await hre.network.provider.send("evm_mine");
+    }
+
+    const endBlock = await hre.ethers.provider.getBlockNumber();
+
+    console.log(`Advanced from block ${startBlock} to ${endBlock}`);
+    console.log(`Total blocks advanced: ${endBlock - startBlock}`);
+  });
+
+task("send-custom-tx", "Sends a custom transaction with specified from, to, and data")
+  .addParam("from", "The address to send the transaction from")
+  .addParam("to", "The address to send the transaction to")
+  .addParam("data", "The transaction data (hex-encoded)")
+  .addOptionalParam("value", "The amount of ETH to send (in wei)", "0")
+  .setAction(async (taskArgs, hre) => {
+    const { from, to, data, value } = taskArgs;
+
+    await mintEth(from);
+
+    // Validate inputs
+    if (!hre.ethers.utils.isAddress(from)) {
+      throw new Error("Invalid 'from' address");
+    }
+    if (!hre.ethers.utils.isAddress(to)) {
+      throw new Error("Invalid 'to' address");
+    }
+    if (!/^0x[0-9A-Fa-f]*$/.test(data)) {
+      throw new Error("Invalid 'data' format. Must be hex-encoded starting with 0x");
+    }
+
+    // Prepare the transaction
+    const tx = {
+      from: from,
+      to: to,
+      data: data,
+      value: hre.ethers.utils.parseEther(value)
+    };
+
+    try {
+      // Send the transaction
+      const signer = await hre.ethers.getSigner(from);
+      const txResponse = await signer.sendTransaction(tx);
+
+      console.log("Transaction sent successfully!");
+      console.log("Transaction hash:", txResponse.hash);
+
+      // Wait for the transaction to be mined
+      const receipt = await txResponse.wait();
+      console.log("Transaction mined in block:", receipt.blockNumber);
+    } catch (error) {
+      console.error("Error sending transaction:", error.message);
+    }
+  });
+
+// task for getOverallConvertCapacity
+task("getOverallConvertCapacity", async function () {
+  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+  const overallCappedDeltaB = await beanstalk.getOverallConvertCapacity();
+  console.log(overallCappedDeltaB);
+});
+
+task("getUsedConvertCapacity", "Gets the used convert capacity at a specific block")
+  .addParam("block", "The block number to query")
+  .setAction(async (taskArgs) => {
+    const blockNumber = parseInt(taskArgs.block);
+    beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
+
+    const usedConvertCapacities = await beanstalk.getUsedConvertCapacity(blockNumber);
+    console.log(usedConvertCapacities);
+  });
+
 /*task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
   await replant(account)

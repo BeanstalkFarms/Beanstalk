@@ -266,7 +266,9 @@ async function ebip19(mock = true, account = undefined) {
       "LibShipping",
       "LibFlood",
       "LibGerminate",
-      "LibWellMinting"
+      "LibWellMinting",
+      "LibConvert",
+      "LibWhitelistedTokens"
     ],
     facetLibraries: {
       SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],

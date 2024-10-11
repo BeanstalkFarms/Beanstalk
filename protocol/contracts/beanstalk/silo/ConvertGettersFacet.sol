@@ -10,6 +10,7 @@ import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 
 /**
  * @author Publius
@@ -17,6 +18,15 @@ import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
  **/
 contract ConvertGettersFacet {
     using LibRedundantMath256 for uint256;
+    struct WellConvertCapacityUsed {
+        address well;
+        uint256 wellConvertCapacityUsed;
+    }
+
+    struct ConvertCapacityUsed {
+        uint256 overallConvertCapacityUsed;
+        WellConvertCapacityUsed[] wellConvertCapacityUsed;
+    }
 
     /**
      * @notice Returns the maximum amount that can be converted of `tokenIn` to `tokenOut`.
@@ -113,6 +123,36 @@ contract ConvertGettersFacet {
             LibConvert.abs(LibDeltaB.cappedReservesDeltaB(well)).sub(
                 s.sys.convertCapacity[LibArbitrum.blockNumber()].wellConvertCapacityUsed[well]
             );
+    }
+
+    /**
+     * @notice Returns the used convert capacity information at a specific block number.
+     * @param blockNumber the block number to get the used convert capacity for
+     */
+    function getUsedConvertCapacity(
+        uint256 blockNumber
+    ) external view returns (ConvertCapacityUsed memory) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
+        ConvertCapacityUsed memory usedConvertCapacity;
+        usedConvertCapacity.wellConvertCapacityUsed = new WellConvertCapacityUsed[](tokens.length);
+        for (uint i; i < tokens.length; i++) {
+            address well = tokens[i];
+            uint256 wellConvertCapacityUsed = s
+                .sys
+                .convertCapacity[blockNumber]
+                .wellConvertCapacityUsed[well];
+
+            WellConvertCapacityUsed memory wellConvertCapacityUsedStruct;
+            wellConvertCapacityUsedStruct.well = well;
+            wellConvertCapacityUsedStruct.wellConvertCapacityUsed = wellConvertCapacityUsed;
+            usedConvertCapacity.wellConvertCapacityUsed[i] = wellConvertCapacityUsedStruct;
+        }
+        usedConvertCapacity.overallConvertCapacityUsed = s
+            .sys
+            .convertCapacity[blockNumber]
+            .overallConvertCapacityUsed;
+        return usedConvertCapacity;
     }
 
     /**
