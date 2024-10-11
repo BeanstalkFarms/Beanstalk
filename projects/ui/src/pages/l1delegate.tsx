@@ -64,6 +64,10 @@ export default function L1Delegate() {
         "function tokenAllowance(address account, address spender, address token) public view returns (uint256)"
     ])
 
+    const beanL1MiniAbi = new ethers.utils.Interface([
+        "function allowance(address owner, address spender) returns (uint256)"
+    ])
+
     const l1ReadResults = useReadContracts({
         contracts: [
             {
@@ -74,11 +78,11 @@ export default function L1Delegate() {
                 args: [account, beanL1Address]
             },
             {
-                address: beanstalkL1Address as `0x${string}`,
-                abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
-                functionName: "tokenAllowance",
+                address: beanL1Address as `0x${string}`,
+                abi: JSON.parse(beanL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
+                functionName: "allowance",
                 // @ts-ignore
-                args: [account, beanstalkL1Address, beanL1Address]
+                args: [account, beanstalkL1Address]
             },
         ],
         query: {
@@ -337,7 +341,7 @@ export default function L1Delegate() {
                                                     migrated and automatically sent to the specified address on Arbitrum.
                                                 </Typography>
                                                 <Button
-                                                    disabled={(!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
+                                                    disabled={!isAddressValid || (!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
                                                     sx={{
                                                         width: '100%',
                                                         height: 60,
@@ -355,7 +359,7 @@ export default function L1Delegate() {
                                                     specified.
                                                 </Typography>
                                                 <Button
-                                                    disabled={(!isAddressValid && !migrateInternal) || !destinationAccount || internalComplete}
+                                                    disabled={!isAddressValid || (!isAddressValid && !migrateInternal) || !destinationAccount || internalComplete}
                                                     sx={{
                                                         width: '100%',
                                                         height: 60,
