@@ -1,6 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
-import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
+import { BI_10, ONE_BI, subBigIntArray, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import {
   BEAN_SWAP_AMOUNT,
   BEAN_USD_AMOUNT,
@@ -333,10 +333,14 @@ describe("Well Entity: Liquidity Event Tests", () => {
     well.reserves = [BigInt.fromI32(1200).times(BI_10.pow(6)), BigInt.fromU32(1).times(BI_10.pow(18))];
     deltaReserves = [BigInt.fromI32(-1800).times(BI_10.pow(6)), ZERO_BI];
     deltaLp = ONE_BI.neg();
-    mockWellLpTokenUnderlying(toAddress(wellFn.id), deltaLp.abs(), well.reserves, well.lpTokenSupply, wellFn.data, [
-      BigInt.fromString("-697366596"),
-      BigInt.fromString("-581138830084189666")
-    ]);
+    mockWellLpTokenUnderlying(
+      toAddress(wellFn.id),
+      deltaLp.abs(),
+      subBigIntArray(well.reserves, deltaReserves),
+      well.lpTokenSupply.minus(deltaLp),
+      wellFn.data,
+      [BigInt.fromString("697366596"), BigInt.fromString("581138830084189666")]
+    );
 
     tokenTradeVolume = calcLiquidityVolume(well, deltaReserves, deltaLp);
     assert.bigIntEquals(BigInt.fromString("1102633404"), tokenTradeVolume[0]);
