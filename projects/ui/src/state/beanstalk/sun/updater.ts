@@ -1,7 +1,6 @@
 import { DateTime, Duration } from 'luxon';
 import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import toast from 'react-hot-toast';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { useAppSelector } from '~/state';
 import { bigNumberResult } from '~/util/Ledger';
@@ -141,9 +140,9 @@ const SunUpdater = () => {
           dispatch(setAwaitingSunrise(false));
           dispatch(setNextSunrise(_next));
           setRemainingUntilSunrise(_next.diffNow());
-          toast.success(
-            `The Sun has risen. It is now Season ${newSeason.current.toString()}.`
-          );
+          // toast.success(
+          //   `The Sun has risen. It is now Season ${newSeason.current.toString()}.`
+          // );
           await refreshSeeds(sdk);
         }
       })();
