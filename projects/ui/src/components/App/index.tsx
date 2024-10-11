@@ -69,6 +69,7 @@ import L2Claim from '~/pages/l2claim';
 import L1Delegate from '~/pages/l1delegate';
 
 import MigrationPreview from '../../pages/preview';
+import L1Withdraw from '~/pages/l1withdraw';
 
 // import Snowflakes from './theme/winter/Snowflakes';
 
@@ -146,6 +147,7 @@ function MigrationGate() {
               <Route path="/l2claim" element={<L2Claim />} />
               <Route path="/l2" element={<L2Claim />} />
               <Route path="/arbitrum" element={<L2Claim />} />
+              <Route path="/l1withdraw" element={<L1Withdraw />} />
               <Route path="/404" element={<PageNotFound />} />
             </Routes>
           </Box>
