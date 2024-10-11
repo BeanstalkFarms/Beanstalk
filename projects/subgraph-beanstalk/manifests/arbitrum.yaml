@@ -84,13 +84,13 @@ dataSources:
         - name: Reseed
           file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
-        - event: L1BeansMigrated
+        - event: L1BeansMigrated(indexed address,uint256,uint8)
           handler: handleL1BeansMigrated
-        - event: L1DepositsMigrated
+        - event: L1DepositsMigrated(indexed address,indexed address,uint256[],uint256[],uint256[])
           handler: handleL1DepositsMigrated
         - event: L1PlotsMigrated(indexed address,indexed address,uint256[],uint256[])
           handler: handleL1PlotsMigrated
-        - event: L1FertilizerMigrated
+        - event: L1FertilizerMigrated(indexed address,indexed address,uint256[],uint128[],uint128)
           handler: handleL1FertilizerMigrated
       file: ../src/handlers/legacy/ArbitrumMigrationHandler.ts
   ###
