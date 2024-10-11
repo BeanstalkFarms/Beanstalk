@@ -18,7 +18,7 @@ type SGEnvironment = {
 const BASE_SUBGRAPH_URL = 'https://graph.bean.money';
 
 const BEANFT_SUBGRAPH_URL =
-  'https://graph.node.bean.money/subgraphs/name/beanft';
+  'https://graph.node.bean.money/subgraphs/name/beanft_eth';
 
 export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
   [SGEnvironments.BF_PROD]: {
