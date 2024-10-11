@@ -493,6 +493,10 @@ task("ebip19", async function () {
   await ebip19();
 });
 
+task("impersonateArb", async function () {
+  await impersonateMockArbitrumSys();
+});
+
 task("verify-ebip19", async function () {
   // due to hardhats inability to impersonate precompiles, a mock is used instead.
   await impersonateMockArbitrumSys();
