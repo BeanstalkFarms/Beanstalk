@@ -29,7 +29,7 @@ Running this fork test against arbitrum requires the following steps:
 8. forge t --fork-url http://127.0.0.1:8545 --match-contract L1ReceiverFacetForkTest
 */
 
-contract L1ReceiverFacetForkTest is Order, TestHelper {
+contract ReseedL1ReceiverFacetForkTest is Order, TestHelper {
     using Strings for string;
     // Offset arbitrum uses for corresponding L2 address
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);

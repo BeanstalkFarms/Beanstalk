@@ -53,7 +53,7 @@ const {
   bipSeedGauge,
   bipMiscellaneousImprovements
 } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19 } = require("./scripts/ebips.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -487,6 +487,27 @@ task("updateBeanstalkForUI", async function () {
 });
 
 /// EBIPS ///
+
+task("ebip19", async function () {
+  await ebip19();
+});
+
+task("verifyEBIP19", async function () {
+  let beanstalk = await getBeanstalk(L2_BEANSTALK);
+  let before = await beanstalk.getAmountOut(
+    "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
+    "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
+    1000000
+  );
+  console.log("view redeem before", before);
+  await ebip19();
+  let after = await beanstalk.getAmountOut(
+    "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
+    "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
+    1000000
+  );
+  console.log("view redeem after", after);
+});
 
 task("ebip17", async function () {
   await ebip17();
