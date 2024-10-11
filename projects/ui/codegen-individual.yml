@@ -21,7 +21,7 @@ generates:
   # BSTODO: Do we need beanft subgraph?
   ./src/graph/schema-beanft.graphql:
     schema:
-      - https://graph.node.bean.money/subgraphs/name/beanft
+      - https://graph.bean.money/beanft_eth
     plugins:
       - 'schema-ast'
   #./src/graph/schema-snapshot2.graphql:

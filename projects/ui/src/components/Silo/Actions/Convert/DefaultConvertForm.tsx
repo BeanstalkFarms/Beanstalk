@@ -31,6 +31,7 @@ import { FormTxn, ConvertFarmStep } from '~/lib/Txn';
 import StatHorizontal from '~/components/Common/StatHorizontal';
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 import { AppState } from '~/state';
+import { useCalcWellHasMinReserves } from '~/hooks/beanstalk/useCalcWellHasMinReserves';
 import { ConvertQuoteHandlerParams, BaseConvertFormProps } from './types';
 
 interface Props extends BaseConvertFormProps {
@@ -50,6 +51,8 @@ export const DefaultConvertForm: FC<Props> = ({
   setFieldValue,
   conversion,
 }) => {
+  const calcHasMinReserves = useCalcWellHasMinReserves();
+
   /// Local state
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const getBDV = useBDV();
@@ -72,7 +75,9 @@ export const DefaultConvertForm: FC<Props> = ({
   const tokenOut = values.tokenOut; // converting to token
   const amountOut = values.tokens[0].amountOut; // amount of to token
   const maxAmountIn = values.maxAmountIn;
-  const canConvert = maxAmountIn?.gt(0) || false;
+  const hasMinReserves = calcHasMinReserves(tokenOut);
+
+  const canConvert = (maxAmountIn?.gt(0) && hasMinReserves) || false;
 
   // FIXME: these use old structs instead of SDK
   const siloBalance = siloBalances[tokenIn.address];
@@ -246,10 +251,11 @@ export const DefaultConvertForm: FC<Props> = ({
     } else {
       pool += ' pool';
     }
-    if (['urBEANETH', 'urBEAN'].includes(tokenIn.symbol)) pool = 'BEANETH Well';
+    if (['urBEANwstETH', 'urBEAN'].includes(tokenIn.symbol))
+      pool = 'BEANwstETH Well';
 
     const lowerOrGreater =
-      tokenIn.isLP || tokenIn.symbol === 'urBEANETH' ? 'less' : 'greater';
+      tokenIn.isLP || tokenIn.symbol === 'urBEANwstETH' ? 'less' : 'greater';
 
     const message = `${tokenIn.symbol} can only be Converted to ${tokenOut?.symbol} when deltaB in the ${pool} is ${lowerOrGreater} than 0.`;
 
@@ -335,6 +341,12 @@ export const DefaultConvertForm: FC<Props> = ({
             </WarningAlert>
           </Box>
         ) : null}
+        {!hasMinReserves && (
+          <WarningAlert>
+            The BEAN reserves for the {tokenOut?.symbol} Well are below the
+            minimum required to Convert.
+          </WarningAlert>
+        )}
         {/* Outputs */}
         {totalAmountIn &&
         tokenOut &&
