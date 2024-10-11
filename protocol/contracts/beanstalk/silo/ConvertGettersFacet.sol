@@ -9,6 +9,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 
 /**
  * @author Publius
@@ -93,7 +94,7 @@ contract ConvertGettersFacet {
         uint256 _overallCappedDeltaB = LibConvert.abs(LibDeltaB.overallCappedDeltaB());
         uint256 overallConvertCapacityUsed = s
             .sys
-            .convertCapacity[block.number]
+            .convertCapacity[LibArbitrum.blockNumber()]
             .overallConvertCapacityUsed;
         return
             overallConvertCapacityUsed > _overallCappedDeltaB
@@ -110,7 +111,7 @@ contract ConvertGettersFacet {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
             LibConvert.abs(LibDeltaB.cappedReservesDeltaB(well)).sub(
-                s.sys.convertCapacity[block.number].wellConvertCapacityUsed[well]
+                s.sys.convertCapacity[LibArbitrum.blockNumber()].wellConvertCapacityUsed[well]
             );
     }
 

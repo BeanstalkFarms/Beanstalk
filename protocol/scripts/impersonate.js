@@ -69,6 +69,17 @@ async function pool() {
   return UNISWAP_V2_PAIR;
 }
 
+async function MockArbitrumSys() {
+  const MockArbitrumSys = await ethers.getContractFactory("MockArbitrumSys");
+  const mockArbitrumSys = await MockArbitrumSys.deploy();
+  await mockArbitrumSys.deployed();
+
+  await network.provider.send("hardhat_setCode", [
+    "0x0000000000000000000000000000000000000064",
+    await ethers.provider.getCode(mockArbitrumSys.address)
+  ]);
+}
+
 async function bean() {
   await token(BEAN, 6);
   // if a new beanstalk is deployed, the bean token should use "BeanstalkERC20",
@@ -190,3 +201,4 @@ exports.impersonateChainlinkAggregator = chainlinkAggregator;
 exports.impersonateContract = impersonateContract;
 exports.impersonateUniswapV3 = uniswapV3;
 exports.impersonatePipeline = impersonatePipeline;
+exports.impersonateMockArbitrumSys = MockArbitrumSys;

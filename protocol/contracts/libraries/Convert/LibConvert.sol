@@ -24,6 +24,7 @@ import {LibTokenSilo} from "contracts/libraries/Silo/LibTokenSilo.sol";
 import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
 import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 
 /**
  * @title LibConvert
@@ -235,7 +236,7 @@ library LibConvert {
         );
 
         // Update penalties in storage.
-        ConvertCapacity storage convertCap = s.sys.convertCapacity[block.number];
+        ConvertCapacity storage convertCap = s.sys.convertCapacity[LibArbitrum.blockNumber()];
         convertCap.overallConvertCapacityUsed = convertCap.overallConvertCapacityUsed.add(
             overallConvertCapacityUsed
         );
@@ -318,7 +319,7 @@ library LibConvert {
     ) internal view returns (uint256 cumulativePenalty, PenaltyData memory pdCapacity) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        ConvertCapacity storage convertCap = s.sys.convertCapacity[block.number];
+        ConvertCapacity storage convertCap = s.sys.convertCapacity[LibArbitrum.blockNumber()];
 
         // first check overall convert capacity, if none remaining then full penalty for amount in direction of peg
         if (convertCap.overallConvertCapacityUsed >= overallCappedDeltaB) {

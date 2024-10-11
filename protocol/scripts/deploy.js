@@ -20,7 +20,8 @@ const {
   impersonateChainlinkAggregator,
   impersonateUniswapV3,
   impersonatePipeline,
-  impersonateToken
+  impersonateToken,
+  impersonateMockArbitrumSys
 } = require("./impersonate.js");
 const { getBeanstalk } = require("../utils/contracts");
 const { impersonateBeanstalkOwner } = require("../utils/signer");
@@ -127,6 +128,9 @@ async function main(
 
   // deploy unripe tokens.
   if (unripe) await impersonateUnripe();
+
+  // impersonate Arbitrum sys.
+  await impersonateMockArbitrumSys();
 
   const [beanstalkDiamond, diamondCut] = await diamond.deploy({
     diamondName: "BeanstalkDiamond",
