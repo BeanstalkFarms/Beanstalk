@@ -4,9 +4,11 @@
 
 pragma solidity ^0.8.20;
 
-import {IAquifer} from "../interfaces/basin/IAquifer.sol";
-import {IWell} from "../interfaces/basin/IWell.sol";
-import {LibWhitelistedTokens} from "../libraries/Silo/LibWhitelistedTokens.sol";
+import {IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
+import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
+import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
+import {LibWellDeployer} from "contracts/libraries/Basin/LibWellDeployer.sol";
+import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 
 interface IWellUpgradeable {
     function upgradeTo(address implementation) external;
@@ -21,6 +23,8 @@ contract InitMultiFlowPumpUpgrade {
     address internal constant U_WELL_IMPLEMENTATION =
         address(0xBA510995783111be5301d93CCfD5dE4e3B28e50B);
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
+
+    AppStorage internal s;
 
     function init() external {
         address[] memory wells = LibWhitelistedTokens.getWhitelistedWellLpTokens();
@@ -44,11 +48,14 @@ contract InitMultiFlowPumpUpgrade {
                 U_WELL_IMPLEMENTATION,
                 immutableData,
                 initData,
-                bytes32(1)
+                bytes32("1")
             );
 
             // upgrade the well to the new implementation
             IWellUpgradeable(wells[i]).upgradeTo(minimalProxyWell);
+
+            // delete the well Oracle snapshot.
+            delete s.sys.wellOracleSnapshots[wells[i]];
         }
     }
 }

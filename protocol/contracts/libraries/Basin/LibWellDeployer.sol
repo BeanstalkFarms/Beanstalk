@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.20;
 
+import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
+import {IWellUpgradeable} from "contracts/interfaces/basin/IWellUpgradeable.sol";
+
 /**
  * @title LibWellDeployer
  * @author Brean
@@ -44,18 +47,5 @@ library LibWellDeployer {
                 _pumps[i].data // pump data (bytes)
             );
         }
-    }
-
-    /**
-     * @notice Encode the Well's immutable data.
-     */
-    function encodeWellDeploymentData(
-        address _aquifer,
-        IERC20[] memory _tokens,
-        Call memory _wellFunction,
-        Call[] memory _pumps
-    ) internal pure returns (bytes memory immutableData, bytes memory initData) {
-        immutableData = encodeWellImmutableData(_aquifer, _tokens, _wellFunction, _pumps);
-        initData = abi.encodeWithSelector(IWellUpgradeable.initNoWellToken.selector);
     }
 }
