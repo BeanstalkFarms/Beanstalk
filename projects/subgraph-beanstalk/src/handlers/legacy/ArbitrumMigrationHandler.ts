@@ -142,7 +142,7 @@ function addMigratedPlot(account: Address, index: BigInt, amount: BigInt, event:
 
 export function handleL1BeansMigrated(event: L1BeansMigrated): void {
   const season = loadSeason(BigInt.fromU32(getCurrentSeason()));
-  season.unmigratedL1Beans!.minus(event.params.amount);
+  season.unmigratedL1Beans = season.unmigratedL1Beans!.minus(event.params.amount);
   season.save();
 }
 
@@ -152,7 +152,7 @@ export function handleL1DepositsMigrated(event: L1DepositsMigrated): void {
     migratedBdv = migratedBdv.plus(event.params.amounts[i]);
   }
   const silo = loadSilo(event.address);
-  silo.unmigratedL1DepositedBdv!.minus(migratedBdv);
+  silo.unmigratedL1DepositedBdv = silo.unmigratedL1DepositedBdv!.minus(migratedBdv);
   silo.save();
 }
 
@@ -163,7 +163,7 @@ export function handleL1PlotsMigrated(event: L1PlotsMigrated): void {
     migratedPods = migratedPods.plus(event.params.pods[i]);
   }
   const field = loadField(event.address);
-  field.unmigratedL1Pods!.minus(migratedPods);
+  field.unmigratedL1Pods = field.unmigratedL1Pods!.minus(migratedPods);
   field.save();
 }
 
@@ -173,7 +173,7 @@ export function handleL1FertilizerMigrated(event: L1FertilizerMigrated): void {
     migratedFert = migratedFert.plus(event.params.amounts[i]);
   }
   const fert = loadFertilizer(getProtocolFertilizer(v())!);
-  fert.unmigratedL1Supply!.minus(migratedFert);
+  fert.unmigratedL1Supply = fert.unmigratedL1Supply!.minus(migratedFert);
   fert.save();
 }
 
