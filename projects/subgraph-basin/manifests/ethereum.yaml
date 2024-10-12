@@ -6,7 +6,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: mainnet
     source:
       address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
@@ -26,7 +26,7 @@ dataSources:
         - handler: handleInitVersion
           filter:
             kind: once
-      file: ../src/utils/Init.ts
+      file: ../src/utils/constants/Version.ts
   - kind: ethereum/contract
     name: Aquifer
     network: mainnet
@@ -48,7 +48,7 @@ dataSources:
       eventHandlers:
         - event: BoreWell(address,address,address[],(address,bytes),(address,bytes)[],bytes)
           handler: handleBoreWell
-      file: ../src/templates/AquiferHandler.ts
+      file: ../src/handlers/AquiferTemplateHandler.ts
   - kind: ethereum/contract
     name: Beanstalk
     network: mainnet
@@ -64,11 +64,11 @@ dataSources:
         - Beanstalk
       abis:
         - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-Replanted.json
+          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
       eventHandlers:
         - event: Sunrise(indexed uint256)
           handler: handleSunrise
-      file: ../src/BeanstalkHandler.ts
+      file: ../src/handlers/BeanstalkHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well
@@ -84,6 +84,8 @@ templates:
       abis:
         - name: Well
           file: ../../subgraph-core/abis/Well.json
+        - name: WellFunction
+          file: ../../subgraph-core/abis/WellFunction.json
         - name: CurvePrice
           file: ../../subgraph-core/abis/CurvePrice.json
         - name: BeanstalkPrice
@@ -103,7 +105,7 @@ templates:
           handler: handleShift
         - event: Sync(uint256[],uint256,address)
           handler: handleSync
-      file: ../src/WellHandler.ts
+      file: ../src/handlers/WellHandler.ts
 # features:
 #   - grafting
 # graft:

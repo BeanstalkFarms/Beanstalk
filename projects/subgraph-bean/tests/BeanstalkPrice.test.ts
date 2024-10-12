@@ -1,5 +1,4 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, log } from "matchstick-as/assembly/index";
-import { loadBean } from "../src/utils/Bean";
 import {
   BEAN_3CRV,
   BEAN_ERC20,
@@ -9,13 +8,15 @@ import {
   PRICE_1_BLOCK,
   PRICE_2_BLOCK,
   WETH
-} from "../../subgraph-core/utils/Constants";
-import { handleDewhitelistToken } from "../src/BeanstalkHandler";
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { createDewhitelistTokenEvent } from "./event-mocking/Beanstalk";
 import { setMockBeanPrice } from "../../subgraph-core/tests/event-mocking/Price";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { BI_10 } from "../../subgraph-core/utils/Decimals";
 import { BeanstalkPrice_try_price, getPoolPrice } from "../src/utils/price/BeanstalkPrice";
+import { loadBean } from "../src/entities/Bean";
+import { handleDewhitelistToken } from "../src/handlers/BeanstalkHandler";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 const curvePrice = BigInt.fromU32(1012000);
 const beanEthPrice = BigInt.fromU32(1025000);
@@ -68,8 +69,10 @@ describe("BeanstalkPrice", () => {
   });
 
   beforeEach(() => {
-    let bean = loadBean(BEAN_ERC20.toHexString());
-    bean.pools = [BEAN_3CRV.toHexString(), BEAN_WETH_CP2_WELL.toHexString()];
+    initL1Version();
+
+    let bean = loadBean(BEAN_ERC20);
+    bean.pools = [BEAN_3CRV, BEAN_WETH_CP2_WELL];
     bean.save();
   });
 
@@ -79,14 +82,14 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Can set the price", () => {
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     assert.assertTrue(priceResult.value.price.equals(overallPrice));
     assert.assertTrue(priceResult.value.ps.length == 2);
     assert.assertTrue(priceResult.dewhitelistedPools.length == 0);
   });
 
   test("Extract pool price", () => {
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     const curvePriceResult = getPoolPrice(priceResult, BEAN_3CRV)!;
     assert.assertTrue(curvePriceResult.price.equals(curvePrice));
 
@@ -95,11 +98,11 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Price response only includes whitelisted tokens", () => {
-    const event = createDewhitelistTokenEvent(BEAN_3CRV.toHexString());
+    const event = createDewhitelistTokenEvent(BEAN_3CRV);
     event.block.number = PRICE_1_BLOCK;
     handleDewhitelistToken(event);
 
-    const priceResult = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const priceResult = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     const curvePriceResult = getPoolPrice(priceResult, BEAN_3CRV);
     assert.assertTrue(priceResult.value.ps.length == 1);
     assert.assertTrue(priceResult.dewhitelistedPools.length == 1);
@@ -108,10 +111,10 @@ describe("BeanstalkPrice", () => {
   });
 
   test("Calls correct price contract by block", () => {
-    const price1 = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_1_BLOCK);
+    const price1 = BeanstalkPrice_try_price(PRICE_1_BLOCK);
     assert.assertTrue(price1.value.price.equals(overallPrice));
 
-    const price2 = BeanstalkPrice_try_price(BEAN_ERC20, PRICE_2_BLOCK);
+    const price2 = BeanstalkPrice_try_price(PRICE_2_BLOCK);
     assert.assertTrue(price2.value.price.equals(contract2Price));
   });
 });

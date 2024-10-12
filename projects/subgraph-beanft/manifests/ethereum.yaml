@@ -6,7 +6,7 @@ dataSources:
   # INITIALIZATION
   ###
   - kind: ethereum/contract
-    name: Version
+    name: InitVersion
     network: mainnet
     source:
       address: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79"
@@ -26,7 +26,7 @@ dataSources:
         - handler: handleInitVersion
           filter:
             kind: once
-      file: ../src/utils/Init.ts
+      file: ../src/utils/constants/Version.ts
   - kind: ethereum
     name: genesis
     network: mainnet

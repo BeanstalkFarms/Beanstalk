@@ -5,11 +5,11 @@ import {
   UpdateAverageStalkPerBdvPerSeason,
   FarmerGerminatingStalkBalanceChanged,
   TotalGerminatingBalanceChanged,
-  UpdateGaugeSettings,
   TotalGerminatingStalkChanged,
   TotalStalkChangedFromGermination
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+} from "../../generated/Beanstalk-ABIs/Reseed";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
+import { UpdateGaugeSettings } from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 export function createBeanToMaxLpGpPerBdvRatioChangeEvent(
   season: BigInt,

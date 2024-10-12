@@ -1,5 +1,7 @@
 import { BigDecimal, BigInt, log } from "@graphprotocol/graph-ts";
 import { toDecimal } from "../../../../subgraph-core/utils/Decimals";
+import { stalkDecimals } from "../../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../constants/Version";
 
 /**
  * @param n An estimate of number of Beans minted to the Silo per Season on average
@@ -17,7 +19,7 @@ export function calculateAPYPreGauge(
   // Initialize sequence
   const beansPerSeason: f64 = parseFloat(n.toString());
   let C: f64 = parseFloat(toDecimal(seeds).toString()); // Init: Total Seeds
-  let K: f64 = parseFloat(toDecimal(stalk, 10).toString()); // Init: Total Stalk
+  let K: f64 = parseFloat(toDecimal(stalk, stalkDecimals(v())).toString()); // Init: Total Stalk
   let b: f64 = parseFloat(seedsPerBDV.div(seedsPerBeanBDV).toString()); // Init: User BDV
   let k: f64 = 1; // Init: User Stalk
 
