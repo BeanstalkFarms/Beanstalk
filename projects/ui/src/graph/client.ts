@@ -87,24 +87,33 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
       { existing, incoming, args }
     );
 
-    // Slicing is necessary because the existing data is
-    // immutable, and frozen in development.
-    let merged = existing ? existing.slice(0).reverse() : [];
+    // Create a map to store unique snapshots
+    const snapshotsMap = new Map();
+    const addToMap = (items: any[]) => {
+      items.forEach((item) => {
+        const id = readField('id', item);
+        const key = `${id}`;
+        snapshotsMap.set(key, item);
+      });
+    };
 
-    // Seasons are indexed by season (could also parseInt the "id" field)
-    // This structures stores seasons in ascending order such that
-    // merged[0] = undefined
-    // merged[1] = Season 1
-    // merged[2] = ...
-    for (let i = 0; i < incoming.length; i += 1) {
-      const season = readField('season', incoming[i]);
-      if ((season as number) - 1 < 0) continue;
-      if (!season) throw new Error('Seasons queried without season');
-      // Season 1 = Index 0
-      merged[(season as number) - 1] = incoming[i];
+    if (existing) {
+      addToMap(existing);
     }
 
-    merged = merged.reverse();
+    // Add incoming items to the map
+    if (incoming) {
+      addToMap(incoming);
+    }
+
+    // Return an array of unique snapshots
+    const merged = Array.from(snapshotsMap.values()).sort((a, b) => {
+      const aSeason = readField('season', a);
+      const bSeason = readField('season', b);
+      if (!aSeason) return -1;
+      if (!bSeason) return 1;
+      return parseFloat(b.season) - parseFloat(a.season);
+    });
 
     console.debug(
       `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(
@@ -113,11 +122,6 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
       { merged }
     );
 
-    // We complete operations on the array in ascending order,
-    // but reverse it before saving back to the cache.
-    // Reverse is O(n) while sorting during the read operation
-    // is O(n*log(n)) and likely called more often.
-    // return merged.reverse();
     return merged;
   },
 });
