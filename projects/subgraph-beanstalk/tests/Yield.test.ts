@@ -1,5 +1,5 @@
 import { BigInt, BigDecimal, log, Bytes } from "@graphprotocol/graph-ts";
-import { assert, describe, test } from "matchstick-as/assembly/index";
+import { assert, beforeEach, describe, test } from "matchstick-as/assembly/index";
 import { BigDecimal_isClose, ZERO_BD, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { loadSilo, loadSiloAsset, loadSiloYield, loadTokenYield, loadWhitelistTokenSetting } from "../src/entities/Silo";
 import {
@@ -10,12 +10,16 @@ import {
   UNRIPE_BEAN,
   UNRIPE_LP,
   LUSD_3POOL
-} from "../../subgraph-core/utils/Constants";
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { setSeason } from "./utils/Season";
 import { calculateAPYPreGauge } from "../src/utils/legacy/LegacyYield";
 import { calculateGaugeVAPYs, updateSiloVAPYs } from "../src/utils/Yield";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("APY Calculations", () => {
+  beforeEach(() => {
+    initL1Version();
+  });
   describe("Pre-Gauge", () => {
     test("No Bean mints", () => {
       const apy = calculateAPYPreGauge(
@@ -148,13 +152,8 @@ describe("APY Calculations", () => {
       let silo = loadSilo(BEANSTALK);
       silo.stalk = BigInt.fromString("1615408790000000000");
       silo.beanToMaxLpGpPerBdvRatio = BigInt.fromString("33000000000000000000");
-      silo.whitelistedTokens = [
-        BEAN_ERC20.toHexString(),
-        BEAN_WETH_CP2_WELL.toHexString(),
-        UNRIPE_BEAN.toHexString(),
-        UNRIPE_LP.toHexString()
-      ];
-      silo.dewhitelistedTokens = [BEAN_3CRV.toHexString()];
+      silo.whitelistedTokens = [BEAN_ERC20, BEAN_WETH_CP2_WELL, UNRIPE_BEAN, UNRIPE_LP];
+      silo.dewhitelistedTokens = [BEAN_3CRV];
       silo.save();
 
       setSeason(20000);
@@ -166,8 +165,7 @@ describe("APY Calculations", () => {
 
       let beanEthWhitelistSettings = loadWhitelistTokenSetting(BEAN_WETH_CP2_WELL);
       beanEthWhitelistSettings.gaugePoints = BigInt.fromString("100000000000000000000");
-      beanEthWhitelistSettings.gpSelector = Bytes.fromHexString("0x12345678");
-      beanEthWhitelistSettings.lwSelector = Bytes.fromHexString("0x12345678");
+      beanEthWhitelistSettings.isGaugeEnabled = true;
       beanEthWhitelistSettings.optimalPercentDepositedBdv = BigInt.fromString("100000000");
       beanEthWhitelistSettings.save();
 

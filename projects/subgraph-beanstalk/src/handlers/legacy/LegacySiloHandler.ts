@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
+import { BigInt, log } from "@graphprotocol/graph-ts";
 import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 import {
   AddWithdrawal,
@@ -14,6 +14,10 @@ import { addToSiloWhitelist, loadSiloWithdraw, loadWhitelistTokenSetting } from 
 import { addDeposits, addWithdrawToSiloAsset, removeDeposits } from "../../utils/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../../entities/snapshots/WhitelistTokenSetting";
 import { WhitelistToken as WhitelistToken_v3 } from "../../../generated/Beanstalk-ABIs/SiloV3";
+import { RemoveWithdrawal, RemoveWithdrawals, SeedsBalanceChanged, WhitelistToken } from "../../../generated/Beanstalk-ABIs/SeedGauge";
+import { updateClaimedWithdraw } from "../../utils/legacy/LegacySilo";
+import { Bytes4_emptySelector } from "../../../../subgraph-core/utils/Bytes";
+import { initLegacyUnripe } from "../../utils/legacy/LegacyWhitelist";
 
 // Note: No silo v1 (pre-replant) handlers have been developed.
 
@@ -70,20 +74,20 @@ export function handleAddWithdrawal(event: AddWithdrawal): void {
   withdraw.createdAt = withdraw.createdAt == ZERO_BI ? event.block.timestamp : withdraw.createdAt;
   withdraw.save();
 
-  addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block.timestamp);
+  addWithdrawToSiloAsset(event.address, event.params.account, event.params.token, event.params.amount, event.block);
 }
 
 // Note: Legacy removals are still possible today, and are therefore not Legacy handlers.
 
 // Replant -> SiloV3
 export function handleTransferDepositCall(call: TransferDepositCall): void {
-  let beanstalk = loadBeanstalk(call.to);
+  let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
-  if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
-    updateFarmers.push(call.from.toHexString());
+  if (updateFarmers.indexOf(call.from) == -1) {
+    updateFarmers.push(call.from);
   }
-  if (updateFarmers.indexOf(call.inputs.recipient.toHexString()) == -1) {
-    updateFarmers.push(call.inputs.recipient.toHexString());
+  if (updateFarmers.indexOf(call.inputs.recipient) == -1) {
+    updateFarmers.push(call.inputs.recipient);
   }
   beanstalk.farmersToUpdate = updateFarmers;
   beanstalk.save();
@@ -91,13 +95,13 @@ export function handleTransferDepositCall(call: TransferDepositCall): void {
 
 // Replant -> SiloV3
 export function handleTransferDepositsCall(call: TransferDepositsCall): void {
-  let beanstalk = loadBeanstalk(call.to);
+  let beanstalk = loadBeanstalk();
   let updateFarmers = beanstalk.farmersToUpdate;
-  if (updateFarmers.indexOf(call.from.toHexString()) == -1) {
-    updateFarmers.push(call.from.toHexString());
+  if (updateFarmers.indexOf(call.from) == -1) {
+    updateFarmers.push(call.from);
   }
-  if (updateFarmers.indexOf(call.inputs.recipient.toHexString()) == -1) {
-    updateFarmers.push(call.inputs.recipient.toHexString());
+  if (updateFarmers.indexOf(call.inputs.recipient) == -1) {
+    updateFarmers.push(call.inputs.recipient);
   }
   beanstalk.farmersToUpdate = updateFarmers;
   beanstalk.save();
@@ -111,8 +115,9 @@ export function handleWhitelistToken_v2(event: WhitelistToken_v2): void {
   setting.selector = event.params.selector;
   setting.stalkIssuedPerBdv = BigInt.fromString("10000000000");
   setting.stalkEarnedPerSeason = event.params.stalk.times(BigInt.fromI32(1000000));
+  initLegacyUnripe(setting);
 
-  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();
 }
 
@@ -125,6 +130,37 @@ export function handleWhitelistToken_v3(event: WhitelistToken_v3): void {
   setting.stalkIssuedPerBdv = event.params.stalk.times(BigInt.fromI32(1_000_000));
   setting.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
 
-  takeWhitelistTokenSettingSnapshots(setting, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(setting, event.block);
   setting.save();
+}
+
+// SeedGauge -> Reseed
+export function handleWhitelistToken_v4(event: WhitelistToken): void {
+  addToSiloWhitelist(event.address, event.params.token);
+
+  let siloSettings = loadWhitelistTokenSetting(event.params.token);
+
+  siloSettings.selector = event.params.selector;
+  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
+  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
+  siloSettings.gaugePoints = event.params.gaugePoints;
+  siloSettings.isGaugeEnabled = !Bytes4_emptySelector(event.params.gpSelector);
+  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = event.block.timestamp;
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
+  siloSettings.save();
+}
+
+/// Withdrawal is a legacy feature from replant, but these events were still present until the reseed ///
+// Replanted -> Reseed
+export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
+  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block);
+}
+
+// Replanted -> Reseed
+export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
+  for (let i = 0; i < event.params.seasons.length; i++) {
+    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block);
+  }
 }

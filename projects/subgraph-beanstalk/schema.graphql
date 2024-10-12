@@ -1,4 +1,16 @@
-# Some items included in this schema come from and are inspired by the Messari Generic Schema
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
 
 enum MarketStatus {
   ACTIVE
@@ -13,6 +25,8 @@ enum PlotSource {
   SOW
   TRANSFER
   MARKET
+  RESEED_MIGRATED
+  CONTRACT_RECEIVER_MIGRATED
 }
 
 enum EmaWindow {
@@ -21,27 +35,13 @@ enum EmaWindow {
   ROLLING_30_DAY
 }
 
-# This same entity schema is intended for use across the subgraphs
-type Version @entity {
-  "= 'subgraph'"
-  id: ID!
-  "= 'beanstalk'"
-  subgraphName: String!
-  "Verison number of the subgraph"
-  versionNumber: String!
-  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
-  chain: String!
-}
-
 type Beanstalk @entity {
-  "Smart contract address of the protocol's main contract (Factory, Registry, etc) "
+  "'beanstalk'"
   id: ID!
-  "Name of the protocol, including version. e.g. Uniswap v3"
-  name: String!
   "Bean token address of the protocol"
-  token: String!
+  token: Bytes!
   "Address of the fertilizer contract"
-  fertilizer1155: String
+  fertilizer1155: Bytes
   "Season specific data"
   seasons: [Season!]! @derivedFrom(field: "beanstalk")
   "Silo level data"
@@ -51,15 +51,15 @@ type Beanstalk @entity {
   "Last season called"
   lastSeason: Int!
   "Array of the addresses for all active farmers in the silo"
-  activeFarmers: [String!]!
-  "Array of the addresses for all farmers that had silo transfers and need stalk/seeds/roots updated"
-  farmersToUpdate: [String!]!
+  activeFarmers: [Bytes!]!
+  "Array of the addresses for all farmers that had silo transfers and need stalk/roots updated"
+  farmersToUpdate: [Bytes!]!
 }
 
 type Season @entity {
   "Season Number"
   id: ID!
-  "Beanstalk Contract Address"
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Season number in Int form for sorting"
   season: Int!
@@ -71,6 +71,8 @@ type Season @entity {
   price: BigDecimal!
   "Total Bean supply"
   beans: BigInt!
+  "Beans from L1 which have not migrated yet"
+  unmigratedL1Beans: BigInt
   "Bean Market Cap"
   marketCap: BigDecimal!
   "Time weighted deltaB"
@@ -81,32 +83,34 @@ type Season @entity {
   rewardBeans: BigInt!
   "Amount of Beans paid to sunrise caller"
   incentiveBeans: BigInt!
-  "New harvestable index for the season"
-  harvestableIndex: BigInt!
 }
 
 type Silo @entity {
-  "Address for the farmer or Beanstalk"
-  id: ID!
-  "Beanstalk diamond address"
+  "Address for the farmer or Beanstalk contract"
+  id: Bytes!
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Farmer address if applicable"
   farmer: Farmer
   "Tokens whitelisted for deposit within the silo"
-  whitelistedTokens: [String!]!
+  whitelistedTokens: [Bytes!]!
   "Tokens that have been removed from the silo deposit whitelist"
-  dewhitelistedTokens: [String!]!
+  dewhitelistedTokens: [Bytes!]!
   "Link to all silo assets currently associated with this silo"
   assets: [SiloAsset!]! @derivedFrom(field: "silo")
   "Current BDV of all deposited assets"
   depositedBDV: BigInt!
+  "Deposited BDV from L1 which has not migrated yet"
+  unmigratedL1DepositedBdv: BigInt
   "Current stalk balance"
   stalk: BigInt!
   "Current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Current seeds balance"
-  seeds: BigInt!
-  "Current grown stalk per season"
+  """
+  Current grown stalk per season.
+  NOTE: This value is currently not accurate for pre-gauge queries (BIP-45).
+  A correct implementation would recalculate this value when a whitelisted token's seed amount is changed.
+  """
   grownStalkPerSeason: BigInt!
   "Current roots balance"
   roots: BigInt!
@@ -141,8 +145,6 @@ type SiloHourlySnapshot @entity {
   stalk: BigInt!
   "Point in time current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Point in time current seeds balance"
-  seeds: BigInt!
   "Point in time grown stalk per season"
   grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
@@ -159,7 +161,7 @@ type SiloHourlySnapshot @entity {
   deltaDepositedBDV: BigInt!
   deltaStalk: BigInt!
   deltaPlantableStalk: BigInt!
-  deltaSeeds: BigInt!
+  deltaGrownStalkPerSeason: BigInt!
   deltaRoots: BigInt!
   deltaGerminatingStalk: BigInt!
   deltaBeanMints: BigInt!
@@ -188,8 +190,6 @@ type SiloDailySnapshot @entity {
   stalk: BigInt!
   "Point in time current plantable stalk for bean seigniorage not yet claimed"
   plantableStalk: BigInt!
-  "Point in time current seeds balance"
-  seeds: BigInt!
   "Point in time grown stalk per season"
   grownStalkPerSeason: BigInt!
   "Point in time current roots balance"
@@ -206,7 +206,7 @@ type SiloDailySnapshot @entity {
   deltaDepositedBDV: BigInt!
   deltaStalk: BigInt!
   deltaPlantableStalk: BigInt!
-  deltaSeeds: BigInt!
+  deltaGrownStalkPerSeason: BigInt!
   deltaRoots: BigInt!
   deltaGerminatingStalk: BigInt!
   deltaBeanMints: BigInt!
@@ -224,7 +224,7 @@ type SiloAsset @entity {
   "Silo for this asset"
   silo: Silo!
   "Token address for this asset"
-  token: String!
+  token: Bytes!
   "Current Token amount of deposits"
   depositedAmount: BigInt!
   "Current BDV of deposits"
@@ -311,7 +311,7 @@ type SiloYield @entity {
   "Bean EMA for season"
   beansPerSeasonEMA: BigDecimal!
   "Current whitelisted silo tokens"
-  whitelistedTokens: [String!]!
+  whitelistedTokens: [Bytes!]!
   "Current Bean (0) and Stalk (1) APY for each token."
   tokenAPYS: [TokenYield!]! @derivedFrom(field: "siloYield")
   "Unix timestamp of update"
@@ -340,16 +340,14 @@ type WhitelistTokenSetting @entity {
   id: Bytes!
   "Encoded BDV selector"
   selector: Bytes!
-  "[Seed Gauge] Encoded Gauge Point selector"
-  gpSelector: Bytes
-  "[Seed Gauge] Encoded Liquidity Weight selector"
-  lwSelector: Bytes
   "Represents how much Stalk one BDV of the underlying deposited token grows each season."
   stalkEarnedPerSeason: BigInt!
   "The stalk per BDV that the silo grants in exchange for depositing this token."
   stalkIssuedPerBdv: BigInt!
   "The last season in which the stalkEarnedPerSeason for this token was updated."
   milestoneSeason: Int!
+  "Whether the seed gauge is enabled on this whitelisted token"
+  isGaugeEnabled: Boolean!
   "[Seed Gauge] Current Gauge Points"
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
@@ -379,16 +377,14 @@ type WhitelistTokenHourlySnapshot @entity {
   token: WhitelistTokenSetting!
   "Encoded BDV selector"
   selector: Bytes!
-  "[Seed Gauge] Encoded Gauge Point selector"
-  gpSelector: Bytes
-  "[Seed Gauge] Encoded Liquidity Weight selector"
-  lwSelector: Bytes
   "Represents how much Stalk one BDV of the underlying deposited token grows each season."
   stalkEarnedPerSeason: BigInt!
   "The stalk per BDV that the silo grants in exchange for depositing this token."
   stalkIssuedPerBdv: BigInt!
   "The last season in which the stalkEarnedPerSeason for this token was updated."
   milestoneSeason: Int!
+  "Whether the seed gauge is enabled on this whitelisted token"
+  isGaugeEnabled: Boolean!
   "[Seed Gauge] Current Gauge Points"
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
@@ -397,6 +393,7 @@ type WhitelistTokenHourlySnapshot @entity {
   deltaStalkEarnedPerSeason: BigInt!
   deltaStalkIssuedPerBdv: BigInt!
   deltaMilestoneSeason: Int!
+  deltaIsGaugeEnabled: Boolean!
   deltaGaugePoints: BigInt
   deltaOptimalPercentDepositedBdv: BigInt
 
@@ -420,16 +417,14 @@ type WhitelistTokenDailySnapshot @entity {
   token: WhitelistTokenSetting!
   "Encoded BDV selector"
   selector: Bytes!
-  "[Seed Gauge] Encoded Gauge Point selector"
-  gpSelector: Bytes
-  "[Seed Gauge] Encoded Liquidity Weight selector"
-  lwSelector: Bytes
   "Represents how much Stalk one BDV of the underlying deposited token grows each season."
   stalkEarnedPerSeason: BigInt!
   "The stalk per BDV that the silo grants in exchange for depositing this token."
   stalkIssuedPerBdv: BigInt!
   "The last season in which the stalkEarnedPerSeason for this token was updated."
   milestoneSeason: Int!
+  "Whether the seed gauge is enabled on this whitelisted token"
+  isGaugeEnabled: Boolean!
   "[Seed Gauge] Current Gauge Points"
   gaugePoints: BigInt
   "[Seed Gauge] The current optimal targeted distribution of BDV for this whitelisted asset"
@@ -438,6 +433,7 @@ type WhitelistTokenDailySnapshot @entity {
   deltaStalkEarnedPerSeason: BigInt!
   deltaStalkIssuedPerBdv: BigInt!
   deltaMilestoneSeason: Int!
+  deltaIsGaugeEnabled: Boolean!
   deltaGaugePoints: BigInt
   deltaOptimalPercentDepositedBdv: BigInt
 
@@ -454,8 +450,8 @@ type WhitelistTokenDailySnapshot @entity {
 
 type Field @entity {
   "Contract address for this field or farmer"
-  id: ID!
-  "Contract address of beanstalk"
+  id: Bytes!
+  "'beanstalk'"
   beanstalk: Beanstalk!
   "Farmer address if applicable"
   farmer: Farmer
@@ -479,10 +475,14 @@ type Field @entity {
   harvestablePods: BigInt!
   "Cumulative harvested pods"
   harvestedPods: BigInt!
+  "Pods from L1 which has not been minted on L2 yet"
+  unmigratedL1Pods: BigInt
   "Current amount of soil available"
   soil: BigInt!
   "Current pod index"
   podIndex: BigInt!
+  "Current harvestable index"
+  harvestableIndex: BigInt!
   "Current pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
   "Season when the previous hourly snapshot was taken/updated"
@@ -524,6 +524,8 @@ type FieldHourlySnapshot @entity {
   issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
+  "Point in time harvestable index"
+  harvestableIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
 
@@ -538,6 +540,7 @@ type FieldHourlySnapshot @entity {
   deltaSoil: BigInt!
   deltaIssuedSoil: BigInt!
   deltaPodIndex: BigInt!
+  deltaHarvestableIndex: BigInt!
   deltaPodRate: BigDecimal!
 
   "Timestamp of initial snapshot creation"
@@ -585,6 +588,8 @@ type FieldDailySnapshot @entity {
   issuedSoil: BigInt!
   "Point in time pod index"
   podIndex: BigInt!
+  "Point in time harvestable index"
+  harvestableIndex: BigInt!
   "Point in time pod rate: Total unharvestable pods / bean supply"
   podRate: BigDecimal!
 
@@ -599,6 +604,7 @@ type FieldDailySnapshot @entity {
   deltaSoil: BigInt!
   deltaIssuedSoil: BigInt!
   deltaPodIndex: BigInt!
+  deltaHarvestableIndex: BigInt!
   deltaPodRate: BigDecimal!
 
   "Timestamp of initial snapshot creation"
@@ -611,7 +617,7 @@ type FieldDailySnapshot @entity {
 
 type Farmer @entity {
   "Address for the farmer"
-  id: ID!
+  id: Bytes!
   silo: Silo @derivedFrom(field: "farmer")
   deposits: [SiloDeposit!]! @derivedFrom(field: "farmer")
   withdraws: [SiloWithdraw!]! @derivedFrom(field: "farmer")
@@ -631,7 +637,7 @@ type SiloDeposit @entity {
   "Farmer address"
   farmer: Farmer!
   "Token Address"
-  token: String!
+  token: Bytes!
   "Version of deposit. Options are season, v3, v3.1. `season` type includes those deposits which are calculated according to their silo v1 deposits pre-explout"
   depositVersion: String!
   "Season of deposit"
@@ -645,7 +651,7 @@ type SiloDeposit @entity {
   "Original deposited BDV"
   depositedBDV: BigInt!
   "Transaction hashes pertaining to this deposit"
-  hashes: [String!]!
+  hashes: [Bytes!]!
   "Block of first deposit"
   createdBlock: BigInt!
   "Block when last updated"
@@ -662,7 +668,7 @@ type SiloWithdraw @entity {
   "Farmer address"
   farmer: Farmer!
   "Token address"
-  token: String!
+  token: Bytes!
   "Season withdrawal initiated"
   withdrawSeason: Int!
   "Season when withdrawal can be claimed"
@@ -685,13 +691,13 @@ type Plot @entity {
   "Transaction source for this plot. Not the same as creationHash which can include plots splitting from transfer or harvest without the owner changing"
   source: PlotSource!
   "Transaction hash corresponding to source"
-  sourceHash: String!
+  sourceHash: Bytes!
   "Associated plot listing"
   listing: PodListing
   "Season when created"
   season: Int!
   "Transaction hash of when this plot entity was created"
-  creationHash: String!
+  creationHash: Bytes!
   "Timestamp of creation"
   createdAt: BigInt!
   "Timestamp when updated"
@@ -713,7 +719,7 @@ type Plot @entity {
 }
 
 type PodMarketplace @entity {
-  "Contract address of beanstalk"
+  "Field id"
   id: ID!
   "Current season of the marketplace"
   season: Int!
@@ -1015,7 +1021,7 @@ type PodListing @entity {
   updatedAt: BigInt!
 
   "Transaction hash when this PodListing entity was created."
-  creationHash: String!
+  creationHash: Bytes!
 }
 
 type PodOrder @entity {
@@ -1133,7 +1139,7 @@ type PodOrder @entity {
   updatedAt: BigInt!
 
   "Transaction hash when this PodOrder entity was created."
-  creationHash: String!
+  creationHash: Bytes!
 }
 
 type PodFill @entity {
@@ -1148,7 +1154,7 @@ type PodFill @entity {
   "Associated order, if any"
   order: PodOrder
   "Account that is sending pods"
-  fromFarmer: String! # These are already referenced via the listing and order entities.
+  fromFarmer: Bytes! # These are already referenced via the listing and order entities.
   "Account that is receiving pods"
   toFarmer: Farmer!
   "Number of pods filled"
@@ -1170,11 +1176,13 @@ type PodFill @entity {
 # Global Fertilizer state for tracking
 type Fertilizer @entity {
   "Token address for fert"
-  id: ID!
-  "Address of parent beanstalk"
+  id: Bytes!
+  "'beanstalk'"
   beanstalk: String!
   "Total overall suppy of fert tokens"
   supply: BigInt!
+  "Supply from L1 which has not been minted on L2 yet"
+  unmigratedL1Supply: BigInt
   tokens: [FertilizerToken!]! @derivedFrom(field: "fertilizer")
 }
 
@@ -1234,11 +1242,9 @@ interface MarketplaceEvent {
   "{ Event type }-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Block number of this event"
   blockNumber: BigInt!
   "Timestamp of this event"
@@ -1265,7 +1271,7 @@ type Chop @entity(immutable: true) {
   "The effective chop rate for this chop"
   chopRate: BigDecimal!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "The block number of this event"
   blockNumber: BigInt!
   "Timestamp of this chop"
@@ -1276,15 +1282,13 @@ type PodListingCreated implements MarketplaceEvent @entity(immutable: true) {
   "podListingCreated-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account creating the listing"
-  account: String!
+  account: Bytes!
   "Where these pods were in line when listed"
   placeInLine: BigInt!
   "Index of the plot listed"
@@ -1315,17 +1319,15 @@ type PodListingFilled implements MarketplaceEvent @entity(immutable: true) {
   "podListingFilled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
-  fromFarmer: String!
+  fromFarmer: Bytes!
   "Account buying pods"
-  toFarmer: String!
+  toFarmer: Bytes!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"
@@ -1346,15 +1348,13 @@ type PodListingCancelled implements MarketplaceEvent @entity(immutable: true) {
   "seedChange-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
-  account: String!
+  account: Bytes!
   "Where these pods were in line when cancelled"
   placeInLine: BigInt!
   "Index of plot listing being cancelled"
@@ -1369,15 +1369,13 @@ type PodOrderCreated implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCreated-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account creating the listing"
-  account: String!
+  account: Bytes!
   "ID of the pod order"
   orderId: String!
   """
@@ -1404,17 +1402,15 @@ type PodOrderFilled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderFilled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account selling pods"
-  fromFarmer: String!
+  fromFarmer: Bytes!
   "Account buying pods"
-  toFarmer: String!
+  toFarmer: Bytes!
   "Where these pods were in line when filled"
   placeInLine: BigInt!
   "Index of the plot transferred"
@@ -1435,15 +1431,13 @@ type PodOrderCancelled implements MarketplaceEvent @entity(immutable: true) {
   "podOrderCancelled-{ Transaction hash }-{ Log index }"
   id: ID!
   "Transaction hash of the transaction that emitted this event"
-  hash: String!
+  hash: Bytes!
   "Event log index. For transactions that don't emit event, create arbitrary index starting from 0"
   logIndex: Int!
-  "The protocol this transaction belongs to"
-  protocol: Beanstalk!
   "Historical ID for joins"
   historyID: String!
   "Account cancelling listing"
-  account: String!
+  account: Bytes!
   "ID of order cancelled"
   orderId: String!
   "Block number of this event"
@@ -1457,7 +1451,7 @@ type Germinating @entity {
   "Address-(EVEN|ODD)"
   id: ID!
   "Address of the token or account which is germinating"
-  address: String!
+  address: Bytes!
   "EVEN or ODD"
   type: String!
   "True when the address is a farmer account"

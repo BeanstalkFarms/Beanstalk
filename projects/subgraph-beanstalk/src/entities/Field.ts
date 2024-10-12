@@ -1,16 +1,16 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Field, Plot } from "../../generated/schema";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { ADDRESS_ZERO, BEANSTALK, CURVE_PRICE } from "../../../subgraph-core/utils/Constants";
-import { loadBeanstalk, loadSeason } from "./Beanstalk";
+import { ADDRESS_ZERO } from "../../../subgraph-core/utils/Bytes";
+import { v } from "../utils/constants/Version";
 
 export function loadField(account: Address): Field {
-  let field = Field.load(account.toHexString());
+  let field = Field.load(account);
   if (field == null) {
-    field = new Field(account.toHexString());
-    field.beanstalk = BEANSTALK.toHexString();
-    if (account !== BEANSTALK) {
-      field.farmer = account.toHexString();
+    field = new Field(account);
+    field.beanstalk = "beanstalk";
+    if (account !== v().protocolAddress) {
+      field.farmer = account;
     }
     field.season = 1;
     field.temperature = 1;
@@ -24,6 +24,7 @@ export function loadField(account: Address): Field {
     field.harvestedPods = ZERO_BI;
     field.soil = ZERO_BI;
     field.podIndex = ZERO_BI;
+    field.harvestableIndex = ZERO_BI;
     field.podRate = ZERO_BD;
     field.save();
   }
@@ -34,12 +35,12 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
   let plot = Plot.load(index.toString());
   if (plot == null) {
     plot = new Plot(index.toString());
-    plot.field = diamondAddress.toHexString();
-    plot.farmer = ADDRESS_ZERO.toHexString();
+    plot.field = diamondAddress;
+    plot.farmer = ADDRESS_ZERO;
     plot.source = "SOW"; // Should be overwritten in case of a transfer creating a new plot
-    plot.sourceHash = "";
+    plot.sourceHash = ADDRESS_ZERO;
     plot.season = 0;
-    plot.creationHash = "";
+    plot.creationHash = ADDRESS_ZERO;
     plot.createdAt = ZERO_BI;
     plot.updatedAt = ZERO_BI;
     plot.updatedAtBlock = ZERO_BI;
@@ -50,10 +51,6 @@ export function loadPlot(diamondAddress: Address, index: BigInt): Plot {
     plot.harvestedPods = ZERO_BI;
     plot.fullyHarvested = false;
     plot.save();
-
-    let field = loadField(diamondAddress);
-    field.plotIndexes.push(plot.index);
-    field.save();
   }
   return plot;
 }

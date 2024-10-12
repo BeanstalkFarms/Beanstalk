@@ -1,13 +1,14 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { SiloAsset, SiloAssetDailySnapshot, SiloAssetHourlySnapshot } from "../../../generated/schema";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 import { getCurrentSeason } from "../Beanstalk";
+import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
-export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeSiloAssetSnapshots(siloAsset: SiloAsset, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = siloAsset.id + "-" + currentSeason.toString();
@@ -51,8 +52,8 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, 
     hourly.deltaWithdrawnAmount = hourly.withdrawnAmount;
     hourly.deltaFarmAmount = hourly.farmAmount;
   }
-  hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -83,10 +84,31 @@ export function takeSiloAssetSnapshots(siloAsset: SiloAsset, protocol: Address, 
     daily.deltaWithdrawnAmount = daily.withdrawnAmount;
     daily.deltaFarmAmount = daily.farmAmount;
   }
-  daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   siloAsset.lastHourlySnapshotSeason = currentSeason;
   siloAsset.lastDailySnapshotDay = day;
+}
+
+export function clearSiloAssetDeltas(siloAsset: SiloAsset, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = SiloAssetHourlySnapshot.load(siloAsset.id + "-" + currentSeason.toString());
+  const daily = SiloAssetDailySnapshot.load(siloAsset.id + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaDepositedAmount = ZERO_BI;
+    hourly.deltaDepositedBDV = ZERO_BI;
+    hourly.deltaWithdrawnAmount = ZERO_BI;
+    hourly.deltaFarmAmount = ZERO_BI;
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaDepositedAmount = ZERO_BI;
+    daily.deltaDepositedBDV = ZERO_BI;
+    daily.deltaWithdrawnAmount = ZERO_BI;
+    daily.deltaFarmAmount = ZERO_BI;
+    daily.save();
+  }
 }

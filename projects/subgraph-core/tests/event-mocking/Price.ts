@@ -9,7 +9,7 @@ import {
   CURVE_PRICE,
   WETH,
   WETH_USDC_PAIR
-} from "../../utils/Constants";
+} from "../../constants/raw/BeanstalkEthConstants";
 import { BD_10, BI_10, pow, toDecimal, ZERO_BI } from "../../utils/Decimals";
 
 // These 2 classes are analagous to structs used by BeanstalkPrice contract
@@ -43,9 +43,7 @@ export function setMockBeanPrice(prices: Prices, contract: Address = BEANSTALK_P
     contract,
     "price",
     "price():((uint256,uint256,int256,(address,address[2],uint256[2],uint256,uint256,int256,uint256,uint256)[]))"
-  )
-    // @ts-expect-error:2322
-    .returns([ethereum.Value.fromTuple(pricesReturn)]);
+  ).returns([ethereum.Value.fromTuple(pricesReturn)]);
 
   if (mockPools) {
     for (let i = 0; i < prices.ps.length; ++i) {

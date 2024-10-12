@@ -2,21 +2,10 @@ import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   AddDeposit as AddDepositV2,
   RemoveDeposit as RemoveDepositV2,
-  RemoveDeposits as RemoveDepositsV2,
-  AddWithdrawal,
-  RemoveWithdrawal,
-  RemoveWithdrawals
+  RemoveDeposits as RemoveDepositsV2
 } from "../../generated/Beanstalk-ABIs/Replanted";
-import { BEAN_DECIMALS } from "../../../subgraph-core/utils/Constants";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
-import {
-  AddDeposit,
-  RemoveDeposits,
-  RemoveDeposit,
-  SeedsBalanceChanged,
-  StalkBalanceChanged,
-  Plant
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
+import { AddDeposit, RemoveDeposits, RemoveDeposit } from "../../generated/Beanstalk-ABIs/Reseed";
 export function createAddDepositV2Event(
   account: string,
   token: string,
@@ -34,10 +23,7 @@ export function createAddDepositV2Event(
     "amount",
     ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(amount).times(BigInt.fromI32(10 ** tokenDecimals)))
   );
-  let bdvParam = new ethereum.EventParam(
-    "bdv",
-    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** BEAN_DECIMALS)))
-  );
+  let bdvParam = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** 6))));
 
   addDepositEvent.parameters.push(accountParam);
   addDepositEvent.parameters.push(tokenParam);
@@ -65,10 +51,7 @@ export function createAddDepositV3Event(
     "amount",
     ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(amount).times(BigInt.fromI32(10 ** tokenDecimals)))
   );
-  let bdvParam = new ethereum.EventParam(
-    "bdv",
-    ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** BEAN_DECIMALS)))
-  );
+  let bdvParam = new ethereum.EventParam("bdv", ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(bdv).times(BigInt.fromI32(10 ** 6))));
 
   addDepositEvent.parameters.push(accountParam);
   addDepositEvent.parameters.push(tokenParam);
@@ -189,54 +172,4 @@ export function createRemoveDepositsV3Event(
   event.parameters.push(param6);
 
   return event as RemoveDeposits;
-}
-
-export function createAddWithdrawalEvent(account: string, token: string, season: i32, amount: BigInt): AddWithdrawal {
-  let event = changetype<AddWithdrawal>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as AddWithdrawal;
-}
-
-export function createRemoveWithdrawalEvent(account: string, token: string, season: i32, amount: BigInt): RemoveWithdrawal {
-  let event = changetype<RemoveWithdrawal>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as RemoveWithdrawal;
-}
-
-export function createRemoveWithdrawalsEvent(account: string, token: string, seasons: i32[], amount: BigInt): RemoveWithdrawals {
-  let event = changetype<RemoveWithdrawals>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as RemoveWithdrawals;
-}
-
-export function createSeedsBalanceChangedEvent(account: string, delta: BigInt): SeedsBalanceChanged {
-  let event = changetype<SeedsBalanceChanged>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as SeedsBalanceChanged;
-}
-
-export function createStalkBalanceChangedEvent(account: string, delta: BigInt, rootDelta: BigInt): StalkBalanceChanged {
-  let event = changetype<StalkBalanceChanged>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as StalkBalanceChanged;
-}
-
-export function createPlantEvent(account: string, amount: BigInt): Plant {
-  let event = changetype<Plant>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as Plant;
-}
-
-export function createWhitelistTokenEvent(token: string, selector: Bytes, seeds: BigInt, stalk: BigInt): WhitelistToken {
-  let event = changetype<WhitelistToken>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  return event as WhitelistToken;
-}
-
-export function createDewhitelistTokenEvent(token: string): DewhitelistToken {
-  let event = changetype<DewhitelistToken>(mockBeanstalkEvent());
-  event.parameters = new Array();
-  let param1 = new ethereum.EventParam("token", ethereum.Value.fromAddress(Address.fromString(token)));
-  event.parameters.push(param1);
-  return event as DewhitelistToken;
 }

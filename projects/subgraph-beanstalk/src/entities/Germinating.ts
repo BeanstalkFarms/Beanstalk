@@ -8,7 +8,7 @@ export function loadOrCreateGerminating(address: Address, season: i32, isFarmer:
   let germinating = Germinating.load(id);
   if (germinating == null) {
     germinating = new Germinating(id);
-    germinating.address = address.toHexString();
+    germinating.address = address;
     germinating.type = type;
     germinating.isFarmer = isFarmer;
     germinating.season = season;
@@ -40,37 +40,6 @@ export function getGerminatingBdvs(address: Address): Array<BigDecimal> {
 
 export function deleteGerminating(germinating: Germinating): void {
   store.remove("Germinating", germinating.id);
-}
-
-// This is the entity that exists to resolve the issue in LibGerminate when deposits from multiple seasons
-// complete their germination (the event emission itself has a bug)
-export function loadPrevFarmerGerminatingEvent(account: Address): PrevFarmerGerminatingEvent {
-  let savedEvent = PrevFarmerGerminatingEvent.load(account);
-  if (savedEvent == null) {
-    savedEvent = new PrevFarmerGerminatingEvent(account);
-    savedEvent.eventBlock = ZERO_BI;
-    savedEvent.logIndex = ZERO_BI;
-    savedEvent.deltaGerminatingStalk = ZERO_BI;
-    // No point in saving it
-  }
-  return savedEvent as PrevFarmerGerminatingEvent;
-}
-
-export function savePrevFarmerGerminatingEvent(account: Address, event: ethereum.Event, deltaGerminatingStalk: BigInt): void {
-  const savedEvent = new PrevFarmerGerminatingEvent(account);
-  savedEvent.eventBlock = event.block.number;
-  savedEvent.logIndex = event.logIndex;
-  savedEvent.deltaGerminatingStalk = deltaGerminatingStalk;
-  savedEvent.save();
-}
-
-// Returns the stalk offset that should be applied to the encountered FarmerGerminatingStalkBalanceChanged event.
-export function getFarmerGerminatingBugOffset(account: Address, event: ethereum.Event): BigInt {
-  const prevEvent = loadPrevFarmerGerminatingEvent(account);
-  if (prevEvent.eventBlock == event.block.number && prevEvent.logIndex == event.logIndex.minus(ONE_BI)) {
-    return prevEvent.deltaGerminatingStalk.neg();
-  }
-  return ZERO_BI;
 }
 
 export function germinationSeasonCategory(season: i32): string {

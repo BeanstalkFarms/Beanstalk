@@ -1,13 +1,14 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { PodMarketplace, PodMarketplaceDailySnapshot, PodMarketplaceHourlySnapshot } from "../../../generated/schema";
 import { getCurrentSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
+import { ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
-export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, timestamp: BigInt): void {
-  const currentSeason = getCurrentSeason(protocol);
+export function takeMarketSnapshots(market: PodMarketplace, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
 
-  const hour = BigInt.fromI32(hourFromTimestamp(timestamp));
-  const day = BigInt.fromI32(dayFromTimestamp(timestamp));
+  const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
 
   // Load the snapshot for this season/day
   const hourlyId = market.id + "-" + currentSeason.toString();
@@ -83,8 +84,8 @@ export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, t
     hourly.deltaPodVolume = hourly.podVolume;
     hourly.deltaBeanVolume = hourly.beanVolume;
   }
-  hourly.createdAt = hour;
-  hourly.updatedAt = timestamp;
+  hourly.createdAt = hour.times(BigInt.fromU32(3600));
+  hourly.updatedAt = block.timestamp;
   hourly.save();
 
   // Repeat for daily snapshot.
@@ -147,10 +148,47 @@ export function takeMarketSnapshots(market: PodMarketplace, protocol: Address, t
     daily.deltaPodVolume = daily.podVolume;
     daily.deltaBeanVolume = daily.beanVolume;
   }
-  daily.createdAt = day;
-  daily.updatedAt = timestamp;
+  daily.createdAt = day.times(BigInt.fromU32(86400));
+  daily.updatedAt = block.timestamp;
   daily.save();
 
   market.lastHourlySnapshotSeason = currentSeason;
   market.lastDailySnapshotDay = day;
+}
+
+export function clearMarketDeltas(market: PodMarketplace, block: ethereum.Block): void {
+  const currentSeason = getCurrentSeason();
+  const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
+  const hourly = PodMarketplaceHourlySnapshot.load(market.id + "-" + currentSeason.toString());
+  const daily = PodMarketplaceDailySnapshot.load(market.id + "-" + day.toString());
+  if (hourly != null) {
+    hourly.deltaListedPods = ZERO_BI;
+    hourly.deltaAvailableListedPods = ZERO_BI;
+    hourly.deltaFilledListedPods = ZERO_BI;
+    hourly.deltaExpiredListedPods = ZERO_BI;
+    hourly.deltaCancelledListedPods = ZERO_BI;
+    hourly.deltaOrderBeans = ZERO_BI;
+    hourly.deltaAvailableOrderBeans = ZERO_BI;
+    hourly.deltaFilledOrderBeans = ZERO_BI;
+    hourly.deltaFilledOrderedPods = ZERO_BI;
+    hourly.deltaCancelledOrderBeans = ZERO_BI;
+    hourly.deltaPodVolume = ZERO_BI;
+    hourly.deltaBeanVolume = ZERO_BI;
+    hourly.save();
+  }
+  if (daily != null) {
+    daily.deltaListedPods = ZERO_BI;
+    daily.deltaAvailableListedPods = ZERO_BI;
+    daily.deltaFilledListedPods = ZERO_BI;
+    daily.deltaExpiredListedPods = ZERO_BI;
+    daily.deltaCancelledListedPods = ZERO_BI;
+    daily.deltaOrderBeans = ZERO_BI;
+    daily.deltaAvailableOrderBeans = ZERO_BI;
+    daily.deltaFilledOrderBeans = ZERO_BI;
+    daily.deltaFilledOrderedPods = ZERO_BI;
+    daily.deltaCancelledOrderBeans = ZERO_BI;
+    daily.deltaPodVolume = ZERO_BI;
+    daily.deltaBeanVolume = ZERO_BI;
+    daily.save();
+  }
 }

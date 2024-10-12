@@ -1,9 +1,7 @@
-import { BigInt, log } from "@graphprotocol/graph-ts";
-import { addDeposits, removeDeposits, updateDepositInSiloAsset, updateSeedsBalances, updateStalkBalances } from "../utils/Silo";
+import { addDeposits, removeDeposits, setWhitelistTokenSettings, updateDepositInSiloAsset, updateStalkBalances } from "../utils/Silo";
 import { addToSiloWhitelist, loadSilo, loadWhitelistTokenSetting } from "../entities/Silo";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
-import { Bytes4_emptyToNull } from "../../../subgraph-core/utils/Bytes";
 import {
   AddDeposit,
   Convert,
@@ -11,16 +9,15 @@ import {
   Plant,
   RemoveDeposit,
   RemoveDeposits,
-  RemoveWithdrawal,
-  RemoveWithdrawals,
-  SeedsBalanceChanged,
   StalkBalanceChanged,
   UpdatedStalkPerBdvPerSeason,
-  WhitelistToken
-} from "../../generated/Beanstalk-ABIs/SeedGauge";
-import { updateClaimedWithdraw } from "../utils/legacy/LegacySilo";
-import { getProtocolToken, isUnripe } from "../utils/Constants";
+  UpdateWhitelistStatus
+} from "../../generated/Beanstalk-ABIs/Reseed";
 import { unripeChopped } from "../utils/Barn";
+import { beanDecimals, getProtocolToken, isUnripe, stalkDecimals } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "../utils/constants/Version";
+import { WhitelistToken } from "../../generated/Beanstalk-ABIs/Reseed";
+import { BI_10 } from "../../../subgraph-core/utils/Decimals";
 
 export function handleAddDeposit(event: AddDeposit): void {
   addDeposits({
@@ -62,7 +59,7 @@ export function handleRemoveDeposits(event: RemoveDeposits): void {
 }
 
 export function handleConvert(event: Convert): void {
-  if (isUnripe(event.params.fromToken) && !isUnripe(event.params.toToken)) {
+  if (isUnripe(v(), event.params.fromToken) && !isUnripe(v(), event.params.toToken)) {
     unripeChopped({
       event,
       type: "convert",
@@ -80,16 +77,7 @@ export function handleStalkBalanceChanged(event: StalkBalanceChanged): void {
     return;
   }
 
-  updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block.timestamp);
-}
-
-export function handleSeedsBalanceChanged(event: SeedsBalanceChanged): void {
-  // Exclude BIP-24 emission of missed past events
-  if (event.transaction.hash.toHexString() == "0xa89638aeb0d6c4afb4f367ea7a806a4c8b3b2a6eeac773e8cc4eda10bfa804fc") {
-    return;
-  }
-
-  updateSeedsBalances(event.address, event.params.account, event.params.delta, event.block.timestamp);
+  updateStalkBalances(event.address, event.params.account, event.params.delta, event.params.deltaRoots, event.block);
 }
 
 export function handlePlant(event: Plant): void {
@@ -97,43 +85,45 @@ export function handlePlant(event: Plant): void {
   // Actual stalk credit for the farmer will be handled under the StalkBalanceChanged event.
 
   let silo = loadSilo(event.address);
-  let newPlantableStalk = event.params.beans.times(BigInt.fromI32(10000));
+  let newPlantableStalk = event.params.beans.times(BI_10.pow(<u8>(stalkDecimals(v()) - beanDecimals())));
 
   // Subtract stalk since it was already added in Reward, and is about to get re-added in StalkBalanceChanged.
   silo.stalk = silo.stalk.minus(newPlantableStalk);
   silo.plantableStalk = silo.plantableStalk.minus(newPlantableStalk);
   silo.depositedBDV = silo.depositedBDV.minus(event.params.beans);
 
-  takeSiloSnapshots(silo, event.address, event.block.timestamp);
+  takeSiloSnapshots(silo, event.block);
   silo.save();
 
-  // Remove the asset-only amount that got added in Reward event handler.
+  // Remove the protocol asset amount that got added in Reward event handler.
   // Will be immediately re-credited to the user/system in AddDeposit
   updateDepositInSiloAsset(
     event.address,
     event.address,
-    getProtocolToken(event.address),
-    event.params.beans,
-    event.params.beans,
-    event.block.timestamp
+    getProtocolToken(v(), event.block.number),
+    event.params.beans.neg(),
+    event.params.beans.neg(),
+    event.block
   );
 }
 
 export function handleWhitelistToken(event: WhitelistToken): void {
   addToSiloWhitelist(event.address, event.params.token);
+  setWhitelistTokenSettings({
+    token: event.params.token,
+    selector: event.params.selector,
+    stalkEarnedPerSeason: event.params.stalkEarnedPerSeason,
+    stalkIssuedPerBdv: event.params.stalkIssuedPerBdv,
+    gaugePoints: event.params.gaugePoints,
+    optimalPercentDepositedBdv: event.params.optimalPercentDepositedBdv,
+    block: event.block
+  });
+}
 
+export function handleUpdateWhitelistStatus(event: UpdateWhitelistStatus): void {
   let siloSettings = loadWhitelistTokenSetting(event.params.token);
-
-  siloSettings.selector = event.params.selector;
-  siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
-  siloSettings.stalkIssuedPerBdv = event.params.stalkIssuedPerBdv;
-  siloSettings.gaugePoints = event.params.gaugePoints;
-  siloSettings.gpSelector = Bytes4_emptyToNull(event.params.gpSelector);
-  siloSettings.lwSelector = Bytes4_emptyToNull(event.params.lwSelector);
-  siloSettings.optimalPercentDepositedBdv = event.params.optimalPercentDepositedBdv;
-  siloSettings.updatedAt = event.block.timestamp;
-
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  siloSettings.isGaugeEnabled = event.params.isWhitelistedWell;
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
 }
 
@@ -141,7 +131,7 @@ export function handleDewhitelistToken(event: DewhitelistToken): void {
   let silo = loadSilo(event.address);
   let currentWhitelist = silo.whitelistedTokens;
   let currentDewhitelist = silo.dewhitelistedTokens;
-  let index = currentWhitelist.indexOf(event.params.token.toHexString());
+  let index = currentWhitelist.indexOf(event.params.token);
   if (index >= 0) {
     currentDewhitelist.push(currentWhitelist.splice(index, 1)[0]);
     silo.whitelistedTokens = currentWhitelist;
@@ -156,17 +146,6 @@ export function handleUpdatedStalkPerBdvPerSeason(event: UpdatedStalkPerBdvPerSe
   siloSettings.stalkEarnedPerSeason = event.params.stalkEarnedPerSeason;
   siloSettings.updatedAt = event.block.timestamp;
 
-  takeWhitelistTokenSettingSnapshots(siloSettings, event.address, event.block.timestamp);
+  takeWhitelistTokenSettingSnapshots(siloSettings, event.block);
   siloSettings.save();
-}
-
-// Withdrawal is a legacy feature from replant, but these events are still present
-export function handleRemoveWithdrawal(event: RemoveWithdrawal): void {
-  updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.season, event.block.timestamp);
-}
-
-export function handleRemoveWithdrawals(event: RemoveWithdrawals): void {
-  for (let i = 0; i < event.params.seasons.length; i++) {
-    updateClaimedWithdraw(event.address, event.params.account, event.params.token, event.params.seasons[i], event.block.timestamp);
-  }
 }

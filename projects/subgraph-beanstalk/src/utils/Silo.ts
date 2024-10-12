@@ -1,11 +1,13 @@
-import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum, Bytes, log } from "@graphprotocol/graph-ts";
 import { takeSiloSnapshots } from "../entities/snapshots/Silo";
 import { loadSilo, loadSiloAsset, loadSiloDeposit, loadWhitelistTokenSetting, updateDeposit } from "../entities/Silo";
 import { takeSiloAssetSnapshots } from "../entities/snapshots/SiloAsset";
-import { stemFromSeason } from "./contracts/SiloCalculations";
-import { GAUGE_BIP45_BLOCK } from "../../../subgraph-core/utils/Constants";
 import { BI_10, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { loadBeanstalk, loadFarmer } from "../entities/Beanstalk";
+import { stemFromSeason } from "./legacy/LegacySilo";
+import { beanDecimals, isGaugeDeployed } from "../../../subgraph-core/constants/RuntimeConstants";
+import { v } from "./constants/Version";
+import { takeWhitelistTokenSettingSnapshots } from "../entities/snapshots/WhitelistTokenSetting";
 
 class AddRemoveDepositsParams {
   event: ethereum.Event;
@@ -16,6 +18,16 @@ class AddRemoveDepositsParams {
   amounts: BigInt[];
   bdvs: BigInt[] | null; // bdv not present in v2 removal
   depositVersion: String;
+}
+
+class WhitelistTokenParams {
+  token: Address;
+  selector: Bytes;
+  stalkEarnedPerSeason: BigInt;
+  stalkIssuedPerBdv: BigInt;
+  gaugePoints: BigInt;
+  optimalPercentDepositedBdv: BigInt;
+  block: ethereum.Block;
 }
 
 export function addDeposits(params: AddRemoveDepositsParams): void {
@@ -34,8 +46,8 @@ export function addDeposits(params: AddRemoveDepositsParams): void {
       // Fill stem according to legacy conversion
       deposit.stemV31 = stemFromSeason(params.seasons![i].toI32(), params.token);
     } else {
-      deposit.depositVersion = params.event.block.number > GAUGE_BIP45_BLOCK ? "v3.1" : "v3";
-      deposit.stemV31 = params.event.block.number > GAUGE_BIP45_BLOCK ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
+      deposit.depositVersion = isGaugeDeployed(v(), params.event.block.number) ? "v3.1" : "v3";
+      deposit.stemV31 = isGaugeDeployed(v(), params.event.block.number) ? deposit.stem! : deposit.stem!.times(BI_10.pow(6));
     }
 
     deposit = updateDeposit(deposit, params.amounts[i], params.bdvs![i], params.event)!;
@@ -44,14 +56,7 @@ export function addDeposits(params: AddRemoveDepositsParams): void {
     // Ensure that a Farmer entity is set up for this account.
     loadFarmer(params.account);
 
-    updateDepositInSilo(
-      params.event.address,
-      params.account,
-      params.token,
-      params.amounts[i],
-      params.bdvs![i],
-      params.event.block.timestamp
-    );
+    updateDepositInSilo(params.event.address, params.account, params.token, params.amounts[i], params.bdvs![i], params.event.block);
   }
 }
 
@@ -75,14 +80,7 @@ export function removeDeposits(params: AddRemoveDepositsParams): void {
     }
 
     // Update protocol totals
-    updateDepositInSilo(
-      params.event.address,
-      params.account,
-      params.token,
-      params.amounts[i].neg(),
-      removedBdv.neg(),
-      params.event.block.timestamp
-    );
+    updateDepositInSilo(params.event.address, params.account, params.token, params.amounts[i].neg(), removedBdv.neg(), params.event.block);
   }
 }
 
@@ -92,21 +90,21 @@ export function updateDepositInSilo(
   token: Address,
   deltaAmount: BigInt,
   deltaBdv: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+    updateDepositInSilo(protocol, protocol, token, deltaAmount, deltaBdv, block);
   }
   let silo = loadSilo(account);
   silo.depositedBDV = silo.depositedBDV.plus(deltaBdv);
 
-  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, timestamp, false);
+  const newSeedStalk = updateDepositInSiloAsset(protocol, account, token, deltaAmount, deltaBdv, block, false);
   // Individual farmer seeds cannot be directly tracked due to seed gauge
   if (account == protocol) {
     silo.grownStalkPerSeason = silo.grownStalkPerSeason.plus(newSeedStalk);
   }
-  takeSiloSnapshots(silo, protocol, timestamp);
+  takeSiloSnapshots(silo, block);
   silo.save();
 }
 
@@ -116,21 +114,21 @@ export function updateDepositInSiloAsset(
   token: Address,
   deltaAmount: BigInt,
   deltaBdv: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): BigInt {
   if (recurs && account != protocol) {
-    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, timestamp);
+    updateDepositInSiloAsset(protocol, protocol, token, deltaAmount, deltaBdv, block);
   }
   let asset = loadSiloAsset(account, token);
 
   let tokenSettings = loadWhitelistTokenSetting(token);
-  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BigInt.fromI32(1000000));
+  let newGrownStalk = deltaBdv.times(tokenSettings.stalkEarnedPerSeason).div(BI_10.pow(<u8>beanDecimals()));
 
   asset.depositedBDV = asset.depositedBDV.plus(deltaBdv);
   asset.depositedAmount = asset.depositedAmount.plus(deltaAmount);
 
-  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  takeSiloAssetSnapshots(asset, block);
   asset.save();
 
   return newGrownStalk;
@@ -141,15 +139,15 @@ export function addWithdrawToSiloAsset(
   account: Address,
   token: Address,
   deltaAmount: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, timestamp);
+    addWithdrawToSiloAsset(protocol, protocol, token, deltaAmount, block);
   }
   let asset = loadSiloAsset(account, token);
   asset.withdrawnAmount = asset.withdrawnAmount.plus(deltaAmount);
-  takeSiloAssetSnapshots(asset, protocol, timestamp);
+  takeSiloAssetSnapshots(asset, block);
   asset.save();
 }
 
@@ -158,25 +156,25 @@ export function updateStalkBalances(
   account: Address,
   deltaStalk: BigInt,
   deltaRoots: BigInt,
-  timestamp: BigInt,
+  block: ethereum.Block,
   recurs: boolean = true
 ): void {
   if (recurs && account != protocol) {
-    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, timestamp);
+    updateStalkBalances(protocol, protocol, deltaStalk, deltaRoots, block);
   }
   let silo = loadSilo(account);
   silo.stalk = silo.stalk.plus(deltaStalk);
   silo.roots = silo.roots.plus(deltaRoots);
 
-  takeSiloSnapshots(silo, protocol, timestamp);
+  takeSiloSnapshots(silo, block);
 
   // Add account to active list if needed
   if (account !== protocol) {
-    let beanstalk = loadBeanstalk(protocol);
-    let farmerIndex = beanstalk.activeFarmers.indexOf(account.toHexString());
+    let beanstalk = loadBeanstalk();
+    let farmerIndex = beanstalk.activeFarmers.indexOf(account);
     if (farmerIndex == -1) {
       let newFarmers = beanstalk.activeFarmers;
-      newFarmers.push(account.toHexString());
+      newFarmers.push(account);
       beanstalk.activeFarmers = newFarmers;
       beanstalk.save();
       silo.activeFarmers += 1;
@@ -191,12 +189,19 @@ export function updateStalkBalances(
   silo.save();
 }
 
-export function updateSeedsBalances(protocol: Address, account: Address, seeds: BigInt, timestamp: BigInt, recurs: boolean = true): void {
-  if (recurs && account != protocol) {
-    updateSeedsBalances(protocol, protocol, seeds, timestamp);
+export function setWhitelistTokenSettings(params: WhitelistTokenParams, forceEnableGauge: boolean = false): void {
+  let siloSettings = loadWhitelistTokenSetting(params.token);
+
+  siloSettings.selector = params.selector;
+  siloSettings.stalkEarnedPerSeason = params.stalkEarnedPerSeason;
+  siloSettings.stalkIssuedPerBdv = params.stalkIssuedPerBdv;
+  siloSettings.gaugePoints = params.gaugePoints;
+  siloSettings.optimalPercentDepositedBdv = params.optimalPercentDepositedBdv;
+  siloSettings.updatedAt = params.block.timestamp;
+  if (forceEnableGauge) {
+    siloSettings.isGaugeEnabled = true;
   }
-  let silo = loadSilo(account);
-  silo.seeds = silo.seeds.plus(seeds);
-  takeSiloSnapshots(silo, protocol, timestamp);
-  silo.save();
+
+  takeWhitelistTokenSettingSnapshots(siloSettings, params.block);
+  siloSettings.save();
 }

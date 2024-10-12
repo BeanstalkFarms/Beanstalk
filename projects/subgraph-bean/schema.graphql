@@ -6,13 +6,15 @@ type Version @entity {
   subgraphName: String!
   "Verison number of the subgraph"
   versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
   "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
   chain: String!
 }
 
 type Token @entity {
   "Smart contract address of the token"
-  id: ID!
+  id: Bytes!
 
   "Name of the token, i.e. BEAN, WETH"
   name: String!
@@ -26,7 +28,7 @@ type Token @entity {
 
 type Bean @entity {
   "Contract address of the Bean token"
-  id: ID!
+  id: Bytes!
 
   "Which chain this Bean is from"
   chain: String!
@@ -207,7 +209,7 @@ type PoolCross @entity {
 }
 
 type Pool @entity {
-  id: ID!
+  id: Bytes!
   "The Bean token that is in this pool"
   bean: Bean!
   "All tokens in this pool"
@@ -288,7 +290,7 @@ type PoolDailySnapshot @entity {
 
 # For tracking twa balances as the seasons progress
 type TwaOracle @entity {
-  id: ID!
+  id: Bytes!
   pool: Pool!
   # These two fields are used to determine twa over the previous season.
   # priceCumulativeSun is the value of priceCumulativeLast at the time of the previous sunrise (lastSun)
