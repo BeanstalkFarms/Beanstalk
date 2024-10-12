@@ -43,7 +43,12 @@ export default function L2Claim() {
             const { source } = JSON.parse(internalBalanceMigrationData);
             const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](source);
             const logs = await sdk.contracts.beanstalk.queryFilter(filter);
-            setReceiverApproved(logs && logs.length > 0);
+            if (logs && logs.length > 0) {
+                setReceiverApproved(true);
+                setSourceAccount(logs[0].args[0]);
+            } else {
+                setReceiverApproved(false);
+            }
         } else {
             setReceiverApproved(false);
         }
