@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Box } from '@mui/material';
+import { AppBar, Box, useMediaQuery, useTheme } from '@mui/material';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import NetworkButton from '~/components/Common/Connection/NetworkButton';
 import {
@@ -20,7 +20,7 @@ import HoverMenu from './HoverMenu';
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
 
-const L1NavBar = () => (
+const L1NavBar = ({ isMobile }: { isMobile: boolean }) => (
   <>
     <AppBar
       className="navbar"
@@ -34,22 +34,23 @@ const L1NavBar = () => (
       {/* Desktop: Right Side */}
       <Row
         justifyContent="space-between"
-        gap={1}
+        gap={isMobile ? 0 : 1}
         px={1}
         height={`${NAV_HEIGHT}px`}
       >
         <Box
-          px={2}
+          px={isMobile ? 1 : 2}
           height={`${NAV_HEIGHT}px`}
           sx={{
             display: 'flex',
             flexDirection: 'row',
-            gap: 2,
+            gap: isMobile ? 0 : 2,
             alignItems: 'center',
           }}
         >
           <BeanProgressIcon size={25} enabled={false} variant="indeterminate" />
           <LinkButton key="/" to="/" title="Migration" />
+          <LinkButton key="/l1transfer" to="/l1transfer" title="Transfer" />
         </Box>
         <Row gap={1}>
           <Box sx={{ display: { sm: 'block', xs: 'none' } }}>
@@ -65,9 +66,11 @@ const L1NavBar = () => (
 
 const NavBar: FC<{}> = ({ children }) => {
   const { isArbitrum, isArbMainnet } = useChainState();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   if (!isArbitrum) {
-    return <L1NavBar />;
+    return <L1NavBar isMobile={isMobile} />;
   }
 
   return (

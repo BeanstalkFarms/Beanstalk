@@ -63,6 +63,8 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, DepositFarmStep, FormTxn } from '~/lib/Txn';
 import useGetBalancesUsedBySource from '~/hooks/beanstalk/useBalancesUsedBySource';
 import { selectBdvPerToken } from '~/state/beanstalk/silo';
+import { useCalcWellHasMinReserves } from '~/hooks/beanstalk/useCalcWellHasMinReserves';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
 // -----------------------------------------------------------------------
 
@@ -118,6 +120,9 @@ const DepositForm: FC<
   const account = useAccount();
   const beanstalkSilo = useSilo();
   const siblingRef = useRef<HTMLDivElement | null>(null);
+
+  const calcHasMinReserves = useCalcWellHasMinReserves();
+  const hasMinReserves = calcHasMinReserves(whitelistedToken);
 
   /// Handlers
   // This handler does not run when _tokenIn = _tokenOut (direct deposit)
@@ -280,6 +285,8 @@ const DepositForm: FC<
               key={`tokens.${index}`}
               name={`tokens.${index}`}
               tokenOut={whitelistedToken}
+              disabled={!hasMinReserves}
+              disableTokenSelect={!hasMinReserves}
               balance={balance}
               state={tokenState}
               showTokenSelect={showTokenSelect}
@@ -290,6 +297,12 @@ const DepositForm: FC<
           );
         })}
         {false && <ClaimBeanDrawerToggle actionText="Deposit" />}
+        {!hasMinReserves && (
+          <WarningAlert>
+            The BEAN reserves for this Well are below the minimum required for
+            deposit.
+          </WarningAlert>
+        )}
         {isReady ? (
           <>
             <TxnSeparator />
@@ -342,7 +355,7 @@ const DepositForm: FC<
         ) : null}
         <SmartSubmitButton
           loading={isSubmitting}
-          disabled={isSubmitting || noAmount}
+          disabled={isSubmitting || noAmount || !hasMinReserves}
           type="submit"
           variant="contained"
           color="primary"
