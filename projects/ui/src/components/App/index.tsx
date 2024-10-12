@@ -131,9 +131,6 @@ function MigrationGate() {
         <Stack
           sx={{
             width: '100vw',
-            minHeight: `calc(100vh - ${navHeight}px)`,
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
         >
           <Box sx={{ marginTop: 0 }}>
@@ -152,7 +149,7 @@ function MigrationGate() {
             </Routes>
           </Box>
         </Stack>
-      </Box>
+      </Box >
     </>
   );
 }
@@ -275,9 +272,8 @@ function Arbitrum() {
             <Route path="/swap" element={<SwapPage />} />
             <Route path="/l1delegate" element={<L1Delegate />} />
             <Route path="/l2claim" element={<L2Claim />} />
+            <Route path="/l1transfer" element={<L1Transfer />} />
             <Route path="/404" element={<PageNotFound />} />
-            <Route path="/l1delegate" element={<L1Delegate />} />
-            <Route path="/l2claim" element={<L2Claim />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </Box>

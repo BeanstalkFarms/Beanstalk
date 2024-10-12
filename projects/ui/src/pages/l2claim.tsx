@@ -9,6 +9,8 @@ import useAccount from '~/hooks/ledger/useAccount';
 import BeanProgressIcon from '~/components/Common/BeanProgressIcon';
 import useChainState from '~/hooks/chain/useChainState';
 import { useSwitchChain } from 'wagmi';
+import useBanner from '~/hooks/app/useBanner';
+import useNavHeight from '~/hooks/app/usePageDimensions';
 
 export default function L2Claim() {
 
@@ -148,8 +150,11 @@ export default function L2Claim() {
             });
     }
 
+    const banner = useBanner();
+    const navHeight = useNavHeight(!!banner);
+
     return (
-        <Box sx={{ paddingX: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)` }}>
             <PageHeader
                 title="Receive Contract Balance on L2"
                 description="Retrieve the balances delegated to the address specified in the previous step"
@@ -244,6 +249,10 @@ export default function L2Claim() {
                                 }
                                 <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                             </Box>
+                            <Typography sx={{ padding: 1 }}>
+                                This page will periodically check Arbitrum for the arrival of migration data. The button below will automatically
+                                enable itself when this data becomes available.
+                            </Typography>
                             <Button
                                 disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
                                 sx={{
