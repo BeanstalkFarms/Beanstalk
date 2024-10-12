@@ -7,29 +7,48 @@ import useTimedRefresh from '~/hooks/app/useTimedRefresh';
 import useSetting from '~/hooks/app/useSetting';
 import useSdk from '~/hooks/sdk';
 import { ChainResolver } from '@beanstalk/sdk-core';
-import { setEthPrices, updateSetting } from './actions';
+import BigNumber from 'bignumber.js';
+import { setGasPrices, updateSetting } from './actions';
 
 export const useEthPrices = () => {
   const dispatch = useDispatch();
   const sdk = useSdk();
+
   const getGas = useCallback(() => {
     (async () => {
       if (!ChainResolver.isL2Chain(sdk.chainId)) {
         return;
       }
       try {
-        const query = await fetch('/.netlify/functions/ethprice');
-        const ethprice = await query.json();
-        dispatch(setEthPrices(ethprice));
+        console.debug('[useEthPrices/fetch] fetching...');
+
+        const [ethGasPrice, ethL1BaseFee] = await Promise.all([
+          sdk.provider.getGasPrice(),
+          sdk.provider
+            .getBlock('latest')
+            .then((result) => result.baseFeePerGas),
+        ]);
+
+        console.debug('[useEthPrices/fetch] RESULT: ', {
+          ethGasPrice,
+          ethL1BaseFee,
+        });
+
+        dispatch(
+          setGasPrices({
+            gasPrice: new BigNumber(ethGasPrice?.toString() || '0'),
+            baseFeePerGas: new BigNumber(ethL1BaseFee?.toString() || '0'),
+          })
+        );
       } catch (e) {
         console.error('Failed to load: ethprice');
       }
     })();
-  }, [dispatch, sdk.chainId]);
+  }, [dispatch, sdk]);
 
-  /// Auto-refresh gas prices every 10s.
-  /// FIXME: refresh every block or N blocks instead?
-  useTimedRefresh(getGas, 30 * 1000);
+  // / Auto-refresh gas prices every 60s.
+  // / FIXME: refresh every block or N blocks instead?
+  useTimedRefresh(getGas, 60 * 1000);
 
   return [getGas, () => {}];
 };

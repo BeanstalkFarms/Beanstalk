@@ -3,24 +3,24 @@ import { useDispatch } from 'react-redux';
 import { DateTime } from 'luxon';
 import BigNumber from 'bignumber.js';
 import { GovSpace, SNAPSHOT_SPACES } from '~/lib/Beanstalk/Governance';
+import useAccount from '~/hooks/ledger/useAccount';
+import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
+import { GOV_SPACE_BY_ID, tokenResult } from '~/util';
+import { STALK } from '~/constants/tokens';
+import { useAppSelector } from '~/state';
+import { AddressMap, ZERO_ADDRESS } from '~/constants';
+import {
+  setDelegatorsVotingPower,
+  setFarmerDelegates,
+  setFarmerDelegators,
+} from './actions';
+import { FarmerDelegation, GovSpaceAddressMap } from '.';
 import {
   useBeaNftUsersLazyQuery,
   useDelegatorsStalkLazyQuery,
   useVoterDelegatesLazyQuery,
   useVoterDelegatorsLazyQuery,
 } from '~/generated/graphql';
-import useAccount from '~/hooks/ledger/useAccount';
-import { FarmerDelegation, GovSpaceAddressMap } from '.';
-import {
-  setDelegatorsVotingPower,
-  setFarmerDelegates,
-  setFarmerDelegators,
-} from './actions';
-import { useDelegatesRegistryContract } from '~/hooks/ledger/useContract';
-import { GOV_SPACE_BY_ID, tokenResult } from '~/util';
-import { STALK } from '~/constants/tokens';
-import { useAppSelector } from '~/state';
-import { AddressMap, ZERO_ADDRESS } from '~/constants';
 import { getDefaultGovSpaceMap } from './reducer';
 
 export function useReadDelegatesDev() {
@@ -212,7 +212,7 @@ export function useFetchNFTVotingPower() {
   const [triggerQuery] = useBeaNftUsersLazyQuery({
     variables: { id_in: delegators },
     fetchPolicy: 'cache-and-network',
-    context: { subgraph: 'beanft' },
+    context: { subgraph: 'beanf_eth' },
   });
 
   /// handlers
