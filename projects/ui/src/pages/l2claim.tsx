@@ -278,7 +278,7 @@ export default function L2Claim() {
                                             Awaiting Migration Confirmation...
                                         </Box>
                                         :
-                                        'Receive Assets'
+                                        'Claim Beanstalk Balances'
                                 }
                             </Button>
                         </Box>

@@ -455,7 +455,7 @@ export default function L1Delegate() {
                                                         }}
                                                         onClick={() => onSubmitFarmMigration()}
                                                     >
-                                                        {internalComplete ? "Delegation Complete!" : "Migrate Beanstalk Balances"}
+                                                        {internalComplete ? "Delegation Complete!" : "Delegate Beanstalk Balances"}
                                                     </Button>
                                                 </Box>
                                             }
