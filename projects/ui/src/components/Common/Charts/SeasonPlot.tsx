@@ -4,6 +4,7 @@ import { QueryOptions } from '@apollo/client';
 import { StatProps } from '~/components/Common/Stat';
 import useSeasonsQuery, {
   MinimumViableSnapshotQuery,
+  SeasonsQueryDynamicConfig,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useGenerateChartSeries from '~/hooks/beanstalk/useGenerateChartSeries';
 import {
@@ -47,6 +48,8 @@ export type SeasonPlotBaseProps = {
   height?: number | string;
   /** True if this plot should be a StackedAreaChard */
   stackedArea?: boolean;
+
+  name?: string;
 };
 
 type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
@@ -60,7 +63,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
      */
     formatValue?: (value: number) => string | JSX.Element;
     dateKey?: 'timestamp' | 'createdAt';
-    queryConfig?: Partial<QueryOptions>;
+    queryConfig?: Partial<QueryOptions> | SeasonsQueryDynamicConfig;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
@@ -85,6 +88,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   stackedArea,
   statsRowFullWidth,
   fetchType = 'both',
+  name,
 }: SeasonPlotFinalProps<T>) {
   const timeTabParams = useTimeTabState();
   const getDisplayValue = useCallback((v?: BaseDataPoint[]) => {
@@ -97,7 +101,8 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
     document,
     timeTabParams[0][1],
     queryConfig,
-    fetchType
+    fetchType,
+    name
   );
 
   const queryParams = useMemo(

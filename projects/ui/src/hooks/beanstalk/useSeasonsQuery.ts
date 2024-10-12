@@ -8,6 +8,7 @@ import {
   useLazyQuery,
 } from '@apollo/client';
 import { apolloClient } from '~/graph/client';
+import { RESEED_SEASON } from '~/constants';
 
 const PAGE_SIZE = 1000;
 
@@ -94,7 +95,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   `,
   range: SeasonRange,
   queryConfig?: Partial<QueryOptions> | SeasonsQueryDynamicConfig,
-  fetchType: 'l1-only' | 'l2-only' | 'both' = 'both'
+  fetchType: 'l1-only' | 'l2-only' | 'both' = 'both',
+  name?: string
 ) => {
   /// Custom loading prop
   const [loading, setLoading] = useState(false);
@@ -107,6 +109,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
     const config: LazyQueryHookExecOptions<T, OperationVariables> = {
       ..._queryConfig,
       variables: _queryConfig.variables ?? {},
+      fetchPolicy: 'cache-and-network',
       context: {
         subgraph: _queryConfig.context?.subgraph ?? 'beanstalk',
       },
@@ -121,8 +124,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   const [allSeasonsOutput, setAllSeasonsOutput] = useState<any[]>([]);
 
   useEffect(() => {
+    const fetchL2 = fetchType !== 'l1-only';
     const fetchL1 = fetchType !== 'l2-only';
-    const fetchL2 = fetchType === 'l1-only';
 
     (async () => {
       console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
@@ -133,12 +136,13 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             ...initConfig?.variables,
             first: SEASON_RANGE_TO_COUNT[range],
             season_lte: 999999999,
+            season_gte: RESEED_SEASON,
           };
           console.debug('[useSeasonsQuery] run', { variables });
           const config: LazyQueryHookExecOptions<T, OperationVariables> = {
             ...initConfig,
             variables,
-            fetchPolicy: 'cache-first',
+            fetchPolicy: 'cache-and-network',
           };
           let data;
           if (fetchL2) {
@@ -146,8 +150,16 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               console.error(e);
               return { data: { seasons: [] } };
             });
+            if (name) {
+              console.log(name, data);
+            }
           } else {
             data = { data: { seasons: [] } };
+          }
+
+          if (name) {
+            console.log(name, 'config: ', config);
+            console.log(name, 'data: ', data);
           }
 
           if (
@@ -159,13 +171,19 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                 ? queryConfig('l1')
                 : getEthSubgraphConfig(config);
             // Try x_eth subgraph if not enough data is available. Apollo will auto merge
-            await get({
+            const data2 = await get({
               ..._config,
               variables: {
                 ...config.variables,
                 ..._config.variables,
+                season_lte: RESEED_SEASON - 1,
+                season_gte: 0,
               },
             });
+
+            if (name === 'podRate') {
+              console.log('data2: ', data2);
+            }
           }
         } else {
           // Initialize Season data with a call to the first set of Seasons.
@@ -201,6 +219,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             variables: {
               ...variables,
               ..._l1Config.variables,
+              season_lte: RESEED_SEASON,
             },
           };
 
@@ -289,7 +308,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         console.error(e);
       }
     })();
-  }, [range, get, document, initConfig, queryConfig, fetchType]);
+  }, [range, get, document, initConfig, queryConfig, fetchType, name]);
 
   if (range === SeasonRange.ALL) {
     return {
