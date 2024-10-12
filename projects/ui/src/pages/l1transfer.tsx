@@ -497,8 +497,7 @@ const L1Transfer: FC<{}> = () => {
     address: beanstalkL1Address as `0x${string}`,
     abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
     functionName: "getAllBalances",
-    // @ts-ignore
-    args: [account, supportedAddresses],
+    args: [(account || ''), supportedAddresses],
     query: {
       enabled: Boolean(account),
       refetchInterval: 10000
@@ -506,8 +505,7 @@ const L1Transfer: FC<{}> = () => {
   });
 
   const tokenBalanceData = tokenBalances.data as Array<{ internal: bigint, external: bigint, total: bigint }>;
-  const tokenData = supportedAddresses.reduce((acc, address, index) => {
-    // @ts-ignore
+  const tokenData = supportedAddresses.reduce((acc: { [x: string]: { internal: BigNumber, external: BigNumber, total: BigNumber } }, address, index) => {
     acc[address] = {
       internal: transform(TokenValue.fromBlockchain(tokenBalanceData ? tokenBalanceData[index].internal : 0n, tokenMap[address].decimals), 'bnjs'),
       external: transform(TokenValue.fromBlockchain(tokenBalanceData ? tokenBalanceData[index].external : 0n, tokenMap[address].decimals), 'bnjs'),
@@ -532,8 +530,7 @@ const L1Transfer: FC<{}> = () => {
     }
   });
   const tokenAllowancesData = tokenAllowances.data as Array<{ result: bigint, status: string }>
-  const allowances = supportedAddresses.reduce((acc, address, index) => {
-    // @ts-ignore
+  const allowances = supportedAddresses.reduce((acc: { [x: string]: BigNumber }, address, index) => {
     acc[address] = transform(TokenValue.fromBlockchain(tokenAllowancesData ? tokenAllowancesData[index].result : 0n, tokenMap[address].decimals), 'bnjs')
     return acc;
   }, {})
