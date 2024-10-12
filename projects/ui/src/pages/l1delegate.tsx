@@ -74,15 +74,13 @@ export default function L1Delegate() {
                 address: beanstalkL1Address as `0x${string}`,
                 abi: JSON.parse(beanstalkL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
                 functionName: "getExternalBalance",
-                // @ts-ignore
-                args: [account, beanL1Address]
+                args: [(account || ''), beanL1Address]
             },
             {
                 address: beanL1Address as `0x${string}`,
                 abi: JSON.parse(beanL1MiniAbi.format(ethers.utils.FormatTypes.json) as string),
                 functionName: "allowance",
-                // @ts-ignore
-                args: [account, beanstalkL1Address]
+                args: [(account || ''), beanstalkL1Address]
             },
         ],
         query: {
