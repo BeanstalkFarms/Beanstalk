@@ -150,16 +150,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               console.error(e);
               return { data: { seasons: [] } };
             });
-            if (name) {
-              console.log(name, data);
-            }
           } else {
             data = { data: { seasons: [] } };
-          }
-
-          if (name) {
-            console.log(name, 'config: ', config);
-            console.log(name, 'data: ', data);
           }
 
           if (
@@ -171,7 +163,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                 ? queryConfig('l1')
                 : getEthSubgraphConfig(config);
             // Try x_eth subgraph if not enough data is available. Apollo will auto merge
-            const data2 = await get({
+            await get({
               ..._config,
               variables: {
                 ...config.variables,
@@ -180,10 +172,6 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                 season_gte: 0,
               },
             });
-
-            if (name === 'podRate') {
-              console.log('data2: ', data2);
-            }
           }
         } else {
           // Initialize Season data with a call to the first set of Seasons.
@@ -308,7 +296,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         console.error(e);
       }
     })();
-  }, [range, get, document, initConfig, queryConfig, fetchType, name]);
+  }, [range, get, document, initConfig, queryConfig, fetchType]);
 
   if (range === SeasonRange.ALL) {
     return {
