@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, Box, Button, Card, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, Box, Button, Card, Stack, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
@@ -306,8 +306,11 @@ const TransferForm: FC<
       (sameAddressCheck ? !internalExternalCheck : true) &&
       (ethTransferCheck ? ethTransferModeCheck : true);
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     return (
-      <Box sx={{ padding: 1, maxWidth: 600, minWidth: 300 }}>
+      <Box sx={{ padding: 1, maxWidth: 600, width: !isMobile ? 600 : undefined, minWidth: 300 }}>
         <PageHeader
           title="Transfer assets from L1 Beanstalk"
           description="Transfer non-Beanstalk assets that were not automatically migrated"
