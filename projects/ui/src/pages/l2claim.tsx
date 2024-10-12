@@ -22,9 +22,14 @@ export default function L2Claim() {
     const [plots, setPlots] = useState<any>(undefined);
     const [farmBalance, setFarmBalance] = useState<any>(undefined);
 
-    const [receiverApproved, setReceiverApproved] = useState<boolean>(false);
+    const [depositsClaimed, setDepositsClaimed] = useState(false);
+    const [plotsClaimed, setPlotsClaimed] = useState(false);
+    const [internalBalancesClaimed, setInternalBalancesClaimed] = useState(false);
+    const [fertilizerClaimed, setFertilizerClaimed] = useState(false);
 
-    const [claimComplete, setClaimComplete] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [receiverApproved, setReceiverApproved] = useState<boolean>(false);
 
     const account = useAccount();
     const sdk = useSdk();
@@ -38,10 +43,10 @@ export default function L2Claim() {
     const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
 
     const getEvent = useCallback(async () => {
-        const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
-        if (internalBalanceMigrationData) {
-            const { source } = JSON.parse(internalBalanceMigrationData);
-            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](source);
+        if (isLoading) return
+        setIsLoading(true)
+        if (sourceAccount) {
+            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](sourceAccount);
             const logs = await sdk.contracts.beanstalk.queryFilter(filter);
             if (logs && logs.length > 0) {
                 setReceiverApproved(true);
@@ -49,10 +54,38 @@ export default function L2Claim() {
             } else {
                 setReceiverApproved(false);
             }
+
+            const depositsFilter = sdk.contracts.beanstalk.filters['L1DepositsMigrated(address,address,uint256[],uint256[],uint256[])'](sourceAccount);
+            const depositLogs = await sdk.contracts.beanstalk.queryFilter(depositsFilter);
+            (depositLogs && depositLogs.length > 0) ? setDepositsClaimed(true) : setDepositsClaimed(false);
+
+            const plotsFilter = sdk.contracts.beanstalk.filters['L1PlotsMigrated(address,address,uint256[],uint256[])'](sourceAccount);
+            const plotsLogs = await sdk.contracts.beanstalk.queryFilter(plotsFilter);
+            (plotsLogs && plotsLogs.length > 0) ? setPlotsClaimed(true) : setPlotsClaimed(false);
+
+            const internalBalancesFilter = sdk.contracts.beanstalk.filters['L1InternalBalancesMigrated(address,address,address[],uint256[])'](sourceAccount);
+            const internalLogs = await sdk.contracts.beanstalk.queryFilter(internalBalancesFilter);
+            (internalLogs && internalLogs.length > 0) ? setInternalBalancesClaimed(true) : setInternalBalancesClaimed(false);
+
+            const fertilizerFilter = sdk.contracts.beanstalk.filters['L1FertilizerMigrated(address,address,uint256[],uint128[],uint128)'](sourceAccount);
+            const fertilizerLogs = await sdk.contracts.beanstalk.queryFilter(fertilizerFilter);
+            (fertilizerLogs && fertilizerLogs.length > 0) ? setFertilizerClaimed(true) : setFertilizerClaimed(false);
+
         } else {
+            const receiverFilter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)']();
+            const logs = await sdk.contracts.beanstalk.queryFilter(receiverFilter);
+            for (const log of logs) {
+                if (log.args.receiver.toLowerCase() === account) {
+                    setSourceAccount(log.args.owner);
+                    setReceiverApproved(true);
+                    setIsLoading(false);
+                    return
+                };
+            };
             setReceiverApproved(false);
         }
-    }, [sdk.contracts.beanstalk]);
+        setIsLoading(false);
+    }, [sdk.contracts.beanstalk, sourceAccount, isLoading]);
 
     useEffect(() => {
         async function getMigrationData() {
@@ -71,17 +104,15 @@ export default function L2Claim() {
     useEffect(() => {
         const interval = setInterval(getEvent, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [getEvent]);
 
     useEffect(() => {
-        const internalBalanceMigrationData = localStorage.getItem("internalL2MigrationData");
-        if (!internalBalanceMigrationData) return
-        const { source, complete } = JSON.parse(internalBalanceMigrationData);
-        setSourceAccount(source);
-        setClaimComplete(complete);
-    }, [])
+        getEvent();
+    }, []);
 
     const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
+    const claimComplete = (hasDeposits || hasFert || hasPlots || hasFarmBalance)
+        && ((hasDeposits === depositsClaimed) && (hasFert === fertilizerClaimed) && (hasPlots === plotsClaimed) && (hasFarmBalance === internalBalancesClaimed));
 
     function onSubmit() {
 
@@ -143,12 +174,7 @@ export default function L2Claim() {
             })
             .then((receipt) => {
                 txToast.success(receipt);
-                const internal = localStorage.getItem('internalL2MigrationData');
-                if (internal) {
-                    const internalMigration = JSON.parse(internal);
-                    localStorage.setItem('internalL2MigrationData', JSON.stringify({ destination: internalMigration.destination, source: internalMigration.source, complete: true }))
-                }
-                setClaimComplete(true);
+                getEvent();
             })
             .catch((err) => {
                 console.error(txToast.error(err.error || err));
@@ -160,136 +186,139 @@ export default function L2Claim() {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)` }}>
-            <PageHeader
-                title="Receive Contract Balance on L2"
-                description="Retrieve the balances delegated to the address specified in the previous step"
-            />
-            <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
-                {claimComplete ?
-                    <Box sx={{
-                        width: "100%", height: 200, display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexDirection: 'column'
-                    }}>
-                        <Typography variant="h4" textAlign="center">Beanstalk Balance Migration Complete!</Typography>
-                        <Link
-                            color="primary"
-                            display="flex"
-                            flexDirection="row"
-                            gap={1}
-                            alignItems="center"
-                            href={'/'}
-                        >
-                            <Typography variant="h4">Migrate another address</Typography>
-                        </Link>
-                    </Box>
-                    :
-                    <>
-                        <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
-                            {"Receive Delegated Balances from Mainnet"}
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Box
-                                sx={{
-                                    padding: 1,
-                                    border: 1,
-                                    borderColor: hasDeposits ? '#46B955' : undefined,
-                                    backgroundColor: hasDeposits ? '#EDF8EE' : undefined,
-                                    borderRadius: 1,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}>
-                                {hasDeposits &&
-                                    <CheckIcon sx={{ width: 20, height: 20 }} />
-                                }
-                                <Typography>{hasDeposits ? 'Silo Deposits' : 'No Silo Deposits'}</Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    padding: 1,
-                                    border: 1,
-                                    borderColor: hasPlots ? '#46B955' : undefined,
-                                    backgroundColor: hasPlots ? '#EDF8EE' : undefined,
-                                    borderRadius: 1,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}>
-                                {hasPlots &&
-                                    <CheckIcon sx={{ width: 20, height: 20 }} />
-                                }
-                                <Typography>{hasPlots ? 'Pods' : 'No Pods'}</Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    padding: 1,
-                                    border: 1,
-                                    borderColor: hasFarmBalance ? '#46B955' : undefined,
-                                    backgroundColor: hasFarmBalance ? '#EDF8EE' : undefined,
-                                    borderRadius: 1,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}>
-                                {hasFarmBalance &&
-                                    <CheckIcon sx={{ width: 20, height: 20 }} />
-                                }
-                                <Typography>{hasFarmBalance ? 'Farm Balance' : 'No Farm Balance'}</Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    padding: 1,
-                                    border: 1,
-                                    borderColor: hasFert ? '#46B955' : undefined,
-                                    backgroundColor: hasFert ? '#EDF8EE' : undefined,
-                                    borderRadius: 1,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}>
-                                {hasFert &&
-                                    <CheckIcon sx={{ width: 20, height: 20 }} />
-                                }
-                                <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
-                            </Box>
-                            <Typography sx={{ padding: 1 }}>
-                                This page will periodically check Arbitrum for the arrival of migration data. The button below will automatically
-                                enable itself when this data becomes available.
-                            </Typography>
-                            <Button
-                                disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
-                                sx={{
-                                    width: "100%",
-                                    height: 60,
-                                    backgroundColor: (!isArbitrum && !isTestnet) ? '#213147' : undefined,
-                                    color: (!isArbitrum && !isTestnet) ? '#12ABFF' : undefined,
-                                    '&:hover': {
-                                        backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
-                                    }
-                                }}
-                                onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
+            <Box sx={{ textAlign: 'left' }}>
+                <PageHeader
+                    title="Receive Contract Balance on L2"
+                    description="Retrieve the balances delegated to the address specified in the previous step"
+                    sx={{ textAlign: 'left' }}
+                />
+                <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2, }}>
+                    {claimComplete ?
+                        <Box sx={{
+                            height: 200, display: 'flex', flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            flexDirection: 'column'
+                        }}>
+                            <Typography variant="h4" textAlign="center">Beanstalk Balance Migration Complete!</Typography>
+                            <Link
+                                color="primary"
+                                display="flex"
+                                flexDirection="row"
+                                gap={1}
+                                alignItems="center"
+                                href={'/'}
                             >
-                                {(!isArbitrum && !isTestnet) ?
-                                    'Switch to Arbitrum'
-                                    : !receiverApproved ?
-                                        <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
-                                            <BeanProgressIcon
-                                                size={16}
-                                                enabled
-                                                variant="indeterminate"
-                                            />
-                                            Awaiting Migration Confirmation...
-                                        </Box>
-                                        :
-                                        'Claim Beanstalk Balances'
-                                }
-                            </Button>
+                                <Typography variant="h4">Migrate another address</Typography>
+                            </Link>
                         </Box>
-                    </>
-                }
-            </Card>
+                        :
+                        <>
+                            <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
+                                {"Receive Delegated Balances from Mainnet"}
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                <Box
+                                    sx={{
+                                        padding: 1,
+                                        border: 1,
+                                        borderColor: hasDeposits ? '#46B955' : undefined,
+                                        backgroundColor: hasDeposits ? '#EDF8EE' : undefined,
+                                        borderRadius: 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.5
+                                    }}>
+                                    {hasDeposits &&
+                                        <CheckIcon sx={{ width: 20, height: 20 }} />
+                                    }
+                                    <Typography>{hasDeposits ? 'Silo Deposits' : 'No Silo Deposits'}</Typography>
+                                </Box>
+                                <Box
+                                    sx={{
+                                        padding: 1,
+                                        border: 1,
+                                        borderColor: hasPlots ? '#46B955' : undefined,
+                                        backgroundColor: hasPlots ? '#EDF8EE' : undefined,
+                                        borderRadius: 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.5
+                                    }}>
+                                    {hasPlots &&
+                                        <CheckIcon sx={{ width: 20, height: 20 }} />
+                                    }
+                                    <Typography>{hasPlots ? 'Pods' : 'No Pods'}</Typography>
+                                </Box>
+                                <Box
+                                    sx={{
+                                        padding: 1,
+                                        border: 1,
+                                        borderColor: hasFarmBalance ? '#46B955' : undefined,
+                                        backgroundColor: hasFarmBalance ? '#EDF8EE' : undefined,
+                                        borderRadius: 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.5
+                                    }}>
+                                    {hasFarmBalance &&
+                                        <CheckIcon sx={{ width: 20, height: 20 }} />
+                                    }
+                                    <Typography>{hasFarmBalance ? 'Farm Balance' : 'No Farm Balance'}</Typography>
+                                </Box>
+                                <Box
+                                    sx={{
+                                        padding: 1,
+                                        border: 1,
+                                        borderColor: hasFert ? '#46B955' : undefined,
+                                        backgroundColor: hasFert ? '#EDF8EE' : undefined,
+                                        borderRadius: 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.5
+                                    }}>
+                                    {hasFert &&
+                                        <CheckIcon sx={{ width: 20, height: 20 }} />
+                                    }
+                                    <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
+                                </Box>
+                                <Typography sx={{ padding: 1 }}>
+                                    This page will periodically check Arbitrum for the arrival of migration data. The button below will automatically
+                                    enable itself when this data becomes available.
+                                </Typography>
+                                <Button
+                                    disabled={!isArbitrum ? !!isArbitrum : (isArbitrum && !claimEnabled)}
+                                    sx={{
+                                        width: "100%",
+                                        height: 60,
+                                        backgroundColor: (!isArbitrum && !isTestnet) ? '#213147' : undefined,
+                                        color: (!isArbitrum && !isTestnet) ? '#12ABFF' : undefined,
+                                        '&:hover': {
+                                            backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
+                                        }
+                                    }}
+                                    onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
+                                >
+                                    {(!isArbitrum && !isTestnet) ?
+                                        'Switch to Arbitrum'
+                                        : !receiverApproved ?
+                                            <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
+                                                <BeanProgressIcon
+                                                    size={16}
+                                                    enabled
+                                                    variant="indeterminate"
+                                                />
+                                                Awaiting Migration Confirmation...
+                                            </Box>
+                                            :
+                                            'Claim Beanstalk Balances'
+                                    }
+                                </Button>
+                            </Box>
+                        </>
+                    }
+                </Card>
+            </Box>
         </Box>
     )
 };

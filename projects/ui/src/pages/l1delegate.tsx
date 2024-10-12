@@ -145,7 +145,7 @@ export default function L1Delegate() {
             return logs;
         };
 
-        getReceiverApproved().then((event) => { if (event && event[0]?.args) { checkAddress(event[0].args.receiver); setInternalComplete(true); saveInternalMigrationData() } })
+        getReceiverApproved().then((event) => { if (event && event[0]?.args) { checkAddress(event[0].args.receiver); setInternalComplete(true) } })
         getL1Deposits().then((event) => { setMigratedDeposits(event && event[0] ? true : false) });
         getL1Plots().then((event) => { setMigratedPlots(event && event[0] ? true : false) });
         getL1InternalBalances().then((event) => { setMigratedBalances(event && event[0] ? true : false) });
@@ -193,7 +193,6 @@ export default function L1Delegate() {
     }, [l1ReadResults])
 
     useEffect(() => {
-        getReceipt();
         getMigrationData();
     }, [account, sdk]);
 
@@ -208,16 +207,6 @@ export default function L1Delegate() {
             setEnableMigration(true);
         }
     }, [internalComplete, beanComplete, migrateInternal, beanBalance])
-
-    const getReceipt = () => {
-        const ticket = localStorage.getItem('retryableTicketBean');
-        if (ticket) {
-            setHasReceipt(true);
-            setDestinationAccount(JSON.parse(ticket).l2Address);
-        } else {
-            setHasReceipt(false);
-        }
-    };
 
     const checkAddress = (address: string) => {
         const isValid = ethers.utils.isAddress(address);
@@ -235,15 +224,6 @@ export default function L1Delegate() {
             console.error('Error fetching migration data:', error);
         }
 
-    };
-
-    const saveInternalMigrationData = () => {
-        const internalMigration = {
-            destination: destinationAccount,
-            source: account,
-            complete: false,
-        }
-        localStorage.setItem('internalL2MigrationData', JSON.stringify(internalMigration))
     };
 
     const onSubmitBeanMigration = useCallback(async () => {
@@ -306,7 +286,6 @@ export default function L1Delegate() {
             txToast.confirming(txn);
             await txn.wait();
             txToast.success();
-            saveInternalMigrationData();
             setInternalComplete(true);
         } catch (err) {
             console.error('Transaction failed:', err);
@@ -375,7 +354,7 @@ export default function L1Delegate() {
                                         placeholder="0x0000"
                                         size="medium"
                                         color="primary"
-                                        value={destinationAccount ? destinationAccount : undefined}
+                                        value={destinationAccount ? destinationAccount : ''}
                                         InputProps={{
                                             startAdornment: !isAddressValid ? (
                                                 <InputAdornment position="start" sx={{ ml: 0, mr: 1 }}>
