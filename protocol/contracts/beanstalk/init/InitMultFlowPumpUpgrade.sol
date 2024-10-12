@@ -23,6 +23,10 @@ contract InitMultiFlowPumpUpgrade {
     address internal constant U_WELL_IMPLEMENTATION =
         address(0xBA510995783111be5301d93CCfD5dE4e3B28e50B);
     address internal constant AQUIFER = address(0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521);
+    address internal constant CP2_WELL_FUNCTION =
+        address(0x0000000000000000000000000000000000000000);
+    address internal constant BEAN_USDC = address(0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7);
+    address internal constant BEAN_USDT = address(0xbEA00fF437ca7E8354B174339643B4d1814bED33);
 
     AppStorage internal s;
 
@@ -38,6 +42,11 @@ contract InitMultiFlowPumpUpgrade {
 
             // replace the pump addresses with the new MultiFlowPump address
             pumps[0].target = MULTI_FLOW_PUMP_V1_2_1;
+
+            // if the well is not USDC or USDT, set the well function to CP2_WELL_FUNCTION
+            if (wells[i] != BEAN_USDC && wells[i] != BEAN_USDT) {
+                wellFunction.target = CP2_WELL_FUNCTION;
+            }
 
             // encode the immutable and init data
             (bytes memory immutableData, bytes memory initData) = LibWellDeployer
