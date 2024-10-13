@@ -43,7 +43,13 @@ export function handleWellOracle(event: WellOracle): void {
     return;
   }
   setRawWellReserves(event);
-  setTwaLast(event.params.well, decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
+  const decreasing = setTwaLast(event.params.well, decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
+
+  // Ignore further twa price processing if the cumulative reserves decreased. This is generally
+  // considered an error, but occurred during EBIP-19.
+  if (decreasing) {
+    return;
+  }
 
   // Ignore deltaB processing for wells with fewer than 1k beans (contract always reports zero)
   const pool = loadOrCreatePool(event.params.well, event.block.number);

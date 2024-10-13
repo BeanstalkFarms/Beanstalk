@@ -6,7 +6,7 @@ import { ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
-  const seasonEntity = loadSeason(currentSeason);
+  const seasonEntity = loadSeason(BigInt.fromU32(currentSeason));
   const sunriseBlock = seasonEntity.sunriseBlock;
 
   const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
