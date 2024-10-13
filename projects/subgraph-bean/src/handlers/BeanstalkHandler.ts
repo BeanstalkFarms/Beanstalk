@@ -2,7 +2,7 @@ import { BigInt } from "@graphprotocol/graph-ts";
 import { updateBeanSupplyPegPercent, updateBeanTwa } from "../utils/Bean";
 import { Chop, Convert, DewhitelistToken, Shipped, Sunrise, WellOracle } from "../../generated/Bean-ABIs/Reseed";
 import { loadBean } from "../entities/Bean";
-import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
+import { getTWAPrices, setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
 import { updateSeason } from "../utils/legacy/Beanstalk";
 import { updatePoolPricesOnCross } from "../utils/Cross";
@@ -10,6 +10,8 @@ import { beanDecimals, getProtocolToken, isUnripe } from "../../../subgraph-core
 import { v } from "../utils/constants/Version";
 import { loadOrCreatePool } from "../entities/Pool";
 import { BI_10 } from "../../../subgraph-core/utils/Decimals";
+import { TWAType } from "../utils/price/Types";
+import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 
 // Beanstalk 3 handler here, might not put this in the manifest yet - do not delete.
 export function handleSunrise(event: Sunrise): void {
@@ -43,11 +45,16 @@ export function handleWellOracle(event: WellOracle): void {
     return;
   }
   setRawWellReserves(event);
-  const decreasing = setTwaLast(event.params.well, decodeCumulativeWellReserves(event.params.cumulativeReserves), event.block.timestamp);
+  const newPriceCumulative = decodeCumulativeWellReserves(event.params.cumulativeReserves);
+  const decreasing = setTwaLast(event.params.well, newPriceCumulative, event.block.timestamp);
 
   // Ignore further twa price processing if the cumulative reserves decreased. This is generally
-  // considered an error, but occurred during EBIP-19.
+  // considered an error, but occurred during EBIP-19. The internal oracle should still be updated here.
   if (decreasing) {
+    const twaOracle = loadOrCreateTwaOracle(event.params.well);
+    twaOracle.priceCumulativeSun = newPriceCumulative;
+    twaOracle.lastSun = event.block.timestamp;
+    twaOracle.save();
     return;
   }
 
