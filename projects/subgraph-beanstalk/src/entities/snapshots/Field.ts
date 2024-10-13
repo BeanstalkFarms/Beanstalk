@@ -80,6 +80,12 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       hourly.caseId = baseHourly.caseId;
       hourly.soilSoldOut = baseHourly.soilSoldOut;
       hourly.blocksToSoldOutSoil = baseHourly.blocksToSoldOutSoil;
+    } else {
+      // Sets initial values, assuming no sunrise has occurred
+      hourly.issuedSoil = ZERO_BI;
+      hourly.deltaIssuedSoil = ZERO_BI.minus(baseHourly.issuedSoil);
+      hourly.seasonBlock = block.number;
+      hourly.soilSoldOut = false;
     }
 
     if (block.number == sunriseBlock) {
@@ -163,10 +169,14 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       // Carry over existing values
       daily.issuedSoil = baseDaily.issuedSoil;
       daily.deltaIssuedSoil = baseDaily.deltaIssuedSoil;
+    } else {
+      // Sets initial values, assuming no sunrise has occurred
+      daily.issuedSoil = ZERO_BI;
+      daily.deltaIssuedSoil = ZERO_BI.minus(baseDaily.issuedSoil);
     }
 
     if (block.number == sunriseBlock) {
-      // Sets issued soil here since this is the initial creation
+      // Sets initial sunrise values
       daily.issuedSoil = field.soil;
       daily.deltaIssuedSoil = field.soil.minus(baseDaily.issuedSoil);
     }
