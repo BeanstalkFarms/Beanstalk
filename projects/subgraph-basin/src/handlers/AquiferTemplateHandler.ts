@@ -14,6 +14,7 @@ export function handleBoreWell(event: BoreWell): void {
   const actualAddress = getActualWell(event.params.well);
   Well.create(actualAddress);
 
+  // TODO: loadOrCreate (if is upgrade, will already exist)
   let well = createWell(actualAddress, event.params.tokens);
   well.aquifer = event.address;
 
@@ -28,17 +29,21 @@ export function handleBoreWell(event: BoreWell): void {
     loadOrCreatePump(event.params.pumps[i], actualAddress);
   }
 
+  // TODO: what if the same well function has different data for different wells?
+  // - data should be a field on the well and also included in WellUpgradeHistory
   const wellFn = loadOrCreateWellFunction(event.params.wellFunction.target);
   wellFn.data = event.params.wellFunction.data;
   wellFn.save();
 
   well.wellFunction = event.params.wellFunction.target;
   well.implementation = event.params.implementation;
+  // TODO: avoid re setting these on update
   well.createdTimestamp = event.block.timestamp;
   well.createdBlockNumber = event.block.number;
   well.save();
 
   let wells = aquifer.wells;
+  // TODO: only push if is new well
   wells.push(actualAddress);
   aquifer.wells = wells;
   aquifer.save();

@@ -46,6 +46,24 @@ type Token @entity {
   lastPriceBlockNumber: BigInt!
 }
 
+type WellUpgradeHistory @entity {
+  " {Well Address}-{Upgrade Index} "
+  id: ID!
+  " The well that this upgrade history is for "
+  well: Well!
+  " The block this upgrade went into effect "
+  effectiveBlock: BigInt!
+  " The timestamp this upgrade went into effect "
+  effectiveTimestamp: BigInt!
+  ##### Datapoints #####
+  aquifer: Aquifer!
+  implementation: Bytes!
+  pumps: [Pump!]!
+  pumpData: [Bytes!]!
+  wellFunction: WellFunction!
+  wellFunctionData: Bytes!
+}
+
 type Aquifer @entity {
   " Smart contract address of the aquifer "
   id: Bytes!
@@ -57,21 +75,15 @@ type Aquifer @entity {
 type WellFunction @entity {
   " Well Function address "
   id: Bytes!
-  " Calldata passed to the well function "
-  data: Bytes!
   " Wells associated with this well function"
   wells: [Well!]! @derivedFrom(field: "wellFunction")
 }
 
 type Pump @entity {
-  " {Well address}-{Pump address}"
-  id: ID!
-  " Contract address of the pump"
-  target: Bytes!
-  " Calldata passed to the pump "
-  data: Bytes!
-  " Well associated with this pump"
-  well: Well!
+  "Pump address"
+  id: Bytes!
+  " Wells associated with this pump"
+  wells: [Well!]! @derivedFrom(field: "pump")
 }
 
 type Well @entity {
@@ -81,11 +93,20 @@ type Well @entity {
   " The aquifer used to bore this well "
   aquifer: Aquifer!
 
+  " The well implementation used to deploy this well "
+  implementation: Bytes!
+
+  " Pumps associated with this well "
+  pumps: [Pump!]!
+
+  " Data to be passed to each pump "
+  pumpData: [Bytes!]!
+
   " Pricing function contract used with this well "
   wellFunction: WellFunction!
 
-  " The well implementation used to deploy this well "
-  implementation: Bytes!
+  " Data to be passed to the well function "
+  wellFunctionData: Bytes!
 
   " Name of liquidity well (e.g. Curve.fi DAI/USDC/USDT) "
   name: String
@@ -99,14 +120,14 @@ type Well @entity {
   " The order of the tokens in the Well. The above `tokens` association will be sorted by id on any retrieval. "
   tokenOrder: [Bytes!]!
 
-  " Pumps associated with this well "
-  pumps: [Pump!]! @derivedFrom(field: "well")
-
   " Creation timestamp "
   createdTimestamp: BigInt!
 
   " Creation block number "
   createdBlockNumber: BigInt!
+
+  " History of upgrades (for upgradeable wells). All wells will have at least one entry here. "
+  upgradeHistory: [WellUpgradeHistory!]! @derivedFrom(field: "well")
 
   ##### Quantitative Data #####
 
