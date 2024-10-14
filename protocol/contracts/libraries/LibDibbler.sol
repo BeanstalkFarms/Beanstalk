@@ -14,6 +14,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 
 /**
  * @title LibDibbler
@@ -230,9 +231,11 @@ library LibDibbler {
      */
     function morningTemperature() internal view returns (uint256) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        uint256 delta = block.number.sub(s.sys.season.sunriseBlock).mul(L2_BLOCK_TIME).div(
-            L1_BLOCK_TIME
-        );
+        uint256 delta = LibArbitrum
+            .blockNumber()
+            .sub(s.sys.season.sunriseBlock)
+            .mul(L2_BLOCK_TIME)
+            .div(L1_BLOCK_TIME);
 
         // check most likely case first
         if (delta > 24) {

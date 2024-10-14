@@ -26,7 +26,7 @@ import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
 ///// COMMON IMPORTED LIBRARIES //////
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
-
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 ///// ECOSYSTEM //////
 import {Pipeline} from "contracts/pipeline/Pipeline.sol";
 
@@ -110,6 +110,8 @@ contract TestHelper is
 
         // initialize oracle configuration
         initWhitelistOracles(verbose);
+
+        initMockArbitrumSys();
     }
 
     /**
@@ -159,6 +161,10 @@ contract TestHelper is
             if (verbose) console.log(name, "Deployed at:", token);
             vm.label(token, name);
         }
+    }
+
+    function initMockArbitrumSys() internal {
+        deployCodeTo("MockArbitrumSys.sol", "", LibArbitrum.ARB_SYS_PRECOMPILE);
     }
 
     /**

@@ -148,7 +148,7 @@ library LibWellMinting {
 
         // If the Bean reserve is less than the minimum, the minting oracle should be considered off.
         if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
-            return (0, snapshot, new uint256[](0), new uint256[](0));
+            return (0, snapshot, new uint256[](0), ratios);
         }
 
         // If the USD Oracle oracle call fails, the minting oracle should be considered off.

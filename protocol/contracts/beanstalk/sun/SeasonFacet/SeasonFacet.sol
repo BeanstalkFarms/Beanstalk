@@ -13,6 +13,7 @@ import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 
 /**
  * @title SeasonFacet
@@ -102,7 +103,7 @@ contract SeasonFacet is Invariable, Weather {
     function stepSeason() private returns (uint32 season) {
         s.sys.season.current += 1;
         season = s.sys.season.current;
-        s.sys.season.sunriseBlock = uint64(block.number); // Note: will overflow after 2^64 blocks.
+        s.sys.season.sunriseBlock = uint64(LibArbitrum.blockNumber()); // Note: will overflow after 2^64 blocks.
         emit Sunrise(season);
     }
 

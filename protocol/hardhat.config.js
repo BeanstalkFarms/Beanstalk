@@ -53,7 +53,8 @@ const {
   bipSeedGauge,
   bipMiscellaneousImprovements
 } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19 } = require("./scripts/ebips.js");
+const { impersonateMockArbitrumSys } = require("./scripts/impersonate.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -133,11 +134,72 @@ task("getTime", async function () {
   console.log("Current time: ", await this.seasonGetter.time());
 });
 
-task("tokenSettings", async function () {
-  beanstalk = await getBeanstalk("0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70");
-  const tokenSettings = await beanstalk.tokenSettings("0xBEA0005B8599265D41256905A9B3073D397812E4");
-  console.log(tokenSettings);
-});
+task("advance-blocks", "Advances the blockchain by a specified number of blocks")
+  .addParam("number", "The number of blocks to advance")
+  .setAction(async (taskArgs, hre) => {
+    const numBlocks = parseInt(taskArgs.number);
+
+    if (isNaN(numBlocks) || numBlocks <= 0) {
+      console.error("Please provide a valid positive number of blocks to advance.");
+      return;
+    }
+
+    const startBlock = await hre.ethers.provider.getBlockNumber();
+
+    for (let i = 0; i < numBlocks; i++) {
+      await hre.network.provider.send("evm_mine");
+    }
+
+    const endBlock = await hre.ethers.provider.getBlockNumber();
+
+    console.log(`Advanced from block ${startBlock} to ${endBlock}`);
+    console.log(`Total blocks advanced: ${endBlock - startBlock}`);
+  });
+
+task("send-custom-tx", "Sends a custom transaction with specified from, to, and data")
+  .addParam("from", "The address to send the transaction from")
+  .addParam("to", "The address to send the transaction to")
+  .addParam("data", "The transaction data (hex-encoded)")
+  .addOptionalParam("value", "The amount of ETH to send (in wei)", "0")
+  .setAction(async (taskArgs, hre) => {
+    const { from, to, data, value } = taskArgs;
+
+    await mintEth(from);
+
+    // Validate inputs
+    if (!hre.ethers.utils.isAddress(from)) {
+      throw new Error("Invalid 'from' address");
+    }
+    if (!hre.ethers.utils.isAddress(to)) {
+      throw new Error("Invalid 'to' address");
+    }
+    if (!/^0x[0-9A-Fa-f]*$/.test(data)) {
+      throw new Error("Invalid 'data' format. Must be hex-encoded starting with 0x");
+    }
+
+    // Prepare the transaction
+    const tx = {
+      from: from,
+      to: to,
+      data: data,
+      value: hre.ethers.utils.parseEther(value)
+    };
+
+    try {
+      // Send the transaction
+      const signer = await hre.ethers.getSigner(from);
+      const txResponse = await signer.sendTransaction(tx);
+
+      console.log("Transaction sent successfully!");
+      console.log("Transaction hash:", txResponse.hash);
+
+      // Wait for the transaction to be mined
+      const receipt = await txResponse.wait();
+      console.log("Transaction mined in block:", receipt.blockNumber);
+    } catch (error) {
+      console.error("Error sending transaction:", error.message);
+    }
+  });
 
 /*task('replant', async () => {
   const account = await impersonateSigner(PUBLIUS)
@@ -487,6 +549,35 @@ task("updateBeanstalkForUI", async function () {
 });
 
 /// EBIPS ///
+
+task("ebip19", async function () {
+  await ebip19();
+});
+
+task("impersonateArb", async function () {
+  await impersonateMockArbitrumSys();
+});
+
+task("verify-ebip19", async function () {
+  // due to hardhats inability to impersonate precompiles, a mock is used instead.
+  await impersonateMockArbitrumSys();
+  let beanstalk = await getBeanstalk(L2_BEANSTALK);
+  let before = await beanstalk.getAmountOut(
+    "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
+    "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
+    1000000
+  );
+  console.log("view redeem before", before);
+  await ebip19();
+  let after = await beanstalk.getAmountOut(
+    "0x1BEA059c3Ea15F6C10be1c53d70C75fD1266D788",
+    "0x1BEA054dddBca12889e07B3E076f511Bf1d27543",
+    1000000
+  );
+  let block = await beanstalk.l2BlockNumber();
+  console.log("block", block);
+  console.log("view redeem after", after);
+});
 
 task("ebip17", async function () {
   await ebip17();

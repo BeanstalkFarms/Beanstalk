@@ -15,6 +15,9 @@ import "forge-std/StdUtils.sol";
 import {BeanstalkPrice, WellPrice} from "contracts/ecosystem/price/BeanstalkPrice.sol";
 import {P} from "contracts/ecosystem/price/P.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
+import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {SeasonGettersFacet} from "contracts/beanstalk/sun/SeasonFacet/SeasonGettersFacet.sol";
 
 interface IBeanstalkPrice {
     function price() external view returns (P.Prices memory p);
@@ -88,6 +91,7 @@ contract ReseedStateTest is TestHelper {
     uint256 accountNumber;
 
     function setUp() public {
+        l2Beanstalk = IMockFBeanstalk(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
         // parse accounts and populate the accounts.txt file
         // the number of accounts to parse, for testing purposes
         // the total number of accounts is 3665
@@ -103,9 +107,6 @@ contract ReseedStateTest is TestHelper {
     }
 
     function test_WhitelistingState() public {
-        // address L2_BEANSTALK = address(0xD1A0060ba708BC4BCD3DA6C37EFa8deDF015FB70);
-        // IMockFBeanstalk l2Beanstalk = IMockFBeanstalk(L2_BEANSTALK);
-
         // get AssetSettings of L2BEAN
         IMockFBeanstalk.AssetSettings memory assetSettings = l2Beanstalk.tokenSettings(L2BEAN);
 

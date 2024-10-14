@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { BEANSTALK } = require("../test/hardhat/utils/constants");
+const { BEANSTALK, L2_BEANSTALK } = require("../test/hardhat/utils/constants");
 const { getBeanstalk, impersonateBeanstalkOwner, mintEth, strDisplay } = require("../utils");
 const { upgradeWithNewFacets } = require("./diamond");
 
@@ -175,9 +175,9 @@ async function ebip15(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["SiloFacet", "SiloGettersFacet"],
-    libraryNames: ['LibSilo'],
+    libraryNames: ["LibSilo"],
     facetLibraries: {
-      'SiloFacet': ['LibSilo']
+      SiloFacet: ["LibSilo"]
     },
     bip: false,
     object: !mock,
@@ -195,10 +195,10 @@ async function ebip16(mock = true, account = undefined) {
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
     facetNames: ["SiloFacet", "SiloGettersFacet", "ConvertFacet", "EnrootFacet"],
-    libraryNames: ['LibSilo', 'LibConvert'],
+    libraryNames: ["LibSilo", "LibConvert"],
     facetLibraries: {
-      'SiloFacet': ['LibSilo'],
-      'ConvertFacet': ['LibConvert']
+      SiloFacet: ["LibSilo"],
+      ConvertFacet: ["LibConvert"]
     },
     bip: false,
     object: !mock,
@@ -215,13 +215,20 @@ async function ebip17(mock = true, account = undefined) {
 
   await upgradeWithNewFacets({
     diamondAddress: BEANSTALK,
-    facetNames: ["MigrationFacet", "MarketplaceFacet", "ConvertFacet", "EnrootFacet", "SiloGettersFacet", "SiloFacet"],
+    facetNames: [
+      "MigrationFacet",
+      "MarketplaceFacet",
+      "ConvertFacet",
+      "EnrootFacet",
+      "SiloGettersFacet",
+      "SiloFacet"
+    ],
     initFacetName: "InitHotFix6",
-    libraryNames: ['LibSilo', 'LibConvert'],
+    libraryNames: ["LibSilo", "LibConvert"],
     facetLibraries: {
-      'SiloFacet': ['LibSilo'],
-      'ConvertFacet': ['LibConvert'],
-      'EnrootFacet': ['LibSilo']
+      SiloFacet: ["LibSilo"],
+      ConvertFacet: ["LibConvert"],
+      EnrootFacet: ["LibSilo"]
     },
     bip: false,
     object: !mock,
@@ -230,6 +237,63 @@ async function ebip17(mock = true, account = undefined) {
   });
 }
 
+async function ebip19(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner(L2_BEANSTALK);
+    await mintEth(account.address);
+  }
+
+  await upgradeWithNewFacets({
+    diamondAddress: L2_BEANSTALK,
+    facetNames: [
+      "SeasonGettersFacet",
+      "SeasonFacet",
+      "ConvertGettersFacet",
+      "FieldFacet",
+      "ConvertFacet",
+      "PipelineConvertFacet"
+    ],
+    libraryNames: [
+      "LibLockedUnderlying",
+      "LibWellMinting",
+      "LibPipelineConvert",
+      "LibConvert",
+      "LibSilo",
+      "LibTokenSilo",
+      "LibEvaluate",
+      "LibGauge",
+      "LibIncentive",
+      "LibShipping",
+      "LibFlood",
+      "LibGerminate",
+      "LibWellMinting",
+      "LibConvert",
+      "LibWhitelistedTokens"
+    ],
+    facetLibraries: {
+      SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
+      SeasonFacet: [
+        "LibEvaluate",
+        "LibGauge",
+        "LibIncentive",
+        "LibShipping",
+        "LibFlood",
+        "LibGerminate",
+        "LibWellMinting"
+      ],
+      ConvertFacet: ["LibPipelineConvert", "LibConvert", "LibSilo", "LibTokenSilo"],
+      PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"]
+    },
+    linkedLibraries: {
+      LibEvaluate: ["LibLockedUnderlying"]
+    },
+    initFacetName: "InitMultiFlowPumpUpgrade",
+    bip: false,
+    object: !mock,
+    verbose: true,
+    account: account
+  });
+}
 
 async function bipDiamondCut(name, dc, account, mock = true) {
   beanstalk = await getBeanstalk();
@@ -265,3 +329,4 @@ exports.ebip14 = ebip14;
 exports.ebip15 = ebip15;
 exports.ebip16 = ebip16;
 exports.ebip17 = ebip17;
+exports.ebip19 = ebip19;

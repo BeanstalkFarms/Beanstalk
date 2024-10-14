@@ -16,6 +16,7 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
 import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
+import {LibArbitrum} from "contracts/libraries/LibArbitrum.sol";
 
 /**
  * @title SeasonGettersFacet
@@ -296,5 +297,9 @@ contract SeasonGettersFacet {
         )
     {
         return LibFlood.getWellsByDeltaB();
+    }
+
+    function l2BlockNumber() external view returns (uint256) {
+        return LibArbitrum.blockNumber();
     }
 }

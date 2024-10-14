@@ -5063,6 +5063,49 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "blockNumber",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUsedConvertCapacity",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "overallConvertCapacityUsed",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "well",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "wellConvertCapacityUsed",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct ConvertGettersFacet.WellConvertCapacityUsed[]",
+            "name": "wellConvertCapacityUsed",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct ConvertGettersFacet.ConvertCapacityUsed",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "well",
         "type": "address"
@@ -10222,6 +10265,19 @@
       {
         "internalType": "uint256",
         "name": "positiveDeltaBCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "l2BlockNumber",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
