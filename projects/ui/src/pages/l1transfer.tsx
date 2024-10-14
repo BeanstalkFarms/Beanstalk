@@ -2,7 +2,7 @@ import { Accordion, AccordionDetails, Box, Button, Card, Stack, Typography, useM
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
-import { useConnect, useReadContract, useReadContracts } from 'wagmi';
+import { useConnect, useReadContract, useReadContracts, useSwitchChain } from 'wagmi';
 import { Alert } from '@mui/lab';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { BeanstalkSDK, FarmFromMode, FarmToMode, TokenValue } from '@beanstalk/sdk';
@@ -47,6 +47,10 @@ import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import PageHeader from '~/components/Common/PageHeader';
 import useSdk from '~/hooks/sdk';
 import BigNumber from 'bignumber.js';
+import useBanner from '~/hooks/app/useBanner';
+import useNavHeight from '~/hooks/app/usePageDimensions';
+import useChainId from '~/hooks/chain/useChainId';
+import useChainState from '~/hooks/chain/useChainState';
 
 /// ---------------------------------------------------------------
 
@@ -108,9 +112,12 @@ const TransferForm: FC<
   defaultValues,
   submitForm,
 }) => {
-    /// Tokens
+    /// Status
     const { status } = useConnect();
     const account = useAccount();
+    const chainId = useChainId();
+    const { isArbitrum, isTestnet } = useChainState();
+    const { chains, error, isPending, switchChain } = useSwitchChain();
 
     /// Derived values
     const stateIn = values.tokensIn[0];
@@ -424,19 +431,35 @@ const TransferForm: FC<
                   will be lost.
                 </Warning>
               )}
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={!isValid || isSubmitting}
-              >
-                {noBalance
-                  ? 'Nothing to transfer'
-                  : values.approving ? `Approve ${tokenIn.symbol}` // : !enoughBalanceCheck
-                    // ? 'Not enough to transfer'
-                    : 'Transfer'}
-              </Button>
+              {(isArbitrum && !isTestnet) ?
+                <Button
+                  sx={{
+                    width: '100%',
+                    height: 60,
+                    backgroundColor: '#7487CF',
+                    '&:hover': {
+                      backgroundColor: '#556BC4'
+                    }
+                  }}
+                  onClick={() => switchChain({ chainId: 1 })}
+                >
+                  Switch to Ethereum
+                </Button>
+                :
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  disabled={!isValid || isSubmitting}
+                >
+                  {noBalance
+                    ? 'Nothing to transfer'
+                    : values.approving ? `Approve ${tokenIn.symbol}` // : !enoughBalanceCheck
+                      // ? 'Not enough to transfer'
+                      : 'Transfer'}
+                </Button>
+              }
             </Stack>
           </Form>
         </Card>
@@ -620,26 +643,31 @@ const L1Transfer: FC<{}> = () => {
     [account, tokenBalances, beanstalk, middleware, signer]
   );
 
+  const banner = useBanner();
+  const navHeight = useNavHeight(!!banner);
+
   return (
-    <Formik<TransferFormValues>
-      enableReinitialize
-      initialValues={initialValues}
-      onSubmit={onSubmit}
-    >
-      {(formikProps: FormikProps<TransferFormValues>) => (
-        <>
-          <TransferForm
-            balances={tokenData}
-            allowances={allowances}
-            beanstalk={beanstalk}
-            sdk={sdk}
-            tokenList={tokenList}
-            defaultValues={initialValues}
-            {...formikProps}
-          />
-        </>
-      )}
-    </Formik>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)` }}>
+      <Formik<TransferFormValues>
+        enableReinitialize
+        initialValues={initialValues}
+        onSubmit={onSubmit}
+      >
+        {(formikProps: FormikProps<TransferFormValues>) => (
+          <>
+            <TransferForm
+              balances={tokenData}
+              allowances={allowances}
+              beanstalk={beanstalk}
+              sdk={sdk}
+              tokenList={tokenList}
+              defaultValues={initialValues}
+              {...formikProps}
+            />
+          </>
+        )}
+      </Formik>
+    </Box>
   );
 };
 
