@@ -57,7 +57,7 @@ type WellUpgradeHistory @entity {
   effectiveTimestamp: BigInt!
   ##### Datapoints #####
   aquifer: Aquifer!
-  implementation: Bytes!
+  implementation: Implementation!
   pumps: [Pump!]!
   pumpData: [Bytes!]!
   wellFunction: WellFunction!
@@ -67,9 +67,15 @@ type WellUpgradeHistory @entity {
 type Aquifer @entity {
   " Smart contract address of the aquifer "
   id: Bytes!
-
   " Wells deployed by this aquifer "
-  wells: [Well!]!
+  wells: [Well!]! @derivedFrom(field: "aquifer")
+}
+
+type Implementation @entity {
+  " Implementation address "
+  id: Bytes!
+  " Wells deployed with this implementation "
+  wells: [Well!]! @derivedFrom(field: "implementation")
 }
 
 type WellFunction @entity {
@@ -83,7 +89,7 @@ type Pump @entity {
   "Pump address"
   id: Bytes!
   " Wells associated with this pump"
-  wells: [Well!]! @derivedFrom(field: "pump")
+  wells: [Well!]! @derivedFrom(field: "pumps")
 }
 
 type Well @entity {
@@ -94,7 +100,7 @@ type Well @entity {
   aquifer: Aquifer!
 
   " The well implementation used to deploy this well "
-  implementation: Bytes!
+  implementation: Implementation!
 
   " Pumps associated with this well "
   pumps: [Pump!]!

@@ -1,4 +1,3 @@
-import { Address } from "@graphprotocol/graph-ts";
 import { v } from "../utils/constants/Version";
 import { Sunrise } from "../../generated/Basin-ABIs/Beanstalk";
 import { loadOrCreateAquifer } from "../entities/Aquifer";

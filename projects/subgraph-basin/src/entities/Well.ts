@@ -1,5 +1,5 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { Well, WellDailySnapshot, WellFunction, WellHourlySnapshot } from "../../generated/schema";
+import { Well, WellDailySnapshot, WellHourlySnapshot } from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import {
   subBigDecimalArray,
@@ -10,7 +10,7 @@ import {
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
 
-export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
+export function loadOrCreateWell(wellAddress: Address, inputTokens: Address[], block: ethereum.Block): Well {
   let well = Well.load(wellAddress);
   if (well !== null) {
     return well as Well;
@@ -35,12 +35,15 @@ export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
   }
 
   well.aquifer = Bytes.empty();
-  well.wellFunction = Bytes.empty();
   well.implementation = Bytes.empty();
-  well.tokens = []; // This is currently set in the `handleBoreWell` function
+  well.pumps = [];
+  well.pumpData = [];
+  well.wellFunction = Bytes.empty();
+  well.wellFunctionData = Bytes.empty();
+  well.tokens = [];
   well.tokenOrder = [];
-  well.createdTimestamp = ZERO_BI;
-  well.createdBlockNumber = ZERO_BI;
+  well.createdTimestamp = block.timestamp;
+  well.createdBlockNumber = block.number;
   well.lpTokenSupply = ZERO_BI;
   well.totalLiquidityUSD = ZERO_BD;
   well.tokenPrice = [ZERO_BI, ZERO_BI];
@@ -81,16 +84,6 @@ export function createWell(wellAddress: Address, inputTokens: Address[]): Well {
 
 export function loadWell(wellAddress: Address): Well {
   return Well.load(wellAddress) as Well;
-}
-
-export function loadOrCreateWellFunction(wellFnAddress: Address): WellFunction {
-  let wellFunction = WellFunction.load(wellFnAddress);
-  if (wellFunction == null) {
-    wellFunction = new WellFunction(wellFnAddress);
-    wellFunction.data = Bytes.empty();
-    wellFunction.save();
-  }
-  return wellFunction as WellFunction;
 }
 
 export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, block: ethereum.Block): WellDailySnapshot {
