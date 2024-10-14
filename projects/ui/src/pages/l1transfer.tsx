@@ -50,6 +50,7 @@ import BigNumber from 'bignumber.js';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 import useChainId from '~/hooks/chain/useChainId';
+import useChainState from '~/hooks/chain/useChainState';
 
 /// ---------------------------------------------------------------
 
@@ -115,6 +116,7 @@ const TransferForm: FC<
     const { status } = useConnect();
     const account = useAccount();
     const chainId = useChainId();
+    const { isArbitrum, isTestnet } = useChainState();
     const { chains, error, isPending, switchChain } = useSwitchChain();
 
     /// Derived values
@@ -429,7 +431,7 @@ const TransferForm: FC<
                   will be lost.
                 </Warning>
               )}
-              {chainId !== 1 ?
+              {(isArbitrum && !isTestnet) ?
                 <Button
                   sx={{
                     width: '100%',

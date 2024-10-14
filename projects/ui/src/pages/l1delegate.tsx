@@ -23,13 +23,13 @@ import { useSigner } from '~/hooks/ledger/useSigner';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import MigrationMessage from '../components/Common/MigrationMessage';
 import useChainId from '~/hooks/chain/useChainId';
-import { useClient, useContractReads, useReadContracts, useSwitchChain, useWatchContractEvent } from 'wagmi';
-import { parseAbi, parseAbiItem } from 'viem';
-import { localForkArbitrum } from '~/util/wagmi/chains';
+import { useClient, useReadContracts, useSwitchChain, useWatchContractEvent } from 'wagmi';
+import { parseAbiItem } from 'viem';
 import { arbitrum } from 'viem/chains';
 import { getLogs } from 'viem/actions';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
+import useChainState from '~/hooks/chain/useChainState';
 
 export default function L1Delegate() {
 
@@ -39,6 +39,7 @@ export default function L1Delegate() {
     const beanstalk = useBeanstalkContract(signer);
 
     const chainId = useChainId();
+    const { isArbitrum, isTestnet } = useChainState();
     const { chains, error, isPending, switchChain } = useSwitchChain();
 
     const [destinationAccount, setDestinationAccount] = useState<
@@ -89,6 +90,8 @@ export default function L1Delegate() {
             const logs = await getLogs(arbitrumClient, {
                 address: beanstalkL2Address as `0x${string}`,
                 event: parseAbiItem("event ReceiverApproved(address indexed owner, address receiver)"),
+                fromBlock: 4365627n,
+                toBlock: 'latest',
                 args: {
                     owner: (account || '') as `0x${string}`
                 },
@@ -101,6 +104,8 @@ export default function L1Delegate() {
             const logs = await getLogs(arbitrumClient, {
                 address: beanstalkL2Address as `0x${string}`,
                 event: parseAbiItem("event L1DepositsMigrated(address indexed owner, address indexed receiver, uint256[] depositIds, uint256[] amounts, uint256[] bdvs)"),
+                fromBlock: 4365627n,
+                toBlock: 'latest',
                 args: {
                     owner: (account || '') as `0x${string}`
                 },
@@ -113,6 +118,8 @@ export default function L1Delegate() {
             const logs = await getLogs(arbitrumClient, {
                 address: beanstalkL2Address as `0x${string}`,
                 event: parseAbiItem("event L1PlotsMigrated(address indexed owner, address indexed receiver, uint256[] index, uint256[] pods)"),
+                fromBlock: 4365627n,
+                toBlock: 'latest',
                 args: {
                     owner: (account || '') as `0x${string}`
                 },
@@ -125,6 +132,8 @@ export default function L1Delegate() {
             const logs = await getLogs(arbitrumClient, {
                 address: beanstalkL2Address as `0x${string}`,
                 event: parseAbiItem("event L1InternalBalancesMigrated(address indexed owner, address indexed receiver, address[] tokens, uint256[] amounts)"),
+                fromBlock: 4365627n,
+                toBlock: 'latest',
                 args: {
                     owner: (account || '') as `0x${string}`
                 },
@@ -137,6 +146,8 @@ export default function L1Delegate() {
             const logs = await getLogs(arbitrumClient, {
                 address: beanstalkL2Address as `0x${string}`,
                 event: parseAbiItem("event L1FertilizerMigrated(address indexed owner, address indexed receiver, uint256[] fertIds, uint128[] amounts, uint128 lastBpf)"),
+                fromBlock: 4365627n,
+                toBlock: 'latest',
                 args: {
                     owner: (account || '') as `0x${string}`
                 },
@@ -151,7 +162,15 @@ export default function L1Delegate() {
         getL1InternalBalances().then((event) => { setMigratedBalances(event && event[0] ? true : false) });
         getL1Fertilizer().then((event) => { setMigratedFertilizer(event && event[0] ? true : false) });
 
-    }, [arbitrumClient, account]);
+
+        const localData = localStorage.getItem('internalL2MigrationData');
+        const parsed = localData ? JSON.parse(localData) : undefined;
+        if (parsed && parsed.source.toLowerCase() === account?.toLowerCase() && !isArbitrum) {
+            checkAddress(parsed.destination);
+            setInternalComplete(true);
+        }
+
+    }, [arbitrumClient, account, chainId]);
 
     const l1ReadResults = useReadContracts({
         contracts: [
@@ -199,6 +218,7 @@ export default function L1Delegate() {
     useEffect(() => {
         if ((beanComplete && internalComplete) || (beanComplete && !migrateInternal) || (beanBalance.eq(0) && internalComplete)) {
             setReadyForNext(true);
+            setEnableMigration(true);
         } else if (beanBalance.eq(0) && !migrateInternal) {
             setEnableMigration(false);
             setReadyForNext(false);
@@ -224,6 +244,14 @@ export default function L1Delegate() {
             console.error('Error fetching migration data:', error);
         }
 
+    };
+
+    const saveInternalMigrationData = () => {
+        const internalMigration = {
+            destination: destinationAccount,
+            source: account,
+        }
+        localStorage.setItem('internalL2MigrationData', JSON.stringify(internalMigration))
     };
 
     const onSubmitBeanMigration = useCallback(async () => {
@@ -287,6 +315,7 @@ export default function L1Delegate() {
             await txn.wait();
             txToast.success();
             setInternalComplete(true);
+            saveInternalMigrationData();
         } catch (err) {
             console.error('Transaction failed:', err);
             txToast.error(err);
@@ -386,7 +415,7 @@ export default function L1Delegate() {
                                 </>
                             )}
                             <Box sx={{ display: 'inline-flex', gap: 1, width: '100%' }}>
-                                {chainId !== 1 ?
+                                {(isArbitrum && !isTestnet) ?
                                     <Button
                                         sx={{
                                             width: '100%',
@@ -440,7 +469,6 @@ export default function L1Delegate() {
                                             }
                                         </Box>
                                         :
-                                        migrateInternal &&
                                         <Button
                                             sx={{
                                                 width: '100%',
@@ -448,7 +476,7 @@ export default function L1Delegate() {
                                             }}
                                             onClick={() => navigate('/l2claim')}
                                         >
-                                            Next Step
+                                            Go To L2 Claim Page
                                         </Button>
                                 }
                             </Box>
