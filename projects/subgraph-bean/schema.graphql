@@ -26,15 +26,20 @@ type Token @entity {
   lastPriceUSD: BigDecimal!
 }
 
+type Season @entity {
+  "Season number"
+  id: ID!
+
+  # Snapshots
+  beanHourlySnapshots: BeanHourlySnapshot! @derivedFrom(field: "season")
+  beanDailySnapshots: BeanDailySnapshot! @derivedFrom(field: "season")
+  poolHourlySnapshots: [PoolHourlySnapshot!]! @derivedFrom(field: "season")
+  poolDailySnapshots: [PoolDailySnapshot!]! @derivedFrom(field: "season")
+}
+
 type Bean @entity {
   "Contract address of the Bean token"
   id: Bytes!
-
-  "Which chain this Bean is from"
-  chain: String!
-
-  "Smart contract address of the Beanstalk this Bean is associated with"
-  beanstalk: String!
 
   "Current supply"
   supply: BigInt!
@@ -63,7 +68,7 @@ type Bean @entity {
   "Cumulative number of crosses"
   crosses: Int!
 
-  "Detailed cross events during this snapshot"
+  "Peg crosses information"
   crossEvents: [BeanCross!]! @derivedFrom(field: "bean")
 
   "Last timestamp a cross was seen"
@@ -72,30 +77,23 @@ type Bean @entity {
   "Last season seen from Beanstalk"
   lastSeason: Int!
 
-  "Pools that include this Bean"
+  "Whitelisted pools having bean"
   pools: [Pool!]!
 
-  "Dewhitelisted pools that include this Bean"
+  "Dewhitelisted pools having bean"
   dewhitelistedPools: [Pool!]!
 
-  "Hourly snapshot of Bean data"
-  hourlySnapshot: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
-
-  "Daily snapshot of Bean data"
-  dailySnapshot: [BeanDailySnapshot!]! @derivedFrom(field: "bean")
+  hourlySnapshots: [BeanHourlySnapshot!]! @derivedFrom(field: "bean")
+  dailySnapshots: [BeanDailySnapshot!]! @derivedFrom(field: "bean")
 }
 
 type BeanHourlySnapshot @entity {
   "{Token address}-{Season}"
   id: ID!
 
-  "Bean token address"
+  season: Season!
   bean: Bean!
-
-  "Current supply"
   supply: BigInt!
-
-  "Current market cap"
   marketCap: BigDecimal!
 
   "Amount of the supply which is considered Locked Beans (untradeable due to chop rate)"
@@ -141,10 +139,7 @@ type BeanHourlySnapshot @entity {
   deltaCrosses: Int!
 
   "Detailed cross events during this snapshot"
-  crossEvents: [BeanCross!]! @derivedFrom(field: "hourlySnapshot")
-
-  "Season associated with this snapshot"
-  season: Int!
+  crossEvents: [BeanCross!]! @derivedFrom(field: "beanHourlySnapshot")
 
   "Timestamp this snapshot was updated"
   timestamp: BigInt!
@@ -154,7 +149,10 @@ type BeanHourlySnapshot @entity {
 }
 
 type BeanDailySnapshot @entity {
+  "{Token address}-{Unix day}"
   id: ID!
+
+  season: Season!
   bean: Bean!
   supply: BigInt!
   marketCap: BigDecimal!
@@ -178,34 +176,9 @@ type BeanDailySnapshot @entity {
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
-  crossEvents: [BeanCross!]! @derivedFrom(field: "dailySnapshot")
-  season: Int!
+  crossEvents: [BeanCross!]! @derivedFrom(field: "beanDailySnapshot")
   timestamp: BigInt!
   blockNumber: BigInt!
-}
-
-type BeanCross @entity {
-  id: ID!
-  bean: Bean!
-  price: BigDecimal!
-  blockNumber: BigInt!
-  timestamp: BigInt!
-  timeSinceLastCross: BigInt!
-  above: Boolean!
-  hourlySnapshot: BeanHourlySnapshot!
-  dailySnapshot: BeanDailySnapshot!
-}
-
-type PoolCross @entity {
-  id: ID!
-  pool: Pool!
-  price: BigDecimal!
-  blockNumber: BigInt!
-  timestamp: BigInt!
-  timeSinceLastCross: BigInt!
-  above: Boolean!
-  hourlySnapshot: PoolHourlySnapshot!
-  dailySnapshot: PoolDailySnapshot!
 }
 
 type Pool @entity {
@@ -226,12 +199,13 @@ type Pool @entity {
   crossEvents: [PoolCross!]! @derivedFrom(field: "pool")
   "Instantaneous deltaB"
   deltaBeans: BigInt!
-  hourlySnapshot: [PoolHourlySnapshot!]! @derivedFrom(field: "pool")
-  dailySnapshot: [PoolDailySnapshot!]! @derivedFrom(field: "pool")
+  hourlySnapshots: [PoolHourlySnapshot!]! @derivedFrom(field: "pool")
+  dailySnapshots: [PoolDailySnapshot!]! @derivedFrom(field: "pool")
 }
 
 type PoolHourlySnapshot @entity {
   id: ID!
+  season: Season!
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
@@ -253,14 +227,14 @@ type PoolHourlySnapshot @entity {
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
-  crossEvents: [PoolCross!]! @derivedFrom(field: "hourlySnapshot")
-  season: Int!
+  crossEvents: [PoolCross!]! @derivedFrom(field: "poolHourlySnapshot")
   createdAt: BigInt!
   updatedAt: BigInt!
 }
 
 type PoolDailySnapshot @entity {
   id: ID!
+  season: Season!
   pool: Pool!
   reserves: [BigInt!]!
   lastPrice: BigDecimal!
@@ -282,10 +256,35 @@ type PoolDailySnapshot @entity {
   deltaVolumeUSD: BigDecimal!
   deltaLiquidityUSD: BigDecimal!
   deltaCrosses: Int!
-  crossEvents: [PoolCross!]! @derivedFrom(field: "dailySnapshot")
-  season: Int!
+  crossEvents: [PoolCross!]! @derivedFrom(field: "poolDailySnapshot")
   createdAt: BigInt!
   updatedAt: BigInt!
+}
+
+type BeanCross @entity {
+  id: ID!
+  bean: Bean!
+  price: BigDecimal!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  timeSinceLastCross: BigInt!
+  above: Boolean!
+
+  beanHourlySnapshot: BeanHourlySnapshot!
+  beanDailySnapshot: BeanDailySnapshot!
+}
+
+type PoolCross @entity {
+  id: ID!
+  pool: Pool!
+  price: BigDecimal!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  timeSinceLastCross: BigInt!
+  above: Boolean!
+
+  poolHourlySnapshot: PoolHourlySnapshot!
+  poolDailySnapshot: PoolDailySnapshot!
 }
 
 # For tracking twa balances as the seasons progress

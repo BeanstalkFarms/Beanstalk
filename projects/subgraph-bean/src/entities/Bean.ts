@@ -64,7 +64,7 @@ export function loadOrCreateBeanHourlySnapshot(token: Address, timestamp: BigInt
 }
 
 export function loadOrCreateBeanDailySnapshot(token: Address, timestamp: BigInt): BeanDailySnapshot {
-  let day = dayFromTimestamp(timestamp).toString();
+  let day = token.toHexString() + "-" + dayFromTimestamp(timestamp).toString();
   let snapshot = BeanDailySnapshot.load(day);
   if (snapshot == null) {
     let bean = loadBean(token);
