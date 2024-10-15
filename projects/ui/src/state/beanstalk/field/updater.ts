@@ -34,7 +34,7 @@ export const useFetchBeanstalkField = () => {
         })),
         beanstalk.temperature().then(tokenResult(BEAN)), // FIXME
         beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIXME
-      ] as const);
+      ]);
 
       console.debug('[beanstalk/field/useBeanstalkField] RESULT', {
         harvestableIndex: harvestableIndex.toString(),

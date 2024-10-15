@@ -48,6 +48,8 @@ export const HOW_TO_MM_PATH =
 /* Base Links */
 export const BASE_ETHERSCAN_TX_LINK = 'https://etherscan.io/tx/';
 export const BASE_ETHERSCAN_ADDR_LINK = 'https://etherscan.io/address/';
+export const BASE_ARBISCAN_TX_LINK = 'https://arbiscan.io/tx/';
+export const BASE_ARBISCAN_ADDR_LINK = 'https://arbiscan.io/address/';
 
 /* Informational Links */
 export const MEDIUM_INTEREST_LINK =

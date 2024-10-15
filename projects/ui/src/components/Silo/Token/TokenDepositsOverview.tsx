@@ -63,9 +63,10 @@ const TokenDepositsOverview = ({ token }: Props) => {
             <Typography
               component="span"
               fontWeight="inherit"
+              ml={0.3}
               display={{ xs: 'none', md: 'inline' }}
             >
-              {' Deposits'}
+              Deposits
             </Typography>
           </Button>
           {!isBEAN && (
@@ -87,9 +88,10 @@ const TokenDepositsOverview = ({ token }: Props) => {
               <Typography
                 fontWeight="inherit"
                 component="span"
+                ml={0.3}
                 display={{ xs: 'none', md: 'inline' }}
               >
-                {' Deposits'}
+                Deposits
               </Typography>
             </Button>
           )}

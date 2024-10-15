@@ -321,7 +321,7 @@ const MorningTemperature: React.FC<{
         titleTooltip={
           <Box>
             The interest rate for Sowing Beans. Beanstalk logarithmically
-            increases the Temperature for the first 25 blocks of each Season up
+            increases the Temperature for the first 5 minutes of each Season up
             to the Max Temperature.
           </Box>
         }

@@ -20,6 +20,7 @@ import {
   NativeToken,
   BeanSwapNodeQuote,
   BeanSwapOperation,
+  BeanstalkSDK,
 } from '@beanstalk/sdk';
 import {
   FormApprovingState,
@@ -35,7 +36,6 @@ import {
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
@@ -113,7 +113,7 @@ const Quoting = (
 const SwapForm: FC<
   FormikProps<SwapFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
-    beanstalk: Beanstalk;
+    beanstalk: BeanstalkSDK['contracts']['beanstalk'];
     tokenList: (ERC20Token | NativeToken)[];
     defaultValues: SwapFormValues;
   }
@@ -420,8 +420,8 @@ const SwapForm: FC<
     (_tokens: Set<TokenInstance>) => {
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
-        setFieldValue('tokenOut.token', newTokenOut);
         if (tokenIn === newTokenOut) handleTokensEqual();
+        setFieldValue('tokenOut.token', newTokenOut);
       } else if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
         setFieldValue('tokensIn.0.token', newTokenIn);
