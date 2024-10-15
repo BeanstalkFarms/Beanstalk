@@ -56,6 +56,7 @@ type WellUpgradeHistory @entity {
   " The timestamp this upgrade went into effect "
   effectiveTimestamp: BigInt!
   ##### Datapoints #####
+  boredWell: Bytes!
   aquifer: Aquifer!
   implementation: Implementation!
   pumps: [Pump!]!
@@ -93,8 +94,11 @@ type Pump @entity {
 }
 
 type Well @entity {
-  " Smart contract address of the well "
+  " Well address. For upgradeable wells, this is the proxy address. "
   id: Bytes!
+
+  " The bored well address. Differs from `id` in the case of an Upgradeable well. "
+  boredWell: Bytes!
 
   " The aquifer used to bore this well "
   aquifer: Aquifer!

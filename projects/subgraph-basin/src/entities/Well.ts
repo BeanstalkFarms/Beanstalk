@@ -34,6 +34,7 @@ export function loadOrCreateWell(wellAddress: Address, inputTokens: Address[], b
     well.symbol = symbolCall.value;
   }
 
+  well.boredWell = Bytes.empty();
   well.aquifer = Bytes.empty();
   well.implementation = Bytes.empty();
   well.pumps = [];

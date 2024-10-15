@@ -1,10 +1,11 @@
 import { Address, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { emptyBigIntArray, toDecimal, ZERO_BD, ZERO_BI, subBigIntArray } from "../../../subgraph-core/utils/Decimals";
 import { Well } from "../../generated/schema";
-import { loadOrCreateWellFunction, loadWell } from "../entities/Well";
+import { loadWell } from "../entities/Well";
 import { loadToken } from "../entities/Token";
 import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
+import { loadOrCreateWellFunction } from "../entities/WellComponents";
 
 // Constant product volume calculations
 
@@ -77,12 +78,12 @@ export function calcLiquidityVolume(well: Well, deltaReserves: BigInt[], deltaLp
 
   let tokenAmountBought: BigInt[];
   if (deltaLpSupply.gt(ZERO_BI)) {
-    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, wellFn.data);
+    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), well.reserves, well.lpTokenSupply, well.wellFunctionData);
     tokenAmountBought = [doubleSided[0].minus(deltaReserves[0]), doubleSided[1].minus(deltaReserves[1])];
   } else {
     const prevReserves = subBigIntArray(well.reserves, deltaReserves);
     const prevLpSupply = well.lpTokenSupply.minus(deltaLpSupply);
-    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), prevReserves, prevLpSupply, wellFn.data);
+    const doubleSided = wellFnContract.calcLPTokenUnderlying(deltaLpSupply.abs(), prevReserves, prevLpSupply, well.wellFunctionData);
     tokenAmountBought = [deltaReserves[0].abs().minus(doubleSided[0]), deltaReserves[1].abs().minus(doubleSided[1])];
   }
   return tokenAmountBought;

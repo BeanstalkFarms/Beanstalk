@@ -12,6 +12,7 @@ export function handleBoreWell(event: BoreWell): void {
   Well.create(actualAddress);
 
   let well = loadOrCreateWell(actualAddress, event.params.tokens, event.block);
+  well.boredWell = event.params.well;
 
   loadOrCreateAquifer(event.address);
   well.aquifer = event.address;
