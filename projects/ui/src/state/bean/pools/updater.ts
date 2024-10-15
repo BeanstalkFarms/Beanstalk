@@ -43,8 +43,9 @@ export const useFetchPools = () => {
         ];
         const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
 
-        const [priceAndBean, _lpResults] = await Promise.all([
+        const [priceResult, poolsResult, _lpResults] = await Promise.all([
           // fetch [price, bean.totalSupply, totalDeltaB]
+          beanstalkPrice.price(),
           multicall(config, {
             contracts: priceAndBeanCalls,
             allowFailure: true,
@@ -62,15 +63,15 @@ export const useFetchPools = () => {
 
         console.debug(`${pageContext} MULTICALL RESULTS: `, {
           lpMulticall,
+          priceResult,
           priceAndBeanCalls,
           _lpResults,
-          priceAndBean,
+          poolsResult,
         });
 
-        const [priceResult, beanTotalSupply, totalDeltaB] = [
-          extract<PriceResultStruct>(priceAndBean[0], 'price'),
-          extract(priceAndBean[1], 'bean.totalSupply'),
-          extract(priceAndBean[2], 'totalDeltaB'),
+        const [beanTotalSupply, totalDeltaB] = [
+          extract(poolsResult[1], 'bean.totalSupply'),
+          extract(poolsResult[2], 'totalDeltaB'),
         ];
 
         const lpResults = _lpResults.reduce<Record<string, LPResultType>>(
