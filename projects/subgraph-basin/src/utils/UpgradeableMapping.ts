@@ -4,21 +4,21 @@ import * as BeanstalkArb from "../../../subgraph-core/constants/raw/BeanstalkArb
 // For the upgradeable wells used in Beanstalk 3, the BoreWell event does not indicate the proxy address.
 // A manual mapping is required.
 export function getActualWell(boredWell: Address): Address {
-  for (let i = 0; i < mapping.length; ++i) {
-    if (mapping[i].boredWells.includes(boredWell)) {
-      return mapping[i].proxy;
+  for (let i = 0; i < UPGRADEABLE_MAPPING.length; ++i) {
+    if (UPGRADEABLE_MAPPING[i].boredWells.includes(boredWell)) {
+      return UPGRADEABLE_MAPPING[i].proxy;
     }
   }
   // There is no upgradeable mapping here, passthrough the bored well address
   return boredWell;
 }
 
-class UpgradeableMapping {
+export class UpgradeableMapping {
   proxy: Address;
   boredWells: Address[];
 }
 
-const mapping: UpgradeableMapping[] = [
+export const UPGRADEABLE_MAPPING: UpgradeableMapping[] = [
   // arbitrum
   {
     proxy: BeanstalkArb.BEAN_WETH,

@@ -1,13 +1,13 @@
-import { BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { createMockedFunction } from "matchstick-as/assembly/index";
 import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_TOKEN, WETH } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
-import { BEAN_USD_PRICE, WELL, WELL_FUNCTION } from "./Constants";
+import { BEAN_USD_PRICE, WELL } from "./Constants";
 import { setMockBeanPrice } from "../../../subgraph-core/tests/event-mocking/Price";
 import { BI_10, ONE_BD, ZERO_BD } from "../../../subgraph-core/utils/Decimals";
 
 let prevMocked = ZERO_BD;
 
-export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD): void {
+export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD, well: Address = WELL): void {
   if (prevMocked == priceMultiple) {
     return;
   }
@@ -47,9 +47,9 @@ export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD): voi
     .withArgs([])
     .returns([ethereum.Value.fromString("Bean")]);
 
-  createMockedFunction(WELL, "name", "name():(string)")
+  createMockedFunction(well, "name", "name():(string)")
     .withArgs([])
-    .returns([ethereum.Value.fromString("Bean")]);
+    .returns([ethereum.Value.fromString("Well LP")]);
 
   createMockedFunction(WETH, "name", "name():(string)")
     .withArgs([])
@@ -59,7 +59,7 @@ export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD): voi
     .withArgs([])
     .returns([ethereum.Value.fromString("BEAN")]);
 
-  createMockedFunction(WELL, "symbol", "symbol():(string)")
+  createMockedFunction(well, "symbol", "symbol():(string)")
     .withArgs([])
     .returns([ethereum.Value.fromString("BEAN-WETH-wCP2")]);
 
@@ -71,7 +71,7 @@ export function createContractCallMocks(priceMultiple: BigDecimal = ONE_BD): voi
     .withArgs([])
     .returns([ethereum.Value.fromI32(6)]);
 
-  createMockedFunction(WELL, "decimals", "decimals():(uint8)")
+  createMockedFunction(well, "decimals", "decimals():(uint8)")
     .withArgs([])
     .returns([ethereum.Value.fromI32(12)]);
 
