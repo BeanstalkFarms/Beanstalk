@@ -4,6 +4,7 @@ import {
     Button,
     Card,
     InputAdornment,
+    Link,
     TextField,
     Typography,
 } from '@mui/material';
@@ -342,6 +343,18 @@ export default function L1Delegate() {
                             title="Delegate Balances for L2 Migration"
                             description="Specify which address your want your Beanstalk assets migrated to on Arbitrum One"
                         />
+                        {isContract &&
+                            <Link
+                                color="primary"
+                                display="flex"
+                                flexDirection="row"
+                                gap={1}
+                                alignItems="center"
+                                href={'#/l2claim'}
+                            >
+                                <Typography variant="subtitle1">Done with this step? Click here to Claim your assets on Arbitrum One →</Typography>
+                            </Link>
+                        }
                         <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
                             <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
                                 Delegate Balances
