@@ -212,6 +212,14 @@ export default function L1Delegate() {
     }, [l1ReadResults])
 
     useEffect(() => {
+        if (!isContract && account) {
+            checkAddress(account)
+        } else {
+            checkAddress("")
+        }
+    }, [isContract, account])
+
+    useEffect(() => {
         getMigrationData();
     }, [account, sdk]);
 

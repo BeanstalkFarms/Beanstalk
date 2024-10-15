@@ -19,7 +19,7 @@ export default function useIsSmartContract() {
             } else {
                 setIsLoading(true);
                 const _isContract = await getBytecode(client, { address: account as `0x${string}` })
-                if (_isContract === "0x") {
+                if (_isContract === "0x" || !_isContract) {
                     setIsContract(false);
                 } else {
                     setIsContract(true);
