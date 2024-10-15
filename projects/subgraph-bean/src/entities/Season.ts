@@ -6,6 +6,7 @@ export function loadOrCreateSeason(seasonNumber: u32): Season {
   let season = Season.load(seasonNumber.toString());
   if (season == null) {
     season = new Season(seasonNumber.toString());
+    season.save();
   }
   return season as Season;
 }
