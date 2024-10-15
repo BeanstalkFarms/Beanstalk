@@ -75,7 +75,7 @@ type Bean @entity {
   lastCross: BigInt!
 
   "Last season seen from Beanstalk"
-  lastSeason: Int!
+  lastSeason: Season!
 
   "Whitelisted pools having bean"
   pools: [Pool!]!
@@ -188,7 +188,7 @@ type Pool @entity {
   "All tokens in this pool"
   tokens: [Token!]!
   reserves: [BigInt!]!
-  lastSeason: Int!
+  lastSeason: Season!
   lastPrice: BigDecimal!
   volume: BigInt!
   volumeUSD: BigDecimal!

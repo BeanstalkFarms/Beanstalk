@@ -18,6 +18,7 @@ describe("Beanstalk 3 Migration", () => {
 
   test("Bean entity initialization", () => {
     assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "volume", BEAN_INITIAL_VALUES.volume.toString());
+    assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "lastSeason", BEAN_INITIAL_VALUES.lastSeason.toString());
     assert.fieldEquals("Bean", BEAN_ERC20.toHexString(), "crosses", BEAN_INITIAL_VALUES.crosses.toString());
     assert.fieldEquals(
       "BeanHourlySnapshot",
