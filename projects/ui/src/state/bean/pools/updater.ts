@@ -37,14 +37,12 @@ export const useFetchPools = () => {
         const BEAN = sdk.tokens.BEAN;
 
         const priceAndBeanCalls = [
-          makePriceMulticall(beanstalkPrice.address),
           makeTokenTotalSupplyMulticall(BEAN),
           makeTotalDeltaBMulticall(beanstalk.address),
         ];
         const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
 
         const [priceResult, poolsResult, _lpResults] = await Promise.all([
-          // fetch [price, bean.totalSupply, totalDeltaB]
           beanstalkPrice.price(),
           multicall(config, {
             contracts: priceAndBeanCalls,
@@ -70,8 +68,8 @@ export const useFetchPools = () => {
         });
 
         const [beanTotalSupply, totalDeltaB] = [
-          extract(poolsResult[1], 'bean.totalSupply'),
-          extract(poolsResult[2], 'totalDeltaB'),
+          extract(poolsResult[0], 'bean.totalSupply'),
+          extract(poolsResult[1], 'totalDeltaB'),
         ];
 
         const lpResults = _lpResults.reduce<Record<string, LPResultType>>(
@@ -186,22 +184,6 @@ export default PoolsUpdater;
 
 // ------------------------------------------
 // Types
-
-type PriceResultStruct = {
-  price: bigint;
-  liquidity: bigint;
-  deltaB: bigint;
-  ps: {
-    pool: string;
-    tokens: [string, string];
-    balances: [bigint, bigint];
-    price: bigint;
-    liquidity: bigint;
-    deltaB: bigint;
-    lpUsd: bigint;
-    lpBdv: bigint;
-  }[];
-};
 
 type LPResultType = {
   deltaB: bigint | null;
