@@ -8,7 +8,7 @@ export default function MigrationMessage({ message }: { message?: string }) {
   return (
     <Box sx={{ textAlign: 'center' }}>
       <Typography variant="h1">
-        {message || isArbitrum ? "We're migrating!" : "We're on Arbitrum!"}
+        {message || isArbitrum ? "We're migrating!" : "We're on Arbitrum One!"}
       </Typography>
       <Typography variant="body1" textAlign="center" sx={{ display: 'inline-flex', gap: 0.5 }}>
         Please check
