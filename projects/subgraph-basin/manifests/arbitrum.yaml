@@ -57,7 +57,7 @@ dataSources:
     source:
       address: "0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521"
       abi: Aquifer
-      startBlock: 261000000
+      startBlock: 261000001
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
