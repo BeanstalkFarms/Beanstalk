@@ -2,13 +2,12 @@
 pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
-import {TestHelper, LibTransfer, IMockFBeanstalk, MockToken, C, IWell, LibWell} from "test/foundry/utils/TestHelper.sol";
-import {LibGauge} from "contracts/libraries/LibGauge.sol";
+import {TestHelper, IMockFBeanstalk, MockToken, C, IWell} from "test/foundry/utils/TestHelper.sol";
 import {MockChainlinkAggregator} from "contracts/mocks/chainlink/MockChainlinkAggregator.sol";
 import {MockLiquidityWeight} from "contracts/mocks/MockLiquidityWeight.sol";
 import {GaugePointPrice} from "contracts/beanstalk/sun/GaugePoints/GaugePointPrice.sol";
-import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @notice Tests the functionality of the gauge.
@@ -119,7 +118,7 @@ contract GaugeTest is TestHelper {
      * @notice verifies getters with no liquidity.
      */
     function test_L2SRNoLiquidity(uint256 index) public {
-        C.bean().mint(users[0], 100e6);
+        bean.mint(users[0], 100e6);
         address[] memory whitelistedWellTokens = bs.getWhitelistedWellLpTokens();
         index = bound(index, 0, whitelistedWellTokens.length - 1);
         address well = whitelistedWellTokens[index];
@@ -165,13 +164,13 @@ contract GaugeTest is TestHelper {
         uint256 snapshot = vm.snapshot();
 
         // verify L2SR decreases with an increase in bean supply.
-        C.bean().mint(users[1], beansIssued);
+        bean.mint(users[1], beansIssued);
         uint256 l2srIncreasedBeans = bs.getLiquidityToSupplyRatio();
         assertLe(l2srIncreasedBeans, l2sr, "l2sr did not decrease");
 
         // verify L2SR increases with an decrease in bean supply.
         vm.prank(users[1]);
-        C.bean().burn(beansIssued);
+        bean.burn(beansIssued);
         assertGe(bs.getLiquidityToSupplyRatio(), l2srIncreasedBeans, "l2sr did not increase");
     }
 
@@ -211,13 +210,13 @@ contract GaugeTest is TestHelper {
     function test_avgGrownStalkPerBdv_noChange(uint256 season) public {
         season = bound(season, 0, bs.getTargetSeasonsToCatchUp() - 1);
         uint256 initialAvgGrownStalkPerBdvPerSeason = bs.getAverageGrownStalkPerBdvPerSeason();
-        depositForUser(users[1], C.BEAN, 100e6);
+        depositForUser(users[1], LibConstant.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
 
         // the user must mow as unmowed grown stalk cannot be tracked.
         vm.prank(users[1]);
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         // attempt to update average grown stalk per bdv per season (done during the sunrise function).
         bs.mockUpdateAverageGrownStalkPerBdvPerSeason();
 
@@ -233,13 +232,13 @@ contract GaugeTest is TestHelper {
     function test_avgGrownStalkPerBdv_changes(uint256 season) public {
         // season is capped to uint32 max - 1.
         season = bound(season, bs.getTargetSeasonsToCatchUp(), type(uint32).max - 1);
-        depositForUser(users[1], C.BEAN, 100e6);
+        depositForUser(users[1], LibConstant.BEAN, 100e6);
 
         bs.fastForward(uint32(season));
 
         // the user must mow as unmowed grown stalk cannot be tracked.
         vm.prank(users[1]);
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         // update average grown stalk per bdv per season (done during the gauge portion of sunrise).
         bs.mockUpdateAverageGrownStalkPerBdvPerSeason();
 
@@ -256,18 +255,21 @@ contract GaugeTest is TestHelper {
      */
     function test_seedGauge_oracleFailure() public {
         uint256 initBeanToMaxLpRatio = bs.getBeanToMaxLpGpPerBdvRatio();
-        uint256 initBeanEthGaugePoints = bs.getGaugePoints(C.BEAN_ETH_WELL);
-        uint256 initBeanSeeds = bs.tokenSettings(C.BEAN).stalkEarnedPerSeason;
-        uint256 initBeanEthSeeds = bs.tokenSettings(C.BEAN_ETH_WELL).stalkEarnedPerSeason;
+        uint256 initBeanEthGaugePoints = bs.getGaugePoints(LibConstant.BEAN_ETH_WELL);
+        uint256 initBeanSeeds = bs.tokenSettings(LibConstant.BEAN).stalkEarnedPerSeason;
+        uint256 initBeanEthSeeds = bs.tokenSettings(LibConstant.BEAN_ETH_WELL).stalkEarnedPerSeason;
 
         // set oracle failure, verify unchanged values.
-        MockChainlinkAggregator(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR).setOracleFailure();
-        MockChainlinkAggregator(C.WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR).setOracleFailure();
+        MockChainlinkAggregator(ETH_USD_CHAINLINK_PRICE_AGGREGATOR).setOracleFailure();
+        MockChainlinkAggregator(WSTETH_ETH_CHAINLINK_PRICE_AGGREGATOR).setOracleFailure();
 
         assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), initBeanToMaxLpRatio);
-        assertEq(bs.getGaugePoints(C.BEAN_ETH_WELL), initBeanEthGaugePoints);
-        assertEq(bs.tokenSettings(C.BEAN).stalkEarnedPerSeason, initBeanSeeds);
-        assertEq(bs.tokenSettings(C.BEAN_ETH_WELL).stalkEarnedPerSeason, initBeanEthSeeds);
+        assertEq(bs.getGaugePoints(LibConstant.BEAN_ETH_WELL), initBeanEthGaugePoints);
+        assertEq(bs.tokenSettings(LibConstant.BEAN).stalkEarnedPerSeason, initBeanSeeds);
+        assertEq(
+            bs.tokenSettings(LibConstant.BEAN_ETH_WELL).stalkEarnedPerSeason,
+            initBeanEthSeeds
+        );
     }
 
     ////////////////////// LOCKED BEANS //////////////////////
@@ -279,7 +281,11 @@ contract GaugeTest is TestHelper {
      */
     function test_lockedBeansUnderBeans(uint256 addedBeans) public {
         initializeLockedBeans();
-        addedBeans = bound(addedBeans, 0, MockToken(C.UNRIPE_BEAN).totalSupply() - 1000e6);
+        addedBeans = bound(
+            addedBeans,
+            0,
+            MockToken(LibConstant.UNRIPE_BEAN).totalSupply() - 1000e6
+        );
 
         uint256 lockedBeans = bs.getLockedBeansUnderlyingUnripeBean();
 
@@ -288,10 +294,10 @@ contract GaugeTest is TestHelper {
 
         // verify the locked beans increased.
         assertGe(bs.getLockedBeansUnderlyingUnripeBean(), lockedBeans);
-        uint256 totalUnderlying = bs.getTotalUnderlying(C.UNRIPE_BEAN);
+        uint256 totalUnderlying = bs.getTotalUnderlying(LibConstant.UNRIPE_BEAN);
         assertEq(
             bs.getLockedBeansUnderlyingUnripeBean(),
-            (totalUnderlying * 0.4363321054081788e18) / 1e18
+            (totalUnderlying * 0.4587658967980477e18) / 1e18
         );
     }
 
@@ -303,29 +309,29 @@ contract GaugeTest is TestHelper {
         // deduct < 10m and verify that locked beans amount do not change.
         supply = bound(supply, 0, 10000000e6 - 1e6);
         vm.prank(users[0]);
-        MockToken(C.UNRIPE_BEAN).burn(supply);
+        MockToken(LibConstant.UNRIPE_BEAN).burn(supply);
         assertEq(bs.getLockedBeansUnderlyingUnripeBean(), lockedBeans);
     }
 
     function test_lockedBeansSupply10Million(uint256 burntBeans) public {
         initializeLockedBeans();
         // initial supply is 20 million urBean.
-        // deduct 10m < x< 15m and verify that locked beans amount are within a range.
-        burntBeans = bound(burntBeans, 10000000e6 + 1e6, 15000000e6 - 1e6);
+        // deduct 0 < x< 10m and verify that locked beans amount are within a range.
+        burntBeans = bound(burntBeans, 0, 10000000e6 - 1e6);
         uint256 lockedBeansPercent = burnBeansAndCheckLockedBeans(burntBeans);
         // 1e-12% precision.
-        assertApproxEqRel(lockedBeansPercent, 0.5156047910307769e18, 1e6); // see {LibLockedUnderlying}
+        assertApproxEqRel(lockedBeansPercent, 0.458765896798e18, 1e6); // see {LibLockedUnderlying}
     }
 
     function test_lockedBeansSupply5Million(uint256 burntBeans) public {
         initializeLockedBeans();
 
         // initial supply is 20 million urBean.
-        // deduct 15m < x< 19m and verify that locked beans amount are within a range.
-        burntBeans = bound(burntBeans, 15000000e6 + 1e6, 19000000e6 - 1e6);
+        // deduct 10m < x< 19m and verify that locked beans amount are within a range.
+        burntBeans = bound(burntBeans, 10000000e6 + 1e6, 19000000e6 - 1e6);
         uint256 lockedBeansPercent = burnBeansAndCheckLockedBeans(burntBeans);
         // 1e-12% precision.
-        assertApproxEqRel(lockedBeansPercent, 0.5795008171102514e18, 1e6); // see {LibLockedUnderlying}
+        assertApproxEqRel(lockedBeansPercent, 0.460273768141e18, 1e6); // see {LibLockedUnderlying}
     }
 
     /**
@@ -337,15 +343,15 @@ contract GaugeTest is TestHelper {
         uint256 initialLockedBeans = bs.getLockedBeansUnderlyingUnripeLP();
 
         // add liquidity to unripeLP well.
-        // Note: {addLiqudityToWell} is not used as sync() is called to manipulate the reserves.
+        // Note: {addLiquidityToWell} is not used as sync() is called to manipulate the reserves.
         // Additionally, calling sync() multiple times to update reserves only works for the MockPump and should
         // not work for the multiFlowPump.
 
-        address underlyingWell = bs.getUnderlyingToken(C.UNRIPE_LP);
-        (address nonBeanToken, ) = LibWell.getNonBeanTokenAndIndexFromWell(underlyingWell);
+        address underlyingWell = bs.getUnderlyingToken(LibConstant.UNRIPE_LP);
+        (address nonBeanToken, ) = bs.getNonBeanTokenAndIndexFromWell(underlyingWell);
 
         // mint and sync.
-        MockToken(C.BEAN).mint(underlyingWell, 1000000e6);
+        MockToken(LibConstant.BEAN).mint(underlyingWell, 1000000e6);
         MockToken(nonBeanToken).mint(underlyingWell, 1000 ether);
 
         // initial liquidity owned by beanstalk deployer.
@@ -361,7 +367,11 @@ contract GaugeTest is TestHelper {
      */
     function test_lockedBeansTotal(uint256 addedBeans) public {
         initializeLockedBeans();
-        addedBeans = bound(addedBeans, 0, MockToken(C.UNRIPE_BEAN).totalSupply() - 1000e6);
+        addedBeans = bound(
+            addedBeans,
+            0,
+            MockToken(LibConstant.UNRIPE_BEAN).totalSupply() - 1000e6
+        );
 
         // add additional underlying to beans:
         addUnderlyingToUnripeBean(0, addedBeans);
@@ -388,8 +398,8 @@ contract GaugeTest is TestHelper {
         // bound beanToMaxLpRatio.
         beanToMaxLpRatio = bound(beanToMaxLpRatio, 0, 100e18);
         // bound averageGrownStalkPerBdvPerSeason to reasonable values.
-        // note: the bounds are limited by the ∆ seeds between seasons (cannot exceed int24.max, ~8 seeds).
-        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e6, 10e6);
+        // note: the bounds are limited by the ∆ seeds between seasons (cannot exceed int32.max, ~8 seeds).
+        avgGsPerBdvPerSeason = bound(avgGsPerBdvPerSeason, 3e12, 10e12);
 
         // set values.
         bs.mockSetAverageGrownStalkPerBdvPerSeason(uint128(avgGsPerBdvPerSeason));
@@ -401,7 +411,7 @@ contract GaugeTest is TestHelper {
         bs.mockStepGauge();
 
         // assertions.
-        IMockFBeanstalk.AssetSettings memory postBeanSettings = bs.tokenSettings(C.BEAN);
+        IMockFBeanstalk.AssetSettings memory postBeanSettings = bs.tokenSettings(LibConstant.BEAN);
         IMockFBeanstalk.AssetSettings memory postLpSettings = bs.tokenSettings(wellToken);
 
         // verify that the gauge points remain unchanged.
@@ -429,16 +439,18 @@ contract GaugeTest is TestHelper {
         // verify that the seeds were properly calculated.
         // bean bdv * bean seeds + LP bdv * LP seeds = total stalk Issued this bs.
         // total Stalk issued = averageGrownStalkPerBdvPerSeason * total bdv.
-        uint256 beanBDV = bs.getTotalDepositedBdv(C.BEAN);
+        uint256 beanBDV = bs.getTotalDepositedBdv(LibConstant.BEAN);
         uint256 lpBDV = bs.getTotalDepositedBdv(wellToken);
         uint256 totalBdv = beanBDV + lpBDV;
         uint256 beanStalk = beanBDV * postBeanSettings.stalkEarnedPerSeason;
         uint256 lpStalk = lpBDV * postLpSettings.stalkEarnedPerSeason;
-        uint256 totalStalk = beanStalk + lpStalk;
+        uint256 totalStalk = (beanStalk + lpStalk);
         // precise within 1e-12%.
+        // note: with the stalk Precision update, totalBdv * avgGsPerBdvPerSeason needs to be divided by 1e6,
+        // as `avgGsPerBdvPerSeason` is seeds, but seeds only has 6 decimal precision, whereas Gs/bdv has 12 decimal precision.
         assertApproxEqRel(
             totalStalk,
-            totalBdv * avgGsPerBdvPerSeason,
+            (totalBdv * avgGsPerBdvPerSeason) / 1e6,
             1e12,
             "invalid distrubution"
         );
@@ -475,11 +487,12 @@ contract GaugeTest is TestHelper {
         uint256 largestLpSeeds;
         uint256 largestGpPerBdv;
         for (uint i; i < tokens.length; i++) {
-            if (tokens[i] == C.UNRIPE_BEAN || tokens[i] == C.UNRIPE_LP) continue;
+            if (tokens[i] == LibConstant.UNRIPE_BEAN || tokens[i] == LibConstant.UNRIPE_LP)
+                continue;
             postSettings[i] = bs.tokenSettings(tokens[i]);
             totalDepositedBdv += bs.getTotalDepositedBdv(tokens[i]);
 
-            if (tokens[i] == C.BEAN) {
+            if (tokens[i] == LibConstant.BEAN) {
                 beanSeeds = postSettings[i].stalkEarnedPerSeason;
                 continue;
             } else {
@@ -497,7 +510,7 @@ contract GaugeTest is TestHelper {
             }
         }
         uint256 beanGpPerBdv = (largestGpPerBdv * bs.getBeanToMaxLpGpPerBdvRatioScaled()) / 100e18;
-        totalGaugePoints += (bs.getTotalDepositedBdv(C.BEAN) * beanGpPerBdv) / 1e6;
+        totalGaugePoints += (bs.getTotalDepositedBdv(LibConstant.BEAN) * beanGpPerBdv) / 1e6;
 
         // assertions.
 
@@ -508,12 +521,12 @@ contract GaugeTest is TestHelper {
         uint256 avgGrownStalkPerBdvPerSeason = bs.getAverageGrownStalkPerBdvPerSeason();
         uint256 totalStalk = totalDepositedBdv * avgGrownStalkPerBdvPerSeason;
         for (uint i; i < tokens.length; i++) {
-            if (tokens[i] == C.BEAN) continue;
+            if (tokens[i] == LibConstant.BEAN) continue;
             uint256 percentGaugePoints = (postSettings[i].gaugePoints * 1e18) / totalGaugePoints;
             uint256 tokenDepositedBdv = bs.getTotalDepositedBdv(tokens[i]);
             uint256 stalkToLp = postSettings[i].stalkEarnedPerSeason * tokenDepositedBdv;
             // precise within 1e-6.
-            assertApproxEqRel(stalkToLp, (totalStalk * percentGaugePoints) / 1e18, 1e12);
+            assertApproxEqRel(stalkToLp, (totalStalk * percentGaugePoints) / (1e18 * 1e6), 1e12);
         }
     }
 
@@ -529,12 +542,13 @@ contract GaugeTest is TestHelper {
         price = bound(price, 0, 1000e6);
 
         // update weth price:
-        mockAddRound(C.ETH_USD_CHAINLINK_PRICE_AGGREGATOR, int256(price), 900);
+        mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, int256(price), 900);
 
         uint256 newGaugePoints = gpP.priceGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         if (gpP.getPriceThreshold() >= price) {
@@ -548,7 +562,8 @@ contract GaugeTest is TestHelper {
                 gpP.defaultGaugePointFunction(
                     gaugePoints,
                     optimalPercentDepositedBdv,
-                    percentOfDepositedBdv
+                    percentOfDepositedBdv,
+                    new bytes(0)
                 )
             );
         }
@@ -560,13 +575,14 @@ contract GaugeTest is TestHelper {
         uint256 percentOfDepositedBdv
     ) public {
         gaugePoints = bound(gaugePoints, 1e18, 1000e18);
-        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0, 100e6);
-        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0, 100e6);
+        optimalPercentDepositedBdv = bound(optimalPercentDepositedBdv, 0.01e6, 100e6);
+        percentOfDepositedBdv = bound(percentOfDepositedBdv, 0.01e6, 100e6);
 
         uint256 newGaugePoints = gpP.defaultGaugePointFunction(
             gaugePoints,
             optimalPercentDepositedBdv,
-            percentOfDepositedBdv
+            percentOfDepositedBdv,
+            new bytes(0)
         );
 
         uint256 extFarAbove = gpP.getExtremelyFarAbove(optimalPercentDepositedBdv);
@@ -642,30 +658,30 @@ contract GaugeTest is TestHelper {
         // mint 20m unripe LP, add 20m beans worth of underlying:
         addUnderlyingToUnripeLP(20000000e6, 2000000e6);
 
-        // set s.recapitalized to 100, and 1000 sprouts fertilized:
-        bs.setPenaltyParams(100e6, 1000e6);
+        // set s.recapitalized to 4032696.8e6 (10612360000000 * 0.38), and 1000 sprouts fertilized:
+        bs.setPenaltyParams(4032696.8e6, 1000e6);
     }
 
     function addUnderlyingToUnripeBean(
         uint256 unripeAmount,
         uint256 beanAmount
     ) internal prank(users[0]) {
-        MockToken(C.UNRIPE_BEAN).mint(users[0], unripeAmount);
-        C.bean().mint(users[0], beanAmount);
-        C.bean().approve(address(bs), beanAmount);
-        bs.addUnderlying(C.UNRIPE_BEAN, beanAmount);
+        MockToken(LibConstant.UNRIPE_BEAN).mint(users[0], unripeAmount);
+        IBean(LibConstant.BEAN).mint(users[0], beanAmount);
+        IBean(LibConstant.BEAN).approve(address(bs), beanAmount);
+        bs.addUnderlying(LibConstant.UNRIPE_BEAN, beanAmount);
     }
 
     function addUnderlyingToUnripeLP(
         uint256 unripeAmount,
         uint256 beanAmount
     ) internal prank(users[0]) {
-        MockToken(C.UNRIPE_LP).mint(users[0], unripeAmount);
-        address underlyingToken = bs.getUnderlyingToken(C.UNRIPE_LP);
+        MockToken(LibConstant.UNRIPE_LP).mint(users[0], unripeAmount);
+        address underlyingToken = bs.getUnderlyingToken(LibConstant.UNRIPE_LP);
         uint256 lpOut = addLiquidityToWell(underlyingToken, beanAmount, 20000 ether);
 
         MockToken(underlyingToken).approve(address(bs), type(uint256).max);
-        bs.addUnderlying(C.UNRIPE_LP, lpOut);
+        bs.addUnderlying(LibConstant.UNRIPE_LP, lpOut);
     }
 
     function burnBeansAndCheckLockedBeans(
@@ -673,10 +689,12 @@ contract GaugeTest is TestHelper {
     ) internal returns (uint256 lockedBeansPercent) {
         uint256 lockedBeans = bs.getLockedBeansUnderlyingUnripeBean();
         vm.prank(users[0]);
-        MockToken(C.UNRIPE_BEAN).burn(beansBurned);
+        MockToken(LibConstant.UNRIPE_BEAN).burn(beansBurned);
         // a lower supply increases the amount of beans that are locked.
         uint256 newLockedBeans = bs.getLockedBeansUnderlyingUnripeBean();
-        lockedBeansPercent = (newLockedBeans * 1e18) / bs.getTotalUnderlying(C.UNRIPE_BEAN);
+        lockedBeansPercent =
+            (newLockedBeans * 1e18) /
+            bs.getTotalUnderlying(LibConstant.UNRIPE_BEAN);
         assertGe(newLockedBeans, lockedBeans);
         // 1e-12% precision.
     }
@@ -700,7 +718,7 @@ contract GaugeTest is TestHelper {
         addLiquidityToWellAtCurrentPrice(wellToken, 1000 ether);
 
         // deposit beans. (1000 bdv)
-        depositForUser(users[1], C.BEAN, 1000e6);
+        depositForUser(users[1], LibConstant.BEAN, 1000e6);
 
         // deposit 1 ETH of LP (~2000 bdv)
         depositForUser(users[1], wellToken, 1e18);
@@ -719,14 +737,24 @@ contract GaugeTest is TestHelper {
         address[] memory whitelistedWells = bs.getWhitelistedWellLpTokens();
 
         for (uint i; i < whitelistedWells.length; i++) {
-            vm.prank(address(bs));
-            bytes4 gpSelector = bs.gaugePointsNoChange.selector;
-            bytes4 lwSelector = bs.maxWeight.selector;
+            vm.prank(LibConstant.BEANSTALK);
+            IMockFBeanstalk.Implementation memory gpImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.gaugePointsNoChange.selector,
+                bytes1(0),
+                new bytes(0)
+            );
+            IMockFBeanstalk.Implementation memory lwImplementation = IMockFBeanstalk.Implementation(
+                address(0),
+                bs.maxWeight.selector,
+                bytes1(0),
+                new bytes(0)
+            );
             bs.updateGaugeForToken(
                 whitelistedWells[i],
-                gpSelector,
-                lwSelector,
-                100e6 // unused.
+                100e6, // unused.
+                gpImplementation,
+                lwImplementation
             );
 
             addLiquidityToWellAtCurrentPrice(whitelistedWells[i], 1000 ether);
@@ -736,7 +764,7 @@ contract GaugeTest is TestHelper {
         }
 
         // deposit beans. (1000 bdv)
-        depositForUser(users[1], C.BEAN, 1000e6);
+        depositForUser(users[1], LibConstant.BEAN, 1000e6);
 
         // skip germination, as germinating bdv is not included.
         bs.siloSunrise(0);
@@ -748,15 +776,31 @@ contract GaugeTest is TestHelper {
      */
     function testSeedGaugeSettings() external {
         // validate current settings
-        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory seedGauge = bs.getEvaluationParameters();
 
         // change settings
         vm.prank(address(bs));
         bs.updateSeedGaugeSettings(
-            IMockFBeanstalk.EvaluationParameters(uint256(0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(0),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            )
         );
 
-        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getSeedGaugeSetting();
+        IMockFBeanstalk.EvaluationParameters memory ssg = bs.getEvaluationParameters();
         assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 0);
         assertEq(ssg.targetSeasonsToCatchUp, 0);
@@ -769,6 +813,48 @@ contract GaugeTest is TestHelper {
         assertEq(ssg.lpToSupplyRatioOptimal, 0);
         assertEq(ssg.lpToSupplyRatioLowerBound, 0);
         assertEq(ssg.excessivePriceThreshold, 0);
+        assertEq(ssg.soilCoefficientHigh, 0);
+        assertEq(ssg.soilCoefficientLow, 0);
+        assertEq(ssg.baseReward, 0);
+
+        // change settings
+        vm.prank(LibConstant.BEANSTALK);
+        bs.updateSeedGaugeSettings(
+            IMockFBeanstalk.EvaluationParameters(
+                uint256(1),
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+            )
+        );
+
+        ssg = bs.getEvaluationParameters();
+        assertEq(ssg.maxBeanMaxLpGpPerBdvRatio, 1);
+        assertEq(ssg.minBeanMaxLpGpPerBdvRatio, 2);
+        assertEq(ssg.targetSeasonsToCatchUp, 3);
+        assertEq(ssg.podRateLowerBound, 4);
+        assertEq(ssg.podRateOptimal, 5);
+        assertEq(ssg.podRateUpperBound, 6);
+        assertEq(ssg.deltaPodDemandLowerBound, 7);
+        assertEq(ssg.deltaPodDemandUpperBound, 8);
+        assertEq(ssg.lpToSupplyRatioUpperBound, 9);
+        assertEq(ssg.lpToSupplyRatioOptimal, 10);
+        assertEq(ssg.lpToSupplyRatioLowerBound, 11);
+        assertEq(ssg.excessivePriceThreshold, 12);
+        assertEq(ssg.soilCoefficientHigh, 13);
+        assertEq(ssg.soilCoefficientLow, 14);
+        assertEq(ssg.baseReward, 15);
     }
 
     function getPercentDifference(

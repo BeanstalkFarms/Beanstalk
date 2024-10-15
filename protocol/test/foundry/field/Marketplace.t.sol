@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {TestHelper, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {MockFieldFacet} from "contracts/mocks/mockFacets/MockFieldFacet.sol";
 import {C} from "contracts/C.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 contract ListingTest is TestHelper {
     // test accounts
@@ -15,14 +16,14 @@ contract ListingTest is TestHelper {
 
         bs.siloSunrise(0);
 
-        // initalize farmers from farmers (farmer0 == diamond deployer)
+        // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
         farmers.push(users[2]);
 
         // max approve.
         maxApproveBeanstalk(farmers);
 
-        mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmers, LibConstant.BEAN, MAX_DEPOSIT_BOUND);
 
         bs.incrementTotalSoilE(1000e18);
 

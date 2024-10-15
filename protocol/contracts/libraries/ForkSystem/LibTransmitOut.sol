@@ -16,6 +16,8 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
 import {LibField} from "contracts/libraries/LibField.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title LibTransmitOut
@@ -103,10 +105,10 @@ library LibTransmitOut {
                 deposits[i].amount
             );
 
-            if (deposits[i].token == C.BEAN) {
+            if (deposits[i].token == s.sys.tokens.bean) {
                 // Burn Bean.
                 deposits[i]._burnedBeans = deposits[i].amount;
-                C.bean().burn(deposits[i].amount);
+                IBean(s.sys.tokens.bean).burn(deposits[i].amount);
             }
             // If Well LP token. Only supports Wells with Bean:Token.
             else if (LibWell.isWell(deposits[i].token)) {
@@ -122,7 +124,7 @@ library LibTransmitOut {
                 deposits[i]._burnedBeans = tokenAmountsOut[
                     LibWell.getBeanIndexFromWell(deposits[i].token)
                 ];
-                C.bean().burn(deposits[i]._burnedBeans);
+                IBean(s.sys.tokens.bean).burn(deposits[i]._burnedBeans);
 
                 // Send non-Bean token.
                 IERC20 nonBeanToken = LibWell.getNonBeanTokenFromWell(deposits[i].token);
@@ -214,7 +216,7 @@ library LibTransmitOut {
             }
 
             uint128 remainingBpf = fertilizer[i].id - s.sys.fert.bpf;
-            C.fertilizer().beanstalkBurn(
+            IFertilizer(s.sys.tokens.fertilizer).beanstalkBurn(
                 account,
                 s.sys.fert.bpf + remainingBpf,
                 uint128(fertilizer[i].amount),

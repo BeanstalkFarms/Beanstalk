@@ -303,13 +303,14 @@ library LibSilo {
         uint256 stalk,
         GerminationSide side
     ) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         // Deposited Earned Beans do not germinate. Thus, when withdrawing a Bean Deposit
         // with a Germinating Stem, Beanstalk needs to determine how many of the Beans
         // were Planted vs Deposited from a Circulating/Farm balance.
         // If a Farmer's Germinating Stalk for a given Season is less than the number of
         // Deposited Beans in that Season, then it is assumed that the excess Beans were
         // Planted.
-        if (token == C.BEAN) {
+        if (token == s.sys.tokens.bean) {
             (uint256 germinatingStalk, uint256 earnedBeansStalk) = checkForEarnedBeans(
                 account,
                 stalk,
@@ -327,7 +328,7 @@ library LibSilo {
             // burn the earned bean stalk (which is active).
             burnActiveStalk(account, earnedBeansStalk);
             // calculate earnedBeans and decrement totalDeposited.
-            LibTokenSilo.decrementTotalDeposited(C.BEAN, earnedBeans, earnedBeans);
+            LibTokenSilo.decrementTotalDeposited(s.sys.tokens.bean, earnedBeans, earnedBeans);
         }
         // Decrement from total germinating.
         LibTokenSilo.decrementTotalGerminating(token, amount, bdv, side); // Decrement total Germinating in the silo.
@@ -484,7 +485,7 @@ library LibSilo {
         uint256 roots;
         roots = stalk == s.accts[sender].stalk
             ? s.accts[sender].roots
-            : s.sys.silo.roots.sub(1).mul(stalk).div(s.sys.silo.stalk).add(1);
+            : s.sys.silo.roots.mul(stalk).sub(1).div(s.sys.silo.stalk).add(1);
 
         // Subtract Stalk and Roots from the 'sender' balance.
         s.accts[sender].stalk = s.accts[sender].stalk.sub(stalk);
@@ -548,7 +549,7 @@ library LibSilo {
 
         if (ar.odd.bdv > 0) {
             uint256 initialStalk = ar.odd.bdv.mul(stalkPerBDV);
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned
                 // Beans. Deduct the odd BDV and increment the activeBDV by the difference.
@@ -569,7 +570,7 @@ library LibSilo {
 
         if (ar.even.bdv > 0) {
             uint256 initialStalk = ar.even.bdv.mul(stalkPerBDV);
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 // check whether the Germinating Stalk transferred exceeds the farmers
                 // Germinating Stalk. If so, the difference is considered from Earned
                 // Beans. Deduct the even BDV and increment the active BDV by the difference.
@@ -892,7 +893,6 @@ library LibSilo {
         if (s.sys.silo.roots == 0) return 0;
 
         uint256 stalk = s.sys.silo.stalk.mul(accountRoots).div(s.sys.silo.roots);
-
         // Beanstalk rounds down when minting Roots. Thus, it is possible that
         // balanceOfRoots / totalRoots * totalStalk < s.accts[account].stalk.
         // As `account` Earned Balance balance should never be negative,

@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { ContractReceipt, ContractTransaction } from 'ethers';
 import toast from 'react-hot-toast';
-import { Box, IconButton, Link, Typography } from '@mui/material';
+import { Box, IconButton, Link } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import useChainConstant from '~/hooks/chain/useChainConstant';
@@ -45,7 +45,15 @@ export function ToastAlert({
         overflow: 'hidden',
       }}
     >
-      <Box sx={{ pl: 1, pr: 2, flex: 1, alignSelf: 'flex-start', textAlign: 'center' }}>
+      <Box
+        sx={{
+          pl: 1,
+          pr: 2,
+          flex: 1,
+          alignSelf: 'flex-start',
+          textAlign: 'center',
+        }}
+      >
         <span>
           {desc}
           {hash && (
@@ -125,6 +133,12 @@ type ToastMessages = {
   error?: string;
 };
 
+const defaultToastMessages: ToastMessages = {
+  loading: 'Confirming transaction...',
+  success: 'Transaction confirmed.',
+  error: 'Transaction failed.',
+};
+
 /**
  * A lightweight wrapper around react-hot-toast
  * to minimize repetitive Toast code when issuing transactions.
@@ -136,11 +150,21 @@ export default class TransactionToast {
   /** */
   toastId: any;
 
-  constructor(messages: ToastMessages) {
-    this.messages = messages;
+  constructor(messages: Partial<ToastMessages>) {
+    this.messages = {
+      ...defaultToastMessages,
+      ...messages,
+    };
     this.toastId = toast.loading(<ToastAlert desc={this.messages.loading} />, {
       duration: Infinity,
     });
+  }
+
+  setToastMessages(messages: Partial<ToastMessages>) {
+    this.messages = {
+      ...this.messages,
+      ...messages,
+    };
   }
 
   /**

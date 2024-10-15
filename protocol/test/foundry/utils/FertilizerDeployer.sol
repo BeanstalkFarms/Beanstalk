@@ -10,6 +10,7 @@ import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 
 interface IOwner {
     function transferOwnership(address newOwner) external;
+
     function owner() external returns (address);
 }
 

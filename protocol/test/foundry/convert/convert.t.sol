@@ -7,9 +7,7 @@ import {IWell, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {MockConvertFacet} from "contracts/mocks/mockFacets/MockConvertFacet.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
-import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
  * @title ConvertTest
@@ -30,7 +28,7 @@ contract ConvertTest is TestHelper {
     );
 
     // MockTokens.
-    MockToken weth = MockToken(C.WETH);
+    MockToken weth = MockToken(LibConstant.WETH);
 
     // test accounts
     address[] farmers;
@@ -40,7 +38,7 @@ contract ConvertTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
-        well = C.BEAN_ETH_WELL;
+        well = LibConstant.BEAN_ETH_WELL;
         // init user.
         farmers.push(users[1]);
         maxApproveBeanstalk(farmers);
@@ -53,7 +51,7 @@ contract ConvertTest is TestHelper {
         );
 
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            LibConstant.BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 WETH of wstETH
         );
@@ -68,29 +66,45 @@ contract ConvertTest is TestHelper {
         multipleBeanDepositSetup();
         beanAmount = bound(beanAmount, 0, 9000e6);
 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, "BEAN -> WELL maxAmountIn should be 0");
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, "WELL -> BEAN maxAmountIn should be 0");
+        assertEq(
+            bs.getMaxAmountIn(LibConstant.BEAN, well),
+            0,
+            "BEAN -> WELL maxAmountIn should be 0"
+        );
+        assertEq(
+            bs.getMaxAmountIn(well, LibConstant.BEAN),
+            0,
+            "WELL -> BEAN maxAmountIn should be 0"
+        );
 
         uint256 snapshot = vm.snapshot();
         // decrease bean reserves
         setReserves(well, bean.balanceOf(well) - beanAmount, weth.balanceOf(well));
 
         assertEq(
-            bs.getMaxAmountIn(C.BEAN, well),
+            bs.getMaxAmountIn(LibConstant.BEAN, well),
             beanAmount,
             "BEAN -> WELL maxAmountIn should be beanAmount"
         );
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, "WELL -> BEAN maxAmountIn should be 0");
+        assertEq(
+            bs.getMaxAmountIn(well, LibConstant.BEAN),
+            0,
+            "WELL -> BEAN maxAmountIn should be 0"
+        );
 
         vm.revertTo(snapshot);
 
         // increase bean reserves
         setReserves(well, bean.balanceOf(well) + beanAmount, weth.balanceOf(well));
 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, "BEAN -> WELL maxAmountIn should be 0");
+        assertEq(
+            bs.getMaxAmountIn(LibConstant.BEAN, well),
+            0,
+            "BEAN -> WELL maxAmountIn should be 0"
+        );
         // convert lp amount to beans:
-        uint256 lpAmountOut = bs.getMaxAmountIn(well, C.BEAN);
-        uint256 beansOut = IWell(well).getRemoveLiquidityOneTokenOut(lpAmountOut, C.bean());
+        uint256 lpAmountOut = bs.getMaxAmountIn(well, LibConstant.BEAN);
+        uint256 beansOut = IWell(well).getRemoveLiquidityOneTokenOut(lpAmountOut, bean);
         assertEq(beansOut, beanAmount, "beansOut should equal beanAmount");
     }
 
@@ -183,7 +197,7 @@ contract ConvertTest is TestHelper {
         setReserves(well, beanWellAmount, weth.balanceOf(well));
 
         uint256 expectedBeansConverted = 10000e6 - beanWellAmount;
-        uint256 expectedAmtOut = bs.getAmountOut(C.BEAN, well, expectedBeansConverted);
+        uint256 expectedAmtOut = bs.getAmountOut(LibConstant.BEAN, well, expectedBeansConverted);
 
         // create encoding for a bean -> well convert.
         bytes memory convertData = convertEncoder(
@@ -197,11 +211,15 @@ contract ConvertTest is TestHelper {
         amounts[0] = type(uint256).max;
 
         vm.expectEmit();
-        emit Convert(farmers[0], C.BEAN, well, expectedBeansConverted, expectedAmtOut);
+        emit Convert(farmers[0], LibConstant.BEAN, well, expectedBeansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         bs.convert(convertData, new int96[](1), amounts);
 
-        assertEq(bs.getMaxAmountIn(C.BEAN, well), 0, "BEAN -> WELL maxAmountIn should be 0");
+        assertEq(
+            bs.getMaxAmountIn(LibConstant.BEAN, well),
+            0,
+            "BEAN -> WELL maxAmountIn should be 0"
+        );
     }
 
     /**
@@ -211,11 +229,11 @@ contract ConvertTest is TestHelper {
         multipleBeanDepositSetup();
 
         deltaB = bound(deltaB, 100, 7000e6);
-        setDeltaBforWell(int256(deltaB), well, C.WETH);
+        setDeltaBforWell(int256(deltaB), well, LibConstant.WETH);
 
         beansConverted = bound(beansConverted, 100, deltaB);
 
-        uint256 expectedAmtOut = bs.getAmountOut(C.BEAN, well, beansConverted);
+        uint256 expectedAmtOut = bs.getAmountOut(LibConstant.BEAN, well, beansConverted);
 
         // create encoding for a bean -> well convert.
         bytes memory convertData = convertEncoder(
@@ -229,14 +247,14 @@ contract ConvertTest is TestHelper {
         amounts[0] = beansConverted;
 
         // vm.expectEmit();
-        emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
+        emit Convert(farmers[0], LibConstant.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         bs.convert(convertData, new int96[](1), amounts);
 
         int256 newDeltaB = bs.poolCurrentDeltaB(well);
 
         // verify deltaB.
-        // assertEq(bs.getMaxAmountIn(C.BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');
+        // assertEq(bs.getMaxAmountIn(BEAN, well), deltaB - beansConverted, 'BEAN -> WELL maxAmountIn should be deltaB - beansConverted');
     }
 
     /**
@@ -250,7 +268,7 @@ contract ConvertTest is TestHelper {
 
         beansConverted = bound(beansConverted, 2, deltaB);
 
-        uint256 expectedAmtOut = bs.getAmountOut(C.BEAN, well, beansConverted);
+        uint256 expectedAmtOut = bs.getAmountOut(LibConstant.BEAN, well, beansConverted);
 
         // create encoding for a bean -> well convert.
         bytes memory convertData = convertEncoder(
@@ -268,13 +286,13 @@ contract ConvertTest is TestHelper {
         amounts[1] = beansConverted - amounts[0];
 
         vm.expectEmit();
-        emit Convert(farmers[0], C.BEAN, well, beansConverted, expectedAmtOut);
+        emit Convert(farmers[0], LibConstant.BEAN, well, beansConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         bs.convert(convertData, stems, amounts);
 
         // verify deltaB.
         assertEq(
-            bs.getMaxAmountIn(C.BEAN, well),
+            bs.getMaxAmountIn(LibConstant.BEAN, well),
             deltaB - beansConverted,
             "BEAN -> WELL maxAmountIn should be deltaB - beansConverted"
         );
@@ -282,12 +300,12 @@ contract ConvertTest is TestHelper {
 
     function multipleBeanDepositSetup() public {
         // Create 2 deposits, each at 10000 Beans to farmer[0].
-        C.bean().mint(farmers[0], 20000e6);
+        bean.mint(farmers[0], 20000e6);
         vm.prank(farmers[0]);
-        bs.deposit(C.BEAN, 10000e6, 0);
+        bs.deposit(LibConstant.BEAN, 10000e6, 0);
         bs.siloSunrise(0);
         vm.prank(farmers[0]);
-        bs.deposit(C.BEAN, 10000e6, 0);
+        bs.deposit(LibConstant.BEAN, 10000e6, 0);
 
         // Germinating deposits cannot convert (see {LibGerminate}).
         passGermination();
@@ -329,7 +347,7 @@ contract ConvertTest is TestHelper {
 
         setReserves(well, beanWellAmount, weth.balanceOf(well));
 
-        uint256 maxLPin = bs.getMaxAmountIn(well, C.BEAN);
+        uint256 maxLPin = bs.getMaxAmountIn(well, LibConstant.BEAN);
 
         // create encoding for a well -> bean convert.
         bytes memory convertData = convertEncoder(
@@ -343,11 +361,15 @@ contract ConvertTest is TestHelper {
         amounts[0] = type(uint256).max;
 
         vm.expectEmit();
-        emit Convert(farmers[0], well, C.BEAN, maxLPin, beansAddedToWell);
+        emit Convert(farmers[0], well, LibConstant.BEAN, maxLPin, beansAddedToWell);
         vm.prank(farmers[0]);
         bs.convert(convertData, new int96[](1), amounts);
 
-        assertEq(bs.getMaxAmountIn(well, C.BEAN), 0, "WELL -> BEAN maxAmountIn should be 0");
+        assertEq(
+            bs.getMaxAmountIn(well, LibConstant.BEAN),
+            0,
+            "WELL -> BEAN maxAmountIn should be 0"
+        );
     }
 
     /**
@@ -379,7 +401,7 @@ contract ConvertTest is TestHelper {
         uint256 initalLPbalance = MockToken(well).totalSupply();
         uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
-        uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+        uint256 maxLpIn = bs.getMaxAmountIn(well, LibConstant.BEAN);
         lpConverted = bound(lpConverted, minLp, lpMinted / 2);
 
         // if the maximum LP that can be used is less than
@@ -387,7 +409,7 @@ contract ConvertTest is TestHelper {
         // cap the amount to the maximum LP that can be used.
         if (lpConverted > maxLpIn) lpConverted = maxLpIn;
 
-        uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+        uint256 expectedAmtOut = bs.getAmountOut(well, LibConstant.BEAN, lpConverted);
 
         // create encoding for a well -> bean convert.
         bytes memory convertData = convertEncoder(
@@ -401,13 +423,13 @@ contract ConvertTest is TestHelper {
         amounts[0] = lpConverted;
 
         vm.expectEmit();
-        emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+        emit Convert(farmers[0], well, LibConstant.BEAN, lpConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         bs.convert(convertData, new int96[](1), amounts);
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
         assertEq(
-            bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)),
+            bs.getAmountOut(well, LibConstant.BEAN, bs.getMaxAmountIn(well, LibConstant.BEAN)),
             deltaB - expectedAmtOut,
             "amountOut does not equal deltaB - expectedAmtOut"
         );
@@ -441,7 +463,7 @@ contract ConvertTest is TestHelper {
         uint256 initalLPbalance = MockToken(well).totalSupply();
         uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
-        uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+        uint256 maxLpIn = bs.getMaxAmountIn(well, LibConstant.BEAN);
         lpConverted = bound(lpConverted, minLp, lpMinted);
 
         // if the maximum LP that can be used is less than
@@ -449,7 +471,7 @@ contract ConvertTest is TestHelper {
         // cap the amount to the maximum LP that can be used.
         if (lpConverted > maxLpIn) lpConverted = maxLpIn;
 
-        uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+        uint256 expectedAmtOut = bs.getAmountOut(well, LibConstant.BEAN, lpConverted);
 
         // create encoding for a well -> bean convert.
         bytes memory convertData = convertEncoder(
@@ -467,13 +489,13 @@ contract ConvertTest is TestHelper {
         amounts[1] = lpConverted - amounts[0];
 
         vm.expectEmit();
-        emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+        emit Convert(farmers[0], well, LibConstant.BEAN, lpConverted, expectedAmtOut);
         vm.prank(farmers[0]);
         bs.convert(convertData, stems, amounts);
 
         // the new maximum amount out should be the difference between the deltaB and the expected amount out.
         assertEq(
-            bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)),
+            bs.getAmountOut(well, LibConstant.BEAN, bs.getMaxAmountIn(well, LibConstant.BEAN)),
             deltaB - expectedAmtOut,
             "amountOut does not equal deltaB - expectedAmtOut"
         );
@@ -519,7 +541,7 @@ contract ConvertTest is TestHelper {
         uint256 priceRatio // ratio of TKN/BEAN (6 decimal precision)
     ) internal returns (uint256 amountOut) {
         IERC20[] memory tokens = IWell(well).tokens();
-        address nonBeanToken = address(tokens[0]) == C.BEAN
+        address nonBeanToken = address(tokens[0]) == LibConstant.BEAN
             ? address(tokens[1])
             : address(tokens[0]);
         bean.mint(well, beanAmount);
@@ -691,7 +713,7 @@ contract ConvertTest is TestHelper {
     //     uint256 initalLPbalance = MockToken(well).totalSupply();
     //     uint256 initalBeanBalance = bean.balanceOf(address(bs));
 
-    //     uint256 maxLpIn = bs.getMaxAmountIn(well, C.BEAN);
+    //     uint256 maxLpIn = bs.getMaxAmountIn(well, BEAN);
     //     lpConverted = bound(lpConverted, minLp, lpMinted / 2);
 
     //     // if the maximum LP that can be used is less than
@@ -699,7 +721,7 @@ contract ConvertTest is TestHelper {
     //     // cap the amount to the maximum LP that can be used.
     //     if (lpConverted > maxLpIn) lpConverted = maxLpIn;
 
-    //     uint256 expectedAmtOut = bs.getAmountOut(well, C.BEAN, lpConverted);
+    //     uint256 expectedAmtOut = bs.getAmountOut(well, BEAN, lpConverted);
 
     //     // create encoding for a well -> bean convert.
     //     bytes memory convertData = convertEncoder(
@@ -713,7 +735,7 @@ contract ConvertTest is TestHelper {
     //     amounts[0] = lpConverted;
 
     //     vm.expectEmit();
-    //     emit Convert(farmers[0], well, C.BEAN, lpConverted, expectedAmtOut);
+    //     emit Convert(farmers[0], well, BEAN, lpConverted, expectedAmtOut);
     //     vm.prank(farmers[0]);
     //     bs.convert(
     //         convertData,
@@ -722,7 +744,7 @@ contract ConvertTest is TestHelper {
     //     );
 
     //     // the new maximum amount out should be the difference between the deltaB and the expected amount out.
-    //     assertEq(bs.getAmountOut(well, C.BEAN, bs.getMaxAmountIn(well, C.BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
+    //     assertEq(bs.getAmountOut(well, BEAN, bs.getMaxAmountIn(well, BEAN)), deltaB - expectedAmtOut, 'amountOut does not equal deltaB - expectedAmtOut');
     //     assertEq(bean.balanceOf(well), initalWellBeanBalance - expectedAmtOut, 'well bean balance does not equal initalWellBeanBalance - expectedAmtOut');
     //     assertEq(MockToken(well).totalSupply(), initalLPbalance - lpConverted, 'well LP balance does not equal initalLPbalance - lpConverted');
     //     assertEq(bean.balanceOf(address(bs)), initalBeanBalance + expectedAmtOut, 'bean balance does not equal initalBeanBalance + expectedAmtOut');

@@ -10,25 +10,29 @@ import useSeasonsQuery, {
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useInterpolateDeposits from '~/hooks/farmer/useInterpolateDeposits';
 import useInterpolateStalk from '~/hooks/farmer/useInterpolateStalk';
+import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
 
 const useFarmerSiloHistory = (
   account: string | undefined,
   itemizeByToken: boolean = false,
   includeStalk: boolean = false
 ) => {
-  /// Data
+  const breakdown = useFarmerBalancesBreakdown();
+
   const siloRewardsQuery = useFarmerSiloRewardsQuery({
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
+    context: { subgraph: 'beanstalk_eth' },
   });
   const siloAssetsQuery = useFarmerSiloAssetSnapshotsQuery({
     variables: { account: account || '' },
     skip: !account,
     fetchPolicy: 'cache-and-network',
+    context: { subgraph: 'beanstalk_eth' },
   });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'cache-and-network',
   });
 
   const queryConfig = useMemo(
@@ -42,7 +46,8 @@ const useFarmerSiloHistory = (
   const priceQuery = useSeasonsQuery(
     SeasonalInstantPriceDocument,
     SeasonRange.ALL,
-    queryConfig
+    queryConfig,
+    'both'
   );
 
   /// Interpolate
@@ -51,15 +56,52 @@ const useFarmerSiloHistory = (
     priceQuery,
     itemizeByToken
   );
+  // const depositDataL1 = useInterpolateDeposits(
+  //   siloAssetsQueryL1,
+  //   priceQuery,
+  //   itemizeByToken
+  // )
+  // const [stalkDataL1, seedsDataL1, grownStalkDataL1] = useInterpolateStalk(
+  //   siloRewardsQueryL1,
+  //   seedsPerTokenQueryL1,
+  //   !includeStalk
+  // )
+
   const [stalkData, seedsData, grownStalkData] = useInterpolateStalk(
     siloRewardsQuery,
     seedsPerTokenQuery,
     !includeStalk
   );
 
+  const withCurrSeasonDepositsData = useMemo(() => {
+    if (!depositData.length) return depositData;
+    const copy = [...depositData];
+
+    const baseDataPoint = { ...copy[copy.length - 1] };
+    baseDataPoint.value = breakdown.states.deposited.value.toNumber();
+    if (itemizeByToken) {
+      Object.entries(breakdown.states.deposited.byToken).forEach(
+        ([tk, { value }]) => {
+          if (tk in baseDataPoint) {
+            baseDataPoint[tk] = value.toNumber();
+          }
+        }
+      );
+    }
+
+    copy[copy.length - 1] = baseDataPoint;
+    return copy;
+  }, [
+    breakdown.states.deposited.byToken,
+    breakdown.states.deposited.value,
+    itemizeByToken,
+    depositData,
+  ]);
+
   return {
+    // remove the current season's data
     data: {
-      deposits: depositData,
+      deposits: withCurrSeasonDepositsData,
       stalk: stalkData,
       seeds: seedsData,
       grownStalk: grownStalkData,

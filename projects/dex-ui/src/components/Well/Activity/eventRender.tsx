@@ -1,12 +1,28 @@
-import { Well } from "@beanstalk/sdk/Wells";
 import React from "react";
-import { AddEvent, EVENT_TYPE, RemoveEvent, ShiftEvent, SwapEvent, WellEvent } from "src/wells/useWellHistory";
-import { Row, Td } from "../Table";
-import { TokenValue } from "@beanstalk/sdk";
-import styled from "styled-components";
-import { size } from "src/breakpoints";
 
-export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | null)[], lpTokenPrice: TokenValue) => {
+import { Well } from "@beanstalk/sdk/Wells";
+import styled from "styled-components";
+
+import { TokenValue } from "@beanstalk/sdk";
+
+import { size } from "src/breakpoints";
+import {
+  AddEvent,
+  EVENT_TYPE,
+  RemoveEvent,
+  ShiftEvent,
+  SwapEvent,
+  WellEvent
+} from "src/wells/useWellHistory";
+
+import { Row, Td } from "../Table";
+
+export const renderEvent = (
+  event: WellEvent,
+  well: Well,
+  prices: (TokenValue | null)[],
+  lpTokenPrice: TokenValue
+) => {
   let action;
   let description;
   let valueUSD;
@@ -75,7 +91,11 @@ export const renderEvent = (event: WellEvent, well: Well, prices: (TokenValue | 
   return (
     <Row key={event.tx}>
       <Td>
-        <Action href={`https://etherscan.io/tx/${event.tx}`} target="_blank" rel="noopener noreferrer">
+        <Action
+          href={`https://etherscan.io/tx/${event.tx}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {action}
         </Action>
       </Td>

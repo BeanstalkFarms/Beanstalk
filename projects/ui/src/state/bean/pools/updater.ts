@@ -1,161 +1,156 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
+import { multicall } from '@wagmi/core';
 
-import {
-  useBeanstalkContract,
-  useBeanstalkPriceContract,
-} from '~/hooks/ledger/useContract';
-import { tokenResult, getChainConstant, displayBeanPrice } from '~/util';
-import { BEAN } from '~/constants/tokens';
-import { ALL_POOLS, WHITELISTED_POOLS } from '~/constants/pools';
-import { ERC20__factory } from '~/generated';
-import { useEthersProvider } from '~/util/wagmi/ethersAdapter';
-import { updatePrice, updateDeltaB, updateSupply } from '../token/actions';
+import { displayBeanPrice, tokenResult } from '~/util';
+import useSdk from '~/hooks/sdk';
+import { ContractFunctionParameters, erc20Abi } from 'viem';
+import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
+import { config } from '~/util/wagmi/config';
+import { ERC20Token, Pool } from '@beanstalk/sdk';
+import { chunkArray } from '~/util/UI';
+import { getExtractMulticallResult } from '~/util/Multicall';
+import { transform } from '~/util/BigNumber';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
+import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
+
+const pageContext = '[bean/pools/useGetPools]';
+
+const extract = getExtractMulticallResult(pageContext);
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
-  const [beanstalkPriceContract, chainId] = useBeanstalkPriceContract();
-  const provider = useEthersProvider();
+  const sdk = useSdk();
 
   // Handlers
   const _fetch = useCallback(async () => {
+    const { beanstalk, beanstalkPrice } = sdk.contracts;
     try {
-      if (beanstalk && beanstalkPriceContract) {
-        console.debug(
-          '[bean/pools/useGetPools] FETCH',
-          beanstalkPriceContract.address,
-          chainId
-        );
-        const Pools = getChainConstant(ALL_POOLS, chainId);
-        const WhitelistedPools = getChainConstant(WHITELISTED_POOLS, chainId);
-        const Bean = getChainConstant(BEAN, chainId);
+      if (beanstalk && beanstalkPrice) {
+        console.debug(`${pageContext} FETCH`, beanstalkPrice.address);
 
-        // FIXME: find regression with Bean.totalSupply()
-        const beanErc20 = ERC20__factory.connect(Bean.address, provider);
-        const [priceResult, totalSupply, totalDeltaB] = await Promise.all([
-          beanstalkPriceContract.price(),
-          // FIXME: these should probably reside in bean/token/updater,
-          // but the above beanstalkPriceContract call also grabs the
-          // aggregate price, so for now we bundle them here.
-          beanErc20.totalSupply().then(tokenResult(Bean)),
-          beanstalk.totalDeltaB().then(tokenResult(Bean)), // TWAdeltaB
+        const whitelistedPools = sdk.pools.whitelistedPools;
+        const poolsArr = [...whitelistedPools.values()];
+        const BEAN = sdk.tokens.BEAN;
+
+        const priceAndBeanCalls = [
+          makePriceMulticall(beanstalkPrice.address),
+          makeTokenTotalSupplyMulticall(BEAN),
+          makeTotalDeltaBMulticall(beanstalk.address),
+        ];
+        const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
+
+        const [priceAndBean, _lpResults] = await Promise.all([
+          // fetch [price, bean.totalSupply, totalDeltaB]
+          multicall(config, {
+            contracts: priceAndBeanCalls,
+            allowFailure: true,
+          }),
+          // fetch [poolDeltaB, totalSupply] for each pool, in chunks of 20
+          Promise.all(
+            lpMulticall.calls.map((lpCall) =>
+              multicall(config, {
+                contracts: lpCall,
+                allowFailure: true,
+              })
+            )
+          ).then((result) => chunkArray(result.flat(), lpMulticall.chunkSize)),
         ]);
 
-        if (!priceResult) return;
+        console.debug(`${pageContext} MULTICALL RESULTS: `, {
+          lpMulticall,
+          priceAndBeanCalls,
+          _lpResults,
+          priceAndBean,
+        });
 
-        console.debug(
-          '[bean/pools/useGetPools] RESULT: price contract result =',
-          priceResult,
-          totalSupply.toString()
+        const [priceResult, beanTotalSupply, totalDeltaB] = [
+          extract<PriceResultStruct>(priceAndBean[0], 'price'),
+          extract(priceAndBean[1], 'bean.totalSupply'),
+          extract(priceAndBean[2], 'totalDeltaB'),
+        ];
+
+        const lpResults = _lpResults.reduce<Record<string, LPResultType>>(
+          (prev, [_deltaB, _supply], i) => {
+            const lp = poolsArr[i].lpToken;
+
+            prev[lp.address.toLowerCase()] = {
+              deltaB: extract(_deltaB, `${lp.symbol} poolDeltaB`),
+              supply: extract(_supply, `${lp.symbol} totalSupply`),
+            };
+            return prev;
+          },
+          {}
         );
+        if (priceResult) {
+          const price = tokenResult(BEAN)(priceResult.price.toString());
 
-        // Step 2: Get LP token supply data and format as UpdatePoolPayload
-        const dataWithSupplyResult: Promise<UpdatePoolPayload>[] = [
-          ...priceResult.ps.reduce<Promise<UpdatePoolPayload>[]>(
+          const poolsPayload = priceResult.ps.reduce<UpdatePoolPayload[]>(
             (acc, poolData) => {
-              // NOTE:
-              // The below address must be lower-cased. All internal Pool/Token
-              // addresses are case-insensitive and stored as lowercase strings.
               const address = poolData.pool.toLowerCase();
+              const pool = sdk.pools.getPoolByLPToken(address);
+              const lpResult = lpResults[address];
 
-              // If a new pool is added to the Pools contract before it's
-              // configured in the frontend, this function would throw an error.
-              // Thus, we only process the pool's data if we have it configured.
-              if (Pools[address]) {
-                const POOL = Pools[address];
-                acc.push(
-                  ERC20__factory.connect(POOL.lpToken.address, provider)
-                    .totalSupply()
-                    .then(
-                      (supply) =>
-                        ({
-                          address: poolData.pool,
-                          pool: {
-                            price: tokenResult(BEAN)(poolData.price.toString()),
-                            reserves: [
-                              // NOTE:
-                              // Assumes that the ordering of tokens in the Pool instance
-                              // matches the order returned by the price contract.
-                              tokenResult(POOL.tokens[0])(poolData.balances[0]),
-                              tokenResult(POOL.tokens[1])(poolData.balances[1]),
-                            ],
-                            deltaB: tokenResult(BEAN)(
-                              poolData.deltaB.toString()
-                            ),
-                            supply: tokenResult(POOL.lpToken)(
-                              supply.toString()
-                            ),
-                            // Liquidity: always denominated in USD for the price contract
-                            liquidity: tokenResult(BEAN)(
-                              poolData.liquidity.toString()
-                            ),
-                            // USD value of 1 LP token == liquidity / supply
-                            totalCrosses: new BigNumber(0),
-                            lpUsd: tokenResult(BEAN)(poolData.lpUsd),
-                            lpBdv: tokenResult(BEAN)(poolData.lpBdv),
-                            twaDeltaB: null,
-                          },
-                        }) as UpdatePoolPayload
-                    )
-                    .then((data) => {
-                      if (WhitelistedPools[data.address.toLowerCase()]) {
-                        return beanstalk
-                          .poolDeltaB(data.address)
-                          .then((twaDeltaB) => {
-                            data.pool.twaDeltaB = tokenResult(BEAN)(
-                              twaDeltaB.toString()
-                            );
-                            return data;
-                          });
-                      }
-
-                      return data;
-                    })
-                    .catch((err) => {
-                      console.debug(
-                        '[beanstalk/pools/updater] Failed to get LP token supply',
-                        POOL.lpToken
-                      );
-                      console.error(err);
-                      throw err;
-                    })
-                );
+              if (pool) {
+                const payload: UpdatePoolPayload = {
+                  address: address,
+                  pool: {
+                    price: transform(poolData.price, 'bnjs', BEAN),
+                    reserves: [
+                      transform(poolData.balances[0], 'bnjs', pool.tokens[0]),
+                      transform(poolData.balances[1], 'bnjs', pool.tokens[1]),
+                    ],
+                    deltaB: transform(poolData.deltaB, 'bnjs', BEAN),
+                    supply: lpResult.supply
+                      ? transform(lpResult.supply, 'bnjs', pool.lpToken)
+                      : new BigNumber(0),
+                    // Liquidity: always denominated in USD for the price contract
+                    liquidity: transform(poolData.liquidity, 'bnjs', BEAN),
+                    // USD value of 1 LP token == liquidity / supply
+                    totalCrosses: new BigNumber(0),
+                    lpUsd: transform(poolData.lpUsd, 'bnjs', BEAN),
+                    lpBdv: transform(poolData.lpBdv, 'bnjs', BEAN),
+                    twaDeltaB: lpResult.deltaB
+                      ? transform(lpResult.deltaB, 'bnjs', BEAN)
+                      : null,
+                  },
+                } as UpdatePoolPayload;
+                acc.push(payload);
               } else {
                 console.debug(
-                  `[bean/pools/useGetPools] price contract returned data for pool ${address} but it isn't configured, skipping. available pools:`,
-                  Pools
+                  `${pageContext} price contract returned data for pool ${address} but it isn't configured, skipping. available pools:`,
+                  sdk.pools.pools
                 );
               }
               return acc;
             },
             []
-          ),
-        ];
+          );
+          dispatch(updatePrice(price));
+          dispatch(updateBeanPools(poolsPayload));
 
-        console.debug(
-          '[bean/pools/useGetPools] RESULT: dataWithSupply =',
-          dataWithSupplyResult
-        );
+          if (price) {
+            document.title = `$${displayBeanPrice(price, 4)} · Beanstalk App`;
+          }
+        }
 
-        const price = tokenResult(BEAN)(priceResult.price.toString());
-        dispatch(updateBeanPools(await Promise.all(dataWithSupplyResult)));
-        dispatch(updatePrice(price));
-        dispatch(updateSupply(totalSupply));
-        dispatch(updateDeltaB(totalDeltaB));
+        if (beanTotalSupply) {
+          dispatch(updateSupply(transform(beanTotalSupply, 'bnjs', BEAN)));
+        }
 
-        if (price) {
-          document.title = `$${displayBeanPrice(price, 4)} · Beanstalk App`;
+        if (totalDeltaB) {
+          dispatch(updateDeltaB(transform(totalDeltaB, 'bnjs', BEAN)));
         }
       }
     } catch (e) {
-      console.debug('[bean/pools/useGetPools] FAILED', e);
+      console.debug(`${pageContext} FAILED`, e);
       console.error(e);
     }
-  }, [dispatch, beanstalkPriceContract, beanstalk, chainId, provider]);
+  }, [sdk.contracts, sdk.pools, sdk.tokens.BEAN, dispatch]);
+
   const clear = useCallback(() => {
     dispatch(resetPools());
   }, [dispatch]);
@@ -165,12 +160,18 @@ export const useFetchPools = () => {
   return [fetch, clear];
 };
 
+export const useThrottledFetchPools = () => {
+  const [fetch] = useFetchPools();
+
+  return useMemo(() => throttle(fetch, 10_000), [fetch]);
+};
+
 // ------------------------------------------
 
 const PoolsUpdater = () => {
   const [fetch, clear] = useFetchPools();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     fetch();
   }, [fetch, clear]);
@@ -181,3 +182,93 @@ const PoolsUpdater = () => {
 };
 
 export default PoolsUpdater;
+
+// ------------------------------------------
+// Types
+
+type PriceResultStruct = {
+  price: bigint;
+  liquidity: bigint;
+  deltaB: bigint;
+  ps: {
+    pool: string;
+    tokens: [string, string];
+    balances: [bigint, bigint];
+    price: bigint;
+    liquidity: bigint;
+    deltaB: bigint;
+    lpUsd: bigint;
+    lpBdv: bigint;
+  }[];
+};
+
+type LPResultType = {
+  deltaB: bigint | null;
+  supply: bigint | null;
+};
+
+// ------------------------------------------
+// Helpers
+
+function makeTokenTotalSupplyMulticall(
+  token: ERC20Token
+): ContractFunctionParameters<typeof erc20Abi> {
+  return {
+    address: token.address as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'totalSupply',
+    args: [],
+  };
+}
+
+function makeTotalDeltaBMulticall(
+  beanstalkAddress: string
+): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.totalDeltaB> {
+  return {
+    address: beanstalkAddress as `0x${string}`,
+    abi: BEANSTALK_ABI_SNIPPETS.totalDeltaB,
+    functionName: 'totalDeltaB',
+    args: [],
+  };
+}
+
+function makePriceMulticall(
+  address: string
+): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.price> {
+  return {
+    address: address as `0x${string}`,
+    abi: BEANSTALK_ABI_SNIPPETS.price,
+    functionName: 'price',
+    args: [],
+  };
+}
+
+function makeLPMulticall(
+  beanstalkAddress: string,
+  pools: Pool[]
+): {
+  calls: ContractFunctionParameters[][];
+  chunkSize: number;
+} {
+  const calls: ContractFunctionParameters[] = [];
+
+  pools.forEach((pool) => {
+    const address = pool.address as `0x${string}`;
+    const deltaBCall: ContractFunctionParameters<
+      typeof BEANSTALK_ABI_SNIPPETS.poolDeltaB
+    > = {
+      address: beanstalkAddress as `0x${string}`,
+      abi: BEANSTALK_ABI_SNIPPETS.poolDeltaB,
+      functionName: 'poolDeltaB',
+      args: [address],
+    };
+    const totalSupplyCall = makeTokenTotalSupplyMulticall(pool.lpToken);
+
+    calls.push(deltaBCall, totalSupplyCall);
+  });
+
+  return {
+    calls: chunkArray(calls, 20),
+    chunkSize: 2,
+  };
+}

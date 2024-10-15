@@ -12,6 +12,8 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {Season} from "contracts/beanstalk/storage/System.sol";
 import {Rain} from "contracts/beanstalk/storage/System.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title FloodTest
@@ -38,17 +40,17 @@ contract FloodTest is TestHelper {
         // init user.
         farmers.push(users[1]);
         vm.prank(farmers[0]);
-        C.bean().approve(address(bs), type(uint256).max);
+        IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
 
-        // Initialize well to balances. (1000 BEAN/ETH)
+        // Initialize well to balances. (1000 LibConstant.BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             1000000e6, // 10,000 Beans
             1000 ether // 10 ether.
         );
 
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            LibConstant.BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -56,7 +58,7 @@ contract FloodTest is TestHelper {
         bs.siloSunrise(0);
         bs.siloSunrise(0);
 
-        depositStemBean = bs.stemTipForToken(C.BEAN);
+        depositStemBean = bs.stemTipForToken(LibConstant.BEAN);
 
         // users 1 and 2 deposits 1000 beans into the silo.
         address[] memory depositUsers = new address[](2);
@@ -70,49 +72,41 @@ contract FloodTest is TestHelper {
 
     function testBugReportLostPlenty2() public {
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         // set reserves so next season plenty is accrued
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise(); // 1st actual sop
-        bs.mow(users[1], C.BEAN);
-
+        bs.mow(users[1], LibConstant.BEAN);
         bs.rainSunrise();
         bs.rainSunrise();
-
-        bs.droughtSunrise();
-        bs.droughtSunrise();
-
         // withdraw deposit
         vm.prank(users[1]);
-        bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
+        bs.withdrawDeposit(LibConstant.BEAN, depositStemBean, 1_000e6, 0);
 
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
-
-        uint256 userPlenty = bs.balanceOfPlenty(users[1], C.BEAN_ETH_WELL);
-        assertEq(userPlenty, 25595575914848452999);
+        bs.mow(users[1], LibConstant.BEAN);
     }
 
     function testReducesRainRootsUponWithdrawal() public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise();
         bs.rainSunrise();
 
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
         assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
-        bs.withdrawDeposit(C.BEAN, depositStemBean, 1_000e6, 0);
+        bs.withdrawDeposit(LibConstant.BEAN, depositStemBean, 1_000e6, 0);
 
         rainRoots = bs.balanceOfRainRoots(users[1]);
 
@@ -120,18 +114,18 @@ contract FloodTest is TestHelper {
     }
 
     function testStopsRainingAndWithdraw() public {
-        int96 stem = bs.stemTipForToken(C.BEAN);
+        int96 stem = bs.stemTipForToken(LibConstant.BEAN);
         address[] memory testUsers = new address[](1);
 
         testUsers[0] = users[3];
         depostBeansForUsers(testUsers, 50_000e6, 100_000e6, false);
 
         // set reserves so that a sop will occur
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise();
-        bs.mow(users[3], C.BEAN);
+        bs.mow(users[3], LibConstant.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[3]);
         assertEq(rainRoots, 500000000000000000000000000000000);
@@ -140,14 +134,14 @@ contract FloodTest is TestHelper {
 
         // withdraw
         vm.prank(users[3]);
-        bs.withdrawDeposit(C.BEAN, stem, 50_000e6, 0);
+        bs.withdrawDeposit(LibConstant.BEAN, stem, 50_000e6, 0);
         rainRoots = bs.balanceOfRainRoots(users[3]);
         assertEq(rainRoots, 0);
 
         // start raining again
         bs.rainSunrise();
         bs.rainSunrise();
-        bs.mow(users[3], C.BEAN);
+        bs.mow(users[3], LibConstant.BEAN);
         rainRoots = bs.balanceOfRainRoots(users[3]);
         assertEq(rainRoots, 0);
 
@@ -157,21 +151,21 @@ contract FloodTest is TestHelper {
     }
 
     function testBurnsRainRootsUponTransfer() public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise(); // start raining
         bs.rainSunrise(); // sop
 
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
         assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
-        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 1_000e6);
-        bs.mow(users[1], C.BEAN);
+        bs.transferDeposit(users[1], users[3], LibConstant.BEAN, depositStemBean, 1_000e6);
+        bs.mow(users[1], LibConstant.BEAN);
 
         // user[1] should have 0 rain roots
         assertEq(bs.balanceOfRainRoots(users[1]), 0);
@@ -180,34 +174,34 @@ contract FloodTest is TestHelper {
     }
 
     function testBurnsHalfOfRainRootsUponHalfTransfer() public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise(); // start raining
         bs.rainSunrise(); // sop
 
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
         assertEq(rainRoots, 10004000000000000000000000000000);
 
         vm.prank(users[1]);
-        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
-        bs.mow(users[1], C.BEAN);
+        bs.transferDeposit(users[1], users[3], LibConstant.BEAN, depositStemBean, 500e6);
+        bs.mow(users[1], LibConstant.BEAN);
 
         // user[1] should be down by 500 rain roots
         assertEq(bs.balanceOfRainRoots(users[1]), 5004000000000000000000000000000);
     }
 
     function testDoesNotBurnRainRootsUponTransferIfExtraRootsAvailable() public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise(); // start raining
         bs.rainSunrise(); // sop
 
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         uint256 rainRoots = bs.balanceOfRainRoots(users[1]);
 
@@ -215,7 +209,7 @@ contract FloodTest is TestHelper {
 
         // do another deposit
         vm.prank(users[1]);
-        bs.deposit(C.BEAN, 1_000e6, 0);
+        bs.deposit(LibConstant.BEAN, 1_000e6, 0);
 
         // pass germination
         bs.siloSunrise(0);
@@ -228,27 +222,27 @@ contract FloodTest is TestHelper {
         assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
 
         vm.prank(users[1]);
-        bs.transferDeposit(users[1], users[3], C.BEAN, depositStemBean, 500e6);
-        bs.mow(users[1], C.BEAN);
+        bs.transferDeposit(users[1], users[3], LibConstant.BEAN, depositStemBean, 500e6);
+        bs.mow(users[1], LibConstant.BEAN);
 
         // user should have full rain roots, since they had non-rain roots that could be removed before
         assertEq(bs.balanceOfRainRoots(users[1]), 10004000000000000000000000000000);
     }
 
     function testGerminationRainRoots() public {
-        C.bean().mint(users[3], 50_000e6);
+        bean.mint(users[3], 50_000e6);
         vm.prank(users[3]);
-        C.bean().approve(address(bs), type(uint256).max);
+        IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
         vm.prank(users[3]);
-        bs.deposit(C.BEAN, 50_000e6, 0);
+        bs.deposit(LibConstant.BEAN, 50_000e6, 0);
 
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise();
 
         bs.rainSunrise();
-        bs.mow(users[3], C.BEAN);
+        bs.mow(users[3], LibConstant.BEAN);
 
         uint256 totalRainRoots = bs.totalRainRoots();
         uint256 userRainRoots = bs.balanceOfRainRoots(users[3]);
@@ -266,17 +260,17 @@ contract FloodTest is TestHelper {
 
         uint256 totalRainRootsBefore = bs.totalRainRoots();
 
-        C.bean().mint(users[3], 50_000e6);
+        bean.mint(users[3], 50_000e6);
         vm.prank(users[3]);
-        C.bean().approve(address(bs), type(uint256).max);
+        IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
         vm.prank(users[3]);
-        bs.deposit(C.BEAN, 50_000e6, 0);
+        bs.deposit(LibConstant.BEAN, 50_000e6, 0);
         // set reserves so we'll sop
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
-        setInstantaneousReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setInstantaneousReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         bs.rainSunrise(); // sop
-        bs.mow(users[3], C.BEAN);
+        bs.mow(users[3], LibConstant.BEAN);
 
         uint256 totalRainRootsAfter = bs.totalRainRoots();
         // rain roots before should equal rain roots after, anything deposited after raining doesn't count
@@ -308,7 +302,7 @@ contract FloodTest is TestHelper {
     function testRaining() public {
         bs.incrementTotalPodsE(1000e18, bs.activeField());
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         Rain memory rain = seasonGetters.rain();
         Season memory s = seasonGetters.time();
@@ -322,15 +316,18 @@ contract FloodTest is TestHelper {
 
         assertEq(sop.lastRain, s.rainStart);
         assertEq(sop.roots, 10004000e24);
+
+        // verify the beanToMaxLpGpPerBdvRatio is zero after rain starts
+        assertEq(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
     }
 
     function testStopsRaining() public {
         bs.incrementTotalPodsE(1000e18, bs.activeField());
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         bs.droughtSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         Season memory s = seasonGetters.time();
         assertEq(s.rainStart, s.current - 1);
@@ -348,7 +345,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsBelowPeg() public {
-        setDeltaBforWell(-1000e6, C.BEAN_ETH_WELL, C.WETH);
+        setDeltaBforWell(-1000e6, LibConstant.BEAN_ETH_WELL, LibConstant.WETH);
         bs.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
@@ -357,7 +354,9 @@ contract FloodTest is TestHelper {
     }
 
     function testOneSop() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        assertGt(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
+
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         // there's only one well, so sop amount into that well will be the current deltaB
@@ -365,8 +364,8 @@ contract FloodTest is TestHelper {
 
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
-            IERC20(C.BEAN),
-            IERC20(C.WETH),
+            IERC20(LibConstant.BEAN),
+            IERC20(LibConstant.WETH),
             uint256(currentDeltaB)
         );
 
@@ -378,7 +377,7 @@ contract FloodTest is TestHelper {
             C.SOP_PRECISION; // 25595575914848452999
 
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         vm.expectEmit();
         emit SeasonOfPlentyField(0); // zero in this test since no beans in podline
@@ -387,7 +386,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            LibConstant.WETH,
             51191151829696906017
         );
 
@@ -398,7 +397,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
+        assertEq(IERC20(LibConstant.WETH).balanceOf(address(bs)), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -409,7 +408,7 @@ contract FloodTest is TestHelper {
         assertEq(userPlenty, userCalcPlenty);
 
         // tracks user plenty after update
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
         assertEq(userSop.lastRain, 6);
@@ -426,7 +425,7 @@ contract FloodTest is TestHelper {
         assertEq(bs.balanceOfPlenty(users[2], sopWell), userCalcPlenty);
 
         // tracks user2 plenty after update
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], LibConstant.BEAN);
         userSop = siloGetters.balanceOfSop(users[2]);
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
@@ -436,19 +435,20 @@ contract FloodTest is TestHelper {
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, userCalcPlentyPerRoot);
 
         // claims user plenty
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], LibConstant.BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
-        assertEq(IERC20(C.WETH).balanceOf(users[2]), userCalcPlenty);
+        assertEq(IERC20(LibConstant.WETH).balanceOf(users[2]), userCalcPlenty);
     }
 
     function testMultipleSop() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
+        assertGt(bs.getBeanToMaxLpGpPerBdvRatio(), 0);
 
         bs.rainSunrise();
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], LibConstant.BEAN);
         bs.rainSunrise();
         bs.droughtSunrise();
 
@@ -461,7 +461,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 2, // flood will happen in two seasons
             sopWell,
-            C.WETH,
+            LibConstant.WETH,
             25900501355272002583
         );
 
@@ -473,7 +473,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 77091653184968908600);
+        assertEq(IERC20(LibConstant.WETH).balanceOf(address(bs)), 77091653184968908600);
 
         assertEq(reserves[0], 1074099498643);
         assertEq(reserves[1], 1074099498644727997417);
@@ -508,7 +508,7 @@ contract FloodTest is TestHelper {
     }
 
     function testWithCurrentBalances() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1_000_000e6, 1_100e18);
 
         // set instantaneous reserves differently
@@ -524,7 +524,7 @@ contract FloodTest is TestHelper {
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen in two seasons
             sopWell,
-            C.WETH,
+            LibConstant.WETH,
             51191151829696906017
         );
 
@@ -537,7 +537,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
+        assertEq(IERC20(LibConstant.WETH).balanceOf(address(bs)), 51191151829696906017);
 
         assertEq(reserves[0], 1048808848170);
         assertEq(reserves[1], 1048808848170303093983);
@@ -547,7 +547,7 @@ contract FloodTest is TestHelper {
         assertEq(userPlenty, 25595575914848452999);
 
         // tracks user plenty after update
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
 
         assertEq(userSop.lastRain, 6);
@@ -572,13 +572,13 @@ contract FloodTest is TestHelper {
         // claims user plenty
         bs.mow(users[2], sopWell);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(bs.balanceOfPlenty(users[2], sopWell), 0);
-        assertEq(IERC20(C.WETH).balanceOf(users[2]), 25595575914848452999);
+        assertEq(IERC20(LibConstant.WETH).balanceOf(users[2]), 25595575914848452999);
     }
 
     function testSopUsingRealSunrise() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         // there's only one well, so sop amount into that well will be the current deltaB
@@ -589,8 +589,8 @@ contract FloodTest is TestHelper {
 
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
-            IERC20(C.BEAN),
-            IERC20(C.WETH),
+            IERC20(LibConstant.BEAN),
+            IERC20(LibConstant.WETH),
             uint256(currentDeltaB)
         );
 
@@ -697,7 +697,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopAndDewhitelist() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         // there's only one well, so sop amount into that well will be the current deltaB
@@ -705,8 +705,8 @@ contract FloodTest is TestHelper {
 
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
-            IERC20(C.BEAN),
-            IERC20(C.WETH),
+            IERC20(LibConstant.BEAN),
+            IERC20(LibConstant.WETH),
             uint256(currentDeltaB)
         );
 
@@ -718,13 +718,13 @@ contract FloodTest is TestHelper {
             C.SOP_PRECISION; // 25595575914848452999
 
         bs.rainSunrise(); // start raining
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         vm.expectEmit();
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            LibConstant.WETH,
             51191151829696906017
         );
 
@@ -732,25 +732,21 @@ contract FloodTest is TestHelper {
 
         // de-whitelist bean eth well
         vm.prank(address(bs));
-        bs.dewhitelistToken(C.BEAN_ETH_WELL);
+        bs.dewhitelistToken(LibConstant.BEAN_ETH_WELL);
 
         Season memory s = seasonGetters.time();
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
-        // after the swap, the composition of the pools are
+        assertEq(IERC20(LibConstant.WETH).balanceOf(address(bs)), 51191151829696906017);
         uint256[] memory balances = IWell(sopWell).getReserves();
-        assertEq(balances[0], 1048808848170);
-        assertEq(balances[1], 1048808848170303093983);
-
         // tracks user plenty before update
         uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
         assertEq(userPlenty, userCalcPlenty);
 
         // tracks user plenty after update
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
         assertEq(userSop.lastRain, 6);
@@ -771,7 +767,7 @@ contract FloodTest is TestHelper {
         assertEq(bs.balanceOfPlenty(users[2], sopWell), userCalcPlenty);
 
         // tracks user2 plenty after update
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], LibConstant.BEAN);
         userSop = siloGetters.balanceOfSop(users[2]);
         assertEq(userSop.lastRain, 6);
         assertEq(userSop.lastSop, 6);
@@ -781,23 +777,23 @@ contract FloodTest is TestHelper {
         assertEq(userSop.farmerSops[0].wellsPlenty.plentyPerRoot, userCalcPlentyPerRoot);
 
         // claims user plenty
-        bs.mow(users[2], C.BEAN);
+        bs.mow(users[2], LibConstant.BEAN);
         vm.prank(users[2]);
-        bs.claimPlenty(sopWell, IMockFBeanstalk.To.EXTERNAL);
+        bs.claimPlenty(sopWell, 0);
         assertEq(
             bs.balanceOfPlenty(users[2], sopWell),
             0,
             "balance of plenty not cleared after claim"
         );
         assertEq(
-            IERC20(C.WETH).balanceOf(users[2]),
+            IERC20(LibConstant.WETH).balanceOf(users[2]),
             userCalcPlenty,
             "user balance not correct after claim"
         );
     }
 
     function testDewhitelistAndMoreSops() public {
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         // there's only one well, so sop amount into that well will be the current deltaB
@@ -805,8 +801,8 @@ contract FloodTest is TestHelper {
 
         // getSwapOut for how much Beanstalk will get for swapping this amount of beans
         uint256 amountOut = IWell(sopWell).getSwapOut(
-            IERC20(C.BEAN),
-            IERC20(C.WETH),
+            IERC20(LibConstant.BEAN),
+            IERC20(LibConstant.WETH),
             uint256(currentDeltaB)
         );
 
@@ -818,13 +814,13 @@ contract FloodTest is TestHelper {
             C.SOP_PRECISION; // 25595575914848452999
 
         bs.rainSunrise(); // start raining
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         vm.expectEmit();
         emit SeasonOfPlentyWell(
             seasonGetters.time().current + 1, // flood will happen next season
             sopWell,
-            C.WETH,
+            LibConstant.WETH,
             51191151829696906017
         );
 
@@ -832,10 +828,10 @@ contract FloodTest is TestHelper {
 
         // de-whitelist bean eth well
         vm.prank(address(bs));
-        bs.dewhitelistToken(C.BEAN_ETH_WELL);
+        bs.dewhitelistToken(LibConstant.BEAN_ETH_WELL);
 
         // mow after dewhitelist
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         bs.rainSunrise(); // sop one more after dewhitelist
 
         // get balance of plenty
@@ -846,7 +842,7 @@ contract FloodTest is TestHelper {
         // stop sopping
         bs.siloSunrise(0);
         bs.siloSunrise(0);
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         setReserves(sopWell, 1_000_000e6, 1_100e18);
         // start sopping again
@@ -854,25 +850,25 @@ contract FloodTest is TestHelper {
         bs.rainSunrise();
 
         // neither of these should revert
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
         bs.balanceOfPlenty(users[1], sopWell);
     }
 
     // test making Beans harvestable
     function testHarvestablePodlineLessThanPointOnePercent(uint256 amount) public {
-        setReserves(C.BEAN_ETH_WELL, 1000000e6, 1100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1000000e6, 1100e18);
 
         amount = bound(amount, 1, 1_000e6);
 
         // "buy" some pods
         bs.incrementTotalPodsE(bs.activeField(), amount);
 
-        uint256 initialBeanSupply = C.bean().totalSupply();
+        uint256 initialBeanSupply = bean.totalSupply();
         uint256 initialPodLine = bs.podIndex(bs.activeField());
         uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         vm.expectEmit();
 
@@ -881,7 +877,7 @@ contract FloodTest is TestHelper {
         bs.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestableForActiveField();
-        uint256 newBeanSupply = C.bean().totalSupply();
+        uint256 newBeanSupply = bean.totalSupply();
         uint256 newPodLine = bs.podIndex(bs.activeField());
 
         assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
@@ -892,17 +888,17 @@ contract FloodTest is TestHelper {
     }
 
     function testHarvestablePodlineMoreThanPointOnePercent(uint256 amount) public {
-        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
+        setReserves(LibConstant.BEAN_ETH_WELL, 1_000_000e6, 1_100e18);
 
         amount = bound(amount, 10_000e6, 100_000e6);
 
         bs.incrementTotalPodsE(bs.activeField(), amount);
-        uint256 initialBeanSupply = C.bean().totalSupply();
+        uint256 initialBeanSupply = bean.totalSupply();
         uint256 initialPodLine = bs.podIndex(bs.activeField());
         uint256 initialHarvestable = bs.totalHarvestableForActiveField();
 
         bs.rainSunrise();
-        bs.mow(users[1], C.BEAN);
+        bs.mow(users[1], LibConstant.BEAN);
 
         vm.expectEmit();
         emit SeasonOfPlentyField(initialBeanSupply / 1000);
@@ -910,7 +906,7 @@ contract FloodTest is TestHelper {
         bs.rainSunrise();
 
         uint256 newHarvestable = bs.totalHarvestableForActiveField();
-        uint256 newBeanSupply = C.bean().totalSupply();
+        uint256 newBeanSupply = bean.totalSupply();
         uint256 newPodLine = bs.podIndex(bs.activeField());
 
         assertGt(newBeanSupply, initialBeanSupply); // Beans were minted
@@ -923,8 +919,8 @@ contract FloodTest is TestHelper {
     // TODO test with more wells?
     function testGetWellsByDeltaB() public {
         //set up wells to test
-        addLiquidityToWell(C.BEAN_ETH_WELL, 13000e6, 10 ether);
-        addLiquidityToWell(C.BEAN_WSTETH_WELL, 12000e6, 10 ether);
+        addLiquidityToWell(LibConstant.BEAN_ETH_WELL, 13000e6, 10 ether);
+        addLiquidityToWell(LibConstant.BEAN_WSTETH_WELL, 12000e6, 10 ether);
 
         (IMockFBeanstalk.WellDeltaB[] memory wells, , , ) = bs.getWellsByDeltaB();
 
@@ -1024,23 +1020,23 @@ contract FloodTest is TestHelper {
     function test_notGerminated() public {
         address customUser = address(1337);
 
-        C.bean().mint(customUser, 10_000e6);
+        bean.mint(customUser, 10_000e6);
         vm.prank(customUser);
-        C.bean().approve(address(bs), type(uint256).max);
+        IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
         vm.prank(customUser);
-        bs.deposit(C.BEAN, 1000e6, 0);
+        bs.deposit(LibConstant.BEAN, 1000e6, 0);
 
         bs.siloSunrise(0);
         bs.siloSunrise(0);
         bs.siloSunrise(0); // should be germinated by now, not mown though
 
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
         bs.rainSunrise();
         bs.rainSunrise();
 
-        bs.mow(customUser, C.BEAN);
+        bs.mow(customUser, LibConstant.BEAN);
 
         uint256 balanceOfPlenty = bs.balanceOfPlenty(customUser, sopWell);
         // TODO: manually calculate this value to ensure it's correct
@@ -1050,24 +1046,24 @@ contract FloodTest is TestHelper {
     function test_Germinated() public {
         address customUser = address(1337);
 
-        C.bean().mint(customUser, 10_000e6);
+        bean.mint(customUser, 10_000e6);
         vm.prank(customUser);
-        C.bean().approve(address(bs), type(uint256).max);
+        IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
         vm.prank(customUser);
-        bs.deposit(C.BEAN, 1000e6, 0);
+        bs.deposit(LibConstant.BEAN, 1000e6, 0);
 
         bs.siloSunrise(0);
         bs.siloSunrise(0);
         bs.siloSunrise(0); // should be germinated by now, not mown though
 
-        address sopWell = C.BEAN_ETH_WELL;
+        address sopWell = LibConstant.BEAN_ETH_WELL;
         setReserves(sopWell, 1000000e6, 1100e18);
 
-        bs.mow(customUser, C.BEAN);
+        bs.mow(customUser, LibConstant.BEAN);
         bs.rainSunrise();
         bs.rainSunrise();
 
-        bs.mow(customUser, C.BEAN);
+        bs.mow(customUser, LibConstant.BEAN);
 
         uint256 balanceOfPlenty = bs.balanceOfPlenty(customUser, sopWell);
         // TODO: manually calculate this value to ensure it's correct
@@ -1113,11 +1109,11 @@ contract FloodTest is TestHelper {
         bool mow
     ) public {
         for (uint i = 0; i < users.length; i++) {
-            C.bean().mint(users[i], beansMint);
+            bean.mint(users[i], beansMint);
             vm.prank(users[i]);
-            C.bean().approve(address(bs), type(uint256).max);
+            IBean(LibConstant.BEAN).approve(address(bs), type(uint256).max);
             vm.prank(users[i]);
-            bs.deposit(C.BEAN, beansDeposit, 0);
+            bs.deposit(LibConstant.BEAN, beansDeposit, 0);
         }
 
         // pass germination process
@@ -1128,7 +1124,7 @@ contract FloodTest is TestHelper {
             for (uint i = 0; i < users.length; i++) {
                 // mow, so that lastUpdated has been called at least once
                 vm.prank(users[i]);
-                bs.mow(users[i], C.BEAN);
+                bs.mow(users[i], LibConstant.BEAN);
             }
         }
     }

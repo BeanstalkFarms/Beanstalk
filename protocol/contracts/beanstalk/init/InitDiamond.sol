@@ -6,6 +6,8 @@ pragma solidity ^0.8.20;
 
 import {InitializeDiamond} from "contracts/beanstalk/init/InitializeDiamond.sol";
 import {C} from "contracts/C.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @author Publius, Brean
@@ -19,8 +21,8 @@ contract InitDiamond is InitializeDiamond {
     uint256 constant INIT_SUPPLY = 100e6;
 
     function init() external {
-        initializeDiamond(C.BEAN, C.BEAN_ETH_WELL);
+        initializeDiamond(LibConstant.BEAN, LibConstant.BEAN_ETH_WELL);
 
-        C.bean().mint(msg.sender, INIT_SUPPLY);
+        IBean(LibConstant.BEAN).mint(msg.sender, INIT_SUPPLY);
     }
 }

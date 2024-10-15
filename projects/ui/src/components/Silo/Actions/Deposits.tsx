@@ -3,7 +3,8 @@ import { useAccount as useWagmiAccount } from 'wagmi';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import { GridColumns } from '@mui/x-data-grid';
 import { ERC20Token } from '@beanstalk/sdk';
-import { BigNumber } from 'ethers';
+import { BigNumber as ethersBN } from 'ethers';
+import { BigNumber } from 'bignumber.js';
 import { Token } from '~/classes';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
 import type { LegacyDepositCrate } from '~/state/farmer/silo';
@@ -33,13 +34,13 @@ const Deposits: FC<
   const account = useWagmiAccount();
   const newToken = sdk.tokens.findBySymbol(token.symbol) as ERC20Token;
 
-  const stemTip = useStemTipForToken(newToken) || BigNumber.from(0);
-  const lastStem = siloBalance?.mowStatus?.lastStem || BigNumber.from(0);
+  const stemTip = useStemTipForToken(newToken) || ethersBN.from(0);
+  const lastStem = siloBalance?.mowStatus?.lastStem || ethersBN.from(0);
   const deltaStem = transform(stemTip.sub(lastStem), 'bnjs').div(1_000_000);
-  const rows: (LegacyDepositCrate & { id: string })[] = useMemo(
+  const rows: (LegacyDepositCrate & { key: string })[] = useMemo(
     () =>
       siloBalance?.deposited.crates.map((deposit) => ({
-        id: deposit.stem?.toString(),
+        key: deposit.id.toString(),
         mowableStalk: deposit.bdv?.multipliedBy(deltaStem).div(10000),
         ...deposit,
       })) || [],
@@ -81,7 +82,7 @@ const Deposits: FC<
                     <Fiat amount={params.row.amount} token={token} />
                   </StatHorizontal>
                   <StatHorizontal label="Stem">
-                    {params.row.stem.toString()}
+                    {params.row.key.toString()}
                   </StatHorizontal>
                 </Stack>
               }
@@ -150,7 +151,10 @@ const Deposits: FC<
                 <Stack gap={0.5}>
                   <StatHorizontal label="Mown Grown Stalk">
                     {displayFullBN(
-                      params.row.stalk.grown.minus(params.row.mowableStalk),
+                      BigNumber.max(
+                        params.row.stalk.grown.minus(params.row.mowableStalk),
+                        ZERO_BN
+                      ),
                       2,
                       2
                     )}

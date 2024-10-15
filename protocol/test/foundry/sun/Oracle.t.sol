@@ -6,6 +6,7 @@ import {TestHelper, LibTransfer} from "test/foundry/utils/TestHelper.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
 import {ICumulativePump} from "contracts/interfaces/basin/pumps/ICumulativePump.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
  * @notice Tests the oracle portion of sunrise.
@@ -46,7 +47,7 @@ contract OracleTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -54,7 +55,7 @@ contract OracleTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/WSTETH)
         // note: wstETH:stETH ratio is initialized to 1:1.
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 wstETH.
         );
@@ -124,10 +125,10 @@ contract OracleTest is TestHelper {
      * @notice tests that the deltaB for a well is capped at 1% of supply.
      */
     function test_oracleCappedDeltaB(uint256 entropy) public {
-        int256[] memory deltaBPerWell = setDeltaBForWellsWithEntropy(entropy);
+        setDeltaBForWellsWithEntropy(entropy);
         for (uint i; i < lps.length; i++) {
             int256 poolDeltaB = bs.poolDeltaB(lps[i]);
-            uint256 beanSupply = C.bean().totalSupply();
+            uint256 beanSupply = bean.totalSupply();
             assertLe(uint256(abs(poolDeltaB)), beanSupply);
         }
     }

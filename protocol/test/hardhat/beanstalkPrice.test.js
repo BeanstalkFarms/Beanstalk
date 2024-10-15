@@ -26,7 +26,7 @@ describe("BeanstalkPrice", function () {
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
     this.diamond = contracts.beanstalkDiamond;
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(this.diamond.address);
 
@@ -82,7 +82,7 @@ describe("BeanstalkPrice", function () {
       });
 
       const p = await this.beanstalkPrice.price();
-      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address);
+      const w = await this.beanstalkPrice.getWell(this.beanEthWell.address);
 
       expect(p.price).to.equal("1499997");
       expect(p.liquidity).to.equal("3999994000000");
@@ -103,7 +103,7 @@ describe("BeanstalkPrice", function () {
       });
 
       const p = await this.beanstalkPrice.price();
-      const w = await this.beanstalkPrice.getConstantProductWell(this.beanEthWell.address);
+      const w = await this.beanstalkPrice.getWell(this.beanEthWell.address);
 
       expect(p.price).to.equal("749999");
       expect(p.liquidity).to.equal("3999994000000");

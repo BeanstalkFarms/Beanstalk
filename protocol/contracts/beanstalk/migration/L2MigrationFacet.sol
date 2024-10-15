@@ -19,16 +19,16 @@ import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
  * L1 Beans for value), Beanstalk allows Farmers who hold Beans to 1) Burn their Beans on L1 and 2) Issue the
  * same amount on L2.
  *
- * Beanstalk also allows contracts that own Beanstalk assets to approve an address on L2 to recieve their assets.
+ * Beanstalk also allows contracts that own Beanstalk assets to approve an address on L2 to receive their assets.
  * Beanstalk cannot mint Beanstalk assets to an contract on L2, as it cannot assume that the owner of the contract
  * has access to the same address on L2.
  *
  **/
 
-interface IL1RecieverFacet {
-    function recieveL1Beans(address reciever, uint256 amount, LibTransfer.To toMode) external;
+interface IL1ReceiverFacet {
+    function recieveL1Beans(address receiver, uint256 amount, LibTransfer.To toMode) external;
 
-    function approveReciever(address owner, address reciever) external;
+    function approveReceiver(address owner, address receiver) external;
 }
 
 interface IInbox {
@@ -53,10 +53,10 @@ contract L2MigrationFacet is ReentrancyGuard {
 
     /**
      * @notice migrates `amount` of Beans to L2,
-     * issued to `reciever`.
+     * issued to `receiver`.
      */
     function migrateL2Beans(
-        address reciever,
+        address receiver,
         address L2Beanstalk,
         uint256 amount,
         LibTransfer.To toMode,
@@ -68,8 +68,8 @@ contract L2MigrationFacet is ReentrancyGuard {
         IBean(L1_BEAN).burnFrom(msg.sender, amount);
 
         bytes memory data = abi.encodeCall(
-            IL1RecieverFacet(L2Beanstalk).recieveL1Beans,
-            (reciever, amount, toMode)
+            IL1ReceiverFacet(L2Beanstalk).recieveL1Beans,
+            (receiver, amount, toMode)
         );
 
         // send data to L2Beanstalk via the bridge.
@@ -77,7 +77,7 @@ contract L2MigrationFacet is ReentrancyGuard {
             L2Beanstalk,
             0,
             maxSubmissionCost,
-            msg.sender,
+            receiver, // excessFeeRefundAddress
             msg.sender,
             maxGas,
             gasPriceBid,
@@ -89,12 +89,12 @@ contract L2MigrationFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice allows a contract to approve an address on L2 to recieve their Beanstalk assets.
+     * @notice allows a contract to approve an address on L2 to receive their Beanstalk assets.
      * @dev Beanstalk cannot assume that owners of a contract are able to have access to the same address on L2.
-     * Thus, contracts that own Beanstalk Assets must approve an address on L2 to recieve their assets.
+     * Thus, contracts that own Beanstalk Assets must approve an address on L2 to receive their assets.
      */
-    function approveL2Reciever(
-        address reciever,
+    function approveL2Receiver(
+        address receiver,
         address L2Beanstalk,
         uint256 maxSubmissionCost,
         uint256 maxGas,
@@ -102,11 +102,11 @@ contract L2MigrationFacet is ReentrancyGuard {
     ) external payable nonReentrant returns (uint256 ticketID) {
         // verify msg.sender is a contract.
         require(hasCode(msg.sender), "L2MigrationFacet: must be a contract");
-        require(reciever != address(0), "L2MigrationFacet: invalid reciever");
+        require(receiver != address(0), "L2MigrationFacet: invalid receiver");
 
         bytes memory data = abi.encodeCall(
-            IL1RecieverFacet(L2Beanstalk).approveReciever,
-            (msg.sender, reciever)
+            IL1ReceiverFacet(L2Beanstalk).approveReceiver,
+            (msg.sender, receiver)
         );
 
         // send data to L2Beanstalk via the bridge.
@@ -114,7 +114,7 @@ contract L2MigrationFacet is ReentrancyGuard {
             L2Beanstalk,
             0,
             maxSubmissionCost,
-            msg.sender,
+            receiver, // excessFeeRefundAddress
             msg.sender,
             maxGas,
             gasPriceBid,

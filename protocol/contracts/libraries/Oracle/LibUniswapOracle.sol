@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {C} from "contracts/C.sol";
 import {LibUniswapOracleLibrary} from "./LibUniswapOracleLibrary.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
@@ -16,9 +15,6 @@ interface IERC20Decimals {
 /**
  * @title Uniswap Oracle Library
  * @notice Contains functionalty to read prices from Uniswap V3 pools.
- * @dev currently supports:
- * - ETH:USDC price from the ETH:USDC 0.05% pool
- * - ETH:USDT price from the ETH:USDT 0.05% pool
  **/
 library LibUniswapOracle {
     // All instantaneous queries of Uniswap Oracles should use a 15 minute lookback.

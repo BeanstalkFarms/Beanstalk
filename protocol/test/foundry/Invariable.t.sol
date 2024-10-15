@@ -8,6 +8,7 @@ import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {ClaimFacet} from "contracts/beanstalk/silo/SiloFacet/ClaimFacet.sol";
 import {MockAttackFacet} from "contracts/mocks/mockFacets/MockAttackFacet.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
  * @notice Tests the different invariants to ensure they are failing expectedly.
@@ -22,7 +23,7 @@ contract InvariableTest is TestHelper {
 
         siloUsers = createUsers(3);
         initializeUnripeTokens(siloUsers[0], 100e6, 100e18);
-        mintTokensToUsers(siloUsers, C.BEAN, 100_000e6);
+        mintTokensToUsers(siloUsers, LibConstant.BEAN, 100_000e6);
 
         setUpSiloDeposits(10_000e6, siloUsers);
         addFertilizerBasedOnSprouts(0, 100e6);

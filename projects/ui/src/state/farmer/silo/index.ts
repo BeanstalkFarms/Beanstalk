@@ -64,7 +64,6 @@ export type FarmerSiloTokenBalance = {
     /** All Withdrawal crates. */
     crates: any[];
   };
-
   /** @deprecated */
   claimable: {
     /** The total amount of this Token currently in the Claimable state. */
@@ -151,7 +150,15 @@ export type FarmerSilo = FarmerSiloBalances &
   FarmerSiloRewards & {
     migrationNeeded: boolean | undefined;
     balancesSdk: Map<Token, TokenSiloBalance>;
+    mowStatuses: MowStatusTokenMap;
     loading?: boolean;
     error?: string;
     ran: boolean;
   };
+
+export type MowStatus<T = ethers.BigNumber> = {
+  lastStem: T;
+  bdv: T;
+};
+
+export type MowStatusTokenMap = Map<Token, MowStatus>;

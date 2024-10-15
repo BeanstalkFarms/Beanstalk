@@ -8,13 +8,13 @@ const {
   WSTETH,
   WSTETH_ETH_UNIV3_01_POOL,
   BEANSTALK,
-  UNRIPE_BEAN,
-  TRI_CRYPTO_POOL
+  UNRIPE_BEAN
 } = require("../test/hardhat/utils/constants.js");
 const diamond = require("./diamond.js");
 const {
   impersonateBean,
   impersonateWeth,
+  impersonateL2Weth,
   impersonateUnripe,
   impersonatePrice,
   impersonateChainlinkAggregator,
@@ -63,7 +63,6 @@ async function main(
 
   const accounts = await ethers.getSigners();
   const account = await accounts[0].getAddress();
-
   if (verbose) {
     console.log("Account: " + account);
     console.log("---");
@@ -74,13 +73,14 @@ async function main(
   const name = "Beanstalk";
 
   // Deploy all facets and external libraries.
-  [facets, libraryNames, facetLibraries] = await getFacetData(mock);
+  [facets, libraryNames, facetLibraries, linkedLibraries] = await getFacetData(mock);
   let facetsAndNames = await deployFacets(
     verbose,
     mock,
     facets,
     libraryNames,
     facetLibraries,
+    linkedLibraries,
     totalGasUsed
   );
 
@@ -251,6 +251,7 @@ async function deployFacets(
   facets,
   libraryNames = [],
   facetLibraries = {},
+  linkedLibraries = {},
   totalGasUsed
 ) {
   const instancesAndNames = [];
@@ -258,7 +259,18 @@ async function deployFacets(
 
   for (const name of libraryNames) {
     if (verbose) console.log(`Deploying: ${name}`);
-    let libraryFactory = await ethers.getContractFactory(name);
+    let libraryFactory;
+    if (linkedLibraries[name]) {
+      let linkedLibrary = Object.keys(libraries).reduce((acc, val) => {
+        if (linkedLibraries[name].includes(val)) acc[val] = libraries[val];
+        return acc;
+      }, {});
+      libraryFactory = await ethers.getContractFactory(name, {
+        libraries: linkedLibrary
+      });
+    } else {
+      libraryFactory = await ethers.getContractFactory(name);
+    }
     libraryFactory = await libraryFactory.deploy();
     await libraryFactory.deployed();
     const receipt = await libraryFactory.deployTransaction.wait();
@@ -338,6 +350,7 @@ async function getFacetData(mock = true) {
     "PauseFacet",
     "DepotFacet",
     "SeasonGettersFacet",
+    "GaugeGettersFacet",
     "OwnershipFacet",
     "TokenFacet",
     "TokenSupportFacet",
@@ -370,7 +383,10 @@ async function getFacetData(mock = true) {
     "LibPipelineConvert",
     "LibSilo",
     "LibShipping",
-    "LibFlood"
+    "LibFlood",
+    "LibTokenSilo",
+    "LibEvaluate",
+    "LibSiloPermit"
   ];
 
   // A mapping of facet to public library names that will be linked to it.
@@ -379,22 +395,30 @@ async function getFacetData(mock = true) {
     SeasonFacet: [
       "LibGauge",
       "LibIncentive",
-      "LibLockedUnderlying",
       "LibWellMinting",
       "LibGerminate",
       "LibShipping",
-      "LibFlood"
+      "LibFlood",
+      "LibEvaluate"
     ],
-    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo"],
-    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo"],
+    ConvertFacet: ["LibConvert", "LibPipelineConvert", "LibSilo", "LibTokenSilo"],
+    PipelineConvertFacet: ["LibPipelineConvert", "LibSilo", "LibTokenSilo"],
     UnripeFacet: ["LibLockedUnderlying"],
     SeasonGettersFacet: ["LibLockedUnderlying", "LibWellMinting"],
-    SiloFacet: ["LibSilo"],
-    EnrootFacet: ["LibSilo"],
-    ClaimFacet: ["LibSilo"]
+    SiloFacet: ["LibSilo", "LibTokenSilo", "LibSiloPermit"],
+    EnrootFacet: ["LibSilo", "LibTokenSilo"],
+    ClaimFacet: ["LibSilo", "LibTokenSilo"],
+    GaugeGettersFacet: ["LibLockedUnderlying"]
   };
 
-  return [facets, libraryNames, facetLibraries];
+  // A mapping of external libraries to external libraries that need to be linked.
+  // note: if a library depends on another library, the dependency will need to come
+  // before itself in `libraryNames`
+  libraryLinks = {
+    LibEvaluate: ["LibLockedUnderlying"]
+  };
+
+  return [facets, libraryNames, facetLibraries, libraryLinks];
 }
 
 /**
@@ -404,6 +428,7 @@ async function getFacetData(mock = true) {
  */
 async function impersonateERC20s() {
   await impersonateWeth();
+  await impersonateL2Weth();
 
   // New default ERC20s should be added here.
   tokens = [

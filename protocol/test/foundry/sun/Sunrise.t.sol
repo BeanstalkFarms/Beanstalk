@@ -6,6 +6,7 @@ import {TestHelper, LibTransfer, IMockFBeanstalk} from "test/foundry/utils/TestH
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
 import {IWell, Call, IERC20} from "contracts/interfaces/basin/IWell.sol";
 import {C} from "contracts/C.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
  * @notice Tests the various parts of sunrise.
@@ -56,7 +57,7 @@ contract SunriseTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -64,7 +65,7 @@ contract SunriseTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/WSTETH)
         // note: wstETH:stETH ratio is initialized to 1:1.
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            LibConstant.BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 wstETH.
         );

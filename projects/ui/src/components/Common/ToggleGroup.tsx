@@ -5,8 +5,8 @@ import {
   ToggleButtonGroup,
   ToggleButtonGroupProps,
 } from '@mui/material';
-import { FontSize, FontWeight } from '../App/muiTheme';
 import { hexToRgba } from '~/util/UI';
+import { BeanstalkPalette, FontSize, FontWeight } from '../App/muiTheme';
 
 export type IToggleGroup<T extends string | number> = ToggleButtonGroupProps & {
   options: {
@@ -83,7 +83,7 @@ export default function ToggleGroup<T extends string | number>({
                     ':hover': {
                       background: isActive
                         ? 'primary.dark'
-                        : hexToRgba('primary.main', 0.2),
+                        : hexToRgba(BeanstalkPalette.logoGreen, 0.2),
                     },
                   }}
                 >

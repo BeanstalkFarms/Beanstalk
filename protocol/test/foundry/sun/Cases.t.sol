@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {TestHelper, LibTransfer, IWell, IERC20, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
 import {C} from "contracts/C.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 contract CasesTest is TestHelper {
     // Events.
@@ -15,7 +16,7 @@ contract CasesTest is TestHelper {
     );
     event BeanToMaxLpGpPerBdvRatioChange(uint256 indexed season, uint256 caseId, int80 absChange);
 
-    address well = C.BEAN_ETH_WELL;
+    address well = LibConstant.BEAN_ETH_WELL;
     uint256 constant EX_LOW = 0;
     uint256 constant RES_LOW = 1;
     uint256 constant RES_HIGH = 2;
@@ -45,7 +46,7 @@ contract CasesTest is TestHelper {
 
         // call well to wsteth/bean to initialize the well.
         // avoids errors due to gas limits.
-        addLiquidityToWell(C.BEAN_WSTETH_WELL, 10e6, .01 ether);
+        addLiquidityToWell(LibConstant.BEAN_WSTETH_WELL, 10e6, .01 ether);
     }
 
     /**

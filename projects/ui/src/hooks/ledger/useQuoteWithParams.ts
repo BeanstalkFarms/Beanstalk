@@ -10,21 +10,21 @@ export type QuoteHandlerResultNew = {
   value?: ethers.BigNumber;
 };
 
-export type QuoteHandlerWithParams<T = {}> = (
+export type QuoteHandlerWithParams<T = {}, Result extends QuoteHandlerResultNew = QuoteHandlerResultNew> = (
   tokenIn: ERC20Token | NativeToken,
   amountIn: BigNumber,
   /** Calculate `amountOut` of this `tokenOut`. */
   tokenOut: ERC20Token | NativeToken,
   ...parameters: T[]
-) => Promise<null | QuoteHandlerResultNew['amountOut'] | QuoteHandlerResultNew>;
+) => Promise<null | QuoteHandlerResultNew['amountOut'] | Result>;
 
-export type QuoteSettingsNew = {
+export type QuoteSettingsNew<Result extends QuoteHandlerResultNew = QuoteHandlerResultNew> = {
   /** The number of milliseconds to wait before calling */
   debounceMs: number;
   /** If true, returns amountOut = amountIn when tokenOut = tokenIn. Otherwise returns void. */
   ignoreSameToken: boolean;
   /** */
-  onReset: () => QuoteHandlerResultNew | null;
+  onReset: () => Result | null;
 };
 
 const baseSettings = {
@@ -43,12 +43,12 @@ const baseSettings = {
  * @param _settings
  * @returns
  */
-export default function useQuoteWithParams<T>(
+export default function useQuoteWithParams<T, Result extends QuoteHandlerResultNew = QuoteHandlerResultNew>(
   tokenOut: ERC20Token | NativeToken,
-  quoteHandler: QuoteHandlerWithParams<T>,
-  _settings?: Partial<QuoteSettingsNew>
+  quoteHandler: QuoteHandlerWithParams<T, Result>,
+  _settings?: Partial<QuoteSettingsNew<Result>>
 ): [
-  result: QuoteHandlerResultNew | null,
+  result: Result | null,
   quoting: boolean,
   refreshAmountOut: (
     _tokenIn: ERC20Token | NativeToken,
@@ -56,7 +56,7 @@ export default function useQuoteWithParams<T>(
     params: T
   ) => void
 ] {
-  const [result, setResult] = useState<QuoteHandlerResultNew | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
   const [quoting, setQuoting] = useState<boolean>(false);
   const settings = useMemo(
     () => ({ ...baseSettings, ..._settings }),
@@ -91,7 +91,9 @@ export default function useQuoteWithParams<T>(
             if (_result === null) return resolve(_result);
             /// FIXME: this is for backwards-compat, find everywhere that doesnt use the obj form.
             setResult(
-              _result instanceof BigNumber ? { amountOut: _result } : _result
+              _result instanceof BigNumber 
+                ? { amountOut: _result } as Result
+                : _result
             );
             /// Return the result back to wherever it was called.
             setQuoting(false);

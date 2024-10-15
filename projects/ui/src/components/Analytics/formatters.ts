@@ -17,3 +17,5 @@ export const tickFormatBeanPrice = (v: NumberLike) => `$${v.valueOf().toLocaleSt
 export const tickFormatRRoR = (value: any) => `${(parseFloat(value) * 100).toFixed(2)}`;
 export const valueFormatBeanAmount = (value: any) => Number(formatUnits(value, 6));
 export const tickFormatBeanAmount = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+export const tickFormatSmallBN = (decimals?: number) => 
+  (v: NumberLike) => new BigNumber(v.valueOf()).toExponential(decimals || 4)

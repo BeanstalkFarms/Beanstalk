@@ -14,6 +14,7 @@ import {TokenFacet} from "contracts/beanstalk/farm/TokenFacet.sol";
 import {SiloFacet} from "contracts/beanstalk/silo/SiloFacet/SiloFacet.sol";
 import {IWell} from "contracts/interfaces/basin/IWell.sol";
 import {DepotFacet} from "contracts/beanstalk/farm/DepotFacet.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
  * @notice Tests the functionality of AdvancedFarm call sequences.
@@ -23,14 +24,14 @@ contract AdvancedFarmTest is TestHelper {
 
     function setUp() public {
         initializeBeanstalkTestState(true, false, true);
-        MockToken(C.WETH).mint(address(bs), 100_000);
+        MockToken(LibConstant.WETH).mint(address(bs), 100_000);
 
         farmers = createUsers(2);
-        mintTokensToUsers(farmers, C.BEAN, 100_000e6);
+        mintTokensToUsers(farmers, LibConstant.BEAN, 100_000e6);
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             10_000_000e6, // 10,000,000 Beans
             10_000 ether // 10,000 ether.
         );
@@ -40,7 +41,7 @@ contract AdvancedFarmTest is TestHelper {
      * @notice Wrap eth, add liquidity from weth, deposit LP into Silo.
      */
     function test_farmAddLiquidityDeposit() public {
-        IERC20(C.WETH).approve(C.BEAN_ETH_WELL, type(uint256).max);
+        IERC20(LibConstant.WETH).approve(LibConstant.BEAN_ETH_WELL, type(uint256).max);
 
         // advancedFarmCall[0], wrap eth.
         IMockFBeanstalk.AdvancedFarmCall memory wrapEth = IMockFBeanstalk.AdvancedFarmCall(
@@ -52,7 +53,7 @@ contract AdvancedFarmTest is TestHelper {
         IMockFBeanstalk.AdvancedFarmCall memory loadDepot = IMockFBeanstalk.AdvancedFarmCall(
             abi.encodeWithSelector(
                 TokenFacet.transferToken.selector,
-                C.WETH,
+                LibConstant.WETH,
                 C.PIPELINE,
                 1e18,
                 LibTransfer.From.INTERNAL,
@@ -65,7 +66,7 @@ contract AdvancedFarmTest is TestHelper {
         uint256[] memory assetInAmounts = new uint256[](2);
         assetInAmounts[1] = 1e18;
         PipeCall memory AddLpPipeCall = PipeCall(
-            C.BEAN_ETH_WELL,
+            LibConstant.BEAN_ETH_WELL,
             abi.encodeWithSelector(
                 IWell.addLiquidity.selector,
                 assetInAmounts,
@@ -86,7 +87,7 @@ contract AdvancedFarmTest is TestHelper {
         IMockFBeanstalk.AdvancedFarmCall memory depositLp = IMockFBeanstalk.AdvancedFarmCall(
             abi.encodeWithSelector(
                 SiloFacet.deposit.selector,
-                C.BEAN_ETH_WELL,
+                LibConstant.BEAN_ETH_WELL,
                 0,
                 LibTransfer.From.EXTERNAL
             ),
@@ -103,9 +104,9 @@ contract AdvancedFarmTest is TestHelper {
         // Simplify by setting up approvals.
         deal(farmers[0], 1e18);
         vm.prank(C.PIPELINE);
-        IERC20(C.WETH).approve(C.BEAN_ETH_WELL, type(uint256).max);
+        IERC20(LibConstant.WETH).approve(LibConstant.BEAN_ETH_WELL, type(uint256).max);
         vm.prank(farmers[0]);
-        IERC20(C.BEAN_ETH_WELL).approve(address(bs), type(uint256).max);
+        IERC20(LibConstant.BEAN_ETH_WELL).approve(address(bs), type(uint256).max);
 
         vm.prank(farmers[0]);
         bytes[] memory results = bs.advancedFarm{value: 1e18}(farmCalls);

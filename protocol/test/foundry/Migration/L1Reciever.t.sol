@@ -3,18 +3,19 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper, LibTransfer, C, IMockFBeanstalk} from "test/foundry/utils/TestHelper.sol";
-import {L1RecieverFacet} from "contracts/beanstalk/migration/L1RecieverFacet.sol";
+import {L1ReceiverFacet} from "contracts/beanstalk/migration/L1ReceiverFacet.sol";
 import {LibBytes} from "contracts/Libraries/LibBytes.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 /**
- * @notice Tests the functionality of the L1RecieverFacet.
+ * @notice Tests the functionality of the L1ReceiverFacet.
  */
 
 interface IERC1555 {
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract L1RecieverFacetTest is TestHelper {
+contract L1ReceiverFacetTest is TestHelper {
     // contracts for testing:
     address constant OWNER = address(0x000000009d3a9e5C7c620514e1f36905C4Eb91e1);
     address constant RECIEVER = address(0x000000009D3a9E5c7C620514E1F36905C4eb91e5);
@@ -40,7 +41,7 @@ contract L1RecieverFacetTest is TestHelper {
         ) = getMockDepositData();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
+        L1ReceiverFacet(address(bs)).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
 
         assertEq(bs.balanceOfStalk(RECIEVER), 10199e12);
         (address token, int96 stem) = LibBytes.unpackAddressAndStem(depositIds[0]);
@@ -51,7 +52,7 @@ contract L1RecieverFacetTest is TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Deposits have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
+        L1ReceiverFacet(address(bs)).issueDeposits(owner, depositIds, depositAmounts, bdvs, proof);
     }
 
     function test_L2MigratePlots() public {
@@ -65,14 +66,14 @@ contract L1RecieverFacetTest is TestHelper {
         ) = getMockPlot();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(address(bs)).issuePlots(owner, index, pods, proof);
         uint256 amt = bs.plot(RECIEVER, 0, index[0]);
         assertEq(amt, pods[0]);
 
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Plots have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(address(bs)).issuePlots(owner, index, pods, proof);
     }
 
     function test_L2MigrateInternalBalances() public {
@@ -86,13 +87,13 @@ contract L1RecieverFacetTest is TestHelper {
         ) = getMockInternalBalance();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
         uint256 amount = bs.getInternalBalance(RECIEVER, tokens[0]);
         assertEq(amount, amounts[0]);
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Internal Balances have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
     }
 
     function test_L2MigrateFert() public {
@@ -107,34 +108,34 @@ contract L1RecieverFacetTest is TestHelper {
         ) = getMockFertilizer();
 
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
 
-        assertEq(IERC1555(address(C.fertilizer())).balanceOf(RECIEVER, ids[0]), amounts[0]);
+        assertEq(IERC1555(address(LibConstant.FERTILIZER)).balanceOf(RECIEVER, ids[0]), amounts[0]);
 
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Fertilizer have been migrated");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
     /**
      * @notice verifies only the owner or bridge can call the migration functions.
      */
-    function test_L2MigrateInvalidReciever(address reciever) public {
-        vm.prank(reciever);
-        vm.expectRevert("L1RecieverFacet: Invalid Caller");
-        bs.approveReciever(OWNER, reciever);
+    function test_L2MigrateInvalidReciever(address receiver) public {
+        vm.prank(receiver);
+        vm.expectRevert("L1ReceiverFacet: Invalid Caller");
+        bs.approveReciever(OWNER, receiver);
 
         uint256 snapshot = vm.snapshot();
         address aliasedAddress = applyL1ToL2Alias(address(bs));
         vm.prank(aliasedAddress);
-        bs.approveReciever(OWNER, reciever);
-        assertEq(bs.getReciever(OWNER), reciever);
+        bs.approveReciever(OWNER, receiver);
+        assertEq(bs.getReciever(OWNER), receiver);
 
         vm.revertTo(snapshot);
         vm.prank(users[0]);
-        bs.approveReciever(OWNER, reciever);
-        assertEq(bs.getReciever(OWNER), reciever);
+        bs.approveReciever(OWNER, receiver);
+        assertEq(bs.getReciever(OWNER), receiver);
     }
 
     /**
@@ -154,7 +155,7 @@ contract L1RecieverFacetTest is TestHelper {
 
         vm.expectRevert("L2Migration: Invalid plots");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issuePlots(owner, index, pods, proof);
+        L1ReceiverFacet(address(bs)).issuePlots(owner, index, pods, proof);
     }
 
     function test_L2MigrateInvalidInternalBalance() public {
@@ -171,7 +172,7 @@ contract L1RecieverFacetTest is TestHelper {
 
         vm.expectRevert("L2Migration: Invalid internal balances");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
+        L1ReceiverFacet(address(bs)).issueInternalBalances(owner, tokens, amounts, proof);
     }
 
     function test_L2MigrateInvalidInternalFert() public {
@@ -190,7 +191,7 @@ contract L1RecieverFacetTest is TestHelper {
         // verify user cannot migrate afterwords.
         vm.expectRevert("L2Migration: Invalid Fertilizer");
         vm.prank(RECIEVER);
-        L1RecieverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
+        L1ReceiverFacet(address(bs)).issueFertilizer(owner, ids, amounts, lastBpf, proof);
     }
 
     // test helpers

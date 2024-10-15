@@ -3,12 +3,9 @@ pragma solidity >=0.6.0 <0.9.0;
 pragma abicoder v2;
 
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
-import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {MockSiloFacet} from "contracts/mocks/mockFacets/MockSiloFacet.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
-import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
-import {Bean} from "contracts/tokens/Bean.sol";
 import {IWell, Call} from "contracts/interfaces/basin/IWell.sol";
 import {MockToken} from "contracts/mocks/MockToken.sol";
 import {MockSeasonFacet} from "contracts/mocks/mockFacets/MockSeasonFacet.sol";
@@ -16,16 +13,13 @@ import {DepotFacet, AdvancedPipeCall} from "contracts/beanstalk/farm/DepotFacet.
 import {AdvancedFarmCall} from "contracts/libraries/LibFarm.sol";
 import {C} from "contracts/C.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {LibWell} from "contracts/libraries/Well/LibWell.sol";
-import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
-import {LibClipboard} from "contracts/libraries/LibClipboard.sol";
-import {LibWellMinting} from "contracts/libraries/Minting/LibWellMinting.sol";
 import {LibConvert} from "contracts/libraries/Convert/LibConvert.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibDeltaB} from "contracts/libraries/Oracle/LibDeltaB.sol";
+import {MockPipelineConvertFacet, AdvancedPipeCall} from "contracts/mocks/mockFacets/MockPipelineConvertFacet.sol";
 import {PipelineConvertFacet} from "contracts/beanstalk/silo/PipelineConvertFacet.sol";
-import {MockPipelineConvertFacet} from "contracts/mocks/mockFacets/MockPipelineConvertFacet.sol";
 import "forge-std/Test.sol";
+import {LibConstant} from "test/foundry/utils/LibConstant.sol";
 
 contract MiscHelperContract {
     function returnLesser(uint256 a, uint256 b) public pure returns (uint256) {
@@ -50,8 +44,8 @@ contract PipelineConvertTest is TestHelper {
     PipelineConvertFacet convert;
     MockPipelineConvertFacet pipelineConvert;
     DepotFacet depot;
-    address beanEthWell = C.BEAN_ETH_WELL;
-    address beanwstethWell = C.BEAN_WSTETH_WELL;
+    address beanEthWell = LibConstant.BEAN_ETH_WELL;
+    address beanwstethWell = LibConstant.BEAN_WSTETH_WELL;
     MiscHelperContract miscHelper = new MiscHelperContract();
 
     // test accounts
@@ -144,17 +138,17 @@ contract PipelineConvertTest is TestHelper {
         addLiquidityToWell(
             beanEthWell,
             10_000e6, // 10,000 bean,
-            10 ether // 10 WETH
+            10 ether // 10 LibConstant.WETH
         );
 
         addLiquidityToWell(
             beanwstethWell,
             10_000e6, // 10,000 bean,
-            10 ether // 10 WETH of wstETH
+            10 ether // 10 LibConstant.WETH of wstETH
         );
 
         // mint 1000 beans to farmers (user 0 is the beanstalk deployer).
-        mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmers, LibConstant.BEAN, MAX_DEPOSIT_BOUND);
 
         deployExtraWells(true, true);
 
@@ -180,7 +174,7 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 10e6, 5000e6);
 
         // manipulate well so we won't have a penalty applied
-        setDeltaBforWell(int256(amount), beanEthWell, C.WETH);
+        setDeltaBforWell(int256(amount), beanEthWell, LibConstant.WETH);
 
         depositBeanAndPassGermination(amount, users[1]);
 
@@ -190,7 +184,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
@@ -201,7 +195,7 @@ contract PipelineConvertTest is TestHelper {
         // get well amount out if we deposit amount of beans
         uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
 
-        uint256 grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 grownStalkForDeposit = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
 
         uint256 newBdv = bs.bdv(beanEthWell, wellAmountOut);
 
@@ -213,23 +207,23 @@ contract PipelineConvertTest is TestHelper {
         );
 
         vm.expectEmit(true, false, false, true);
-        emit RemoveDeposits(users[1], C.BEAN, stems, amounts, amount, amounts);
+        emit RemoveDeposits(users[1], LibConstant.BEAN, stems, amounts, amount, amounts);
 
         vm.expectEmit(true, false, false, true);
         emit AddDeposit(users[1], beanEthWell, outputStem, wellAmountOut, bdvOfAmountOut);
 
         // verify convert
         vm.expectEmit(true, false, false, true);
-        emit Convert(users[1], C.BEAN, beanEthWell, amount, wellAmountOut);
+        emit Convert(users[1], LibConstant.BEAN, beanEthWell, amount, wellAmountOut);
 
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stems
             amounts, // amount
             beanEthWell, // token out
-            beanToLPFarmCalls // farmData
+            beanToLPPipeCalls // pipeData
         );
     }
 
@@ -246,7 +240,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createLPToBeanPipeCalls(lpAmountOut);
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
@@ -255,12 +249,12 @@ contract PipelineConvertTest is TestHelper {
 
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
-        convert.pipelineConvert(
+        pipelineConvert.pipelineConvert(
             beanEthWell, // input token
             stems, // stems
             amounts, // amount
-            C.BEAN, // token out
-            beanToLPFarmCalls // farmData
+            LibConstant.BEAN, // token out
+            beanToLPPipeCalls // pipeData
         );
     }
 
@@ -279,16 +273,16 @@ contract PipelineConvertTest is TestHelper {
         }
 
         address[] memory convertWells = new address[](4);
-        convertWells[0] = C.BEAN_ETH_WELL;
-        convertWells[1] = C.BEAN_WSTETH_WELL;
-        convertWells[2] = BEAN_USDC_WELL;
-        convertWells[3] = BEAN_USDT_WELL;
+        convertWells[0] = LibConstant.BEAN_ETH_WELL;
+        convertWells[1] = LibConstant.BEAN_WSTETH_WELL;
+        convertWells[2] = LibConstant.BEAN_USDC_WELL;
+        convertWells[3] = LibConstant.BEAN_USDT_WELL;
 
         address[] memory convertTokens = new address[](4);
-        convertTokens[0] = C.WETH;
-        convertTokens[1] = C.WSTETH;
-        convertTokens[2] = C.USDC;
-        convertTokens[3] = C.USDT;
+        convertTokens[0] = LibConstant.WETH;
+        convertTokens[1] = LibConstant.WSTETH;
+        convertTokens[2] = LibConstant.USDC;
+        convertTokens[3] = LibConstant.USDT;
 
         PipelineTestData memory pd;
         pd.inputWell = convertWells[inputIndex];
@@ -318,12 +312,10 @@ contract PipelineConvertTest is TestHelper {
 
         setDeltaBforWell(int256(amount), pd.outputWell, pd.outputWellEthToken);
 
-        uint256 beforeBalanceOfStalk = bs.balanceOfStalk(users[1]);
-
         int96[] memory stems = new int96[](1);
         stems[0] = pd.stem;
 
-        AdvancedFarmCall[] memory lpToLPFarmCalls = createLPToLPFarmCalls(
+        AdvancedPipeCall[] memory lpToLPPipeCalls = createLPToLPPipeCalls(
             pd.amountOfDepositedLP,
             pd.inputWell,
             pd.outputWell
@@ -424,12 +416,12 @@ contract PipelineConvertTest is TestHelper {
         vm.resumeGasMetering();
         vm.prank(users[1]);
 
-        convert.pipelineConvert(
+        pipelineConvert.pipelineConvert(
             pd.inputWell, // input token
             stems, // stems
             amounts, // amount
             pd.outputWell, // token out
-            lpToLPFarmCalls // farmData
+            lpToLPPipeCalls // pipeData
         );
 
         // In this test overall convert capacity before and after should be 0.
@@ -448,7 +440,7 @@ contract PipelineConvertTest is TestHelper {
         tradeAmount = bound(tradeAmount, 10e6, 5000e6);
 
         // apply a known deltaB to the well
-        setDeltaBforWell(5000e6, beanEthWell, C.WETH);
+        setDeltaBforWell(5000e6, beanEthWell, LibConstant.WETH);
 
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96 secondUserStem = depositBeanAndPassGermination(tradeAmount, users[2]);
@@ -469,7 +461,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCallsUsingConvertCapacity(
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCallsUsingConvertCapacity(
             amount
         );
 
@@ -477,16 +469,16 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
 
         // get well amount out if we deposit amount of beans
-        uint256 wellAmountOut = getWellAmountOutForAddingBeans(amount);
+        getWellAmountOutForAddingBeans(amount);
 
         vm.resumeGasMetering();
         vm.prank(users[1]); // do this as user 1
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stems
             amounts, // amount
             beanEthWell, // token out
-            beanToLPFarmCalls // farmData
+            beanToLPPipeCalls // pipeData
         );
     }
 
@@ -496,8 +488,8 @@ contract PipelineConvertTest is TestHelper {
         both = bound(both, 0, 1);
 
         address[] memory convertWells = new address[](2);
-        convertWells[0] = C.BEAN_ETH_WELL;
-        convertWells[1] = C.BEAN_WSTETH_WELL;
+        convertWells[0] = LibConstant.BEAN_ETH_WELL;
+        convertWells[1] = LibConstant.BEAN_WSTETH_WELL;
 
         int256 calculatedNewDeltaB;
 
@@ -564,7 +556,7 @@ contract PipelineConvertTest is TestHelper {
 
         (, , uint256 beforeUserDeposit, ) = setupStalkTests(amount);
 
-        uint256 afterUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        uint256 afterUserDeposit = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
         assertLt(afterUserDeposit, beforeUserDeposit);
     }
 
@@ -582,14 +574,14 @@ contract PipelineConvertTest is TestHelper {
     function testConvertWithPegAndKeepStalk(uint256 amount) public {
         amount = bound(amount, 10e6, 100e6);
 
-        setDeltaBforWell(int256(amount), beanEthWell, C.WETH);
+        setDeltaBforWell(int256(amount), beanEthWell, LibConstant.WETH);
 
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
 
         // get bdv of amount
-        (, uint256 oldBdv) = bs.getDeposit(users[1], C.BEAN, stem);
+        (, uint256 oldBdv) = bs.getDeposit(users[1], LibConstant.BEAN, stem);
 
-        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], LibConstant.BEAN);
 
         beanToLPDoConvert(amount, stem, users[1]);
 
@@ -625,10 +617,10 @@ contract PipelineConvertTest is TestHelper {
 
         // mint user eth
         ethAmount = bound(ethAmount, 10e18, 500e18);
-        MockToken(C.WETH).mint(users[1], ethAmount);
+        MockToken(LibConstant.WETH).mint(users[1], ethAmount);
 
         vm.prank(users[1]);
-        MockToken(C.WETH).approve(beanEthWell, ethAmount);
+        MockToken(LibConstant.WETH).approve(beanEthWell, ethAmount);
 
         // add liquidity to well
         uint256[] memory tokenAmountsIn = new uint256[](2);
@@ -638,7 +630,7 @@ contract PipelineConvertTest is TestHelper {
         vm.prank(users[1]);
         IWell(beanEthWell).addLiquidity(tokenAmountsIn, 0, users[1], type(uint256).max);
 
-        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[1], LibConstant.BEAN);
 
         // convert beans to lp
         beanToLPDoConvert(amount, stem, users[1]);
@@ -669,7 +661,11 @@ contract PipelineConvertTest is TestHelper {
         int96 stem2 = depositBeanAndPassGermination(amount, users[2]);
 
         // if you deposited amount of beans into well, how many eth would you get?
-        uint256 ethAmount = IWell(beanEthWell).getSwapOut(IERC20(C.BEAN), IERC20(C.WETH), amount);
+        uint256 ethAmount = IWell(beanEthWell).getSwapOut(
+            IERC20(LibConstant.BEAN),
+            IERC20(LibConstant.WETH),
+            amount
+        );
 
         // Need a better way to calculate how much eth out there should be to make sure it can swap and be over peg
         ethAmount = ethAmount.mul(15000).div(10000);
@@ -679,7 +675,7 @@ contract PipelineConvertTest is TestHelper {
         // go to next block
         vm.roll(block.number + 1);
 
-        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[2], C.BEAN);
+        uint256 grownStalkBefore = bs.balanceOfGrownStalk(users[2], LibConstant.BEAN);
 
         // update pump
         updateMockPumpUsingWellReserves(beanEthWell);
@@ -717,12 +713,12 @@ contract PipelineConvertTest is TestHelper {
         vm.expectRevert("Convert: Output token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.UNRIPE_LP, // token out
-            new AdvancedFarmCall[](0) // farmData
+            LibConstant.UNRIPE_LP, // token out
+            new AdvancedPipeCall[](0) // pipeData
         );
     }
 
@@ -735,12 +731,12 @@ contract PipelineConvertTest is TestHelper {
         vm.expectRevert("Convert: Input token must be Bean or a well");
         // convert non-whitelisted asset to lp
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.UNRIPE_LP, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.UNRIPE_LP, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            new AdvancedFarmCall[](0) // farmData
+            LibConstant.BEAN, // token out
+            new AdvancedPipeCall[](0) // pipeData
         );
     }
 
@@ -754,28 +750,27 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
 
         uint256 stalkBefore = bs.balanceOfStalk(users[1]);
-        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
-        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        bytes memory callEncoded = abi.encodeWithSelector(
+            bean.balanceOf.selector,
+            LibConstant.PIPELINE
+        );
         AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
         extraPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             callEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
-            extraPipeCalls
-        );
-
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            farmCalls
+            LibConstant.BEAN, // token out
+            extraPipeCalls
         );
 
         uint256 stalkAfter = bs.balanceOfStalk(users[1]);
@@ -793,8 +788,8 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
 
         uint256 stalkBefore = bs.balanceOfStalk(users[1]);
-        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
-        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
+        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
         AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
@@ -806,28 +801,24 @@ contract PipelineConvertTest is TestHelper {
             amount.div(2)
         );
         extraPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             sendBeans, // calldata
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
-            extraPipeCalls
-        );
-
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            farmCalls
+            LibConstant.BEAN, // token out
+            extraPipeCalls
         );
 
         uint256 stalkAfter = bs.balanceOfStalk(users[1]);
         assertEq(stalkAfter, stalkBefore.div(2) + grownStalk.div(2));
 
-        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
         assertEq(bdvAfter, bdvBefore.div(2));
     }
 
@@ -836,7 +827,7 @@ contract PipelineConvertTest is TestHelper {
         amount = bound(amount, 1000e6, 1000e6);
 
         // mint extra beans to pipeline so we can snatch them on convert back into beanstalk
-        bean.mint(C.PIPELINE, amount.div(2));
+        bean.mint(LibConstant.PIPELINE, amount.div(2));
 
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
         int96[] memory stems = new int96[](1);
@@ -845,36 +836,35 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = amount;
 
         uint256 stalkBefore = bs.balanceOfStalk(users[1]);
-        uint256 grownStalk = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
-        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        uint256 grownStalk = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
+        uint256 bdvBefore = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
 
         // make a pipeline call where the only thing it does is return how many beans are in pipeline
         AdvancedPipeCall[] memory extraPipeCalls = new AdvancedPipeCall[](1);
 
-        bytes memory callEncoded = abi.encodeWithSelector(bean.balanceOf.selector, C.PIPELINE);
+        bytes memory callEncoded = abi.encodeWithSelector(
+            bean.balanceOf.selector,
+            LibConstant.PIPELINE
+        );
         extraPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             callEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
-            extraPipeCalls
-        );
-
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            farmCalls
+            LibConstant.BEAN, // token out
+            extraPipeCalls
         );
 
         uint256 stalkAfter = bs.balanceOfStalk(users[1]);
         assertEq(stalkAfter, stalkBefore + stalkBefore.div(2) + grownStalk);
 
-        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], C.BEAN);
+        uint256 bdvAfter = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
         assertEq(bdvAfter, bdvBefore + bdvBefore.div(2));
     }
 
@@ -896,23 +886,19 @@ contract PipelineConvertTest is TestHelper {
             amount
         );
         extraPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             sendBeans, // calldata
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
-            extraPipeCalls
-        );
-
         vm.expectRevert("Convert: No output tokens left in pipeline");
         vm.prank(users[1]);
-        convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            farmCalls
+            LibConstant.BEAN, // token out
+            extraPipeCalls
         );
     }
 
@@ -931,7 +917,7 @@ contract PipelineConvertTest is TestHelper {
 
         // mint a weth to pipeline for later use
         uint256 ethAmount = 1 ether;
-        MockToken(C.WETH).mint(C.PIPELINE, ethAmount);
+        MockToken(LibConstant.WETH).mint(LibConstant.PIPELINE, ethAmount);
 
         addEthToWell(users[1], 1 ether);
 
@@ -941,7 +927,7 @@ contract PipelineConvertTest is TestHelper {
         bs.siloSunrise(10);
 
         BeanToBeanTestData memory td;
-        td.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        td.grownStalkForDeposit = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
 
         // calculate what the stalk penalty would be
         IMockFBeanstalk.DeltaBStorage memory dbs;
@@ -970,13 +956,13 @@ contract PipelineConvertTest is TestHelper {
             dbs,
             td.bdvOfDepositedLp,
             LibConvert.abs(bs.overallCappedDeltaB()), // overall convert capacity
-            C.BEAN,
-            C.BEAN
+            LibConstant.BEAN,
+            LibConstant.BEAN
         );
 
         // using stalk penalty, calculate what the new stem should be
         (td.calculatedStem, ) = bs.calculateStemForTokenFromGrownStalk(
-            C.BEAN,
+            LibConstant.BEAN,
             (td.grownStalkForDeposit * (amount - td.calculatedStalkPenalty)) / amount,
             amount
         );
@@ -990,7 +976,7 @@ contract PipelineConvertTest is TestHelper {
             ethAmount
         );
         extraPipeCalls[0] = AdvancedPipeCall(
-            C.WETH, // target
+            LibConstant.WETH, // target
             approveWell, // calldata
             abi.encode(0) // clipboard
         );
@@ -1004,7 +990,7 @@ contract PipelineConvertTest is TestHelper {
             IWell(beanEthWell).addLiquidity.selector,
             tokenAmountsIn,
             0,
-            C.PIPELINE,
+            LibConstant.PIPELINE,
             type(uint256).max
         );
         extraPipeCalls[1] = AdvancedPipeCall(
@@ -1013,23 +999,19 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-        AdvancedFarmCall[] memory farmCalls = createAdvancedFarmCallsFromAdvancedPipeCalls(
-            extraPipeCalls
-        );
-
         vm.prank(users[1]);
-        (int96 outputStem, , , , ) = convert.pipelineConvert(
-            C.BEAN, // input token
+        (int96 outputStem, , , , ) = pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stem
             amounts, // amount
-            C.BEAN, // token out
-            farmCalls
+            LibConstant.BEAN, // token out
+            extraPipeCalls
         );
 
         assertEq(td.calculatedStem, outputStem);
     }
 
-    function testAmountAgainstPeg() public view {
+    function testAmountAgainstPeg() public pure {
         uint256 amountAgainstPeg;
 
         (amountAgainstPeg) = LibConvert.calculateAgainstPeg(-500, -400);
@@ -1099,7 +1081,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 bdvConverted = amount;
         uint256 overallConvertCapacity = amount;
         address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
 
         (uint256 penalty, , , ) = bs.calculateStalkPenalty(
             dbs,
@@ -1121,7 +1103,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 overallAmountInDirectionOfPeg = amount;
         address inputToken = beanEthWell;
         uint256 inputTokenAmountInDirectionOfPeg = amount;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = amount;
         (uint256 penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1138,7 +1120,7 @@ contract PipelineConvertTest is TestHelper {
         overallAmountInDirectionOfPeg = amount;
         inputToken = beanEthWell;
         inputTokenAmountInDirectionOfPeg = amount;
-        outputToken = C.BEAN;
+        outputToken = LibConstant.BEAN;
         outputTokenAmountInDirectionOfPeg = amount;
         (penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1160,7 +1142,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 overallAmountInDirectionOfPeg = 0;
         address inputToken = beanEthWell;
         uint256 inputTokenAmountInDirectionOfPeg = 0;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
         (uint256 penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1179,7 +1161,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 overallAmountInDirectionOfPeg = 0;
         address inputToken = beanEthWell;
         uint256 inputTokenAmountInDirectionOfPeg = 0;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
         (uint256 penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1195,7 +1177,7 @@ contract PipelineConvertTest is TestHelper {
         overallAmountInDirectionOfPeg = 0;
         inputToken = beanEthWell;
         inputTokenAmountInDirectionOfPeg = amount;
-        outputToken = C.BEAN;
+        outputToken = LibConstant.BEAN;
         outputTokenAmountInDirectionOfPeg = 0;
         (penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1215,7 +1197,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 overallAmountInDirectionOfPeg = amount;
         address inputToken = beanEthWell;
         uint256 inputTokenAmountInDirectionOfPeg = amount;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
         uint256 outputTokenAmountInDirectionOfPeg = 0;
         (uint256 penalty, ) = pipelineConvert.calculateConvertCapacityPenaltyE(
             overallCappedDeltaB,
@@ -1233,7 +1215,7 @@ contract PipelineConvertTest is TestHelper {
         // test with input token zero convert capacity
         uint256 overallCappedDeltaB = amount;
         uint256 overallAmountInDirectionOfPeg = amount;
-        address inputToken = C.BEAN;
+        address inputToken = LibConstant.BEAN;
         uint256 inputTokenAmountInDirectionOfPeg = 0;
         address outputToken = beanEthWell;
         uint256 outputTokenAmountInDirectionOfPeg = amount;
@@ -1263,7 +1245,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 bdvConverted = 100;
         uint256 overallCappedDeltaB = 100;
         address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
 
         (uint256 penalty, , , ) = bs.calculateStalkPenalty(
             dbs,
@@ -1290,7 +1272,7 @@ contract PipelineConvertTest is TestHelper {
         uint256 bdvConverted = 100;
         uint256 overallCappedDeltaB = 100;
         address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
+        address outputToken = LibConstant.BEAN;
 
         (uint256 penalty, , , ) = bs.calculateStalkPenalty(
             dbs,
@@ -1302,176 +1284,9 @@ contract PipelineConvertTest is TestHelper {
         assertEq(penalty, 0);
     }
 
-    /*
-    // These tests broke when calculateStalkPenalty had more variables added, would be nice to update but should already be covered by tests above.
-
-
-    function testCalculateStalkPenaltyDownwardsToZero() public {
-        int256 beforeOverallDeltaB = 100;
-        int256 afterOverallDeltaB = 0;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallCappedDeltaB = 100;
-        address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
-
-        uint256 penalty = bs.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
-            bdvConverted,
-            overallCappedDeltaB,
-            inputToken,
-            outputToken
-        );
-        assertEq(penalty, 0);
-    }
-
-    function testCalculateStalkPenaltyDownwardsNonZero() public {
-        int256 beforeOverallDeltaB = 200;
-        int256 afterOverallDeltaB = 100;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallCappedDeltaB = 100;
-        address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
-
-        uint256 penalty = bs.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
-            bdvConverted,
-            overallCappedDeltaB,
-            inputToken,
-            outputToken
-        );
-        assertEq(penalty, 0);
-    }
-
-    function testCalculateStalkPenaltyCrossPegUpward() public {
-        int256 beforeOverallDeltaB = -50;
-        int256 afterOverallDeltaB = 50;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallCappedDeltaB = 50;
-        address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
-
-        uint256 penalty = bs.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
-            bdvConverted,
-            overallCappedDeltaB,
-            inputToken,
-            outputToken
-        );
-        assertEq(penalty, 50);
-    }
-
-    function testCalculateStalkPenaltyCrossPegDownward() public {
-        int256 beforeOverallDeltaB = 50;
-        int256 afterOverallDeltaB = -50;
-        int256 beforeInputTokenDeltaB = -100;
-        int256 beforeOutputTokenDeltaB = 0;
-        int256 afterInputTokenDeltaB = 0;
-        int256 afterOutputTokenDeltaB = 0;
-        uint256 bdvConverted = 100;
-        uint256 overallCappedDeltaB = 50;
-        address inputToken = beanEthWell;
-        address outputToken = C.BEAN;
-
-        uint256 penalty = bs.calculateStalkPenalty(
-            beforeOverallDeltaB,
-            afterOverallDeltaB,
-            beforeInputTokenDeltaB,
-            beforeOutputTokenDeltaB,
-            afterInputTokenDeltaB,
-            afterOutputTokenDeltaB,
-            bdvConverted,
-            overallCappedDeltaB,
-            inputToken,
-            outputToken
-        );
-        assertEq(penalty, 50);
-    }*/
-
-    /*
-    function testCalculateStalkPenaltyNoCappedDeltaB() public {
-        int256 beforeDeltaB = 100;
-        int256 afterDeltaB = 0;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 0;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 100);
-    }
-
-    function testCalculateStalkPenaltyNoCappedDeltaBNotZero() public {
-        int256 beforeDeltaB = 101;
-        int256 afterDeltaB = 1;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 0;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 100);
-    }
-
-    function testCalculateStalkPenaltyNoCappedDeltaBNotZeroHalf() public {
-        int256 beforeDeltaB = 101;
-        int256 afterDeltaB = 1;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 50;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 50);
-    }
-
-    function testCalculateStalkPenaltyNoCappedDeltaBToZeroHalf() public {
-        int256 beforeDeltaB = 100;
-        int256 afterDeltaB = 0;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 50;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 50);
-    }
-
-    function testCalculateStalkPenaltyLPtoLPSmallSlippage() public {
-        int256 beforeDeltaB = 100;
-        int256 afterDeltaB = 101;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 100;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 1);
-    }
-
-    function testCalculateStalkPenaltyLPtoLPLargeSlippageNoCapped() public {
-        int256 beforeDeltaB = 100;
-        int256 afterDeltaB = 151;
-        uint256 bdvRemoved = 100;
-        uint256 cappedDeltaB = 0;
-        uint256 penalty = bs.calculateStalkPenalty(beforeDeltaB, afterDeltaB, bdvRemoved, cappedDeltaB);
-        assertEq(penalty, 51);
-    }*/
-
     function testCalcStalkPenaltyUpToPeg() public {
         // make beanEthWell have negative deltaB so that it has convert capacity
-        setDeltaBforWell(-1000e6, beanEthWell, C.WETH);
+        setDeltaBforWell(-1000e6, beanEthWell, LibConstant.WETH);
         (
             IMockFBeanstalk.DeltaBStorage memory dbs,
             address inputToken,
@@ -1492,7 +1307,7 @@ contract PipelineConvertTest is TestHelper {
 
     function testCalcStalkPenaltyDownToPeg() public {
         // make beanEthWell have positive deltaB so that it has convert capacity
-        setDeltaBforWell(1000e6, beanEthWell, C.WETH);
+        setDeltaBforWell(1000e6, beanEthWell, LibConstant.WETH);
 
         (
             IMockFBeanstalk.DeltaBStorage memory dbs,
@@ -1569,7 +1384,7 @@ contract PipelineConvertTest is TestHelper {
             uint256 overallConvertCapacity
         ) = setupTowardsPegDeltaBStorageNegative();
 
-        inputToken = C.BEAN;
+        inputToken = LibConstant.BEAN;
         outputToken = beanEthWell;
         dbs.beforeOverallDeltaB = -100;
 
@@ -1581,6 +1396,45 @@ contract PipelineConvertTest is TestHelper {
             outputToken
         );
         assertEq(stalkPenaltyBdv, 100);
+    }
+
+    function testConvertFromFarmCall() public {
+        uint256 amount = 10e6;
+        int96 stem = depositBeanAndPassGermination(amount, users[1]);
+
+        int96[] memory stems = new int96[](1);
+        stems[0] = stem;
+
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCalls(
+            amount,
+            new AdvancedPipeCall[](0)
+        );
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        bytes memory pipelineConvertEncoded = abi.encodeWithSelector(
+            pipelineConvert.pipelineConvert.selector,
+            LibConstant.BEAN, // input token
+            stems, // stems
+            amounts, // amount
+            beanEthWell, // token out
+            beanToLPPipeCalls // pipeData
+        );
+
+        IMockFBeanstalk.AdvancedFarmCall memory advancedFarmCall = IMockFBeanstalk.AdvancedFarmCall(
+            pipelineConvertEncoded,
+            abi.encode(0)
+        );
+
+        // make array with advancedFarmCall as only item
+        IMockFBeanstalk.AdvancedFarmCall[]
+            memory advancedFarmCalls = new IMockFBeanstalk.AdvancedFarmCall[](1);
+        advancedFarmCalls[0] = advancedFarmCall;
+
+        vm.resumeGasMetering();
+        vm.prank(users[1]);
+        bs.advancedFarm(advancedFarmCalls);
     }
 
     ////// CONVERT TEST HELPERS //////
@@ -1599,8 +1453,8 @@ contract PipelineConvertTest is TestHelper {
         int96 stem = depositBeanAndPassGermination(amount, users[1]);
         beforeTotalStalk = bs.totalStalk();
         beforeUserStalk = bs.balanceOfStalk(users[1]);
-        beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], C.BEAN);
-        grownStalkBefore = bs.balanceOfGrownStalk(users[1], C.BEAN);
+        beforeUserDeposit = bs.balanceOfDepositedBdv(users[1], LibConstant.BEAN);
+        grownStalkBefore = bs.balanceOfGrownStalk(users[1], LibConstant.BEAN);
         beanToLPDoConvert(amount, stem, users[1]);
     }
 
@@ -1623,7 +1477,7 @@ contract PipelineConvertTest is TestHelper {
         dbs.afterOverallDeltaB = 0;
 
         inputToken = beanEthWell;
-        outputToken = C.BEAN;
+        outputToken = LibConstant.BEAN;
 
         bdvConverted = 100;
         overallConvertCapacity = 100;
@@ -1693,11 +1547,7 @@ contract PipelineConvertTest is TestHelper {
         MockToken(well).approve(address(bs), type(uint256).max);
 
         vm.prank(users[1]);
-        (uint256 depositedAmount, uint256 _bdv, int96 theStem) = silo.deposit(
-            well,
-            lpAmountOut,
-            LibTransfer.From.EXTERNAL
-        );
+        (, , int96 theStem) = bs.deposit(well, lpAmountOut, 0);
 
         stem = theStem;
 
@@ -1715,7 +1565,7 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCalls(
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCalls(
             amount,
             new AdvancedPipeCall[](0)
         );
@@ -1725,12 +1575,12 @@ contract PipelineConvertTest is TestHelper {
 
         vm.resumeGasMetering();
         vm.prank(user);
-        (outputStem, outputAmount, , , ) = convert.pipelineConvert(
-            C.BEAN, // input token
+        (outputStem, outputAmount, , , ) = pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stems
             amounts, // amount
             beanEthWell, // token out
-            beanToLPFarmCalls // farmData
+            beanToLPPipeCalls // pipeData
         );
     }
 
@@ -1743,19 +1593,19 @@ contract PipelineConvertTest is TestHelper {
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createLPToBeanFarmCalls(lpAmountOut);
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createLPToBeanPipeCalls(lpAmountOut);
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = lpAmountOut;
 
         vm.resumeGasMetering();
         vm.prank(user);
-        (outputStem, outputAmount, , , ) = convert.pipelineConvert(
+        (outputStem, outputAmount, , , ) = pipelineConvert.pipelineConvert(
             beanEthWell, // input token
             stems, // stems
             amounts, // amount
-            C.BEAN, // token out
-            beanToLPFarmCalls // farmData
+            LibConstant.BEAN, // token out
+            beanToLPPipeCalls // pipeData
         );
     }
 
@@ -1785,7 +1635,7 @@ contract PipelineConvertTest is TestHelper {
 
         uint256 wellRemovedBeans = IWell(fromWell).getRemoveLiquidityOneTokenOut(
             amount,
-            IERC20(C.BEAN)
+            IERC20(LibConstant.BEAN)
         );
 
         uint256[] memory addAmounts = new uint256[](2);
@@ -1797,10 +1647,10 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function addEthToWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
-        MockToken(C.WETH).mint(user, amount);
+        MockToken(LibConstant.WETH).mint(user, amount);
 
         vm.prank(user);
-        MockToken(C.WETH).approve(beanEthWell, amount);
+        MockToken(LibConstant.WETH).approve(beanEthWell, amount);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = 0;
@@ -1815,10 +1665,10 @@ contract PipelineConvertTest is TestHelper {
     }
 
     function removeEthFromWell(address user, uint256 amount) public returns (uint256 lpAmountOut) {
-        MockToken(C.WETH).mint(user, amount);
+        MockToken(LibConstant.WETH).mint(user, amount);
 
         vm.prank(user);
-        MockToken(C.WETH).approve(beanEthWell, amount);
+        MockToken(LibConstant.WETH).approve(beanEthWell, amount);
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = 0;
@@ -1827,7 +1677,7 @@ contract PipelineConvertTest is TestHelper {
         vm.prank(user);
         lpAmountOut = IWell(beanEthWell).removeLiquidityOneToken(
             amount,
-            IERC20(C.WETH),
+            IERC20(LibConstant.WETH),
             0,
             user,
             type(uint256).max
@@ -1840,13 +1690,13 @@ contract PipelineConvertTest is TestHelper {
 
     /**
      * @notice Creates a pipeline calls for converting a bean to LP.
-     * @param amountOfBean The amount of bean to convert.
+     * @param amountOfBean The amount of bean to pipelineConvert.
      * @param extraPipeCalls Any additional pipe calls to add to the pipeline.
      */
-    function createBeanToLPFarmCalls(
+    function createBeanToLPPipeCalls(
         uint256 amountOfBean,
         AdvancedPipeCall[] memory extraPipeCalls
-    ) internal view returns (AdvancedFarmCall[] memory output) {
+    ) internal view returns (AdvancedPipeCall[] memory output) {
         // first setup the pipeline calls
 
         // setup approve max call
@@ -1865,7 +1715,7 @@ contract PipelineConvertTest is TestHelper {
             IWell.addLiquidity.selector,
             tokenAmountsIn, // tokenAmountsIn
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -1876,7 +1726,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[callCounter++] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -1897,26 +1747,12 @@ contract PipelineConvertTest is TestHelper {
             mstore(advancedPipeCalls, callCounter)
         }
 
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-        // AdvancedFarmCall calls any function on the beanstalk diamond.
-        // advancedPipe is one of the functions that its calling.
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-        return advancedFarmCalls;
+        return advancedPipeCalls;
     }
 
-    function createBeanToLPFarmCallsUsingConvertCapacity(
+    function createBeanToLPPipeCallsUsingConvertCapacity(
         uint256 amount
-    ) internal view returns (AdvancedFarmCall[] memory output) {
+    ) internal view returns (AdvancedPipeCall[] memory output) {
         // first setup the pipeline calls
 
         // setup approve max call
@@ -1935,7 +1771,7 @@ contract PipelineConvertTest is TestHelper {
             IWell.addLiquidity.selector,
             tokenAmountsIn, // tokenAmountsIn
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -1959,7 +1795,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[callCounter++] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -2004,40 +1840,12 @@ contract PipelineConvertTest is TestHelper {
             mstore(advancedPipeCalls, callCounter)
         }
 
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-        // AdvancedFarmCall calls any function on the beanstalk diamond.
-        // advancedPipe is one of the functions that its calling.
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-        return advancedFarmCalls;
+        return advancedPipeCalls;
     }
 
-    function createAdvancedFarmCallsFromAdvancedPipeCalls(
-        AdvancedPipeCall[] memory advancedPipeCalls
-    ) private view returns (AdvancedFarmCall[] memory) {
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-        return advancedFarmCalls;
-    }
-
-    function createLPToBeanFarmCalls(
+    function createLPToBeanPipeCalls(
         uint256 amountOfLP
-    ) private view returns (AdvancedFarmCall[] memory output) {
+    ) private view returns (AdvancedPipeCall[] memory output) {
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
@@ -2053,9 +1861,9 @@ contract PipelineConvertTest is TestHelper {
         bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
             IWell.removeLiquidityOneToken.selector,
             amountOfLP, // tokenAmountsIn
-            C.BEAN, // tokenOut
+            LibConstant.BEAN, // tokenOut
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -2064,7 +1872,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -2076,29 +1884,14 @@ contract PipelineConvertTest is TestHelper {
             abi.encode(0) // clipboard
         );
 
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-
-        // AdvancedFarmCall calls any function on the beanstalk diamond.
-        // advancedPipe is one of the functions that its calling.
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-        return advancedFarmCalls;
+        return advancedPipeCalls;
     }
 
-    function createLPToLPFarmCalls(
+    function createLPToLPPipeCalls(
         uint256 amountOfLP,
         address inputWell,
         address outputWell
-    ) private view returns (AdvancedFarmCall[] memory output) {
+    ) private pure returns (AdvancedPipeCall[] memory output) {
         // setup approve max call
         bytes memory approveEncoded = abi.encodeWithSelector(
             IERC20.approve.selector,
@@ -2110,9 +1903,9 @@ contract PipelineConvertTest is TestHelper {
         bytes memory removeLiquidityEncoded = abi.encodeWithSelector(
             IWell.removeLiquidityOneToken.selector,
             amountOfLP, // lpAmountIn
-            C.BEAN, // tokenOut
+            LibConstant.BEAN, // tokenOut
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -2123,7 +1916,7 @@ contract PipelineConvertTest is TestHelper {
             IWell.addLiquidity.selector,
             emptyAmountsIn, // to be pasted in
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -2132,7 +1925,7 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[0] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -2159,25 +1952,7 @@ contract PipelineConvertTest is TestHelper {
             clipboard
         );
 
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-
-        // AdvancedFarmCall calls any function on the beanstalk diamond.
-        // advancedPipe is one of the functions that its calling.
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-
-        // encode into bytes.
-        // output = abi.encode(advancedFarmCalls);
-        return advancedFarmCalls;
+        return advancedPipeCalls;
     }
 
     function calculateDeltaBForWellAfterSwapFromLP(
@@ -2189,16 +1964,16 @@ contract PipelineConvertTest is TestHelper {
         // get reserves before swap
         uint256[] memory reserves = IWell(well).getReserves();
 
-        beansOut = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.BEAN));
+        beansOut = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(LibConstant.BEAN));
 
         // get index of bean token
-        uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+        uint256 beanIndex = bs.getBeanIndex(IWell(well).tokens());
 
         // remove beanOut from reserves bean index
         reserves[beanIndex] = reserves[beanIndex].sub(beansOut);
 
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingBean(
@@ -2209,7 +1984,7 @@ contract PipelineConvertTest is TestHelper {
         uint256[] memory reserves = IWell(well).getReserves();
 
         // get index of bean token
-        uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+        uint256 beanIndex = bs.getBeanIndex(IWell(well).tokens());
 
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = beansIn;
@@ -2218,7 +1993,7 @@ contract PipelineConvertTest is TestHelper {
         // add to bean index (no beans out on this one)
         reserves[beanIndex] = reserves[beanIndex].add(beansIn);
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     function calculateDeltaBForWellAfterAddingNonBean(
@@ -2228,7 +2003,7 @@ contract PipelineConvertTest is TestHelper {
         // get reserves before simulated swap
         uint256[] memory reserves = IWell(well).getReserves();
 
-        (, uint256 nonBeanIndex) = LibWell.getNonBeanTokenAndIndexFromWell(well);
+        (, uint256 nonBeanIndex) = bs.getNonBeanTokenAndIndexFromWell(well);
         uint256[] memory tokenAmountsIn = new uint256[](2);
         tokenAmountsIn[0] = 0;
         tokenAmountsIn[1] = amountIn;
@@ -2238,7 +2013,7 @@ contract PipelineConvertTest is TestHelper {
         reserves[nonBeanIndex] = reserves[nonBeanIndex].add(amountIn);
 
         // get new deltaB
-        deltaB = pipelineConvert.calculateDeltaBFromReservesE(well, reserves, 0);
+        deltaB = bs.calculateDeltaBFromReserves(well, reserves, 0);
     }
 
     // verifies there's no way to withdraw from a deposit without losing grown stalk
@@ -2249,17 +2024,16 @@ contract PipelineConvertTest is TestHelper {
         uint beanAmountToWithdraw = 1000e6 - 2; // the amount of bean to withdraw
 
         // manipulate well so we won't have a penalty applied
-        setDeltaBforWell(int256(beanAmountToConvert), beanEthWell, C.WETH);
+        setDeltaBforWell(int256(beanAmountToConvert), beanEthWell, LibConstant.WETH);
         stem = depositBeanAndPassGermination(beanAmountToConvert + beanAmountToWithdraw, users[1]);
 
-        uint256 attackerBalanceBefore = IERC20(C.BEAN).balanceOf(users[1]);
-        uint256 grownStalkBefore = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 grownStalkBefore = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
 
         // Create arrays for stem and amount
         int96[] memory stems = new int96[](1);
         stems[0] = stem;
 
-        AdvancedFarmCall[] memory beanToLPFarmCalls = createBeanToLPFarmCallsExtractBeans(
+        AdvancedPipeCall[] memory beanToLPPipeCalls = createBeanToLPPipeCallsExtractBeans(
             beanAmountToWithdraw,
             beanAmountToConvert
         );
@@ -2268,15 +2042,15 @@ contract PipelineConvertTest is TestHelper {
         amounts[0] = beanAmountToConvert + beanAmountToWithdraw;
 
         vm.prank(users[1]); // do this as user 1
-        (int96 toStem, , , , ) = convert.pipelineConvert(
-            C.BEAN, // input token
+        pipelineConvert.pipelineConvert(
+            LibConstant.BEAN, // input token
             stems, // stems
             amounts, // amount
             beanEthWell, // token out
-            beanToLPFarmCalls // farmData
+            beanToLPPipeCalls // pipeData
         );
 
-        uint256 grownStalkAfter = bs.grownStalkForDeposit(users[1], C.BEAN, stem);
+        uint256 grownStalkAfter = bs.grownStalkForDeposit(users[1], LibConstant.BEAN, stem);
         assertLt(
             grownStalkAfter,
             grownStalkBefore,
@@ -2284,10 +2058,10 @@ contract PipelineConvertTest is TestHelper {
         );
     }
 
-    function createBeanToLPFarmCallsExtractBeans(
+    function createBeanToLPPipeCallsExtractBeans(
         uint256 amountOfBeanTransferredOut,
         uint256 amountOfBeanConverted
-    ) internal view returns (AdvancedFarmCall[] memory output) {
+    ) internal view returns (AdvancedPipeCall[] memory output) {
         // setup transfer to myself
         bytes memory transferEncoded = abi.encodeWithSelector(
             IERC20.transfer.selector,
@@ -2311,7 +2085,7 @@ contract PipelineConvertTest is TestHelper {
             IWell.addLiquidity.selector,
             tokenAmountsIn, // tokenAmountsIn
             0, // min out
-            C.PIPELINE, // recipient
+            LibConstant.PIPELINE, // recipient
             type(uint256).max // deadline
         );
 
@@ -2322,14 +2096,14 @@ contract PipelineConvertTest is TestHelper {
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[callCounter++] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             transferEncoded, // calldata
             abi.encode(0) // clipboard
         );
 
         // Action 0: approve the Bean-Eth well to spend pipeline's bean.
         advancedPipeCalls[callCounter++] = AdvancedPipeCall(
-            C.BEAN, // target
+            LibConstant.BEAN, // target
             approveEncoded, // calldata
             abi.encode(0) // clipboard
         );
@@ -2345,20 +2119,6 @@ contract PipelineConvertTest is TestHelper {
             mstore(advancedPipeCalls, callCounter)
         }
 
-        // Encode into a AdvancedFarmCall. NOTE: advancedFarmCall != advancedPipeCall.
-        // AdvancedFarmCall calls any function on the beanstalk diamond.
-        // advancedPipe is one of the functions that its calling.
-        // AdvancedFarmCall cannot call approve/addLiquidity, but can call AdvancedPipe.
-        // AdvancedPipe can call any arbitrary function.
-        AdvancedFarmCall[] memory advancedFarmCalls = new AdvancedFarmCall[](1);
-
-        bytes memory advancedPipeCalldata = abi.encodeWithSelector(
-            depot.advancedPipe.selector,
-            advancedPipeCalls,
-            0
-        );
-
-        advancedFarmCalls[0] = AdvancedFarmCall(advancedPipeCalldata, new bytes(0));
-        return advancedFarmCalls;
+        return advancedPipeCalls;
     }
 }

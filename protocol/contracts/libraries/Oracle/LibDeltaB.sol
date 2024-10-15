@@ -3,8 +3,6 @@
 pragma solidity ^0.8.20;
 
 import {C} from "contracts/C.sol";
-import {LibWellMinting} from "../Minting/LibWellMinting.sol";
-import {AdvancedFarmCall, LibFarm} from "../../libraries/LibFarm.sol";
 import {LibWell} from "../Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
@@ -13,6 +11,7 @@ import {LibRedundantMathSigned256} from "contracts/libraries/LibRedundantMathSig
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {ICappedReservesPump} from "contracts/interfaces/basin/pumps/ICappedReservesPump.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
 
 /**
  * @title LibPipelineConvert
@@ -30,7 +29,8 @@ library LibDeltaB {
      * @return The deltaB of the token, for Bean it returns 0.
      */
     function getCurrentDeltaB(address token) internal view returns (int256) {
-        if (token == C.BEAN) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (token == s.sys.tokens.bean) {
             return 0;
         }
 
@@ -44,8 +44,17 @@ library LibDeltaB {
      * @return The current deltaB uses the current reserves in the well.
      */
     function currentDeltaB(address well) internal view returns (int256) {
-        uint256[] memory reserves = IWell(well).getReserves();
-        return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
+        try IWell(well).getReserves() returns (uint256[] memory reserves) {
+            uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+            // if less than minimum bean balance, return 0, otherwise
+            // calculateDeltaBFromReserves will revert
+            if (reserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return 0;
+            }
+            return calculateDeltaBFromReserves(well, reserves, ZERO_LOOKBACK);
+        } catch {
+            return 0;
+        }
     }
 
     /**
@@ -63,7 +72,8 @@ library LibDeltaB {
      * @notice returns the overall cappedReserves deltaB for all whitelisted well tokens.
      */
     function cappedReservesDeltaB(address well) internal view returns (int256) {
-        if (well == C.BEAN) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        if (well == s.sys.tokens.bean) {
             return 0;
         }
 
@@ -72,13 +82,20 @@ library LibDeltaB {
         address pump = pumps[0].target;
 
         // well address , data[]
-        uint256[] memory instReserves = ICappedReservesPump(pump).readCappedReserves(
-            well,
-            pumps[0].data
-        );
-
-        // calculate deltaB.
-        return calculateDeltaBFromReserves(well, instReserves, ZERO_LOOKBACK);
+        try ICappedReservesPump(pump).readCappedReserves(well, pumps[0].data) returns (
+            uint256[] memory instReserves
+        ) {
+            uint256 beanIndex = LibWell.getBeanIndex(IWell(well).tokens());
+            // if less than minimum bean balance, return 0, otherwise
+            // calculateDeltaBFromReserves will revert
+            if (instReserves[beanIndex] < C.WELL_MINIMUM_BEAN_BALANCE) {
+                return 0;
+            }
+            // calculate deltaB.
+            return calculateDeltaBFromReserves(well, instReserves, ZERO_LOOKBACK);
+        } catch {
+            return 0;
+        }
     }
 
     // Calculates overall deltaB, used by convert for stalk penalty purposes
@@ -109,9 +126,10 @@ library LibDeltaB {
     function scaledOverallCurrentDeltaB(
         uint256[] memory lpSupply
     ) internal view returns (int256 deltaB) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         address[] memory tokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == C.BEAN) continue;
+            if (tokens[i] == s.sys.tokens.bean) continue;
             int256 wellDeltaB = scaledCurrentDeltaB(tokens[i], lpSupply[i]);
             deltaB = deltaB.add(wellDeltaB);
         }
@@ -122,6 +140,7 @@ library LibDeltaB {
         uint256 lpSupply
     ) internal view returns (int256 wellDeltaB) {
         wellDeltaB = currentDeltaB(well);
+        if (wellDeltaB == 0) return 0; // prevent divide by zero
         wellDeltaB = scaledDeltaB(lpSupply, IERC20(well).totalSupply(), wellDeltaB);
     }
 
@@ -165,14 +184,17 @@ library LibDeltaB {
             revert("Well: USD Oracle call failed");
         }
 
-        return
-            int256(
-                IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
-                    reserves,
-                    beanIndex,
-                    ratios,
-                    wellFunction.data
-                )
-            ).sub(int256(reserves[beanIndex]));
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcReserveAtRatioSwap(
+                reserves,
+                beanIndex,
+                ratios,
+                wellFunction.data
+            )
+        returns (uint256 reserve) {
+            return int256(reserve).sub(int256(reserves[beanIndex]));
+        } catch {
+            return 0;
+        }
     }
 }

@@ -1,14 +1,16 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ACCOUNT_ENTITY_TYPE, BEAN_SWAP_AMOUNT, SWAP_ACCOUNT, SWAP_ENTITY_TYPE, WELL, WETH_SWAP_AMOUNT } from "./helpers/Constants";
 import { boreDefaultWell } from "./helpers/Aquifer";
 import { mockShift, mockSwap } from "./helpers/Swap";
 import { mockAddLiquidity } from "./helpers/Liquidity";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { BI_10 } from "../../subgraph-core/utils/Decimals";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Swap Entity", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

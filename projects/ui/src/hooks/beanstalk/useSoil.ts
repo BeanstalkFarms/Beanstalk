@@ -10,8 +10,8 @@ import useTemperature from './useTemperature';
  *
  * Beanstalk only exposes only 'totalSoil()', which returns the instantaneous amount of soil.
  *
- * 'Beanstalk.totalSoil()' utilizes s.f.soil (AppState.field.soil) in it's calculation, and unfortunately,
- * Beanstalk doesn't expose s.f.soil.
+ * 'Beanstalk.totalSoil()' utilizes s.sys.soil (AppState.field.soil) in it's calculation, but
+ * this is not exposed.
  *
  * refer to LibDibbler.sol for more information on how Beanstalk calculates 'totalSoil()'
  *
@@ -39,10 +39,9 @@ import useTemperature from './useTemperature';
  *
  * - We calculate 'nextSoil' instead of 'soil' b/c 'soil' would require us to know the temperature of the
  * previous morning interval.
- *    - If we are at index = 0, we cannot calculate the temperature of the previous interval, wheras if we
+ *    - If we are at index = 0, we cannot calculate the temperature of the previous interval, whereas if we
  * calculate the soil for the next interval, if we are at interval 25, we can assume 'nextTemperature' is
  * the maxTemperature for the season.
- *
  */
 
 /**
@@ -53,30 +52,30 @@ import useTemperature from './useTemperature';
 export default function useSoil() {
   /// App State
   const season = useAppSelector((s) => s._beanstalk.sun.season);
-  const sunMorning = useAppSelector((s) => s._beanstalk.sun.morning);
+  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
   const soil = useAppSelector((s) => s._beanstalk.field.soil);
 
   /// Hooks
   const [_, { calculate: calculateTemperature }] = useTemperature();
 
   /// Derived
-  const isMorning = sunMorning.isMorning;
+  const isMorning = morning.isMorning;
   const abovePeg = season.abovePeg;
-  const morningBlock = sunMorning.blockNumber;
+  const morningIndex = morning.index;
 
   const calculateNextSoil = useCallback(
-    (_blockNumber: BigNumber) => {
+    (morningIdx: BigNumber) => {
       if (!season.abovePeg) {
         return soil;
       }
-      const currTemp = calculateTemperature(_blockNumber);
-      const nextTemp = calculateTemperature(_blockNumber.plus(1));
+      const currTemp = calculateTemperature(morningIdx);
+      const nextTemp = calculateTemperature(morningIdx.plus(1));
 
       const ratio = currTemp.plus(100).div(nextTemp.plus(100));
 
       return soil.times(ratio).decimalPlaces(6, BigNumber.ROUND_DOWN);
     },
-    [calculateTemperature, season.abovePeg, soil]
+    [season.abovePeg, soil, calculateTemperature]
   );
 
   /**
@@ -90,13 +89,13 @@ export default function useSoil() {
         nextSoil: soil,
       };
 
-    const nextSoil = calculateNextSoil(morningBlock);
+    const nextSoil = calculateNextSoil(morningIndex);
 
     return {
       soil,
       nextSoil,
     };
-  }, [abovePeg, calculateNextSoil, isMorning, soil, morningBlock]);
+  }, [abovePeg, calculateNextSoil, isMorning, soil, morningIndex]);
 
   return [soilData, { calculate: calculateNextSoil }] as const;
 }

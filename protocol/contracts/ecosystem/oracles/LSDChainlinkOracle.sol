@@ -1,8 +1,9 @@
 /**
  * SPDX-License-Identifier: MIT
  **/
-import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 pragma solidity ^0.8.20;
+
+import {LibChainlinkOracle} from "contracts/libraries/Oracle/LibChainlinkOracle.sol";
 
 /**
  * @title LSDChainlinkOracle
@@ -27,13 +28,12 @@ contract LSDChainlinkOracle {
             address ethChainlinkOracle,
             uint256 ethTimeout,
             address xEthChainlinkOracle,
-            uint256 xEthTimeout,
-            address token
+            uint256 xEthTimeout
         )
     {
-        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout, token) = abi.decode(
+        (ethChainlinkOracle, ethTimeout, xEthChainlinkOracle, xEthTimeout) = abi.decode(
             data,
-            (address, uint256, address, uint256, address)
+            (address, uint256, address, uint256)
         );
     }
 
@@ -53,9 +53,8 @@ contract LSDChainlinkOracle {
             address ethChainlinkOracle,
             uint256 ethTimeout,
             address xEthChainlinkOracle,
-            uint256 xEthTimeout,
-            address token
-        ) = abi.decode(data, (address, uint256, address, uint256, address));
+            uint256 xEthTimeout
+        ) = abi.decode(data, (address, uint256, address, uint256));
 
         // get the price of xETH/ETH or ETH/xETH, depending on decimals.
         uint256 xEthEthPrice = LibChainlinkOracle.getTokenPrice(
