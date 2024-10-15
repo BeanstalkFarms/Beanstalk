@@ -1,5 +1,12 @@
 import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
-import { Well, WellDailySnapshot, WellHourlySnapshot } from "../../generated/schema";
+import {
+  Well,
+  WellDailySnapshot,
+  WellHourlySnapshot,
+  WellUpgradeHistory,
+  WellUpgradeHistory,
+  WellUpgradeHistory
+} from "../../generated/schema";
 import { ERC20 } from "../../generated/Basin-ABIs/ERC20";
 import {
   subBigDecimalArray,
@@ -85,6 +92,22 @@ export function loadOrCreateWell(wellAddress: Address, inputTokens: Address[], b
 
 export function loadWell(wellAddress: Address): Well {
   return Well.load(wellAddress) as Well;
+}
+
+export function createWellUpgradeHistoryEntry(well: Well, block: ethereum.Block): void {
+  const historyCount = well.upgradeHistory.load().length;
+  const history = new WellUpgradeHistory(well.id.toHexString() + "-" + historyCount.toString());
+  history.well = well.id;
+  history.effectiveBlock = block.number;
+  history.effectiveTimestamp = block.timestamp;
+  history.boredWell = well.boredWell;
+  history.aquifer = well.aquifer;
+  history.implementation = well.implementation;
+  history.pumps = well.pumps;
+  history.pumpData = well.pumpData;
+  history.wellFunction = well.wellFunction;
+  history.wellFunctionData = well.wellFunctionData;
+  history.save();
 }
 
 export function loadOrCreateWellDailySnapshot(wellAddress: Address, dayID: i32, block: ethereum.Block): WellDailySnapshot {

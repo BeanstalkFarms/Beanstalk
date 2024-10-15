@@ -4,7 +4,7 @@ import { Well } from "../../generated/templates";
 import { loadOrCreateToken } from "../entities/Token";
 import { getActualWell } from "../utils/UpgradeableMapping";
 import { loadOrCreateAquifer, loadOrCreateImplementation, loadOrCreatePump, loadOrCreateWellFunction } from "../entities/WellComponents";
-import { loadOrCreateWell } from "../entities/Well";
+import { createWellUpgradeHistoryEntry, loadOrCreateWell } from "../entities/Well";
 
 export function handleBoreWell(event: BoreWell): void {
   // Accounts for well proxies here
@@ -38,5 +38,5 @@ export function handleBoreWell(event: BoreWell): void {
   well.save();
 
   // Add to well history
-  // TODO
+  createWellUpgradeHistoryEntry(well, event.block);
 }

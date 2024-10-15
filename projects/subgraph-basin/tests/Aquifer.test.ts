@@ -27,11 +27,12 @@ describe("Aquifer Well Deployment", () => {
   describe("Upgradeable Wells", () => {
     beforeEach(() => {
       assert.entityCount("Well", 1);
+      assert.entityCount("WellUpgradeHistory", 1);
       boreUpgradeableWell(0);
       boreUpgradeableWell(1);
     });
     test("WellUpgradeHistory entity tracks each upgrade", () => {
-      assert.entityCount("WellUpgradeHistory", 2);
+      assert.entityCount("WellUpgradeHistory", 3);
       assert.fieldEquals(
         "WellUpgradeHistory",
         UPGRADEABLE_MAPPING[0].proxy.toHexString() + "-0",

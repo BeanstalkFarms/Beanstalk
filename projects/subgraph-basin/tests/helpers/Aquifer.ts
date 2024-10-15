@@ -64,7 +64,8 @@ export function boreDefaultWell(): void {
 }
 
 export function boreUpgradeableWell(index: i32): void {
-  createContractCallMocks(ONE_BD, UPGRADEABLE_MAPPING[0].proxy);
+  const tokens = [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WETH];
+  createContractCallMocks(ONE_BD, UPGRADEABLE_MAPPING[0].proxy, tokens);
   let wellFunctionTuple = new ethereum.Tuple();
   wellFunctionTuple.push(ethereum.Value.fromAddress(WELL_FUNCTION));
   wellFunctionTuple.push(ethereum.Value.fromBytes(Bytes.empty()));
@@ -76,7 +77,7 @@ export function boreUpgradeableWell(index: i32): void {
   let boreWellEvent = createBoreWellEvent(
     AQUIFER,
     UPGRADEABLE_MAPPING[0].boredWells[index],
-    [BeanstalkArb.BEAN_ERC20, BeanstalkArb.WETH],
+    tokens,
     wellFunctionTuple,
     [pump1Tuple],
     IMPLEMENTATION,
