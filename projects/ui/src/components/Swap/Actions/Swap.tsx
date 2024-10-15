@@ -42,7 +42,7 @@ import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import { useSigner } from '~/hooks/ledger/useSigner';
 
 import useAccount from '~/hooks/ledger/useAccount';
-import { MinBN, tokenIshEqual } from '~/util';
+import { getTokenIndex, MinBN, tokenIshEqual } from '~/util';
 import { IconSize } from '~/components/App/muiTheme';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -110,6 +110,8 @@ const Quoting = (
   />
 );
 
+const MIN_AMOUNT_IN = new BigNumber(1e-6);
+
 const SwapForm: FC<
   FormikProps<SwapFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
@@ -162,14 +164,14 @@ const SwapForm: FC<
   );
 
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
-    const _balanceIn = balances[tokenIn.address];
+    const _balanceIn = balances[getTokenIndex(tokenIn)];
     if (tokensMatch) {
       const _balanceInMax =
         _balanceIn[modeIn === FarmFromMode.INTERNAL ? 'internal' : 'external'];
       return [_balanceIn, _balanceInMax, _balanceInMax] as const;
     }
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
-  }, [balances, modeIn, tokenIn.address, tokensMatch]);
+  }, [balances, modeIn, tokenIn, tokensMatch]);
 
   const [getAmountsBySource] = useGetBalancesUsedBySource({
     tokens: values.tokensIn,
@@ -197,12 +199,14 @@ const SwapForm: FC<
           ? FarmFromMode.INTERNAL
           : FarmFromMode.EXTERNAL
       );
+    } else if (tokenIn.equals(sdk.tokens.ETH)) {
+      setFromOptions([BalanceFrom.EXTERNAL]);
     } else {
       setFromOptions([BalanceFrom.TOTAL]);
       setBalanceFromIn(BalanceFrom.TOTAL);
       setFieldValue('modeIn', FarmFromMode.INTERNAL_EXTERNAL);
     }
-  }, [tokensMatch, modeIn, modeOut, setFieldValue]);
+  }, [tokensMatch, modeIn, modeOut, tokenIn, sdk, setFieldValue]);
 
   const noBalance = !balanceInMax?.gt(0);
   const expectedFromMode = balanceIn
@@ -512,6 +516,7 @@ const SwapForm: FC<
                   ]
                 : undefined
             }
+            min={tokensMatch ? MIN_AMOUNT_IN : ZERO_BN}
             balance={balanceInInput}
             quote={quotingOut ? Quoting : undefined}
             onChange={handleChangeAmountIn}

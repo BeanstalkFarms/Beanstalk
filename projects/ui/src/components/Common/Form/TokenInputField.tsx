@@ -239,7 +239,6 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
       ///
       /// FIXME: throws an error if e.target.value === '.'
       const newValue = e.target.value ? new BigNumber(e.target.value) : null;
-      console.log('newValue: ', newValue?.toString());
       /// Always update the display amount right away.
       setDisplayAmount(newValue?.toString() || '');
 
