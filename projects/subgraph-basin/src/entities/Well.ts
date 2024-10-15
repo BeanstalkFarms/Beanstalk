@@ -285,7 +285,6 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
 
   let priorHourID = well.lastSnapshotHourID;
   well.lastSnapshotHourID = hourID;
-  well.save();
 
   let priorSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, priorHourID, block);
   let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, hourID, block);
@@ -366,5 +365,7 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
       well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.minus(oldest7d.deltaTransferVolumeUSD);
     }
   }
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
   well.save();
 }
