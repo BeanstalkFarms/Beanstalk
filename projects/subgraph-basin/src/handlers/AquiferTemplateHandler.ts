@@ -1,21 +1,34 @@
 import { Bytes } from "@graphprotocol/graph-ts";
 import { BoreWell } from "../../generated/Basin-ABIs/Aquifer";
 import { Well } from "../../generated/templates";
-import { loadOrCreatePump } from "../entities/Pump";
-import { loadOrCreateAquifer } from "../entities/Aquifer";
-import { createWell, loadOrCreateWellFunction } from "../entities/Well";
 import { loadOrCreateToken } from "../entities/Token";
 import { getActualWell } from "../utils/UpgradeableMapping";
+import { loadOrCreateAquifer, loadOrCreateImplementation, loadOrCreatePump, loadOrCreateWellFunction } from "../entities/WellComponents";
+import { createWellUpgradeHistoryEntry, loadOrCreateWell } from "../entities/Well";
 
 export function handleBoreWell(event: BoreWell): void {
-  let aquifer = loadOrCreateAquifer(event.address);
-
   // Accounts for well proxies here
   const actualAddress = getActualWell(event.params.well);
   Well.create(actualAddress);
 
-  let well = createWell(actualAddress, event.params.tokens);
+  let well = loadOrCreateWell(actualAddress, event.params.tokens, event.block);
+  well.boredWell = event.params.well;
+
+  loadOrCreateAquifer(event.address);
   well.aquifer = event.address;
+
+  loadOrCreateImplementation(event.params.implementation);
+  well.implementation = event.params.implementation;
+
+  for (let i = 0; i < event.params.pumps.length; i++) {
+    loadOrCreatePump(event.params.pumps[i]);
+    well.pumps.push(event.params.pumps[i].target);
+    well.pumpData.push(event.params.pumps[i].data);
+  }
+
+  loadOrCreateWellFunction(event.params.wellFunction.target);
+  well.wellFunction = event.params.wellFunction.target;
+  well.wellFunctionData = event.params.wellFunction.data;
 
   const tokens: Bytes[] = [];
   for (let i = 0; i < event.params.tokens.length; i++) {
@@ -24,22 +37,8 @@ export function handleBoreWell(event: BoreWell): void {
   well.tokens = tokens;
   well.tokenOrder = tokens;
 
-  for (let i = 0; i < event.params.pumps.length; i++) {
-    loadOrCreatePump(event.params.pumps[i], actualAddress);
-  }
-
-  const wellFn = loadOrCreateWellFunction(event.params.wellFunction.target);
-  wellFn.data = event.params.wellFunction.data;
-  wellFn.save();
-
-  well.wellFunction = event.params.wellFunction.target;
-  well.implementation = event.params.implementation;
-  well.createdTimestamp = event.block.timestamp;
-  well.createdBlockNumber = event.block.number;
   well.save();
 
-  let wells = aquifer.wells;
-  wells.push(actualAddress);
-  aquifer.wells = wells;
-  aquifer.save();
+  // Add to well history
+  createWellUpgradeHistoryEntry(well, event.block);
 }

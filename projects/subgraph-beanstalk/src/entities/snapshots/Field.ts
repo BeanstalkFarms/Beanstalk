@@ -1,11 +1,13 @@
 import { BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { Field, FieldDailySnapshot, FieldHourlySnapshot } from "../../../generated/schema";
-import { getCurrentSeason } from "../Beanstalk";
+import { getCurrentSeason, loadSeason } from "../Beanstalk";
 import { dayFromTimestamp, hourFromTimestamp } from "../../../../subgraph-core/utils/Dates";
 import { ZERO_BD, ZERO_BI } from "../../../../subgraph-core/utils/Decimals";
 
 export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
   const currentSeason = getCurrentSeason();
+  const seasonEntity = loadSeason(BigInt.fromU32(currentSeason));
+  const sunriseBlock = seasonEntity.sunriseBlock;
 
   const hour = BigInt.fromI32(hourFromTimestamp(block.timestamp));
   const day = BigInt.fromI32(dayFromTimestamp(block.timestamp));
@@ -79,7 +81,15 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       hourly.soilSoldOut = baseHourly.soilSoldOut;
       hourly.blocksToSoldOutSoil = baseHourly.blocksToSoldOutSoil;
     } else {
-      // Sets initial creation values
+      // Sets initial values, assuming no sunrise has occurred
+      hourly.issuedSoil = ZERO_BI;
+      hourly.deltaIssuedSoil = ZERO_BI.minus(baseHourly.issuedSoil);
+      hourly.seasonBlock = block.number;
+      hourly.soilSoldOut = false;
+    }
+
+    if (block.number == sunriseBlock) {
+      // Sets initial sunrise values
       hourly.issuedSoil = field.soil;
       hourly.deltaIssuedSoil = field.soil.minus(baseHourly.issuedSoil);
       hourly.seasonBlock = block.number;
@@ -99,7 +109,7 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
     hourly.deltaHarvestableIndex = hourly.harvestableIndex;
     hourly.deltaPodRate = hourly.podRate;
 
-    // Sets initial creation values
+    // Sets initial sunrise values
     hourly.issuedSoil = field.soil;
     hourly.deltaIssuedSoil = field.soil;
     hourly.seasonBlock = block.number;
@@ -160,7 +170,13 @@ export function takeFieldSnapshots(field: Field, block: ethereum.Block): void {
       daily.issuedSoil = baseDaily.issuedSoil;
       daily.deltaIssuedSoil = baseDaily.deltaIssuedSoil;
     } else {
-      // Sets issued soil here since this is the initial creation
+      // Sets initial values, assuming no sunrise has occurred
+      daily.issuedSoil = ZERO_BI;
+      daily.deltaIssuedSoil = ZERO_BI.minus(baseDaily.issuedSoil);
+    }
+
+    if (block.number == sunriseBlock) {
+      // Sets initial sunrise values
       daily.issuedSoil = field.soil;
       daily.deltaIssuedSoil = field.soil.minus(baseDaily.issuedSoil);
     }

@@ -10,7 +10,7 @@ import {
   toDecimal,
   ZERO_BI
 } from "../../../subgraph-core/utils/Decimals";
-import { loadOrCreateWellFunction, loadWell, takeWellDailySnapshot, takeWellHourlySnapshot } from "../entities/Well";
+import { loadWell, takeWellDailySnapshot, takeWellHourlySnapshot } from "../entities/Well";
 import { getTokenDecimals, updateTokenUSD } from "./Token";
 import { getProtocolToken, isStable2WellFn, wellFnSupportsRate } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
@@ -19,6 +19,7 @@ import { Well } from "../../generated/schema";
 import { WellFunction } from "../../generated/Basin-ABIs/WellFunction";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 import { calcRates } from "./legacy/CP2";
+import { loadOrCreateWellFunction } from "../entities/WellComponents";
 
 export function getCalculatedReserveUSDValues(tokens: Bytes[], reserves: BigInt[]): BigDecimal[] {
   let results = emptyBigDecimalArray(tokens.length);
@@ -73,8 +74,8 @@ export function getTokenPrices(well: Well): BigInt[] {
   let rates: BigInt[] = [];
   if (wellFnSupportsRate(v(), wellFnAddress)) {
     rates = [
-      wellFnContract.calcRate(well.reserves, ZERO_BI, ONE_BI, wellFn.data),
-      wellFnContract.calcRate(well.reserves, ONE_BI, ZERO_BI, wellFn.data)
+      wellFnContract.calcRate(well.reserves, ZERO_BI, ONE_BI, well.wellFunctionData),
+      wellFnContract.calcRate(well.reserves, ONE_BI, ZERO_BI, well.wellFunctionData)
     ];
     // Stable2 does not require transforming rates. Otherwise, the rates are given with this precision:
     // quoteToken + 18 - baseToken

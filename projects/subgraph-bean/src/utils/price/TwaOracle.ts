@@ -21,11 +21,15 @@ export function manualTwa(poolAddress: Address, newReserves: BigInt[], timestamp
   twaOracle.save();
 }
 
-export function setTwaLast(poolAddress: Address, newCumulative: BigInt[], timestamp: BigInt): void {
+export function setTwaLast(poolAddress: Address, newCumulative: BigInt[], timestamp: BigInt): boolean {
   let twaOracle = loadOrCreateTwaOracle(poolAddress);
+  const error = newCumulative[0] < twaOracle.priceCumulativeLast[0] || newCumulative[1] < twaOracle.priceCumulativeLast[1];
+
   twaOracle.priceCumulativeLast = newCumulative;
   twaOracle.lastUpdated = timestamp;
   twaOracle.save();
+
+  return error;
 }
 
 export function setRawWellReserves(event: WellOracle): void {

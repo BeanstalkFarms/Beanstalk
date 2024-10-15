@@ -19,11 +19,12 @@ import {
   mockSync
 } from "./helpers/Liquidity";
 import { initL1Version } from "./entity-mocking/MockVersion";
-import { loadOrCreateWellFunction, loadWell } from "../src/entities/Well";
+import { loadWell } from "../src/entities/Well";
 import { calcLiquidityVolume } from "../src/utils/Volume";
 import { toAddress } from "../../subgraph-core/utils/Bytes";
 import { mockWellLpTokenUnderlying } from "../../subgraph-core/tests/event-mocking/Tokens";
 import { deprecated_calcLiquidityVolume } from "../src/utils/legacy/CP2";
+import { loadOrCreateWellFunction } from "../src/entities/WellComponents";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);
@@ -321,7 +322,7 @@ describe("Well Entity: Liquidity Event Tests", () => {
     well.reserves = [BigInt.fromI32(3000).times(BI_10.pow(6)), BigInt.fromU32(1).times(BI_10.pow(18))];
     let deltaReserves = [BigInt.fromI32(1500).times(BI_10.pow(6)), ZERO_BI];
     let deltaLp = ONE_BI;
-    mockWellLpTokenUnderlying(toAddress(wellFn.id), deltaLp.abs(), well.reserves, well.lpTokenSupply, wellFn.data, [
+    mockWellLpTokenUnderlying(toAddress(wellFn.id), deltaLp.abs(), well.reserves, well.lpTokenSupply, well.wellFunctionData, [
       BigInt.fromString("878679656"),
       BigInt.fromString("292893218813452475")
     ]);
@@ -338,7 +339,7 @@ describe("Well Entity: Liquidity Event Tests", () => {
       deltaLp.abs(),
       subBigIntArray(well.reserves, deltaReserves),
       well.lpTokenSupply.minus(deltaLp),
-      wellFn.data,
+      well.wellFunctionData,
       [BigInt.fromString("697366596"), BigInt.fromString("581138830084189666")]
     );
 
