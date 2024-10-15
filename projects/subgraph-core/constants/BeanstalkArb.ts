@@ -13,7 +13,8 @@ import {
   BEAN_USDC,
   BEAN_USDT,
   AQUIFER,
-  WELL_STABLE2
+  WELL_STABLE2,
+  WELL_STABLE2_121
 } from "./raw/BeanstalkArbConstants";
 
 /// ADDRESSES ///
@@ -109,5 +110,5 @@ export function wellFnSupportsRate(wellFnAddress: Address): boolean {
 }
 
 export function isStable2WellFn(wellFnAddress: Address): boolean {
-  return wellFnAddress == WELL_STABLE2;
+  return wellFnAddress == WELL_STABLE2 || wellFnAddress == WELL_STABLE2_121;
 }
