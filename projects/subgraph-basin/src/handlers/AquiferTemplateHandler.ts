@@ -23,10 +23,12 @@ export function handleBoreWell(event: BoreWell): void {
   for (let i = 0; i < event.params.pumps.length; i++) {
     loadOrCreatePump(event.params.pumps[i]);
     well.pumps.push(event.params.pumps[i].target);
+    well.pumpData.push(event.params.pumps[i].data);
   }
 
   loadOrCreateWellFunction(event.params.wellFunction.target);
   well.wellFunction = event.params.wellFunction.target;
+  well.wellFunctionData = event.params.wellFunction.data;
 
   const tokens: Bytes[] = [];
   for (let i = 0; i < event.params.tokens.length; i++) {
