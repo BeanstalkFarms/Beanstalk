@@ -18,14 +18,18 @@ const ForecastPage: FC<{}> = () => (
         <Card sx={{ flex: 1, pt: 2 }}>
           <Price />
         </Card>
-        <Card sx={{ flex: 1, pt: 2 }}>
-          <PodRate />
-        </Card>
+        {false && (
+          <Card sx={{ flex: 1, pt: 2 }}>
+            <PodRate />
+          </Card>
+        )}
       </Stack>
-      <LiquidityOverTime />
-      <Card sx={{ pt: 2 }}>
-        <MarketCap height={250} />
-      </Card>
+      {false && <LiquidityOverTime />}
+      {false && (
+        <Card sx={{ pt: 2 }}>
+          <MarketCap height={250} />
+        </Card>
+      )}
       <LiquidityByState />
     </Stack>
   </Container>

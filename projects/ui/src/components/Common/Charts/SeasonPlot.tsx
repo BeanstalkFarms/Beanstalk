@@ -49,7 +49,7 @@ export type SeasonPlotBaseProps = {
   /** True if this plot should be a StackedAreaChard */
   stackedArea?: boolean;
 
-  name?: string;
+  name: string;
 };
 
 type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
@@ -98,11 +98,11 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   }, []);
 
   const seasonsQuery = useSeasonsQuery<T>(
+    name,
     document,
     timeTabParams[0][1],
     queryConfig,
-    fetchType,
-    name
+    fetchType
   );
 
   const queryParams = useMemo(

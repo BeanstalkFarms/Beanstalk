@@ -4,6 +4,7 @@ import { SeasonalLiquidityPerPoolDocument } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 import useSeasonsQuery, {
+  SEASON_RANGE_TO_COUNT,
   SeasonRange,
   SeasonsQueryDynamicConfig,
 } from '~/hooks/beanstalk/useSeasonsQuery';
@@ -20,7 +21,7 @@ import {
   BEAN_WEETH_WELL_LP,
   BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
-import { ChainConstant, SupportedChainId } from '~/constants';
+import { ChainConstant, RESEED_SEASON, SupportedChainId } from '~/constants';
 import {
   BaseDataPoint,
   ChartMultiStyles,
@@ -59,85 +60,92 @@ const dyanmicBeanConfig = (token: ChainConstant<{ address: string }>) => {
 
 const configs = {
   beanCrv3L1: {
-    variables: { pool: BEAN_CRV3_LP[1].address },
+    variables: { pool: BEAN_CRV3_LP[1].address.toLowerCase() },
     context: { subgraph: 'bean_eth' },
   },
   beanETHOld: {
-    variables: { pool: BEAN_ETH_UNIV2_LP[1].address },
+    variables: { pool: BEAN_ETH_UNIV2_LP[1].address.toLowerCase() },
     context: { subgraph: 'bean_eth' },
   },
   beanLusdOld: {
-    variables: { pool: BEAN_LUSD_LP[1].address },
+    variables: { pool: BEAN_LUSD_LP[1].address.toLowerCase() },
     context: { subgraph: 'bean_eth' },
   },
   beanCrv3Old: {
-    variables: { pool: BEAN_CRV3_V1_LP[1].address },
+    variables: { pool: BEAN_CRV3_V1_LP[1].address.toLowerCase() },
     context: { subgraph: 'bean_eth' },
   },
   beanWstETH: dyanmicBeanConfig(BEAN_WSTETH_WELL_LP),
   beanETH: dyanmicBeanConfig(BEAN_ETH_WELL_LP),
   beanWeETH: {
     variables: {
-      pool: BEAN_WEETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET].address,
+      pool: BEAN_WEETH_WELL_LP[
+        SupportedChainId.ARBITRUM_MAINNET
+      ].address.toLowerCase(),
     },
     context: { subgraph: 'bean' },
   },
   beanWBTC: {
     variables: {
-      pool: BEAN_WBTC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET].address,
+      pool: BEAN_WBTC_WELL_LP[
+        SupportedChainId.ARBITRUM_MAINNET
+      ].address.toLowerCase(),
     },
     context: { subgraph: 'bean' },
   },
   beanUSDC: {
     variables: {
-      pool: BEAN_USDC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET].address,
+      pool: BEAN_USDC_WELL_LP[
+        SupportedChainId.ARBITRUM_MAINNET
+      ].address.toLowerCase(),
     },
     context: { subgraph: 'bean' },
   },
   beanUSDT: {
     variables: {
-      pool: BEAN_USDT_WELL_LP[SupportedChainId.ARBITRUM_MAINNET].address,
+      pool: BEAN_USDT_WELL_LP[
+        SupportedChainId.ARBITRUM_MAINNET
+      ].address.toLowerCase(),
     },
     context: { subgraph: 'bean' },
   },
 };
 
-const BEAN_CRV3 = BEAN_CRV3_LP[1];
-const BEAN_ETH_WELL = BEAN_ETH_WELL_LP[1];
-const BEAN_ETH_UNIV2 = BEAN_ETH_UNIV2_LP[1];
-const BEAN_LUSD_LP_V1 = BEAN_LUSD_LP[1];
-const BEAN_CRV3_V1 = BEAN_CRV3_V1_LP[1];
-const BEAN_WSTETH_WELL = BEAN_WSTETH_WELL_LP[1];
-const BEAN_WSTETH_WELL_L2 =
-  BEAN_WSTETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
-const BEAN_ETH_WELL_L2 = BEAN_ETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
-const BEAN_WBTC_WELL = BEAN_ETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
+const BEAN_ETH_WELL = BEAN_ETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
+const BEAN_WSTETH_WELL = BEAN_WSTETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
+const BEAN_WBTC_WELL = BEAN_WBTC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
 const BEAN_WEETH_WELL = BEAN_WEETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
 const BEAN_USDC_WELL = BEAN_USDC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
 const BEAN_USDT_WELL = BEAN_USDT_WELL_LP[SupportedChainId.ARBITRUM_MAINNET];
 
+const BEAN_ETH_WELL_ETH = BEAN_ETH_WELL_LP[1];
+const BEAN_WSTETH_WELL_ETH = BEAN_WSTETH_WELL_LP[1];
+const BEAN_CRV3_ETH = BEAN_CRV3_LP[1];
+const BEAN_ETH_UNIV2_ETH = BEAN_ETH_UNIV2_LP[1];
+const BEAN_LUSD_LP_V1_ETH = BEAN_LUSD_LP[1];
+const BEAN_CRV3_V1_ETH = BEAN_CRV3_V1_LP[1];
+
 const poolList = [
+  // ARBITRUM MAINNET
   BEAN_WSTETH_WELL,
-  BEAN_WSTETH_WELL_L2,
   BEAN_ETH_WELL,
-  BEAN_ETH_WELL_L2,
   BEAN_WBTC_WELL,
   BEAN_WEETH_WELL,
   BEAN_USDC_WELL,
   BEAN_USDT_WELL,
-  BEAN_CRV3,
-  BEAN_ETH_UNIV2,
-  BEAN_LUSD_LP_V1,
-  BEAN_CRV3_V1,
+  // ETH MAINNET
+  BEAN_ETH_WELL_ETH,
+  BEAN_WSTETH_WELL_ETH,
+  BEAN_CRV3_ETH,
+  BEAN_ETH_UNIV2_ETH,
+  BEAN_LUSD_LP_V1_ETH,
+  BEAN_CRV3_V1_ETH,
 ];
 
 // Order must be the same as poolList!
 const chartStyle: ChartMultiStyles = {
+  // ARBITRUM MAINNET
   [BEAN_WSTETH_WELL.address]: {
-    stroke: BeanstalkPalette.logoGreen,
-    fillPrimary: BeanstalkPalette.lightGreen,
-  },
-  [BEAN_WSTETH_WELL_L2.address]: {
     stroke: BeanstalkPalette.logoGreen,
     fillPrimary: BeanstalkPalette.lightGreen,
   },
@@ -161,23 +169,28 @@ const chartStyle: ChartMultiStyles = {
     stroke: BeanstalkPalette.theme.winter.chart.green,
     fillPrimary: BeanstalkPalette.theme.winter.chart.greenLight,
   },
-  [BEAN_ETH_WELL_L2.address]: {
+  // ETH MAINNET
+  [BEAN_ETH_WELL_ETH.address]: {
     stroke: BeanstalkPalette.theme.spring.beanstalkGreen,
     fillPrimary: BeanstalkPalette.theme.spring.washedGreen,
   },
-  [BEAN_CRV3.address]: {
+  [BEAN_WSTETH_WELL_ETH.address]: {
+    stroke: BeanstalkPalette.logoGreen,
+    fillPrimary: BeanstalkPalette.lightGreen,
+  },
+  [BEAN_CRV3_ETH.address]: {
     stroke: BeanstalkPalette.theme.spring.blue,
     fillPrimary: BeanstalkPalette.theme.spring.lightBlue,
   },
-  [BEAN_ETH_UNIV2.address]: {
+  [BEAN_ETH_UNIV2_ETH.address]: {
     stroke: BeanstalkPalette.theme.spring.chart.purple,
     fillPrimary: BeanstalkPalette.theme.spring.chart.purpleLight,
   },
-  [BEAN_LUSD_LP_V1.address]: {
+  [BEAN_LUSD_LP_V1_ETH.address]: {
     stroke: BeanstalkPalette.theme.spring.grey,
     fillPrimary: BeanstalkPalette.theme.spring.lightishGrey,
   },
-  [BEAN_CRV3_V1.address]: {
+  [BEAN_CRV3_V1_ETH.address]: {
     stroke: BeanstalkPalette.theme.spring.chart.yellow,
     fillPrimary: BeanstalkPalette.theme.spring.chart.yellowLight,
   },
@@ -187,95 +200,113 @@ const baseDefaultDataPoint = {
   season: 0,
   date: 0,
   value: 0,
-  [BEAN_CRV3.address]: 0,
+  // ARBITRUM MAINNET
   [BEAN_ETH_WELL.address]: 0,
   [BEAN_WSTETH_WELL.address]: 0,
-  [BEAN_WSTETH_WELL_L2.address]: 0,
-  [BEAN_ETH_WELL_L2.address]: 0,
-  [BEAN_WEETH_WELL.address]: 0,
   [BEAN_WBTC_WELL.address]: 0,
+  [BEAN_WEETH_WELL.address]: 0,
   [BEAN_USDC_WELL.address]: 0,
   [BEAN_USDT_WELL.address]: 0,
-  [BEAN_ETH_UNIV2.address]: 0,
-  [BEAN_LUSD_LP_V1.address]: 0,
-  [BEAN_CRV3_V1.address]: 0,
+  // ETH MAINNET
+  [BEAN_ETH_WELL_ETH.address]: 0,
+  [BEAN_WSTETH_WELL_ETH.address]: 0,
+  [BEAN_CRV3_ETH.address]: 0,
+  [BEAN_ETH_UNIV2_ETH.address]: 0,
+  [BEAN_LUSD_LP_V1_ETH.address]: 0,
+  [BEAN_CRV3_V1_ETH.address]: 0,
 };
 
 // Filters non-relevant tokens from the tooltip on a per-season basis
 const seasonFilter = {
-  [BEAN_ETH_UNIV2.address]: { from: 0, to: 6074 },
-  [BEAN_LUSD_LP_V1.address]: { from: 5502, to: 6074 },
-  [BEAN_CRV3_V1.address]: { from: 3658, to: 6074 },
-  [BEAN_CRV3.address]: { from: 6074, to: Infinity },
-  [BEAN_ETH_WELL.address]: { from: 15241, to: Infinity },
-  [BEAN_WSTETH_WELL.address]: { from: 23347, to: Infinity },
+  [BEAN_ETH_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_WSTETH_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_WBTC_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_WEETH_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_USDC_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_USDT_WELL.address]: { from: RESEED_SEASON, to: Infinity },
+  [BEAN_ETH_WELL_ETH.address]: { from: 15241, to: RESEED_SEASON - 1 },
+  [BEAN_WSTETH_WELL_ETH.address]: { from: 23347, to: RESEED_SEASON - 1 },
+  [BEAN_CRV3_ETH.address]: { from: 6074, to: RESEED_SEASON - 1 },
+  [BEAN_ETH_UNIV2_ETH.address]: { from: 0, to: 6074 },
+  [BEAN_LUSD_LP_V1_ETH.address]: { from: 5502, to: 6074 },
+  [BEAN_CRV3_V1_ETH.address]: { from: 3658, to: 6074 },
+};
+
+const getStatValue = <T extends BaseDataPoint>(v?: T[]) => {
+  if (!v?.length) return 0;
+  const dataPoint = v[0];
+  return dataPoint?.value || 0;
 };
 
 const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
   const timeTabParams = useTimeTabState();
   const season = useSeason();
 
-  const getStatValue = <T extends BaseDataPoint>(v?: T[]) => {
-    if (!v?.length) return 0;
-    const dataPoint = v[0];
-    return dataPoint?.value || 0;
-  };
-
   const beanEthWell = useSeasonsQuery(
+    'seasonalLiquidityBeanETH',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanETH,
     'both'
   );
   const beanWstEthWell = useSeasonsQuery(
+    'seasonalLiquidityBeanwstETH',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanWstETH,
     'both'
   );
   const beanWeETHWell = useSeasonsQuery(
+    'seasonalLiquidityBeanETH',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanWeETH,
     'l2-only'
   );
   const beanWBTCWell = useSeasonsQuery(
+    'seasonalLiquidityBeanWBTC',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanWBTC,
     'l2-only'
   );
   const beanUSDCWell = useSeasonsQuery(
+    'seasonalLiquidityBeanUSDC',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanUSDC,
     'l2-only'
   );
   const beanUSDTWell = useSeasonsQuery(
+    'seasonalLiquidityBeanUSDT',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanUSDT,
     'l2-only'
   );
   const beanCrv3L1 = useSeasonsQuery(
+    'seasonalLiquidityBeanCRV3L1',
     SeasonalLiquidityPerPoolDocument,
     timeTabParams[0][1],
     configs.beanCrv3L1,
     'l1-only'
   );
   const beanEthOld = useSeasonsQuery(
+    'seasonalLiquidityBeanETHOld',
     SeasonalLiquidityPerPoolDocument,
     SeasonRange.ALL,
     configs.beanETHOld,
     'l1-only'
   );
   const beanLusdOld = useSeasonsQuery(
+    'seasonalLiquidityBeanLUSDOld',
     SeasonalLiquidityPerPoolDocument,
     SeasonRange.ALL,
     configs.beanLusdOld,
     'l1-only'
   );
   const beanCrv3Old = useSeasonsQuery(
+    'seasonalLiquidityBeanCrv3Old',
     SeasonalLiquidityPerPoolDocument,
     SeasonRange.ALL,
     configs.beanCrv3Old,
@@ -283,40 +314,40 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
   );
 
   const loading =
-    beanCrv3L1.loading ||
     beanEthWell.loading ||
-    beanEthOld.loading ||
-    beanLusdOld.loading ||
-    beanCrv3Old.loading ||
     beanWstEthWell.loading ||
     beanWeETHWell.loading ||
     beanWBTCWell.loading ||
     beanUSDCWell.loading ||
-    beanUSDTWell.loading;
+    beanUSDTWell.loading ||
+    beanEthOld.loading ||
+    beanCrv3L1.loading ||
+    beanLusdOld.loading ||
+    beanCrv3Old.loading;
 
   const seasonData = useMemo(() => {
     if (timeTabParams[0][1] === SeasonRange.ALL) {
       return [
-        beanCrv3L1.data?.seasons ?? [],
         beanEthWell.data?.seasons ?? [],
         beanWstEthWell.data?.seasons ?? [],
-        beanUSDCWell.data?.seasons ?? [],
-        beanUSDTWell.data?.seasons ?? [],
         beanWBTCWell.data?.seasons ?? [],
         beanWeETHWell.data?.seasons ?? [],
+        beanUSDCWell.data?.seasons ?? [],
+        beanUSDTWell.data?.seasons ?? [],
+        beanCrv3L1.data?.seasons ?? [],
         beanEthOld.data?.seasons ?? [],
         beanLusdOld.data?.seasons ?? [],
         beanCrv3Old.data?.seasons ?? [],
       ].flat(Infinity);
     }
     return [
-      beanCrv3L1.data?.seasons ?? [],
       beanEthWell.data?.seasons ?? [],
       beanWstEthWell.data?.seasons ?? [],
-      beanUSDCWell.data?.seasons ?? [],
-      beanUSDTWell.data?.seasons ?? [],
       beanWBTCWell.data?.seasons ?? [],
       beanWeETHWell.data?.seasons ?? [],
+      beanUSDCWell.data?.seasons ?? [],
+      beanUSDTWell.data?.seasons ?? [],
+      beanCrv3L1.data?.seasons ?? [],
     ].flat(Infinity);
   }, [
     beanCrv3L1.data?.seasons,
@@ -354,15 +385,18 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       });
     }
 
+    const seasonCount = SEASON_RANGE_TO_COUNT[timeTabParams[0][1]];
+    const processed = processedSeasons.filter(Boolean).slice(0, seasonCount);
+
     const data: QueryData = {
-      data: [processedSeasons.filter(Boolean).reverse()],
+      data: [processed.reverse()],
       loading: loading,
       keys: poolList.map((pool) => pool.address),
       error: undefined,
     };
 
     return data;
-  }, [loading, season, seasonData]);
+  }, [loading, season, seasonData, timeTabParams]);
 
   return (
     <Card sx={{ width: '100%', pt: 2, ...sx }}>

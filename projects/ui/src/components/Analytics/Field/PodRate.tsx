@@ -16,7 +16,7 @@ import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import { tickFormatPercentage } from '~/components/Analytics/formatters';
 
 import { FC } from '~/types';
-import { BEANSTALK_ADDRESSES, RESEED_SEASON } from '~/constants';
+import { BEANSTALK_ADDRESSES } from '~/constants';
 
 const getValue = (season: SnapshotData<SeasonalPodRateQuery>) =>
   parseFloat(season.podRate) * 100;
@@ -35,16 +35,19 @@ const lineChartProps: Partial<LineChartProps> = {
 const queryConfig: SeasonsQueryDynamicConfig = (subgraph: 'l1' | 'l2') => {
   if (subgraph === 'l1') {
     return {
-      variables: { season_gte: 1, field: BEANSTALK_ADDRESSES[1].toLowerCase() },
-      context: { subgraph: 'beanstalk_eth' },
+      variables: {
+        // season_gte: 1,
+        field: BEANSTALK_ADDRESSES[1].toLowerCase(),
+      },
+      // context: { subgraph: 'beanstalk_eth' },
     };
   }
   return {
     variables: {
-      season_gte: RESEED_SEASON,
+      // season_gte: RESEED_SEASON,
       field: BEANSTALK_ADDRESSES[42161].toLowerCase(),
     },
-    context: { subgraph: 'beanstalk' },
+    // context: { subgraph: 'beanstalk' },
   };
 };
 
@@ -64,7 +67,7 @@ const PodRate: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
       StatProps={statProps}
       LineChartProps={lineChartProps}
       queryConfig={queryConfig}
-      name="podRate"
+      name="seasonalPodRate"
     />
   );
 };
