@@ -6,11 +6,10 @@ import { toAddress } from "../../../../subgraph-core/utils/Bytes";
 import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "../constants/Version";
 
-export function updateSeason(season: i32, block: ethereum.Block): void {
-  let beanToken = getProtocolToken(v(), block.number);
-  updateBeanSeason(beanToken, block.timestamp, season);
+export function updateSeason(season: u32, block: ethereum.Block): void {
+  let bean = loadBean(getProtocolToken(v(), block.number));
+  updateBeanSeason(bean, season, block);
 
-  let bean = loadBean(beanToken);
   for (let i = 0; i < bean.pools.length; i++) {
     updatePoolSeason(toAddress(bean.pools[i]), season, block);
   }

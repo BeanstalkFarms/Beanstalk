@@ -7,7 +7,7 @@ import * as BeanstalkArb from "../../../../subgraph-core/constants/raw/Beanstalk
 
 export function handleInitVersion(block: ethereum.Block): void {
   const versionEntity = new Version("subgraph");
-  versionEntity.versionNumber = "3.0.1";
+  versionEntity.versionNumber = "3.1.0";
   versionEntity.subgraphName = subgraphNameForBlockNumber(block.number);
   versionEntity.protocolAddress = protocolForBlockNumber(block.number);
   versionEntity.chain = chainForBlockNumber(block.number);

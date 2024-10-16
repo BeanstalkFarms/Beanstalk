@@ -50,25 +50,27 @@ dataSources:
           handler: handleBoreWell
       file: ../src/handlers/AquiferTemplateHandler.ts
   - kind: ethereum/contract
-    name: Beanstalk
+    name: HourlySnapshots
     network: mainnet
     source:
-      address: "0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5"
-      abi: Beanstalk
-      startBlock: 17977922
+      address: "0xBA51AAAA95aeEFc1292515b36D86C51dC7877773"
+      abi: Aquifer
+      startBlock: 17977923
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Beanstalk
+        - Well
       abis:
-        - name: Beanstalk
-          file: ../../subgraph-core/abis/Beanstalk/Beanstalk-BIP50.json
-      eventHandlers:
-        - event: Sunrise(indexed uint256)
-          handler: handleSunrise
-      file: ../src/handlers/BeanstalkHandler.ts
+        - name: Aquifer
+          file: ../../subgraph-core/abis/Aquifer.json
+      blockHandlers:
+        - handler: handleBlock
+          filter:
+            kind: polling
+            every: 25 # 5 minutes on ethereum
+      file: ../src/handlers/HourlySnapshotHandler.ts
 templates:
   - kind: ethereum/contract
     name: Well

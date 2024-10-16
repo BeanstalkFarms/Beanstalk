@@ -1,42 +1,41 @@
-import { ethereum, Address } from "@graphprotocol/graph-ts";
-import { dayFromTimestamp, hourFromTimestamp } from "../../../subgraph-core/utils/Dates";
+import { ethereum } from "@graphprotocol/graph-ts";
 import { ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { BeanCross, PoolCross } from "../../generated/schema";
+import { Bean, BeanCross, Pool, PoolCross } from "../../generated/schema";
+import { loadOrCreateBeanDailySnapshot, loadOrCreateBeanHourlySnapshot } from "./Bean";
+import { loadOrCreatePoolDailySnapshot, loadOrCreatePoolHourlySnapshot } from "./Pool";
+import { toAddress } from "../../../subgraph-core/utils/Bytes";
 
-export function loadOrCreateBeanCross(id: i32, bean: Address, block: ethereum.Block): BeanCross {
-  let cross = BeanCross.load(id.toString());
+export function loadOrCreateBeanCross(bean: Bean, block: ethereum.Block): BeanCross {
+  let crossID = bean.crosses.toString();
+  let cross = BeanCross.load(crossID);
   if (cross == null) {
-    let hour = hourFromTimestamp(block.timestamp).toString();
-    let day = dayFromTimestamp(block.timestamp).toString();
-    cross = new BeanCross(id.toString());
-    cross.bean = bean;
+    cross = new BeanCross(crossID);
+    cross.bean = bean.id;
     cross.price = ZERO_BD;
     cross.blockNumber = block.number;
     cross.timestamp = block.timestamp;
     cross.timeSinceLastCross = ZERO_BI;
     cross.above = false;
-    cross.hourlySnapshot = hour;
-    cross.dailySnapshot = day;
+    cross.beanHourlySnapshot = loadOrCreateBeanHourlySnapshot(bean, block).id;
+    cross.beanDailySnapshot = loadOrCreateBeanDailySnapshot(bean, block).id;
     cross.save();
   }
   return cross as BeanCross;
 }
 
-export function loadOrCreatePoolCross(id: i32, pool: Address, block: ethereum.Block): PoolCross {
-  let crossID = pool.toHexString() + "-" + id.toString();
+export function loadOrCreatePoolCross(pool: Pool, block: ethereum.Block): PoolCross {
+  let crossID = pool.id.toHexString() + "-" + pool.crosses.toString();
   let cross = PoolCross.load(crossID);
   if (cross == null) {
-    let hour = hourFromTimestamp(block.timestamp).toString();
-    let day = dayFromTimestamp(block.timestamp).toString();
     cross = new PoolCross(crossID);
-    cross.pool = pool;
+    cross.pool = pool.id;
     cross.price = ZERO_BD;
     cross.blockNumber = block.number;
     cross.timestamp = block.timestamp;
     cross.timeSinceLastCross = ZERO_BI;
     cross.above = false;
-    cross.hourlySnapshot = hour;
-    cross.dailySnapshot = day;
+    cross.poolHourlySnapshot = loadOrCreatePoolHourlySnapshot(toAddress(pool.id), block).id;
+    cross.poolDailySnapshot = loadOrCreatePoolDailySnapshot(toAddress(pool.id), block).id;
     cross.save();
   }
   return cross as PoolCross;

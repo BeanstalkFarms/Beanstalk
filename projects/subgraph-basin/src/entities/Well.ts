@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   Well,
   WellDailySnapshot,
@@ -247,7 +247,7 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, block: e
   let newSnapshot = loadOrCreateWellDailySnapshot(wellAddress, well.lastSnapshotDayID, block);
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
-  newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
+  newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD).truncate(2);
 
   newSnapshot.deltaTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTradeVolumeReserves,
@@ -256,8 +256,8 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, block: e
   newSnapshot.deltaTradeVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTradeVolumeReservesUSD,
     priorSnapshot.cumulativeTradeVolumeReservesUSD
-  );
-  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  ).map<BigDecimal>((bd) => bd.truncate(2));
+  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD).truncate(2);
   newSnapshot.deltaBiTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeBiTradeVolumeReserves,
     priorSnapshot.cumulativeBiTradeVolumeReserves
@@ -269,8 +269,8 @@ export function takeWellDailySnapshot(wellAddress: Address, dayID: i32, block: e
   newSnapshot.deltaTransferVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTransferVolumeReservesUSD,
     priorSnapshot.cumulativeTransferVolumeReservesUSD
-  );
-  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD);
+  ).map<BigDecimal>((bd) => bd.truncate(2));
+  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD).truncate(2);
 
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
@@ -285,13 +285,12 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
 
   let priorHourID = well.lastSnapshotHourID;
   well.lastSnapshotHourID = hourID;
-  well.save();
 
   let priorSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, priorHourID, block);
   let newSnapshot = loadOrCreateWellHourlySnapshot(wellAddress, hourID, block);
 
   newSnapshot.deltalpTokenSupply = newSnapshot.lpTokenSupply.minus(priorSnapshot.lpTokenSupply);
-  newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD);
+  newSnapshot.deltaLiquidityUSD = newSnapshot.totalLiquidityUSD.minus(priorSnapshot.totalLiquidityUSD).truncate(2);
 
   newSnapshot.deltaTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeTradeVolumeReserves,
@@ -300,8 +299,8 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
   newSnapshot.deltaTradeVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTradeVolumeReservesUSD,
     priorSnapshot.cumulativeTradeVolumeReservesUSD
-  );
-  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD);
+  ).map<BigDecimal>((bd) => bd.truncate(2));
+  newSnapshot.deltaTradeVolumeUSD = newSnapshot.cumulativeTradeVolumeUSD.minus(priorSnapshot.cumulativeTradeVolumeUSD).truncate(2);
   newSnapshot.deltaBiTradeVolumeReserves = subBigIntArray(
     newSnapshot.cumulativeBiTradeVolumeReserves,
     priorSnapshot.cumulativeBiTradeVolumeReserves
@@ -313,8 +312,8 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
   newSnapshot.deltaTransferVolumeReservesUSD = subBigDecimalArray(
     newSnapshot.cumulativeTransferVolumeReservesUSD,
     priorSnapshot.cumulativeTransferVolumeReservesUSD
-  );
-  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD);
+  ).map<BigDecimal>((bd) => bd.truncate(2));
+  newSnapshot.deltaTransferVolumeUSD = newSnapshot.cumulativeTransferVolumeUSD.minus(priorSnapshot.cumulativeTransferVolumeUSD).truncate(2);
 
   newSnapshot.deltaDepositCount = newSnapshot.cumulativeDepositCount - priorSnapshot.cumulativeDepositCount;
   newSnapshot.deltaWithdrawCount = newSnapshot.cumulativeWithdrawCount - priorSnapshot.cumulativeWithdrawCount;
@@ -332,8 +331,8 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
     well.rollingDailyTradeVolumeReservesUSD = subBigDecimalArray(
       well.rollingDailyTradeVolumeReservesUSD,
       oldest24h.deltaTradeVolumeReservesUSD
-    );
-    well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD);
+    ).map<BigDecimal>((bd) => bd.truncate(2));
+    well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.minus(oldest24h.deltaTradeVolumeUSD).truncate(2);
     well.rollingDailyBiTradeVolumeReserves = subBigIntArray(well.rollingDailyBiTradeVolumeReserves, oldest24h.deltaBiTradeVolumeReserves);
     well.rollingDailyTransferVolumeReserves = subBigIntArray(
       well.rollingDailyTransferVolumeReserves,
@@ -342,15 +341,15 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
     well.rollingDailyTransferVolumeReservesUSD = subBigDecimalArray(
       well.rollingDailyTransferVolumeReservesUSD,
       oldest24h.deltaTransferVolumeReservesUSD
-    );
-    well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.minus(oldest24h.deltaTransferVolumeUSD);
+    ).map<BigDecimal>((bd) => bd.truncate(2));
+    well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.minus(oldest24h.deltaTransferVolumeUSD).truncate(2);
     if (oldest7d != null) {
       well.rollingWeeklyTradeVolumeReserves = subBigIntArray(well.rollingWeeklyTradeVolumeReserves, oldest7d.deltaTradeVolumeReserves);
       well.rollingWeeklyTradeVolumeReservesUSD = subBigDecimalArray(
         well.rollingWeeklyTradeVolumeReservesUSD,
         oldest7d.deltaTradeVolumeReservesUSD
-      );
-      well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD);
+      ).map<BigDecimal>((bd) => bd.truncate(2));
+      well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.minus(oldest7d.deltaTradeVolumeUSD).truncate(2);
       well.rollingWeeklyBiTradeVolumeReserves = subBigIntArray(
         well.rollingWeeklyBiTradeVolumeReserves,
         oldest7d.deltaBiTradeVolumeReserves
@@ -362,9 +361,11 @@ export function takeWellHourlySnapshot(wellAddress: Address, hourID: i32, block:
       well.rollingWeeklyTransferVolumeReservesUSD = subBigDecimalArray(
         well.rollingWeeklyTransferVolumeReservesUSD,
         oldest7d.deltaTransferVolumeReservesUSD
-      );
-      well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.minus(oldest7d.deltaTransferVolumeUSD);
+      ).map<BigDecimal>((bd) => bd.truncate(2));
+      well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.minus(oldest7d.deltaTransferVolumeUSD).truncate(2);
     }
   }
+  well.lastUpdateTimestamp = block.timestamp;
+  well.lastUpdateBlockNumber = block.number;
   well.save();
 }

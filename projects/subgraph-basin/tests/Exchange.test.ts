@@ -19,6 +19,7 @@ import { dayFromTimestamp, hourFromTimestamp } from "../../subgraph-core/utils/D
 import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 import { BEAN_ERC20 } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { initL1Version } from "./entity-mocking/MockVersion";
+import { assertBDClose } from "../../subgraph-core/tests/Assert";
 
 describe("Well Entity: Exchange Tests", () => {
   beforeEach(() => {
@@ -66,15 +67,13 @@ describe("Well Entity: Exchange Tests", () => {
       let transferAmounts = updatedStore.cumulativeTransferVolumeReservesUSD;
 
       assert.stringEquals("0", tradeAmounts[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), tradeAmounts[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), transferAmounts[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), transferAmounts[1].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5"))
-          .plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")))
-          .toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")), tradeAmounts[1]);
+      assertBDClose(BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")), transferAmounts[0]);
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5")), transferAmounts[1]);
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("1.5")), updatedStore.cumulativeTradeVolumeUSD);
+      assertBDClose(
+        BEAN_USD_AMOUNT.times(BigDecimal.fromString("2.5")).plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("3.5"))),
+        updatedStore.cumulativeTransferVolumeUSD
       );
     });
     test("Previous day snapshot entity created", () => {
@@ -123,16 +122,14 @@ describe("Well Entity: Exchange Tests", () => {
       let tradeAmounts = updatedStore.cumulativeTradeVolumeReservesUSD;
       let transferAmounts = updatedStore.cumulativeTransferVolumeReservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), tradeAmounts[0].toString());
+      assertBDClose(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")), tradeAmounts[0]);
       assert.stringEquals("0", tradeAmounts[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")).toString(), transferAmounts[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")).toString(), transferAmounts[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), updatedStore.cumulativeTradeVolumeUSD.toString());
-      assert.stringEquals(
-        BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5"))
-          .plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")))
-          .toString(),
-        updatedStore.cumulativeTransferVolumeUSD.toString()
+      assertBDClose(BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")), transferAmounts[0]);
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5")), transferAmounts[1]);
+      assertBDClose(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")), updatedStore.cumulativeTradeVolumeUSD);
+      assertBDClose(
+        BEAN_USD_AMOUNT.times(BigDecimal.fromString("3.5")).plus(WETH_USD_AMOUNT.times(BigDecimal.fromString("2.5"))),
+        updatedStore.cumulativeTransferVolumeUSD
       );
     });
   });
