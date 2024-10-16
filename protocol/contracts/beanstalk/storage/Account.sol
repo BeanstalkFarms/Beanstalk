@@ -55,7 +55,7 @@ struct Account {
  * @notice Stores a Farmer's Plots and Pod allowances.
  * @param plots A Farmer's Plots. Maps from Plot index to Pod amount.
  * @param podAllowances An allowance mapping for Pods similar to that of the ERC-20 standard. Maps from spender address to allowance amount.
- * @param plotIndexes An array of Plot indexes. Used to return the farm plots of a Farmer.
+ * @param plotIndexes An array of Plot indexes. Used to return the farm plots of a Farmer. Not tracked for null address.
  * @param piIndex A mapping from Plot index to the index in plotIndexes.
  * @param _buffer Reserved storage for future additions.
  */

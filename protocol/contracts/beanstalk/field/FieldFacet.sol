@@ -169,8 +169,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             // The Plot is partially harvestable if its index is less than
             // the current harvestable index.
             require(plots[i] < s.sys.fields[fieldId].harvestable, "Field: Plot not Harvestable");
-            uint256 harvested = _harvestPlot(LibTractor._user(), fieldId, plots[i]);
-            beansHarvested += harvested;
+            beansHarvested += _harvestPlot(LibTractor._user(), fieldId, plots[i]);
         }
         s.sys.fields[fieldId].processed += beansHarvested;
         emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
@@ -185,31 +184,35 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         address account,
         uint256 fieldId,
         uint256 index
-    ) private returns (uint256 harvestablePods) {
+    ) private returns (uint256 beansHarvested) {
         // If Plot held by null address, it has been Slashed. Burn Plot.
         if (s.accts[address(0)].fields[fieldId].plots[index] > 0) {
             account = address(0);
         }
-        uint256 pods = s.accts[account].fields[fieldId].plots[index];
-        require(pods > 0, "Field: no plot");
+        uint256 plotPods = s.accts[account].fields[fieldId].plots[index];
+        require(plotPods > 0, "Field: no plot");
 
         // Calculate how many Pods are harvestable.
         // The upstream _harvest function checks that at least some Pods
         // are harvestable.
-        harvestablePods = s.sys.fields[fieldId].harvestable.sub(index);
+        uint256 harvestablePods = s.sys.fields[fieldId].harvestable.sub(index);
 
         LibMarket._cancelPodListing(account, fieldId, index);
 
         LibField.deletePlot(account, fieldId, index);
 
-        // If burning a Slashed Plot, amount harvestable does not decrease.
+        beansHarvested = plotPods <= harvestablePods ? plotPods : harvestablePods;
+
+        // If burning a Slashed Plot, amount harvestable does not change.
         if (account == address(0)) {
-            s.sys.fields[fieldId].harvestable += harvestablePods;
+            s.sys.fields[fieldId].processed += beansHarvested;
+            s.sys.fields[fieldId].harvestable += beansHarvested;
+            return 0;
         }
 
         // If the entire Plot was harvested, exit.
-        if (harvestablePods >= pods) {
-            return pods;
+        if (beansHarvested == plotPods) {
+            return beansHarvested;
         }
 
         // Create a new Plot with remaining Pods.

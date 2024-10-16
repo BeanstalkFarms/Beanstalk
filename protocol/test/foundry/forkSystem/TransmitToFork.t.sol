@@ -36,7 +36,7 @@ contract TransmitToForkTest is TestHelper {
     function setUp() public {
         initializeBeanstalkTestState(true, false, false);
 
-        farmers = createUsers(5);
+        farmers = createUsers(6);
 
         // max approve.
         maxApproveBeanstalk(farmers);
@@ -305,6 +305,19 @@ contract TransmitToForkTest is TestHelper {
                 new IMockFBeanstalk.SourceFertilizer[](0),
                 abi.encode("")
             );
+        }
+        // Verify source plots slashing.
+        {
+            bs.incrementTotalHarvestableE(0, podsPerSow * 2);
+            uint256[] memory plotIndices = new uint256[](2);
+            plotIndices[0] = 0;
+            plotIndices[1] = podsPerSow;
+            uint256 initBeanBalance = bean.balanceOf(farmers[5]);
+            vm.expectEmit();
+            emit IMockFBeanstalk.Harvest(farmers[5], SRC_FIELD, plotIndices, 0);
+            vm.prank(farmers[5]);
+            bs.harvest(0, plotIndices, 0);
+            require(bean.balanceOf(farmers[5]) == initBeanBalance, "Beans received from slashing");
         }
         // Verify Destination plots by harvesting.
         {
