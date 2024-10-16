@@ -290,6 +290,22 @@ contract FieldFacet is Invariable, ReentrancyGuard {
     }
 
     /**
+     * @notice Returns the number of Pods that have been Harvested. Not including Slashed plots.
+     * @param fieldId The index of the Field to query.
+     */
+    function totalHarvested(uint256 fieldId) public view returns (uint256) {
+        return s.sys.fields[fieldId].totalHarvested;
+    }
+
+    /**
+     * @notice Returns the number of Pods that have been Slashed.
+     * @param fieldId The index of the Field to query.
+     */
+    function totalSlashed(uint256 fieldId) public view returns (uint256) {
+        return s.sys.fields[fieldId].processed - s.sys.fields[fieldId].totalHarvested;
+    }
+
+    /**
      * @notice Returns the number of Pods that are currently Harvestable but
      * have not yet been Harvested.
      * @dev This is the number of Pods that Beanstalk is prepared to pay back,
