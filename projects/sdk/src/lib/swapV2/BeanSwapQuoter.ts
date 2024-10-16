@@ -753,7 +753,7 @@ class Quoter {
       sellToken,
       buyToken,
       sellAmount,
-      buyAmount: last?.buyAmount ?? sellToken.fromHuman(0),
+      buyAmount: last?.buyAmount ?? buyToken.fromHuman(0),
       minBuyAmount: last?.buyAmount ?? buyToken.fromHuman(0),
       slippage,
       nodes: nodes as ReadonlyArray<SwapNode>
