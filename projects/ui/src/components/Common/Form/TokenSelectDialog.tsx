@@ -18,7 +18,7 @@ import {
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import { displayBN } from '~/util';
+import { displayBN, getTokenIndex } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
@@ -116,17 +116,18 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
     );
 
     const getBalance = useCallback(
-      (addr: string) => {
+      (token: TokenInstance) => {
         if (!_balances) return ZERO_BN;
         if (balancesType === 'farm')
           return (
-            (_balances as TokenBalanceMode['farm'])?.[addr]?.[
+            (_balances as TokenBalanceMode['farm'])?.[getTokenIndex(token)]?.[
               balanceFromInternal
             ] || ZERO_BN
           );
         return (
-          (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited
-            ?.amount || ZERO_BN
+          (_balances as TokenBalanceMode['silo-deposits'])?.[
+            getTokenIndex(token)
+          ]?.deposited?.amount || ZERO_BN
         );
       },
       [_balances, balancesType, balanceFromInternal]
@@ -245,7 +246,7 @@ const TokenSelectDialog: TokenSelectDialogC = React.memo(
           <List sx={{ p: 0 }}>
             {filteredTokenList
               ? filteredTokenList.map((_token) => {
-                  const tokenBalance = getBalance(_token.address);
+                  const tokenBalance = getBalance(_token);
                   return (
                     <ListItem
                       key={_token.address}

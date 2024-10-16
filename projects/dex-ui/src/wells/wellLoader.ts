@@ -31,21 +31,27 @@ const WELL_BLACKLIST: Record<number, WellAddresses> = {
     "0x0adf75da6980fee8f848d52a7af1f8d6f34a8169".toLowerCase(), // BEAN:WETH duplicate,
     "0xc22dd977c50812f754c14319de84493cc18b6cf0".toLowerCase(), // BEAN:WETH duplicate
     "0x15d7a96c3dbf6b267fae741d15c3a72f331418fe".toLowerCase(), // BEAN:WETH duplicate
+    "0xd902f7bd849da907202d177fafc1bd39f6bbadc4".toLowerCase(), // BEAN:WETH duplicate
     "0xb968de36ce9c61371a82a78b715af660c2209d11".toLowerCase(), // BEAN:wstETH duplicate
     "0x430837acc8cfe4726453b09b8d782730654899e0".toLowerCase(), // BEAN:wstETH duplicate
     "0x4731431430e7febd8df6a4aa7d28867927e827a6".toLowerCase(), // BEAN:wstETH duplicate
+    "0xc49b38dff421622628258683444f4977078cb96b".toLowerCase(), // BEAN:wstETH duplicate
     "0x8d74ff8e729b4e78898488775b619c05d1ecb5e5".toLowerCase(), // BEAN:weETH duplicate
     "0x65709d322f9c762f9435a326c653e7393807c0bc".toLowerCase(), // BEAN:weETH duplicate
     "0x8dc6400022ac4304b3236f4d073053056ac24086".toLowerCase(), // BEAN:weETH duplicate
+    "0x45f6af24e6eb8371571dde1464a458770cbbbb65".toLowerCase(), // BEAN:weETH duplicate
     "0x370062BE2d6Fc8d02948fEA75fAfe471F74854CF".toLowerCase(), // BEAN:WBTC duplicate
     "0xee950139d7730706695a4613198ecac26e69e12d".toLowerCase(), // BEAN:WBTC duplicate
     "0xb147ff6e2fd05ad3db185028beb3cce4dcb12b72".toLowerCase(), // BEAN:WBTC duplicate
+    "0xd4baa4197aa17c7f27a2465073de33690d77ec7e".toLowerCase(), // BEAN:WBTC duplicate
     "0x157219b5D112F2D8aaFD3c7F3bA5D4c73343cc96".toLowerCase(), // BEAN:USDC duplicate
     "0xdc29769db1caa5cab41835ef9a42becde80de028".toLowerCase(), // BEAN:USDC duplicate
     "0xde1a4b24aa46286739c1879612c5e5445382d93d".toLowerCase(), // BEAN:USDC duplicate
+    "0xeaddd2848e962817fd565ea269a7fedb0588b3f4".toLowerCase(), // BEAN:USDC duplicate
     "0xF3e4FC5c53D5500989e68F81d070094525caC240".toLowerCase(), // BEAN:USDT duplicate
     "0xacfb4644b708043ad6eff1cc323fda374fe6d3ce".toLowerCase(), // BEAN:USDT duplicate
-    "0x704e68281325242a60515616228c668e4865694c".toLowerCase() //  BEAN:USDT duplicate
+    "0x704e68281325242a60515616228c668e4865694c".toLowerCase(), // BEAN:USDT duplicate
+    "0xde8317a2a31a1684e2e4becedec17700718630d8".toLowerCase() //  BEAN:USDT duplicate
   ]
 };
 

@@ -20,6 +20,7 @@ import {
   NativeToken,
   BeanSwapNodeQuote,
   BeanSwapOperation,
+  BeanstalkSDK,
 } from '@beanstalk/sdk';
 import {
   FormApprovingState,
@@ -35,14 +36,13 @@ import {
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import { Beanstalk } from '~/generated/index';
 import { ZERO_BN } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import { useSigner } from '~/hooks/ledger/useSigner';
 
 import useAccount from '~/hooks/ledger/useAccount';
-import { MinBN, tokenIshEqual } from '~/util';
+import { getTokenIndex, MinBN, tokenIshEqual } from '~/util';
 import { IconSize } from '~/components/App/muiTheme';
 import TransactionToast from '~/components/Common/TxnToast';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
@@ -62,6 +62,7 @@ import useQuoteWithParams, {
   QuoteHandlerResultNew,
   QuoteHandlerWithParams,
 } from '~/hooks/ledger/useQuoteWithParams';
+import { useMinTokensIn } from '~/hooks/beanstalk/useMinTokensIn';
 
 /// ---------------------------------------------------------------
 
@@ -113,7 +114,7 @@ const Quoting = (
 const SwapForm: FC<
   FormikProps<SwapFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
-    beanstalk: Beanstalk;
+    beanstalk: BeanstalkSDK['contracts']['beanstalk'];
     tokenList: (ERC20Token | NativeToken)[];
     defaultValues: SwapFormValues;
   }
@@ -161,15 +162,17 @@ const SwapForm: FC<
     [balances]
   );
 
+  const minTokenIn = useMinTokensIn(tokenIn, tokenOut);
+
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
-    const _balanceIn = balances[tokenIn.address];
+    const _balanceIn = balances[getTokenIndex(tokenIn)];
     if (tokensMatch) {
       const _balanceInMax =
         _balanceIn[modeIn === FarmFromMode.INTERNAL ? 'internal' : 'external'];
       return [_balanceIn, _balanceInMax, _balanceInMax] as const;
     }
     return [_balanceIn, _balanceIn, _balanceIn?.total || ZERO_BN] as const;
-  }, [balances, modeIn, tokenIn.address, tokensMatch]);
+  }, [balances, modeIn, tokenIn, tokensMatch]);
 
   const [getAmountsBySource] = useGetBalancesUsedBySource({
     tokens: values.tokensIn,
@@ -197,12 +200,14 @@ const SwapForm: FC<
           ? FarmFromMode.INTERNAL
           : FarmFromMode.EXTERNAL
       );
+    } else if (tokenIn.equals(sdk.tokens.ETH)) {
+      setFromOptions([BalanceFrom.EXTERNAL]);
     } else {
       setFromOptions([BalanceFrom.TOTAL]);
       setBalanceFromIn(BalanceFrom.TOTAL);
       setFieldValue('modeIn', FarmFromMode.INTERNAL_EXTERNAL);
     }
-  }, [tokensMatch, modeIn, modeOut, setFieldValue]);
+  }, [tokensMatch, modeIn, modeOut, tokenIn, sdk, setFieldValue]);
 
   const noBalance = !balanceInMax?.gt(0);
   const expectedFromMode = balanceIn
@@ -237,6 +242,7 @@ const SwapForm: FC<
         inputToken.fromHuman(_amountIn.toString()),
         slippage
       );
+
       if (!quoteData) {
         throw new Error('No route found.');
       }
@@ -399,8 +405,21 @@ const SwapForm: FC<
       /// Flip destinations.
       setFieldValue('modeIn', modeOut);
       setFieldValue('modeOut', modeIn);
+    } else {
+      setFieldValue('tokensIn.0', { ...values.tokenOut });
+      setFieldValue('tokenOut', {
+        ...values.tokensIn[0],
+        amount: undefined,
+      });
     }
-  }, [modeIn, modeOut, setFieldValue, tokensMatch]);
+  }, [
+    modeIn,
+    modeOut,
+    setFieldValue,
+    tokensMatch,
+    values.tokenOut,
+    values.tokensIn,
+  ]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -420,8 +439,8 @@ const SwapForm: FC<
     (_tokens: Set<TokenInstance>) => {
       if (tokenSelect === 'tokenOut') {
         const newTokenOut = Array.from(_tokens)[0];
-        setFieldValue('tokenOut.token', newTokenOut);
         if (tokenIn === newTokenOut) handleTokensEqual();
+        setFieldValue('tokenOut.token', newTokenOut);
       } else if (tokenSelect === 'tokensIn') {
         const newTokenIn = Array.from(_tokens)[0];
         setFieldValue('tokensIn.0.token', newTokenIn);
@@ -512,6 +531,7 @@ const SwapForm: FC<
                   ]
                 : undefined
             }
+            min={minTokenIn}
             balance={balanceInInput}
             quote={quotingOut ? Quoting : undefined}
             onChange={handleChangeAmountIn}
@@ -811,13 +831,12 @@ function getBeanSwapOperation(
       'Output token does not match quote. Please refresh the quote.'
     );
   }
-  if (!quote.sellAmount.eq(amountIn.toNumber())) {
+  if (!amountIn.eq(quote.sellAmount.toHuman())) {
     throw new Error(
       "Input amount doesn't match quote. Please refresh the quote."
     );
   }
-  const formFmountOutTV = tokenOut.fromHuman(amountOut.toString());
-  if (!quote.buyAmount.eq(formFmountOutTV)) {
+  if (!amountOut.eq(quote.buyAmount.toHuman())) {
     throw new Error(
       "Output amount doesn't match quote. Please refresh the quote."
     );

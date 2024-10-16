@@ -6,7 +6,7 @@ import { toTokenUnitsBN } from './Tokens';
 
 export const BN = (v: BignumberJS.Value) => new BignumberJS(v);
 
-BignumberJS.config({ EXPONENTIAL_AT: 1e9 });
+// BignumberJS.config({ EXPONENTIAL_AT: 1e9 });
 
 // @ts-ignore
 // BigNumber.prototype.toJSON = function toJSON() {

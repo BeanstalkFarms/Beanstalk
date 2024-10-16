@@ -5,10 +5,12 @@ import BigNumber from 'bignumber.js';
 import { InfoOutlined } from '@mui/icons-material';
 import { BeanstalkPalette, FontWeight } from '~/components/App/muiTheme';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useNavigate } from 'react-router-dom';
 
 const TokenDepositRewards = ({ token }: { token: Token }) => {
   const seedReward = new BigNumber(token.rewards?.seeds?.toHuman() || '0');
   const stalkReward = new BigNumber(token.rewards?.stalk?.toHuman() || '0');
+  const navigate = useNavigate();
 
   return (
     <Stack gap={2}>
@@ -26,6 +28,7 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           color="secondary"
           size="small"
           endIcon={<OpenInNewIcon sx={{ height: '16px', width: 'auto' }} />}
+          onClick={() => navigate('/analytics')}
         >
           <Typography fontWeight="inherit">
             View rewards
@@ -90,6 +93,7 @@ const TokenDepositRewards = ({ token }: { token: Token }) => {
           color="secondary"
           size="small"
           endIcon={<OpenInNewIcon sx={{ height: '16px', width: 'auto' }} />}
+          onClick={() => navigate('/analytics')}
         >
           View Bean Supply
         </Button>

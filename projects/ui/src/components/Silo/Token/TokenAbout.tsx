@@ -5,7 +5,7 @@ import BigNumber from 'bignumber.js';
 import { Link } from 'react-router-dom';
 import Row from '~/components/Common/Row';
 import { useAppSelector } from '~/state';
-import { BASIN_WELL_LINK, ZERO_BN } from '~/constants';
+import { BASE_ARBISCAN_ADDR_LINK, BASIN_WELL_LINK, ZERO_BN } from '~/constants';
 import { InfoOutlined } from '@mui/icons-material';
 import usePools from '~/hooks/beanstalk/usePools';
 import useSdk from '~/hooks/sdk';
@@ -42,7 +42,7 @@ const TokenAbout = ({ token }: { token: Token }) => {
       <Row justifyContent="space-between">
         <Typography variant="subtitle1">Token address</Typography>
         <Typography
-          to={`https://etherscan.io/address/${token.address}`}
+          to={`${BASE_ARBISCAN_ADDR_LINK}${token.address}`}
           rel="noopener noreferrer"
           target="_blank"
           component={Link}
