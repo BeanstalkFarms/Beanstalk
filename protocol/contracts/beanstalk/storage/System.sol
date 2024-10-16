@@ -115,6 +115,7 @@ struct Silo {
  * @param latestTransmittedPlotIndex The index of the latest Plot that has been transmitted in.
  * @param latestTransmittedPlotOwner The owner of the latest Plot that has been transmitted in.
  * @param srcInitPods The amount of pods in source beanstalk field at destination deployment.
+ * @param totalHarvested The number of Pods that have been Harvested. Not including Slashed plots.
  * @param _buffer Reserved storage for future expansion.
  */
 struct Field {
@@ -124,7 +125,8 @@ struct Field {
     uint256 latestTransmittedPlotIndex;
     address latestTransmittedPlotOwner;
     uint256 srcInitPods;
-    bytes32[5] _buffer;
+    uint256 totalHarvested;
+    bytes32[4] _buffer;
 }
 
 /**

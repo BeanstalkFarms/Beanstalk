@@ -171,7 +171,7 @@ contract FieldFacet is Invariable, ReentrancyGuard {
             require(plots[i] < s.sys.fields[fieldId].harvestable, "Field: Plot not Harvestable");
             beansHarvested += _harvestPlot(LibTractor._user(), fieldId, plots[i]);
         }
-        s.sys.fields[fieldId].processed += beansHarvested;
+        s.sys.fields[fieldId].totalHarvested += beansHarvested;
         emit Harvest(LibTractor._user(), fieldId, plots, beansHarvested);
     }
 
@@ -202,10 +202,10 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         LibField.deletePlot(account, fieldId, index);
 
         beansHarvested = plotPods <= harvestablePods ? plotPods : harvestablePods;
+        s.sys.fields[fieldId].processed += beansHarvested;
 
         // If burning a Slashed Plot, amount harvestable does not change.
         if (account == address(0)) {
-            s.sys.fields[fieldId].processed += beansHarvested;
             s.sys.fields[fieldId].harvestable += beansHarvested;
             return 0;
         }
