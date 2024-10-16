@@ -216,8 +216,8 @@ contract FieldFacet is Invariable, ReentrancyGuard {
         }
 
         // Create a new Plot with remaining Pods.
-        uint256 newIndex = index.add(harvestablePods);
-        LibField.createPlot(account, fieldId, newIndex, pods.sub(harvestablePods));
+        uint256 newIndex = index.add(beansHarvested);
+        LibField.createPlot(account, fieldId, newIndex, plotPods.sub(beansHarvested));
     }
 
     //////////////////// CONFIG /////////////////////
