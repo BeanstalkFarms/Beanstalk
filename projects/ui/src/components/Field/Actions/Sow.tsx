@@ -68,6 +68,7 @@ import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { ClaimAndDoX, SowFarmStep } from '~/lib/Txn';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
+import { useMinTokensIn } from '~/hooks/beanstalk/useMinTokensIn';
 
 type SowFormValues = FormStateWithSwapQuote & {
   settings: SlippageSettingsFragment & {
@@ -181,6 +182,8 @@ const SowForm: FC<
     beanstalkField.harvestableIndex
   );
   const maxAmountUsed = maxAmountIn ? totalBeansAmount.div(maxAmountIn) : null;
+
+  const minTokenIn = useMinTokensIn(tokenIn, sdk.tokens.BEAN);
 
   const txnActions = useFarmerFormTxnsActions({
     showGraphicOnClaim: Bean.equals(tokenIn),
@@ -298,6 +301,7 @@ const SowForm: FC<
             maxAmountIn || ZERO_BN,
             tokenInBalance?.[values.balanceFrom] || ZERO_BN
           )}
+          min={minTokenIn}
           balance={tokenInBalance || undefined}
           state={values.tokens[0]}
           showTokenSelect={showTokenSelect}

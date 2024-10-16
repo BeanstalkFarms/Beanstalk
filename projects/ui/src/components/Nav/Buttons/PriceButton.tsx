@@ -37,7 +37,6 @@ import { useTokens } from '~/hooks/beanstalk/useTokens';
 import { Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import useChainId from '~/hooks/chain/useChainId';
-import { IS_DEV } from '~/util';
 import FolderMenu from '../FolderMenu';
 
 type TokenPriceEntry = {
@@ -290,7 +289,7 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           poolState={beanPools[pool.address]}
           useTWA={showTWA}
           ButtonProps={{
-            href: `${IS_DEV ? 'http://localhost:2424/#/wells' : BASIN_WELL_LINK}/${chainId}/${pool.address}`,
+            href: `${BASIN_WELL_LINK}${chainId}/${pool.address}`,
             target: '_blank',
             rel: 'noreferrer',
           }}
