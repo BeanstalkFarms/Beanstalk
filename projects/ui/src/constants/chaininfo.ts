@@ -63,7 +63,7 @@ export const CHAIN_INFO: ChainInfoMap = {
     explorer: 'https://arbiscan.io',
     explorerName: 'Arbiscan',
     explorerLogoUrl: arbitrumIcon,
-    label: 'Arbitrum',
+    label: 'Arbitrum One',
     logoUrl: ethereumLogoUrl,
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     statusPage: 'https://status.arbitrum.io/',

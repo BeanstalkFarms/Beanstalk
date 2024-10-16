@@ -4,6 +4,7 @@ import {
     Button,
     Card,
     InputAdornment,
+    Link,
     TextField,
     Typography,
 } from '@mui/material';
@@ -212,6 +213,14 @@ export default function L1Delegate() {
     }, [l1ReadResults])
 
     useEffect(() => {
+        if (!isContract && account) {
+            checkAddress(account)
+        } else {
+            checkAddress("")
+        }
+    }, [isContract, account])
+
+    useEffect(() => {
         getMigrationData();
     }, [account, sdk]);
 
@@ -331,9 +340,21 @@ export default function L1Delegate() {
                 <Box sx={{ paddingX: 2 }}>
                     <>
                         <PageHeader
-                            title="Delegate Contract Balance for L2 Migration"
-                            description="Specify which address your want your Beanstalk assets migrated to on Arbitrum"
+                            title="Delegate Balances for L2 Migration"
+                            description="Specify which address your want your Beanstalk assets migrated to on Arbitrum One"
                         />
+                        {isContract &&
+                            <Link
+                                color="primary"
+                                display="flex"
+                                flexDirection="row"
+                                gap={1}
+                                alignItems="center"
+                                href={'#/l2claim'}
+                            >
+                                <Typography variant="subtitle1">Done with this step? Click here to Claim your assets on Arbitrum One →</Typography>
+                            </Link>
+                        }
                         <Card sx={{ padding: 1, maxWidth: 700, minWidth: 300, marginTop: 2 }}>
                             <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
                                 Delegate Balances
@@ -356,7 +377,7 @@ export default function L1Delegate() {
                                     fontWeight={600}
                                     sx={{ alignSelf: 'center' }}
                                 >
-                                    Arbitrum
+                                    Arbitrum One
                                 </Typography>
                                 <Typography>{ }</Typography>
                             </Box>
@@ -367,12 +388,12 @@ export default function L1Delegate() {
                                     </Typography>
                                     {(beanComplete) &&
                                         <Typography padding={1}>
-                                            The specified account will automatically be credited with Circulating Beans once Migration data clears the Arbitrum bridge.
+                                            The specified account will automatically be credited with Circulating Beans once Migration data clears the Arbitrum One bridge.
                                         </Typography>
                                     }
                                     {(migrateInternal && internalComplete) &&
                                         <Typography padding={1}>
-                                            Smart Contracts must claim their Beanstalk assets on Arbitrum in order to complete the Migration process. Click the button below to continue.
+                                            Smart Contracts must claim their Beanstalk assets on Arbitrum One in order to complete the Migration process. Click the button below to continue.
                                         </Typography>
                                     }
                                 </>
@@ -435,7 +456,7 @@ export default function L1Delegate() {
                                                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
                                                     <Typography sx={{ padding: 1, color: 'GrayText' }}>
                                                         Beans held in your wallet will be
-                                                        migrated and automatically sent to the specified address on Arbitrum.
+                                                        migrated and automatically sent to the specified address on Arbitrum One.
                                                     </Typography>
                                                     <Button
                                                         disabled={!isAddressValid || (!isAddressValid && beanBalance.eq(0)) || !destinationAccount || beanComplete}
@@ -452,7 +473,7 @@ export default function L1Delegate() {
                                                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'flex-end' }}>
                                                     <Typography sx={{ padding: 1, color: 'GrayText' }}>
                                                         Beanstalk balances associated with this contract address will be
-                                                        migrated and available to receive on Arbitrum at the address
+                                                        migrated and available to receive on Arbitrum One at the address
                                                         specified.
                                                     </Typography>
                                                     <Button

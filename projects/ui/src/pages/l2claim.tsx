@@ -283,7 +283,7 @@ export default function L2Claim() {
                                     <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                                 </Box>
                                 <Typography sx={{ padding: 1 }}>
-                                    This page will periodically check Arbitrum for the arrival of migration data. The button below will automatically
+                                    This page will periodically check Arbitrum One for the arrival of migration data. The button below will automatically
                                     enable itself when this data becomes available.
                                 </Typography>
                                 <Button
@@ -300,7 +300,7 @@ export default function L2Claim() {
                                     onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
                                 >
                                     {(!isArbitrum && !isTestnet) ?
-                                        'Switch to Arbitrum'
+                                        'Switch to Arbitrum One'
                                         : !receiverApproved ?
                                             <Box sx={{ display: 'inline-flex', gap: 1, alignContent: 'center' }}>
                                                 <BeanProgressIcon
