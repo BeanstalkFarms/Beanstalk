@@ -1,9 +1,14 @@
+import React, { useCallback, useMemo } from 'react';
 import { Box, InputAdornment, Stack, Typography } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { ERC20Token, FarmFromMode, NativeToken, Token } from '@beanstalk/sdk';
+import {
+  BeanSwapNodeQuote,
+  ERC20Token,
+  NativeToken,
+  Token,
+} from '@beanstalk/sdk';
 import TransactionToast from '~/components/Common/TxnToast';
 import TxnAccordion from '~/components/Common/TxnAccordion';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
@@ -17,13 +22,10 @@ import {
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import useChainConstant from '~/hooks/chain/useChainConstant';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import useToggle from '~/hooks/display/useToggle';
 import { Beanstalk } from '~/generated';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
-import { useSigner } from '~/hooks/ledger/useSigner';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { useFetchFarmerMarket } from '~/state/farmer/market/updater';
 import { ActionType } from '~/util/Actions';
@@ -35,9 +37,11 @@ import {
   displayBN,
   bnToTokenValue,
   tokenValueToBN,
+  getTokenIndex,
+  tokenIshEqual,
 } from '~/util';
 import { AppState } from '~/state';
-import { BEAN, ETH, PODS } from '~/constants/tokens';
+import { BEAN, PODS } from '~/constants/tokens';
 import { ONE_BN, ZERO_BN, POD_MARKET_TOOLTIPS } from '~/constants';
 import SliderField from '~/components/Common/Form/SliderField';
 import FieldWrapper from '~/components/Common/Form/FieldWrapper';
@@ -52,24 +56,45 @@ import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuotePro
 import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
 import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import useAccount from '~/hooks/ledger/useAccount';
-import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 
 import FormTxnProvider from '~/components/Common/Form/FormTxnProvider';
 import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-import { useGetLegacyToken } from '~/hooks/beanstalk/useTokens';
+import {
+  QuoteHandlerWithParams,
+  QuoteHandlerResultNew,
+} from '~/hooks/ledger/useQuoteWithParams';
+import { getBeanSwapOperationWithQuote } from '~/lib/Beanstalk/swap';
+import { ContractTransaction } from 'ethers';
+
+type IBeanSwapQuote = {
+  beanSwapQuote: BeanSwapNodeQuote | undefined;
+};
+
+type FormTokenState = FormTokenStateNew & IBeanSwapQuote;
 
 export type CreateOrderFormValues = {
   placeInLine: BigNumber | null;
   pricePerPod: BigNumber | null;
-  tokens: FormTokenStateNew[];
+  tokens: FormTokenState[];
   settings: {
     slippage: number;
   };
 };
 
 type PodOrderFormParams = {
-  fromMode: FarmFromMode;
+  slippage: number;
+};
+
+type QuoterResult = QuoteHandlerResultNew & IBeanSwapQuote;
+
+type CreateOrderV2Quoter = QuoteHandlerWithParams<
+  PodOrderFormParams,
+  QuoterResult
+>;
+
+const quoterSettings = {
+  ignoreSameToken: true,
 };
 
 const PlaceInLineInputProps = {
@@ -107,15 +132,15 @@ const SLIDER_FIELD_KEYS = ['placeInLine'];
 const CreateOrderV2Form: FC<
   FormikProps<CreateOrderFormValues> & {
     podLine: BigNumber;
-    handleQuote: QuoteHandlerWithParams<PodOrderFormParams>;
     tokenList: (ERC20Token | NativeToken)[];
     contract: Beanstalk;
+    handleQuote: CreateOrderV2Quoter;
   }
 > = ({
   values,
   setFieldValue,
-  isSubmitting,
   handleQuote,
+  isSubmitting,
   podLine,
   tokenList,
   contract,
@@ -124,9 +149,11 @@ const CreateOrderV2Form: FC<
   const Bean = sdk.tokens.BEAN;
   const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
   const balances = useFarmerBalances();
-  const getLegacyToken = useGetLegacyToken();
 
   const [showTokenSelect, handleOpen, handleClose] = useToggle();
+
+  
+
   const handleSelectTokens = useCallback(
     (_tokens: Set<Token>) => {
       // If the user has typed some existing values in,
@@ -150,9 +177,9 @@ const CreateOrderV2Form: FC<
 
   const quoteHandlerParams = useMemo(
     () => ({
-      fromMode: FarmFromMode.EXTERNAL,
+      slippage: values.settings.slippage,
     }),
-    []
+    [values.settings.slippage]
   );
 
   const tokenIn = values.tokens[0].token;
@@ -221,6 +248,7 @@ const CreateOrderV2Form: FC<
               <TokenQuoteProviderWithParams<PodOrderFormParams>
                 key={`tokens.${index}`}
                 name={`tokens.${index}`}
+                quoteSettings={quoterSettings}
                 tokenOut={Bean}
                 balance={
                   state.token.address === ''
@@ -266,9 +294,9 @@ const CreateOrderV2Form: FC<
                       ? undefined
                       : {
                           type: ActionType.SWAP,
-                          tokenIn: getLegacyToken(tokenIn),
+                          tokenIn: tokenIn,
                           amountIn: amountIn,
-                          tokenOut: getLegacyToken(tokenOut),
+                          tokenOut: tokenOut,
                           amountOut: amountOut,
                         },
                     {
@@ -322,9 +350,9 @@ const CreateOrderProvider: FC<{}> = () => {
   const sdk = useSdk();
 
   /// Tokens
-  const Eth = useChainConstant(ETH);
-  const Bean = sdk.tokens.BEAN;
-  const Weth = sdk.tokens.WETH;
+  // const Eth = useChainConstant(ETH);
+  // const Bean = sdk.tokens.BEAN;
+  // const Weth = sdk.tokens.WETH;
 
   const { preferredTokens, tokenList } = useMemo(() => {
     const tokens = BuyPlotsFarmStep.getPreferredTokens(sdk.tokens);
@@ -337,8 +365,7 @@ const CreateOrderProvider: FC<{}> = () => {
   const tokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
 
   /// Ledger
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
+  const beanstalk = sdk.contracts.beanstalk;
 
   /// Beanstalk
   const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
@@ -366,6 +393,7 @@ const CreateOrderProvider: FC<{}> = () => {
         {
           token: baseToken as ERC20Token | NativeToken,
           amount: undefined,
+          beanSwapQuote: undefined,
         },
       ],
       settings: {
@@ -375,34 +403,41 @@ const CreateOrderProvider: FC<{}> = () => {
     [baseToken]
   );
 
-  /// Handlers
-
-  const handleQuote = useCallback(
-    async (_tokenIn: any, _amountIn: any, _tokenOut: any) => {
-      const amountOut = await BuyPlotsFarmStep.getAmountOut(
+  const handleQuote: CreateOrderV2Quoter = useCallback(
+    async (_tokenIn, _amountIn, _tokenOut, { slippage }) => {
+      if (!account) {
+        throw new Error('Signer Required');
+      }
+      const quote = await BuyPlotsFarmStep.getAmountOut(
         sdk,
         _tokenIn,
-        _amountIn.toString(),
-        FarmFromMode.EXTERNAL,
-        account
+        _tokenIn.fromHuman(_amountIn.toString()),
+        slippage
       );
 
       return {
-        amountOut: tokenValueToBN(amountOut),
-        tokenValue: amountOut,
+        amountOut: tokenValueToBN(quote.beanSwapQuote.buyAmount),
+        beanSwapQuote: quote.beanSwapQuote,
       };
     },
-    [account, sdk]
+    [sdk, account]
   );
+
+  /// Handlers
 
   const onSubmit = useCallback(
     async (
       values: CreateOrderFormValues,
       formActions: FormikHelpers<CreateOrderFormValues>
     ) => {
+      const Bean = sdk.tokens.BEAN;
       let txToast;
       try {
         middleware.before();
+
+        if (!account) {
+          throw new Error('Signer required');
+        }
 
         if (!values.settings.slippage) {
           throw new Error('No slippage value set.');
@@ -413,14 +448,19 @@ const CreateOrderProvider: FC<{}> = () => {
         const tokenData = values.tokens[0];
         const { pricePerPod, placeInLine } = values;
 
+        const beanOutBN = Bean.equals(tokenData.token) ? tokenData.amount : tokenData.amountOut;
+        if (!beanOutBN) {
+          throw new Error("Expected bean amount gt > 0")
+        }
+        const beanUsed = Bean.fromHuman(beanOutBN.toString());
+
         if (!tokenData?.amount || tokenData.amount.eq(0)) {
           throw new Error('No amount set');
         }
         if (!pricePerPod || !placeInLine) throw new Error('Missing data');
 
         ///
-        let call;
-        let txn;
+        let txn: ContractTransaction;
         const inputToken = tokenData.token;
 
         ///
@@ -433,8 +473,8 @@ const CreateOrderProvider: FC<{}> = () => {
         /// We only need one call to do this, so we skip
         /// the farm() call below to optimize gas.
 
-        if (inputToken === Bean) {
-          call = beanstalk.createPodOrder(
+        if (tokenIshEqual(Bean, inputToken)) {
+          const tx = beanstalk.createPodOrder(
             {
               orderer: account || '',
               minFillAmount: PODS.stringify(new BigNumber(1)),
@@ -443,10 +483,10 @@ const CreateOrderProvider: FC<{}> = () => {
               fieldId: '0',
             },
             toStringBaseUnitBN(tokenData.amount, Bean.decimals),
-            optimizeFromMode(tokenData.amount, balances[Bean.address])
+            optimizeFromMode(tokenData.amount, balances[getTokenIndex(Bean)])
           );
 
-          txn = await call;
+          txn = await tx;
         }
 
         /// Buy and Create Pod Order
@@ -456,16 +496,26 @@ const CreateOrderProvider: FC<{}> = () => {
             throw new Error(`No quote available for ${tokenData.token.symbol}`);
           }
 
-          const beanAmountOut = await handleQuote(
+          const swapOperation = getBeanSwapOperationWithQuote(
+            tokenData.beanSwapQuote,
             tokenData.token,
+            sdk.tokens.BEAN,
             tokenData.amount,
-            BEAN
+            tokenData.amountOut,
+            values.settings.slippage,
+            account,
+            optimizeFromMode(tokenData.amount, balances[getTokenIndex(Bean)])
           );
+
+          if (!swapOperation) {
+            throw new Error('No operation found');
+          }
 
           const orderTxn = new BuyPlotsFarmStep(sdk, account!);
           orderTxn.build(
             tokenData.token,
-            beanAmountOut.tokenValue,
+            beanUsed,
+            swapOperation,
             pricePerPod,
             placeInLine
           );
@@ -501,13 +551,11 @@ const CreateOrderProvider: FC<{}> = () => {
     },
     [
       middleware,
-      Bean,
       refetchFarmerBalances,
       refetchFarmerMarket,
       fetchFarmerMarketItems,
       beanstalk,
       balances,
-      handleQuote,
       sdk,
       account,
       txnBundler,
@@ -541,8 +589,8 @@ const CreateOrderProvider: FC<{}> = () => {
           </Box>
           <CreateOrderV2Form
             podLine={beanstalkField.podLine}
-            handleQuote={handleQuote}
             tokenList={Object.values(tokenMap) as (ERC20Token | NativeToken)[]}
+            handleQuote={handleQuote}
             contract={beanstalk}
             {...formikProps}
           />

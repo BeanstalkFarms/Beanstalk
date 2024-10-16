@@ -8,15 +8,15 @@ import TokenInputField, {
 } from '~/components/Common/Form/TokenInputField';
 import TokenAdornment from '~/components/Common/Form/TokenAdornment';
 import { displayFullBN } from '~/util/Tokens';
-import { FormStateNew, FormTokenStateNew } from '.';
 import Row from '~/components/Common/Row';
 
 import useQuoteWithParams, {
   QuoteHandlerWithParams,
   QuoteSettingsNew,
 } from '~/hooks/ledger/useQuoteWithParams';
-import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
 import useDeepCompareMemo from '~/hooks/display/useDeepCompareMemo';
+import { TokenQuoteProviderCustomProps } from './TokenQuoteProvider';
+import { FormStateNew, FormTokenStateNew } from '.';
 
 export type TokenQuoteProviderWithParamsCustomProps<T> = {
   /** The current form state of this token */
@@ -123,6 +123,9 @@ export default function TokenQuoteProviderWithParams<T>({
     );
     setFieldValue(`${name}.amountOut`, result?.amountOut); // calculated amountOut
     setFieldValue(`${name}.value`, result?.value); // ether value used
+    if (result?.beanSwapQuote) {
+      setFieldValue(`${name}.beanSwapQuote`, result.beanSwapQuote);
+    }
   }, [name, setFieldValue, result]);
   useEffect(() => {
     console.debug(`[TokenQuoteProvider] update ${name}.quoting =>`, quoting);
