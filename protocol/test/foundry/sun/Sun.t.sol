@@ -105,36 +105,40 @@ contract SunTest is TestHelper {
         } else {
             soilIssued = uint256(-deltaB);
         }
-        // vm.expectEmit();
-        // emit Soil(currentSeason + 1, soilIssued);
+        vm.expectEmit();
+        emit Soil(currentSeason + 1, soilIssued);
 
-        // bs.sunSunrise(deltaB, caseId);
+        bs.sunSunrise(deltaB, caseId);
 
-        // // if deltaB is positive,
-        // // 1) beans are minted equal to deltaB.
-        // // 2) soil is equal to the amount of soil
-        // // needed to equal the newly paid off pods (scaled up or down).
-        // // 3) totalunharvestable() should decrease by the amount issued to the field.
-        // if (deltaB >= 0) {
-        //     assertEq(C.bean().balanceOf(address(bs)), uint256(deltaB), "invalid bean minted +deltaB");
-        //     assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
-        //     assertEq(
-        //         bs.totalUnharvestable(0),
-        //         podsInField - beansToField,
-        //         "invalid pods @ +deltaB"
-        //     );
-        // }
-        // // if deltaB is negative, soil is issued equal to deltaB.
-        // // no beans should be minted.
-        // if (deltaB <= 0) {
-        //     assertEq(
-        //         initialBeanBalance - C.bean().balanceOf(address(bs)),
-        //         0,
-        //         "invalid bean minted -deltaB"
-        //     );
-        //     assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
-        //     assertEq(bs.totalUnharvestable(0), podsInField, "invalid pods @ -deltaB");
-        // }
+        // if deltaB is positive,
+        // 1) beans are minted equal to deltaB.
+        // 2) soil is equal to the amount of soil
+        // needed to equal the newly paid off pods (scaled up or down).
+        // 3) totalunharvestable() should decrease by the amount issued to the field.
+        if (deltaB >= 0) {
+            assertEq(
+                C.bean().balanceOf(address(bs)),
+                uint256(deltaB),
+                "invalid bean minted +deltaB"
+            );
+            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ +deltaB");
+            assertEq(
+                bs.totalUnharvestable(0),
+                podsInField - beansToField,
+                "invalid pods @ +deltaB"
+            );
+        }
+        // if deltaB is negative, soil is issued equal to deltaB.
+        // no beans should be minted.
+        if (deltaB <= 0) {
+            assertEq(
+                initialBeanBalance - C.bean().balanceOf(address(bs)),
+                0,
+                "invalid bean minted -deltaB"
+            );
+            assertEq(bs.totalSoil(), soilIssued, "invalid soil @ -deltaB");
+            assertEq(bs.totalUnharvestable(0), podsInField, "invalid pods @ -deltaB");
+        }
     }
 
     /**
