@@ -62,6 +62,7 @@ import useQuoteWithParams, {
   QuoteHandlerResultNew,
   QuoteHandlerWithParams,
 } from '~/hooks/ledger/useQuoteWithParams';
+import { useMinTokensIn } from '~/hooks/beanstalk/useMinTokensIn';
 
 /// ---------------------------------------------------------------
 
@@ -109,8 +110,6 @@ const Quoting = (
     sx={{ width: 14, height: 14 }}
   />
 );
-
-const MIN_AMOUNT_IN = new BigNumber(1e-6);
 
 const SwapForm: FC<
   FormikProps<SwapFormValues> & {
@@ -162,6 +161,8 @@ const SwapForm: FC<
     () => Object.keys(balances).length === 0,
     [balances]
   );
+
+  const minTokenIn = useMinTokensIn(tokenIn, tokenOut);
 
   const [balanceIn, balanceInInput, balanceInMax] = useMemo(() => {
     const _balanceIn = balances[getTokenIndex(tokenIn)];
@@ -241,6 +242,7 @@ const SwapForm: FC<
         inputToken.fromHuman(_amountIn.toString()),
         slippage
       );
+
       if (!quoteData) {
         throw new Error('No route found.');
       }
@@ -403,8 +405,21 @@ const SwapForm: FC<
       /// Flip destinations.
       setFieldValue('modeIn', modeOut);
       setFieldValue('modeOut', modeIn);
+    } else {
+      setFieldValue('tokensIn.0', { ...values.tokenOut });
+      setFieldValue('tokenOut', {
+        ...values.tokensIn[0],
+        amount: undefined,
+      });
     }
-  }, [modeIn, modeOut, setFieldValue, tokensMatch]);
+  }, [
+    modeIn,
+    modeOut,
+    setFieldValue,
+    tokensMatch,
+    values.tokenOut,
+    values.tokensIn,
+  ]);
 
   // if tokenIn && tokenOut are equal and no balances are found, reverse positions.
   // This prevents setting of internal balance of given token when there is none
@@ -516,7 +531,7 @@ const SwapForm: FC<
                   ]
                 : undefined
             }
-            min={tokensMatch ? MIN_AMOUNT_IN : ZERO_BN}
+            min={minTokenIn}
             balance={balanceInInput}
             quote={quotingOut ? Quoting : undefined}
             onChange={handleChangeAmountIn}
@@ -816,13 +831,12 @@ function getBeanSwapOperation(
       'Output token does not match quote. Please refresh the quote.'
     );
   }
-  if (!quote.sellAmount.eq(amountIn.toNumber())) {
+  if (!amountIn.eq(quote.sellAmount.toHuman())) {
     throw new Error(
       "Input amount doesn't match quote. Please refresh the quote."
     );
   }
-  const formFmountOutTV = tokenOut.fromHuman(amountOut.toString());
-  if (!quote.buyAmount.eq(formFmountOutTV)) {
+  if (!amountOut.eq(quote.buyAmount.toHuman())) {
     throw new Error(
       "Output amount doesn't match quote. Please refresh the quote."
     );

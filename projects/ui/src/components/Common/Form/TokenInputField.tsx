@@ -217,7 +217,7 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
         balance: balance?.toString(),
       });
       if (!amount) return undefined; // if no amount, exit
-      if (min?.gt(amount)) return min; // clamp @ min
+      if (amount.gt(0) && min?.gt(amount)) return min; // clamp @ min
       if (!allowNegative && amount?.lt(ZERO_BN)) return ZERO_BN; // clamp negative
       if (max?.lt(amount)) return max; // clamp @ max
       return amount; // no max; always return amount
