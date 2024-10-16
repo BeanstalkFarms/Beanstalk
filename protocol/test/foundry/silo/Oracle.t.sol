@@ -48,7 +48,7 @@ contract OracleTest is TestHelper {
         setupUniswapWBTCOracleImplementation();
 
         // exercise TokenUsd price and UsdToken price
-        uint256 tokenUsdPriceFromExternal = OracleFacet(BEANSTALK).getTokenUsdPriceFromExternal(
+        uint256 tokenUsdPriceFromExternal = OracleFacet(address(bs)).getTokenUsdPriceFromExternal(
             WBTC,
             0
         );
@@ -59,7 +59,7 @@ contract OracleTest is TestHelper {
             "tokenUsdPriceFromExternal"
         );
 
-        uint256 usdTokenPriceFromExternal = OracleFacet(BEANSTALK).getUsdTokenPriceFromExternal(
+        uint256 usdTokenPriceFromExternal = OracleFacet(address(bs)).getUsdTokenPriceFromExternal(
             WBTC,
             0
         );
