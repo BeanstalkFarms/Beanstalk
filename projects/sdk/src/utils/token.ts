@@ -6,5 +6,5 @@ export function isERC20Token(token: Token): token is ERC20Token {
 }
 
 export function isNativeToken(token: Token): token is NativeToken {
-  return isNativeToken(token);
+  return token instanceof NativeToken;
 }

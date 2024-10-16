@@ -14,7 +14,7 @@ import {
   ERC20SwapNode,
   WellSyncSwapNode
 } from "./nodes";
-import { isERC20Token } from "src/utils/token";
+import { isERC20Token, isNativeToken } from "src/utils/token";
 import { BeanSwapNodeQuote } from "./BeanSwap";
 import { TransferTokenNode } from "./nodes/TransferTokenNode";
 
@@ -65,10 +65,10 @@ class WellsRouter {
       throw new Error("Invalid token types. Cannot quote well routes for non-erc20 tokens");
     }
 
-    const routes: {
-      swap: QuoteSourceFragment | undefined;
-      sync: SyncQuoteSourceFragment | undefined;
-    } = { swap: undefined, sync: undefined };
+    const routes: { swap: QuoteSourceFragment | undefined; sync: SyncQuoteSourceFragment | undefined; } = { 
+      swap: undefined, 
+      sync: undefined 
+    };
 
     const inputSwap: QuoteSourceFragment = {
       sellToken,
@@ -234,9 +234,9 @@ class WellsRouter {
       routes: routes
     };
 
-    WellsRouter.sdk.debug("[WellsRouter/makeSummary] bestRoute: ", bestRoute);
-    WellsRouter.sdk.debug("[WellsRouter/makeSummary] directRoute: ", directRoute);
-    WellsRouter.sdk.debug("[WellsRouter/makeSummary] routes: ", routes);
+    WellsRouter.sdk.debug("[BeanSwap/WellsRouter/makeSummary] bestRoute: ", bestRoute);
+    WellsRouter.sdk.debug("[BeanSwap/WellsRouter/makeSummary] directRoute: ", directRoute);
+    WellsRouter.sdk.debug("[BeanSwap/WellsRouter/makeSummary] routes: ", routes);
 
     return summary;
   }
@@ -277,7 +277,7 @@ class WellsRouter {
     }
 
     WellsRouter.sdk.debug(
-      "[WellsRouter/constructWellGetSwapOutPipeCalls] Swap Approximations: ",
+      "[BeanSwap/WellsRouter/constructWellGetSwapOutPipeCalls] Swap Approximations: ",
       swapApproximations
     );
 
@@ -308,7 +308,7 @@ class WellsRouter {
   }
 
   /**
-   *
+   * Fetches the result of well.getSwapOut for all wells in one advancedPipe call
    */
   private async fetchWellGetSwapOutPipeCalls(calls: AdvancedPipeCallStruct[]) {
     return await WellsRouter.sdk.contracts.beanstalk.callStatic.advancedPipe(calls, "0");
@@ -441,9 +441,6 @@ class Quoter {
     const ETH = Quoter.sdk.tokens.ETH;
     const nodes: SwapNode[] = [];
 
-    const unwrapEthNode = new UnwrapEthSwapNode(Quoter.sdk);
-    const wrapEthNode = new WrapEthSwapNode(Quoter.sdk);
-
     const sellingWETH = WETH.equals(sellToken);
     const buyingWETH = WETH.equals(buyToken);
 
@@ -458,17 +455,26 @@ class Quoter {
         transferNode.setFields({ sellAmount: amount });
         return this.makeQuote([transferNode], sellToken, buyToken, amount, slippage);
       }
+    } else if (
+      isNativeToken(sellToken) && 
+      isNativeToken(buyToken) && 
+      sellToken.equals(buyToken)
+    ) {
+      throw new Error("Error building swap route. Cannot determine path two native tokens");
     }
 
     // ONLY WETH -> ETH
     if (sellingWETH && unwrappingETH) {
+      const unwrapEthNode = new UnwrapEthSwapNode(Quoter.sdk);
       unwrapEthNode.setFields({ sellAmount: amount });
       return this.makeQuote([unwrapEthNode], sellToken, buyToken, amount, slippage);
     }
 
     // ETH -> X
     if (wrappingETH) {
+      const wrapEthNode = new WrapEthSwapNode(Quoter.sdk);
       wrapEthNode.setFields({ sellAmount: amount });
+
       // ONLY ETH -> WETH
       if (buyingWETH) {
         return this.makeQuote([wrapEthNode], sellToken, buyToken, amount, slippage);
@@ -476,6 +482,7 @@ class Quoter {
       nodes.push(wrapEthNode);
     }
 
+    // X -> X (ERC20)
     const swapPath = await this.handleERC20OnlyQuote(
       sellToken,
       buyToken as ERC20Token,
@@ -486,7 +493,13 @@ class Quoter {
 
     if (unwrappingETH) {
       const lastSwapNode = nodes[nodes.length - 1];
-      unwrapEthNode.setFields({ sellAmount: lastSwapNode.buyAmount });
+      const unwrapEthNode = new UnwrapEthSwapNode(Quoter.sdk);
+
+      if (lastSwapNode instanceof ERC20SwapNode)  {
+        unwrapEthNode.setFields({ sellAmount: lastSwapNode.minBuyAmount });
+      } else {
+        unwrapEthNode.setFields({ sellAmount: lastSwapNode.buyAmount });
+      }
       nodes.push(unwrapEthNode);
     }
 
@@ -558,7 +571,7 @@ class Quoter {
     slippage: number
   ): Promise<SwapNode[]> {
     if (sellToken.equals(buyToken)) {
-      throw new Error("Invalid swap path. SellToken and BuyToken cannot be the same");
+      throw new Error("Invalid NonBean swap path. SellToken and BuyToken cannot be the same");
     }
     const zeroX = new ZeroXSwapNode(Quoter.sdk, sellToken, buyToken);
     await zeroX.quoteForward(amount, slippage);
@@ -575,7 +588,7 @@ class Quoter {
     const buyingBEAN = this.isTokenBEAN(buyToken);
 
     if (sellToken.equals(buyToken)) {
-      throw new Error("Invalid swap path. Expected SellToken and BuyToken to be different.");
+      throw new Error("Invalid Bean swap path. Expected SellToken and BuyToken to be different.");
     }
     if (!sellingBEAN && !buyingBEAN) {
       throw new Error(
@@ -588,7 +601,7 @@ class Quoter {
       return [] as SwapNode[];
     } 
     if (routesSummary.routes.length === 1) {
-      Quoter.sdk.debug("[BeanSwapQuoter/finalizeSellBeansRoute] Only 1 route found. Using route: ", routesSummary.bestRoute);
+      Quoter.sdk.debug("[BeanSwap/Quoter/finalizeSellBeansRoute] Only 1 route found. Using route: ", routesSummary.bestRoute);
       return routesSummary.routes;
     }
 
@@ -596,7 +609,7 @@ class Quoter {
       ? await this.finalizeSellBeansRoute(routesSummary, buyToken, slippage)
       : await this.finalizeBuyBeansRoute(routesSummary, sellToken, amount, slippage);
 
-    Quoter.sdk.debug("[BeanSwapQuoter/processSellBeansSwap] Selected route: ", nodes);
+    Quoter.sdk.debug("[BeanSwap/Quoter/processSellBeansSwap] Selected route: ", nodes);
     return nodes;
   }
 
@@ -614,7 +627,7 @@ class Quoter {
     const { directRoute, bestRoute } = summary;
 
     if (directRoute && directRoute === bestRoute) {
-      Quoter.sdk.debug("[BeanSwapQuoter/finalizeSellBeansRoute] Using direct route: ", directRoute);
+      Quoter.sdk.debug("[BeanSwap/Quoter/finalizeSellBeansRoute] Using direct route: ", directRoute);
       return [directRoute];
     }
 
@@ -642,7 +655,7 @@ class Quoter {
     const { directRoute, bestRoute } = summary;
 
     if (directRoute && directRoute === bestRoute) {
-      Quoter.sdk.debug("[BeanSwapQuoter/finalizeBuyBeansRoute] Using direct route: ", directRoute);
+      Quoter.sdk.debug("[BeanSwap/Quoter/finalizeBuyBeansRoute] Using direct route: ", directRoute);
       return [directRoute];
     }
 

@@ -17,6 +17,10 @@ export abstract class NativeSwapNode extends SwapNode {
 
   abstract readonly buyToken: NativeToken | ERC20Token;
 
+  /**
+   * @param args sell amount or buy amount
+   * setting sellAmount sets buyAmount and vice versa
+   */
   override setFields<T extends ISwapNodeSettable>(args: Partial<T>) {
     const amount = args.sellAmount ?? args.buyAmount;
     if (amount) {
