@@ -1,6 +1,6 @@
-import { Address, BigDecimal, BigInt, ethereum, store } from "@graphprotocol/graph-ts";
-import { ONE_BI, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import { Germinating, PrevFarmerGerminatingEvent } from "../../generated/schema";
+import { Address, BigDecimal, store } from "@graphprotocol/graph-ts";
+import { toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
+import { Germinating } from "../../generated/schema";
 
 export function loadOrCreateGerminating(address: Address, season: i32, isFarmer: boolean): Germinating {
   const type = germinationSeasonCategory(season);

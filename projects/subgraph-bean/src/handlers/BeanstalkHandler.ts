@@ -2,7 +2,7 @@ import { BigInt } from "@graphprotocol/graph-ts";
 import { updateBeanSupplyPegPercent, updateBeanTwa } from "../utils/Bean";
 import { Chop, Convert, DewhitelistToken, Shipped, Sunrise, WellOracle } from "../../generated/Bean-ABIs/Reseed";
 import { loadBean } from "../entities/Bean";
-import { getTWAPrices, setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
+import { setRawWellReserves, setTwaLast } from "../utils/price/TwaOracle";
 import { decodeCumulativeWellReserves, setWellTwa } from "../utils/price/WellPrice";
 import { updateSeason } from "../utils/legacy/Beanstalk";
 import { updatePoolPricesOnCross } from "../utils/Cross";
@@ -10,12 +10,11 @@ import { beanDecimals, getProtocolToken, isUnripe } from "../../../subgraph-core
 import { v } from "../utils/constants/Version";
 import { loadOrCreatePool } from "../entities/Pool";
 import { BI_10 } from "../../../subgraph-core/utils/Decimals";
-import { TWAType } from "../utils/price/Types";
 import { loadOrCreateTwaOracle } from "../entities/TwaOracle";
 
 // Beanstalk 3 handler here, might not put this in the manifest yet - do not delete.
 export function handleSunrise(event: Sunrise): void {
-  updateSeason(event.params.season.toI32(), event.block);
+  updateSeason(event.params.season.toU32(), event.block);
 
   // Fetch price from price contract to capture any non-bean token price movevements
   // Update the current price regardless of a peg cross

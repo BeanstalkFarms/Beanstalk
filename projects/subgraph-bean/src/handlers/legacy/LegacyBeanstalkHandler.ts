@@ -17,7 +17,7 @@ import { getProtocolToken } from "../../../../subgraph-core/constants/RuntimeCon
 import { v } from "../../utils/constants/Version";
 
 export function handleSunrise_v1(event: Sunrise): void {
-  updateSeason(event.params.season.toI32(), event.block);
+  updateSeason(event.params.season.toU32(), event.block);
 
   // V1 logic below
   let beanToken = getProtocolToken(v(), event.block.number);
@@ -53,7 +53,7 @@ export function handleSunrise_v1(event: Sunrise): void {
 
 // Replanted -> Reseed
 export function handleSunrise_v2(event: Sunrise): void {
-  updateSeason(event.params.season.toI32(), event.block);
+  updateSeason(event.params.season.toU32(), event.block);
 
   // V2 logic below
   let beanToken = getProtocolToken(v(), event.block.number);

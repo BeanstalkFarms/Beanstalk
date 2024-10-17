@@ -56,8 +56,8 @@ export function updateWellTokenUSDPrices(wellAddress: Address, blockNumber: BigI
     }
   }
 
-  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves);
-  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD);
+  well.reservesUSD = getCalculatedReserveUSDValues(well.tokens, well.reserves).map<BigDecimal>((bd) => bd.truncate(2));
+  well.totalLiquidityUSD = getBigDecimalArrayTotal(well.reservesUSD).truncate(2);
   well.save();
 }
 

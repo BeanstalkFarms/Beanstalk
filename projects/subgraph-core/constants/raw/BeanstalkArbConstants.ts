@@ -27,6 +27,8 @@ export const BEANSTALK_PRICE = Address.fromString("0xC218F5a782b0913931DCF502FA2
 export const AQUIFER = Address.fromString("0xBA51AAAa8C2f911AE672e783707Ceb2dA6E97521");
 export const WELL_CP2 = Address.fromString("0xbA1500c28C8965521f47F17Fc21A7829D6E1343e");
 export const WELL_STABLE2 = Address.fromString("0xba150052e11591D0648b17A0E608511874921CBC");
+export const WELL_CP2_121 = Address.fromString("0xBA15000450Bf6d48ec50BD6327A9403E401b72b4");
+export const WELL_STABLE2_121 = Address.fromString("0xba150052e11591D0648b17A0E608511874921CBC");
 
 // Milestone
 

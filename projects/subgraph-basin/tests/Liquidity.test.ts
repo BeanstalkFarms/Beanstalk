@@ -25,6 +25,7 @@ import { toAddress } from "../../subgraph-core/utils/Bytes";
 import { mockWellLpTokenUnderlying } from "../../subgraph-core/tests/event-mocking/Tokens";
 import { deprecated_calcLiquidityVolume } from "../src/utils/legacy/CP2";
 import { loadOrCreateWellFunction } from "../src/entities/WellComponents";
+import { assertBDClose } from "../../subgraph-core/tests/Assert";
 
 const BI_2 = BigInt.fromU32(2);
 const BI_3 = BigInt.fromU32(3);
@@ -59,9 +60,9 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.reservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2")).toString(), updatedStore.totalLiquidityUSD.toString());
+      assertBDClose(BEAN_USD_AMOUNT, endingBalances[0]);
+      assertBDClose(WETH_USD_AMOUNT, endingBalances[1]);
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("2")), updatedStore.totalLiquidityUSD);
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.toString());
@@ -77,8 +78,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT, transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT, transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT, transferReservesUSD[1]);
     });
   });
 
@@ -102,9 +103,9 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let endingBalances = updatedStore.reservesUSD;
 
       // Bean balance is still only one unit of BEAN_USD_AMOUNT because the price was cut in half on the second deposit
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.totalLiquidityUSD.toString());
+      assertBDClose(BEAN_USD_AMOUNT, endingBalances[0]);
+      assertBDClose(WETH_USD_AMOUNT, endingBalances[1]);
+      assertBDClose(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT), updatedStore.totalLiquidityUSD);
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.times(BI_2).toString());
@@ -120,8 +121,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")).toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT.times(BigDecimal.fromString("1.5")), transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT, transferReservesUSD[1]);
     });
   });
 
@@ -144,9 +145,9 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let updatedStore = loadWell(WELL);
       let endingBalances = updatedStore.reservesUSD;
 
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BigDecimal.fromString("2")).toString(), updatedStore.totalLiquidityUSD.toString());
+      assertBDClose(BEAN_USD_AMOUNT, endingBalances[0]);
+      assertBDClose(WETH_USD_AMOUNT, endingBalances[1]);
+      assertBDClose(WETH_USD_AMOUNT.times(BigDecimal.fromString("2")), updatedStore.totalLiquidityUSD);
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.plus(BI_10).toString());
@@ -162,8 +163,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT, transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT, transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT, transferReservesUSD[1]);
     });
   });
 
@@ -188,9 +189,9 @@ describe("Well Entity: Liquidity Event Tests", () => {
       let endingBalances = updatedStore.reservesUSD;
 
       // WETH was doubled from the initial, so the bean price has also doubled
-      assert.stringEquals(BEAN_USD_AMOUNT.toString(), endingBalances[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), endingBalances[1].toString());
-      assert.stringEquals(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT).toString(), updatedStore.totalLiquidityUSD.toString());
+      assertBDClose(BEAN_USD_AMOUNT, endingBalances[0]);
+      assertBDClose(WETH_USD_AMOUNT, endingBalances[1]);
+      assertBDClose(BEAN_USD_AMOUNT.plus(WETH_USD_AMOUNT), updatedStore.totalLiquidityUSD);
     });
     test("Liquidity Token balance", () => {
       assert.fieldEquals(WELL_ENTITY_TYPE, WELL.toHexString(), "lpTokenSupply", WELL_LP_AMOUNT.plus(BI_10).toString());
@@ -206,8 +207,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.div(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT, transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.div(BD_2).toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT.div(BD_2), transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT, transferReservesUSD[1]);
     });
   });
 
@@ -240,8 +241,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT.times(BD_2), transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT.times(BD_2), transferReservesUSD[1]);
     });
   });
 
@@ -275,8 +276,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_3), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_2), transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_3).toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT.times(BD_3).truncate(2), transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT.times(BD_2).truncate(2), transferReservesUSD[1]);
     });
   });
 
@@ -310,8 +311,8 @@ describe("Well Entity: Liquidity Event Tests", () => {
 
       assert.bigIntEquals(BEAN_SWAP_AMOUNT.times(BI_2), transferReserves[0]);
       assert.bigIntEquals(WETH_SWAP_AMOUNT.times(BI_3), transferReserves[1]);
-      assert.stringEquals(BEAN_USD_AMOUNT.times(BD_2).toString(), transferReservesUSD[0].toString());
-      assert.stringEquals(WETH_USD_AMOUNT.times(BD_3).toString(), transferReservesUSD[1].toString());
+      assertBDClose(BEAN_USD_AMOUNT.times(BD_2), transferReservesUSD[0]);
+      assertBDClose(WETH_USD_AMOUNT.times(BD_3), transferReservesUSD[1]);
     });
   });
   test("Liquidity Volume Calculation", () => {

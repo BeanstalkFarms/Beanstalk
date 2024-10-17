@@ -128,16 +128,16 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
     rollingWeeklyTransferVolumeReserves[i] = rollingWeeklyTransferVolumeReserves[i].plus(deltaTransferVolumeReserves[i].abs());
     let usdTransferAmount = toDecimal(deltaTransferVolumeReserves[i].abs(), tokenInfo.decimals).times(tokenInfo.lastPriceUSD);
 
-    tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdTradeAmount);
-    rollingDailyTradeVolumeReservesUSD[i] = rollingDailyTradeVolumeReservesUSD[i].plus(usdTradeAmount);
-    rollingWeeklyTradeVolumeReservesUSD[i] = rollingWeeklyTradeVolumeReservesUSD[i].plus(usdTradeAmount);
+    tradeVolumeReservesUSD[i] = tradeVolumeReservesUSD[i].plus(usdTradeAmount).truncate(2);
+    rollingDailyTradeVolumeReservesUSD[i] = rollingDailyTradeVolumeReservesUSD[i].plus(usdTradeAmount).truncate(2);
+    rollingWeeklyTradeVolumeReservesUSD[i] = rollingWeeklyTradeVolumeReservesUSD[i].plus(usdTradeAmount).truncate(2);
 
-    transferVolumeReservesUSD[i] = transferVolumeReservesUSD[i].plus(usdTransferAmount);
-    rollingDailyTransferVolumeReservesUSD[i] = rollingDailyTransferVolumeReservesUSD[i].plus(usdTransferAmount);
-    rollingWeeklyTransferVolumeReservesUSD[i] = rollingWeeklyTransferVolumeReservesUSD[i].plus(usdTransferAmount);
+    transferVolumeReservesUSD[i] = transferVolumeReservesUSD[i].plus(usdTransferAmount).truncate(2);
+    rollingDailyTransferVolumeReservesUSD[i] = rollingDailyTransferVolumeReservesUSD[i].plus(usdTransferAmount).truncate(2);
+    rollingWeeklyTransferVolumeReservesUSD[i] = rollingWeeklyTransferVolumeReservesUSD[i].plus(usdTransferAmount).truncate(2);
 
-    totalTradeUSD = totalTradeUSD.plus(usdTradeAmount);
-    totalTransferUSD = totalTransferUSD.plus(usdTransferAmount);
+    totalTradeUSD = totalTradeUSD.plus(usdTradeAmount).truncate(2);
+    totalTransferUSD = totalTransferUSD.plus(usdTransferAmount).truncate(2);
   }
 
   well.cumulativeTradeVolumeReserves = tradeVolumeReserves;
@@ -154,19 +154,19 @@ function updateVolumeStats(well: Well, deltaTradeVolumeReserves: BigInt[], delta
   // but this is preferable to having the most recent values being delayed.
   well.rollingDailyTradeVolumeReserves = rollingDailyTradeVolumeReserves;
   well.rollingDailyTradeVolumeReservesUSD = rollingDailyTradeVolumeReservesUSD;
-  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(totalTradeUSD);
+  well.rollingDailyTradeVolumeUSD = well.rollingDailyTradeVolumeUSD.plus(totalTradeUSD).truncate(2);
   well.rollingDailyBiTradeVolumeReserves = rollingDailyBiTradeVolumeReserves;
   well.rollingDailyTransferVolumeReserves = rollingDailyTransferVolumeReserves;
   well.rollingDailyTransferVolumeReservesUSD = rollingDailyTransferVolumeReservesUSD;
-  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(totalTransferUSD);
+  well.rollingDailyTransferVolumeUSD = well.rollingDailyTransferVolumeUSD.plus(totalTransferUSD).truncate(2);
 
   well.rollingWeeklyTradeVolumeReserves = rollingWeeklyTradeVolumeReserves;
   well.rollingWeeklyTradeVolumeReservesUSD = rollingWeeklyTradeVolumeReservesUSD;
-  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(totalTradeUSD);
+  well.rollingWeeklyTradeVolumeUSD = well.rollingWeeklyTradeVolumeUSD.plus(totalTradeUSD).truncate(2);
   well.rollingWeeklyBiTradeVolumeReserves = rollingWeeklyBiTradeVolumeReserves;
   well.rollingWeeklyTransferVolumeReserves = rollingWeeklyTransferVolumeReserves;
   well.rollingWeeklyTransferVolumeReservesUSD = rollingWeeklyTransferVolumeReservesUSD;
-  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(totalTransferUSD);
+  well.rollingWeeklyTransferVolumeUSD = well.rollingWeeklyTransferVolumeUSD.plus(totalTransferUSD).truncate(2);
 }
 
 // Returns the provided token amounts in their appropriate position with respect to well reserve tokens

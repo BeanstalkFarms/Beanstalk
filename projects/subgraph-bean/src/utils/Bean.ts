@@ -1,5 +1,5 @@
 import { BigDecimal, BigInt, ethereum, Address } from "@graphprotocol/graph-ts";
-import { Pool } from "../../generated/schema";
+import { Bean, Pool } from "../../generated/schema";
 import { BEAN_ERC20_V1, BEAN_WETH_V1 } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { ONE_BD, toDecimal, ZERO_BD, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
 import { checkBeanCross } from "./Cross";
@@ -12,6 +12,7 @@ import { updateBeanSupplyPegPercent_v1 } from "./legacy/Bean";
 import { toAddress } from "../../../subgraph-core/utils/Bytes";
 import { getProtocolToken } from "../../../subgraph-core/constants/RuntimeConstants";
 import { v } from "./constants/Version";
+import { loadOrCreateSeason } from "../entities/Season";
 
 export function adjustSupply(beanToken: Address, amount: BigInt): void {
   let bean = loadBean(beanToken);
@@ -39,8 +40,8 @@ export function updateBeanValues(
   bean.liquidityUSD = bean.liquidityUSD.plus(deltaLiquidityUSD);
   bean.save();
 
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, block.timestamp, bean.lastSeason);
-  let beanDaily = loadOrCreateBeanDailySnapshot(token, block.timestamp);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(bean, block);
+  let beanDaily = loadOrCreateBeanDailySnapshot(bean, block);
 
   beanHourly.volume = bean.volume;
   beanHourly.volumeUSD = bean.volumeUSD;
@@ -67,18 +68,15 @@ export function updateBeanValues(
   beanDaily.save();
 }
 
-export function updateBeanSeason(token: Address, timestamp: BigInt, season: i32): void {
-  let bean = loadBean(token);
-  bean.lastSeason = season;
+export function updateBeanSeason(bean: Bean, season: u32, block: ethereum.Block): void {
+  bean.lastSeason = loadOrCreateSeason(season).id;
   bean.save();
 
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, timestamp, season);
-  let beanDaily = loadOrCreateBeanDailySnapshot(token, timestamp);
-
-  beanHourly.season = season;
+  let beanHourly = loadOrCreateBeanHourlySnapshot(bean, block);
+  let beanDaily = loadOrCreateBeanDailySnapshot(bean, block);
+  beanHourly.season = bean.lastSeason;
+  beanDaily.season = bean.lastSeason;
   beanHourly.save();
-
-  beanDaily.season = season;
   beanDaily.save();
 }
 
@@ -158,8 +156,8 @@ export function updateBeanAfterPoolSwap(
 
 export function updateInstDeltaB(token: Address, block: ethereum.Block): void {
   let bean = loadBean(token);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(token, block.timestamp, bean.lastSeason);
-  let beanDaily = loadOrCreateBeanDailySnapshot(token, block.timestamp);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(bean, block);
+  let beanDaily = loadOrCreateBeanDailySnapshot(bean, block);
 
   let cumulativeDeltaB = ZERO_BI;
   for (let i = 0; i < bean.pools.length; i++) {
@@ -177,8 +175,8 @@ export function updateInstDeltaB(token: Address, block: ethereum.Block): void {
 export function updateBeanTwa(block: ethereum.Block): void {
   let beanAddress = getProtocolToken(v(), block.number);
   let bean = loadBean(beanAddress);
-  let beanHourly = loadOrCreateBeanHourlySnapshot(beanAddress, block.timestamp, bean.lastSeason);
-  let beanDaily = loadOrCreateBeanDailySnapshot(beanAddress, block.timestamp);
+  let beanHourly = loadOrCreateBeanHourlySnapshot(bean, block);
+  let beanDaily = loadOrCreateBeanDailySnapshot(bean, block);
 
   let twaDeltaB = ZERO_BI;
   let weightedTwaPrice = ZERO_BD;
