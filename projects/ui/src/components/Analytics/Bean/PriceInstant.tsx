@@ -26,7 +26,7 @@ const statProps = {
 };
 
 const queryConfig = (subgraph: 'l1' | 'l2') => {
-  if (subgraph === 'l2') {
+  if (subgraph === 'l1') {
     return {
       variables: {
         season_gt: 0,
@@ -37,7 +37,7 @@ const queryConfig = (subgraph: 'l1' | 'l2') => {
 
   return {
     variables: {
-      season_gt: RESEED_SEASON,
+      season_gt: RESEED_SEASON - 1,
     },
     context: { subgraph: 'bean' },
   };
