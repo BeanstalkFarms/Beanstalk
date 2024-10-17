@@ -343,12 +343,20 @@ function deriveQueryConfig<T extends MinimumViableSnapshotQuery>(
 ): QueryOptions<OperationVariables, T> {
   const config =
     (isFunction(queryConfig) ? queryConfig(chain) : queryConfig) ?? {};
-  let subgraph: string = config.context?.subgraph || 'beanstalk';
+  let subgraph: string = config.context?.subgraph;
 
   if (chain === 'l2') {
-    subgraph = subgraph === 'beanstalk' ? 'beanstalk' : 'bean';
+    if (!subgraph || subgraph === 'beanstalk_eth') {
+      subgraph = 'beanstalk';
+    } else if (subgraph === 'bean_eth') {
+      subgraph = 'bean';
+    }
   } else if (chain === 'l1') {
-    subgraph = subgraph === 'beanstalk' ? 'beanstalk_eth' : 'bean_eth';
+    if (!subgraph || subgraph === 'beanstalk') {
+      subgraph = 'beanstalk_eth';
+    } else if (subgraph === 'bean') {
+      subgraph = 'bean_eth';
+    }
   }
 
   return {
