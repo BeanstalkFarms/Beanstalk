@@ -166,7 +166,7 @@ const LambdaConvert = ({
                 sx={{ pl: 2.5 }}
               >
                 Ownership of Beanstalk{' '}
-                <Tooltip title="Ownership of Beanstalk">
+                <Tooltip title="Your increase in ownership of Beanstalk.">
                   <InfoOutlined
                     sx={{
                       display: 'inline',
@@ -216,7 +216,7 @@ const LambdaConvert = ({
                 sx={{ pl: 2.5 }}
               >
                 Stalk Growth per Season{' '}
-                <Tooltip title="Stalk grown per season">
+                <Tooltip title="Your increase in Grown Stalk per Season.">
                   <InfoOutlined
                     sx={{
                       display: 'inline',
