@@ -63,7 +63,6 @@ export type SeasonsQueryDynamicConfig = (
 
 const baseL1Variables = {
   season_lte: RESEED_SEASON - 1,
-  // season_gt: 1,
 };
 
 type SeasonsQueryFetchType = 'l1-only' | 'l2-only' | 'both';
@@ -159,51 +158,27 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
           let latestL2 = 0; // latest L2 season
           let latestL1 = 0; // latest L1 season
 
-          /// ---------- INITIAL QUERIES ---------- ///
-
           if (fetchL2) {
             console.debug('[useSeasonsQuery] run l2 config: ', l2Config);
             pushPromise(apolloClient.query(l2Config), (data) => {
               latestL2 = Math.max(latestL2, data.season);
             });
           }
-
           if (fetchL1) {
             console.debug('[useSeasonsQuery] run l1 config', l1Config);
             pushPromise(apolloClient.query(l1Config), (data) => {
               latestL1 = Math.max(latestL1, data.season);
             });
           }
+
           await Promise.all(promises);
 
-          
-
-          /**
-           * If LatestSeason in L2 queries is 5000, and reseed season is 3500,
-           * seasons to query: 1500.
-           * Ceil(1500 / 1000) = 2 queries
-           *
-           * If Latest season in L2 queries is 4000, and reseed season is 3500,
-           * seasons to query: 500
-           * Ceil(500 / 1000) = 1 query. Since we have already queried these seasons, we skip.
-           */
           if (fetchL2) {
-            /// Read Seasons from cache
-            const cacheOptions = mergeQueryOptions(l1Config, {
-              fetchPolicy: 'cache-only',
-              variables: {
-                first: 100_000,
-                season_lte: latestL1,
-                season_gt: RESEED_SEASON - 1,
-              },
+            const cachedL2Data = readApolloCacheWithOptions(l2Config, {
+              season_lte: latestL1,
+              season_gt: RESEED_SEASON - 1,
             });
-            const cached = apolloClient.readQuery(cacheOptions);
-            console.debug('[useSeasonsQuery] l2 cache', {
-              cacheOptions,
-              data: cached?.seasons,
-            });
-
-            cached?.seasons.forEach((seasonData) => {
+            cachedL2Data?.seasons.forEach((seasonData) => {
               output[seasonData.season] = seasonData;
               latestL2 = Math.max(Math.min(latestL2, seasonData.season), 0);
             });
@@ -218,31 +193,22 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
           }
 
           if (fetchL1) {
-            /// Read Seasons from cache
-            const cacheOptions = mergeQueryOptions(l1Config, {
-              fetchPolicy: 'cache-only',
-              variables: {
-                first: RESEED_SEASON,
-                season_lte: RESEED_SEASON - 1,
-                season_gt: 1,
-              },
+            const cachedL1Data = readApolloCacheWithOptions(l1Config, {
+              season_lte: RESEED_SEASON - 1,
+              season_gt: 1,
             });
-
-            const cached = apolloClient.readQuery(cacheOptions);
-            console.debug('[useSeasonsQuery] l1 cache', { cacheOptions, data: cached?.seasons });
-
-            cached?.seasons.forEach((seasonData) => {
+            cachedL1Data?.seasons.forEach((seasonData) => {
               output[seasonData.season] = seasonData;
               latestL1 = Math.max(Math.min(latestL1, seasonData.season), 0);
             });
 
-            const numQ = calcNumQueries(latestL1, l1Config.variables?.season_gt ?? 1);
+            const numQueries = calcNumQueries(latestL1, l1Config.variables?.season_gt ?? 1);
             console.debug(
-              `[useSeasonsQuery] numQueries = ${numQ}, seasonsQueryFrom = ${latestL1} `
+              `[useSeasonsQuery] numQueries = ${numQueries}, seasonsQueryFrom = ${latestL1} `
             );
 
             /// Query Seasons from network
-            const queries = getQueriesWithNumQueries(numQ, latestL1, l1Config);
+            const queries = getQueriesWithNumQueries(numQueries, latestL1, l1Config);
             for (const fetchData of queries) {
               pushPromise(fetchData());
             }
@@ -285,6 +251,24 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 export default useSeasonsQuery;
 
 // ---------- Helper Functions ----------
+
+function readApolloCacheWithOptions<T extends MinimumViableSnapshotQuery>(
+  baseConfig: QueryOptions<OperationVariables, T>,
+  variables: OperationVariables
+) {
+  const options = mergeQueryOptions(baseConfig, {
+    variables: {
+      ...variables,
+      first: 100_000,
+    },
+    fetchPolicy: 'cache-only',
+  });
+
+  const data = apolloClient.readQuery(options);
+  console.debug('[useSeasonsQuery] cache', { options, data });
+
+  return data;
+}
 
 function getQueriesWithNumQueries<T extends MinimumViableSnapshotQuery>(
   numQueries: number,
