@@ -33,22 +33,18 @@ const lineChartProps: Partial<LineChartProps> = {
 };
 
 const queryConfig: SeasonsQueryDynamicConfig = (subgraph: 'l1' | 'l2') => {
-  if (subgraph === 'l1') {
-    return {
-      variables: {
-        // season_gte: 1,
-        field: BEANSTALK_ADDRESSES[1].toLowerCase(),
-      },
-      // context: { subgraph: 'beanstalk_eth' },
-    };
-  }
-  return {
+  const options = {
     variables: {
-      // season_gte: RESEED_SEASON,
       field: BEANSTALK_ADDRESSES[42161].toLowerCase(),
     },
-    // context: { subgraph: 'beanstalk' },
+    context: { subgraph: 'beanstalk' },
   };
+
+  if (subgraph === 'l1') {
+    options.variables.field = BEANSTALK_ADDRESSES[1].toLowerCase();
+    options.context.subgraph = 'beanstalk_eth';
+  }
+  return options;
 };
 
 const PodRate: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({

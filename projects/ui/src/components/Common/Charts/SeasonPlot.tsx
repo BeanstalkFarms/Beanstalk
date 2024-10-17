@@ -104,7 +104,8 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
     document,
     timeTabParams[0][1],
     queryConfig,
-    fetchType
+    fetchType,
+    name
   );
 
   const queryParams = useMemo(
