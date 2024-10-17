@@ -64,7 +64,7 @@ export function ToastAlert({
                 target="_blank"
                 rel="noreferrer"
               >
-                View on Etherscan
+                View on {chainInfo.explorerName}
               </Link>
             </>
           )}

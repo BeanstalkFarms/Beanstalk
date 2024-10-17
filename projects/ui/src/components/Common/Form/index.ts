@@ -24,6 +24,7 @@ export type FormState = {
 export type FormStateNew = {
   tokens: FormTokenStateNew[];
   approving?: FormApprovingStateNew;
+  beanSwapQuote?: BeanSwapNodeQuote;
 };
 
 export type FormStateWithSwapQuote = {

@@ -1,8 +1,8 @@
 import {
   BeanstalkSDK,
+  BeanSwapOperation,
   ERC20Token,
   FarmFromMode,
-  FarmToMode,
   NativeToken,
   StepGenerator,
   TokenValue,
@@ -11,8 +11,7 @@ import BigNumber from 'bignumber.js';
 import { PreferredToken } from '~/hooks/farmer/usePreferredToken';
 import { FarmStep } from '~/lib/Txn/Interface';
 import { BEAN, PODS } from '~/constants/tokens';
-import { ethers } from 'ethers';
-import { toStringBaseUnitBN, tokenValueToBN } from '~/util';
+import { toStringBaseUnitBN } from '~/util';
 
 export class BuyPlotsFarmStep extends FarmStep {
   constructor(
@@ -25,7 +24,8 @@ export class BuyPlotsFarmStep extends FarmStep {
 
   build(
     tokenIn: ERC20Token | NativeToken,
-    beanAmountOut: TokenValue,
+    beanAmount: TokenValue,
+    operation: BeanSwapOperation | undefined,
     pricePerPod: BigNumber,
     placeInLine: BigNumber
   ) {
@@ -33,16 +33,16 @@ export class BuyPlotsFarmStep extends FarmStep {
 
     const { beanstalk } = this._sdk.contracts;
 
-    const swap = this._sdk.swap.buildSwap(
-      tokenIn,
-      this._sdk.tokens.BEAN,
-      this._account,
-      FarmFromMode.EXTERNAL,
-      FarmToMode.INTERNAL
-    );
-
-    const swapSteps = [...swap.getFarm().generators] as StepGenerator[];
-    this.pushInput({ input: swapSteps });
+    if (!this._sdk.tokens.BEAN.equals(tokenIn) && operation?.quote) {
+      if (!this._sdk.tokens.BEAN.equals(operation.quote.buyToken)) {
+        throw new Error(
+          `Error building txn to buy plots. Expected buy token to be BEAN but got ${operation.quote.buyToken.symbol}`
+        );
+      }
+      this.pushInput({
+        input: [...operation.getFarm().generators] as StepGenerator[],
+      });
+    }
 
     const podOrder: StepGenerator = (_amountInStep) => ({
       name: 'createPodOrder',
@@ -57,7 +57,7 @@ export class BuyPlotsFarmStep extends FarmStep {
             maxPlaceInLine: BEAN[1].stringify(placeInLine),
             minFillAmount: toStringBaseUnitBN(new BigNumber(1), PODS.decimals),
           },
-          BEAN[1].stringify(tokenValueToBN(beanAmountOut)),
+          beanAmount.toBlockchain(),
           FarmFromMode.INTERNAL_TOLERANT,
         ]),
       }),
@@ -77,32 +77,25 @@ export class BuyPlotsFarmStep extends FarmStep {
   static async getAmountOut(
     sdk: BeanstalkSDK,
     tokenIn: ERC20Token | NativeToken,
-    amountIn: any,
-    fromMode: FarmFromMode,
-    account: any
+    amountIn: TokenValue,
+    slippage: number
   ) {
-    if (!account) {
-      throw new Error('Signer Required');
-    }
-
-    const swap = sdk.swap.buildSwap(
+    const quote = await sdk.beanSwap.quoter.route(
       tokenIn,
       sdk.tokens.BEAN,
-      account,
-      fromMode,
-      FarmToMode.INTERNAL
-    );
-
-    const estimate = await swap.estimate(
-      ethers.BigNumber.from(toStringBaseUnitBN(amountIn, tokenIn.decimals))
+      amountIn,
+      slippage
     );
 
     console.debug(
       '[BuyPlotsFarmStep][getAmountOut]: estimate',
-      estimate.toHuman()
+      quote.minBuyAmount.toHuman()
     );
 
-    return estimate;
+    return {
+      amountOut: quote.minBuyAmount,
+      beanSwapQuote: quote,
+    };
   }
 
   static getPreferredTokens(tokens: BeanstalkSDK['tokens']): {
@@ -113,8 +106,9 @@ export class BuyPlotsFarmStep extends FarmStep {
       { token: tokens.BEAN, minimum: new BigNumber(1) }, // $1
       { token: tokens.ETH, minimum: new BigNumber(0.001) }, // ~$2-4
       { token: tokens.WETH, minimum: new BigNumber(0.001) }, // ~$2-4
-      { token: tokens.CRV3, minimum: new BigNumber(1) }, // $1
-      { token: tokens.DAI, minimum: new BigNumber(1) }, // $1
+      { token: tokens.WSTETH, minimum: new BigNumber(0.001) }, // $~2-4
+      { token: tokens.WEETH, minimum: new BigNumber(0.001) }, // $~2-4
+      { token: tokens.WBTC, minimum: new BigNumber(0.00005) }, // $~2-4
       { token: tokens.USDC, minimum: new BigNumber(1) }, // $1
       { token: tokens.USDT, minimum: new BigNumber(1) }, // $1
     ];

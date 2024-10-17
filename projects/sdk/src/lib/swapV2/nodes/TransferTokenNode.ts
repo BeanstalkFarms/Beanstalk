@@ -5,6 +5,7 @@ import { StepClass } from "src/classes/Workflow";
 import { AdvancedPipePreparedResult } from "src/lib/depot/pipe";
 import { FarmFromMode, FarmToMode } from "src/lib/farm";
 import { ClipboardSettings } from "src/types";
+import { isNativeToken } from "src/utils/token";
 
 interface TransferTokenBuildParams {
   fromMode: FarmFromMode;
@@ -40,8 +41,8 @@ export class TransferTokenNode extends SwapNode {
   override buildStep({ 
     fromMode, 
     toMode, 
-    recipient,
-    copySlot,
+    recipient, 
+    copySlot 
   }: TransferTokenBuildParams): StepClass<AdvancedPipePreparedResult> {
     let clipboard: ClipboardSettings | undefined;
 
@@ -55,12 +56,21 @@ export class TransferTokenNode extends SwapNode {
 
     const transfer = new TransferTokenNode.sdk.farm.actions.TransferToken(
       this.sellToken.address,
-      recipient, 
-      fromMode, 
+      recipient,
+      fromMode,
       toMode,
       clipboard
-    )
+    );
 
     return transfer;
+  }
+
+  override validateTokens() {
+    super.validateTokens();
+    if (isNativeToken(this.sellToken)) {
+      throw new Error("Invalid token transfer configuration. Sell Token cannot be a native token");
+    } else if (isNativeToken(this.buyToken)) {
+      throw new Error("Invalid token transfer configuration. Buy Token cannot be a native token");
+    }
   }
 }

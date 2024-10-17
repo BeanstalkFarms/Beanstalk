@@ -1,4 +1,4 @@
-import { ERC20Token, NativeToken } from '@beanstalk/sdk';
+import { BeanSwapNodeQuote, ERC20Token, NativeToken } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
@@ -8,6 +8,7 @@ import { ethers } from 'ethers';
 export type QuoteHandlerResultNew = {
   amountOut: BigNumber;
   value?: ethers.BigNumber;
+  beanSwapQuote?: BeanSwapNodeQuote;
 };
 
 export type QuoteHandlerWithParams<T = {}, Result extends QuoteHandlerResultNew = QuoteHandlerResultNew> = (
