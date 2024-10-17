@@ -7,6 +7,8 @@ import { ZERO_BN } from '~/constants';
 import usePrice from './usePrice';
 import { useBalanceTokens } from './useTokens';
 
+const DEFAULT_MIN = new BigNumber(1e-6);
+
 export function useMinTokensIn(tokenIn: Token, tokenOut: Token) {
   const priceMap = useAppSelector((s) => s._beanstalk.tokenPrices);
   const tokens = useBalanceTokens();
@@ -24,7 +26,7 @@ export function useMinTokensIn(tokenIn: Token, tokenOut: Token) {
     const usdTokenOut1 = getUsdValue(tokenOut);
 
     if (!usdTokenIn1 || !usdTokenOut1) {
-      return new BigNumber(1e-6);
+      return DEFAULT_MIN;
     }
 
     if (tokenIn.equals(tokens.ETH)) {
@@ -44,8 +46,6 @@ export function useMinTokensIn(tokenIn: Token, tokenOut: Token) {
     }
     return new BigNumber(10).pow(-tokenIn.decimals);
   }, [tokens, beanPrice, priceMap, tokenIn, tokenOut]);
-
-  console.log('min: ', min.toString());
 
   return min;
 }

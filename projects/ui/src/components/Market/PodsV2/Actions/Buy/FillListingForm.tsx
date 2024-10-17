@@ -1,44 +1,43 @@
 import { Stack } from '@mui/material';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import BigNumber from 'bignumber.js';
-import { BeanstalkSDK, FarmFromMode, FarmToMode } from '@beanstalk/sdk';
+import {
+  BeanstalkSDK,
+  FarmFromMode,
+  FarmToMode,
+  ERC20Token,
+  NativeToken,
+} from '@beanstalk/sdk';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import TransactionToast from '~/components/Common/TxnToast';
 import {
-  FormState,
+  FormStateNew,
   SettingInput,
   SlippageSettingsFragment,
   SmartSubmitButton,
-  TokenQuoteProvider,
   TokenSelectDialog,
   TxnSeparator,
   TxnSettings,
 } from '~/components/Common/Form';
-import { ERC20Token, NativeToken } from '~/classes/Token';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import { QuoteHandler } from '~/hooks/ledger/useQuote';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import useToggle from '~/hooks/display/useToggle';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import { Beanstalk } from '~/generated';
-import usePreferredToken, {
-  PreferredToken,
-} from '~/hooks/farmer/usePreferredToken';
+import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import {
   displayBN,
   displayTokenAmount,
+  getTokenIndex,
   MinBN,
+  tokenIshEqual,
   toTokenUnitsBN,
   transform,
 } from '~/util';
-import { AppState } from '~/state';
-import { BEAN, ETH, PODS, WETH } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { PodListing } from '~/state/farmer/market';
 import { optimizeFromMode } from '~/util/Farm';
@@ -48,18 +47,33 @@ import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
 import useAccount from '~/hooks/ledger/useAccount';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
-import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import {
+  TokenInstance,
+  useBalanceTokens,
+  useBeanstalkTokens,
+} from '~/hooks/beanstalk/useTokens';
+import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
+import { useAppSelector } from '~/state';
+import { useMinTokensIn } from '~/hooks/beanstalk/useMinTokensIn';
+import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
+import { getBeanSwapOperationWithQuote } from '~/lib/Beanstalk/swap';
 
-export type FillListingFormValues = FormState & {
+export type FillListingFormValues = FormStateNew & {
   settings: SlippageSettingsFragment;
   maxAmountIn: BigNumber | undefined;
 };
+
+type QuoterHandlerParams = {
+  slippage: number;
+};
+
+type FillListingQuoter = QuoteHandlerWithParams<QuoterHandlerParams>;
 
 const FillListingV2Form: FC<
   FormikProps<FillListingFormValues> & {
     podListing: PodListing;
     contract: Beanstalk;
-    handleQuote: QuoteHandler;
+    handleQuote: FillListingQuoter;
     account?: string;
     sdk: BeanstalkSDK;
   }
@@ -77,39 +91,38 @@ const FillListingV2Form: FC<
   /// State
   const [isTokenSelectVisible, handleOpen, hideTokenSelect] = useToggle();
 
-  /// Chain
-  const getChainToken = useGetChainToken();
-  const Bean = getChainToken(BEAN);
-  const Eth = getChainToken<NativeToken>(ETH);
-  const Weth = getChainToken<ERC20Token>(WETH);
-  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>([
-    BEAN,
-    ETH,
-    WETH,
-  ]);
+  // tokens
+  const { BEAN, ETH, WETH } = useBalanceTokens();
+  const { PODS } = useBeanstalkTokens();
+
+  const tokenList = useMemo(() => [BEAN, ETH, WETH], [BEAN, ETH, WETH]);
+  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(tokenList);
 
   /// Farmer
   const balances = useFarmerBalances();
 
   /// Beanstalk
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
-    (state) => state._beanstalk.field
-  );
+  const beanstalkField = useAppSelector((s) => s._beanstalk.field);
 
   /// Derived
   const tokenIn = values.tokens[0].token;
   const amountIn = values.tokens[0].amount;
-  const tokenOut = Bean;
+  const tokenOut = BEAN;
   const amountOut =
     tokenIn === tokenOut // Beans
       ? values.tokens[0].amount
       : values.tokens[0].amountOut;
-  const tokenInBalance = balances[tokenIn.address];
+  const tokenInBalance = balances[getTokenIndex(tokenIn)];
+  const slippage = values.settings.slippage;
 
   const isReady = amountIn?.gt(0) && amountOut?.gt(0);
   const isSubmittable = isReady;
   const podsPurchased = amountOut?.div(podListing.pricePerPod) || ZERO_BN;
   const placeInLine = podListing.index.minus(beanstalkField.harvestableIndex);
+
+  const minAmounIn = useMinTokensIn(tokenIn, tokenOut);
+
+  const quoterParams = useMemo(() => ({ slippage }), [slippage]);
 
   /// Token select
   const handleSelectTokens = useCallback(
@@ -173,28 +186,23 @@ const FillListingV2Form: FC<
       } while (found === false && loop < 50);
 
       if (maxBeans.gt(0)) {
-        if (tokenIn === Bean) {
+        if (tokenIshEqual(tokenIn, BEAN)) {
           /// 1 POD is consumed by 1 BEAN
           setFieldValue('maxAmountIn', maxBeans);
-        } else if (tokenIn === Eth || tokenIn === Weth) {
+        } else if (!tokenIshEqual(tokenIn, BEAN)) {
           /// Estimate how many ETH it will take to buy `maxBeans` BEAN.
           /// TODO: across different forms of `tokenIn`.
           /// This (obviously) only works for Eth and Weth.
-          const estimate = await sdk.swap
-            .buildSwap(
-              tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH,
-              sdk.tokens.BEAN,
-              account!,
-              FarmFromMode.EXTERNAL,
-              FarmToMode.EXTERNAL
-            )
-            .estimateReversed(
-              transform(maxBeans, 'tokenValue', sdk.tokens.BEAN)
-            );
+          const estimate = await sdk.beanSwap.quoter.route(
+            sdk.tokens.BEAN,
+            tokenIn,
+            transform(maxBeans, 'tokenValue', sdk.tokens.BEAN),
+            slippage
+          );
 
           setFieldValue(
             'maxAmountIn',
-            toTokenUnitsBN(estimate.toBlockchain(), tokenIn.decimals)
+            transform(estimate.minBuyAmount, 'bnjs', tokenIn)
           );
         } else {
           throw new Error(`Unsupported tokenIn: ${tokenIn.symbol}`);
@@ -203,16 +211,15 @@ const FillListingV2Form: FC<
         setFieldValue('maxAmountIn', ZERO_BN);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    Bean,
-    Eth,
-    Weth,
+    BEAN,
     account,
     podListing.pricePerPod,
     podListing.remainingAmount,
-    setFieldValue,
     tokenIn,
     sdk,
+    slippage,
   ]);
 
   return (
@@ -228,15 +235,17 @@ const FillListingV2Form: FC<
         balanceFrom={BalanceFrom.TOTAL}
       />
       <Stack gap={1}>
-        <TokenQuoteProvider
+        <TokenQuoteProviderWithParams<{ slippage: number }>
           key="tokens.0"
           name="tokens.0"
-          tokenOut={Bean}
+          tokenOut={BEAN}
           disabled={!values.maxAmountIn}
+          min={minAmounIn}
           max={MinBN(
             values.maxAmountIn || ZERO_BN,
             tokenInBalance?.total || ZERO_BN
           )}
+          params={quoterParams}
           balance={tokenInBalance || undefined}
           state={values.tokens[0]}
           showTokenSelect={handleOpen}
@@ -254,7 +263,7 @@ const FillListingV2Form: FC<
                 amount={podsPurchased}
                 amountTooltip={
                   <>
-                    {displayTokenAmount(amountOut!, Bean)} /{' '}
+                    {displayTokenAmount(amountOut!, BEAN)} /{' '}
                     {displayBN(podListing.pricePerPod)} Beans per Pod
                     <br />= {displayTokenAmount(podsPurchased, PODS)}
                   </>
@@ -308,34 +317,40 @@ const FillListingV2Form: FC<
 
 // ---------------------------------------------------
 
-const PREFERRED_TOKENS: PreferredToken[] = [
-  {
-    token: BEAN,
-    minimum: new BigNumber(1), // $1
-  },
-  {
-    token: ETH,
-    minimum: new BigNumber(0.001), // ~$2-4
-  },
-  {
-    token: WETH,
-    minimum: new BigNumber(0.001), // ~$2-4
-  },
-];
+const useFillListingPreferredTokens = () => {
+  const { BEAN, ETH, WETH } = useBalanceTokens();
+
+  return useMemo(
+    () => [
+      {
+        token: BEAN,
+        minimum: new BigNumber(1), // $1
+      },
+      {
+        token: ETH,
+        minimum: new BigNumber(0.001), // ~$2-4
+      },
+      {
+        token: WETH,
+        minimum: new BigNumber(0.001), // ~$2-4
+      },
+    ],
+    [BEAN, ETH, WETH]
+  );
+};
 
 const FillListingForm: FC<{
   podListing: PodListing;
 }> = ({ podListing }) => {
   /// Tokens
-  const getChainToken = useGetChainToken();
-  const Bean = getChainToken(BEAN);
-  const Eth = getChainToken(ETH);
-  const Weth = getChainToken(WETH);
+  const preferredTokens = useFillListingPreferredTokens();
 
   /// Ledger
   const { data: signer } = useSigner();
   const beanstalk = useBeanstalkContract(signer);
   const sdk = useSdk();
+
+  const Bean = sdk.tokens.BEAN;
 
   /// Farmer
   const account = useAccount();
@@ -345,7 +360,7 @@ const FillListingForm: FC<{
 
   /// Form
   const middleware = useFormMiddleware();
-  const baseToken = usePreferredToken(PREFERRED_TOKENS, 'use-best');
+  const baseToken = usePreferredToken(preferredTokens, 'use-best');
   const initialValues: FillListingFormValues = useMemo(
     () => ({
       settings: {
@@ -364,25 +379,27 @@ const FillListingForm: FC<{
 
   /// Handlers
   /// Does not execute for _tokenIn === BEAN
-  const handleQuote = useCallback<QuoteHandler>(
-    async (_tokenIn, _amountIn, _tokenOut) => {
-      const tokenIn = _tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH;
-      const from =
-        _tokenIn === Weth
-          ? optimizeFromMode(_amountIn, balances[Weth.address])
-          : FarmFromMode.EXTERNAL;
-      const amountIn = transform(_amountIn, 'tokenValue', tokenIn);
+  const handleQuote: FillListingQuoter = useCallback(
+    async (_tokenIn, _amountIn, _tokenOut, { slippage }) => {
+      if (!account) {
+        throw new Error('Signer required');
+      }
 
-      const swap = sdk.swap.buildSwap(tokenIn, sdk.tokens.BEAN, from);
+      const amountIn = transform(_amountIn, 'tokenValue', _tokenIn);
 
-      const estimate = await swap.estimate(amountIn);
+      const quote = await sdk.beanSwap.quoter.route(
+        _tokenIn,
+        _tokenOut,
+        amountIn,
+        slippage
+      );
 
       return {
-        amountOut: toTokenUnitsBN(estimate.toBlockchain(), _tokenOut.decimals),
-        value: transform(estimate, 'ethers'),
+        amountOut: transform(quote.buyAmount, 'bnjs', _tokenOut),
+        beanSwapQuote: quote,
       };
     },
-    [Eth, Weth, balances, sdk]
+    [sdk, account]
   );
 
   const onSubmit = useCallback(
@@ -416,7 +433,7 @@ const FillListingForm: FC<{
           throw new Error(
             `This Listing requires a minimum fill amount of ${displayTokenAmount(
               podListing.minFillAmount,
-              PODS
+              sdk.tokens.PODS
             )}`
           );
 
@@ -424,44 +441,60 @@ const FillListingForm: FC<{
         const amountPods = amountBeans.div(podListing.pricePerPod);
 
         let farm;
-        let tokenInNew;
         let finalFromMode: FarmFromMode;
 
         txToast = new TransactionToast({
           loading: `Buying ${displayTokenAmount(
             amountPods,
-            PODS
+            sdk.tokens.PODS
           )} for ${displayTokenAmount(amountBeans, Bean)}...`,
           success: 'Fill successful.',
         });
 
         /// Fill Listing directly from BEAN
-        if (tokenIn === Bean) {
+        if (tokenIshEqual(tokenIn, Bean)) {
           // No swap occurs, so we know exactly how many beans are going in.
           // We can select from INTERNAL, EXTERNAL, INTERNAL_EXTERNAL.
-          finalFromMode = optimizeFromMode(amountBeans, balances[Bean.address]);
+          finalFromMode = optimizeFromMode(
+            amountBeans,
+            balances[getTokenIndex(Bean)]
+          );
           farm = sdk.farm.create();
-          tokenInNew = sdk.tokens.BEAN; // FIXME
+          // tokenInNew = sdk.tokens.BEAN; // FIXME
         } else {
+          farm = sdk.farm.createAdvancedFarm();
           /// Swap to BEAN and buy
           // Require a quote
           if (!formData.amountOut)
             throw new Error(`No quote available for ${formData.token.symbol}`);
 
-          tokenInNew = tokenIn === Eth ? sdk.tokens.ETH : sdk.tokens.WETH;
+          const swapFromMode = optimizeFromMode(
+            amountIn,
+            balances[getTokenIndex(tokenIn)]
+          );
+          console.log('swapFromMode', swapFromMode);
 
-          const swap = sdk.swap.buildSwap(
-            tokenInNew,
+          const swap = getBeanSwapOperationWithQuote(
+            formData.beanSwapQuote,
+            tokenIn,
             sdk.tokens.BEAN,
+            amountIn,
+            amountBeans,
+            values.settings.slippage,
             account,
-            optimizeFromMode(formData.amount, balances[tokenIn.address]),
+            swapFromMode,
             FarmToMode.INTERNAL
           );
 
+          if (!swap) {
+            throw new Error('No swap found');
+          }
+
+          farm.add([...swap.getFarm().generators]);
+
           // At the end of the Swap step, the assets will be in our INTERNAL balance.
           // The Swap decides where to route them from (see handleQuote).
-          finalFromMode = FarmFromMode.INTERNAL;
-          farm = swap.getFarm();
+          finalFromMode = FarmFromMode.INTERNAL_TOLERANT;
         }
 
         console.debug(
@@ -469,19 +502,24 @@ const FillListingForm: FC<{
           podListing
         );
 
+        const to6DecimalStr = (amount: BigNumber | number) => {
+          const amountStr = amount.toString();
+          return Bean.fromHuman(amountStr).toBlockchain();
+        };
+
         farm.add((amountInStep) =>
           beanstalk.interface.encodeFunctionData('fillPodListing', [
             {
               lister: podListing.account,
               fieldId: '0',
-              index: Bean.stringify(podListing.index),
-              start: Bean.stringify(podListing.start),
-              podAmount: Bean.stringify(podListing.amount),
-              pricePerPod: Bean.stringify(podListing.pricePerPod),
-              maxHarvestableIndex: Bean.stringify(
+              index: to6DecimalStr(podListing.index),
+              start: to6DecimalStr(podListing.start),
+              podAmount: to6DecimalStr(podListing.amount),
+              pricePerPod: to6DecimalStr(podListing.pricePerPod),
+              maxHarvestableIndex: to6DecimalStr(
                 podListing.maxHarvestableIndex
               ),
-              minFillAmount: Bean.stringify(podListing.minFillAmount || 0), // minFillAmount for listings is measured in Beans
+              minFillAmount: to6DecimalStr(podListing.minFillAmount || 0), // minFillAmount for listings is measured in Beans
               mode: podListing.mode,
             },
             amountInStep, // FIXME: number type?
@@ -494,8 +532,10 @@ const FillListingForm: FC<{
           data,
         });
 
-        const amountInTV = transform(amountIn, 'tokenValue', tokenInNew);
-        const txn = await farm.execute(amountInTV, { slippage: 0.1 });
+        const amountInTV = transform(amountIn, 'tokenValue', tokenIn);
+        const txn = await farm.execute(amountInTV, {
+          slippage: values.settings.slippage,
+        });
 
         txToast.confirming(txn);
         const receipt = await txn.wait();
@@ -523,7 +563,6 @@ const FillListingForm: FC<{
       Bean,
       podListing,
       signer,
-      Eth,
       refetchFarmerField,
       refetchFarmerBalances,
       balances,

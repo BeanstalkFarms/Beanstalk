@@ -49,7 +49,7 @@ const useMarketData = () => {
         setError(false);    
         do {
           if (harvestableIndex?.gt(0)) {
-            const listings = await getListings({
+            const listingsData = await getListings({
               variables: { 
                 first: 1000,
                 skip: (listingsQueryLoops * 1000) - 1000,
@@ -60,15 +60,15 @@ const useMarketData = () => {
               nextFetchPolicy: 'cache-first',
               notifyOnNetworkStatusChange: true,
             });
-            if (listings.data) {
-              _listings.push(...listings.data.podListings);
-              listingsOutputLength = listings.data.podListings.length;
+            if (listingsData.data) {
+              _listings.push(...listingsData.data.podListings);
+              listingsOutputLength = listingsData.data.podListings.length;
               listingsQueryLoops += 1;
             };
           };
         } while ( listingsOutputLength === 1000 );
         do {
-          const orders = await getOrders({
+          const ordersData = await getOrders({
             variables: { 
               first: 1000,
               skip: (ordersQueryLoops * 1000) - 1000,
@@ -78,9 +78,9 @@ const useMarketData = () => {
             nextFetchPolicy: 'cache-first',
             notifyOnNetworkStatusChange: true,
           });
-          if (orders.data) {
-            _orders.push(...orders.data.podOrders);
-            ordersOutputLength = orders.data.podOrders.length;
+          if (ordersData.data) {
+            _orders.push(...ordersData.data.podOrders);
+            ordersOutputLength = ordersData.data.podOrders.length;
             ordersQueryLoops += 1;
           };
         } while ( ordersOutputLength === 1000 );
@@ -95,11 +95,11 @@ const useMarketData = () => {
         setError(true);
       };
     }, 
-  [harvestableIndex]);
+  [getListings, getOrders, harvestableIndex, sdk.tokens.BEAN.decimals]);
 
   useEffect(() => {
     _fetch();
-  }, [harvestableIndex]);
+  }, [_fetch, harvestableIndex]);
 
   /// Calculations
   useEffect(() => {
@@ -112,7 +112,9 @@ const useMarketData = () => {
           )
         : 0;
       setMaxPlaceInLine(_maxPlaceInLine);
-    };
+    } else {
+      setMaxPlaceInLine(0);
+    }
   }, [harvestableIndex, listings]);
 
   useEffect(() => {

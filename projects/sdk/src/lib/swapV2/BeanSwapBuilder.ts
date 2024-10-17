@@ -139,12 +139,23 @@ class Builder {
       if (i === maxIndex) {
         fromMode = FarmFromMode.EXTERNAL;
         toMode = finalToMode;
-
-        this.#offloadPipeline(node, recipient, fromMode, finalToMode, i);
-        this.#advFarm.add(this.#advPipe);
-
-        // // Add UnwrapETH if last action
+        /**
+         * If WETH -> ETH is the last action, 
+         * - do everything first & send the WETH to the recipient's internal balance.
+         * - then unwrap the WETH to ETH.
+         * 
+         * Otherwise, send the output token to the recipient.
+        */
         if (isUnwrapEthNode(node)) {
+          toMode = FarmToMode.INTERNAL;
+        }
+        
+        this.#offloadPipeline(node, recipient, fromMode, toMode, i);
+        this.#advFarm.add(this.#advPipe);
+        
+        
+        if (isUnwrapEthNode(node)) {
+          fromMode = FarmFromMode.INTERNAL;
           this.#advFarm.add(this.#getUnwrapETH(node, fromMode, i), { tag: node.tag });
         }
       }
@@ -184,38 +195,48 @@ class Builder {
       recipient.toLowerCase() === Builder.sdk.contracts.pipeline.address.toLowerCase();
     if (recipientIsPipeline) return;
 
-    const outputToken = node.buyToken;
     let copySlot: number | undefined;
+    let tag: string;
+    let outToken: ERC20Token;
 
-    let approveToken: ERC20Token;
-
+    /**
+     * If going from WETH -> ETH 
+     * - Send to internal
+     * - use previous node info.
+     */
     if (isUnwrapEthNode(node)) {
-      approveToken = node.sellToken;
-      copySlot = this.#getPrevNodeCopySlot(i);
+      tag = node.returnIndexTag; // get-WETH
+      outToken = node.sellToken; // WETH
+      copySlot = this.#getPrevNodeCopySlot(i); // WETH amountOutCopySlot
     } else if (isERC20Node(node)) {
-      approveToken = node.buyToken;
+      tag = node.tag;
+      outToken = node.buyToken;
       copySlot = node.amountOutCopySlot;
     } else {
-      throw new Error("Error building swap: Cannot determine approval token for transfer.");
+      throw new Error(
+        "Error building swap offloading pipeline: Cannot determine approval token for transfer."
+      );
     }
 
     if (copySlot === undefined) {
-      throw new Error("Error building swap: Cannot determine copySlot from previous node.");
+      throw new Error(
+        "Error building swap offloading pipeline: Cannot determine copySlot from previous node."
+      );
     }
 
     const prevActionClipboard = {
-      tag: node.tag,
+      tag: tag,
       copySlot: copySlot
     };
 
     const approve = new Builder.sdk.farm.actions.ApproveERC20(
-      approveToken,
+      outToken,
       Builder.sdk.contracts.beanstalk.address,
       { ...prevActionClipboard, pasteSlot: 1 }
     );
 
     const transfer = new Builder.sdk.farm.actions.TransferToken(
-      outputToken.address,
+      outToken.address,
       recipient,
       fromMode,
       toMode,
@@ -230,6 +251,12 @@ class Builder {
    *
    */
   #getApproveERC20MaxAllowance(node: SwapNode) {
+    if (isUnwrapEthNode(node)) {
+      const approve = new Builder.sdk.farm.actions.ApproveERC20(node.sellToken, node.allowanceTarget);
+      approve.setAmount(TokenValue.MAX_UINT256);
+      return approve;
+    }
+
     if (!isERC20Node(node)) {
       throw new Error("Misconfigured Swap Route. Cannot approve non-ERC20 token.");
     }
@@ -260,7 +287,11 @@ class Builder {
       );
     }
 
-    const copySlot = this.#getPrevNodeCopySlot(i);
+    let copySlot;
+    if (!isLast) {
+      copySlot = this.#getPrevNodeCopySlot(i);
+    }
+    
 
     return node.buildStep({ fromMode, copySlot });
   }

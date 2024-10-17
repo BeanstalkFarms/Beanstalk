@@ -371,9 +371,13 @@ export function tokenIshEqual(
   );
 
   if (isTokenInstance(a) && isTokenInstance(b)) {
+    const tokenIndexA = getTokenIndex(a);
+    const tokenIndexB = getTokenIndex(b);
+
+    const aChainId = ChainResolver.resolveToMainnetChainId(a.chainId);
+    const bChainId = ChainResolver.resolveToMainnetChainId(b.chainId);
     return (
-      ChainResolver.resolveToMainnetChainId(a.chainId) ===
-        ChainResolver.resolveToMainnetChainId(b.chainId) && addressesEqual
+      aChainId === bChainId && addressesEqual && tokenIndexA === tokenIndexB
     );
   }
 

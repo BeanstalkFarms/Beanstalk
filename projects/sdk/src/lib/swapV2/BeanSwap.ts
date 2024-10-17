@@ -52,7 +52,7 @@ export interface BeanSwapNodeQuote {
 export class BeanSwapOperation {
   static sdk: BeanstalkSDK;
 
-  readonly quoter: BeanSwapQuoter;
+  #quoter: BeanSwapQuoter;
 
   #builder: BeanSwapBuilder;
 
@@ -81,7 +81,7 @@ export class BeanSwapOperation {
     toMode?: FarmToMode
   ) {
     BeanSwapOperation.sdk = sdk;
-    this.quoter = quoter;
+    this.#quoter = quoter;
     this.#builder = new BeanSwapBuilder(BeanSwapOperation.sdk);
 
     this.inputToken = inputToken;
@@ -117,7 +117,7 @@ export class BeanSwapOperation {
    * @param force - If true, the reserves and prices will be refreshed regardless of the time since the last refresh.
    */
   async refresh(force?: boolean) {
-    await this.quoter.refresh(force);
+    await this.#quoter.refresh(force);
   }
 
   /**
@@ -131,7 +131,7 @@ export class BeanSwapOperation {
     if (amount.lte(0)) return;
 
     if (this.#shouldFetchQuote(amount, slippage) || force === true) {
-      this.#quoteData = await this.quoter.route(this.inputToken, this.targetToken, amount, slippage);
+      this.#quoteData = await this.#quoter.route(this.inputToken, this.targetToken, amount, slippage);
       this.#buildQuoteData();
       await this.estimate();
     }

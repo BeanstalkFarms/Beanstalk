@@ -18,7 +18,7 @@ const MarketGraphContainer: React.FC<{
 
   return (
     <CondensedCard title="OVERVIEW" sx={{ borderRadius: 1, height: '100%' }}>
-      {!data.loading && data.listings && data.orders ? (
+      {!data.loading && data.listings && data.orders && data.maxPlaceInLine > 0 ? (
         <Box
           width="100%"
           sx={{
