@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  ApolloQueryResult,
   DocumentNode,
   OperationVariables,
   QueryOptions,
@@ -97,6 +98,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
   const _range = range === SeasonRange.WEEK ? SeasonRange.MONTH : range;
 
+  // prettier-ignore
   const query = useQuery({
     queryKey: [name, queryOptions, _range, fetchType],
     queryFn: async () => {
@@ -104,98 +106,77 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
       try {
         const output: Record<number, T['seasons'][number]> = {};
-        const promises = [];
+        const promises: Promise<void>[] = [];
 
         const fetchL2 = fetchType !== 'l1-only';
         const fetchL1 = fetchType !== 'l2-only';
-
+        
         const reseedSeasonDiff = getNow2ReseedSeasonsDiff();
-
+        
         const baseVariables: OperationVariables = {
           first: PAGE_SIZE,
           season_lte: INIT_SEASON_LTE,
         };
+        const l2Config = mergeQueryOptions(queryOptions.l2, {
+          variables: baseVariables,
+        });
+        const l1Config = mergeQueryOptions(queryOptions.l1, {
+          variables: { ...baseVariables, ...baseL1Variables },
+        });
+        
+        const pushPromise = (
+          promise: Promise<ApolloQueryResult<MinimumViableSnapshotQuery>>,
+          callback?: (data: MinimumViableSnapshot) => void
+        ) => {
+          const seasonPromise = promise.then((data) => {
+            data.data?.seasons.forEach((seasonData) => {
+              output[seasonData.season] = seasonData;
+              callback?.(seasonData);
+            });
+          });
+          promises.push(seasonPromise);
+        };
 
         if (range !== SeasonRange.ALL) {
           const numSeasons = SEASON_RANGE_TO_COUNT[_range];
-          baseVariables.first = numSeasons;
-          const l2Config = shallowMergeQueryConfigs(queryOptions.l2, {
-            variables: baseVariables,
-            fetchPolicy: 'network-only',
-          });
-          const l1Config = shallowMergeQueryConfigs(queryOptions.l1, {
-            variables: {
-              ...baseVariables,
-              ...baseL1Variables,
-            },
-            fetchPolicy: 'network-only',
-          });
+          if (l2Config.variables) { // should always be the truthy
+            l2Config.variables.first = numSeasons;
+          }
 
           if (fetchL2) {
-            console.debug('[useSeasonsQuery] run l2', {
-              variables: l2Config.variables ?? {},
-            });
-            const l2Query = apolloClient.query(l2Config).then((l2Data) => {
-              l2Data.data?.seasons.forEach((seasonData) => {
-                output[seasonData.season] = seasonData;
-              });
-            });
-            promises.push(l2Query);
+            console.debug('[useSeasonsQuery] l2 config', l2Config);
+            pushPromise(apolloClient.query(l2Config));
           }
+
           const l1Needed = numSeasons ? numSeasons > reseedSeasonDiff : true;
 
           if (fetchL1 && l1Needed) {
-            console.debug('[useSeasonsQuery] run l1', {
-              variables: l1Config.variables ?? {},
-            });
-            const l1Query = apolloClient.query(l1Config).then((l1Data) => {
-              l1Data?.data?.seasons.forEach((seasonData) => {
-                output[seasonData.season] = seasonData;
-              });
-            });
-            promises.push(l1Query);
+            console.debug('[useSeasonsQuery] l1 config', l1Config);
+            pushPromise(apolloClient.query(l1Config));
           }
           await Promise.all(promises);
         } else {
-          const initPromises = [];
-          const l2Config = shallowMergeQueryConfigs(queryOptions.l2, {
-            variables: baseVariables,
-          });
-          const l1Config = shallowMergeQueryConfigs(queryOptions.l1, {
-            variables: {
-              ...baseVariables,
-              ...baseL1Variables,
-            },
-            fetchPolicy: 'cache-first',
-          });
-          let latestL2 = 0;
-          let latestL1 = 0;
+          let latestL2 = 0; // latest L2 season
+          let latestL1 = 0; // latest L1 season
+
+          /// ---------- INITIAL QUERIES ---------- ///
 
           if (fetchL2) {
-            console.debug('[useSeasonsQuery] run l2', {
-              variables: l2Config.variables ?? {},
+            console.debug('[useSeasonsQuery] run l2 config: ', l2Config);
+            pushPromise(apolloClient.query(l2Config), (data) => {
+              latestL2 = Math.max(latestL2, data.season);
             });
-            const l2Init = apolloClient.query(l2Config).then((l2Data) => {
-              l2Data.data?.seasons.forEach((seasonData) => {
-                latestL2 = Math.max(latestL2, seasonData.season);
-                output[seasonData.season] = seasonData;
-              });
-            });
-            initPromises.push(l2Init);
           }
+
           if (fetchL1) {
-            console.debug('[useSeasonsQuery] run l2', {
-              variables: l2Config.variables ?? {},
+            console.debug('[useSeasonsQuery] run l1 config', l1Config);
+            pushPromise(apolloClient.query(l1Config), (data) => {
+              latestL1 = Math.max(latestL1, data.season);
             });
-            const l1Init = apolloClient.query(l1Config).then((l1Data) => {
-              l1Data.data?.seasons.forEach((seasonData) => {
-                latestL1 = Math.max(latestL1, seasonData.season);
-                output[seasonData.season] = seasonData;
-              });
-            });
-            promises.push(l1Init);
           }
-          await Promise.all(initPromises);
+          await Promise.all(promises);
+
+          
 
           /**
            * If LatestSeason in L2 queries is 5000, and reseed season is 3500,
@@ -206,68 +187,73 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
            * seasons to query: 500
            * Ceil(500 / 1000) = 1 query. Since we have already queried these seasons, we skip.
            */
-          const numQueriesL2 = fetchL2
-            ? calcNumQueries(latestL2, RESEED_SEASON - 1)
-            : 0;
-
-          for (let i = 0; i < numQueriesL2; i += 1) {
-            const season = Math.max(
-              0, // always at least 0
-              latestL2 - i * PAGE_SIZE
-            );
-            const thisConfig = shallowMergeQueryConfigs(l2Config, {
+          if (fetchL2) {
+            /// Read Seasons from cache
+            const cacheOptions = mergeQueryOptions(l1Config, {
+              fetchPolicy: 'cache-only',
               variables: {
-                first: season < 1000 ? season - 1 : 1000,
-                season_lte: season,
+                first: 100_000,
+                season_lte: latestL1,
+                season_gt: RESEED_SEASON - 1,
               },
             });
-            console.debug('[useSeasonsQuery] run l2', {
-              variables: thisConfig.variables ?? {},
+            const cached = apolloClient.readQuery(cacheOptions);
+            console.debug('[useSeasonsQuery] l2 cache', {
+              cacheOptions,
+              data: cached?.seasons,
             });
-            promises.push(
-              apolloClient.query(thisConfig).then((l2Data) => {
-                l2Data.data?.seasons.forEach((seasonData) => {
-                  output[seasonData.season] = seasonData;
-                });
-              })
-            );
+
+            cached?.seasons.forEach((seasonData) => {
+              output[seasonData.season] = seasonData;
+              latestL2 = Math.max(Math.min(latestL2, seasonData.season), 0);
+            });
+
+            const numQueries = calcNumQueries(latestL2, RESEED_SEASON - 1);
+            console.debug('[useSeasonsQuery]: l2 numQueries', numQueries);
+
+            /// Query Seasons from network
+            for (const fetchData of getQueriesWithNumQueries(numQueries, latestL1, l1Config)) {
+              pushPromise(fetchData());
+            }
           }
 
           if (fetchL1) {
-            const numQueries = calcNumQueries(
-              latestL1,
-              l1Config.variables?.season_gt || 1
+            /// Read Seasons from cache
+            const cacheOptions = mergeQueryOptions(l1Config, {
+              fetchPolicy: 'cache-only',
+              variables: {
+                first: RESEED_SEASON,
+                season_lte: RESEED_SEASON - 1,
+                season_gt: 1,
+              },
+            });
+
+            const cached = apolloClient.readQuery(cacheOptions);
+            console.debug('[useSeasonsQuery] l1 cache', { cacheOptions, data: cached?.seasons });
+
+            cached?.seasons.forEach((seasonData) => {
+              output[seasonData.season] = seasonData;
+              latestL1 = Math.max(Math.min(latestL1, seasonData.season), 0);
+            });
+
+            const numQ = calcNumQueries(latestL1, l1Config.variables?.season_gt ?? 1);
+            console.debug(
+              `[useSeasonsQuery] numQueries = ${numQ}, seasonsQueryFrom = ${latestL1} `
             );
 
-            for (let i = 0; i < numQueries; i += 1) {
-              const season = Math.max(
-                0, // always at least 0
-                latestL1 - i * PAGE_SIZE
-              );
-              const thisConfig = shallowMergeQueryConfigs(l1Config, {
-                variables: {
-                  first: season < 1000 ? season - 1 : 1000,
-                  season_lte: season,
-                  season_gt: Math.max(0, season - PAGE_SIZE),
-                },
-                // fetchPolicy: 'network-only',
-              });
-              console.log('[useSeasonsQuery] run l1', i, {
-                variables: thisConfig.variables ?? {},
-              });
-              promises.push(
-                apolloClient.query(thisConfig).then((l1Data) => {
-                  l1Data.data?.seasons.forEach((seasonData) => {
-                    output[seasonData.season] = seasonData;
-                  });
-                })
-              );
+            /// Query Seasons from network
+            const queries = getQueriesWithNumQueries(numQ, latestL1, l1Config);
+            for (const fetchData of queries) {
+              pushPromise(fetchData());
             }
+
+            await Promise.all(promises);
           }
         }
 
-        await Promise.all(promises);
         const seasonData = Object.values(output).sort(sortSeasonOutputDesc);
+
+        console.debug('[useSeasonsQuery]: RESULT', name, seasonData);
         return seasonData;
       } catch (e) {
         console.error('e: ', e);
@@ -281,7 +267,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
       }
       return data;
     },
-    staleTime: 1000 * 60 * 20, // 20 minutes
+    staleTime: 1000 * 5, // 5 seconds
+    // staleTime: 1000 * 60 * 20, // 20 minutes
   });
 
   return useMemo(
@@ -298,6 +285,35 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 export default useSeasonsQuery;
 
 // ---------- Helper Functions ----------
+
+function getQueriesWithNumQueries<T extends MinimumViableSnapshotQuery>(
+  numQueries: number,
+  latestSeason: number,
+  config: QueryOptions<OperationVariables, T>
+) {
+  const queriesAndOptions: (() => Promise<
+    ApolloQueryResult<MinimumViableSnapshotQuery>
+  >)[] = [];
+  for (let i = 0; i < numQueries; i += 1) {
+    const season = Math.max(0, latestSeason - i * PAGE_SIZE);
+
+    const options = mergeQueryOptions(config, {
+      variables: {
+        first: season < 1000 ? season - 1 : 1000,
+        season_lte: season,
+      },
+    });
+
+    const seasonGt = Math.max(0, season - PAGE_SIZE);
+    mergeVariableIfExists(options, 'season_gt', seasonGt);
+    mergeVariableIfExists(options, 'season_gte', seasonGt - 1);
+
+    console.debug('[getQueriesWithNumQueries] options', i, options);
+    queriesAndOptions.push(() => apolloClient.query(options));
+  }
+
+  return queriesAndOptions;
+}
 
 function calcNumQueries(upper: number, lower: number) {
   return Math.ceil((upper - lower) / PAGE_SIZE);
@@ -320,11 +336,11 @@ function isFunction(fn: unknown): fn is Function {
   return typeof fn === 'function';
 }
 
-function deriveQueryConfig(
+function deriveQueryConfig<T extends MinimumViableSnapshotQuery>(
   chain: 'l1' | 'l2',
   queryConfig: Partial<QueryOptions> | SeasonsQueryDynamicConfig | undefined,
   document: DocumentNode
-) {
+): QueryOptions<OperationVariables, T> {
   const config =
     (isFunction(queryConfig) ? queryConfig(chain) : queryConfig) ?? {};
   let subgraph: string = config.context?.subgraph || 'beanstalk';
@@ -341,10 +357,11 @@ function deriveQueryConfig(
     variables: config.variables ?? {},
     context: { subgraph },
     query: document,
+    fetchPolicy: 'network-only',
   };
 }
 
-function shallowMergeQueryConfigs<T extends MinimumViableSnapshotQuery>(
+function mergeQueryOptions<T extends MinimumViableSnapshotQuery>(
   a: QueryOptions<OperationVariables, T>,
   b: Partial<QueryOptions<OperationVariables, T>>
 ): QueryOptions<OperationVariables, T> {
@@ -362,235 +379,14 @@ function shallowMergeQueryConfigs<T extends MinimumViableSnapshotQuery>(
   };
 }
 
-// Execute generic lazy query
-// const [get, query] = useLazyQuery<T>(document, queryOptions);
-
-/// Output used when user requests all data
-
-// useEffect(() => {
-//   const fetchL2 = fetchType !== 'l1-only';
-//   const fetchL1 = fetchType !== 'l2-only';
-
-//   (async () => {
-//     console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
-//     const seasonOutput: Record<number, MinimumViableSnapshot> = {};
-
-//     try {
-//       setLoading(true);
-//       if (range !== SeasonRange.ALL) {
-//         // data.seasons is sorted by season, descending.
-//         const variables: OperationVariables = {
-//           ...initConfig?.variables,
-//           first: SEASON_RANGE_TO_COUNT[range],
-//           season_lte: 999999999,
-//           season_gt: RESEED_SEASON,
-//         };
-//         console.debug('[useSeasonsQuery] run', { variables });
-
-//         const config: LazyQueryHookExecOptions<T, OperationVariables> = {
-//           ...initConfig,
-//           fetchPolicy: 'cache-and-network',
-//           variables,
-//         };
-
-//         if (fetchL2) {
-//           await get(config)
-//             .catch((e) => {
-//               console.error(e);
-//               return { data: { seasons: [] } };
-//             })
-//             .then((response) => {
-//               response.data?.seasons.forEach((seasonData) => {
-//                 seasonOutput[seasonData.season] = seasonData;
-//               });
-//             });
-//         }
-
-//         if (fetchL1) {
-//           const l1Config = isFunction(queryConfig)
-//             ? queryConfig('l1')
-//             : getEthSubgraphConfig(config);
-//           // Try x_eth subgraph if not enough data is available. Apollo will auto merge
-//           await get({
-//             ...l1Config,
-//             variables: {
-//               ...config.variables,
-//               ...l1Config.variables,
-//               season_lte: RESEED_SEASON - 1,
-//               season_gt: 0,
-//             },
-//           }).then((response) => {
-//             response.data?.seasons.forEach((seasonData) => {
-//               seasonOutput[seasonData.season] = seasonData;
-//             });
-//           });
-//         }
-//         setSeasonsOutput(
-//           Object.values(seasonOutput).sort(sortSeasonOutputDesc)
-//         );
-//       } else {
-//         // Initialize Season data with a call to the first set of Seasons.
-//         const variables = {
-//           ...initConfig?.variables,
-//           first: undefined,
-//           season_lte: 999999999,
-//         };
-
-//         console.debug('[useSeasonsQuery] run', { variables });
-
-//         const config = {
-//           ...initConfig,
-//           variables,
-//         };
-
-//         let earliestSeason = variables.season_lte as number;
-//         const season_gte = RESEED_SEASON;
-
-//         if (fetchL2) {
-//           const initL2Data = await get(config).catch((e) => {
-//             console.error(e);
-//             return { data: { seasons: [] } };
-//           });
-
-//           initL2Data.data?.seasons.forEach((seasonData) => {
-//             if (earliestSeason > (seasonData.season as number)) {
-//               earliestSeason = seasonData.season;
-//             }
-//             seasonOutput[seasonData.season] = seasonData;
-//           });
-
-//           if (earliestSeason > RESEED_SEASON) {
-//             const l2Promises = [];
-//             const numQueries = Math.ceil(
-//               (earliestSeason - RESEED_SEASON) / PAGE_SIZE
-//             );
-
-//             for (let i = 0; i < numQueries; i += 1) {
-//               const season_lte = Math.max(
-//                 0, // always at least 0
-//                 earliestSeason - i * PAGE_SIZE
-//               );
-//               const thisVariables = {
-//                 ...initConfig?.variables,
-//                 first: season_lte < 1000 ? season_lte - 1 : 1000,
-//                 season_lte: season_lte,
-//               };
-
-//               l2Promises.push(
-//                 apolloClient
-//                   .query({
-//                     ...config,
-//                     query: document,
-//                     variables: thisVariables,
-//                     notifyOnNetworkStatusChange: true,
-//                   })
-//                   .then((response) => {
-//                     response.data?.seasons.forEach((seasonData) => {
-//                       seasonOutput[seasonData.season] = seasonData;
-//                     });
-//                   })
-//               );
-//             }
-//           }
-//         }
-
-//         console.debug('[useSeasonsQuery] init: data = ', data.data);
-//         const _l1Config =
-//           typeof queryConfig === 'function'
-//             ? queryConfig('l2')
-//             : getEthSubgraphConfig(config);
-//         const l1Config: any = {
-//           ..._l1Config,
-//           variables: {
-//             ...variables,
-//             ..._l1Config.variables,
-//             season_lte: RESEED_SEASON,
-//           },
-//         };
-
-//         const init = await get(l1Config);
-
-//         if (!init.data) {
-//           console.error(init);
-//           throw new Error('missing data');
-//         }
-
-//         /**
-//          * the newest season indexed by the subgraph
-//          * data is returned sorted from oldest to newest
-//          * so season 0 is the oldest season and length-1 is newest.
-//          */
-//         const latestSubgraphSeason = init.data.seasons[0].season;
-
-//         console.debug(
-//           `[useSeasonsQuery] requested all seasons. current season is ${latestSubgraphSeason}. oldest loaded season ${
-//             init.data.seasons[init.data.seasons.length - 1].season
-//           }`,
-//           init.data.seasons,
-//           queryConfig
-//         );
-
-//         /**
-//          * 3000 / 1000 = 3 queries
-//          * Season    1 - 1000
-//          *        1001 - 2000
-//          *        2001 - 3000
-//          */
-//         const numQueries = Math.ceil(
-//           /// If `season_gt` is provided, we only query back to that season.
-//           (latestSubgraphSeason - (l1Config?.variables?.season_gt || 0)) /
-//             PAGE_SIZE
-//         );
-//         const promises = [];
-//         console.debug(
-//           `[useSeasonsQuery] needs ${numQueries} calls to get ${latestSubgraphSeason} more seasons`
-//         );
-//         const output: any[] = [];
-//         for (let i = 0; i < numQueries; i += 1) {
-//           const season = Math.max(
-//             0, // always at least 0
-//             latestSubgraphSeason - i * PAGE_SIZE
-//           );
-//           const thisVariables = {
-//             ...l1Config?.variables,
-//             first: season < 1000 ? season - 1 : 1000,
-//             season_lte: season,
-//           };
-//           promises.push(
-//             apolloClient
-//               .query({
-//                 ...l1Config,
-//                 query: document,
-//                 variables: thisVariables,
-//                 notifyOnNetworkStatusChange: true,
-//               })
-//               .then((r) => {
-//                 console.debug(
-//                   `[useSeasonsQuery] get: ${season} -> ${Math.max(
-//                     season - 1000,
-//                     1
-//                   )} =`,
-//                   r.data,
-//                   { variables: thisVariables, document }
-//                 );
-//                 r.data.seasons.forEach((seasonData: any) => {
-//                   output[seasonData.season] = seasonData;
-//                 });
-//               })
-//           );
-//         }
-
-//         /**
-//          * Wait for queries to complete
-//          */
-//         await Promise.all(promises);
-//         setSeasonsOutput(output.filter(Boolean).reverse());
-//       }
-//     } catch (e) {
-//       console.debug('[useSeasonsQuery] failed');
-//       console.error(e);
-//     } finally {
-//       setLoading(false);
-//     }
-//   })();
-// }, [range, get, document, initConfig, queryConfig, fetchType, name]);
+function mergeVariableIfExists<T extends MinimumViableSnapshotQuery>(
+  options: QueryOptions<OperationVariables, T>,
+  key: string,
+  value: any
+) {
+  if (!options.variables) return options;
+  if (key in options.variables) {
+    options.variables[key] = value;
+  }
+  return options;
+}

@@ -48,7 +48,9 @@ export type SeasonPlotBaseProps = {
   height?: number | string;
   /** True if this plot should be a StackedAreaChard */
   stackedArea?: boolean;
-
+  /**
+   * Name of query. For React-Query query key.
+   */
   name: string;
 };
 
