@@ -198,6 +198,7 @@ try {
     cache,
     storage: new LocalStorageWrapper(window.localStorage),
     trigger: 'write',
+    debounce: 500,
   });
 } catch (e) {
   console.error('Failed to persist cache, skipping.');
