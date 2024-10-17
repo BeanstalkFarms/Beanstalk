@@ -15,12 +15,6 @@
         "singleQuote": false,
         "bracketSpacing": false
       }
-    },
-    {
-      "files": "projects/subgraph-*/**",
-      "options": {
-        "printWidth": 140
-      }
     }
   ]
 }
