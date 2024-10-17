@@ -3,14 +3,8 @@ import { useCallback } from 'react';
 import { useAppSelector } from '~/state';
 import { getTokenIndex } from '~/util';
 
-import BigNumber from 'bignumber.js';
 import useSdk from '../sdk';
 import { useBalanceTokens } from './useTokens';
-
-(BigNumber.prototype as any)[Symbol.for('nodejs.util.inspect.custom')] =
-  function logBigNumber() {
-    return `${this.toString()}`;
-  };
 
 export const WELL_MINIMUM_BEAN_BALANCE = 1_000;
 

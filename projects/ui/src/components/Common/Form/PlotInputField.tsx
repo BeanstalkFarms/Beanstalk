@@ -9,19 +9,19 @@ import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { PODS } from '~/constants/tokens';
 
 import { ZERO_BN } from '~/constants';
+import Row from '~/components/Common/Row';
+
+import { FC } from '~/types';
+import { TokenInputProps } from '~/components/Common/Form/TokenInputField';
+import useAccount from '~/hooks/ledger/useAccount';
+import SliderField from './SliderField';
+import AdvancedButton from './AdvancedButton';
 import {
   PlotFragment,
   PlotSettingsFragment,
   TokenAdornment,
   TokenInputField,
 } from '.';
-import AdvancedButton from './AdvancedButton';
-import SliderField from './SliderField';
-import Row from '~/components/Common/Row';
-
-import { FC } from '~/types';
-import { TokenInputProps } from '~/components/Common/Form/TokenInputField';
-import useAccount from '~/hooks/ledger/useAccount';
 
 const SLIDER_FIELD_KEYS = ['plot.start', 'plot.end'];
 const InputPropsLeft = { endAdornment: 'Start' };
@@ -64,6 +64,7 @@ const PlotInputField: FC<
     setFieldValue('plot.index', undefined);
     setFieldValue('plot.start', undefined);
     setFieldValue('plot.end', undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
   /// Find the currently selected plot from form state.
@@ -77,7 +78,7 @@ const PlotInputField: FC<
   }, [plots, plot.index]);
 
   const selectedPlotsAmount =
-    values.selectedPlots == undefined ? 0 : values.selectedPlots.length;
+    values.selectedPlots === undefined ? 0 : values.selectedPlots.length;
   /// Button to select a new plot
   const InputProps = useMemo(
     () => ({
@@ -86,7 +87,7 @@ const PlotInputField: FC<
           token={PODS}
           onClick={showDialog}
           buttonLabel={
-            values.selectedPlots == undefined ||
+            values.selectedPlots === undefined ||
             values.selectedPlots.length < 2 ? (
               plot.index ? (
                 <Row gap={0.75}>
@@ -108,7 +109,7 @@ const PlotInputField: FC<
         />
       ),
     }),
-    [harvestableIndex, plot.index, showDialog, props.size, selectedPlotsAmount]
+    [showDialog, values.selectedPlots, plot.index, harvestableIndex, selectedPlotsAmount, props.size]
   );
 
   /// "Advanced" control in the Quote slot
@@ -176,11 +177,11 @@ const PlotInputField: FC<
         values.selectedPlots = [];
       }
       const indexOf = values.selectedPlots.findIndex(
-        (item) => item.index == index
+        (item) => item.index === index
       );
       if (
-        values.selectedPlots == undefined ||
-        values.selectedPlots.length == 0 ||
+        values.selectedPlots === undefined ||
+        values.selectedPlots.length === 0 ||
         indexOf < 0
       ) {
         if (multiSelect) {
@@ -198,19 +199,17 @@ const PlotInputField: FC<
             end: plots[index],
           };
         }
-      } else {
-        if (values.selectedPlots.length > 1) {
+      } else if (values.selectedPlots.length > 1) {
           values.selectedPlots.splice(indexOf, 1);
         }
-      }
       const numPodsClamped = clamp(
         new BigNumber(values.selectedPlots[0].amount!)
       );
-      let total: any[] = [];
+      const total: any[] = [];
       values.selectedPlots.forEach((element) => {
         total.push(element.amount);
       });
-      let totalSum = BigNumber.sum.apply(null, total);
+      const totalSum = BigNumber.sum.apply(null, total);
       setFieldValue('totalAmount', totalSum);
       setFieldValue('plot.amount', numPodsClamped);
       setFieldValue('plot.index', values.selectedPlots[0].index);
@@ -218,6 +217,7 @@ const PlotInputField: FC<
       setFieldValue('plot.start', ZERO_BN);
       setFieldValue('plot.end', numPodsClamped);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [clamp, plots, setFieldValue, multiSelect, values.selectedPlots]
   );
 
@@ -240,7 +240,7 @@ const PlotInputField: FC<
         open={dialogOpen}
         multiSelect={multiSelect}
       />
-      {values.selectedPlots == undefined ||
+      {values.selectedPlots === undefined ||
         (values.selectedPlots.length < 2 && (
           <TokenInputField
             name="plot.amount"
@@ -258,12 +258,12 @@ const PlotInputField: FC<
       {values.selectedPlots !== undefined &&
         values.selectedPlots.length >= 2 && (
           <TokenInputField
-            name={'totalAmount'}
+            name="totalAmount"
             fullWidth
             InputProps={InputProps}
             placeholder={values.totalAmount.toString()}
-            disabled={true}
-            hideBalance={true}
+            disabled
+            hideBalance
             {...props}
           />
         )}

@@ -19,15 +19,13 @@ export function getBeanSwapOperationWithQuote(
   account: string,
   fromMode?: FarmFromMode,
   toMode?: FarmToMode
-) {
+): BeanSwapOperation | undefined {
   if (tokenIshEqual(buyToken, sellToken)) {
     return;
   }
   if (!quote || !quote.nodes.length) {
     throw new Error('No quote found');
   }
-
-  console.log("quote: ", quote);
 
   const firstNode = quote.nodes[0];
   const lastNode = quote.nodes[quote.nodes.length - 1];
@@ -42,14 +40,10 @@ export function getBeanSwapOperationWithQuote(
     );
   }
   if (quote.sellAmount.toHuman() !== sellAmount.toString()) {
-    throw new Error(
-      `Error building swap. Sell amount mismatch.`
-    );
+    throw new Error(`Error building swap. Sell amount mismatch.`);
   }
   if (quote.buyAmount.toHuman() !== buyAmount.toString()) {
-    throw new Error(
-      `Error building swap. Buy amount mismatch.`
-    );
+    throw new Error(`Error building swap. Buy amount mismatch.`);
   }
   if (slippage !== quote.slippage) {
     throw new Error(
