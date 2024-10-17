@@ -353,6 +353,19 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
     </>
   );
 
+  const menuContent = (
+    <Stack gap={1}>
+      {showPrices ? (
+        <PriceOverlayContent
+          tokenPrices={tokenPrices}
+          togglePrices={togglePrices}
+        />
+      ) : (
+        poolsContent
+      )}
+    </Stack>
+  );
+
   return (
     <FolderMenu
       onOpen={refetchPools}
@@ -371,21 +384,10 @@ const PriceButton: FC<ButtonProps> = ({ ...props }) => {
           <Typography variant="h4">
             Pools — Season {displayBN(season || ZERO_BN)}
           </Typography>
-          <Stack gap={1}>{poolsContent}</Stack>
+          {menuContent}
         </Stack>
       }
-      popoverContent={
-        <Stack gap={1} p={1}>
-          {showPrices ? (
-            <PriceOverlayContent
-              tokenPrices={tokenPrices}
-              togglePrices={togglePrices}
-            />
-          ) : (
-            poolsContent
-          )}
-        </Stack>
-      }
+      popoverContent={<Stack p={1}>{menuContent}</Stack>}
       hotkey="opt+1, alt+1"
       zeroTopLeftRadius
       {...props}
