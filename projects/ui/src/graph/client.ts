@@ -9,6 +9,7 @@ import { LocalStorageWrapper, persistCacheSync } from 'apollo3-cache-persist';
 import { SGEnvironments, SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import store from '~/state';
 import { exists } from '~/util';
+import { binarySearchSeasons } from '~/util/Graph';
 
 /// ///////////////////////// Field policies ////////////////////////////
 
@@ -47,13 +48,13 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     // Find the start index
     let startIndex = 0;
     if (season_lte !== undefined) {
-      startIndex = binarySearchSeason(seasons, season_lte, compareDesc);
+      startIndex = binarySearchSeasons<number>(seasons, season_lte, compareDesc);
     }
 
     // Find the end index
     let endIndex = existing.length - 1;
     if (season_gt !== undefined) {
-      endIndex = binarySearchSeason(seasons, season_gt, compareDesc) + 1;
+      endIndex = binarySearchSeasons<number>(seasons, season_gt, compareDesc) + 1;
     }
 
     // Ensure indices are within bounds
@@ -151,29 +152,6 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     return merged;
   },
 });
-
-// Binary search function
-function binarySearchSeason<T>(
-  array: T[],
-  target: T,
-  compare: (a: T, b: T) => number
-) {
-  let low = 0;
-  let high = array.length - 1;
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const cmp = compare(array[mid], target);
-    if (cmp === 0) {
-      return mid;
-    }
-    if (cmp < 0) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-  return high;
-}
 
 /// ///////////////////////// Cache Persistence ////////////////////////////
 

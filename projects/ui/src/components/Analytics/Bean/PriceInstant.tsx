@@ -14,7 +14,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
-import { RESEED_SEASON } from '~/constants';
+import { subgraphQueryConfigs, subgraphQueryKeys } from '~/graph/queryConfigs';
 
 const getValue = (season: SnapshotData<SeasonalInstantPriceQuery>) =>
   parseFloat(season.price);
@@ -25,23 +25,6 @@ const statProps = {
   gap: 0.25,
 };
 
-const queryConfig = (subgraph: 'l1' | 'l2') => {
-  if (subgraph === 'l1') {
-    return {
-      variables: {
-        season_gt: 0,
-      },
-      context: { subgraph: 'bean_eth' },
-    };
-  }
-
-  return {
-    variables: {
-      season_gt: RESEED_SEASON - 1,
-    },
-    context: { subgraph: 'bean' },
-  };
-};
 
 const lineChartProps: Partial<LineChartProps> = {
   pegLine: true,
@@ -61,11 +44,11 @@ const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
       formatValue={formatValue}
-      queryConfig={queryConfig}
+      queryConfig={subgraphQueryConfigs.priceInstant.queryOptions}
       StatProps={statProps}
       LineChartProps={lineChartProps}
       dateKey="timestamp"
-      name="seasonalInstantPrice"
+      name={subgraphQueryKeys.priceInstant()}
     />
   );
 };
