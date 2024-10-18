@@ -9,7 +9,7 @@ import {
 import { apolloClient } from '~/graph/client';
 import { useQuery } from '@tanstack/react-query';
 import { RESEED_SEASON } from '~/constants';
-import { DynamicSGQueryOption } from '~/util/Graph';
+import { DynamicSGQueryOption, SeasonsQueryFetchType } from '~/util/Graph';
 
 const PAGE_SIZE = 1000;
 
@@ -61,8 +61,6 @@ export type SnapshotData<T extends MinimumViableSnapshotQuery> =
 const baseL1Variables = {
   season_lte: RESEED_SEASON - 1,
 };
-
-type SeasonsQueryFetchType = 'l1-only' | 'l2-only' | 'both';
 
 /**
  * Iteratively query entities that have a `season` entity.
