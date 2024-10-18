@@ -457,32 +457,33 @@ export const useGetNormaliseChainToken = () => {
   return getToken;
 };
 
-export const getMultiChainToken = (_address: string): ChainConstant<LegacyToken> => {
+export const getMultiChainToken = (_address: string) => {
   const chainConstant = ADDRESS_TO_CHAIN_CONSTANT[_address.toLowerCase()];
 
   if (!chainConstant) {
-    throw new Error(
-      `Could not find legacy token with address: ${_address}`
-    );
+    throw new Error(`Could not find legacy token with address: ${_address}`);
   }
 
-  return chainConstant;
-}
+  return {
+    arb: chainConstant[cARB],
+    eth: chainConstant[cETH],
+  };
+};
 
-export const getChainAgnosticToken = (chainId: SupportedChainId, _address: string): LegacyToken => {
+export const getChainAgnosticToken = (
+  chainId: SupportedChainId,
+  _address: string
+): LegacyToken => {
   const otherChain = chainId === cARB ? cETH : cARB;
 
   const chainConstant = ADDRESS_TO_CHAIN_CONSTANT[_address.toLowerCase()];
 
   if (!chainConstant) {
-    throw new Error(
-      `Could not find legacy token with address: ${_address}`
-    );
+    throw new Error(`Could not find legacy token with address: ${_address}`);
   }
 
   return chainConstant[chainId] ?? chainConstant[otherChain];
-}
-
+};
 
 /**
  * Takes an address (chain agnostic) and returns the legacy token instance.
@@ -509,23 +510,23 @@ export const useHistoricalWhitelistedTokens = (): TokenInstance[] => {
 
   return useMemo(() => {
     const addresses = [
-    A.BEAN_ADDRESSES[cARB],
-    // wells
-    A.BEAN_WSTETH_ADDRESSS[cARB],
-    A.BEAN_ETH_WELL_ADDRESSES[cARB],
-    A.BEANWEETH_WELL_ADDRESSES[cARB],
-    A.BEANWBTC_WELL_ADDRESSES[cARB],
-    A.BEANUSDC_WELL_ADDRESSES[cARB],
-    A.BEANUSDT_WELL_ADDRESSES[cARB],
-    // unripe
-    A.UNRIPE_BEAN_ADDRESSES[cARB],
-    A.UNRIPE_BEAN_WSTETH_ADDRESSES[cARB],
-    // legacy
-    A.BEAN_CRV3_ADDRESSES[cETH],
-    A.BEAN_ETH_UNIV2_LP_ADDRESSES[cETH],
-    A.BEAN_CRV3_V1_ADDRESSES[cETH],
-    A.BEAN_LUSD_ADDRESSES[cETH],
-  ];
+      A.BEAN_ADDRESSES[cARB],
+      // wells
+      A.BEAN_WSTETH_ADDRESSS[cARB],
+      A.BEAN_ETH_WELL_ADDRESSES[cARB],
+      A.BEANWEETH_WELL_ADDRESSES[cARB],
+      A.BEANWBTC_WELL_ADDRESSES[cARB],
+      A.BEANUSDC_WELL_ADDRESSES[cARB],
+      A.BEANUSDT_WELL_ADDRESSES[cARB],
+      // unripe
+      A.UNRIPE_BEAN_ADDRESSES[cARB],
+      A.UNRIPE_BEAN_WSTETH_ADDRESSES[cARB],
+      // legacy
+      A.BEAN_CRV3_ADDRESSES[cETH],
+      A.BEAN_ETH_UNIV2_LP_ADDRESSES[cETH],
+      A.BEAN_CRV3_V1_ADDRESSES[cETH],
+      A.BEAN_LUSD_ADDRESSES[cETH],
+    ];
 
     return addresses.map(getLegacyToken);
   }, [getLegacyToken]);

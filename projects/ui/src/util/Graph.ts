@@ -12,9 +12,10 @@ export function binarySearchSeasons<T>(
 
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
-    const value = typeof array[mid] !== 'number' && accessor
-      ? accessor(array[mid])
-      : array[mid] as number;
+    const value =
+      typeof array[mid] !== 'number' && accessor
+        ? accessor(array[mid])
+        : (array[mid] as number);
     const cmp = compare(value, target);
 
     if (cmp === 0) {
@@ -27,4 +28,13 @@ export function binarySearchSeasons<T>(
     }
   }
   return high;
+}
+
+const RESEED_SEASON_TIMESTAMP = 1728525600;
+
+function getNow2ReseedSeasonsDiff() {
+  const now = Math.floor(new Date().getTime() / 1000);
+  const secondsDiff = now - RESEED_SEASON_TIMESTAMP;
+
+  return Math.floor(secondsDiff / 60 / 60);
 }
