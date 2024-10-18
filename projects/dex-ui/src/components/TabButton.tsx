@@ -1,8 +1,17 @@
 import styled from "styled-components";
-import { BodyXS } from "./Typography";
+
 import { size } from "src/breakpoints";
 
-export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bold?: boolean; justify?: boolean; hover?: boolean }>`
+import { BodyXS } from "./Typography";
+
+export const TabButton = styled.button<{
+  active?: boolean;
+  stretch?: boolean;
+  bold?: boolean;
+  justify?: boolean;
+  hover?: boolean;
+  zIndex?: number;
+}>`
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -19,6 +28,7 @@ export const TabButton = styled.button<{ active?: boolean; stretch?: boolean; bo
   outline-offset: -0.5px;
   background-color: ${({ active }) => (active ? "#fff" : "#F9F8F6")};
   cursor: pointer;
+  z-index: ${({ zIndex }) => zIndex || 0};
 
   ${({ hover }) =>
     hover &&

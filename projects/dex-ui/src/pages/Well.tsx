@@ -1,47 +1,50 @@
 import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
-import { getPrice } from "src/utils/price/usePrice";
-import useSdk from "src/utils/sdk/useSdk";
-import { TokenValue } from "@beanstalk/sdk";
-import { BodyL, BodyS, BodyXS, TextNudge } from "src/components/Typography";
 import styled from "styled-components";
-import { Title } from "src/components/PageComponents/Title";
-import { Page } from "src/components/Page";
-import { TokenLogo } from "src/components/TokenLogo";
-import { Reserves } from "src/components/Well/Reserves";
-import { LiquidityBox } from "src/components/Well/LiquidityBox";
-import { Button } from "src/components/Swap/Button";
-import { LearnYield } from "src/components/Well/LearnYield";
-import { Item, Row } from "src/components/Layout";
-import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
-import { LearnPump } from "src/components/Well/LearnPump";
-import { ChartSection } from "src/components/Well/Chart/ChartSection";
-import { TabButton } from "src/components/TabButton";
-import { OtherSection } from "src/components/Well/OtherSection";
-import { WellHistory } from "src/components/Well/Activity/WellHistory";
-import { ChevronDown } from "src/components/Icons";
-import { ImageButton } from "src/components/ImageButton";
+import { useChainId } from "wagmi";
+
+import { TokenValue } from "@beanstalk/sdk";
+
 import { mediaQuery, size } from "src/breakpoints";
 import { Error } from "src/components/Error";
-import { useWellWithParams } from "src/wells/useWellWithParams";
+import { ChevronDown } from "src/components/Icons";
+import { ImageButton } from "src/components/ImageButton";
+import { Item, Row } from "src/components/Layout";
 import { LoadingItem } from "src/components/LoadingItem";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { Page } from "src/components/Page";
+import { Title } from "src/components/PageComponents/Title";
+import { Button } from "src/components/Swap/Button";
+import { TabButton } from "src/components/TabButton";
+import { TokenLogo } from "src/components/TokenLogo";
+import { BodyL, BodyS, BodyXS, TextNudge } from "src/components/Typography";
+import { WellHistory } from "src/components/Well/Activity/WellHistory";
+import { ChartSection } from "src/components/Well/Chart/ChartSection";
+import { LearnPump } from "src/components/Well/LearnPump";
+import { LearnWellFunction } from "src/components/Well/LearnWellFunction";
+import { LearnYield } from "src/components/Well/LearnYield";
+import { LiquidityBox } from "src/components/Well/LiquidityBox";
+import { OtherSection } from "src/components/Well/OtherSection";
+import { Reserves } from "src/components/Well/Reserves";
 import { WellYieldWithTooltip } from "src/components/Well/WellYieldWithTooltip";
+import { useChainErrExists } from "src/state/atoms/chain.atoms";
+import { getPrice } from "src/utils/price/usePrice";
+import useSdk from "src/utils/sdk/useSdk";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
 import { useLagLoading } from "src/utils/ui/useLagLoading";
 import { useBeanstalkSiloAPYs } from "src/wells/useBeanstalkSiloAPYs";
 import { useMultiFlowPumpTWAReserves } from "src/wells/useMultiFlowPumpTWAReserves";
-import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { useWellWithParams } from "src/wells/useWellWithParams";
 
 export const Well = () => {
   const { well, loading: dataLoading, error } = useWellWithParams();
   const { isLoading: apysLoading } = useBeanstalkSiloAPYs();
   const { isLoading: twaLoading, getTWAReservesWithWell } = useMultiFlowPumpTWAReserves();
-  const { getIsWhitelisted } = useBeanstalkSiloWhitelist();
+  const chainIdErr = useChainErrExists();
+  const chainId = useChainId();
 
-  const isWhitelistedWell = getIsWhitelisted(well);
-
-  const loading = useLagLoading(dataLoading || apysLoading || twaLoading);
+  const loading = useLagLoading(dataLoading || apysLoading || twaLoading) || chainIdErr;
 
   const sdk = useSdk();
   const navigate = useNavigate();
@@ -61,7 +64,7 @@ export const Well = () => {
   }, [open]);
 
   useEffect(() => {
-    if (!well?.tokens) return;
+    if (!well?.tokens || chainIdErr) return;
 
     const run = async () => {
       if (well.tokens) {
@@ -76,7 +79,7 @@ export const Well = () => {
     };
 
     run();
-  }, [sdk, well]);
+  }, [sdk, well, chainIdErr]);
 
   const title = (well?.tokens ?? []).map((t) => t.symbol).join("/");
   const logos: ReactNode[] = (well?.tokens || []).map((token) => (
@@ -148,14 +151,14 @@ export const Well = () => {
   );
   // Code above detects if the component with the Add/Remove Liq + Swap buttons is sticky
 
-  if (error) return <Error message={error?.message} errorOnly />;
+  if (error && !chainIdErr) return <Error message={error?.message} errorOnly />;
 
   return (
     <Page>
       <ContentWrapper>
         <StyledTitle
           title={title}
-          parent={{ title: "Liquidity", path: "/wells" }}
+          parent={{ title: "Liquidity", path: `/wells/${chainId}` }}
           fontWeight="550"
           center
         />
@@ -314,7 +317,7 @@ export const Well = () => {
           </LearnMoreLabel>
           <LearnMoreButtons open={open}>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
-              <LearnYield isWhitelisted={isWhitelistedWell} />
+              <LearnYield token={well?.lpToken} />
             </LoadingItem>
             <LoadingItem loading={loading} onLoading={<EmptyLearnItem />}>
               <LearnWellFunction well={well} />

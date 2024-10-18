@@ -1,11 +1,14 @@
 import React, { Children, useCallback, useState, MouseEvent as ReactMouseEvent } from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
-import { BodyCaps, BodyS, BodyXS } from "./Typography";
-import { ImageButton } from "./ImageButton";
-import { ChevronDown } from "./Icons";
-import { BottomDrawer } from "./BottomDrawer";
+
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
+import { BottomDrawer } from "./BottomDrawer";
+import { ChevronDown } from "./Icons";
+import { ImageButton } from "./ImageButton";
+import { BodyCaps, BodyS, BodyXS } from "./Typography";
 
 interface Composition {
   Header: typeof Header;
@@ -36,7 +39,11 @@ export const ExpandBox: FC<Props> & Composition = ({ children, drawerHeaderText 
 
   return (
     <Container open={open} onClick={toggle} data-trace="true">
-      <BottomDrawer showDrawer={open} headerText={drawerHeaderText || header} toggleDrawer={setOpen}>
+      <BottomDrawer
+        showDrawer={open}
+        headerText={drawerHeaderText || header}
+        toggleDrawer={setOpen}
+      >
         {body}
       </BottomDrawer>
       <Header id="header" open={open}>

@@ -3,7 +3,9 @@ import { table } from "table";
 
 export const balance = async (sdk, { account, symbol }) => {
   console.log(`${chalk.bold.whiteBright("Account:")} ${chalk.greenBright(account)}`);
-  let res = [[chalk.bold("Token"), chalk.bold("Internal"), chalk.bold("External"), chalk.bold("Total")]];
+  let res = [
+    [chalk.bold("Token"), chalk.bold("Internal"), chalk.bold("External"), chalk.bold("Total")]
+  ];
 
   if (symbol) {
     res.push(await getBal(sdk, symbol, account));
@@ -12,16 +14,21 @@ export const balance = async (sdk, { account, symbol }) => {
       [
         "ETH",
         "WETH",
+        "WSTETH",
+        "WEETH",
+        "WBTC",
         "BEAN",
-        "USDT",
-        "USDC",
         "DAI",
-        "CRV3",
-        "UNRIPE_BEAN",
-        "UNRIPE_BEAN_WETH",
-        "BEAN_CRV3_LP",
-        "BEAN_ETH_WELL_LP",
-        "ROOT"
+        "USDC",
+        "USDT",
+        "urBEAN",
+        "urBEANWSTETH",
+        "BEANWETH",
+        "BEANWEETH",
+        "BEANWEETH",
+        "BEANWBTC",
+        "BEANUSDC",
+        "BEANUSDT"
       ].map((s) => getBal(sdk, s, account))
     );
     res.push(...bals);
@@ -30,7 +37,17 @@ export const balance = async (sdk, { account, symbol }) => {
 };
 
 async function getBal(sdk, symbol: string, account: string) {
-  const token = sdk.tokens[symbol];
+  let token = sdk.tokens[symbol];
+  if (!token) {
+    if (symbol === "urBEAN") token = sdk.tokens.UNRIPE_BEAN;
+    if (symbol === "urBEANWSTETH") token = sdk.tokens.UNRIPE_BEAN_WSTETH;
+    if (symbol === "BEANWETH") token = sdk.tokens.BEAN_ETH_WELL_LP;
+    if (symbol === "BEANWEETH") token = sdk.tokens.BEAN_WEETH_WELL_LP;
+    if (symbol === "BEANWSTETH") token = sdk.tokens.BEAN_WSTETH_WELL_LP;
+    if (symbol === "BEANWBTC") token = sdk.tokens.BEAN_WBTC_WELL_LP;
+    if (symbol === "BEANUSDC") token = sdk.tokens.BEAN_USDC_WELL_LP;
+    if (symbol === "BEANUSDT") token = sdk.tokens.BEAN_USDT_WELL_LP;
+  }
   if (!token) throw new Error(`No token found: ${symbol}`);
 
   try {

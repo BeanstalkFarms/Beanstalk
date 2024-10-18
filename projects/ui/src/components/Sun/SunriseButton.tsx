@@ -4,7 +4,6 @@ import { LoadingButton } from '@mui/lab';
 import { Box, Dialog, Divider, Link, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import SunriseCountdown from '~/components/Sun/SunriseCountdown';
 import useToggle from '~/hooks/display/useToggle';
@@ -20,7 +19,7 @@ import { ZERO_BN } from '~/constants';
 import { displayBN } from '~/util';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { BEAN } from '~/constants/tokens';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
@@ -41,10 +40,7 @@ const SunriseButton: FC<{}> = () => {
   const [open, show, hide] = useToggle();
   const [now, setNow] = useState(DateTime.now());
   const [reward, setReward] = useState(ZERO_BN);
-  const awaiting = useSelector<
-    AppState,
-    AppState['_beanstalk']['sun']['sunrise']['awaiting']
-  >((state) => state._beanstalk.sun.sunrise.awaiting);
+  const awaiting = useAppSelector((s) => s._beanstalk.sun.sunrise.awaiting);
 
   // Are we impersonating a different account while not in dev mode
   const isImpersonating =

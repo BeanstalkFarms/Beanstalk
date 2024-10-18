@@ -10,11 +10,11 @@ import {
   getGovSpaceLabel,
   getGovSpaceWithTab,
 } from '~/util/Governance';
-import { Module, ModuleTabs, ModuleContent } from '../Common/Module';
 import { StyledTab, ChipLabel } from '~/components/Common/Tabs';
-import ProposalList from './Proposals/ProposalList';
 import { useAppSelector } from '~/state';
 import useFarmerVotingPower from '~/hooks/farmer/useFarmerVotingPower';
+import ProposalList from './Proposals/ProposalList';
+import { Module, ModuleTabs, ModuleContent } from '../Common/Module';
 
 const GovernanceSpaces: React.FC<{}> = () => {
   const [tab, handleChange] = useTabs(GOV_SLUGS, 'type');
@@ -34,16 +34,18 @@ const GovernanceSpaces: React.FC<{}> = () => {
   useEffect(() => {
     (async () => {
       try {
-        const getOldBips = await fetch(`/.netlify/functions/oldbipdata?getOldBip=all`)
-          .then((response) => response.json())
-        const getEbips = await fetch(`/.netlify/functions/ebipdata?getEbip=all`)
-          .then((response) => response.json())
+        const getOldBips = await fetch(
+          `/.netlify/functions/oldbipdata?getOldBip=all`
+        ).then((response) => response.json());
+        const getEbips = await fetch(
+          `/.netlify/functions/ebipdata?getEbip=all`
+        ).then((response) => response.json());
         setOldBips(getOldBips);
         setEbips(getEbips);
         setLoadingOtherBips(false);
       } catch (err) {
         console.error(err);
-      };
+      }
     })();
   }, []);
 
@@ -64,28 +66,32 @@ const GovernanceSpaces: React.FC<{}> = () => {
                 (p.title.startsWith('BSP') &&
                   p.space.id === 'wearebeansprout.eth') ||
                 (p.title.startsWith('BNP') && p.space.id === 'beanft.eth') ||
-                (p.title.startsWith('BFBP') && p.space.id === 'beanstalkfarmsbudget.eth') ||
-                (p.title.startsWith('BIR') && p.space.id === 'beanstalkbugbounty.eth'))
+                (p.title.startsWith('BFBP') &&
+                  p.space.id === 'beanstalkfarmsbudget.eth') ||
+                (p.title.startsWith('BIR') &&
+                  p.space.id === 'beanstalkbugbounty.eth'))
           );
 
           if (t === 0 && oldBips) {
             const onchainBips = [...oldBips];
             onchainBips.reverse();
+            // @ts-ignore
             const withOldBips = output.concat(onchainBips);
-
+            // @ts-ignore
             return withOldBips as Proposal[];
-          };
+          }
 
           if (t === 99 && ebips) {
             const ebipList = [...ebips];
             ebipList.reverse();
             return ebipList as Proposal[];
-          };
-
+          }
+          // @ts-ignore
           return output as Proposal[];
         }
 
         if (t === 999) {
+          // @ts-ignore
           return data.proposals.filter(
             (p) =>
               p !== null &&
@@ -96,7 +102,7 @@ const GovernanceSpaces: React.FC<{}> = () => {
               !p.title.startsWith('BNP') &&
               !p.title.startsWith('BFBP') &&
               !p.title.startsWith('BIR')
-          ) as Proposal[];
+          ) as unknown as Proposal[];
         }
       }
       return [];
@@ -187,20 +193,8 @@ const GovernanceSpaces: React.FC<{}> = () => {
             </ChipLabel>
           }
         />
-        <StyledTab
-          label={
-            <ChipLabel name="EBIP">
-              {null}
-            </ChipLabel>
-          }
-        />
-        <StyledTab
-          label={
-            <ChipLabel name="Archive">
-              {null}
-            </ChipLabel>
-          }
-        />
+        <StyledTab label={<ChipLabel name="EBIP">{null}</ChipLabel>} />
+        <StyledTab label={<ChipLabel name="Archive">{null}</ChipLabel>} />
       </ModuleTabs>
       {tab !== 5 && (
         <Box

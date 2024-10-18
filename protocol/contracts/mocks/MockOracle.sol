@@ -22,7 +22,7 @@ contract MockOracle {
     /**
      * @notice Valid Implementation.
      */
-    function getPrice(uint256 lookback) public view returns (uint256) {
+    function getPrice(uint256, uint256 lookback, bytes memory) public view returns (uint256) {
         if (lookback > 0) {
             return twaPrice;
         } else {
@@ -33,10 +33,14 @@ contract MockOracle {
     /**
      * @notice Invalid due to changing state.
      */
-    function invalidGetPrice(uint256 lookback) external returns (uint256) {
+    function invalidGetPrice(
+        uint256 decimals,
+        uint256 lookback,
+        bytes memory
+    ) external returns (uint256) {
         twaPrice = twaPrice;
         price = price;
-        return getPrice(lookback);
+        return getPrice(decimals, lookback, new bytes(0));
     }
 
     /**
@@ -45,6 +49,6 @@ contract MockOracle {
     function invalidGetPrice2(uint256 lookback, uint256 param2) external returns (uint256) {
         twaPrice = twaPrice;
         price = price;
-        return getPrice(lookback + param2);
+        return getPrice(lookback + param2, 0, new bytes(0));
     }
 }

@@ -6,7 +6,6 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Call, IWell, IERC20} from "../../interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "../../interfaces/basin/IBeanstalkWellFunction.sol";
-import {LibWell} from "../../libraries/Well/LibWell.sol";
 import {C} from "../../C.sol";
 
 interface IBeanstalk {
@@ -15,6 +14,10 @@ interface IBeanstalk {
     function poolCurrentDeltaB(address pool) external view returns (int256 deltaB);
 
     function getUsdTokenPrice(address token) external view returns (uint256);
+
+    function getBeanIndex(IERC20[] memory tokens) external view returns (uint256);
+
+    function getWhitelistedWellLpTokens() external view returns (address[] memory tokens);
 }
 
 interface dec {
@@ -25,7 +28,12 @@ contract WellPrice {
     using LibRedundantMath256 for uint256;
     using SafeCast for uint256;
 
-    IBeanstalk private constant BEANSTALK = IBeanstalk(0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5);
+    IBeanstalk immutable beanstalk;
+
+    constructor(address _beanstalk) {
+        beanstalk = IBeanstalk(_beanstalk);
+    }
+
     uint256 private constant WELL_DECIMALS = 1e18;
     uint256 private constant PRICE_PRECISION = 1e6;
 
@@ -42,10 +50,10 @@ contract WellPrice {
 
     /**
      * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
-     * Bean a given Well.
+     * Bean in a given Well.
      * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
      **/
-    function getConstantProductWell(address wellAddress) public view returns (P.Pool memory pool) {
+    function getWell(address wellAddress) public view returns (P.Pool memory pool) {
         IWell well = IWell(wellAddress);
         pool.pool = wellAddress;
 
@@ -53,14 +61,15 @@ contract WellPrice {
         pool.tokens = [address(wellTokens[0]), address(wellTokens[1])];
 
         uint256[] memory wellBalances = well.getReserves();
+        if (wellBalances[0] == 0 || wellBalances[1] == 0) return pool;
         pool.balances = [wellBalances[0], wellBalances[1]];
 
-        uint256 beanIndex = LibWell.getBeanIndex(wellTokens);
+        uint256 beanIndex = beanstalk.getBeanIndex(wellTokens);
         uint256 tknIndex = beanIndex == 0 ? 1 : 0;
 
         // swap 1 bean of the opposite asset to get the usd price
         // price = amtOut/tknOutPrice
-        uint256 assetPrice = BEANSTALK.getUsdTokenPrice(pool.tokens[tknIndex]);
+        uint256 assetPrice = beanstalk.getUsdTokenPrice(pool.tokens[tknIndex]);
         if (assetPrice > 0) {
             pool.price = well
                 .getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
@@ -71,10 +80,15 @@ contract WellPrice {
         // liquidity is calculated by getting the usd value of the bean portion of the pool,
         // and multiplying by 2 to get the total liquidity of the pool.
         pool.liquidity = pool.balances[beanIndex].mul(pool.price).mul(2).div(PRICE_PRECISION);
-
-        pool.deltaB = BEANSTALK.poolCurrentDeltaB(wellAddress);
-        pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(IERC20(wellAddress).totalSupply());
-        try BEANSTALK.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
+        // attempt to get deltaB, if it fails, set deltaB to 0.
+        try beanstalk.poolCurrentDeltaB(wellAddress) returns (int256 deltaB) {
+            pool.deltaB = deltaB;
+        } catch {}
+        uint256 totalSupply = IERC20(wellAddress).totalSupply();
+        if (totalSupply > 0) {
+            pool.lpUsd = pool.liquidity.mul(WELL_DECIMALS).div(totalSupply);
+        }
+        try beanstalk.bdv(wellAddress, WELL_DECIMALS) returns (uint256 bdv) {
             pool.lpBdv = bdv;
         } catch {}
     }

@@ -1,10 +1,13 @@
-import { Well } from "@beanstalk/sdk/Wells";
-import { useQuery } from "@tanstack/react-query";
-import { Token, TokenValue } from "@beanstalk/sdk";
 import { useMemo } from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
+import { useAccount } from "wagmi";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
 import { REMOVE_LIQUIDITY_MODE } from "src/components/Liquidity/types";
 import { Log } from "src/utils/logger";
-import { useAccount } from "wagmi";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
 
 export const useLiquidityQuote = (
   well: Well,
@@ -29,14 +32,25 @@ export const useLiquidityQuote = (
     return nonZeroValues !== 0;
   }, [amounts, well.tokens]);
 
-  Log.module("useliquidityquote").debug("Quote details:", { amounts, oneAmountNonZero, removeLiquidityMode });
+  Log.module("useliquidityquote").debug("Quote details:", {
+    amounts,
+    oneAmountNonZero,
+    removeLiquidityMode
+  });
 
   const {
     data: balancedQuote,
     isLoading: loadingBalancedQuote,
     isError: balanedQuoteError
-  } = useQuery({
-    queryKey: ["wells", "quote", "removeLiquidity", well.address, removeLiquidityMode, lpTokenAmount],
+  } = useChainScopedQuery({
+    queryKey: [
+      "wells",
+      "quote",
+      "removeLiquidity",
+      well.address,
+      removeLiquidityMode,
+      lpTokenAmount
+    ],
 
     queryFn: async () => {
       if (!lpTokenAmount || removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.Balanced) {
@@ -65,8 +79,16 @@ export const useLiquidityQuote = (
     data: oneTokenQuote,
     isLoading: loadingOneTokenQuote,
     isError: oneTokenQuoteError
-  } = useQuery({
-    queryKey: ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, lpTokenAmount, singleTokenIndex],
+  } = useChainScopedQuery({
+    queryKey: [
+      "wells",
+      "quote",
+      "removeliquidity",
+      well.address,
+      removeLiquidityMode,
+      lpTokenAmount,
+      singleTokenIndex
+    ],
 
     queryFn: async () => {
       if (removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken) {
@@ -78,8 +100,16 @@ export const useLiquidityQuote = (
       }
 
       try {
-        const quote = await well.removeLiquidityOneTokenQuote(lpTokenAmount, wellTokens![singleTokenIndex]);
-        const estimate = await well.removeLiquidityOneTokenGasEstimate(lpTokenAmount, wellTokens![singleTokenIndex], quote, address);
+        const quote = await well.removeLiquidityOneTokenQuote(
+          lpTokenAmount,
+          wellTokens![singleTokenIndex]
+        );
+        const estimate = await well.removeLiquidityOneTokenGasEstimate(
+          lpTokenAmount,
+          wellTokens![singleTokenIndex],
+          quote,
+          address
+        );
         return {
           quote,
           estimate
@@ -99,7 +129,7 @@ export const useLiquidityQuote = (
     data: customRatioQuote,
     isLoading: loadingCustomRatioQuote,
     isError: customRatioQuoteError
-  } = useQuery({
+  } = useChainScopedQuery({
     queryKey: ["wells", "quote", "removeliquidity", well.address, removeLiquidityMode, amounts],
 
     queryFn: async () => {
@@ -117,7 +147,11 @@ export const useLiquidityQuote = (
           _amountsFilled[i] = !amounts[i] ? TokenValue.ZERO : amounts[i];
         }
         const quote = await well.removeLiquidityImbalancedQuote(_amountsFilled);
-        const estimate = await well.removeLiquidityImbalancedEstimateGas(quote, _amountsFilled, address);
+        const estimate = await well.removeLiquidityImbalancedEstimateGas(
+          quote,
+          _amountsFilled,
+          address
+        );
         return {
           quote,
           estimate

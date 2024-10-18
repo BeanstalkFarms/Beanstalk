@@ -55,10 +55,13 @@ export class EventManager {
   }
 
   async getSiloEvents(account: string, opts: QueryFilterOptions & { token?: Token } = {}) {
+    if (this.sdk.chainId !== ChainId.ETH_MAINNET && this.sdk.chainId !== ChainId.LOCALHOST_ETH) {
+      throw new Error("EventManager: getSiloEvents only supported on eth_mainnet");
+    }
     if (!account) throw new Error("EventManager: getSiloEvents requires an account");
 
     // TODO: set this to SiloV3 deployment block
-    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].SILOV3_DEPLOYMENT_BLOCK;
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.ETH_MAINNET].SILOV3_DEPLOYMENT_BLOCK;
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([
@@ -81,9 +84,12 @@ export class EventManager {
   }
 
   async getFieldEvents(account: string, opts: QueryFilterOptions = {}) {
+    if (this.sdk.chainId !== ChainId.ETH_MAINNET && this.sdk.chainId !== ChainId.LOCALHOST_ETH) {
+      throw new Error("EventManager: getFieldEvents only supported on eth_mainnet");
+    }
     if (!account) throw new Error("EventManager: getSiloEvents requires an account");
 
-    const fromBlock = opts.fromBlock ?? Blocks[ChainId.MAINNET].BEANSTALK_GENESIS_BLOCK;
+    const fromBlock = opts.fromBlock ?? Blocks[ChainId.ETH_MAINNET].BEANSTALK_GENESIS_BLOCK;
     const toBlock = opts.toBlock ?? "latest";
 
     return Promise.all([

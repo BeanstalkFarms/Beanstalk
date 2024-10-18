@@ -8,10 +8,10 @@ import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibConvertData} from "contracts/libraries/Convert/LibConvertData.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {C} from "contracts/C.sol";
 import {Call, IWell} from "contracts/interfaces/basin/IWell.sol";
 import {IBeanstalkWellFunction} from "contracts/interfaces/basin/IBeanstalkWellFunction.sol";
-import {ConvertFacet} from "contracts/beanstalk/silo/ConvertFacet.sol";
+import {LibAppStorage, AppStorage} from "contracts/libraries/LibAppStorage.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @title Well Convert Library
@@ -93,7 +93,8 @@ library LibWellConvert {
         address well,
         uint256 amountIn
     ) internal view returns (uint256 beans) {
-        beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(C.BEAN));
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        beans = IWell(well).getRemoveLiquidityOneTokenOut(amountIn, IERC20(s.sys.tokens.bean));
     }
 
     /**
@@ -119,11 +120,12 @@ library LibWellConvert {
     function convertLPToBeans(
         bytes memory convertData
     ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         (uint256 lp, uint256 minBeans, address well) = convertData.convertWithAddress();
 
         require(LibWell.isWell(well), "Convert: Invalid Well");
 
-        tokenOut = C.BEAN;
+        tokenOut = s.sys.tokens.bean;
         tokenIn = well;
 
         (amountOut, amountIn) = _wellRemoveLiquidityTowardsPeg(lp, minBeans, well);
@@ -137,12 +139,13 @@ library LibWellConvert {
         uint256 minBeans,
         address well
     ) internal returns (uint256 beans, uint256 lpConverted) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         uint256 maxLp = lpToPeg(well);
         require(maxLp > 0, "Convert: P must be < 1.");
         lpConverted = lp > maxLp ? maxLp : lp;
         beans = IWell(well).removeLiquidityOneToken(
             lpConverted,
-            C.bean(),
+            BeanstalkERC20(s.sys.tokens.bean),
             minBeans,
             address(this),
             block.timestamp
@@ -161,12 +164,13 @@ library LibWellConvert {
     function convertBeansToLP(
         bytes memory convertData
     ) internal returns (address tokenOut, address tokenIn, uint256 amountOut, uint256 amountIn) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         (uint256 beans, uint256 minLP, address well) = convertData.convertWithAddress();
 
         require(LibWell.isWell(well), "Convert: Invalid Well");
 
         tokenOut = well;
-        tokenIn = C.BEAN;
+        tokenIn = s.sys.tokens.bean;
 
         (amountOut, amountIn) = _wellAddLiquidityTowardsPeg(beans, minLP, well);
     }
@@ -179,10 +183,11 @@ library LibWellConvert {
         uint256 minLP,
         address well
     ) internal returns (uint256 lp, uint256 beansConverted) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         (uint256 maxBeans, ) = _beansToPeg(well);
         require(maxBeans > 0, "Convert: P must be >= 1.");
         beansConverted = beans > maxBeans ? maxBeans : beans;
-        C.bean().transfer(well, beansConverted);
+        BeanstalkERC20(s.sys.tokens.bean).transfer(well, beansConverted);
         lp = IWell(well).sync(address(this), minLP);
     }
 }

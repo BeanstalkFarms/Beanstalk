@@ -218,7 +218,7 @@ contract TokenSilo is ReentrancyGuard {
         if (side == GerminationSide.NOT_GERMINATING) {
             LibSilo.transferStalk(sender, recipient, initialStalk.add(activeStalk));
         } else {
-            if (token == C.BEAN) {
+            if (token == s.sys.tokens.bean) {
                 (uint256 senderGerminatingStalk, uint256 senderEarnedBeansStalk) = LibSilo
                     .checkForEarnedBeans(sender, initialStalk, side);
                 // if initial stalk is greater than the sender's germinating stalk, then the sender is sending an

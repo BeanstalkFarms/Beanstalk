@@ -1,10 +1,12 @@
 import React from "react";
+
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 import { Table, Td, THead, ResponsiveTr, Th, TBody, Row } from "src/components//Table";
-import { Link } from "react-router-dom";
-import { theme } from "src/utils/ui/theme";
 import { Text } from "src/components/Typography";
+import { theme } from "src/utils/ui/theme";
+
 import { useWhitelistedWellComponents } from "./useWhitelistedWellComponents";
 
 export const ComponentLibraryTable = () => {

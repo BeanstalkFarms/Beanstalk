@@ -6,7 +6,6 @@ export enum FormTxn {
   ENROOT = 'ENROOT',
   HARVEST = 'HARVEST',
   RINSE = 'RINSE',
-  CLAIM = 'CLAIM',
 }
 
 export type FormTxnBundlerInterface = {

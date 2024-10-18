@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { Token } from '@beanstalk/sdk';
-import { getNewToOldToken } from '~/hooks/sdk';
 import { FormStateNew } from '~/components/Common/Form';
 import { Action, ActionType } from '~/util/Actions';
 import { ZERO_BN } from '~/constants';
@@ -11,7 +10,7 @@ export function depositSummary(
   to: Token,
   tokens: FormStateNew['tokens'],
   amountsBySource: AmountsBySource[],
-  amountToBDV: (amount: BigNumber) => BigNumber
+  amountToBDV: (amount: BigNumber) => BigNumber,
 ) {
   const summary = tokens.reduce(
     (agg, curr, idx) => {
@@ -51,8 +50,8 @@ export function depositSummary(
           agg.actions.push({
             type: ActionType.SWAP,
             amountsBySource: bySource,
-            tokenIn: getNewToOldToken(curr.token),
-            tokenOut: getNewToOldToken(to),
+            tokenIn: curr.token,
+            tokenOut: to,
             amountIn: curr.amount,
             amountOut: curr.amountOut,
           });
@@ -75,7 +74,7 @@ export function depositSummary(
     type: ActionType.DEPOSIT,
     amount: summary.amount,
     // from the perspective of the deposit, the token is "coming in".
-    token: getNewToOldToken(to),
+    token: to,
   });
   summary.actions.push({
     type: ActionType.UPDATE_SILO_REWARDS,

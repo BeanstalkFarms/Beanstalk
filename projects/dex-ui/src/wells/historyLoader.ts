@@ -1,15 +1,27 @@
-import { BeanstalkSDK } from "@beanstalk/sdk";
-import { AddEvent, BaseEvent, EVENT_TYPE, ShiftEvent, SwapEvent, WellEvent } from "./useWellHistory";
-import { fetchFromSubgraphRequest } from "./subgraphFetch";
-import { Settings } from "src/settings";
 import { Well } from "@beanstalk/sdk/Wells";
-import isEqual from "lodash/isEqual";
 import { BigNumber } from "ethers";
+import isEqual from "lodash/isEqual";
+
+import { BeanstalkSDK } from "@beanstalk/sdk";
+
 import { GetWellEventsDocument } from "src/generated/graph/graphql";
+import { Settings } from "src/settings";
 import { Log } from "src/utils/logger";
 
+import { fetchFromSubgraphRequest } from "./subgraphFetch";
+import {
+  AddEvent,
+  BaseEvent,
+  EVENT_TYPE,
+  ShiftEvent,
+  SwapEvent,
+  WellEvent
+} from "./useWellHistory";
+
 const HISTORY_DAYS = 7;
-const HISTORY_DAYS_AGO_BLOCK_TIMESTAMP = Math.floor(new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000).getTime() / 1000);
+const HISTORY_DAYS_AGO_BLOCK_TIMESTAMP = Math.floor(
+  new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000).getTime() / 1000
+);
 
 const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
   Log.module("history").debug("Loading history from blockchain");
@@ -87,7 +99,9 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
       const event: AddEvent = {
         ...base,
         lpAmount: well.lpToken!.fromBlockchain(data.lpAmountOut),
-        tokenAmounts: data.tokenAmountsIn.map((bn: BigNumber, i: number) => well.tokens![i].fromBlockchain(bn))
+        tokenAmounts: data.tokenAmountsIn.map((bn: BigNumber, i: number) =>
+          well.tokens![i].fromBlockchain(bn)
+        )
       };
       return event;
     }
@@ -96,7 +110,9 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
       const event: AddEvent = {
         ...base,
         lpAmount: well.lpToken!.fromBlockchain(data.lpAmountIn),
-        tokenAmounts: data.tokenAmountsOut.map((bn: BigNumber, i: number) => well.tokens![i].fromBlockchain(bn))
+        tokenAmounts: data.tokenAmountsOut.map((bn: BigNumber, i: number) =>
+          well.tokens![i].fromBlockchain(bn)
+        )
       };
       return event;
     }
@@ -105,7 +121,9 @@ const loadFromChain = async (sdk: BeanstalkSDK, well: Well): Promise<any[]> => {
       const event: AddEvent = {
         ...base,
         lpAmount: well.lpToken!.fromBlockchain(data.lpAmountOut),
-        tokenAmounts: data.reserves.map((bn: BigNumber, i: number) => well.tokens![i].fromBlockchain(bn))
+        tokenAmounts: data.reserves.map((bn: BigNumber, i: number) =>
+          well.tokens![i].fromBlockchain(bn)
+        )
       };
       return event;
     }
@@ -118,10 +136,14 @@ const loadFromGraph = async (sdk: BeanstalkSDK, well: Well) => {
 
   if (!well.lpToken) await well.getLPToken();
 
-  const data = await fetchFromSubgraphRequest(GetWellEventsDocument, {
-    id: well.address,
-    searchTimestamp: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP
-  });
+  const data = await fetchFromSubgraphRequest(
+    GetWellEventsDocument,
+    {
+      id: well.address,
+      searchTimestamp: HISTORY_DAYS_AGO_BLOCK_TIMESTAMP
+    },
+    sdk.chainId
+  );
 
   const results = await data();
   Log.module("history").debug("Raw event data from subgraph: ", results);

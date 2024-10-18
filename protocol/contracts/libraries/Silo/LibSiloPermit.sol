@@ -5,7 +5,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../../C.sol";
 import "../LibAppStorage.sol";
 
 /**
@@ -161,7 +160,7 @@ library LibSiloPermit {
         bytes32 name,
         bytes32 version
     ) internal view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, version, C.getChainId(), address(this)));
+        return keccak256(abi.encode(typeHash, name, version, block.chainid, address(this)));
     }
 
     /**
@@ -203,7 +202,7 @@ library LibSiloPermit {
         address spender,
         address token,
         uint256 amount
-    ) internal {
+    ) external {
         uint256 currentAllowance = depositAllowance(owner, spender, token);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "Silo: insufficient allowance");

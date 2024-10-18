@@ -6,6 +6,7 @@ const {
   UNISWAP_V2_ROUTER,
   UNISWAP_V2_PAIR,
   WETH,
+  L2_WETH,
   LUSD,
   UNRIPE_BEAN,
   UNRIPE_LP,
@@ -30,6 +31,16 @@ const { getSigner } = "../utils";
 async function weth() {
   await impersonateContractOnPath("./artifacts/contracts/mocks/MockWETH.sol/MockWETH.json", WETH);
   const weth = await ethers.getContractAt("MockToken", WETH);
+  await weth.setSymbol("WETH");
+  await weth.setDecimals(18);
+}
+
+async function l2Weth() {
+  await impersonateContractOnPath(
+    "./artifacts/contracts/mocks/MockWETH.sol/MockWETH.json",
+    L2_WETH
+  );
+  const weth = await ethers.getContractAt("MockToken", L2_WETH);
   await weth.setSymbol("WETH");
   await weth.setDecimals(18);
 }
@@ -148,7 +159,7 @@ async function impersonateContractOnPath(artifactPath, deployAddress) {
 }
 
 async function impersonateContract(contractName, deployAddress) {
-  contract = await (await ethers.getContractFactory(contractName)).deploy();
+  contract = await await ethers.getContractFactory(contractName);
   await contract.deployed();
   const bytecode = await ethers.provider.getCode(contract.address);
   await network.provider.send("hardhat_setCode", [deployAddress, bytecode]);
@@ -168,6 +179,7 @@ exports.impersonateRouter = router;
 exports.impersonateBean = bean;
 exports.impersonatePool = pool;
 exports.impersonateWeth = weth;
+exports.impersonateL2Weth = l2Weth;
 exports.impersonateUnripe = unripe;
 exports.impersonateToken = token;
 exports.impersonatePrice = price;

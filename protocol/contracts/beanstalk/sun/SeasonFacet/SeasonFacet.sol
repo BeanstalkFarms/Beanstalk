@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {Weather, C} from "./Weather.sol";
+import {Weather} from "./Weather.sol";
 import {LibIncentive} from "contracts/libraries/LibIncentive.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibWell} from "contracts/libraries/Well/LibWell.sol";
@@ -12,6 +12,7 @@ import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {Invariable} from "contracts/beanstalk/Invariable.sol";
 import {LibTractor} from "contracts/libraries/LibTractor.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title SeasonFacet
@@ -101,7 +102,7 @@ contract SeasonFacet is Invariable, Weather {
     function stepSeason() private returns (uint32 season) {
         s.sys.season.current += 1;
         season = s.sys.season.current;
-        s.sys.season.sunriseBlock = uint32(block.number); // Note: Will overflow in the year 3650.
+        s.sys.season.sunriseBlock = uint64(block.number); // Note: will overflow after 2^64 blocks.
         emit Sunrise(season);
     }
 
@@ -125,7 +126,7 @@ contract SeasonFacet is Invariable, Weather {
 
         uint256 incentiveAmount = LibIncentive.determineReward(secondsLate);
 
-        LibTransfer.mintToken(C.bean(), incentiveAmount, account, mode);
+        LibTransfer.mintToken(IBean(s.sys.tokens.bean), incentiveAmount, account, mode);
 
         emit LibIncentive.Incentivization(account, incentiveAmount);
         return incentiveAmount;

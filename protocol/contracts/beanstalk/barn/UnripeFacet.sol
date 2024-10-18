@@ -136,19 +136,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
         uint256 amount
     ) public view returns (uint256 redeem) {
         return
-            LibUnripe._getPenalizedUnderlying(
-                unripeToken,
-                amount,
-                IBean(unripeToken).totalSupply()
-            );
-    }
-
-    function _getPenalizedUnderlying(
-        address unripeToken,
-        uint256 amount,
-        uint256 supply
-    ) public view returns (uint256 redeem) {
-        return LibUnripe._getPenalizedUnderlying(unripeToken, amount, supply);
+            LibUnripe.getPenalizedUnderlying(unripeToken, amount, IBean(unripeToken).totalSupply());
     }
 
     /**
@@ -193,9 +181,9 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return percent The recap % of the token.
      */
     function getRecapFundedPercent(address unripeToken) public view returns (uint256 percent) {
-        if (unripeToken == C.UNRIPE_BEAN) {
+        if (unripeToken == s.sys.tokens.urBean) {
             return LibUnripe.percentBeansRecapped();
-        } else if (unripeToken == C.UNRIPE_LP) {
+        } else if (unripeToken == s.sys.tokens.urLp) {
             return LibUnripe.percentLPRecapped();
         }
         revert("not vesting");
@@ -204,10 +192,26 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     /**
      * @notice Returns the % penalty of Chopping an Unripe Token into its Ripe Token.
      * @param unripeToken The address of the Unripe Token.
-     * @return penalty The penalty % of Chopping.
+     * @return penalty The penalty % of Chopping derived from %Recapitalized^2.
+     * @dev `address` parameter retained for backwards compatiability.
      */
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty) {
-        return LibUnripe.getRecapPaidPercentAmount(getRecapFundedPercent(unripeToken));
+        if (unripeToken == s.sys.tokens.urBean) {
+            return
+                LibUnripe.getPenalizedUnderlying(
+                    unripeToken,
+                    LibUnripe.DECIMALS,
+                    IERC20(unripeToken).totalSupply()
+                );
+        }
+
+        if (unripeToken == s.sys.tokens.urLp) {
+            return
+                LibUnripe
+                    .getTotalRecapitalizedPercent()
+                    .mul(LibUnripe.getTotalRecapitalizedPercent())
+                    .div(LibUnripe.DECIMALS);
+        }
     }
 
     /**
@@ -330,8 +334,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getLockedBeansUnderlyingUnripeBean() external view returns (uint256) {
         return
             LibLockedUnderlying.getLockedUnderlying(
-                C.UNRIPE_BEAN,
-                LibUnripe.getRecapPaidPercentAmount(1e6)
+                s.sys.tokens.urBean,
+                LibUnripe.getTotalRecapitalizedPercent()
             );
     }
 
@@ -343,5 +347,27 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
             LibBarnRaise.getBarnRaiseWell()
         );
         return LibUnripe.getLockedBeansFromLP(twaReserves);
+    }
+
+    /**
+     * @notice Returns the locked beans given the cumulative reserves and timestamp.
+     */
+    function getLockedBeansFromTwaReserves(
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) external view returns (uint256) {
+        uint256[] memory twaReserves = LibWell.getTwaReservesFromPump(
+            LibBarnRaise.getBarnRaiseWell(),
+            cumulativeReserves,
+            timestamp
+        );
+        return LibUnripe.getLockedBeans(twaReserves);
+    }
+
+    /**
+     * @notice returns the amount of dollars recapitalized in the barn raise.
+     */
+    function getRecapitalized() external view returns (uint256) {
+        return s.sys.fert.recapitalized;
     }
 }

@@ -1,10 +1,12 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { boreDefaultWell } from "./helpers/Aquifer";
 import { AQUIFER, PUMP, WELL } from "./helpers/Constants";
+import { initL1Version } from "./entity-mocking/MockVersion";
 
 describe("Aquifer Well Deployment", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 

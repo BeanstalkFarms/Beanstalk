@@ -56,7 +56,7 @@ contract SunriseTest is TestHelper {
 
         // Initialize well to balances. (1000 BEAN/ETH)
         addLiquidityToWell(
-            C.BEAN_ETH_WELL,
+            BEAN_ETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 ether.
         );
@@ -64,7 +64,7 @@ contract SunriseTest is TestHelper {
         // Initialize well to balances. (1000 BEAN/WSTETH)
         // note: wstETH:stETH ratio is initialized to 1:1.
         addLiquidityToWell(
-            C.BEAN_WSTETH_WELL,
+            BEAN_WSTETH_WELL,
             10000e6, // 10,000 Beans
             10 ether // 10 wstETH.
         );

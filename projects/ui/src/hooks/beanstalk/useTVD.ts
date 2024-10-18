@@ -3,12 +3,13 @@ import { useSelector } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { ERC20Token } from '~/classes/Token';
 import { AppState } from '~/state';
+import { ONE_BN, ZERO_BN } from '~/constants';
+import { Token } from '@beanstalk/sdk';
 import useSiloTokenToFiat from './useSiloTokenToFiat';
 import useWhitelist from './useWhitelist';
-import { ONE_BN, ZERO_BN } from '~/constants';
 import useUnripeUnderlyingMap from './useUnripeUnderlying';
 
-export default function useTVD() {
+export default function useTVD(token?: Token) {
   const whitelist = useWhitelist();
   const balances = useSelector<
     AppState,
@@ -24,13 +25,13 @@ export default function useTVD() {
   return useMemo(() => {
     const getDepositedAmount = ({ address, isUnripe }: ERC20Token) => {
       if (isUnripe) {
-        const deposited = balances[address]?.deposited.amount ?? ZERO_BN;
+        const deposited = balances[address]?.TVD ?? ZERO_BN;
         const depositSupply = unripeTokens[address]?.supply ?? ONE_BN;
         return deposited
           .div(depositSupply)
           .times(unripeTokens[address]?.underlying ?? ZERO_BN);
       }
-      return balances[address]?.deposited.amount;
+      return balances[address]?.TVD;
     };
 
     const { tokenTvdMap, total } = Object.values(whitelist).reduce(
@@ -64,11 +65,18 @@ export default function useTVD() {
       }
     );
 
+    const pctTVD =
+      token && token.address in tokenTvdMap
+        ? tokenTvdMap[token.address].div(total)
+        : ZERO_BN;
+
     return {
+      pctTotalTVD: pctTVD.times(100),
       tvdByToken: tokenTvdMap,
       total,
     };
   }, [
+    token,
     balances,
     siloTokenToFiat,
     unripeTokens,

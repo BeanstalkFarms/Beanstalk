@@ -1,13 +1,11 @@
 import React from 'react';
 import { Box, Chip, Link, Stack, Tooltip, Typography } from '@mui/material';
-import Token from '~/classes/Token';
-import { BEAN } from '~/constants/tokens';
 import useAPY from '~/hooks/beanstalk/useAPY';
 import stalkIconBlue from '~/img/beanstalk/stalk-icon-blue.svg';
 import { displayFullBN } from '~/util';
-import useChainConstant from '~/hooks/chain/useChainConstant';
 import { FC } from '~/types';
 import BigNumber from 'bignumber.js';
+import { TokenInstance, useTokens } from '~/hooks/beanstalk/useTokens';
 import Row from '../Common/Row';
 import TokenIcon from '../Common/TokenIcon';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -22,7 +20,7 @@ const TOOLTIP_COMPONENT_PROPS = {
 };
 
 type SiloAssetApyChipProps = {
-  token: Token;
+  token: TokenInstance;
   metric: 'bean' | 'stalk';
   variant?: 'default' | 'labeled';
 };
@@ -33,14 +31,14 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
   variant = 'default',
 }) => {
   const { data: latestYield, loading: isLoading } = useAPY();
-  const Bean = useChainConstant(BEAN);
+  const { BEAN: Bean } = useTokens();
   const isBean = metric === 'bean';
 
   const apys = latestYield ? latestYield.byToken[token.address] : null;
 
   const tokenProps = isBean
     ? Bean
-    : ({ symbol: 'Stalk', logo: stalkIconBlue } as Token);
+    : ({ symbol: 'Stalk', logo: stalkIconBlue } as TokenInstance);
 
   function getDisplayString(val: BigNumber | null) {
     return `${val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'}%`;
@@ -95,8 +93,8 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   </Stack>
                 </Box>
                 <Typography variant="bodySmall" color="text.primary">
-                  30-day exponential moving average of Beans
-                  earned by all Stalkholders per Season.
+                  30-day exponential moving average of Beans earned by all
+                  Stalkholders per Season.
                 </Typography>
               </Stack>
             </Box>
@@ -142,10 +140,10 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
           '& .MuiChip-label': {
             overflow: 'visible',
           },
-          maxWidth: '120%'
+          maxWidth: '120%',
         }}
         label={
-          <Typography sx={{ whiteSpace: 'nowrap' }}>
+          <Typography component="span" sx={{ whiteSpace: 'nowrap' }}>
             <Row
               gap={0.25}
               flexWrap="nowrap"
@@ -173,7 +171,9 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                     ) : (
                       <>
                         {getDisplayString(
-                          apys && apys['24h'] ? apys['24h'][metric].times(100) : null
+                          apys && apys['24h']
+                            ? apys['24h'][metric].times(100)
+                            : null
                         )}
                       </>
                     )}
@@ -195,7 +195,9 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                     ) : (
                       <>
                         {getDisplayString(
-                          apys && apys['7d'] ? apys['7d'][metric].times(100) : null
+                          apys && apys['7d']
+                            ? apys['7d'][metric].times(100)
+                            : null
                         )}
                       </>
                     )}
@@ -215,7 +217,9 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                 ) : (
                   <>
                     {getDisplayString(
-                      apys && apys['30d'] ? apys['30d'][metric].times(100) : null
+                      apys && apys['30d']
+                        ? apys['30d'][metric].times(100)
+                        : null
                     )}
                   </>
                 )}

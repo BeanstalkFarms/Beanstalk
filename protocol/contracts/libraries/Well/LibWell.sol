@@ -47,29 +47,54 @@ library LibWell {
         IERC20[] memory tokens,
         uint256 lookback
     ) internal view returns (uint[] memory ratios, uint beanIndex, bool success) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         success = true;
         ratios = new uint[](tokens.length);
         beanIndex = type(uint256).max;
+        bool isMillion;
+        address bean = s.sys.tokens.bean;
+
+        // fetch the bean index and check whether the ratios precision needs to be increased.
         for (uint i; i < tokens.length; ++i) {
-            if (C.BEAN == address(tokens[i])) {
+            if (address(tokens[i]) == bean) {
                 beanIndex = i;
-                ratios[i] = 1e6;
+            } else if (IERC20Decimals(address(tokens[i])).decimals() <= 8) {
+                // if the nonBean token in the well has a low decimal precision,
+                // set `isMillion` such that the ratio is set to be on a million basis.
+                isMillion = true;
+            }
+        }
+
+        // get the target ratios.
+        for (uint i; i < tokens.length; ++i) {
+            if (address(tokens[i]) == bean) {
+                if (isMillion) {
+                    ratios[i] = 1e12;
+                } else {
+                    ratios[i] = 1e6;
+                }
             } else {
-                ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                if (isMillion) {
+                    ratios[i] = LibUsdOracle.getMillionUsdPrice(address(tokens[i]), lookback);
+                } else {
+                    ratios[i] = LibUsdOracle.getUsdPrice(address(tokens[i]), lookback);
+                }
                 if (ratios[i] == 0) {
                     success = false;
                 }
             }
         }
+
         require(beanIndex != type(uint256).max, "Bean not in Well.");
     }
 
     /**
      * @dev Returns the index of Bean in a list of tokens.
      */
-    function getBeanIndex(IERC20[] memory tokens) internal pure returns (uint beanIndex) {
+    function getBeanIndex(IERC20[] memory tokens) internal view returns (uint beanIndex) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (beanIndex; beanIndex < tokens.length; ++beanIndex) {
-            if (C.BEAN == address(tokens[beanIndex])) {
+            if (s.sys.tokens.bean == address(tokens[beanIndex])) {
                 return beanIndex;
             }
         }
@@ -79,9 +104,10 @@ library LibWell {
     /**
      * @dev Returns the first ERC20 well token that is not Bean.
      */
-    function getNonBeanIndex(IERC20[] memory tokens) internal pure returns (uint nonBeanIndex) {
+    function getNonBeanIndex(IERC20[] memory tokens) internal view returns (uint nonBeanIndex) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         for (nonBeanIndex; nonBeanIndex < tokens.length; ++nonBeanIndex) {
-            if (C.BEAN != address(tokens[nonBeanIndex])) {
+            if (s.sys.tokens.bean != address(tokens[nonBeanIndex])) {
                 return nonBeanIndex;
             }
         }
@@ -117,9 +143,10 @@ library LibWell {
     function getNonBeanTokenAndIndexFromWell(
         address well
     ) internal view returns (address, uint256) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(well).tokens();
         for (uint256 i; i < tokens.length; i++) {
-            if (address(tokens[i]) != C.BEAN) {
+            if (address(tokens[i]) != s.sys.tokens.bean) {
                 return (address(tokens[i]), i);
             }
         }
@@ -158,7 +185,7 @@ library LibWell {
         }
 
         // if tokenUsd == 0, then the beanstalk could not compute a valid eth price,
-        // and should return 0. if s.sys.twaReserves[C.BEAN_ETH_WELL].reserve1 is 0, the previous if block will return 0.
+        // and should return 0. if s.sys.twaReserves[well].reserve1 is 0, the previous if block will return 0.
         if (tokenUsd == 0) {
             return 0;
         }
@@ -167,12 +194,25 @@ library LibWell {
         // (i.e, seasonGetterFacet.getLiquidityToSupplyRatio()).We use LibUsdOracle
         // to get the price. This should never be reached during sunrise and thus
         // should not impact gas.
-        return LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).div(1e6);
+        // LibUsdOracle returns the price with 1e6 precision.
+        // twaReserves has the same decimal precision as the token.
+        // The return value is then used in LibEvaluate.calcLPToSupplyRatio that assumes 18 decimal precision,
+        // so we need to account for whitelisted tokens that have less than 18 decimals by dividing the
+        // precision by the token decimals.
+        // Here tokenUsd = 1 so 1e6 * 1eN * 1e12 / 1eN = 1e18.
+
+        uint8 tokenDecimals = IERC20Decimals(token).decimals();
+        return
+            LibUsdOracle.getTokenPrice(token).mul(twaReserves[j]).mul(1e12).div(
+                10 ** tokenDecimals
+            );
     }
 
     /**
      * @dev Sets the price in {AppStorage.usdTokenPrice} given a set of ratios.
-     * It assumes that the ratios correspond to the Constant Product Well indexes.
+     * Assumes
+     * 1) Ratios correspond to the Constant Product Well indexes.
+     * 2) the Well is a 2 token Well.
      */
     function setUsdTokenPriceForWell(address well, uint256[] memory ratios) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
@@ -184,7 +224,12 @@ library LibWell {
             s.sys.usdTokenPrice[well] = 0;
         } else {
             (, uint256 j) = getNonBeanTokenAndIndexFromWell(well);
-            s.sys.usdTokenPrice[well] = ratios[j];
+            uint256 i = j == 0 ? 1 : 0;
+            // usdTokenPrice is scaled down to USD/TOKEN, in the cases where
+            // Beanstalk calculated the MILLION_USD/TOKEN price instead of USD/TOKEN price.
+            // Beanstalk accepts the loss of precision here, as `usdTokenPrice[well]` is used for
+            // calculating the liquidity and excessive price.
+            s.sys.usdTokenPrice[well] = (ratios[j] * 1e6) / ratios[i];
         }
     }
 
@@ -276,6 +321,13 @@ library LibWell {
         }
     }
 
+    /**
+     * @notice Calculates the token price in terms of Bean by increasing
+     * the bean reserves of the given well by 1 and recaclulating the new reserves,
+     * while maintaining the same liquidity levels.
+     * This essentially simulates a swap of 1 Bean for the non bean token and quotes the price.
+     * @dev wrapped in a try/catch to return gracefully.
+     */
     function calculateTokenBeanPriceFromReserves(
         address well,
         uint256 beanIndex,
@@ -283,27 +335,35 @@ library LibWell {
         uint256[] memory reserves,
         Call memory wellFunction
     ) internal view returns (uint256 price) {
-        address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
-        uint256 lpTokenSupply = IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
-            reserves,
-            wellFunction.data
-        );
+        // attempt to calculate the LP token Supply.
+        try
+            IBeanstalkWellFunction(wellFunction.target).calcLpTokenSupply(
+                reserves,
+                wellFunction.data
+            )
+        returns (uint256 lpTokenSupply) {
+            address nonBeanToken = address(IWell(well).tokens()[nonBeanIndex]);
+            uint256 oldReserve = reserves[nonBeanIndex];
+            reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
 
-        uint256 oldReserve = reserves[nonBeanIndex];
-        reserves[beanIndex] = reserves[beanIndex] + BEAN_UNIT;
-        uint256 newReserve = IBeanstalkWellFunction(wellFunction.target).calcReserve(
-            reserves,
-            nonBeanIndex,
-            lpTokenSupply,
-            wellFunction.data
-        );
-        uint256 delta;
-        if (nonBeanIndex == 1) {
-            delta = oldReserve - newReserve;
-        } else {
-            delta = newReserve - oldReserve;
+            try
+                IBeanstalkWellFunction(wellFunction.target).calcReserve(
+                    reserves,
+                    nonBeanIndex,
+                    lpTokenSupply,
+                    wellFunction.data
+                )
+            returns (uint256 newReserve) {
+                // Measure the delta of the non bean reserve.
+                // Due to the invariant of the well function, old reserve > new reserve.
+                uint256 delta = oldReserve - newReserve;
+                price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
+            } catch {
+                return 0;
+            }
+        } catch {
+            return 0;
         }
-        price = (10 ** (IERC20Decimals(nonBeanToken).decimals() + 6)) / delta;
     }
 
     function getTwaReservesFromStorageOrBeanstalkPump(
@@ -330,6 +390,31 @@ library LibWell {
                 s.sys.wellOracleSnapshots[well],
                 uint40(s.sys.season.timestamp),
                 pumps[0].data
+            )
+        returns (uint[] memory twaReserves, bytes memory) {
+            return twaReserves;
+        } catch {
+            return (new uint256[](2));
+        }
+    }
+
+    /**
+     * @notice returns the twa reserves for well,
+     * given the cumulative reserves and timestamp.
+     * @dev wrapped in a try/catch to return gracefully.
+     */
+    function getTwaReservesFromPump(
+        address well,
+        bytes memory cumulativeReserves,
+        uint40 timestamp
+    ) internal view returns (uint256[] memory) {
+        Call[] memory pump = IWell(well).pumps();
+        try
+            ICumulativePump(pump[0].target).readTwaReserves(
+                well,
+                cumulativeReserves,
+                timestamp,
+                pump[0].data
             )
         returns (uint[] memory twaReserves, bytes memory) {
             return twaReserves;
