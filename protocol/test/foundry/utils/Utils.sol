@@ -21,12 +21,13 @@ contract Utils is Test {
     address internal constant BEAN = LibConstant.BEAN;
     address internal constant UNRIPE_BEAN = LibConstant.UNRIPE_BEAN;
     address internal constant UNRIPE_LP = LibConstant.UNRIPE_LP;
+    address internal constant WETH = LibConstant.L1_WETH; // NOTE: setting L1 weth to weth here for tests is intentional
     address internal constant L1_WETH = LibConstant.L1_WETH;
-    address internal constant WETH = LibConstant.WETH;
-    address internal constant WSTETH = LibConstant.WSTETH;
+    address internal constant WSTETH = LibConstant.L1_WSTETH;
+    address internal constant L1_WSTETH = LibConstant.L1_WSTETH;
     address internal constant USDC = LibConstant.USDC;
     address internal constant USDT = LibConstant.USDT;
-    address internal constant WBTC = LibConstant.WBTC;
+    address internal constant WBTC = LibConstant.L1_WBTC;
     address internal constant BEAN_ETH_WELL = LibConstant.BEAN_ETH_WELL;
     address internal constant BEAN_WSTETH_WELL = LibConstant.BEAN_WSTETH_WELL;
     address payable internal constant PIPELINE = payable(LibConstant.PIPELINE);
