@@ -185,7 +185,7 @@ export default function L2Claim() {
     const navHeight = useNavHeight(!!banner);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)` }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)`, paddingX: 1 }}>
             <Box sx={{ textAlign: 'left' }}>
                 <PageHeader
                     title="Receive Contract Balance on L2"
@@ -297,7 +297,7 @@ export default function L2Claim() {
                                             backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
                                         }
                                     }}
-                                    onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
+                                    onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ addEthereumChainParameter: { chainName: "Arbitrum One", rpcUrls: ["https://arb1.arbitrum.io/rpc"] }, chainId: 42161 }) : onSubmit()}
                                 >
                                     {(!isArbitrum && !isTestnet) ?
                                         'Switch to Arbitrum One'
