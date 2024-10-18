@@ -297,7 +297,7 @@ export default function L2Claim() {
                                             backgroundColor: (!isArbitrum && !isTestnet) ? '#375278' : undefined,
                                         }
                                     }}
-                                    onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ chainId: 42161 }) : onSubmit()}
+                                    onClick={() => (!isArbitrum && !isTestnet) ? switchChain({ addEthereumChainParameter: { chainName: "Arbitrum One", rpcUrls: ["https://arb1.arbitrum.io/rpc"] }, chainId: 42161 }) : onSubmit()}
                                 >
                                     {(!isArbitrum && !isTestnet) ?
                                         'Switch to Arbitrum One'
