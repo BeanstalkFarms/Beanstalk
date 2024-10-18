@@ -21,8 +21,6 @@ import { RESEED_SEASON } from '~/constants';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
 import useChainId from '../chain/useChainId';
 
-const { priceInstant: priceInstantConfig } = subgraphQueryConfigs;
-
 export const useMergedFarmerSiloRewardsQuery = (
   account: string | undefined
 ) => {
@@ -153,10 +151,10 @@ const useFarmerSiloHistory = (
   });
 
   const priceQuery = useSeasonsQuery<SeasonalInstantPriceQuery>(
-    priceInstantConfig.queryKey(),
-    priceInstantConfig.document,
+    subgraphQueryConfigs.priceInstant.queryKey,
+    subgraphQueryConfigs.priceInstant.document,
     SeasonRange.ALL,
-    priceInstantConfig.queryOptions,
+    subgraphQueryConfigs.priceInstant.queryOptions,
     'both'
   );
 

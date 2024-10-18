@@ -15,18 +15,19 @@ type QueryData = {
   };
 };
 
+const chartsToUse = [
+  'Bean Price',
+  'Market Cap',
+  'Supply',
+  'Total Liquidity',
+];
+
 const MiniCharts: FC<{}> = () => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
   const selectedCharts: number[] = useMemo(() => {
-    const chartsToUse = [
-      'Bean Price',
-      'Market Cap',
-      'Supply',
-      'Total Liquidity',
-    ];
-    const output: any[] = [];
+    const output: number[] = [];
     chartsToUse.forEach((chartName) => {
       const chartId = chartSetupData.findIndex(
         (setupData) => setupData.name === chartName

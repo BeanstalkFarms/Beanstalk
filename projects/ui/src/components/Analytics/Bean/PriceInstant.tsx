@@ -48,7 +48,7 @@ const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
       StatProps={statProps}
       LineChartProps={lineChartProps}
       dateKey="timestamp"
-      name={subgraphQueryKeys.priceInstant()}
+      name={subgraphQueryKeys.priceInstantBEAN}
     />
   );
 };
