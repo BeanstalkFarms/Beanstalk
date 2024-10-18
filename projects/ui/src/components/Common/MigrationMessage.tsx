@@ -40,7 +40,7 @@ export default function MigrationMessage({ message }: { message?: string }) {
               backgroundColor: '#375278',
             }
           }}
-          onClick={() => switchChain({ chainId: 42161 })}
+          onClick={() => switchChain({ addEthereumChainParameter: { chainName: "Arbitrum One", rpcUrls: ["https://arb1.arbitrum.io/rpc"] }, chainId: 42161 })}
         >
           Switch to Arbitrum One
         </Button>
