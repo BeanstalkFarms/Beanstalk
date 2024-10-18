@@ -144,8 +144,6 @@ const Transfer: FC<{}> = () => {
   /// Ledger
   const account = useAccount();
   const sdk = useSdk();
-  const workflow = sdk.farm.create('Multi Plot Transfer!', 'beanstalk');
-  const beanstalk = sdk.contracts.beanstalk;
 
   /// Farmer
   const [refetchFarmerField] = useFetchFarmerField();
@@ -178,6 +176,7 @@ const Transfer: FC<{}> = () => {
       formActions: FormikHelpers<TransferFormValues>
     ) => {
       const PODS = sdk.tokens.PODS;
+      const beanstalk = sdk.contracts.beanstalk;
       let txToast;
       try {
         middleware.before();
@@ -269,7 +268,7 @@ const Transfer: FC<{}> = () => {
         }
       }
     },
-    [sdk, middleware, account, refetchFarmerField, beanstalk]
+    [sdk, middleware, account, refetchFarmerField]
   );
 
   return (
