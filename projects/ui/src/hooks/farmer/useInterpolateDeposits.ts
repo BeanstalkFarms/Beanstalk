@@ -1,39 +1,40 @@
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
-import {
-  useFarmerSiloAssetSnapshotsQuery,
-  useSeasonalInstantPriceQuery,
-} from '~/generated/graphql';
 import { useAppSelector } from '~/state';
 import {
   interpolateFarmerDepositedValue,
   SnapshotBeanstalk,
 } from '~/util/Interpolate';
 import { ZERO_BN } from '~/constants';
+import { SeasonalInstantPriceQuery } from '~/generated/graphql';
 import useUnripeUnderlyingMap from '../beanstalk/useUnripeUnderlying';
 import {
-  useGetNormaliseChainToken,
+  useGetChainAgnosticLegacyToken,
+  useHistoricalWhitelistedTokens,
   useUnripeTokens,
-  useWhitelistedTokens,
 } from '../beanstalk/useTokens';
+import useSeasonsQuery from '../beanstalk/useSeasonsQuery';
+import { useMergedFarmerSiloAssetSnapshotsQuery } from './useFarmerSiloHistory';
+
+
 
 const useInterpolateDeposits = (
-  siloAssetsQuery: ReturnType<typeof useFarmerSiloAssetSnapshotsQuery>,
-  priceQuery: ReturnType<typeof useSeasonalInstantPriceQuery>,
+  siloAssetsQuery: ReturnType<typeof useMergedFarmerSiloAssetSnapshotsQuery>,
+  priceQuery: ReturnType<typeof useSeasonsQuery<SeasonalInstantPriceQuery>>,
   itemizeByToken: boolean = false
 ) => {
   const unripe = useAppSelector((state) => state._bean.unripe);
   const beanPools = useAppSelector((state) => state._bean.pools);
   const { UNRIPE_BEAN_WSTETH: urBeanLP } = useUnripeTokens();
-  const normalizeToken = useGetNormaliseChainToken();
-  const { whitelist } = useWhitelistedTokens();
+  const normalizeToken = useGetChainAgnosticLegacyToken();
+  const whitelist = useHistoricalWhitelistedTokens();
   const underlyingMap = useUnripeUnderlyingMap();
 
   return useMemo(() => {
     if (
       priceQuery.loading ||
       !priceQuery.data?.seasons?.length ||
-      !siloAssetsQuery.data?.farmer?.silo?.assets.length ||
+      !siloAssetsQuery.data?.length ||
       Object.keys(unripe).length === 0
     ) {
       return [];
@@ -41,15 +42,16 @@ const useInterpolateDeposits = (
 
     // Convert the list of assets => snapshots into one snapshot list
     // sorted by Season and normalized based on chop rate.
-    const snapshots = siloAssetsQuery.data.farmer.silo.assets
+    const snapshots = siloAssetsQuery.data
       .reduce((prev, asset) => {
-        const tokenAddress = normalizeToken(asset.token)?.address;
-        if (!tokenAddress) return prev;
+        const token = normalizeToken(asset.token);
+        if (!token) return prev;
+        const tokenAddress = token?.address;
         prev.push(
           ...asset.hourlySnapshots.map((snapshot) => {
             let hourlyDepositedBDV;
 
-            if (tokenAddress in unripe) {
+            if (token.isUnripe) {
               if (tokenAddress === urBeanLP.address) {
                 // formula: penalty = amount of BEANwstETH per 1 urBEANwstETH.
                 // bdv of urBEANwstETH = amount * penalty * BDV of 1 BEANwstETH
@@ -88,21 +90,21 @@ const useInterpolateDeposits = (
       }, [] as SnapshotBeanstalk[])
       .sort((a, b) => a.season - b.season);
 
+
     return interpolateFarmerDepositedValue(
       snapshots,
       priceQuery.data.seasons,
       itemizeByToken,
       24,
       whitelist,
-      normalizeToken,
-
+      normalizeToken
     );
   }, [
     normalizeToken,
     whitelist,
     priceQuery.loading,
     priceQuery.data?.seasons,
-    siloAssetsQuery.data?.farmer?.silo?.assets,
+    siloAssetsQuery.data,
     unripe,
     itemizeByToken,
     urBeanLP.address,

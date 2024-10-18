@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 import {
-  SeasonalInstantPriceDocument,
+  SeasonalInstantPriceQuery,
   useFarmerSiloAssetSnapshotsLazyQuery,
-  useFarmerSiloAssetSnapshotsQuery,
   useFarmerSiloRewardsLazyQuery,
   useWhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
@@ -12,125 +11,131 @@ import useSeasonsQuery, {
 import useInterpolateDeposits from '~/hooks/farmer/useInterpolateDeposits';
 import useInterpolateStalk from '~/hooks/farmer/useInterpolateStalk';
 import { useQuery } from '@tanstack/react-query';
+import { useGetChainAgnosticLegacyToken } from '~/hooks/beanstalk/useTokens';
+import {
+  subgraphQueryConfigs,
+  subgraphQueryKeys as queryKeys,
+} from '~/graph/queryConfigs';
+import { getTokenIndex } from '~/util';
+import { RESEED_SEASON } from '~/constants';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
 import useChainId from '../chain/useChainId';
 
-// type K = Exact<T extends { [key: string]: unknown; }> = { [K in keyof T]: T[K]; }
+const { priceInstant: priceInstantConfig } = subgraphQueryConfigs;
 
-// const useMergedApolloQuery = <
-//   TQuery extends {},
-//   TVars extends { [key: string]: unknown },
-//   TReturn
-// >(props: {
-//   queryKey: string[];
-//   apolloLazyFetch: LazyQueryExecFunction<TQuery, Exact<TVars>>;
-//   dataKey: string;
-//   subgraph: 'beanstalk' | 'bean';
-//   enabled: boolean;
-// }) => {
-//   const chainId = useChainId();
-
-//   const mergedQuery = useQuery({
-//     queryKey: [[chainId], ...props.queryKey],
-//     queryFn: async () => {
-//       const l1 = await props.apolloLazyFetch({
-//         context: { subgraph: `${props.subgraph}_eth` },
-//       });
-//       const l2 = await props.apolloLazyFetch({
-//         context: { subgraph: props.subgraph },
-//       });
-
-//       const l1Data = (l1.data?.[props.dataKey as keyof typeof l1.data] ??
-//         []) as TQuery[keyof TQuery][];
-//       const l2Data = (l2.data?.[props.dataKey as keyof typeof l2.data] ??
-//         []) as TQuery[keyof TQuery][];
-
-//       return [...l1Data, ...l2Data];
-//     },
-//     enabled: props.enabled,
-//     staleTime: 1000 * 60 * 60, // 1 hour
-//   });
-
-//   return {
-//     ...query,
-//     data: query.data ? { [props.dataKey]: query.data } : undefined,
-//     loading: query.isLoading,
-//   } as TReturn;
-// };
-
-const useMergedFarmerSiloRewardsQuery = (account: string | undefined) => {
-  const chainId = useChainId();
-  const [fetch, query] = useFarmerSiloRewardsLazyQuery({
-    variables: { account: account || '' },
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const mergedQuery = useQuery({
-    queryKey: [[chainId], 'farmerSiloRewards', account],
-    queryFn: async () => {
-      const l1 = await fetch({
-        context: { subgraph: 'beanstalk_eth' },
-      });
-      const l2 = await fetch({
-        context: { subgraph: 'beanstalk' },
-      });
-
-      return [...(l1.data?.snapshots ?? []), ...(l2.data?.snapshots ?? [])];
-    },
-    enabled: !!account,
-    staleTime: 1000 * 60 * 20, // 20 mins
-  });
-
-  return {
-    ...query,
-    loading: mergedQuery.isLoading,
-    data: mergedQuery.data ? { snapshots: mergedQuery.data } : undefined,
-  };
-};
-
-const useMergedFarmerSiloAssetSnapshotsQuery = (
+export const useMergedFarmerSiloRewardsQuery = (
   account: string | undefined
 ) => {
   const chainId = useChainId();
-  const [fetch, query] = useFarmerSiloAssetSnapshotsLazyQuery({
+  const [execute] = useFarmerSiloRewardsLazyQuery({
     variables: { account: account || '' },
     fetchPolicy: 'cache-and-network',
   });
 
-  const mergedQuery = useQuery({
-    queryKey: [[chainId], 'farmerSiloAssetSnapshots', account],
+  const query = useQuery({
+    queryKey: [[chainId], ...queryKeys.farmerSiloRewards(account)],
     queryFn: async () => {
-      const l1 = await fetch({
+      console.debug('[useMergedFarmerSiloRewardsQuery] fetching...');
+      const l1 = await execute({
         context: { subgraph: 'beanstalk_eth' },
       });
-      const l2 = await fetch({
+      const l2 = await execute({
         context: { subgraph: 'beanstalk' },
       });
 
-      return [
-        ...(l1.data?.farmer?.silo?.assets ?? []),
-        ...(l2.data?.farmer?.silo?.assets ?? []),
+      const data = [
+        ...(l1.data?.snapshots ?? []),
+        ...(l2.data?.snapshots ?? []),
       ];
-    },
-    select: (data) => {
-      if (!data) return undefined;
-      return {
-        farmer: {
-          silo: {
-            assets: data,
-          },
-        },
-      };
+      console.debug('[useMergedFarmerSiloRewardsQuery] result', data);
+
+      return data.sort((a, b) => b.season - a.season);
     },
     enabled: !!account,
     staleTime: 1000 * 60 * 20, // 20 mins
   });
 
-  return {
-    ...query,
-    loading: mergedQuery.isLoading,
-    data: mergedQuery.data,
-  } as typeof query;
+  return query;
+};
+
+export type FarmerSiloAssetSnapshot = {
+  __typename: 'SiloAssetHourlySnapshot';
+  id: string;
+  season: number;
+  deltaDepositedBDV: any;
+  deltaDepositedAmount: any;
+  depositedAmount: any;
+  depositedBDV: any;
+  createdAt: any;
+};
+
+type SeasonToFarmerSiloAssetSnapshot = Record<number, FarmerSiloAssetSnapshot>;
+
+export const useMergedFarmerSiloAssetSnapshotsQuery = (
+  account: string | undefined
+) => {
+  const chainId = useChainId();
+  const getToken = useGetChainAgnosticLegacyToken();
+
+  const [execute] = useFarmerSiloAssetSnapshotsLazyQuery({
+    variables: { account: account || '' },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const query = useQuery({
+    queryKey: [[chainId], queryKeys.farmerSiloAssetSnapshots(account)],
+    queryFn: async () => {
+      const output: Record<string, SeasonToFarmerSiloAssetSnapshot> = {};
+
+      console.debug('[useMergedFarmerSiloAssetSnapshotsQuery] fetching...');
+
+      const l2Result = await execute({
+        context: { subgraph: 'beanstalk' },
+      }).then((result) => result.data?.farmer?.silo?.assets ?? []);
+
+      const l1Result = await execute({
+        context: { subgraph: 'beanstalk_eth' },
+      }).then((result) => result.data?.farmer?.silo?.assets ?? []);
+      
+      for (const siloAssetFragment of l2Result) {      
+        const token = getToken(siloAssetFragment.token);
+        const map = siloAssetFragment.hourlySnapshots.reduce<SeasonToFarmerSiloAssetSnapshot>((acc, curr) => {
+          if (curr.season !== RESEED_SEASON - 1) {
+            acc[curr.season] = curr as FarmerSiloAssetSnapshot;
+          }
+          return acc;
+        }, {});
+        
+        output[getTokenIndex(token)] = { ...map };
+      }
+
+      for (const siloAssetFragment of l1Result) {
+        const token = getToken(siloAssetFragment.token);
+        const map = { ...(output[getTokenIndex(token)] || {}) };
+        siloAssetFragment.hourlySnapshots.forEach(snapshot => {
+          map[snapshot.season] = snapshot as FarmerSiloAssetSnapshot;
+        })
+        output[getTokenIndex(token)] = map;
+      }
+
+      const assets = Object.entries(output).map(
+        ([tokenAddress, snapshots]) => ({
+            token: tokenAddress,
+            // sort in ascending order
+            hourlySnapshots: Object.values(snapshots).sort((a, b) => a.season - b.season),
+          })
+      );
+
+      console.debug('[useMergedFarmerSiloAssetSnapshotsQuery] result', assets);
+
+      return assets;
+    },
+    enabled: !!account,
+    staleTime: 1000 * 60 * 20, // 20 mins
+    refetchOnMount: true,
+  });
+
+  return query;
 };
 
 const useFarmerSiloHistory = (
@@ -140,32 +145,36 @@ const useFarmerSiloHistory = (
 ) => {
   const breakdown = useFarmerBalancesBreakdown();
   const siloRewardsQuery = useMergedFarmerSiloRewardsQuery(account);
+  const siloAssetsQuery = useMergedFarmerSiloAssetSnapshotsQuery(account);
 
-  const siloAssetsQuery = useFarmerSiloAssetSnapshotsQuery({
-    variables: { account: account || '' },
-    skip: !account,
-    fetchPolicy: 'cache-and-network',
-    context: { subgraph: 'beanstalk_eth' },
-  });
   const seedsPerTokenQuery = useWhitelistTokenRewardsQuery({
     fetchPolicy: 'cache-and-network',
-    context: { subgraph: 'beanstalk_eth' },
+    context: { subgraph: 'beanstalk' },
   });
 
-  const queryConfig = useMemo(
-    () => ({
-      variables: { season_gte: 1 },
-      context: { subgraph: 'bean' },
-    }),
-    []
-  );
-
-  const priceQuery = useSeasonsQuery(
-    SeasonalInstantPriceDocument,
+  const priceQuery = useSeasonsQuery<SeasonalInstantPriceQuery>(
+    priceInstantConfig.queryKey(),
+    priceInstantConfig.document,
     SeasonRange.ALL,
-    queryConfig,
+    priceInstantConfig.queryOptions,
     'both'
   );
+
+  // const urBeanChopRateQuery = useSeasonsQuery<SeasonalTokenChopRateQuery>(
+  //   queryKeys.seasonalUrBeanChopRate(),
+  //   subgraphQueryConfigs.seasonalUrBeanChopRate.document,
+  //   SeasonRange.ALL,
+  //   subgraphQueryConfigs.seasonalUrBeanChopRate.queryOptions,
+  //   'both'
+  // )
+
+  // const urBeanLPChopRateQuery = useSeasonsQuery<SeasonalTokenChopRateQuery>(
+  //   queryKeys.seasonalUrBeanLPChopRate(),
+  //   subgraphQueryConfigs.seasonalUrBeanLPChopRate.document,
+  //   SeasonRange.ALL,
+  //   subgraphQueryConfigs.seasonalUrBeanLPChopRate.queryOptions,
+  //   'both'
+  // )
 
   /// Interpolate
   const depositData = useInterpolateDeposits(
@@ -179,8 +188,6 @@ const useFarmerSiloHistory = (
     seedsPerTokenQuery,
     !includeStalk
   );
-
-  // console.log('salkData', stalkData);
 
   const withCurrSeasonDepositsData = useMemo(() => {
     if (!depositData.length) return depositData;
@@ -216,7 +223,9 @@ const useFarmerSiloHistory = (
       grownStalk: grownStalkData,
     },
     loading:
-      siloRewardsQuery.loading || siloAssetsQuery.loading || priceQuery.loading,
+      siloRewardsQuery.isLoading ||
+      siloAssetsQuery.isLoading ||
+      priceQuery.loading,
     // || breakdown hasn't loaded value yet
   };
 };
