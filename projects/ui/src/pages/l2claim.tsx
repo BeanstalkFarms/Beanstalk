@@ -185,7 +185,7 @@ export default function L2Claim() {
     const navHeight = useNavHeight(!!banner);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)` }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: `calc(100vh - ${navHeight}px)`, paddingX: 1 }}>
             <Box sx={{ textAlign: 'left' }}>
                 <PageHeader
                     title="Receive Contract Balance on L2"
