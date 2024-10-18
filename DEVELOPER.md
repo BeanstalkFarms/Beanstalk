@@ -94,10 +94,6 @@ Some examples of what you can do with the bean cli:
 
 By combining these commands, you should be able to put a beanstalk account in pretty much any state desired.
 
-### Subgraphs
-
-You don't need to run the subgraphs locally unless you're working on those components. If you are using Anvil with the local subgraph node, include the `--disable-block-gas-limit` option when starting Anvil to avoid issues when indexing.
-
 ### UI
 
 Start the UI with `yarn ui:start`
