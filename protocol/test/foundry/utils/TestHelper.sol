@@ -155,8 +155,8 @@ contract TestHelper is
             initERC20params(BEAN, "Bean", "BEAN", 6),
             initERC20params(UNRIPE_BEAN, "Unripe Bean", "UrBEAN", 6),
             initERC20params(UNRIPE_LP, "Unripe LP", "UrBEAN3CRV", 18),
-            initERC20params(WETH, "Weth", "WETH", 18),
-            initERC20params(WSTETH, "wstETH", "WSTETH", 18),
+            initERC20params(L1_WETH, "Weth", "WETH", 18),
+            initERC20params(L1_WSTETH, "wstETH", "WSTETH", 18),
             initERC20params(USDC, "USDC", "USDC", 6),
             initERC20params(USDT, "USDT", "USDT", 6),
             initERC20params(WBTC, "WBTC", "WBTC", 8)
