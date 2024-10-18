@@ -44,7 +44,7 @@ import { OperationVariables, QueryOptions } from '@apollo/client';
 import { Typography } from '@mui/material';
 import { REPLANT_SEASON, RESEED_SEASON, SupportedChainId } from '~/constants';
 import { getMultiChainToken, TokenInstance } from '~/hooks/beanstalk/useTokens';
-import { subgraphQueryKeys } from '~/graph/queryConfigs';
+import { subgraphQueryKeys } from '~/util/Graph';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -139,9 +139,7 @@ type ChartSetup = ChartSetupBase & {
   index: number;
 };
 
-function getFetchTypeWithToken(
-  _token: TokenInstance
-): ChartSetupBase['fetchType'] {
+function getFetchTypeWithToken(_token: TokenInstance): ChartSetupBase['fetchType'] {
   const token = getMultiChainToken(_token.address);
   let fetchType: ChartSetupBase['fetchType'] = 'both';
 

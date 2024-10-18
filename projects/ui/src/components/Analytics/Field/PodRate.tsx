@@ -9,7 +9,6 @@ import {
 import useSeason from '~/hooks/beanstalk/useSeason';
 import usePodRate from '~/hooks/beanstalk/usePodRate';
 import {
-  SeasonsQueryDynamicConfig,
   SnapshotData,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
@@ -17,6 +16,7 @@ import { tickFormatPercentage } from '~/components/Analytics/formatters';
 
 import { FC } from '~/types';
 import { BEANSTALK_ADDRESSES } from '~/constants';
+import { DynamicSGQueryOption } from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalPodRateQuery>) =>
   parseFloat(season.podRate) * 100;
@@ -32,7 +32,7 @@ const lineChartProps: Partial<LineChartProps> = {
   yTickFormat: tickFormatPercentage,
 };
 
-const queryConfig: SeasonsQueryDynamicConfig = (subgraph: 'l1' | 'l2') => {
+const queryConfig: DynamicSGQueryOption = (subgraph: 'l1' | 'l2') => {
   const options = {
     variables: {
       field: BEANSTALK_ADDRESSES[42161].toLowerCase(),

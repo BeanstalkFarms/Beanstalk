@@ -12,6 +12,7 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalCrossesQuery>) => season.crosses;
 const formatValue = (value: number) => `${value}`;
@@ -41,6 +42,7 @@ const Crosses: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
       StatProps={statProps}
       LineChartProps={lineChartProps}
       dateKey="timestamp"
+      name={subgraphQueryKeys.crossesBEAN}
     />
   );
 };

@@ -9,6 +9,7 @@ import { tickFormatTruncated } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import { FC } from '~/types';
 import { SeasonalSeedsDocument, SeasonalSeedsQuery } from '~/generated/graphql';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalSeedsQuery>) =>
   toTokenUnitsBN(season.grownStalkPerSeason, SEEDS.decimals).toNumber();
@@ -37,6 +38,7 @@ const Seeds: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => (
     StatProps={statProps}
     LineChartProps={lineChartProps}
     queryConfig={queryConfig}
+    name={subgraphQueryKeys.beanstalkTotalSeeds}
   />
 );
 

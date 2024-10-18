@@ -15,7 +15,7 @@ import { useGetChainAgnosticLegacyToken } from '~/hooks/beanstalk/useTokens';
 import {
   subgraphQueryConfigs,
   subgraphQueryKeys as queryKeys,
-} from '~/graph/queryConfigs';
+} from '~/util/Graph';
 import { getTokenIndex } from '~/util';
 import { RESEED_SEASON } from '~/constants';
 import useFarmerBalancesBreakdown from './useFarmerBalancesBreakdown';
@@ -151,10 +151,10 @@ const useFarmerSiloHistory = (
   });
 
   const priceQuery = useSeasonsQuery<SeasonalInstantPriceQuery>(
-    subgraphQueryConfigs.priceInstant.queryKey,
-    subgraphQueryConfigs.priceInstant.document,
+    subgraphQueryConfigs.priceInstantBEAN.queryKey,
+    subgraphQueryConfigs.priceInstantBEAN.document,
     SeasonRange.ALL,
-    subgraphQueryConfigs.priceInstant.queryOptions,
+    subgraphQueryConfigs.priceInstantBEAN.queryOptions,
     'both'
   );
 

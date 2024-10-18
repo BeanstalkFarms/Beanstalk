@@ -6,7 +6,6 @@ import { FC } from '~/types';
 import useSeasonsQuery, {
   SEASON_RANGE_TO_COUNT,
   SeasonRange,
-  SeasonsQueryDynamicConfig,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useTimeTabState from '~/hooks/app/useTimeTabState';
 import {
@@ -22,6 +21,7 @@ import {
   BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
 import { ChainConstant, RESEED_SEASON, SupportedChainId } from '~/constants';
+import { DynamicSGQueryOption } from '~/util/Graph';
 import {
   BaseDataPoint,
   ChartMultiStyles,
@@ -42,7 +42,7 @@ const StatProps = {
 };
 
 const dyanmicBeanConfig = (token: ChainConstant<{ address: string }>) => {
-  const fn: SeasonsQueryDynamicConfig = (subgraph: 'l1' | 'l2') => {
+  const fn: DynamicSGQueryOption = (subgraph: 'l1' | 'l2') => {
     const chain =
       subgraph === 'l1'
         ? SupportedChainId.ETH_MAINNET

@@ -22,13 +22,13 @@ const useInterpolateStalk = (
   const balances = useAppSelector((state) => state._farmer.silo.balances);
 
   return useMemo(() => {
-    if (skip || !season.gt(0) || !siloRewardsQuery.data?.snapshots?.length || !whitelistQuery.data?.snapshots?.length) {
+    if (skip || !season.gt(0) || !siloRewardsQuery.data?.length || !whitelistQuery.data?.snapshots?.length) {
       return [[], []];
     }
-    const siloSnapshots = siloRewardsQuery.data.snapshots;
+    const siloSnapshots = siloRewardsQuery.data;
     const whitelistSnapshots = whitelistQuery.data.snapshots;
     return interpolateFarmerStalk(siloSnapshots, whitelistSnapshots, season, undefined, balances, whitelist, getChainAgnosticToken);
-  }, [skip, siloRewardsQuery.data?.snapshots, whitelistQuery.data?.snapshots, season, balances, whitelist, getChainAgnosticToken]);
+  }, [skip, siloRewardsQuery.data, whitelistQuery.data?.snapshots, season, balances, whitelist, getChainAgnosticToken]);
 };
 
 export default useInterpolateStalk;

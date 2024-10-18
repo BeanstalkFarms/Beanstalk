@@ -10,6 +10,7 @@ import { SeasonalApyDocument, SeasonalApyQuery } from '~/generated/graphql';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const formatValue = (value: number) => `${value.toFixed(2)}%`;
 const queryConfig = {
@@ -21,6 +22,7 @@ const queryConfig = {
 const lineChartProps: Partial<LineChartProps> = {
   yTickFormat: tickFormatPercentage,
 };
+
 const metricToKey = {
   Bean: SILO_WHITELIST[0][1].address,
   Bean3Curve: SILO_WHITELIST[1][1].address,
@@ -71,6 +73,7 @@ const APY: FC<{
         },
       };
     }, [metric])}
+    name={subgraphQueryKeys.siloToken30DvAPY(metric)}
   />
 );
 

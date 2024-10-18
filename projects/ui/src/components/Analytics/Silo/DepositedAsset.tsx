@@ -13,6 +13,7 @@ import { toTokenUnitsBN } from '~/util';
 
 import { FC } from '~/types';
 import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
@@ -62,6 +63,7 @@ const DepositedAsset: FC<{
       StatProps={statProps}
       LineChartProps={lineChartProps}
       queryConfig={queryConfig}
+      name={subgraphQueryKeys.depositedSiloToken(asset)}
     />
   );
 };

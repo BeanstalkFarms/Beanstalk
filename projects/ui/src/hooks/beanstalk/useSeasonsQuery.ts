@@ -9,6 +9,7 @@ import {
 import { apolloClient } from '~/graph/client';
 import { useQuery } from '@tanstack/react-query';
 import { RESEED_SEASON } from '~/constants';
+import { DynamicSGQueryOption } from '~/util/Graph';
 
 const PAGE_SIZE = 1000;
 
@@ -57,10 +58,6 @@ export type MinimumViableSnapshotQuery = {
 export type SnapshotData<T extends MinimumViableSnapshotQuery> =
   T['seasons'][number];
 
-export type SeasonsQueryDynamicConfig = (
-  subgraph: 'l1' | 'l2'
-) => Partial<QueryOptions>;
-
 const baseL1Variables = {
   season_lte: RESEED_SEASON - 1,
 };
@@ -87,7 +84,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
     }
   `,
   range: SeasonRange,
-  queryConfig?: Partial<QueryOptions> | SeasonsQueryDynamicConfig,
+  queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption,
   fetchType: SeasonsQueryFetchType = 'both'
 ) => {
   const queryOptions = {
@@ -322,7 +319,7 @@ function isFunction(fn: unknown): fn is Function {
 
 function deriveQueryConfig<T extends MinimumViableSnapshotQuery>(
   chain: 'l1' | 'l2',
-  queryConfig: Partial<QueryOptions> | SeasonsQueryDynamicConfig | undefined,
+  queryConfig: Partial<QueryOptions> | DynamicSGQueryOption | undefined,
   document: DocumentNode
 ): QueryOptions<OperationVariables, T> {
   const config =

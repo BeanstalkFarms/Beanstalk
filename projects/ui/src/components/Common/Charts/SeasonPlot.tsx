@@ -4,7 +4,6 @@ import { QueryOptions } from '@apollo/client';
 import { StatProps } from '~/components/Common/Stat';
 import useSeasonsQuery, {
   MinimumViableSnapshotQuery,
-  SeasonsQueryDynamicConfig,
 } from '~/hooks/beanstalk/useSeasonsQuery';
 import useGenerateChartSeries from '~/hooks/beanstalk/useGenerateChartSeries';
 import {
@@ -15,6 +14,7 @@ import useTimeTabState from '~/hooks/app/useTimeTabState';
 import BaseSeasonPlot, {
   QueryData,
 } from '~/components/Common/Charts/BaseSeasonPlot';
+import { DynamicSGQueryOption } from '~/util/Graph';
 
 export const defaultValueFormatter = (value: number) => `$${value.toFixed(4)}`;
 
@@ -65,7 +65,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
      */
     formatValue?: (value: number) => string | JSX.Element;
     dateKey?: 'timestamp' | 'createdAt';
-    queryConfig?: Partial<QueryOptions> | SeasonsQueryDynamicConfig;
+    queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
@@ -104,8 +104,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
     document,
     timeTabParams[0][1],
     queryConfig,
-    fetchType,
-    name
+    fetchType
   );
 
   const queryParams = useMemo(
