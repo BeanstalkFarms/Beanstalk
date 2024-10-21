@@ -323,7 +323,7 @@ export const subgraphQueryConfigs = {
     document: LiquiditySupplyRatioDocument,
     queryKey: subgraphQueryKeys.l2srBEAN,
     queryOptions: (
-      (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
+      (chain) => makeOptions(chain, { ctx: "bean", add: ["gt"] })
     ) satisfies DynamicSGQueryOption,
   },
   

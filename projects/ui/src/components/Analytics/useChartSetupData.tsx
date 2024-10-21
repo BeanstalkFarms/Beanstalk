@@ -123,14 +123,13 @@ const depositedTokensToChart = [
 ];
 
 const lpTokensToChart = [
-  BEAN_CRV3_LP[1],
   BEAN_ETH_WELL_LP[1],
   BEAN_WSTETH_WELL_LP[1],
-  BEAN_CRV3_LP[SupportedChainId.ETH_MAINNET],
   BEAN_WBTC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
   BEAN_WEETH_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
   BEAN_USDC_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
   BEAN_USDT_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
+  BEAN_CRV3_LP[SupportedChainId.ETH_MAINNET],
   BEAN_ETH_UNIV2_LP[1],
   BEAN_LUSD_LP[1],
   BEAN_CRV3_V1_LP[1],
