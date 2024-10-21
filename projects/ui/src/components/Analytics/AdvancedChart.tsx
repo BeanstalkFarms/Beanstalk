@@ -34,7 +34,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const storedTimePeriod = storedSetting1
     ? JSON.parse(storedSetting1)
     : undefined;
-
   const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
   const storedSelectedCharts = storedSetting2
     ? JSON.parse(storedSetting2)
@@ -69,13 +68,20 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                     : seasonData;
                   const _value = valueFormatter(data[priceKey]);
                   let value;
-                  if (typeof _value === "function") {
-                    value = _value(season.lte(RESEED_SEASON - 2) ? "l1" : "l2");
+                  if (typeof _value === 'function') {
+                    value = _value(
+                      seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
+                    );
                   } else {
                     value = _value;
                   }
 
-                  if (!exists(time) || !exists(value) || timestamps.has(time) || time <= 0) {
+                  if (
+                    !exists(time) ||
+                    !exists(value) ||
+                    timestamps.has(time) ||
+                    time <= 0
+                  ) {
                     return undefined;
                   }
 
@@ -114,7 +120,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     [queries]
   );
 
-  console.log("queryData", queryData);
+  console.log('queryData', queryData);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 
-
 import useSdk from '~/hooks/sdk';
 import { formatUnits } from 'viem';
 import {
@@ -63,9 +62,9 @@ interface ChartSetupBase extends SGQueryParameters {
   /**
    * Formats the raw output from the query into a number for Lightweight Charts.
    */
-  valueFormatter: 
-    ((v: string) => number | undefined) | 
-    ((v: string) => (chain: "l1" | "l2") => number | undefined);
+  valueFormatter:
+    | ((v: string) => number | undefined)
+    | ((v: string) => (chain: 'l1' | 'l2') => number | undefined);
   /**
    *
    */
@@ -442,6 +441,7 @@ export function useChartSetupData() {
         valueFormatter: 
           (value: any) => 
           (chain: "l1" | "l2") => Number(
+            // pre-reseed migration stalk had 10 decimals
             formatUnits(value, chain === "l1" ? 10 : stalk.decimals)
           ),
         tickFormatter: tickFormatBeanAmount,
