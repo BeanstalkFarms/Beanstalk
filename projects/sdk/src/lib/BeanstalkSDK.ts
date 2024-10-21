@@ -135,18 +135,29 @@ export class BeanstalkSDK {
     }
 
     this.signer = config.signer;
-    if (!config.provider && !config.signer) {
+
+    if (config.signer?.provider){
+      this.provider = config.signer.provider as Provider;
+    } else if (config.provider) {
+      this.provider = config.provider;
+    } else {
       console.log("WARNING: No provider or signer specified, using DefaultProvider.");
       this.provider = ethers.getDefaultProvider() as Provider;
-    } else {
-      this.provider = (config.signer?.provider as Provider) ?? config.provider!;
     }
-    this.readProvider = config.readProvider;
-    this.providerOrSigner = config.signer ?? config.provider!;
+
+    this.readProvider = config.readProvider ?? this.provider;
+    this.providerOrSigner = this.signer ?? this.provider;
 
     this.DEBUG = config.DEBUG ?? false;
 
     this.source = DataSource.LEDGER; // FIXME
+
+    console.log("[sdk/handleConfig]", {
+      config,
+      provider: this.provider,
+      signer: this.signer,
+      providerOrSigner: this.providerOrSigner,
+    });
   }
 
   deriveSource<T extends { source?: DataSource }>(config?: T): DataSource {
@@ -166,6 +177,8 @@ export class BeanstalkSDK {
     const provider = config.signer ? (config.signer.provider as Provider) : config.provider;
     const networkish = provider?._network || provider?.network || ChainResolver.defaultChainId;
 
+    console.log("[sdk/getProviderFromUrl]", url, networkish);
+
     if (url.startsWith("ws")) {
       return new ethers.providers.WebSocketProvider(url, networkish);
     }
@@ -184,6 +197,7 @@ export class BeanstalkSDK {
   }
 
   private deriveChainId() {
+    console.log("[sdk/deriveChainId]", this.provider);
     const { _network, network } = this.provider || {};
     const providerChainId = _network?.chainId || network?.chainId || ChainResolver.defaultChainId;
 
