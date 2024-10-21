@@ -1534,9 +1534,7 @@ interface IMockFBeanstalk {
 
     function transmitOut(
         address destination,
-        SourceDeposit[] calldata sourceDeposits,
-        SourcePlot[] calldata sourcePlots,
-        SourceFertilizer[] calldata sourceFertilizer,
+        bytes[] calldata assets,
         bytes calldata data
     ) external;
 

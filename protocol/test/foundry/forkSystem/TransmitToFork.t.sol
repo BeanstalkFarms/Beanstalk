@@ -159,14 +159,13 @@ contract TransmitToForkTest is TestHelper {
             emit IERC20.Transfer(ZERO_ADDR, newBsAddr, 1); // LP mint
         }
 
+        bytes[] memory assets = new bytes[](3);
+        assets[0] = abi.encode(deposits);
+        assets[1] = abi.encode(new IMockFBeanstalk.SourcePlot[](0));
+        assets[2] = abi.encode(new IMockFBeanstalk.SourceFertilizer[](0));
+
         vm.prank(user);
-        bs.transmitOut(
-            newBsAddr,
-            deposits,
-            new IMockFBeanstalk.SourcePlot[](0),
-            new IMockFBeanstalk.SourceFertilizer[](0),
-            abi.encode("")
-        );
+        bs.transmitOut(newBsAddr, assets, abi.encode(""));
 
         // Verify Source deposits.
         {
@@ -244,14 +243,13 @@ contract TransmitToForkTest is TestHelper {
             );
         }
 
+        bytes[] memory assets = new bytes[](3);
+        assets[0] = abi.encode(new IMockFBeanstalk.SourceDeposit[](0));
+        assets[1] = abi.encode(plots);
+        assets[2] = abi.encode(new IMockFBeanstalk.SourceFertilizer[](0));
+
         vm.prank(user);
-        bs.transmitOut(
-            newBsAddr,
-            new IMockFBeanstalk.SourceDeposit[](0),
-            plots,
-            new IMockFBeanstalk.SourceFertilizer[](0),
-            abi.encode("")
-        );
+        bs.transmitOut(newBsAddr, assets, abi.encode(""));
 
         // Verify Source plots.
         {
@@ -297,14 +295,13 @@ contract TransmitToForkTest is TestHelper {
             );
             pods = pods0 + pods1;
 
+            bytes[] memory assets = new bytes[](3);
+            assets[0] = abi.encode(new IMockFBeanstalk.SourceDeposit[](0));
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(new IMockFBeanstalk.SourceFertilizer[](0));
+
             vm.prank(user);
-            bs.transmitOut(
-                newBsAddr,
-                new IMockFBeanstalk.SourceDeposit[](0),
-                plots,
-                new IMockFBeanstalk.SourceFertilizer[](0),
-                abi.encode("")
-            );
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
         }
         // Verify source plots slashing.
         {
@@ -385,11 +382,15 @@ contract TransmitToForkTest is TestHelper {
         }
 
         vm.prank(user);
+
+        bytes[] memory assets = new bytes[](3);
+        assets[0] = abi.encode(new IMockFBeanstalk.SourceDeposit[](0));
+        assets[1] = abi.encode(new IMockFBeanstalk.SourcePlot[](0));
+        assets[2] = abi.encode(ferts);
+
         bs.transmitOut(
             newBsAddr, // Transmit into self
-            new IMockFBeanstalk.SourceDeposit[](0),
-            new IMockFBeanstalk.SourcePlot[](0),
-            ferts,
+            assets,
             abi.encode("")
         );
 
@@ -463,8 +464,14 @@ contract TransmitToForkTest is TestHelper {
                 0
             );
             vm.expectRevert();
+
+            bytes[] memory assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(fertilizer);
+
             vm.prank(user);
-            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
 
             // Revert LP amount out too high.
             uint256 lpDepositAmount = 100e18;
@@ -488,8 +495,14 @@ contract TransmitToForkTest is TestHelper {
                 0 // populated by source
             );
             vm.expectRevert(); // 0xd58ad03f // error SlippageOut
+
+            assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(fertilizer);
+
             vm.prank(user);
-            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
         }
 
         // Plot reverts.
@@ -509,8 +522,14 @@ contract TransmitToForkTest is TestHelper {
                 0 // existingIndex
             );
             vm.expectRevert();
+
+            bytes[] memory assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(fertilizer);
+
             vm.prank(user);
-            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
 
             // Revert bad existing index.
             uint256 podsPerSow = sowForUser(user, 1000e6);
@@ -521,8 +540,14 @@ contract TransmitToForkTest is TestHelper {
                 1 // existingIndex
             );
             vm.expectRevert("existingIndex non null");
+
+            assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(fertilizer);
+
             vm.prank(user);
-            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
         }
 
         // Fertilizer Reverts.
@@ -542,8 +567,14 @@ contract TransmitToForkTest is TestHelper {
                 0 // _remainingBpf
             );
             vm.expectRevert();
+
+            bytes[] memory assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(plots);
+            assets[2] = abi.encode(fertilizer);
+
             vm.prank(user);
-            bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
         }
     }
 
@@ -594,7 +625,12 @@ contract TransmitToForkTest is TestHelper {
             0 // _remainingBpf
         );
 
+        bytes[] memory assets = new bytes[](3);
+        assets[0] = abi.encode(deposits);
+        assets[1] = abi.encode(plots);
+        assets[2] = abi.encode(fertilizer);
+
         vm.prank(user);
-        bs.transmitOut(newBsAddr, deposits, plots, fertilizer, abi.encode(""));
+        bs.transmitOut(newBsAddr, assets, abi.encode(""));
     }
 }

@@ -22,28 +22,31 @@ contract TransmitOutFacet is Invariable {
      */
     function transmitOut(
         address destination,
-        LibTransmitOut.SourceDeposit[] calldata sourceDeposits,
-        LibTransmitOut.SourcePlot[] calldata sourcePlots,
-        LibTransmitOut.SourceFertilizer[] calldata sourceFertilizer,
+        bytes[] calldata assets,
         bytes calldata data
     ) external fundsSafu {
+        require(assets.length >= 3, "Missing asset data");
+
         bytes[] memory deposits = LibTransmitOut.transmitOutDeposits(
             LibTractor._user(),
             destination,
-            sourceDeposits
+            abi.decode(assets[0], (LibTransmitOut.SourceDeposit[]))
         );
-        bytes[] memory plots = LibTransmitOut.transmitOutPlots(LibTractor._user(), sourcePlots);
+        bytes[] memory plots = LibTransmitOut.transmitOutPlots(
+            LibTractor._user(),
+            abi.decode(assets[1], (LibTransmitOut.SourcePlot[]))
+        );
         bytes[] memory fertilizer = LibTransmitOut.transmitOutFertilizer(
             LibTractor._user(),
-            sourceFertilizer
+            abi.decode(assets[2], (LibTransmitOut.SourceFertilizer[]))
         );
 
-        bytes[][] memory assets = new bytes[][](3);
-        assets[0] = deposits;
-        assets[1] = plots;
-        assets[2] = fertilizer;
+        bytes[][] memory processedAssets = new bytes[][](3);
+        processedAssets[0] = deposits;
+        processedAssets[1] = plots;
+        processedAssets[2] = fertilizer;
 
         // Reverts if Destination fails to handle transmitted assets.
-        ITransmitInFacet(destination).transmitIn(LibTractor._user(), assets, data);
+        ITransmitInFacet(destination).transmitIn(LibTractor._user(), processedAssets, data);
     }
 }
