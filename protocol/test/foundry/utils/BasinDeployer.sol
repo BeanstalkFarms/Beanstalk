@@ -10,6 +10,7 @@ import {Utils, console} from "test/foundry/utils/Utils.sol";
 import {Call, IAquifer} from "contracts/interfaces/basin/IAquifer.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MockPump} from "contracts/mocks/well/MockPump.sol";
+import "forge-std/console.sol";
 
 /**
  * @title BasinDeployer
@@ -208,23 +209,18 @@ contract BasinDeployer is Utils {
     }
 
     function deployWBTCWellOnFork(bool mock, bool verbose) internal {
-        console.log("deploying wbtc well");
-
-        console.log("wellImplementations[0]:", wellImplementations[0]);
-
         // deploy Bean WBTC well:
         // wells.push(deployBeanCp2Well([BEAN_WBTC_WELL, WBTC], _pump));
 
         deployWellAtAddressNoData(
             BEAN_WBTC_WELL,
             BEAN,
-            WBTC,
+            L1_WBTC,
             wellFunctions[0],
             pumps[0], // multi flow pump
             wellImplementations[0]
         );
 
-        console.log("deployed wbtc well");
         if (verbose) console.log("Bean WBTC well deployed at:", wells[0]);
         vm.label(BEAN_WBTC_WELL, "BEAN/WBTC Well");
     }

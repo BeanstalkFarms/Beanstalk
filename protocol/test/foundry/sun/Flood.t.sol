@@ -354,7 +354,7 @@ contract FloodTest is TestHelper {
     }
 
     function testSopsBelowPeg() public {
-        setDeltaBforWell(-1000e6, BEAN_ETH_WELL, C.WETH);
+        setDeltaBforWell(-1000e6, BEAN_ETH_WELL, WETH);
         bs.siloSunrise(25);
 
         Season memory s = seasonGetters.time();
@@ -410,7 +410,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(address(bs)), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);
@@ -466,7 +466,6 @@ contract FloodTest is TestHelper {
         bs.mow(users[2], BEAN);
         bs.rainSunrise();
         bs.droughtSunrise();
-
         setReserves(sopWell, 1048808848170, 1100e18);
 
         vm.expectEmit();
@@ -488,7 +487,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 77091653184968908600);
+        assertEq(IERC20(WETH).balanceOf(address(bs)), 77091653184968908600);
 
         assertEq(reserves[0], 1074099498643);
         assertEq(reserves[1], 1074099498644727997417);
@@ -496,6 +495,7 @@ contract FloodTest is TestHelper {
         // tracks user plenty before update
         uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
         assertEq(userPlenty, 38544532214605630101);
+
 
         // tracks user plenty after update
         bs.mow(users[1], sopWell);
@@ -552,7 +552,7 @@ contract FloodTest is TestHelper {
 
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(address(bs)), 51191151829696906017);
 
         assertEq(reserves[0], 1048808848170);
         assertEq(reserves[1], 1048808848170303093983);
@@ -754,7 +754,7 @@ contract FloodTest is TestHelper {
         assertEq(s.lastSop, s.rainStart);
         assertEq(s.lastSopSeason, s.current);
         // check weth balance of beanstalk
-        assertEq(IERC20(C.WETH).balanceOf(address(bs)), 51191151829696906017);
+        assertEq(IERC20(WETH).balanceOf(address(bs)), 51191151829696906017);
         // after the swap, the composition of the pools are
         uint256[] memory balances = IWell(sopWell).getReserves();
         assertEq(balances[0], 1048808848170);

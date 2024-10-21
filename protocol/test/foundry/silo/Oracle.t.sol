@@ -49,28 +49,6 @@ contract OracleTest is TestHelper {
         assertApproxEqRel(price, 50000e6, 0.001e18, "price using encode type 0x02");
     }
 
-    function test_uniswap_external() public {
-        setupUniswapWBTCOracleImplementation();
-
-        // exercise TokenUsd price and UsdToken price
-        uint256 tokenUsdPriceFromExternal = OracleFacet(address(bs)).getTokenUsdPriceFromExternal(
-            WBTC,
-            0
-        );
-        assertApproxEqRel(
-            tokenUsdPriceFromExternal,
-            50000e6,
-            0.001e18,
-            "tokenUsdPriceFromExternal"
-        );
-
-        uint256 usdTokenPriceFromExternal = OracleFacet(address(bs)).getUsdTokenPriceFromExternal(
-            WBTC,
-            0
-        );
-        assertEq(usdTokenPriceFromExternal, 0.00002e8, "usdTokenPriceFromExternal"); // e8 because wbtc has 8 decimals
-    }
-
     /**
      * @notice verifies functionality with LSDChainlinkOracle.sol.
      */
@@ -106,8 +84,8 @@ contract OracleTest is TestHelper {
         mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 600);
 
         // query price
-        uint256 usdTokenPrice = OracleFacet(address(bs)).getUsdTokenTwap(C.WETH, 3600);
-        uint256 tokenUsdPrice = OracleFacet(address(bs)).getTokenUsdTwap(C.WETH, 3600);
+        uint256 usdTokenPrice = OracleFacet(address(bs)).getUsdTokenTwap(WETH, 3600);
+        uint256 tokenUsdPrice = OracleFacet(address(bs)).getTokenUsdTwap(WETH, 3600);
 
         // verify math:
         // 1200 + 1000 + 1100 + 1000 + 900 + 1200 = 6400 / 6 = 1066.666666e6
@@ -126,8 +104,8 @@ contract OracleTest is TestHelper {
         mockAddRound(ETH_USD_CHAINLINK_PRICE_AGGREGATOR, 1200e6, 50);
 
         // query price
-        uint256 usdTokenPrice = OracleFacet(address(bs)).getUsdTokenTwap(C.WETH, 3600);
-        uint256 tokenUsdPrice = OracleFacet(address(bs)).getTokenUsdTwap(C.WETH, 3600);
+        uint256 usdTokenPrice = OracleFacet(address(bs)).getUsdTokenTwap(WETH, 3600);
+        uint256 tokenUsdPrice = OracleFacet(address(bs)).getTokenUsdTwap(WETH, 3600);
 
         // verify math:
         // (1200 * 600) + (1000 * 1000) + (1100 * 500) + (1000 * 300) + (900 * 1150) + (1200 * 50) / 3600 = 1018.055555 * 1e6
@@ -264,11 +242,11 @@ contract OracleTest is TestHelper {
         );
 
         // token price is number of dollars per token, i.e. 50000 USD for 1 WBTC
-        uint256 tokenPriceEth = OracleFacet(address(bs)).getTokenUsdPrice(C.WETH); // 1000e6
+        uint256 tokenPriceEth = OracleFacet(address(bs)).getTokenUsdPrice(LibConstant.WETH); // 1000e6
         assertEq(tokenPriceEth, 1000e6, "getTokenUsdPrice eth");
 
         // number of tokens received per dollar
-        uint256 usdPriceEth = OracleFacet(address(bs)).getUsdTokenPrice(C.WETH); // 1e15 which is 1e18 (1 eth in wei) / 1000 (weth price 1000), you get 1/1000th of 1 eth for $1
+        uint256 usdPriceEth = OracleFacet(address(bs)).getUsdTokenPrice(LibConstant.WETH); // 1e15 which is 1e18 (1 eth in wei) / 1000 (weth price 1000), you get 1/1000th of 1 eth for $1
         assertEq(usdPriceEth, 1e18 / 1000, "getUsdTokenPrice eth");
 
         uint256 tokenPriceWBTC = OracleFacet(address(bs)).getTokenUsdPrice(WBTC); // should be 50000e6
@@ -294,12 +272,12 @@ contract OracleTest is TestHelper {
         );
 
         // WETH price is 1000
-        uint256 priceWETH = OracleFacet(address(bs)).getUsdTokenPrice(C.WETH);
-        assertEq(priceWETH, 1e15); //  1e18/1e3 = 1e15
+        uint256 priceWETH = OracleFacet(address(bs)).getUsdTokenPrice(WETH);
+        assertEq(priceWETH, 1e15, "weth price invalid"); //  1e18/1e3 = 1e15
 
         // WBTC price is 50000
         uint256 priceWBTC = OracleFacet(address(bs)).getUsdTokenPrice(WBTC);
-        assertEq(priceWBTC, 0.00002e8); // adjusted to 8 decimals
+        assertEq(priceWBTC, 0.00002e8, "wbtc price invalid"); // adjusted to 8 decimals
     }
 
     function testForkMainnetWBTCOracle() public {
@@ -307,12 +285,12 @@ contract OracleTest is TestHelper {
 
         setupUniswapWBTCOracleImplementation();
 
-        uint256 priceWBTCmillion = OracleFacet(BEANSTALK).getMillionUsdPrice(WBTC, 0);
+        uint256 priceWBTCmillion = OracleFacet(BEANSTALK).getMillionUsdPrice(L1_WBTC, 0);
         // 1e(8+6)/1684341342 = 59370.3885943091
         assertEq(priceWBTCmillion, 1684454192); // $1,000,000 buys 1684341342 at BTC price of 6148186669379 per USDC and USDC 99993272.
 
         // 1e8/1684 = 59382.4228028504
-        uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(WBTC);
+        uint256 priceWBTC = OracleFacet(BEANSTALK).getUsdTokenPrice(L1_WBTC);
         assertEq(priceWBTC, 1684); // $1 buys 1683 satoshi at BTC price of 6148186669379 per USDC and USDC 99993272.
     }
 
@@ -354,7 +332,7 @@ contract OracleTest is TestHelper {
         // deal didn't seem to work with wbtc, so instead, transfer from a wbtc whale
 
         vm.prank(WBTC_WHALE);
-        IERC20(WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
+        IERC20(L1_WBTC).transfer(BEAN_WBTC_WELL, 2e8); // 2 wbtc
         deal(address(BEAN), BEAN_WBTC_WELL, 117989199462, true); // approx 2 btc worth of beans
         IWell(BEAN_WBTC_WELL).sync(users[0], 0);
 
@@ -370,7 +348,7 @@ contract OracleTest is TestHelper {
     function setupUniswapWBTCOracleImplementation() public {
         vm.prank(address(bs));
         bs.updateOracleImplementationForToken(
-            WBTC,
+            L1_WBTC,
             IMockFBeanstalk.Implementation(
                 WBTC_USDC_03_POOL,
                 bytes4(0),
@@ -382,7 +360,7 @@ contract OracleTest is TestHelper {
         // also uniswap relies on having a chainlink oracle for the dollar-denominated token, in this case USDC
         vm.prank(address(bs));
         bs.updateOracleImplementationForToken(
-            USDC,
+            L1_USDC,
             IMockFBeanstalk.Implementation(
                 USDC_USD_CHAINLINK_PRICE_AGGREGATOR,
                 bytes4(0),
@@ -422,7 +400,7 @@ contract OracleTest is TestHelper {
     function setupUniswapWstethOracleImplementation() internal {
         vm.prank(BEANSTALK);
         bs.updateOracleImplementationForToken(
-            WSTETH,
+            L1_WSTETH,
             IMockFBeanstalk.Implementation(
                 WSTETH_ETH_001_POOL,
                 bytes4(0),

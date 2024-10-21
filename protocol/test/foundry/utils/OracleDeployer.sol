@@ -189,7 +189,7 @@ contract OracleDeployer is Utils {
 
         // init L1 ETH:USD oracle
         updateOracleImplementationForTokenUsingChainlinkAggregator(
-            L1_WETH,
+            WETH,
             ETH_USD_CHAINLINK_PRICE_AGGREGATOR,
             verbose
         );

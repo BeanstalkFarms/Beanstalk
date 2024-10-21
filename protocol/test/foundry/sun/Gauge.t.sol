@@ -654,10 +654,9 @@ contract GaugeTest is TestHelper {
         uint256 unripeAmount,
         uint256 beanAmount
     ) internal prank(users[0]) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         MockToken(UNRIPE_BEAN).mint(users[0], unripeAmount);
-        IBean(s.sys.tokens.bean).mint(users[0], beanAmount);
-        IBean(s.sys.tokens.bean).approve(address(bs), beanAmount);
+        IBean(BEAN).mint(users[0], beanAmount);
+        IBean(BEAN).approve(address(bs), beanAmount);
         bs.addUnderlying(UNRIPE_BEAN, beanAmount);
     }
 

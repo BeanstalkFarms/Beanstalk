@@ -57,10 +57,8 @@ contract FieldTest is TestHelper {
         beans = bound(beans, 2, type(uint128).max); // soil casted to uint128.
         soil = bound(soil, 1, beans - 1); // beans less than soil.
 
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
         // issue `beans` to farmers
-        IBean(s.sys.tokens.bean).mint(farmers[0], beans);
+        IBean(BEAN).mint(farmers[0], beans);
         bs.setSoilE(soil - 1);
         vm.prank(farmers[0]);
         vm.expectRevert("Field: Soil Slippage");
@@ -331,8 +329,7 @@ contract FieldTest is TestHelper {
         uint256 amount1
     ) public returns (uint256, uint256, uint256, uint256) {
         bs.setSoilE(soil);
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        IBean(s.sys.tokens.bean).mint(farmer0, amount0);
+        IBean(BEAN).mint(farmer0, amount0);
         uint256 initalBeanBalance0 = IBean(BEAN).balanceOf(farmer0);
         if (amount0 > soil) amount0 = soil;
         soil -= amount0;

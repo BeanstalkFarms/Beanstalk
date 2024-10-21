@@ -9,6 +9,7 @@ import {InitMint} from "contracts/beanstalk/init/InitMint.sol";
 import {TestHelper} from "test/foundry/utils/TestHelper.sol";
 import {IMockFBeanstalk} from "contracts/interfaces/IMockFBeanstalk.sol";
 import {IDiamondCut} from "contracts/interfaces/IDiamondCut.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
 
 /**
  * @title UpgradeDiamond
@@ -58,7 +59,7 @@ contract UpgradeDiamond is TestHelper {
 
     function testInitMint() public view {
         // verify beans are minted.
-        assertEq(bean.balanceOf(users[0]), 100e6);
+        assertEq(IBean(BEAN).balanceOf(users[0]), 100e6);
     }
 
     function test_SelectorRemoval() public {

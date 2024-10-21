@@ -111,14 +111,14 @@ contract reeseedMigrateL2 is TestHelper {
         // active address on beanstalk.
         address user = address(0x1c42949f6f326Fc53E6fAaDE1A4cCB9b5b209A80);
         // transfer out.
-        address token = address(USDC);
+        address token = address(L1_USDC);
 
-        uint256 initialTokenBalance = IERC20(USDC).balanceOf(BEANSTALK);
-        uint256 initialUserBalance = IERC20(USDC).balanceOf(user);
+        uint256 initialTokenBalance = IERC20(L1_USDC).balanceOf(BEANSTALK);
+        uint256 initialUserBalance = IERC20(L1_USDC).balanceOf(user);
         uint256 initialInternalTokenBalance = bs.getInternalBalance(user, token);
 
         vm.prank(user);
-        IERC20(USDC).approve(BEANSTALK, type(uint256).max);
+        IERC20(L1_USDC).approve(BEANSTALK, type(uint256).max);
 
         vm.prank(user);
         // verify the user is able to deposit into internal balances.
@@ -130,9 +130,9 @@ contract reeseedMigrateL2 is TestHelper {
         // initial snapshot.
         uint256 snapshot = vm.snapshot();
 
-        initialUserBalance = IERC20(USDC).balanceOf(user);
+        initialUserBalance = IERC20(L1_USDC).balanceOf(user);
         initialInternalTokenBalance = bs.getInternalBalance(user, token);
-        initialTokenBalance = IERC20(USDC).balanceOf(BEANSTALK);
+        initialTokenBalance = IERC20(L1_USDC).balanceOf(BEANSTALK);
         vm.prank(user);
         // verify the user is able to transfer internal balances to other users).
         bs.transferToken(token, address(100010), 1e6, 1, 1);
