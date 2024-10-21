@@ -42,12 +42,10 @@ export const useFetchPools = () => {
         ];
         const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
 
-        const [priceResult, poolsResult, _lpResults] = await Promise.all([
+        const [priceResult, beanTotalSupply, totalDeltaB, _lpResults] = await Promise.all([
           beanstalkPrice.price(),
-          multicall(config, {
-            contracts: priceAndBeanCalls,
-            allowFailure: true,
-          }),
+          BEAN.getContract().totalSupply().then(tokenResult(BEAN)),
+          beanstalk.totalDeltaB().then(tokenResult(BEAN)),
           // fetch [poolDeltaB, totalSupply] for each pool, in chunks of 20
           Promise.all(
             lpMulticall.calls.map((lpCall) =>
@@ -59,18 +57,19 @@ export const useFetchPools = () => {
           ).then((result) => chunkArray(result.flat(), lpMulticall.chunkSize)),
         ]);
 
-        console.debug(`${pageContext} MULTICALL RESULTS: `, {
+        console.debug(`${pageContext} FETCH: `, {
           lpMulticall,
           priceResult,
           priceAndBeanCalls,
           _lpResults,
-          poolsResult,
+          beanTotalSupply,
+          totalDeltaB,
         });
 
-        const [beanTotalSupply, totalDeltaB] = [
-          extract(poolsResult[0], 'bean.totalSupply'),
-          extract(poolsResult[1], 'totalDeltaB'),
-        ];
+        // const [beanTotalSupply, totalDeltaB] = [
+        //   extract(poolsResult[0], 'bean.totalSupply'),
+        //   extract(poolsResult[1], 'totalDeltaB'),
+        // ];
 
         const lpResults = _lpResults.reduce<Record<string, LPResultType>>(
           (prev, [_deltaB, _supply], i) => {
@@ -137,7 +136,7 @@ export const useFetchPools = () => {
         }
 
         if (beanTotalSupply) {
-          dispatch(updateSupply(transform(beanTotalSupply, 'bnjs', BEAN)));
+          dispatch(updateSupply(beanTotalSupply));
         }
 
         if (totalDeltaB) {
@@ -211,17 +210,6 @@ function makeTotalDeltaBMulticall(
     address: beanstalkAddress as `0x${string}`,
     abi: BEANSTALK_ABI_SNIPPETS.totalDeltaB,
     functionName: 'totalDeltaB',
-    args: [],
-  };
-}
-
-function makePriceMulticall(
-  address: string
-): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.price> {
-  return {
-    address: address as `0x${string}`,
-    abi: BEANSTALK_ABI_SNIPPETS.price,
-    functionName: 'price',
     args: [],
   };
 }
