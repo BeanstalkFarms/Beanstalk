@@ -496,7 +496,6 @@ contract FloodTest is TestHelper {
         uint256 userPlenty = bs.balanceOfPlenty(users[1], sopWell);
         assertEq(userPlenty, 38544532214605630101);
 
-
         // tracks user plenty after update
         bs.mow(users[1], sopWell);
         SiloGettersFacet.AccountSeasonOfPlenty memory userSop = siloGetters.balanceOfSop(users[1]);
