@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import type { Account, Chain, Client, Transport } from 'viem';
 import { Config, useClient, useConnectorClient } from 'wagmi';
 
-const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
+const netlifyContext = import.meta.env.VITE_NETLIFY_CONTEXT;
+const IS_DEVELOPMENT_ENV = netlifyContext !== 'production' && netlifyContext !== "deploy-preview";
 
 const fallbackChain = {
   chainId: IS_DEVELOPMENT_ENV ? ChainId.LOCALHOST : ChainId.ARBITRUM_MAINNET,

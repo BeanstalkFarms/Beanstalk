@@ -26,22 +26,22 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
 
   React.useEffect(() => {
     console.log({
-      totalBeanSupply,
-      beanstalkField,
-      beanstalkSilo,
-      beanstalkBarn,
+      totalBeanSupply: totalBeanSupply.toNumber(),
+      beanstalkField: beanstalkField.podLine.toNumber(),
+      beanstalkSilo: beanstalkSilo.stalk.total.toNumber(),
+      beanstalkBarn: beanstalkBarn.unfertilized.toNumber(),
     });
   }, [totalBeanSupply, beanstalkField, beanstalkSilo, beanstalkBarn]);
 
   React.useEffect(() => {
-    console.log(sdk.provider);
-  }, [sdk.provider]);
+    console.log(sdk);
+  }, [sdk]);
 
   const { STALK, SPROUTS, PODS } = useBeanstalkTokens();
   const breakdown = useBeanstalkSiloBreakdown();
 
   React.useEffect(() => {
-    console.log({ breakdown });
+    console.log(breakdown);
   }, [breakdown]);
 
   /// Total Balances
