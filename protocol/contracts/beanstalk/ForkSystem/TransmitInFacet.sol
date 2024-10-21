@@ -24,15 +24,17 @@ contract TransmitInFacet is Invariable {
      */
     function transmitIn(
         address user,
-        bytes[] calldata deposits,
-        bytes[] calldata plots,
-        bytes[] calldata fertilizer,
-        bytes calldata // data
+        bytes[][] calldata assets,
+        bytes calldata //data
     ) external fundsSafu {
         require(s.sys.supportedSourceForks[msg.sender], "Unsupported source");
+        require(assets.length >= 2, "Insufficient data provided");
 
-        LibTransmitIn.transmitInDeposits(user, deposits);
-        LibTransmitIn.transmitInPlots(user, plots);
-        LibTransmitIn.transmitInFertilizer(user, fertilizer);
+        LibTransmitIn.transmitInDeposits(user, assets[0]);
+        LibTransmitIn.transmitInPlots(user, assets[1]);
+        if (assets.length > 2) {
+            LibTransmitIn.transmitInFertilizer(user, assets[2]);
+        }
+        // additional assets can be processed here in the future
     }
 }

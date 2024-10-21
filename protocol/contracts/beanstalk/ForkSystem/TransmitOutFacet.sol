@@ -25,7 +25,7 @@ contract TransmitOutFacet is Invariable {
         LibTransmitOut.SourceDeposit[] calldata sourceDeposits,
         LibTransmitOut.SourcePlot[] calldata sourcePlots,
         LibTransmitOut.SourceFertilizer[] calldata sourceFertilizer,
-        bytes calldata // data
+        bytes calldata data
     ) external fundsSafu {
         bytes[] memory deposits = LibTransmitOut.transmitOutDeposits(
             LibTractor._user(),
@@ -38,13 +38,12 @@ contract TransmitOutFacet is Invariable {
             sourceFertilizer
         );
 
+        bytes[][] memory assets = new bytes[][](3);
+        assets[0] = deposits;
+        assets[1] = plots;
+        assets[2] = fertilizer;
+
         // Reverts if Destination fails to handle transmitted assets.
-        ITransmitInFacet(destination).transmitIn(
-            LibTractor._user(),
-            deposits,
-            plots,
-            fertilizer,
-            abi.encode("")
-        );
+        ITransmitInFacet(destination).transmitIn(LibTractor._user(), assets, data);
     }
 }
