@@ -2008,11 +2008,15 @@ interface IMockFBeanstalk {
 
     function totalPods(uint256 fieldId) external view returns (uint256);
 
+    function totalProcessed(uint256 fieldId) external view returns (uint256);
+
     function totalRainRoots() external view returns (uint256);
 
     function totalRealSoil() external view returns (uint256);
 
     function totalRoots() external view returns (uint256);
+
+    function totalSlashed(uint256 fieldId) external view returns (uint256);
 
     function totalSoil() external view returns (uint256);
 

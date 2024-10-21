@@ -315,6 +315,9 @@ contract TransmitToForkTest is TestHelper {
             vm.prank(farmers[5]);
             bs.harvest(0, plotIndices, 0);
             require(bean.balanceOf(farmers[5]) == initBeanBalance, "Beans received from slashing");
+            // at this point, only slashed plots have been processed, no beans harvested
+            require(bs.totalHarvested(SRC_FIELD) == 0, "total harvested");
+            require(bs.totalSlashed(SRC_FIELD) == bs.totalProcessed(SRC_FIELD), "total slashed");
         }
         // Verify Destination plots by harvesting.
         {
