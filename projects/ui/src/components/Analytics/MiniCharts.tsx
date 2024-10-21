@@ -58,8 +58,8 @@ const MiniCharts: FC<{}> = () => {
               : seasonData;
             const _value = valueFormatter(data[priceKey]);
             let value;
-            if (typeof _value === "function") {
-              value = _value(season.lte(RESEED_SEASON - 2) ? "l1" : "l2");
+            if (typeof _value === 'function') {
+              value = _value(season.lte(RESEED_SEASON - 2) ? 'l1' : 'l2');
             } else {
               value = _value;
             }
@@ -88,7 +88,7 @@ const MiniCharts: FC<{}> = () => {
             key={`selectedMiniChart${index}`}
             sx={{ width: '100%', height: '15vh', minHeight: 150 }}
           >
-            {(!queries?.[index].data?.length || queries[index]?.isLoading) ? (
+            {!queries?.[index].data?.length || queries[index]?.isLoading ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -112,7 +112,7 @@ const MiniCharts: FC<{}> = () => {
               </Box>
             ) : (
               <ChartV2
-                formattedData={queries[index].data}
+                formattedData={queries[index].data ?? [[]]}
                 selected={[chart]}
                 size="mini"
               />
