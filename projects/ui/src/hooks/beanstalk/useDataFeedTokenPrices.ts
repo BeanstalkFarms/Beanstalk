@@ -1,13 +1,11 @@
 import { useCallback, useMemo } from 'react';
-import { AdvancedPipeStruct, BeanstalkSDK, Clipboard, ERC20Token, Token } from '@beanstalk/sdk';
+import { AdvancedPipeStruct, BeanstalkSDK, Clipboard, ERC20Token } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
 import { useDispatch } from 'react-redux';
-import { ContractFunctionParameters } from 'viem';
 
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
 import { chunkArray, bigNumberResult, getTokenIndex, tokenIshEqual } from '~/util';
-import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
 import { TokenMap } from '~/constants/index';
 import { DAI_CHAINLINK_ADDRESSES } from '~/constants/addresses';
 import { useAppSelector } from '~/state/index';
@@ -142,39 +140,4 @@ async function fetchOraclePrices(sdk: BeanstalkSDK, tokens: ERC20Token[]) {
     };
     return prev;
   }, {});
-}
-
-type OraclePriceCall = ContractFunctionParameters<
-  typeof BEANSTALK_ABI_SNIPPETS.oraclePrices
->;
-function makeMultiCall(beanstalkAddress: string, tokens: Token[]) {
-  const calls: OraclePriceCall[] = [];
-
-  const contract = {
-    address: beanstalkAddress as `0x${string}`,
-    abi: BEANSTALK_ABI_SNIPPETS.oraclePrices,
-  };
-
-  let address: `0x${string}` = '0x';
-
-  for (const token of tokens) {
-    address = token.address as `0x${string}`;
-    const instantPriceCall: OraclePriceCall = {
-      ...contract,
-      functionName: 'getTokenUsdPrice',
-      args: [address as `0x${string}`],
-    };
-    const twapPriceCall: OraclePriceCall = {
-      ...contract,
-      functionName: 'getTokenUsdTwap',
-      args: [address as `0x${string}`, 3600n],
-    };
-
-    calls.push(instantPriceCall, twapPriceCall);
-  }
-
-  return {
-    contracts: chunkArray(calls, 20),
-    chunkSize: 2,
-  };
 }

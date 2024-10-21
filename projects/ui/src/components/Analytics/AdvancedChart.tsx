@@ -10,7 +10,7 @@ import { useQueries } from '@tanstack/react-query';
 import { fetchAllSeasonData } from '~/util/Graph';
 import { exists, mayFunctionToValue } from '~/util';
 import { RESEED_SEASON } from '~/constants';
-import useIsMounted from '~/hooks/display/useIsMounted';
+import useOnAnimationFrame from '~/hooks/display/useOnAnimationFrame';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
@@ -32,7 +32,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const chartSetupData = useChartSetupData();
 
   // wait to mount before fetching data
-  const mounted = useIsMounted();
+  const ready = useOnAnimationFrame();
 
   const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
   const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
@@ -89,7 +89,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
           return data as QueryData[];
         },
         retry: false,
-        enabled: mounted && season.gt(0),
+        enabled: ready && season.gt(0),
         staleTime: Infinity,
       };
     }),
