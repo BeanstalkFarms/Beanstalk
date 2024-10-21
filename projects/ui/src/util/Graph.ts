@@ -53,6 +53,7 @@ export const subgraphQueryKeys = {
 
   // Token
   tokenLiquidity: (token: TokenInstance) => ['seasonalTokenLiquidity', token.symbol].join("-"),
+  whitelistTokenRewards: () => ['whitelistTokenRewards'],
 
   // --------------------- Beanstalk ---------------------
   // ------ Beanstalk Silo ------

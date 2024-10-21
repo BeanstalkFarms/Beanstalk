@@ -8,17 +8,41 @@ import { NEW_BN } from '~/constants';
 
 import { FC } from '~/types';
 import { useBeanstalkTokens } from '~/hooks/beanstalk/useTokens';
-import Stat from '../Common/Stat';
-import { displayFullBN } from '../../util';
+import BigNumber from 'bignumber.js';
+import useSdk from '~/hooks/sdk';
+import { displayFullBN } from '~/util';
+import Stat from '~/components/Common/Stat';
+
+(BigNumber.prototype as any)[Symbol.for('nodejs.util.inspect.custom')] = function logBN() {
+  return this.toNumber();
+}
 
 const LiquidityByState: FC<CardProps> = ({ sx }) => {
+  const sdk = useSdk();
   const totalBeanSupply = useAppSelector((s) => s._bean.token.supply);
   const beanstalkField = useAppSelector((s) => s._beanstalk.field);
   const beanstalkSilo = useAppSelector((s) => s._beanstalk.silo);
   const beanstalkBarn = useAppSelector((s) => s._beanstalk.barn);
 
+  React.useEffect(() => {
+    console.log({
+      totalBeanSupply,
+      beanstalkField,
+      beanstalkSilo,
+      beanstalkBarn,
+    });
+  }, [totalBeanSupply, beanstalkField, beanstalkSilo, beanstalkBarn]);
+
+  React.useEffect(() => {
+    console.log(sdk.provider);
+  }, [sdk.provider]);
+
   const { STALK, SPROUTS, PODS } = useBeanstalkTokens();
   const breakdown = useBeanstalkSiloBreakdown();
+
+  React.useEffect(() => {
+    console.log({ breakdown });
+  }, [breakdown]);
 
   /// Total Balances
   const STAT_ITEMS: StatItem[] = [

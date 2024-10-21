@@ -8,8 +8,9 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { Range, Time } from 'lightweight-charts';
 import { useQueries } from '@tanstack/react-query';
 import { fetchAllSeasonData } from '~/util/Graph';
-import { exists } from '~/util';
+import { exists, mayFunctionToValue } from '~/util';
 import { RESEED_SEASON } from '~/constants';
+import useIsMounted from '~/hooks/display/useIsMounted';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
@@ -30,82 +31,65 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
-  const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
-  const storedTimePeriod = storedSetting1
-    ? JSON.parse(storedSetting1)
-    : undefined;
-  const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
-  const storedSelectedCharts = storedSetting2
-    ? JSON.parse(storedSetting2)
-    : undefined;
+  // wait to mount before fetching data
+  const mounted = useIsMounted();
 
-  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(
-    storedTimePeriod
-  );
-  const [selectedCharts, setSelectedCharts] = useState<number[]>(
-    storedSelectedCharts || [0]
-  );
+  const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
+  const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+  const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
+  const storedSelectedCharts = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+
+  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(storedTimePeriod);
+  const [selectedCharts, setSelectedCharts] = useState<number[]>(storedSelectedCharts || [0]);
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const queries = useQueries({
     queries: selectedCharts.map((chartId) => {
       const params = chartSetupData[chartId];
+      const queryKey = ['analytics', params.id, season.toNumber()];
       return {
-        queryKey: ['analytics', params.id, season.toNumber()],
+        queryKey,
         queryFn: async () => {
           const dataFormatter = params.dataFormatter;
           const valueFormatter = params.valueFormatter;
           const priceKey = params.priceScaleKey;
           const timestamps = new Set<number>();
 
-          return fetchAllSeasonData(params, season.toNumber()).then(
-            (allSeasonData) => {
-              const output = allSeasonData.map((seasonData) => {
-                try {
-                  const time = Number(seasonData[params.timeScaleKey]);
-                  const data = dataFormatter
-                    ? dataFormatter?.(seasonData)
-                    : seasonData;
-                  const _value = valueFormatter(data[priceKey]);
-                  let value;
-                  if (typeof _value === 'function') {
-                    value = _value(
-                      seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
-                    );
-                  } else {
-                    value = _value;
-                  }
+          const allSeasonData = await fetchAllSeasonData(params, season.toNumber());
+          const output = allSeasonData.map((seasonData) => {
+            try {
+              const time = Number(seasonData[params.timeScaleKey]);
+              const data = dataFormatter ? dataFormatter?.(seasonData): seasonData;
+              const value = mayFunctionToValue<number>(
+                valueFormatter(data[priceKey]), 
+                seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
+              );
 
-                  if (
-                    !exists(time) ||
-                    !exists(value) ||
-                    timestamps.has(time) ||
-                    time <= 0
-                  ) {
-                    return undefined;
-                  }
+              const invalidTime = !exists(time) || timestamps.has(time) || time <= 0;
+              if (invalidTime || !exists(value)) return undefined;
 
-                  timestamps.add(time);
+              timestamps.add(time);
 
-                  return {
-                    time: time as Time,
-                    value,
-                    customValues: {
-                      season: data.season,
-                    },
-                  } satisfies QueryData;
-                } catch (e) {
-                  return undefined;
-                }
-              });
-              return output
-                .filter(Boolean)
-                .sort((a, b) => Number(a!.time) - Number(b!.time));
+              return {
+                time: time as Time,
+                value,
+                customValues: {
+                  season: data.season,
+                },
+              } as QueryData;
+            } catch (e) {
+              console.debug(`[advancedChart] failed to process some data for ${queryKey}`, e);
+              return undefined;
             }
-          );
+          }).filter(Boolean) as QueryData[];
+
+          // Sort by time
+          const data = output.sort((a, b) => Number(a.time) - Number(b.time));
+          console.debug(`[advancedChart] ${queryKey}`, data);
+          return data as QueryData[];
         },
         retry: false,
-        enabled: season.gt(0),
+        enabled: mounted && season.gt(0),
         staleTime: Infinity,
       };
     }),
@@ -119,8 +103,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
     () => queries.map((q) => q.data).filter(Boolean) as QueryData[][],
     [queries]
   );
-
-  console.log('queryData', queryData);
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];

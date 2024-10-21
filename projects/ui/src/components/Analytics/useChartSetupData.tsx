@@ -8,7 +8,6 @@ import {
   BEAN_CRV3_V1_LP,
   BEAN_ETH_UNIV2_LP,
   BEAN_ETH_WELL_LP,
-  BEAN_LUSD_LP,
   BEAN_USDC_WELL_LP,
   BEAN_USDT_WELL_LP,
   BEAN_WBTC_WELL_LP,
@@ -130,7 +129,6 @@ const lpTokensToChart = [
   BEAN_USDT_WELL_LP[SupportedChainId.ARBITRUM_MAINNET],
   BEAN_CRV3_LP[SupportedChainId.ETH_MAINNET],
   BEAN_ETH_UNIV2_LP[1],
-  BEAN_LUSD_LP[1],
   BEAN_CRV3_V1_LP[1],
 ];
 
@@ -189,20 +187,20 @@ export function useChartSetupData() {
 
     lpTokensToChart.forEach((token) => {
       const tokenSymbol = token.symbol;
-      const apyConfig = subgraphQueryConfigs.tokenLiquidity(token);
+      const liqConfig = subgraphQueryConfigs.tokenLiquidity(token);
       const lpChart: ChartSetupBase = {
-        id: apyConfig.queryKey,
+        id: liqConfig.queryKey,
         name: `${tokenSymbol} Liquidity`,
         tooltipTitle: `${tokenSymbol} Liquidity`,
         tooltipHoverText: `The total USD value of ${tokenSymbol} in liquidity pools on the Minting Whitelist.`,
         shortDescription: `${tokenSymbol} Liquidity.`,
         timeScaleKey: 'updatedAt',
         priceScaleKey: 'liquidityUSD',
-        document: apyConfig.document,
+        document: liqConfig.document,
         documentEntity: 'seasons',
         valueAxisType: 'usdLiquidity',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: apyConfig.queryOptions,
+        queryConfig: liqConfig.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
