@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
 import { Deposit, Token, TokenValue } from '@beanstalk/sdk';
-import useChainId from '~/hooks/chain/useChainId';
 import { transform } from '~/util';
 import useAccount from '~/hooks/ledger/useAccount';
 import useSdk from '~/hooks/sdk';
@@ -199,8 +198,26 @@ export const useFetchFarmerSilo = () => {
 const FarmerSiloUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerSilo();
   const account = useAccount();
-  const chainId = useChainId();
   const dispatch = useDispatch();
+
+  const handleError = useCallback((err: any) => {
+    if ((err as Error).message.includes('limit the query')) {
+      dispatch(
+        updateFarmerSiloError(
+          'Error while loading Silo data. RPC query limit exceeded.'
+        )
+      );
+      console.log('Failed to fetch Silo events: RPC query limit exceeded');
+    } else {
+      dispatch(
+        updateFarmerSiloError(
+          'Error loading silo data. Check console for details.'
+        )
+      );
+      console.log('Error loading silo data: ', err.message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     clear(account);
@@ -211,31 +228,16 @@ const FarmerSiloUpdater = () => {
     if (account && initialized) {
       dispatch(updateFarmerSiloError(undefined));
       fetch()
-        .catch((err) => {
-          if ((err as Error).message.includes('limit the query')) {
-            dispatch(
-              updateFarmerSiloError(
-                'Error while loading Silo data. RPC query limit exceeded.'
-              )
-            );
-            console.log(
-              'Failed to fetch Silo events: RPC query limit exceeded'
-            );
-          } else {
-            dispatch(
-              updateFarmerSiloError(
-                'Error loading silo data. Check console for details.'
-              )
-            );
-            console.log('Error loading silo data: ', err.message);
-          }
+        .catch(async () => {
+          // Retry once on failure.
+          await fetch().catch(handleError);
         })
         .finally(() => {
           dispatch(updateFarmerSiloLoading(false));
           dispatch(updateFarmerSiloRan(true));
         });
     }
-  }, [account, chainId, initialized]);
+  }, [account, initialized]);
 
   return null;
 };

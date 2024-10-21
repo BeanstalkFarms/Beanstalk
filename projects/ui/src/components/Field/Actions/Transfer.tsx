@@ -13,14 +13,11 @@ import {
 } from '~/components/Common/Form';
 import TransactionToast from '~/components/Common/TxnToast';
 import PlotInputField from '~/components/Common/Form/PlotInputField';
-import { useSigner } from '~/hooks/ledger/useSigner';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useAccount from '~/hooks/ledger/useAccount';
 import useFarmerPlots from '~/hooks/farmer/useFarmerPlots';
 import useHarvestableIndex from '~/hooks/beanstalk/useHarvestableIndex';
 import { ZERO_BN } from '~/constants';
-import { PODS } from '~/constants/tokens';
-import { displayFullBN, toStringBaseUnitBN, trimAddress } from '~/util';
+import { displayFullBN, exists, toStringBaseUnitBN, trimAddress } from '~/util';
 import { ActionType } from '~/util/Actions';
 import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSummary';
 import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
@@ -29,8 +26,6 @@ import { useFetchFarmerField } from '~/state/farmer/field/updater';
 import { FC } from '~/types';
 import TokenOutput from '~/components/Common/Form/TokenOutput';
 import useSdk from '~/hooks/sdk';
-import { StepGenerator } from '@beanstalk/sdk';
-import { ethers } from 'ethers';
 
 export type TransferFormValues = {
   plot: PlotFragment;
@@ -50,6 +45,7 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
   isSubmitting,
 }) => {
   const sdk = useSdk();
+  const { PODS } = sdk.tokens;
   /// Data
   const plots = useFarmerPlots();
   const harvestableIndex = useHarvestableIndex();
@@ -147,11 +143,7 @@ const TransferForm: FC<SendFormProps & FormikProps<TransferFormValues>> = ({
 const Transfer: FC<{}> = () => {
   /// Ledger
   const account = useAccount();
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
   const sdk = useSdk();
-  const workflow = sdk.farm.create('Multi Plot Transfer!', 'beanstalk');
-  const _beanstalk = sdk.contracts.beanstalk;
 
   /// Farmer
   const [refetchFarmerField] = useFetchFarmerField();
@@ -183,6 +175,8 @@ const Transfer: FC<{}> = () => {
       values: TransferFormValues,
       formActions: FormikHelpers<TransferFormValues>
     ) => {
+      const PODS = sdk.tokens.PODS;
+      const beanstalk = sdk.contracts.beanstalk;
       let txToast;
       try {
         middleware.before();
@@ -206,10 +200,10 @@ const Transfer: FC<{}> = () => {
             success: 'Plot Transfer successful.',
           });
 
-          // @ts-ignore
-          const call = _beanstalk.transferPlot(
+          const call = beanstalk.transferPlot(
             account,
             to.toString(),
+            '0',
             toStringBaseUnitBN(index, PODS.decimals),
             toStringBaseUnitBN(start, PODS.decimals),
             toStringBaseUnitBN(end, PODS.decimals)
@@ -217,37 +211,21 @@ const Transfer: FC<{}> = () => {
 
           txn = await call;
         } else {
-          for (let i = 0; i < values.selectedPlots.length; i += 1) {
-            const _index = values.selectedPlots[i].index!;
-            const _start = values.selectedPlots[i].start!;
-            const _end = values.selectedPlots[i].end!;
+          const indexes: string[] = [];
+          const starts: string[] = [];
+          const ends: string[] = [];
 
-            const _data: StepGenerator = (_amountInStep) => ({
-              name: 'transferPlot',
-              amountOut: _amountInStep,
-              prepare: () => ({
-                target: _beanstalk.address,
-                callData: _beanstalk.interface.encodeFunctionData(
-                  // @ts-ignore
-                  'transferPlots',
-                  [
-                    account,
-                    to.toString(),
-                    toStringBaseUnitBN(_index, PODS.decimals),
-                    toStringBaseUnitBN(_start, PODS.decimals),
-                    toStringBaseUnitBN(_end, PODS.decimals),
-                  ]
-                ),
-              }),
-              decode: (data: string) =>
-                _beanstalk.interface.decodeFunctionResult('transferPlot', data),
-              decodeResult: (result: string) =>
-                _beanstalk.interface.decodeFunctionResult(
-                  'transferPlot',
-                  result
-                ),
-            });
-            workflow.add(_data);
+          for (const plot of values.selectedPlots) {
+            if (!exists(plot.index))
+              throw new Error(`Missing index for plot: ${plot}`);
+            if (!exists(plot.start))
+              throw new Error(`Missing start for plot: ${plot}`);
+            if (!exists(plot.end))
+              throw new Error(`Missing end for plot: ${plot}`);
+
+            indexes.push(toStringBaseUnitBN(plot.index, PODS.decimals));
+            starts.push(toStringBaseUnitBN(plot.start, PODS.decimals));
+            ends.push(toStringBaseUnitBN(plot.end, PODS.decimals));
           }
 
           txToast = new TransactionToast({
@@ -261,9 +239,16 @@ const Transfer: FC<{}> = () => {
             success: 'Multi Plot Transfer successful.',
           });
 
-          txn = await workflow.execute(ethers.BigNumber.from(0), {
-            slippage: values.settings.slippage,
-          });
+          const call = beanstalk.transferPlots(
+            account,
+            to.toString(),
+            '0',
+            indexes,
+            starts,
+            ends
+          );
+
+          txn = await call;
         }
 
         txToast.confirming(txn);
@@ -283,7 +268,7 @@ const Transfer: FC<{}> = () => {
         }
       }
     },
-    [middleware, account, refetchFarmerField, _beanstalk, workflow]
+    [sdk, middleware, account, refetchFarmerField]
   );
 
   return (

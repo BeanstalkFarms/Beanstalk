@@ -1,24 +1,16 @@
 [discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
 [discord-url]: https://discord.gg/beanstalk
-
 [proj-protocol]: /protocol
 [proj-ui]: /projects/ui
 [proj-sdk]: /projects/sdk
-[proj-subgraph-beanstalk]: /projects/subgraph-beanstalk
-[proj-subgraph-bean]: /projects/subgraph-bean
 [proj-cli]: /projects/cli
 [proj-basin-ui]: /projects/dex-ui
 [proj-basin-sdk]: /projects/sdk-wells
-[proj-subgraph-basin]: /projects/subgraph-wells
-
 [basin-protocol]: https://github.com/BeanstalkFarms/Basin
 [pipeline-protocol]: https://github.com/BeanstalkFarms/Pipeline
-
-
 [es-beanstalk]: https://etherscan.io/address/0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5
 [es-bean]: https://etherscan.io/address/0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab
 [es-basin]: https://docs.basin.exchange/resources/contracts
-
 [npm-beanstalk]: https://www.npmjs.com/package/@beanstalk/sdk
 
 <img src="https://github.com/BeanstalkFarms/Beanstalk-Brand-Assets/blob/main/BEAN/bean-128x128.png" alt="Beanstalk logo" align="right" width="120" />
@@ -45,17 +37,14 @@ Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
 
 ## Repository
 
-| Project                                         | Description                                                                                             |
-|:------------------------------------------------|:--------------------------------------------------------------------------------------------------------|
-| [`protocol`][proj-protocol]                     | The Beanstalk protocol, its facets and related contracts in the Beanstalk ecosystem.                    |
-| [`ui`][proj-ui]                                 | The Beanstalk UI hosted at [app.bean.money](https://app.bean.money).                                    |
-| [`sdk`][proj-sdk]                               | A Typescript SDK for interacting with Beanstalk and ecosystem contracts ([npm module][npm-beanstalk]).  |
-| [`subgraph-beanstalk`][proj-subgraph-beanstalk] | A subgraph indexing Beanstalk ([0xC1E088][es-beanstalk]).                                               |
-| [`subgraph-bean`][proj-subgraph-bean]           | A subgraph indexing the Bean ERC-20 token ([0xBEA000][es-bean]).                                        |
-| [`cli`][proj-cli]                               | A tool for interacting with Beanstalk in a development environment.                                     |
-| [`dex-ui`][proj-basin-ui]                          | The Basin UI hosted at [basin.exchange](https://basin.exchange).                                     |
-| [`sdk-wells`][proj-basin-sdk]                   | A Typescript SDK for interacting with Basin its components' contracts.                                  |
-| [`subgraph-wells`][proj-subgraph-basin]         | A subgraph indexing Basin and its components.                                                           |
+| Project                       | Description                                                                                            |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------- |
+| [`protocol`][proj-protocol]   | The Beanstalk protocol, its facets and related contracts in the Beanstalk ecosystem.                   |
+| [`ui`][proj-ui]               | The Beanstalk UI hosted at [app.bean.money](https://app.bean.money).                                   |
+| [`sdk`][proj-sdk]             | A Typescript SDK for interacting with Beanstalk and ecosystem contracts ([npm module][npm-beanstalk]). |
+| [`cli`][proj-cli]             | A tool for interacting with Beanstalk in a development environment.                                    |
+| [`dex-ui`][proj-basin-ui]     | The Basin UI hosted at [basin.exchange](https://basin.exchange).                                       |
+| [`sdk-wells`][proj-basin-sdk] | A Typescript SDK for interacting with Basin its components' contracts.                                 |
 
 Note that the [Basin][basin-protocol] and [Pipeline][pipeline-protocol] contracts are in separate repostitories.
 
