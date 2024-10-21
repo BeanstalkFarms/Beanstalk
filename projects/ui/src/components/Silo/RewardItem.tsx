@@ -2,10 +2,10 @@ import { Typography, Tooltip, Box } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import React from 'react';
 import BigNumber from 'bignumber.js';
-import { displayFullBN } from '../../util';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { displayFullBN } from '../../util';
 
 export type RewardItemProps = {
   title: string;

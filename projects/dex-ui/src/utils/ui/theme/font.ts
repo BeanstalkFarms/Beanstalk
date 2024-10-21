@@ -1,6 +1,16 @@
-import { H1, H2, H3, BodyL, BodyS, BodyXS, LinksButtonText } from "src/components/Typography";
-import { exists } from "src/utils/check";
 import { css } from "styled-components";
+
+// import from ./typography-components b/c otherwise it will be a circular dependency
+import {
+  H1,
+  H2,
+  H3,
+  BodyL,
+  BodyS,
+  BodyXS,
+  LinksButtonText
+} from "src/components/Typography/typography-components";
+import { exists } from "src/utils/check";
 
 export type FontWeight = "normal" | "semi-bold" | "bold";
 

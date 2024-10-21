@@ -1,7 +1,12 @@
 import React, { useEffect } from "react";
-import styled from "styled-components";
+
 import { ConnectKitButton, useModal as useConnectKitModal } from "connectkit";
+import { useAtom } from "jotai";
+import styled from "styled-components";
 import { useAccount } from "wagmi";
+
+import { sdkAtom } from "src/state/atoms";
+
 import { ButtonPrimary } from "./Button";
 
 type ActionWalletButtonProps = {
@@ -37,10 +42,16 @@ export const ActionWalletButtonWrapper = ({ children, allow }: ActionWalletButto
   return !address && !allow ? (
     <ConnectKitButton.Custom>
       {({ show }) => {
-        return <ButtonPrimary onClick={(e) => {
-          e.preventDefault();
-          show?.();
-        }}>Connect Wallet</ButtonPrimary>;
+        return (
+          <ButtonPrimary
+            onClick={(e) => {
+              e.preventDefault();
+              show?.();
+            }}
+          >
+            Connect Wallet
+          </ButtonPrimary>
+        );
       }}
     </ConnectKitButton.Custom>
   ) : (
@@ -77,7 +88,12 @@ const StyledConnectButton = styled.button`
  */
 const useUpdateWalletModalStyles = () => {
   const { address } = useAccount();
-  const { open, setOpen } = useConnectKitModal();
+  const { open, setOpen } = useConnectKitModal({
+    onConnect: () => {
+      console.log("connecting....");
+    }
+  });
+  const [sdk, setSdk] = useAtom(sdkAtom);
 
   useEffect(() => {
     if (address || !open) return;

@@ -1,6 +1,9 @@
 import { useMemo } from "react";
-import { ERC20Token, TokenValue } from "@beanstalk/sdk";
+
 import { Well } from "@beanstalk/sdk/Wells";
+
+import { ERC20Token, TokenValue } from "@beanstalk/sdk";
+
 import { useTokenSupplyMany } from "src/tokens/useTokenSupply";
 import { AddressMap } from "src/types";
 import { useTokenPrices } from "src/utils/price/useTokenPrices";

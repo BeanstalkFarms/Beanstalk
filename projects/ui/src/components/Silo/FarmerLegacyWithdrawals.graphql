@@ -1,6 +1,6 @@
 query FarmerLegacyWithdrawals(
-  $account: ID!,
-  $token: String!
+  $account: Bytes!,
+  $token: Bytes!
 ) {
   siloWithdraws(where: { farmer_: { id: $account }, claimed: false, token: $token }) {
     id

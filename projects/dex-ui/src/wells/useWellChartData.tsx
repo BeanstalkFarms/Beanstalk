@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-
-import useSdk from "src/utils/sdk/useSdk";
-import { IWellHourlySnapshot, loadChartData } from "./chartDataLoader";
 import { Well } from "@beanstalk/sdk/Wells";
+
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
+
+import { loadChartData } from "./chartDataLoader";
 
 const useWellChartData = (well: Well, timePeriod: string) => {
   const sdk = useSdk();
 
-  return useQuery({
+  return useChainScopedQuery({
     queryKey: ["wells", "wellChartData", well.address],
 
     queryFn: async () => {

@@ -9,6 +9,8 @@ import {
   PopperPlacementType,
   Typography,
   useMediaQuery,
+  Theme,
+  SxProps,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DropdownIcon from '~/components/Common/DropdownIcon';
@@ -45,6 +47,7 @@ const FolderMenu: FC<
     zeroTopLeftRadius?: boolean;
     popoverPlacement?: PopperPlacementType;
     navDrawer?: boolean;
+    popperSx?: SxProps<Theme>;
   } & ButtonProps
 > = ({
   startIcon,
@@ -63,6 +66,7 @@ const FolderMenu: FC<
   zeroTopLeftRadius,
   popoverPlacement,
   navDrawer,
+  popperSx,
   ...buttonProps
 }) => {
   // Theme
@@ -116,6 +120,7 @@ const FolderMenu: FC<
     }
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -186,6 +191,7 @@ const FolderMenu: FC<
         placement={popoverPlacement || 'bottom-start'}
         disablePortal
         sx={{
+          ...popperSx,
           zIndex: zIndex,
           visibility: mobileWindow ? 'hidden' : 'visible',
         }}
@@ -206,7 +212,7 @@ const FolderMenu: FC<
         onResizeCapture={undefined}
       >
         <Box
-          sx={(_theme) => ({
+          sx={{
             background: BeanstalkPalette.white,
             width: popperWidth !== undefined ? popperWidth : '325px',
             borderBottomLeftRadius: borderRadius * 1,
@@ -217,13 +223,11 @@ const FolderMenu: FC<
             borderWidth: 1,
             borderStyle: 'solid',
             boxSizing: 'border-box',
-            // px: 1,
-            // py: 1,
-            boxShadow: _theme.shadows[0],
+            boxShadow: theme.shadows[0],
             // Should be below the zIndex of the Button.
             zIndex: zIndex,
             mt: '-1px',
-          })}
+          }}
         >
           {popoverContent}
         </Box>

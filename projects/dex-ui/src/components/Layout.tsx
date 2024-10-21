@@ -1,11 +1,11 @@
+import styled from "styled-components";
+
 import { size } from "src/breakpoints";
 import { AdditionalCssBase, BoxModelBase } from "src/utils/ui/styled";
 import { CommonCssProps, CommonCssStyles } from "src/utils/ui/styled/common";
 import { FlexModelProps, FlexBase } from "src/utils/ui/styled/flex-model";
 import { theme } from "src/utils/ui/theme";
-
 import { CssProps } from "src/utils/ui/theme/types";
-import styled from "styled-components";
 
 export const Item = styled.div<{ stretch?: boolean; right?: boolean; column?: boolean }>`
   display: flex;

@@ -1,61 +1,61 @@
-import { ChainId, TESTNET_CHAINS } from "src/constants/chains";
+import { ChainId } from "src/constants/chains";
+import { ChainResolver } from "src/lib/ChainResolver";
 
-export type AddressDefinition = {
-  [id: number]: string;
-};
+export type AddressDefinition = Record<number, string>;
 
 export class Address {
   private addresses: AddressDefinition;
-  public MAINNET: string;
-  public LOCALHOST: string;
-  public ANVIL1: string;
 
   static make<T extends string | AddressDefinition>(input: T): Address {
-    const addresses: AddressDefinition = {};
-    if (typeof input == "string") {
-      addresses[ChainId.MAINNET] = input;
-    } else {
-      Object.assign(addresses, input);
-    }
+    const addresses: AddressDefinition =
+      typeof input === "string" ? { [ChainResolver.defaultChainId]: input } : input;
 
-    // Make address values lowercase
-    const lowerCaseAddresses: AddressDefinition = {};
-    for (const key in addresses) {
-      lowerCaseAddresses[key] = addresses[key].toLowerCase();
-    }
-
-    return new Address(lowerCaseAddresses);
+    return new Address(addresses);
   }
 
   constructor(addresses: AddressDefinition) {
-    this.addresses = addresses;
-    this.MAINNET = this.addresses[ChainId.MAINNET];
-    this.LOCALHOST = this.addresses[ChainId.LOCALHOST];
-    this.ANVIL1 = this.addresses[ChainId.ANVIL1];
+    this.addresses = Object.fromEntries(
+      Object.entries(addresses).map(([key, value]) => [Number(key), (value || "").toLowerCase()])
+    );
   }
 
-  get(chainId?: number) {
-    // Default to MAINNET if no chain is specified
-    if (!chainId) {
-      return this.addresses[ChainId.MAINNET];
+  get(chainId: number = ChainResolver.defaultChainId) {
+    ChainResolver.validateChainId(chainId);
+
+    if (ChainResolver.isTestnet(chainId)) {
+      // return the address for the chainId if it exists.
+      if (this.addresses[chainId]) {
+        return this.addresses[chainId];
+      }
+
+      // return the address for this chainId's mainnet counterpart.
+      return this.addresses[ChainResolver.resolveToMainnetChainId(chainId)] || "";
     }
 
-    // Throw if user wants a specific chain which we don't support
-    if (!ChainId[chainId]) {
-      throw new Error(`Chain ID ${chainId} is not supported`);
-    }
-
-    // If user wants an address on a TESTNET chain
-    // return mainnet one if it's not found
-    if (TESTNET_CHAINS.has(chainId)) {
-      return this.addresses[chainId] || this.addresses[ChainId.MAINNET];
-    }
-
-    return this.addresses[chainId];
+    return this.addresses[chainId] || "";
   }
 
   set<T extends string | AddressDefinition>(input: T) {
     const newAddress = Address.make(input);
-    Object.assign(this, newAddress);
+    Object.assign(this.addresses, newAddress.addresses);
+  }
+
+  get ARBITRUM_MAINNET(): string {
+    return this.get(ChainId.ARBITRUM_MAINNET);
+  }
+  get ETH_MAINNET(): string {
+    return this.get(ChainId.ETH_MAINNET);
+  }
+  get LOCALHOST(): string {
+    return this.get(ChainId.LOCALHOST);
+  }
+  get LOCALHOST_ETH(): string {
+    return this.get(ChainId.LOCALHOST_ETH);
+  }
+  get TESTNET(): string {
+    return this.get(ChainId.TESTNET);
+  }
+  get ANVIL1(): string {
+    return this.get(ChainId.ANVIL1);
   }
 }

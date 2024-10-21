@@ -15,6 +15,8 @@ import {LibFertilizer} from "contracts/libraries/LibFertilizer.sol";
 import {LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {LibField} from "contracts/libraries/LibField.sol";
+import {IBean} from "contracts/interfaces/IBean.sol";
+import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 
 /**
  * @title LibTransmitIn
@@ -64,13 +66,14 @@ library LibTransmitIn {
      */
     function transmitInDeposits(address user, bytes[] calldata deposits) internal {
         if (deposits.length == 0) return;
+
         address[] memory whitelistedTokens = LibWhitelistedTokens.getWhitelistedWellLpTokens();
         for (uint256 i = 0; i < deposits.length; i++) {
             SourceDeposit memory deposit = abi.decode(deposits[i], (SourceDeposit));
 
             _alterDeposit(deposit);
 
-            C.bean().mint(address(this), deposit._burnedBeans);
+            IBean(C.bean()).mint(address(this), deposit._burnedBeans);
 
             // If LP deposit.
             if (deposit._transferredToken != address(0)) {
@@ -92,7 +95,7 @@ library LibTransmitIn {
                         well,
                         uint256(deposit._transferredTokenAmount)
                     );
-                    C.bean().approve(well, deposit._burnedBeans);
+                    IBean(C.bean()).approve(well, deposit._burnedBeans);
                     uint256 lpAmount = IWell(whitelistedTokens[j]).addLiquidity(
                         tokenAmountsIn,
                         deposit.destMinLpOut,
@@ -101,11 +104,11 @@ library LibTransmitIn {
                     );
 
                     LibConvert._depositTokensForConvert(
-                        user,
                         well,
                         lpAmount, // amount
                         LibWellBdv.bdv(well, lpAmount), // bdv
-                        deposit._grownStalk
+                        deposit._grownStalk,
+                        user
                     );
                     lpMatched = true;
                     break;
@@ -116,11 +119,11 @@ library LibTransmitIn {
             else {
                 // Update Beanstalk state and mint Beans to user. Bypasses standard minting calcs.
                 LibConvert._depositTokensForConvert(
-                    user,
-                    C.BEAN,
+                    C.bean(),
                     deposit._burnedBeans, // amount
                     deposit._burnedBeans, // bdv
-                    deposit._grownStalk
+                    deposit._grownStalk,
+                    user
                 );
             }
             emit DepositTransmittedIn(user, deposit);
@@ -146,7 +149,7 @@ library LibTransmitIn {
 
             // Update Beanstalk state and mint Fert to user. Bypasses standard minting calcs.
             LibFertilizer.IncrementFertState(sourceFert.amount, sourceFert._remainingBpf);
-            C.fertilizer().beanstalkMint(
+            IFertilizer(s.sys.tokens.fertilizer).beanstalkMint(
                 user,
                 s.sys.fert.bpf + sourceFert._remainingBpf,
                 sourceFert.amount.toUint128(),

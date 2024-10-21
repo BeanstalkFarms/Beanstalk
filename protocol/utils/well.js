@@ -15,10 +15,15 @@ const { increaseToNonce } = require("../scripts/contracts");
 const { impersonateContract } = require("../scripts/impersonate");
 
 const BASE_STRING = "./node_modules/@beanstalk/wells/out";
-const BASE_STRINGV1_1 = "./node_modules/@beanstalk/wells1.1/out";
+const BASE_STRINGV1_2 = "./node_modules/@beanstalk/wells1.2/out";
 
 async function getWellContractFactory(name, account = undefined, version = "1.0") {
-  const baseString = version == "1.1" ? BASE_STRINGV1_1 : BASE_STRING;
+  let baseString;
+  if (version == "1.1" || version == "1.2") {
+    baseString = BASE_STRINGV1_2;
+  } else {
+    baseString = BASE_STRING;
+  }
   const contractJson = JSON.parse(await fs.readFileSync(`${baseString}/${name}.sol/${name}.json`));
   return await ethers.getContractFactory(
     contractJson.abi,
@@ -28,7 +33,12 @@ async function getWellContractFactory(name, account = undefined, version = "1.0"
 }
 
 async function getWellContractAt(name, address, version = "1.0") {
-  const baseString = version == "1.1" ? BASE_STRINGV1_1 : BASE_STRING;
+  let baseString;
+  if (version == "1.1" || version == "1.2") {
+    baseString = BASE_STRINGV1_2;
+  } else {
+    baseString = BASE_STRING;
+  }
   const contractJson = JSON.parse(await fs.readFileSync(`${baseString}/${name}.sol/${name}.json`));
   return await ethers.getContractAt(contractJson.abi, address);
 }
@@ -338,7 +348,7 @@ async function deployMockWellWithMockPump(address = BEAN_ETH_WELL, token1 = WETH
     await ethers.getContractFactory("MockSetComponentsWell", await getWellDeployer())
   ).deploy();
   await well.deployed();
-  // if address is uninitalized, do not set code.
+  // if address is uninitialized, do not set code.
   if (address != ZERO_ADDRESS) {
     await network.provider.send("hardhat_setCode", [
       address,
@@ -371,15 +381,15 @@ exports.getWellContractFactory = getWellContractFactory;
 exports.deployWell = deployWell;
 exports.setReserves = setReserves;
 exports.whitelistWell = whitelistWell;
-exports.getWellContractAt = getWellContractAt
-exports.deployMockBeanWell = deployMockBeanWell
-exports.deployMockWell = deployMockWell
-exports.deployMockPump = deployMockPump
-exports.deployWellContract = deployWellContract
-exports.deployWellContractAtNonce = deployWellContractAtNonce
-exports.encodeWellImmutableData = encodeWellImmutableData
-exports.impersonateMockWell = impersonateMockWell
-exports.impersonateBeanEthWell = impersonateBeanEthWell
-exports.impersonateBeanWstethWell = impersonateBeanWstethWell
-exports.deployMockWellWithMockPump = deployMockWellWithMockPump
-exports.deployMockToken = deployMockToken
+exports.getWellContractAt = getWellContractAt;
+exports.deployMockBeanWell = deployMockBeanWell;
+exports.deployMockWell = deployMockWell;
+exports.deployMockPump = deployMockPump;
+exports.deployWellContract = deployWellContract;
+exports.deployWellContractAtNonce = deployWellContractAtNonce;
+exports.encodeWellImmutableData = encodeWellImmutableData;
+exports.impersonateMockWell = impersonateMockWell;
+exports.impersonateBeanEthWell = impersonateBeanEthWell;
+exports.impersonateBeanWstethWell = impersonateBeanWstethWell;
+exports.deployMockWellWithMockPump = deployMockWellWithMockPump;
+exports.deployMockToken = deployMockToken;

@@ -33,7 +33,7 @@ contract MockFertilizerFacet is FertilizerFacet {
     }
 
     function setBarnRaiseWell(address well) external {
-        s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken = well;
+        s.sys.silo.unripeSettings[s.sys.tokens.urLp].underlyingToken = well;
     }
 
     function addFertilizer(
@@ -46,5 +46,9 @@ contract MockFertilizerFacet is FertilizerFacet {
             LibBarnRaise.getBarnRaiseToken()
         );
         LibFertilizer.addFertilizer(seasonAdded, tokenAmountIn, fertilizerAmount, minLpOut);
+    }
+
+    function setBpf(uint128 bpf) external {
+        s.sys.fert.bpf = bpf;
     }
 }

@@ -1,5 +1,7 @@
 import React from "react";
+
 import styled from "styled-components";
+
 import { Skeleton } from "./Skeleton";
 import { ArrowButton } from "./Swap/ArrowButton";
 
@@ -91,7 +93,13 @@ LoadingTemplate.TokenLogo = ({ count = 1, size }: { count?: number; size: number
       {Array(count)
         .fill(null)
         .map((_, i) => (
-          <Background height={size} width={size} circle key={`Token-Logo-skeleton-${i}`} margin={{ left: i === 0 ? 0 : -8 }}>
+          <Background
+            height={size}
+            width={size}
+            circle
+            key={`Token-Logo-skeleton-${i}`}
+            margin={{ left: i === 0 ? 0 : -8 }}
+          >
             <Skeleton height={size} width={size} circle />
           </Background>
         ))}
@@ -118,7 +126,13 @@ const FlexBox = styled.div<FlexProps>`
   `}
 `;
 
-const Background = styled.div<{ width?: number; height?: number; margin?: MarginProps; circle?: boolean; rounded?: boolean }>`
+const Background = styled.div<{
+  width?: number;
+  height?: number;
+  margin?: MarginProps;
+  circle?: boolean;
+  rounded?: boolean;
+}>`
   display: flex;
   background: white;
   ${(props) => `

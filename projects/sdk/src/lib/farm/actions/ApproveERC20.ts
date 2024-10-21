@@ -1,3 +1,4 @@
+import { TokenValue } from "@beanstalk/sdk-core";
 import { ethers } from "ethers";
 import { ERC20Token } from "src/classes/Token";
 import { RunContext, Step, StepClass } from "src/classes/Workflow";
@@ -9,6 +10,7 @@ export class ApproveERC20 extends StepClass<AdvancedPipePreparedResult> {
   public name: string = "approve";
   public token: ERC20Token;
   public spender: string;
+  public amount?: TokenValue;
   public clipboard?: ClipboardSettings;
 
   constructor(token: ERC20Token, spender: string, clipboard?: ClipboardSettings) {
@@ -21,7 +23,15 @@ export class ApproveERC20 extends StepClass<AdvancedPipePreparedResult> {
     this.clipboard = clipboard;
   }
 
+  setAmount(amount: TokenValue) {
+    this.amount = amount;
+    return this;
+  }
+
   async run(_amountInStep: ethers.BigNumber, context: RunContext): Promise<Step<AdvancedPipePreparedResult>> {
+    const approvalAmount = this.amount?.gt(0) ? this.amount.toBigNumber() : _amountInStep;
+
+
     return {
       name: this.name,
       amountOut: _amountInStep,
@@ -35,7 +45,7 @@ export class ApproveERC20 extends StepClass<AdvancedPipePreparedResult> {
         });
         return {
           target: this.token.address,
-          callData: this.token.getContract().interface.encodeFunctionData("approve", [this.spender, _amountInStep]),
+          callData: this.token.getContract().interface.encodeFunctionData("approve", [this.spender, approvalAmount]),
           clipboard: this.clipboard ? Clipboard.encodeSlot(context.step.findTag(this.clipboard.tag), this.clipboard.copySlot, this.clipboard.pasteSlot) : undefined
         };
       },

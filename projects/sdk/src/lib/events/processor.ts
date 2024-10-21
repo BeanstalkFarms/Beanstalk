@@ -58,6 +58,9 @@ export type EventProcessorData = {
   >;
 };
 
+/**
+ * @deprecated
+ */
 export class EventProcessor {
   private readonly sdk: BeanstalkSDK;
 

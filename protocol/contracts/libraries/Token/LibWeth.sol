@@ -14,7 +14,7 @@ import "./LibTransfer.sol";
  **/
 
 library LibWeth {
-    address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     function wrap(uint256 amount, LibTransfer.To mode) internal {
         deposit(amount);

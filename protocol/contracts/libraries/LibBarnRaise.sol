@@ -14,15 +14,13 @@ import {AppStorage, LibAppStorage} from "contracts/libraries/LibAppStorage.sol";
  */
 library LibBarnRaise {
     function getBarnRaiseToken() internal view returns (address) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         IERC20[] memory tokens = IWell(getBarnRaiseWell()).tokens();
-        return address(address(tokens[0]) == C.BEAN ? tokens[1] : tokens[0]);
+        return address(address(tokens[0]) == s.sys.tokens.bean ? tokens[1] : tokens[0]);
     }
 
     function getBarnRaiseWell() internal view returns (address) {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        return
-            s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken == address(0)
-                ? C.BEAN_ETH_WELL
-                : s.sys.silo.unripeSettings[C.UNRIPE_LP].underlyingToken;
+        return s.sys.silo.unripeSettings[s.sys.tokens.urLp].underlyingToken;
     }
 }

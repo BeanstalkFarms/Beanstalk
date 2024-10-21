@@ -1,21 +1,18 @@
 import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { Token } from '@beanstalk/sdk';
-import TokenOld from '~/classes/Token';
 import { ZERO_BN } from '~/constants';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
+import { TokenInstance } from './useTokens';
 
 /**
  * Return the BDV that Beanstalk will honor for a
  * given token when it is deposited in the Silo.
  */
 export default function useBDV() {
-  const beanstalkSiloBalances = useSelector<
-    AppState,
-    AppState['_beanstalk']['silo']['balances']
-  >((state) => state._beanstalk.silo.balances);
+  const beanstalkSiloBalances = useAppSelector(
+    (state) => state._beanstalk.silo.balances
+  );
   return useCallback(
-    (_token: Token | TokenOld) =>
+    (_token: TokenInstance) =>
       beanstalkSiloBalances[_token.address]?.bdvPerToken || ZERO_BN,
     [beanstalkSiloBalances]
   );

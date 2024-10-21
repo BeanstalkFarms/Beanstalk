@@ -1,13 +1,14 @@
 import { TokenValue } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 import { FormTokenStateNew } from '~/components/Common/Form';
 import useHumidity from '~/hooks/beanstalk/useHumidity';
 import { Action, ActionType, SwapAction } from '~/util/Actions';
+import { useGetLegacyToken } from '../beanstalk/useTokens';
 
 export type SummaryData = {
   actions: Action[];
-  weth: BigNumber;
+  wstETH: BigNumber;
   fert: BigNumber;
   humidity: BigNumber;
 };
@@ -22,12 +23,13 @@ export type SummaryData = {
  */
 export default function useFertilizerSummary(
   tokens: FormTokenStateNew[],
-  ethPrice: TokenValue
+  wstETHPrice: TokenValue
 ) {
   const sdk = useSdk();
+  const getLegacyToken = useGetLegacyToken();
 
   // const usdc = sdk.tokens.USDC;
-  const wethToken = sdk.tokens.WETH;
+  const wstETH = sdk.tokens.WSTETH;
   const eth = sdk.tokens.ETH;
   const [humidity] = useHumidity();
 
@@ -35,12 +37,10 @@ export default function useFertilizerSummary(
     const _data = tokens.reduce(
       (agg, curr) => {
         // const amount = usdc.equals(curr.token) ? curr.amount : curr.amountOut;
-        const amount = wethToken.equals(curr.token)
-          ? curr.amount
-          : curr.amountOut;
+        const amount = wstETH.equals(curr.token) ? curr.amount : curr.amountOut;
         if (amount) {
           // agg.usdc = agg.usdc.plus(amount);
-          agg.weth = agg.weth.plus(amount);
+          agg.wstETH = agg.wstETH.plus(amount);
           if (curr.amount && curr.amountOut) {
             const currTokenKey = curr.token.equals(eth)
               ? 'eth'
@@ -55,8 +55,8 @@ export default function useFertilizerSummary(
             } else {
               agg.actions[currTokenKey] = {
                 type: ActionType.SWAP,
-                tokenIn: getNewToOldToken(curr.token),
-                tokenOut: getNewToOldToken(wethToken),
+                tokenIn: getLegacyToken(curr.token),
+                tokenOut: getLegacyToken(wstETH),
                 amountIn: curr.amount,
                 amountOut: curr.amountOut,
               };
@@ -68,7 +68,7 @@ export default function useFertilizerSummary(
       },
       {
         // usdc: new BigNumber(0), // The amount of USD used to buy FERT.
-        weth: new BigNumber(0), // The amount of WETH to be swapped for FERT.
+        wstETH: new BigNumber(0), // The amount of wstETH to be swapped for FERT.
         fert: new BigNumber(0),
         humidity: humidity,
         actions: {} as Record<string, SwapAction>,
@@ -83,13 +83,13 @@ export default function useFertilizerSummary(
 
   const data = buildSummary();
 
-  data.fert = data.weth
-    .multipliedBy(ethPrice.toHuman())
+  data.fert = data.wstETH
+    .multipliedBy(wstETHPrice.toHuman())
     .dp(0, BigNumber.ROUND_DOWN);
 
   data.actions.push({
     type: ActionType.BUY_FERTILIZER,
-    amountIn: data.weth,
+    amountIn: data.wstETH,
     amountOut: data.fert,
     humidity,
   });

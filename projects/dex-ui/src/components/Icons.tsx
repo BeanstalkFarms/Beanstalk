@@ -1,5 +1,11 @@
 import * as React from "react";
 
+import { ChainResolver } from "@beanstalk/sdk-core";
+
+import useSdk from "src/utils/sdk/useSdk";
+
+import { TokenLogo } from "./TokenLogo";
+
 export type SVGProps = {
   color?: string;
   width?: number;
@@ -7,13 +13,31 @@ export type SVGProps = {
 };
 
 export const ChevronDown = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 6" fill="none">
-    <path d="M1 1L5 5L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 10 6"
+    fill="none"
+  >
+    <path
+      d="M1 1L5 5L9 1"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 export const Discord = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 16" fill="none">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 20 16"
+    fill="none"
+  >
     <path
       fill={color}
       fillRule="evenodd"
@@ -24,7 +48,13 @@ export const Discord = ({ color = "#000", width, height }: SVGProps) => (
 );
 
 export const Twitter = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 16" fill="none">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 20 16"
+    fill="none"
+  >
     <path
       fill={color}
       fillRule="evenodd"
@@ -35,7 +65,13 @@ export const Twitter = ({ color = "#000", width, height }: SVGProps) => (
 );
 
 export const Github = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 20" fill="none">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 20 20"
+    fill="none"
+  >
     <path
       fill={color}
       fillRule="evenodd"
@@ -45,8 +81,24 @@ export const Github = ({ color = "#000", width, height }: SVGProps) => (
   </svg>
 );
 
+export const ChainExplorerIcon = ({ color = "#000", width, height }: SVGProps) => {
+  const sdk = useSdk();
+
+  if (ChainResolver.isL2Chain(sdk.chainId)) {
+    return <TokenLogo token={sdk.tokens.ARB} size={width || height || 16} />;
+  }
+
+  return <Etherscan color={color} width={width} height={height} />;
+};
+
 export const Etherscan = ({ color = "#000", width, height }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 20 20" fill="none">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 20 20"
+    fill="none"
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -57,10 +109,22 @@ export const Etherscan = ({ color = "#000", width, height }: SVGProps) => (
 );
 
 export const BeanstalkLogoBlack = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg width={width} height={height} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect width="48" height="48" rx="24" fill={color} />
-    <path d="M30.7438 5.05786L16.7279 42.5026C16.7279 42.5026 1.18757 15.9919 30.7438 5.05786Z" fill="white" />
-    <path d="M19.9849 40.1793L29.8344 13.4126C29.8344 13.4126 47.9863 28.0973 19.9849 40.1793Z" fill="white" />
+    <path
+      d="M30.7438 5.05786L16.7279 42.5026C16.7279 42.5026 1.18757 15.9919 30.7438 5.05786Z"
+      fill="white"
+    />
+    <path
+      d="M19.9849 40.1793L29.8344 13.4126C29.8344 13.4126 47.9863 28.0973 19.9849 40.1793Z"
+      fill="white"
+    />
   </svg>
 );
 
@@ -73,20 +137,39 @@ export const YieldSparkle = ({ color = "#000", width = 16, height = 16 }: SVGPro
       d="m4.43 8.623 1.422.54a4 4 0 0 1 2.318 2.319l.54 1.421a.667.667 0 0 0 1.247 0l.54-1.421a4 4 0 0 1 2.318-2.319l1.422-.54a.667.667 0 0 0 0-1.246l-1.422-.54a4 4 0 0 1-2.318-2.319l-.54-1.422a.667.667 0 0 0-1.247 0l-.54 1.422a4 4 0 0 1-2.318 2.318l-1.422.54a.667.667 0 0 0 0 1.247Z"
       clipRule="evenodd"
     />
-    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M4 14v-2.666M2.667 12.667h2.666M3.333 4.667V2M2 3.333h2.667" />
+    <path
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4 14v-2.666M2.667 12.667h2.666M3.333 4.667V2M2 3.333h2.667"
+    />
   </svg>
 );
 
 export const WellFunction = ({ color = "#000", width = 14, height = 14 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
-    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M5 1.349a5.996 5.996 0 1 0 4.69 11.008" />
-    <path stroke={color} strokeLinecap="round" strokeLinejoin="round" d="M7 1v6l4.243 4.243A6 6 0 0 0 7 1h0Z" clipRule="evenodd" />
+    <path
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M5 1.349a5.996 5.996 0 1 0 4.69 11.008"
+    />
+    <path
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M7 1v6l4.243 4.243A6 6 0 0 0 7 1h0Z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 export const X = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none">
-    <path fill={color} d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19Z" />
+    <path
+      fill={color}
+      d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19Z"
+    />
   </svg>
 );
 
@@ -100,7 +183,13 @@ export const Copy = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
 );
 
 export const Error = ({ color = "#000", width = 19, height = 19 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="2 2 19 19">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    fill="none"
+    viewBox="2 2 19 19"
+  >
     <path
       fill={color}
       fillRule="evenodd"
@@ -111,7 +200,13 @@ export const Error = ({ color = "#000", width = 19, height = 19 }: SVGProps) => 
 );
 
 export const Success = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 52 52">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    fill="none"
+    viewBox="0 0 52 52"
+  >
     <path
       fill={color}
       d="M26 2C12.7 2 2 12.7 2 26s10.7 24 24 24 24-10.7 24-24S39.3 2 26 2zm13.4 18L24.1 35.5c-.6.6-1.6.6-2.2 0L13.5 27c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0l4.4 4.5c.4.4 1.1.4 1.5 0L35 15.5c.6-.6 1.6-.6 2.2 0l2.2 2.2c.7.6.7 1.6 0 2.3z"
@@ -120,7 +215,13 @@ export const Success = ({ color = "#000", width = 24, height = 24 }: SVGProps) =
 );
 
 export const Info = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
-  <svg width={width} height={height} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -137,7 +238,13 @@ export const Info = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path d="M8.16646 10.7905V7.6225H7.49951" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M8.16646 10.7905V7.6225H7.49951"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -223,36 +330,102 @@ export const RightArrowCircle = ({ width = 24, height = 24 }: SVGProps) => (
 );
 
 export const RightArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
-<path d="M2.5 8H13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-<path d="M9 3.5L13.5 8L9 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+  >
+    <path
+      d="M2.5 8H13.5"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9 3.5L13.5 8L9 12.5"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
 );
 
 export const LeftArrow = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
-    <path d="M13.5 8H2.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M7 3.5L2.5 8L7 12.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+  >
+    <path
+      d="M13.5 8H2.5"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7 3.5L2.5 8L7 12.5"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
-)
+);
 
 export const BurgerMenuIcon = ({ color = "#000", width = 24, height = 24 }: SVGProps) => (
-  <svg width={width} height={height} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={width}
+    height={height}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <line x1="4" y1="7" x2="20" y2="7" stroke={color} strokeWidth="2" />
     <line x1="4" y1="15" x2="20" y2="15" stroke={color} strokeWidth="2" />
   </svg>
 );
 
 export const CheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 18" fill="none">
-    <path d="M7.08333 12.1166L4.25 9.28325L5.24167 8.29159L7.08333 10.1333L11.7583 5.45825L12.75 6.44992L7.08333 12.1166Z" fill={color}/>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 17 18"
+    fill="none"
+  >
+    <path
+      d="M7.08333 12.1166L4.25 9.28325L5.24167 8.29159L7.08333 10.1333L11.7583 5.45825L12.75 6.44992L7.08333 12.1166Z"
+      fill={color}
+    />
   </svg>
-)
+);
 
 export const CircleFilledCheckIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none">
-    <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill={color} />
-    <path d="M11.4375 6.125L6.85156 10.5L4.5625 8.3125" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 16 16"
+    fill="none"
+  >
+    <path
+      d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z"
+      fill={color}
+    />
+    <path
+      d="M11.4375 6.125L6.85156 10.5L4.5625 8.3125"
+      stroke="white"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -263,17 +436,65 @@ export const CircleEmptyIcon = ({ color = "#000", width = 16, height = 16 }: SVG
 );
 
 export const SearchIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 17 16" fill="none">
-    <path d="M7.75 12.5C10.6495 12.5 13 10.1495 13 7.25C13 4.35051 10.6495 2 7.75 2C4.85051 2 2.5 4.35051 2.5 7.25C2.5 10.1495 4.85051 12.5 7.75 12.5Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M11.4625 10.9624L14.5 13.9999" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 17 16"
+    fill="none"
+  >
+    <path
+      d="M7.75 12.5C10.6495 12.5 13 10.1495 13 7.25C13 4.35051 10.6495 2 7.75 2C4.85051 2 2.5 4.35051 2.5 7.25C2.5 10.1495 4.85051 12.5 7.75 12.5Z"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M11.4625 10.9624L14.5 13.9999"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 export const XIcon = ({ color = "#000", width = 16, height = 16 }: SVGProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 10 10" fill="none">
-    <path d="M1 1L9 9" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M1 9L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M1 1L9 9" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M1 9L9 1" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={width}
+    height={height}
+    viewBox="0 0 10 10"
+    fill="none"
+  >
+    <path
+      d="M1 1L9 9"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M1 9L9 1"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M1 1L9 9"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M1 9L9 1"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
-)
+);

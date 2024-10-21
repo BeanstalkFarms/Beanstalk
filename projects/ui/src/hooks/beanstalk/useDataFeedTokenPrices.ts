@@ -1,19 +1,22 @@
+import { useCallback, useMemo } from 'react';
+import { Token } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
-import { useCallback, useMemo, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { TokenMap } from '../../constants/index';
-import { bigNumberResult } from '../../util/Ledger';
-import useGetChainToken from '~/hooks/chain/useGetChainToken';
-import { CRV3, DAI, ETH, USDC, USDT, WETH } from '../../constants/tokens';
-import {
-  DAI_CHAINLINK_ADDRESSES,
-  USDT_CHAINLINK_ADDRESSES,
-  USDC_CHAINLINK_ADDRESSES,
-} from '../../constants/addresses';
+import { useDispatch } from 'react-redux';
+import { ContractFunctionParameters } from 'viem';
+
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
-import { AppState } from '../../state/index';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
-import useSdk from '../sdk';
+import { chunkArray, bigNumberResult, getTokenIndex } from '~/util';
+import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
+import { TokenMap } from '~/constants/index';
+import { DAI_CHAINLINK_ADDRESSES } from '~/constants/addresses';
+import { useAppSelector } from '~/state/index';
+import useSdk from '~/hooks/sdk';
+import { useTokens } from '~/hooks/beanstalk/useTokens';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
+import { multicall } from '@wagmi/core';
+import { config } from '~/util/wagmi/config';
+import { extractMulticallResult } from '~/util/Multicall';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -25,126 +28,128 @@ const getBNResult = (result: any, decimals: number) => {
  * fetches data from Chainlink DataFeeds.
  * Currently supports prices for the following pairs:
  * - DAI/USD
- * - USDT/USD
- * - USDC/USD
- * - ETH/USD
+ *
+ * - Other tokens are fetched from the Beanstalk oracle
  */
 export default function useDataFeedTokenPrices() {
-  const tokenPriceMap = useSelector<
-    AppState,
-    AppState['_beanstalk']['tokenPrices']
-  >((state) => state._beanstalk.tokenPrices);
+  const tokenPriceMap = useAppSelector((state) => state._beanstalk.tokenPrices);
 
   const sdk = useSdk();
+  const tokens = useTokens();
+  const beanstalk = sdk.contracts.beanstalk;
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
-  const usdtPriceFeed = useAggregatorV3Contract(USDT_CHAINLINK_ADDRESSES);
-  const usdcPriceFeed = useAggregatorV3Contract(USDC_CHAINLINK_ADDRESSES);
-  const ethPriceFeed = sdk.contracts.usdOracle;
-  const crv3Pool = sdk.contracts.curve.pools.pool3;
-  const getChainToken = useGetChainToken();
   const dispatch = useDispatch();
 
+  const hasEntries = Object.values(tokenPriceMap).length;
+
   const fetch = useCallback(async () => {
-    if (Object.values(tokenPriceMap).length) return;
-    if (!daiPriceFeed || !usdtPriceFeed || !usdcPriceFeed || !ethPriceFeed || !crv3Pool)
-      return;
+    if (hasEntries || !daiPriceFeed) return;
 
-    console.debug('[beanstalk/tokenPrices/useCrvUnderlylingPrices] FETCH');
+    const underlyingTokens = [
+      tokens.WETH,
+      tokens.WSTETH,
+      tokens.WBTC,
+      tokens.WEETH,
+      tokens.USDT,
+      tokens.USDC,
+    ];
 
-    const [
-      daiPriceData,
-      daiPriceDecimals,
-      usdtPriceData,
-      usdtPriceDecimals,
-      usdcPriceData,
-      usdcPriceDecimals,
-      ethPrice,
-      ethPriceTWA,
-      crv3Price,
-    ] = await Promise.all([
+    console.debug('[beanstalk/tokenPrices/useDataFeedTokenPrices] FETCH');
+
+    const calls = makeMultiCall(beanstalk.address, underlyingTokens);
+
+    const [daiPriceData, daiPriceDecimals, oracleResults] = await Promise.all([
       daiPriceFeed.latestRoundData(),
       daiPriceFeed.decimals(),
-      usdtPriceFeed.latestRoundData(),
-      usdtPriceFeed.decimals(),
-      usdcPriceFeed.latestRoundData(),
-      usdcPriceFeed.decimals(),
-      ethPriceFeed.getEthUsdPrice(),
-      ethPriceFeed.getEthUsdTwa(3600),
-      crv3Pool.get_virtual_price(),
+      Promise.all(
+        calls.contracts.map((oracleCalls) =>
+          multicall(config, { contracts: oracleCalls })
+        )
+      ).then((results) => chunkArray(results.flat(), calls.chunkSize)),
     ]);
-
-    const dai = getChainToken(DAI);
-    const usdc = getChainToken(USDC);
-    const usdt = getChainToken(USDT);
-    const eth = getChainToken(ETH);
-    const weth = getChainToken(WETH);
-    const crv3 = getChainToken(CRV3);
 
     const priceDataCache: TokenMap<BigNumber> = {};
 
     if (daiPriceData && daiPriceDecimals) {
-      priceDataCache[dai.address] = getBNResult(
+      priceDataCache[getTokenIndex(tokens.DAI)] = getBNResult(
         daiPriceData.answer,
         daiPriceDecimals
       );
     }
-    if (usdtPriceData && usdtPriceDecimals) {
-      priceDataCache[usdt.address] = getBNResult(
-        usdtPriceData.answer,
-        usdtPriceDecimals
-      );
-    }
-    if (usdcPriceData && usdcPriceDecimals) {
-      priceDataCache[usdc.address] = getBNResult(
-        usdcPriceData.answer,
-        usdcPriceDecimals
-      );
-    }
-    if (ethPrice && ethPriceTWA) {
-      priceDataCache[eth.address] = getBNResult(
-        ethPrice,
-        6
-      );
-      priceDataCache[weth.address] = getBNResult(
-        ethPrice,
-        6
-      );
-      priceDataCache["ETH-TWA"] = getBNResult(
-        ethPriceTWA,
-        6
-      );
-    }
-    if (crv3Price) {
-      priceDataCache[crv3.address] = getBNResult(
-        crv3Price,
-        crv3.decimals
-      );
-    }
+
+    oracleResults.forEach((result, index) => {
+      const price = extractMulticallResult(result[0]);
+      const twap = extractMulticallResult(result[1]);
+      const token = underlyingTokens[index];
+      if (!token) return;
+
+      if (price) {
+        priceDataCache[getTokenIndex(token)] = getBNResult(price.toString(), 6);
+      }
+      if (twap) {
+        priceDataCache[`${token.symbol}-TWA`] = getBNResult(twap.toString(), 6);
+      }
+
+      // add it for ETH as well
+      if (token.equals(tokens.WETH)) {
+        priceDataCache[getTokenIndex(tokens.ETH)] =
+          priceDataCache[getTokenIndex(tokens.WETH)];
+        priceDataCache[`ETH-TWA`] = priceDataCache[`${token.symbol}-TWA`];
+      }
+    });
 
     console.debug(
-      `[beanstalk/tokenPrices/useCrvUnderlyingPrices] RESULT: ${priceDataCache}`
+      `[beanstalk/tokenPrices/useCrvUnderlyingPrices] RESULT:`,
+      priceDataCache
     );
 
     return priceDataCache;
-  }, [
-    tokenPriceMap,
-    daiPriceFeed,
-    usdtPriceFeed,
-    usdcPriceFeed,
-    ethPriceFeed,
-    crv3Pool,
-    getChainToken,
-  ]);
+  }, [hasEntries, daiPriceFeed, beanstalk, tokens]);
 
   const handleUpdatePrices = useCallback(async () => {
     const prices = await fetch();
     prices && dispatch(updateTokenPrices(prices));
   }, [dispatch, fetch]);
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     handleUpdatePrices();
-  }, [handleUpdatePrices]);
+  }, []);
 
   return useMemo(() => ({ ...tokenPriceMap }), [tokenPriceMap]);
+}
+
+type OraclePriceCall = ContractFunctionParameters<
+  typeof BEANSTALK_ABI_SNIPPETS.oraclePrices
+>;
+function makeMultiCall(beanstalkAddress: string, tokens: Token[]) {
+  const calls: OraclePriceCall[] = [];
+
+  const contract = {
+    address: beanstalkAddress as `0x${string}`,
+    abi: BEANSTALK_ABI_SNIPPETS.oraclePrices,
+  };
+
+  let address: `0x${string}` = '0x';
+
+  for (const token of tokens) {
+    address = token.address as `0x${string}`;
+    const instantPriceCall: OraclePriceCall = {
+      ...contract,
+      functionName: 'getTokenUsdPrice',
+      args: [address as `0x${string}`],
+    };
+    const twapPriceCall: OraclePriceCall = {
+      ...contract,
+      functionName: 'getTokenUsdTwap',
+      args: [address as `0x${string}`, 3600n],
+    };
+
+    calls.push(instantPriceCall, twapPriceCall);
+  }
+
+  return {
+    contracts: chunkArray(calls, 20),
+    chunkSize: 2,
+  };
 }

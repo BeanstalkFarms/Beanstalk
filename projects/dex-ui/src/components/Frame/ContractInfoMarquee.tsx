@@ -48,7 +48,12 @@ export const ContractInfoMarquee = () => {
                     <InfoRow>
                       <InfoText>{key.toUpperCase()}:</InfoText>
                       {data.map(({ display, url }, i) => (
-                        <TextLink href={url} target="_blank" rel="noopener noreferrer" key={`${display}-${i}`}>
+                        <TextLink
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          key={`${display}-${i}`}
+                        >
                           {display}
                           <span>{data.length > 1 && i + 1 < data.length ? <>{","}</> : ""}</span>
                         </TextLink>

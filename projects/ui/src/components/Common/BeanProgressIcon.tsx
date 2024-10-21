@@ -3,7 +3,7 @@ import { CircularProgress, Stack } from '@mui/material';
 import beanIcon from '~/img/tokens/bean-logo-circled.svg';
 
 const PROGRESS_THICKNESS = 2;
-const PROGRESS_GAP = 3.5;
+const PROGRESS_GAP = 4;
 
 interface ProgressIconProps {
   size: number;
@@ -19,7 +19,7 @@ export default function BeanProgressIcon({
   progress,
 }: ProgressIconProps) {
   return (
-    <Stack sx={{ position: 'relative' }}>
+    <Stack component="span" sx={{ position: 'relative' }}>
       {enabled ? (
         <CircularProgress
           variant={variant}

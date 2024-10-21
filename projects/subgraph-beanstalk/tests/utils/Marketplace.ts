@@ -1,19 +1,6 @@
 import { BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import { assert } from "matchstick-as/assembly/index";
 import {
-  handlePodListingCancelled,
-  handlePodListingCreated,
-  handlePodListingCreated_v1_1,
-  handlePodListingCreated_v2,
-  handlePodListingFilled,
-  handlePodListingFilled_v2,
-  handlePodOrderCancelled,
-  handlePodOrderCreated,
-  handlePodOrderCreated_v2,
-  handlePodOrderFilled,
-  handlePodOrderFilled_v2
-} from "../../src/MarketplaceHandler";
-import {
   createPodListingCancelledEvent,
   createPodListingCreatedEvent,
   createPodListingCreatedEvent_v1_1,
@@ -27,23 +14,38 @@ import {
   createPodOrderFilledEvent_v2
 } from "../event-mocking/Marketplace";
 import { BI_10, ONE_BI, ZERO_BI } from "../../../subgraph-core/utils/Decimals";
-import {
-  PodListingCreated as PodListingCreated_v2,
-  PodListingFilled as PodListingFilled_v2,
-  PodOrderCreated as PodOrderCreated_v2,
-  PodOrderFilled as PodOrderFilled_v2
-} from "../../generated/BIP29-PodMarketplace/Beanstalk";
-import { BEANSTALK } from "../../../subgraph-core/utils/Constants";
+import { PodOrderCancelled } from "../../generated/Beanstalk-ABIs/Reseed";
+import { BEANSTALK } from "../../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { transferPlot } from "./Field";
 import {
-  PodOrderCancelled,
-  PodListingCancelled,
   PodListingCreated as PodListingCreated_v1,
   PodListingFilled as PodListingFilled_v1,
   PodOrderCreated as PodOrderCreated_v1,
   PodOrderFilled as PodOrderFilled_v1
-} from "../../generated/Field/Beanstalk";
-import { PodListingCreated as PodListingCreated_v1_1 } from "../../generated/Marketplace-Replanted/Beanstalk";
+} from "../../generated/Beanstalk-ABIs/PreReplant";
+import { PodListingCreated as PodListingCreated_v1_1 } from "../../generated/Beanstalk-ABIs/Replanted";
+import {
+  handlePodListingCreated_v1,
+  handlePodListingCreated_v1_1,
+  handlePodListingFilled_v1,
+  handlePodOrderCreated_v1,
+  handlePodOrderFilled_v1
+} from "../../src/handlers/legacy/LegacyMarketplaceV1Handler";
+import {
+  handlePodListingCancelled_v2,
+  handlePodListingCreated_v2,
+  handlePodListingFilled_v2,
+  handlePodOrderCreated_v2,
+  handlePodOrderFilled_v2
+} from "../../src/handlers/legacy/LegacyMarketplaceV2Handler";
+import { handlePodOrderCancelled } from "../../src/handlers/MarketplaceHandler";
+import {
+  PodListingCancelled as PodListingCancelled_v2,
+  PodListingCreated as PodListingCreated_v2,
+  PodListingFilled as PodListingFilled_v2,
+  PodOrderCreated as PodOrderCreated_v2,
+  PodOrderFilled as PodOrderFilled_v2
+} from "../../generated/Beanstalk-ABIs/SeedGauge";
 
 const pricingFunction = Bytes.fromHexString(
   "0x0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000000c8000000000000000000000000000000000000000000000000000000000000012c000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101010101010000"
@@ -65,13 +67,13 @@ export function fillListing_v1(
   transferPlot(from, to, listingIndex.plus(listingStart), podAmount);
 
   const event = createPodListingFilledEvent(from, to, listingIndex, listingStart, podAmount);
-  handlePodListingFilled(event);
+  handlePodListingFilled_v1(event);
 
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
   assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + event.params.index.toString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -97,8 +99,8 @@ export function fillListing_v2(
   // Assert PodFill
   const podFillId = getPodFillId(event.params.index, event);
   assert.fieldEquals("PodFill", podFillId, "listing", event.params.from.toHexString() + "-" + event.params.index.toString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -117,7 +119,7 @@ export function fillOrder_v1(
   pricePerPod: BigInt
 ): PodOrderFilled_v1 {
   const event = createPodOrderFilledEvent(from, to, orderId, index, start, podAmount);
-  handlePodOrderFilled(event);
+  handlePodOrderFilled_v1(event);
 
   // Perform plot transfer
   transferPlot(from, to, index.plus(start), podAmount);
@@ -125,8 +127,8 @@ export function fillOrder_v1(
   // Assert PodFill
   const podFillId = getPodFillId(index, event);
   assert.fieldEquals("PodFill", podFillId, "order", event.params.id.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -153,8 +155,8 @@ export function fillOrder_v2(
   // Assert PodFill
   const podFillId = getPodFillId(index, event);
   assert.fieldEquals("PodFill", podFillId, "order", event.params.id.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "from", event.params.from.toHexString());
-  assert.fieldEquals("PodFill", podFillId, "to", event.params.to.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "fromFarmer", event.params.from.toHexString());
+  assert.fieldEquals("PodFill", podFillId, "toFarmer", event.params.to.toHexString());
   assert.fieldEquals("PodFill", podFillId, "amount", event.params.amount.toString());
   assert.fieldEquals("PodFill", podFillId, "index", event.params.index.toString());
   assert.fieldEquals("PodFill", podFillId, "start", event.params.start.toString());
@@ -163,9 +165,9 @@ export function fillOrder_v2(
   return event;
 }
 
-export function cancelListing(account: string, listingIndex: BigInt): PodListingCancelled {
+export function cancelListing(account: string, listingIndex: BigInt): PodListingCancelled_v2 {
   const event = createPodListingCancelledEvent(account, listingIndex);
-  handlePodListingCancelled(event);
+  handlePodListingCancelled_v2(event);
   return event;
 }
 
@@ -265,7 +267,7 @@ export function createListing_v1(
   maxHarvestableIndex: BigInt
 ): PodListingCreated_v1 {
   const event = createPodListingCreatedEvent(account, index, start, listedPods, pricePerPod, maxHarvestableIndex, true);
-  handlePodListingCreated(event);
+  handlePodListingCreated_v1(event);
   assertListingCreated_v1(event);
   return event;
 }
@@ -310,7 +312,7 @@ export function createListing_v2(
 
 export function createOrder_v1(account: string, id: Bytes, beans: BigInt, pricePerPod: BigInt, maxPlaceInLine: BigInt): PodOrderCreated_v1 {
   const event = createPodOrderCreatedEvent(account, id, beans.times(BI_10.pow(6)).div(pricePerPod), pricePerPod, maxPlaceInLine);
-  handlePodOrderCreated(event);
+  handlePodOrderCreated_v1(event);
   assertOrderCreated_v1(account, event);
   return event;
 }

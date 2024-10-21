@@ -1,6 +1,8 @@
-import { FC } from "src/types";
 import React from "react";
+
 import styled from "styled-components";
+
+import { FC } from "src/types";
 
 type Props = {
   children: any;
@@ -14,7 +16,17 @@ type Props = {
   bgColor?: "black" | "white";
 };
 
-export const Tooltip: FC<Props> = ({ children, content, offsetX, offsetY, arrowSize, arrowOffset, side, width, bgColor = "black" }) => {
+export const Tooltip: FC<Props> = ({
+  children,
+  content,
+  offsetX,
+  offsetY,
+  arrowSize,
+  arrowOffset,
+  side,
+  width,
+  bgColor = "black"
+}) => {
   return (
     <TooltipContainer>
       {children}
@@ -65,14 +77,14 @@ const TooltipBox = styled.div<TooltipProps>`
       ? `top: ${props.offsetY * -1}%;
          left: ${props.offsetX}%;`
       : props.side === "left"
-      ? `left: auto;
+        ? `left: auto;
         right: calc(100% + ${props.offsetX}%);
         top: ${props.offsetY}%;`
-      : props.side === "right"
-      ? `left: calc(100% + ${props.offsetX}%);
+        : props.side === "right"
+          ? `left: calc(100% + ${props.offsetX}%);
         top: ${props.offsetY}%;`
-      : //props.side === 'bottom
-        `bottom: ${props.offsetY * -1}%;`}
+          : //props.side === 'bottom
+            `bottom: ${props.offsetY * -1}%;`}
   ${TooltipContainer}:hover & {
     visibility: visible;
   }
@@ -89,12 +101,12 @@ const TooltipBox = styled.div<TooltipProps>`
         ? `top: calc(100% - ${props.arrowSize}px);
              left: ${props.arrowOffset}%;`
         : props.side === "left"
-        ? `left: calc(100% - ${props.arrowSize}px);
+          ? `left: calc(100% - ${props.arrowSize}px);
              top: ${props.arrowOffset}%;`
-        : props.side === "right"
-        ? `right: calc(100% - ${props.arrowSize}px);;
+          : props.side === "right"
+            ? `right: calc(100% - ${props.arrowSize}px);;
              top: ${props.arrowOffset}%;`
-        : //props.side === 'bottom
-          `bottom: calc(100% - ${props.arrowSize}px);`}
+            : //props.side === 'bottom
+              `bottom: calc(100% - ${props.arrowSize}px);`}
   }
 `;

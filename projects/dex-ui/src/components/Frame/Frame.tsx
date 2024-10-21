@@ -1,25 +1,29 @@
 import React, { useState } from "react";
+
 import { Link } from "react-router-dom";
-import { FC } from "src/types";
 import styled from "styled-components";
-import { Footer } from "./Footer";
-import { Window } from "./Window";
-import { Settings } from "src/settings";
-import CustomToaster from "../TxnToast/CustomToaster";
+import { useChainId } from "wagmi";
+
 import buildIcon from "src/assets/images/navbar/build.svg";
 import swapIcon from "src/assets/images/navbar/swap.svg";
 import wellsIcon from "src/assets/images/navbar/wells.svg";
-import { LinksNav } from "../Typography";
-import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
-import { TokenMarquee } from "./TokenMarquee";
 import { WalletButton } from "src/components/Wallet";
+import { Settings } from "src/settings";
+import { FC } from "src/types";
+import { useSdkChainId } from "src/utils/chain";
 import { theme } from "src/utils/ui/theme";
-import { useChainId } from "wagmi";
+
+import { Footer } from "./Footer";
+import { TokenMarquee } from "./TokenMarquee";
+import { Window } from "./Window";
+import { BurgerMenuIcon, Discord, Github, Logo, Twitter, X, BeanstalkLogoBlack } from "../Icons";
+import CustomToaster from "../TxnToast/CustomToaster";
+import { LinksNav } from "../Typography";
 
 export const Frame: FC<{}> = ({ children }) => {
   const isNotProd = !Settings.PRODUCTION;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const chain = useChainId();
+  const resolvedcid = useSdkChainId();
 
   return (
     <Container id="frame">
@@ -38,7 +42,7 @@ export const Frame: FC<{}> = ({ children }) => {
               <NavLink to="/build" hovericon={buildIcon}>
                 Build
               </NavLink>
-              <NavLink to="/wells" hovericon={wellsIcon}>
+              <NavLink to={`/wells/${resolvedcid}`} hovericon={wellsIcon}>
                 Liquidity
               </NavLink>
               <NavLink to="/swap" hovericon={swapIcon}>
@@ -63,7 +67,11 @@ export const Frame: FC<{}> = ({ children }) => {
             <MobileNavLink $bold to="/swap" onClick={() => setMobileMenuOpen(false)}>
               Swap
             </MobileNavLink>
-            <MobileNavLink $bold to="/wells" onClick={() => setMobileMenuOpen(false)}>
+            <MobileNavLink
+              $bold
+              to={`/wells/${resolvedcid}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Wells
             </MobileNavLink>
             <MobileNavLink $bold to="/build" onClick={() => setMobileMenuOpen(false)}>

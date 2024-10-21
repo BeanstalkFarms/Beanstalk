@@ -10,6 +10,7 @@ import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
 
 interface IOwner {
     function transferOwnership(address newOwner) external;
+
     function owner() external returns (address);
 }
 
@@ -33,7 +34,7 @@ contract FertilizerDeployer is Utils {
         IOwner(FERTILIZER).transferOwnership(newOwner);
     }
 
-    function mintFertilizer() internal {} // TODO
+    function mintFertilizer() internal {}
 
     function mockMintFertilizer() internal {}
 

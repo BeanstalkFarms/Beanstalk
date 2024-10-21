@@ -3,7 +3,7 @@ import { FarmToMode, Token } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { useFormikContext } from 'formik';
 import { ZERO_BN } from '~/constants';
-import useSdk, { getNewToOldToken } from '~/hooks/sdk';
+import useSdk from '~/hooks/sdk';
 
 import useFarmerFertilizer from '~/hooks/farmer/useFarmerFertilizer';
 import useFarmerField from '~/hooks/farmer/useFarmerField';
@@ -48,7 +48,7 @@ type TXActionParams = {
   [FormTxn.ENROOT]: never;
   [FormTxn.HARVEST]: { toMode?: FarmToMode };
   [FormTxn.RINSE]: { toMode?: FarmToMode };
-  [FormTxn.CLAIM]: { toMode?: FarmToMode };
+  // [FormTxn.CLAIM]: { toMode?: FarmToMode };
 };
 
 type ClaimableOption = {
@@ -133,9 +133,6 @@ export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
 
     const harvestablePods = normalizeBN(farmerField.harvestablePods);
     const rinsableSprouts = normalizeBN(farmerBarn.fertilizedSprouts);
-    const claimableBeans = normalizeBN(
-      farmerSilo.balances[BEAN.address]?.claimable?.amount
-    );
 
     return {
       [FormTxn.MOW]: {
@@ -259,31 +256,10 @@ export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
           {
             type: ActionType.RINSE,
             amount: rinsableSprouts,
-            destination: mode === 'plantToggle' ? (values.destination || FarmToMode.INTERNAL) : values.destination,
-          },
-        ],
-      },
-      [FormTxn.CLAIM]: {
-        title: 'Claim',
-        tooltip: tooltips.claim,
-        enabled: claimableBeans.gt(0),
-        claimable: {
-          token: BEAN,
-          amount: claimableBeans,
-        },
-        summary: [
-          {
-            description: 'Claimable Beans',
-            tooltip: tooltips.claimableBeans,
-            token: BEAN,
-            amount: claimableBeans,
-          },
-        ],
-        txActions: () => [
-          {
-            type: ActionType.CLAIM_WITHDRAWAL,
-            amount: claimableBeans,
-            token: getNewToOldToken(BEAN),
+            destination:
+              mode === 'plantToggle'
+                ? values.destination || FarmToMode.INTERNAL
+                : values.destination,
           },
         ],
       },
@@ -291,16 +267,15 @@ export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
   }, [
     farmerBarn.fertilizedSprouts,
     farmerField.harvestablePods,
-    farmerSilo.balances,
     farmerSilo.beans.earned,
     farmerSilo.seeds.earned,
     farmerSilo.stalk.earned,
     farmerSilo.stalk.grown,
+    mode,
     revitalizedSeeds,
     revitalizedStalk,
     sdk.tokens,
     values.destination,
-    mode
   ]);
 
   /**
@@ -325,11 +300,7 @@ export default function useFarmerFormTxnsSummary(mode?: 'plantToggle') {
   );
 
   const canClaimBeans = useMemo(() => {
-    const { bn } = getClaimable([
-      FormTxn.CLAIM,
-      FormTxn.RINSE,
-      FormTxn.HARVEST,
-    ]);
+    const { bn } = getClaimable([FormTxn.RINSE, FormTxn.HARVEST]);
     return bn.gt(0);
   }, [getClaimable]);
 

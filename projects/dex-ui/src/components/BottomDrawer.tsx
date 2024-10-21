@@ -1,10 +1,13 @@
 import React from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
-import { BodyXS } from "./Typography";
+
 import x from "src/assets/images/x.svg";
-import { ImageButton } from "./ImageButton";
 import { size } from "src/breakpoints";
+import { FC } from "src/types";
+
+import { ImageButton } from "./ImageButton";
+import { BodyXS } from "./Typography";
 
 interface Composition {
   Header: typeof Header;
@@ -26,7 +29,12 @@ type Props = {
   toggleDrawer?: (isDrawerOpen: boolean) => void;
 };
 
-export const BottomDrawer: FC<Props> & Composition = ({ children, showDrawer, headerText, toggleDrawer }) => {
+export const BottomDrawer: FC<Props> & Composition = ({
+  children,
+  showDrawer,
+  headerText,
+  toggleDrawer
+}) => {
   return (
     <>
       <Container showDrawer={showDrawer} data-trace="true">

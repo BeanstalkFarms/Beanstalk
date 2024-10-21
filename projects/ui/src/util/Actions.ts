@@ -1,14 +1,14 @@
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import React from 'react';
 import BigNumber from 'bignumber.js';
 import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
-import Token from '~/classes/Token';
 import { displayFullBN, displayTokenAmount } from '~/util/Tokens';
 import copy from '~/constants/copy';
 import {
   AmountsBySource,
   displayAmountsBySource,
 } from '~/hooks/beanstalk/useBalancesUsedBySource';
-import { BEAN, PODS, SPROUTS, CRV3 } from '../constants/tokens';
+import { BEAN, PODS, SPROUTS } from '../constants/tokens';
 import { displayBN, trimAddress } from './index';
 
 export enum ActionType {
@@ -62,23 +62,23 @@ export type BaseAction = {
 
 export type EndTokenAction = {
   type: ActionType.END_TOKEN;
-  token: Token;
+  token: TokenInstance;
 };
 
 export type SwapAction = {
   type: ActionType.SWAP;
-  tokenIn: Token;
+  tokenIn: TokenInstance;
   source?: FarmFromMode;
   amountsBySource?: AmountsBySource;
   amountIn: BigNumber;
-  tokenOut: Token;
+  tokenOut: TokenInstance;
   amountOut: BigNumber;
 };
 
 export type ReceiveTokenAction = {
   type: ActionType.RECEIVE_TOKEN;
   amount: BigNumber;
-  token: Token;
+  token: TokenInstance;
   destination?: FarmToMode;
   to?: string;
   hideMessage?: boolean;
@@ -88,7 +88,7 @@ export type TransferBalanceAction = {
   type: ActionType.TRANSFER_BALANCE;
   amount: BigNumber;
   amountsBySource?: AmountsBySource;
-  token: Token;
+  token: TokenInstance;
   source:
     | FarmFromMode.INTERNAL
     | FarmFromMode.EXTERNAL
@@ -100,7 +100,7 @@ export type TransferBalanceAction = {
 /// ////////////////////////////// SILO /////////////////////////////////
 type SiloAction = {
   amount: BigNumber;
-  token: Token;
+  token: TokenInstance;
 };
 
 export type SiloRewardsAction = {
@@ -162,7 +162,7 @@ export type BuyBeansAction = {
   type: ActionType.BUY_BEANS;
   beanAmount: BigNumber;
   beanPrice: BigNumber;
-  token: Token;
+  token: TokenInstance;
   tokenAmount: BigNumber;
 };
 
@@ -297,13 +297,12 @@ export const parseActionMessage = (a: Action) => {
     case ActionType.END_TOKEN:
       return null;
     case ActionType.SWAP:
-      if (
-        a.tokenOut.isLP &&
-        a.tokenOut.symbol !== CRV3[1].symbol &&
-        !a.tokenOut.isUnripe
-      ) {
+      if (a.tokenOut.isLP && !a.tokenOut.isUnripe) {
         const bySource = a.amountsBySource;
-        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut);
+        const amtOutDisplay = displayTokenAmount(a.amountOut, a.tokenOut, {
+          showName: false,
+          showSymbol: true,
+        });
 
         if (bySource && bySource.external.plus(bySource.internal).gt(0)) {
           const amountsBySourceDisplay = displayAmountsBySource(
@@ -315,20 +314,16 @@ export const parseActionMessage = (a: Action) => {
           return `Add ${amountsBySourceDisplay.combined} for ${amtOutDisplay}.`;
         }
 
-        return `Add ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} of liquidity for ${amtOutDisplay}.`;
+        return `Add ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} of liquidity for ${amtOutDisplay}.`;
       }
-      if (
-        a.tokenIn.isLP &&
-        a.tokenIn.symbol !== CRV3[1].symbol &&
-        !a.tokenIn.isUnripe
-      ) {
-        return `Burn ${displayTokenAmount(
-          a.amountIn,
-          a.tokenIn
-        )} for ${displayTokenAmount(a.amountOut, a.tokenOut)} of liquidity.`;
+      if (a.tokenIn.isLP && !a.tokenIn.isUnripe) {
+        return `Burn ${displayTokenAmount(a.amountIn, a.tokenIn, {
+          showName: false,
+          showSymbol: true,
+        })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })} of liquidity.`;
       }
       if (
         a.amountsBySource &&
@@ -338,13 +333,13 @@ export const parseActionMessage = (a: Action) => {
           a.amountsBySource,
           a.tokenIn
         );
-        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+        return `Swap ${bySourceDisplay.combined} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
       }
 
-      return `Swap ${displayTokenAmount(
-        a.amountIn,
-        a.tokenIn
-      )} for ${displayTokenAmount(a.amountOut, a.tokenOut)}.`;
+      return `Swap ${displayTokenAmount(a.amountIn, a.tokenIn, {
+        showName: false,
+        showSymbol: true,
+      })} for ${displayTokenAmount(a.amountOut, a.tokenOut, { showName: false, showSymbol: true })}.`;
     case ActionType.RECEIVE_TOKEN: {
       if (a.hideMessage) {
         return null;
@@ -463,7 +458,7 @@ export const parseActionMessage = (a: Action) => {
       return `Buy ${displayFullBN(a.amountOut, 2)} Fertilizer at ${displayFullBN(
         a.humidity.multipliedBy(100),
         1
-      )}% Humidity with ${displayFullBN(a.amountIn, 2)} Wrapped Ether.`;
+      )}% Humidity with ${displayFullBN(a.amountIn, 2)} wstETH.`;
     case ActionType.RECEIVE_FERT_REWARDS:
       return `Receive ${displayFullBN(a.amountOut, 2)} Sprouts.`;
     case ActionType.TRANSFER_FERTILIZER:

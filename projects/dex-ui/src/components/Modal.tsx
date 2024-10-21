@@ -1,11 +1,14 @@
 import React, { useCallback, useContext } from "react";
+
 import * as Dialog from "@radix-ui/react-dialog";
 import styled, { keyframes } from "styled-components";
-import { theme } from "src/utils/ui/theme";
-import { Text, TextProps } from "./Typography";
-import { Divider, Flex } from "./Layout";
+
 import x from "src/assets/images/x.svg";
+import { theme } from "src/utils/ui/theme";
+
 import { ImageButton } from "./ImageButton";
+import { Divider, Flex } from "./Layout";
+import { Text, TextProps } from "./Typography";
 
 type ModalContextProps = {
   open: boolean;

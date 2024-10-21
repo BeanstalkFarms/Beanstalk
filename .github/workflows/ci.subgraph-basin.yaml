@@ -44,7 +44,7 @@ jobs:
         run: echo "There are uncommitted changes - execute 'yarn codegen' locally and commit the generated files!"
 
       - name: Build Subgraph
-        run: yarn build
+        run: yarn build -- ethereum
         working-directory: projects/subgraph-basin
   test:
     runs-on: ubuntu-latest

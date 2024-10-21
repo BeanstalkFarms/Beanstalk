@@ -2,11 +2,11 @@ import React from 'react';
 import { Container, Stack } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
 import ChopActions from '~/components/Chop/Actions';
-import ChopConditions from '../components/Chop/ChopConditions';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import { HOW_TO_CHOP_UNRIPE_BEANS } from '~/util/Guides';
 
 import { FC } from '~/types';
+import ChopConditions from '../components/Chop/ChopConditions';
 
 const ChopPage: FC<{}> = () => (
   <Container maxWidth="sm">

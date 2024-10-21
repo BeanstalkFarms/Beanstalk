@@ -16,7 +16,8 @@ library LibConvertData {
         LAMBDA_LAMBDA,
         BEANS_TO_WELL_LP,
         WELL_LP_TO_BEANS,
-        UNRIPE_TO_RIPE
+        UNRIPE_TO_RIPE,
+        ANTI_LAMBDA_LAMBDA
     }
 
     /// @notice Decoder for the Convert Enum
@@ -46,5 +47,15 @@ library LibConvertData {
         bytes memory self
     ) internal pure returns (uint256 amount, address token) {
         (, amount, token) = abi.decode(self, (ConvertKind, uint256, address));
+    }
+
+    /// @notice Decoder for the antiLambdaConvert
+    /// @dev contains an additional address parameter for the account to update the deposit
+    /// and a bool to indicate whether to decrease the bdv
+    function antiLambdaConvert(
+        bytes memory self
+    ) internal pure returns (uint256 amount, address token, address account, bool decreaseBDV) {
+        (, amount, token, account) = abi.decode(self, (ConvertKind, uint256, address, address));
+        decreaseBDV = true;
     }
 }

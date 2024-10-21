@@ -17,11 +17,11 @@ describe("newSilo", function () {
     [owner, user, user2, user3, user4] = await ethers.getSigners();
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
 
-    // initalize users - mint bean and approve beanstalk to use all beans.
+    // initialize users - mint bean and approve beanstalk to use all beans.
     await initializeUsersForToken(BEAN, [user, user2, user3, user4], to6("10000"));
 
     // deposit 1000 beans from 2 users.

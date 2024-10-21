@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import { useSelector } from 'react-redux';
 import { AddressMap, ZERO_BN } from '~/constants';
-import { AppState } from '~/state';
-import useSiloTokenToFiat from '../beanstalk/useSiloTokenToFiat';
-import useWhitelist from '../beanstalk/useWhitelist';
+import { useAppSelector } from '~/state';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
+import useSiloTokenToFiat from '../beanstalk/useSiloTokenToFiat';
 
 // -----------------
 // Types and Helpers
@@ -68,7 +67,7 @@ const _initState = (tokenAddresses: string[]) =>
       },
       {}
     ),
-  } as SiloStateBreakdown);
+  }) as SiloStateBreakdown;
 
 // -----------------
 // Hooks
@@ -87,17 +86,11 @@ const _initState = (tokenAddresses: string[]) =>
  */
 export default function useFarmerBalancesBreakdown() {
   /// Constants
-  const whitelist = useWhitelist();
-  const whitelistAddrs = useMemo(() => Object.keys(whitelist), [whitelist]);
+  const { tokenMap: whitelist, addresses } = useWhitelistedTokens();
 
   /// Balances
-  const siloBalances = useSelector<
-    AppState,
-    AppState['_farmer']['silo']['balances']
-  >((state) => state._farmer.silo.balances);
-  const tokenBalances = useSelector<AppState, AppState['_farmer']['balances']>(
-    (state) => state._farmer.balances
-  );
+  const siloBalances = useAppSelector((s) => s._farmer.silo.balances);
+  const tokenBalances = useAppSelector((s) => s._farmer.balances);
 
   /// Helpers
   const getUSD = useSiloTokenToFiat();
@@ -106,16 +99,16 @@ export default function useFarmerBalancesBreakdown() {
     const prev = {
       totalValue: ZERO_BN,
       states: {
-        deposited: _initState(whitelistAddrs),
-        withdrawn: _initState(whitelistAddrs),
-        claimable: _initState(whitelistAddrs),
-        farm: _initState(whitelistAddrs), // FIXME: not a Silo state
-        circulating: _initState(whitelistAddrs), // FIXME: not a Silo state
+        deposited: _initState(addresses),
+        withdrawn: _initState(addresses),
+        claimable: _initState(addresses),
+        farm: _initState(addresses), // FIXME: not a Silo state
+        circulating: _initState(addresses), // FIXME: not a Silo state
       },
     };
 
     /// Silo whitelist
-    whitelistAddrs.forEach((address) => {
+    addresses.forEach((address) => {
       const token = whitelist[address];
       const siloBalance = siloBalances[address];
       const tokenBalance = tokenBalances[address] || ZERO_BN;
@@ -157,5 +150,5 @@ export default function useFarmerBalancesBreakdown() {
     });
 
     return prev;
-  }, [whitelist, whitelistAddrs, siloBalances, tokenBalances, getUSD]);
+  }, [whitelist, addresses, siloBalances, tokenBalances, getUSD]);
 }

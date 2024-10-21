@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   Box,
   CircularProgress,
+  Link,
   Stack,
   Typography,
 } from '@mui/material';
@@ -10,9 +11,9 @@ import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { FarmToMode } from '@beanstalk/sdk';
+import { FarmToMode, ERC20Token } from '@beanstalk/sdk';
 import {
-  FormState,
+  FormStateNew,
   SmartSubmitButton,
   TokenAdornment,
   TokenOutputField,
@@ -25,17 +26,12 @@ import StyledAccordionSummary from '~/components/Common/Accordion/AccordionSumma
 import TokenInputField from '~/components/Common/Form/TokenInputField';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
-import Token, { ERC20Token, NativeToken } from '~/classes/Token';
+
 import { Beanstalk } from '~/generated/index';
 import useToggle from '~/hooks/display/useToggle';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import useTokenMap from '~/hooks/chain/useTokenMap';
-import { useSigner } from '~/hooks/ledger/useSigner';
 import useAccount from '~/hooks/ledger/useAccount';
-import usePreferredToken, {
-  PreferredToken,
-} from '~/hooks/farmer/usePreferredToken';
+import usePreferredToken from '~/hooks/farmer/usePreferredToken';
 import { ActionType } from '~/util/Actions';
 import {
   displayBN,
@@ -43,11 +39,7 @@ import {
   optimizeFromMode,
   toStringBaseUnitBN,
 } from '~/util';
-import {
-  UNRIPE_BEAN,
-  UNRIPE_BEAN_WETH,
-  UNRIPE_TOKENS,
-} from '~/constants/tokens';
+
 import { ZERO_BN } from '~/constants';
 import { useFetchFarmerBalances } from '~/state/farmer/balances/updater';
 import { AppState } from '~/state';
@@ -59,34 +51,58 @@ import useFormMiddleware from '~/hooks/ledger/useFormMiddleware';
 import useSdk from '~/hooks/sdk';
 import useBDV from '~/hooks/beanstalk/useBDV';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
+import { useUnripe } from '~/state/bean/unripe/updater';
+import { TokenInstance, useUnripeTokens } from '~/hooks/beanstalk/useTokens';
+import WarningAlert from '~/components/Common/Alert/WarningAlert';
 
-type ChopFormValues = FormState & {
+type ChopFormValues = FormStateNew & {
   destination: FarmToMode | undefined;
+};
+
+const useOptimizedBalanceSource = (
+  token: FormStateNew['tokens'][number]['token'],
+  balances: ReturnType<typeof useFarmerBalances>
+) => {
+  const bal = balances[token.address];
+
+  if (bal && bal.external.gt(bal.internal)) {
+    return BalanceFrom.EXTERNAL;
+  }
+
+  return BalanceFrom.INTERNAL;
 };
 
 const ChopForm: FC<
   FormikProps<ChopFormValues> & {
     balances: ReturnType<typeof useFarmerBalances>;
     beanstalk: Beanstalk;
+    optimizedBalanceSource: BalanceFrom;
   }
-> = ({ values, setFieldValue, balances, beanstalk }) => {
+> = ({
+  values,
+  setFieldValue,
+  balances,
+  beanstalk,
+  optimizedBalanceSource,
+}) => {
   const sdk = useSdk();
   const getBDV = useBDV();
-  const erc20TokenMap = useTokenMap<ERC20Token | NativeToken>(UNRIPE_TOKENS);
+  const { tokenMap: erc20TokenMap } = useUnripeTokens();
   const [isTokenSelectVisible, showTokenSelect, hideTokenSelect] = useToggle();
   const unripeUnderlying = useUnripeUnderlyingMap();
   const [quote, setQuote] = useState<BigNumber>(new BigNumber(0));
   const [quoteBdv, setQuoteBdv] = useState<BigNumber>(new BigNumber(0));
   const [balanceFromIn, setBalanceFromIn] = useState<BalanceFrom>(
-    values.destination === FarmToMode.EXTERNAL
-      ? BalanceFrom.EXTERNAL
-      : BalanceFrom.INTERNAL
+    optimizedBalanceSource
   );
   /// Derived values
   const state = values.tokens[0];
   const inputToken = state.token;
   const tokenBalance = balances[inputToken.address];
   const outputToken = unripeUnderlying[inputToken.address];
+
+  const isUnripeLP =
+    values.tokens[0]?.token.symbol === sdk.tokens.UNRIPE_BEAN_WSTETH.symbol;
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -130,7 +146,7 @@ const ChopForm: FC<
 
   ///
   const handleSelectTokens = useCallback(
-    (_tokens: Set<Token>) => {
+    (_tokens: Set<TokenInstance>) => {
       // If the user has typed some existing values in,
       // save them. Add new tokens to the end of the list.
       // FIXME: match sorting of erc20TokenList
@@ -178,6 +194,7 @@ const ChopForm: FC<
         <TokenInputField
           token={inputToken}
           balance={tokenBalance || ZERO_BN}
+          balanceFrom={balanceFromIn}
           name="tokens.0.amount"
           // MUI
           fullWidth
@@ -251,6 +268,23 @@ const ChopForm: FC<
             </Box>
           </>
         ) : null}
+        {isUnripeLP ? (
+          <WarningAlert>
+            <Typography>
+              You can get more value by Converting to{' '}
+              {sdk.tokens.UNRIPE_BEAN.symbol} first by Depositing and Converting
+              in the Silo{' '}
+              <Typography
+                component={Link}
+                href={`#/silo/${sdk.tokens.UNRIPE_BEAN_WSTETH.address}?action=deposit`}
+              >
+                here
+              </Typography>
+              . Note that you will have to wait 2 Seasons for your new Deposit
+              to Germinate before Converting.
+            </Typography>
+          </WarningAlert>
+        ) : null}
         <SmartSubmitButton
           type="submit"
           variant="contained"
@@ -268,24 +302,25 @@ const ChopForm: FC<
   );
 };
 
-// ---------------------------------------------------
-
-const PREFERRED_TOKENS: PreferredToken[] = [
-  {
-    token: UNRIPE_BEAN,
-    minimum: new BigNumber(1),
-  },
-  {
-    token: UNRIPE_BEAN_WETH,
-    minimum: new BigNumber(1),
-  },
-];
+const usePreferredUnripeTokenConfig = () => {
+  const { UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } = useUnripeTokens();
+  return useMemo(
+    () => [
+      { token: UNRIPE_BEAN, minimum: new BigNumber(1) },
+      { token: UNRIPE_BEAN_WSTETH, minimum: new BigNumber(1) },
+    ],
+    [UNRIPE_BEAN, UNRIPE_BEAN_WSTETH]
+  );
+};
 
 const Chop: FC<{}> = () => {
   /// Ledger
+  const sdk = useSdk();
   const account = useAccount();
-  const { data: signer } = useSigner();
-  const beanstalk = useBeanstalkContract(signer);
+  const beanstalk = sdk.contracts.beanstalk;
+  const [refetchUnripe] = useUnripe();
+
+  const preferredUnripeTokenConfig = usePreferredUnripeTokenConfig();
 
   /// Farmer
   const farmerBalances = useFarmerBalances();
@@ -293,7 +328,7 @@ const Chop: FC<{}> = () => {
 
   /// Form
   const middleware = useFormMiddleware();
-  const baseToken = usePreferredToken(PREFERRED_TOKENS, 'use-best');
+  const baseToken = usePreferredToken(preferredUnripeTokenConfig, 'use-best');
   const initialValues: ChopFormValues = useMemo(
     () => ({
       tokens: [
@@ -307,13 +342,18 @@ const Chop: FC<{}> = () => {
     [baseToken]
   );
 
+  const initialBalanceFrom = useOptimizedBalanceSource(
+    initialValues.tokens[0].token,
+    farmerBalances
+  );
+
   /// Handlers
   const onSubmit = useCallback(
     async (
       values: ChopFormValues,
       formActions: FormikHelpers<ChopFormValues>
     ) => {
-      let txToast;
+      const txToast = new TransactionToast({});
       try {
         middleware.before();
 
@@ -323,7 +363,7 @@ const Chop: FC<{}> = () => {
         if (!state.amount?.gt(0))
           throw new Error('No Unfertilized token to Chop.');
 
-        txToast = new TransactionToast({
+        txToast.setToastMessages({
           loading: `Chopping ${displayFullBN(state.amount)} ${
             state.token.symbol
           }...`,
@@ -339,20 +379,22 @@ const Chop: FC<{}> = () => {
         txToast.confirming(txn);
 
         const receipt = await txn.wait();
-        await Promise.all([refetchFarmerBalances()]); // should we also refetch the penalty?
+        await Promise.all([refetchFarmerBalances(), refetchUnripe()]);
         txToast.success(receipt);
         formActions.resetForm();
       } catch (err) {
-        if (txToast) {
-          txToast.error(err);
-        } else {
-          const errorToast = new TransactionToast({});
-          errorToast.error(err);
-        }
+        txToast.error(err);
         formActions.setSubmitting(false);
       }
     },
-    [account, beanstalk, refetchFarmerBalances, farmerBalances, middleware]
+    [
+      account,
+      beanstalk,
+      farmerBalances,
+      middleware,
+      refetchFarmerBalances,
+      refetchUnripe,
+    ]
   );
 
   return (
@@ -365,6 +407,7 @@ const Chop: FC<{}> = () => {
         <ChopForm
           balances={farmerBalances}
           beanstalk={beanstalk}
+          optimizedBalanceSource={initialBalanceFrom}
           {...formikProps}
         />
       )}

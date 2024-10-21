@@ -1,19 +1,21 @@
-import { TokenValue } from "@beanstalk/sdk";
 import React, { FC, ReactNode } from "react";
+
+import { Well } from "@beanstalk/sdk/Wells";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
+import { TokenValue } from "@beanstalk/sdk";
+
+import { mediaQuery, size } from "src/breakpoints";
+import { Skeleton } from "src/components/Skeleton";
 import { Row, Td } from "src/components/Table";
 import { TokenLogo } from "src/components/TokenLogo";
-import styled from "styled-components";
-import { mediaQuery, size } from "src/breakpoints";
-import { displayTokenSymbol, formatNum, formatUSD } from "src/utils/format";
-import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
-import { LPBalanceSummary } from "src/tokens/useLPPositionSummary";
-import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
 import { Tooltip } from "src/components/Tooltip";
-import { Well } from "@beanstalk/sdk/Wells";
-import { Skeleton } from "src/components/Skeleton";
-
-import { useNavigate } from "react-router-dom";
+import { LPBalanceSummary } from "src/tokens/useLPPositionSummary";
+import { displayTokenSymbol, formatNum, formatUSD } from "src/utils/format";
 import { useIsMobile } from "src/utils/ui/useIsMobile";
+import { useBeanstalkSiloWhitelist } from "src/wells/useBeanstalkSiloWhitelist";
+import { useWellLPTokenPrice } from "src/wells/useWellLPTokenPrice";
 
 const PositionBreakdown: React.FC<{
   items: { external: TokenValue; silo: TokenValue; internal: TokenValue; total: TokenValue };
@@ -128,7 +130,12 @@ export const MyWellPositionRow: FC<{
       </DesktopContainer>
       <DesktopContainer align="right">
         <BalanceContainer>
-          <PositionBreakdown isWhitelisted={whitelisted} items={positionsUSD} totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"} isLP={false} />
+          <PositionBreakdown
+            isWhitelisted={whitelisted}
+            items={positionsUSD}
+            totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"}
+            isLP={false}
+          />
         </BalanceContainer>
       </DesktopContainer>
       <MobileContainer>
@@ -148,7 +155,12 @@ export const MyWellPositionRow: FC<{
       </MobileContainer>
       <MobileContainer align="right">
         <BalanceContainer>
-          <PositionBreakdown items={positionsUSD} isWhitelisted={whitelisted} totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"} isLP={false} />
+          <PositionBreakdown
+            items={positionsUSD}
+            isWhitelisted={whitelisted}
+            totalDisplay={positionsUSD.total.gt(0) ? formatUSD(positionsUSD.total) : "$-.--"}
+            isLP={false}
+          />
         </BalanceContainer>
       </MobileContainer>
     </TableRow>

@@ -21,6 +21,11 @@ interface ImportMetaEnv {
    * If set, don't add CSP meta tag
    */
   readonly DISABLE_CSP?: any;
+
+  /**
+   * API key for used for ZeroX Swap API
+   */
+  readonly VITE_ZERO_X_API_KEY: string;
 }
 
 interface ImportMeta {

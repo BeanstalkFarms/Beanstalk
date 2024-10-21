@@ -1,7 +1,9 @@
-import { Token, TokenValue } from "@beanstalk/sdk";
-import { useQuery } from "@tanstack/react-query";
-import useSdk from "src/utils/sdk/useSdk";
 import { useAccount } from "wagmi";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
+import { useScopedQuery } from "src/utils/query/useScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
 
 const emptyAddress = "0x0";
 
@@ -14,7 +16,7 @@ export default function useTokenBalanceInternal(token: Token | undefined) {
 
   const beanstalk = sdk.contracts.beanstalk;
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useScopedQuery({
     queryKey: ["token", "internalBalance", sdk, token?.address || emptyAddress],
 
     queryFn: async () => {

@@ -39,7 +39,7 @@ type Bean {
   hourlySnapshot(first: Int = 100, orderBy: BeanHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: BeanHourlySnapshot_filter): [BeanHourlySnapshot!]!
 
   """Contract address of the Bean token"""
-  id: ID!
+  id: Bytes!
 
   """Last timestamp a cross was seen"""
   lastCross: BigInt!
@@ -894,14 +894,16 @@ input Bean_filter {
   dewhitelistedPools_not_contains: [String!]
   dewhitelistedPools_not_contains_nocase: [String!]
   hourlySnapshot_: BeanHourlySnapshot_filter
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastCross: BigInt
   lastCross_gt: BigInt
   lastCross_gte: BigInt
@@ -1049,7 +1051,7 @@ type Pool {
   """Instantaneous deltaB"""
   deltaBeans: BigInt!
   hourlySnapshot(first: Int = 100, orderBy: PoolHourlySnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHourlySnapshot_filter): [PoolHourlySnapshot!]!
-  id: ID!
+  id: Bytes!
 
   """Last timestamp a cross was seen for this pool"""
   lastCross: BigInt!
@@ -1799,14 +1801,16 @@ input Pool_filter {
   deltaBeans_not: BigInt
   deltaBeans_not_in: [BigInt!]
   hourlySnapshot_: PoolHourlySnapshot_filter
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastCross: BigInt
   lastCross_gt: BigInt
   lastCross_gte: BigInt
@@ -2186,6 +2190,34 @@ type Query {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: TwaOracle_filter
   ): [TwaOracle!]!
+  version(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Version
+  versions(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Version_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Version_filter
+  ): [Version!]!
 }
 
 type Subscription {
@@ -2471,6 +2503,34 @@ type Subscription {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: TwaOracle_filter
   ): [TwaOracle!]!
+  version(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Version
+  versions(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Version_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Version_filter
+  ): [Version!]!
 }
 
 "A string representation of microseconds UNIX timestamp (16 digits)\n"
@@ -2481,7 +2541,7 @@ type Token {
   decimals: BigInt!
 
   """Smart contract address of the token"""
-  id: ID!
+  id: Bytes!
 
   """
   Last USD price calculated. Isn't calculated for all tokens, in those cases will be zero.
@@ -2504,14 +2564,16 @@ input Token_filter {
   decimals_lte: BigInt
   decimals_not: BigInt
   decimals_not_in: [BigInt!]
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastPriceUSD: BigDecimal
   lastPriceUSD_gt: BigDecimal
   lastPriceUSD_gte: BigDecimal
@@ -2557,7 +2619,7 @@ type TwaOracle {
   cumulativeWellReservesPrevBlock: BigInt!
   cumulativeWellReservesPrevTime: BigInt!
   cumulativeWellReservesTime: BigInt!
-  id: ID!
+  id: Bytes!
   lastBalances: [BigInt!]!
   lastSun: BigInt!
   lastUpdated: BigInt!
@@ -2622,14 +2684,16 @@ input TwaOracle_filter {
   cumulativeWellReserves_not: Bytes
   cumulativeWellReserves_not_contains: Bytes
   cumulativeWellReserves_not_in: [Bytes!]
-  id: ID
-  id_gt: ID
-  id_gte: ID
-  id_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_not: ID
-  id_not_in: [ID!]
+  id: Bytes
+  id_contains: Bytes
+  id_gt: Bytes
+  id_gte: Bytes
+  id_in: [Bytes!]
+  id_lt: Bytes
+  id_lte: Bytes
+  id_not: Bytes
+  id_not_contains: Bytes
+  id_not_in: [Bytes!]
   lastBalances: [BigInt!]
   lastBalances_contains: [BigInt!]
   lastBalances_contains_nocase: [BigInt!]
@@ -2711,6 +2775,116 @@ enum TwaOracle_orderBy {
   pool__volumeUSD
   priceCumulativeLast
   priceCumulativeSun
+}
+
+type Version {
+  """Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."""
+  chain: String!
+
+  """= 'subgraph'"""
+  id: ID!
+
+  """Address of Beanstalk protocol"""
+  protocolAddress: Bytes!
+
+  """= 'beanstalk'"""
+  subgraphName: String!
+
+  """Verison number of the subgraph"""
+  versionNumber: String!
+}
+
+input Version_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [Version_filter]
+  chain: String
+  chain_contains: String
+  chain_contains_nocase: String
+  chain_ends_with: String
+  chain_ends_with_nocase: String
+  chain_gt: String
+  chain_gte: String
+  chain_in: [String!]
+  chain_lt: String
+  chain_lte: String
+  chain_not: String
+  chain_not_contains: String
+  chain_not_contains_nocase: String
+  chain_not_ends_with: String
+  chain_not_ends_with_nocase: String
+  chain_not_in: [String!]
+  chain_not_starts_with: String
+  chain_not_starts_with_nocase: String
+  chain_starts_with: String
+  chain_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  or: [Version_filter]
+  protocolAddress: Bytes
+  protocolAddress_contains: Bytes
+  protocolAddress_gt: Bytes
+  protocolAddress_gte: Bytes
+  protocolAddress_in: [Bytes!]
+  protocolAddress_lt: Bytes
+  protocolAddress_lte: Bytes
+  protocolAddress_not: Bytes
+  protocolAddress_not_contains: Bytes
+  protocolAddress_not_in: [Bytes!]
+  subgraphName: String
+  subgraphName_contains: String
+  subgraphName_contains_nocase: String
+  subgraphName_ends_with: String
+  subgraphName_ends_with_nocase: String
+  subgraphName_gt: String
+  subgraphName_gte: String
+  subgraphName_in: [String!]
+  subgraphName_lt: String
+  subgraphName_lte: String
+  subgraphName_not: String
+  subgraphName_not_contains: String
+  subgraphName_not_contains_nocase: String
+  subgraphName_not_ends_with: String
+  subgraphName_not_ends_with_nocase: String
+  subgraphName_not_in: [String!]
+  subgraphName_not_starts_with: String
+  subgraphName_not_starts_with_nocase: String
+  subgraphName_starts_with: String
+  subgraphName_starts_with_nocase: String
+  versionNumber: String
+  versionNumber_contains: String
+  versionNumber_contains_nocase: String
+  versionNumber_ends_with: String
+  versionNumber_ends_with_nocase: String
+  versionNumber_gt: String
+  versionNumber_gte: String
+  versionNumber_in: [String!]
+  versionNumber_lt: String
+  versionNumber_lte: String
+  versionNumber_not: String
+  versionNumber_not_contains: String
+  versionNumber_not_contains_nocase: String
+  versionNumber_not_ends_with: String
+  versionNumber_not_ends_with_nocase: String
+  versionNumber_not_in: [String!]
+  versionNumber_not_starts_with: String
+  versionNumber_not_starts_with_nocase: String
+  versionNumber_starts_with: String
+  versionNumber_starts_with_nocase: String
+}
+
+enum Version_orderBy {
+  chain
+  id
+  protocolAddress
+  subgraphName
+  versionNumber
 }
 
 type _Block_ {

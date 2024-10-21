@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FC } from "src/types";
-import { ChartContainer } from "./ChartStyles";
-import { createChart, IChartApi, ISeriesApi, Time } from "lightweight-charts";
 import { useRef } from "react";
+
+import { createChart, IChartApi, ISeriesApi, Time } from "lightweight-charts";
 import styled from "styled-components";
+
+import { FC } from "src/types";
+
 import { IChartDataItem } from "./ChartSection";
+import { ChartContainer } from "./ChartStyles";
 
 type Props = {
   legend: string;

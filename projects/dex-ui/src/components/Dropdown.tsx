@@ -1,9 +1,12 @@
 import React from "react";
+
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import styled from "styled-components";
+
 import { theme } from "src/utils/ui/theme";
-import { Flex } from "./Layout";
 import useElementDimensions from "src/utils/ui/useDimensions";
+
+import { Flex } from "./Layout";
 
 export type DropdownProps = {
   open: boolean;

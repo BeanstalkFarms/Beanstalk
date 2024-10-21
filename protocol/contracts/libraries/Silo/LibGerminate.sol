@@ -450,6 +450,7 @@ library LibGerminate {
      * @dev if the milestone season is not the current season, then the stalkEarnedPerSeason
      * hasn't changed from the previous season. Otherwise, we calculate the prevStalkEarnedPerSeason.
      */
+
     function getPrevStalkEarnedPerSeason(
         address token
     ) private view returns (uint32 prevStalkEarnedPerSeason) {
@@ -458,7 +459,7 @@ library LibGerminate {
         if (s.sys.silo.assetSettings[token].milestoneSeason < s.sys.season.current) {
             prevStalkEarnedPerSeason = s.sys.silo.assetSettings[token].stalkEarnedPerSeason;
         } else {
-            int24 deltaStalkEarnedPerSeason = s
+            int32 deltaStalkEarnedPerSeason = s
                 .sys
                 .silo
                 .assetSettings[token]
@@ -466,11 +467,11 @@ library LibGerminate {
             if (deltaStalkEarnedPerSeason >= 0) {
                 prevStalkEarnedPerSeason =
                     s.sys.silo.assetSettings[token].stalkEarnedPerSeason -
-                    uint32(int32(deltaStalkEarnedPerSeason));
+                    uint32(deltaStalkEarnedPerSeason);
             } else {
                 prevStalkEarnedPerSeason =
                     s.sys.silo.assetSettings[token].stalkEarnedPerSeason +
-                    uint32(int32(-deltaStalkEarnedPerSeason));
+                    uint32(-deltaStalkEarnedPerSeason);
             }
         }
     }

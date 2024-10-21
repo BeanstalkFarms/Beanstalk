@@ -71,8 +71,8 @@ describe("Silo Utils", function () {
 
   describe("calculateGrownStalk via stems", () => {
     it("should call fromBlockchain with the correct arguments and return its result", () => {
-      const stemTip = BigNumber.from("20");
-      const stem = BigNumber.from("10");
+      const stemTip = BigNumber.from(20e6);
+      const stem = BigNumber.from(10e6);
       const bdv = sdk.tokens.BEAN.fromHuman("5");
 
       // Calculated as bdv.toBigNumber() * (stemTip - stem)

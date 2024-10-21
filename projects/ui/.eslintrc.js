@@ -86,7 +86,7 @@ module.exports = {
     'no-trailing-spaces': 0,
 
     // -- Emotion css prop on DOM element override - https://emotion.sh/docs/eslint-plugin-react
-    "react/no-unknown-property": ["error", { "ignore": ["css"] }],
+    'react/no-unknown-property': ['error', { ignore: ['css'] }],
 
     // -- Other (to categorize)
     'react/button-has-type': 0,
@@ -101,8 +101,17 @@ module.exports = {
     'no-continue': 0,
     'import/extensions': 0,
     'newline-per-chained-call': 0,
-    'no-use-before-define': 0,
-    '@typescript-eslint/no-use-before-define': 'error',
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': [
+      'error',
+      {
+        functions: false,
+        classes: true,
+        variables: true,
+        typedefs: true,
+        allowNamedExports: true,
+      },
+    ],
     'import/prefer-default-export': 0,
     'react/jsx-props-no-spreading': 0,
     'jsx-a11y/label-has-associated-control': 0,

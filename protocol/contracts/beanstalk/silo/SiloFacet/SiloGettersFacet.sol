@@ -4,11 +4,8 @@
 
 pragma solidity ^0.8.20;
 
-import {AppStorage} from "contracts/beanstalk/storage/AppStorage.sol";
-import {Deposit} from "contracts/beanstalk/storage/Account.sol";
-import {GerminationSide} from "contracts/beanstalk/storage/System.sol";
-import {MowStatus} from "contracts/beanstalk/storage/Account.sol";
-import {AssetSettings} from "contracts/beanstalk/storage/System.sol";
+import {Deposit, MowStatus, PerWellPlenty} from "contracts/beanstalk/storage/Account.sol";
+import {AssetSettings, GerminationSide, Tokens} from "contracts/beanstalk/storage/System.sol";
 import {LibRedundantMath128} from "contracts/libraries/LibRedundantMath128.sol";
 import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
@@ -18,9 +15,8 @@ import {LibBytes} from "contracts/libraries/LibBytes.sol";
 import {LibSilo} from "contracts/libraries/Silo/LibSilo.sol";
 import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
 import {C} from "contracts/C.sol";
-import {LibWhitelistedTokens} from "contracts/libraries/Silo/LibWhitelistedTokens.sol";
-import {PerWellPlenty} from "contracts/beanstalk/storage/Account.sol";
 import {LibFlood} from "contracts/libraries/Silo/LibFlood.sol";
+import {LibWell, IERC20} from "contracts/libraries/Well/LibWell.sol";
 
 /**
  * @author Brean, pizzaman1337
@@ -180,6 +176,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
+     * @notice outputs the token and stem given a depositId.
+     */
+    function getAddressAndStem(
+        uint256 depositId
+    ) external pure returns (address token, int96 stem) {
+        return LibBytes.unpackAddressAndStem(depositId);
+    }
+
+    /**
      * @notice returns the bean denominated value ("bdv") of a token amount.
      */
     function bdv(address token, uint256 amount) public view returns (uint256 _bdv) {
@@ -187,14 +192,15 @@ contract SiloGettersFacet is ReentrancyGuard {
     }
 
     /**
-     * @notice returns the bean denominated value ("bdv") of a set of tokens and amounts.
+     * @notice returns the bean denominated values ("bdv") of an array of tokens and amounts.
      */
     function bdvs(
         address[] calldata tokens,
         uint256[] calldata amounts
-    ) external view returns (uint256 _bdv) {
+    ) external view returns (uint256[] memory _bdvs) {
+        _bdvs = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
-            _bdv += bdv(tokens[i], amounts[i]);
+            _bdvs[i] = bdv(tokens[i], amounts[i]);
         }
     }
 
@@ -485,7 +491,8 @@ contract SiloGettersFacet is ReentrancyGuard {
 
     function balanceOfPlantableSeeds(address account) external view returns (uint256) {
         return
-            balanceOfEarnedBeans(account) * s.sys.silo.assetSettings[C.BEAN].stalkEarnedPerSeason;
+            balanceOfEarnedBeans(account) *
+            s.sys.silo.assetSettings[s.sys.tokens.bean].stalkEarnedPerSeason;
     }
 
     /**
@@ -734,5 +741,19 @@ contract SiloGettersFacet is ReentrancyGuard {
         uint256 depositId
     ) external view returns (uint256) {
         return s.accts[account].depositIdList[token].idIndex[depositId];
+    }
+
+    function getBeanIndex(IERC20[] calldata tokens) external view returns (uint256) {
+        return LibWell.getBeanIndex(tokens);
+    }
+
+    function getNonBeanTokenAndIndexFromWell(
+        address well
+    ) external view returns (address, uint256) {
+        return LibWell.getNonBeanTokenAndIndexFromWell(well);
+    }
+
+    function getBeanstalkTokens() external view returns (Tokens memory) {
+        return s.sys.tokens;
     }
 }

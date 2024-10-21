@@ -1,4 +1,4 @@
-import { defineConfig, splitVendorChunkPlugin, UserConfig } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import path from 'path';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import react from '@vitejs/plugin-react';
@@ -41,6 +41,8 @@ const CSP = buildCSP({
     '*.google-analytics.com',
     '*.doubleclick.net',
     'https://gateway-arbitrum.network.thegraph.com', // Decentralized subgraph
+    '*.0x.org', // 0x API
+    '*.tenderly.co', // Tenderly API
   ],
   'style-src': [
     "'self'",
@@ -63,7 +65,10 @@ const CSP = buildCSP({
     'https://cf-ipfs.com/', // Gov proposal images,
     'https://*.ipfs.cf-ipfs.com/',
   ],
-  'frame-src': ['https://verify.walletconnect.com/', 'https://verify.walletconnect.org'], // for walletconnect
+  'frame-src': [
+    'https://verify.walletconnect.com/',
+    'https://verify.walletconnect.org',
+  ], // for walletconnect
 });
 
 // @ts-ignore
@@ -129,4 +134,4 @@ export default defineConfig(({ command }) => ({
       ],
     },
   },
-})); 
+}));

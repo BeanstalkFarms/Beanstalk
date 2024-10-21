@@ -15,14 +15,14 @@ contract ListingTest is TestHelper {
 
         bs.siloSunrise(0);
 
-        // initalize farmers from farmers (farmer0 == diamond deployer)
+        // initialize farmers from farmers (farmer0 == diamond deployer)
         farmers.push(users[1]);
         farmers.push(users[2]);
 
         // max approve.
         maxApproveBeanstalk(farmers);
 
-        mintTokensToUsers(farmers, C.BEAN, MAX_DEPOSIT_BOUND);
+        mintTokensToUsers(farmers, BEAN, MAX_DEPOSIT_BOUND);
 
         bs.incrementTotalSoilE(1000e18);
 

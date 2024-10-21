@@ -646,7 +646,7 @@ contract MetadataImage {
 
     function getTokenName(address token) internal view returns (string memory tokenString) {
         // for unripe LP, return `urLP` given the current unripe name is inaccurate.
-        if (token == C.UNRIPE_LP) {
+        if (token == s.sys.tokens.urLp) {
             tokenString = "urBEANLP";
         } else {
             tokenString = ERC20(token).symbol();

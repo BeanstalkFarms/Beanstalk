@@ -1,4 +1,10 @@
+import { BeanstalkSDK } from "@beanstalk/sdk";
+
 export const queryKeys = {
+  // wells
+  wells: (sdk: BeanstalkSDK) => ["wells", sdk.toJSON().provider.url],
+  wellTokens: ["wells", "tokens"],
+
   erc20TokenWithAddress: (address: string) => ["token", "erc20", address],
   tokenMetadata: (address: string) => ["token", "metadata", address],
   tokenAllowance: (tokenAddress: string | undefined, spender: string) => [
@@ -7,11 +13,13 @@ export const queryKeys = {
     tokenAddress || "invalid",
     spender
   ],
+  lpSummaryAll: ["token", "lpSummary"],
 
-  // wells
+  // well implementations
   wellImplementations: (addresses: string[]) => ["wells", "implementations", addresses],
 
   // well Function
+  wellFunctions: (addresses: string[]) => ["wellFunctions", addresses],
   wellFunctionValid: (address: string, data: string) => ["wellFunction", "isValid", address, data],
   wellFunctionNames: (addresses: string[] | undefined) => ["wellFunctions", "names", addresses],
 
@@ -22,5 +30,22 @@ export const queryKeys = {
 
   // token balance
   tokenBalancesAll: ["token", "balance"],
-  tokenBalance: (symbol: string | undefined) => ["token", "balance", symbol || "invalid"]
+  tokenBalance: (address: string | undefined) => [
+    "token",
+    "balance",
+    "external",
+    address || "invalid"
+  ],
+  tokenBalanceInternal: (address: string | undefined) => [
+    "token",
+    "balance",
+    "internal",
+    address || "invalid"
+  ],
+
+  siloBalancesAll: (addresses: string[]) => ["silo", "balance", ...addresses],
+  siloBalance: (address: string) => ["silo", "balance", address],
+  siloBalanceMany: (addresses: string[]) => ["silo", "balance", ...addresses],
+
+  siloWellAPYs: ["silo", "wells", "APYs"]
 } as const;

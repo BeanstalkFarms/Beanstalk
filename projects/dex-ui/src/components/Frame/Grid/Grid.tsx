@@ -1,6 +1,9 @@
 import React, { useRef } from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
+
+import { FC } from "src/types";
+
 import { useWiggle } from "./useWiggle";
 
 type Grid = {
@@ -11,7 +14,13 @@ type Grid = {
   content: HTMLDivElement;
 };
 
-export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content, color = "#E7E4E6", type = "dot" }) => {
+export const Grid: FC<Grid> = ({
+  gridSize = 24,
+  bigGrid = false,
+  content,
+  color = "#E7E4E6",
+  type = "dot"
+}) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
 
@@ -41,7 +50,14 @@ export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content, color 
               <>
                 <ellipse cx={0} cy={0} rx={radius} ry={radius} fill={color} stroke="none" />
                 <ellipse cx={0} cy={gridSize} rx={radius} ry={radius} fill={color} stroke="none" />
-                <ellipse cx={gridSize} cy={gridSize} rx={radius} ry={radius} fill={color} stroke="none" />
+                <ellipse
+                  cx={gridSize}
+                  cy={gridSize}
+                  rx={radius}
+                  ry={radius}
+                  fill={color}
+                  stroke="none"
+                />
                 <ellipse cx={gridSize} cy={0} rx={radius} ry={radius} fill={color} stroke="none" />
               </>
             )}
@@ -60,15 +76,42 @@ export const Grid: FC<Grid> = ({ gridSize = 24, bigGrid = false, content, color 
             ) : (
               <>
                 <ellipse cx={0} cy={0} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
-                <ellipse cx={0} cy={bigWidth} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
-                <ellipse cx={bigWidth} cy={bigWidth} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
-                <ellipse cx={bigWidth} cy={0} rx={bigRadius} ry={bigRadius} fill={color} stroke="none" />
+                <ellipse
+                  cx={0}
+                  cy={bigWidth}
+                  rx={bigRadius}
+                  ry={bigRadius}
+                  fill={color}
+                  stroke="none"
+                />
+                <ellipse
+                  cx={bigWidth}
+                  cy={bigWidth}
+                  rx={bigRadius}
+                  ry={bigRadius}
+                  fill={color}
+                  stroke="none"
+                />
+                <ellipse
+                  cx={bigWidth}
+                  cy={0}
+                  rx={bigRadius}
+                  ry={bigRadius}
+                  fill={color}
+                  stroke="none"
+                />
               </>
             )}
           </pattern>
         </defs>
         <rect x={0} y={0} width={width} height={2000} fill="#F9F8F6" />
-        <rect x={0} y={0} width={width} height={2000} fill={`url(#${bigGrid ? "bigGrid" : "smallGrid"})`} />
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={2000}
+          fill={`url(#${bigGrid ? "bigGrid" : "smallGrid"})`}
+        />
         <path
           ref={pathRef}
           style={{

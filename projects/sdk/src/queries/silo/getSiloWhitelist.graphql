@@ -1,7 +1,0 @@
-query getSiloWhitelist {
-  whitelistTokens {
-    token
-    stalk
-    seeds
-  }
-}

@@ -1,7 +1,10 @@
 import React, { FocusEventHandler, RefObject, useCallback, useEffect, useState } from "react";
-import { FC } from "src/types";
+
 import styled from "styled-components";
+
 import { TokenValue } from "@beanstalk/sdk";
+
+import { FC } from "src/types";
 
 type Props = {
   id?: string;
@@ -37,7 +40,8 @@ export const BasicInput: FC<Props> = ({
     // which are mathematically equal, so we shouldn't update the displayValue.
     // But we need to do this comparison in big number space, using TokenValue.
 
-    if (TokenValue.fromHuman(value || 0, 18).eq(TokenValue.fromHuman(displayValue || 0, 18))) return;
+    if (TokenValue.fromHuman(value || 0, 18).eq(TokenValue.fromHuman(displayValue || 0, 18)))
+      return;
     setDisplayValue(value === "0" || value === "" ? "" : value);
 
     // adding displayValue to the dependency array breaks the input in some edge cases
@@ -95,7 +99,10 @@ export const BasicInput: FC<Props> = ({
       if (!current) {
         e.currentTarget.value = "";
       }
-      if (!(current + e.clipboardData.getData("Text")).match(reg) && e.clipboardData.getData("Text").match(reg)) {
+      if (
+        !(current + e.clipboardData.getData("Text")).match(reg) &&
+        e.clipboardData.getData("Text").match(reg)
+      ) {
         e.currentTarget.value = "";
       }
       if (!e.clipboardData.getData("Text").match(reg)) {

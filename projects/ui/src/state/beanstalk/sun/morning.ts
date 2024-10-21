@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
-import { setMorning, setRemainingUntilBlockUpdate } from './actions';
 import {
   updateScaledTemperature,
   updateTotalSoil,
 } from '~/state/beanstalk/field/actions';
-import { getDiffNow, getMorningResult, getNowRounded } from '.';
 import { useAppSelector } from '~/state';
 import useTemperature from '~/hooks/beanstalk/useTemperature';
 import useSoil from '~/hooks/beanstalk/useSoil';
 import { useSeasonalTemperatureLazyQuery } from '~/generated/graphql';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { DateTime, Duration } from 'luxon';
+import { getDiffNow, getMorningResult, getNowRounded } from '.';
+import { setMorning } from './actions';
 
 /**
  * Architecture Notes: @Bean-Sama
@@ -27,14 +29,14 @@ import { useSeasonalTemperatureLazyQuery } from '~/generated/graphql';
  * - function: <SunUpdater />
  *
  * When the next season approaches, SunUpdater fetches Beanstalk.time() and updates the redux state
- * with the block number in which gm() was called and the timestamp of that block, refered to as
+ * with the block number in which gm() was called and the timestamp of that block, referred to as
  * 'sunriseBlock' and 'timestamp' respectively.
  *
  * We rely on Ethereum's consistent block time of 12 seconds to determine the current block number,
  * and the timestamp of that block. If the current timestamp is less than 300 seconds (5 mins = 25 blocks)
  * from the timestamp of the sunriseBlock, then assume that is Morning.
  *
- * Alterntaively, we could fetch for the current block number via RPC-call, however,
+ * Alternatively, we could fetch for the current block number via RPC-call, however,
  * there can be a delay of up to 6 seconds, which is not ideal for our use case.
  *
  * Refer to getMorningResult() in ~/state/beanstalk/sun/index.ts for more details on this part.
@@ -54,7 +56,7 @@ import { useSeasonalTemperatureLazyQuery } from '~/generated/graphql';
  * MorningUpdater also calculates & updates the scaled temperature based on the next expected block number.
  * In addition, we also update the soil for the next morning block if we are above peg.
  *
- * We calcuate the temperature for the next block via 'calculateTemperature' from useTemperature()
+ * We calculate the temperature for the next block via 'calculateTemperature' from useTemperature()
  * When above peg, we calculate the soil amount for the next morning block. via 'calculateNextSoil' from useSoil().
  *
  * ------------------------
@@ -70,17 +72,41 @@ import { useSeasonalTemperatureLazyQuery } from '~/generated/graphql';
  *
  */
 
-export const BLOCKS_PER_MORNING = 25;
-export const FIRST_MORNING_BLOCK = 1;
-export const APPROX_SECS_PER_BLOCK = 12;
+export const INTERVALS_PER_MORNING = 25;
+
+export const MORNING_INTERVAL_1 = 1;
+
+export const APPROX_SECS_PER_L2_BLOCK = 0.25;
+
+export const APPROX_L2_BLOCK_PER_L1_BLOCK = 48;
+
+export const SECONDS_PER_MORNING_INTERVAL = 12;
+
+// use Jotai here instead of updating the redux state tree every second.
+const remainingUntilNextMorningIntervalAtom = atom<Duration>(
+  DateTime.now().plus({ seconds: 12 }).diffNow()
+);
+
+export const useRemainingUntilNextMorningInterval = () => {
+  const remaining = useAtomValue(remainingUntilNextMorningIntervalAtom);
+  return remaining;
+};
+
+export const useSetRemainingUntilNextMorningInterval = () => {
+  const setRemaining = useSetAtom(remainingUntilNextMorningIntervalAtom);
+  return setRemaining;
+};
 
 export const getIsMorningInterval = (interval: BigNumber) =>
-  interval.gte(FIRST_MORNING_BLOCK) && interval.lte(BLOCKS_PER_MORNING);
+  interval.gte(MORNING_INTERVAL_1) && interval.lte(INTERVALS_PER_MORNING);
 
 function useUpdateMorning() {
-  const morningTime = useAppSelector((s) => s._beanstalk.sun.morningTime);
+  const nextMorningInterval = useAppSelector(
+    (s) => s._beanstalk.sun.morning.next
+  );
   const season = useAppSelector((s) => s._beanstalk.sun.season);
   const morning = useAppSelector((s) => s._beanstalk.sun.morning);
+  const setRemaining = useSetRemainingUntilNextMorningInterval();
 
   const [_, { calculate: calculateTemperature }] = useTemperature();
   const [_soilData, { calculate: calculateNextSoil }] = useSoil();
@@ -96,12 +122,12 @@ function useUpdateMorning() {
     // set up the timer while in the  morning state.
     const intervalId = setInterval(async () => {
       const { abovePeg, sunriseBlock, timestamp: sTimestamp } = season;
-      const { blockNumber: morningBlock } = morning;
+      const { index: morningIdx } = morning;
 
       const now = getNowRounded();
-      const _remaining = getDiffNow(morningTime.next, now);
+      const _remaining = getDiffNow(nextMorningInterval, now);
       if (
-        now.toSeconds() === morningTime.next.toSeconds() ||
+        now.toSeconds() === nextMorningInterval.toSeconds() ||
         _remaining.as('seconds') <= 0
       ) {
         const morningResult = getMorningResult({
@@ -109,31 +135,30 @@ function useUpdateMorning() {
           blockNumber: sunriseBlock,
         });
 
-        const scaledTemp = calculateTemperature(morningBlock.plus(1));
-        const nextSoil = abovePeg ? calculateNextSoil(morningBlock) : undefined;
+        const scaledTemp = calculateTemperature(morningIdx.plus(1));
+        const nextSoil = abovePeg ? calculateNextSoil(morningIdx) : undefined;
 
         console.debug('[beanstalk/sun/useUpdateMorning]: new block: ', {
           temp: scaledTemp.toNumber(),
           soil: nextSoil?.toNumber() || 'N/A',
-          blockNumber: morningResult.morning.blockNumber.toNumber(),
-          index: morningResult.morning.index.toNumber(),
-          isMorning: morningResult.morning.isMorning,
+          blockNumber: morningResult.blockNumber.toNumber(),
+          index: morningResult.index.toNumber(),
+          isMorning: morningResult.isMorning,
         });
-
-        const _morning = morningResult.morning;
 
         /// If we are transitioning out of the morning state, refetch the max Temperature from the subgraph.
         /// This is to make sure that when transitioning out of the morning state, the max Temperature chart
         /// shows the maxTemperature for the current season, not the previous season.
-        if (!_morning.isMorning && _morning.index.eq(25)) {
+        if (!morningResult.isMorning && morningResult.index.eq(25)) {
           triggerQuery();
         }
 
         dispatch(updateScaledTemperature(scaledTemp));
         nextSoil && dispatch(updateTotalSoil(nextSoil));
         dispatch(setMorning(morningResult));
+        setRemaining(morningResult.remaining);
       } else {
-        dispatch(setRemainingUntilBlockUpdate(_remaining));
+        setRemaining(_remaining);
       }
     }, 1000);
 
@@ -143,10 +168,11 @@ function useUpdateMorning() {
   }, [
     season,
     morning,
-    morningTime.next,
+    nextMorningInterval,
     triggerQuery,
     calculateNextSoil,
     calculateTemperature,
+    setRemaining,
     dispatch,
   ]);
 

@@ -1,21 +1,17 @@
-query getSiloBalance($token: String, $account: ID!, $season: Int!) {
+query getSiloBalance($token: Bytes, $account: ID!, $season: Int!) {
   farmer(id: $account) {
     # Deposited
     deposited: deposits(
       orderBy: season
       orderDirection: asc
-      where: {
-        token: $token
-        #amount_gt: 0
-        amount_gt: 0
-      }
+      where: { token: $token, depositedAmount_gt: 0 }
     ) {
       season
       stem
       token
       #amount
-      amount
-      bdv
+      depositedAmount
+      depositedBDV
     }
     # Withdrawn
     withdrawn: withdraws(

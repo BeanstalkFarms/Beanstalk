@@ -53,7 +53,8 @@ contract GaugePointPrice is GaugePointFacet {
     function priceGaugePointFunction(
         uint256 currentGaugePoints,
         uint256 optimalPercentDepositedBdv,
-        uint256 percentOfDepositedBdv
+        uint256 percentOfDepositedBdv,
+        bytes memory data
     ) public view returns (uint256 newGaugePoints) {
         try IBS(beanstalk).getTokenUsdPrice(token) returns (uint256 price) {
             if (priceThreshold >= price) {
@@ -64,7 +65,8 @@ contract GaugePointPrice is GaugePointFacet {
                     defaultGaugePointFunction(
                         currentGaugePoints,
                         optimalPercentDepositedBdv,
-                        percentOfDepositedBdv
+                        percentOfDepositedBdv,
+                        data
                     );
             }
         } catch {

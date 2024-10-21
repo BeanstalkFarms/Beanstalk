@@ -23,13 +23,15 @@ const getSx = (isMorning: boolean) => ({
 const FieldOverview: React.FC<{}> = () => {
   const [open, show, hide] = useToggle();
 
-  const morning = useAppSelector((s) => s._beanstalk.sun.morning);
-  const isMorning = morning.isMorning;
+  const isMorning = useAppSelector((s) => s._beanstalk.sun.morning.isMorning);
 
   const toggle = () => {
     if (isMorning) return;
-    open && hide();
-    !open && show();
+    if (open) {
+      hide();
+    } else {
+      show();
+    }
   };
 
   useEffect(() => {

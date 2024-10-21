@@ -1,12 +1,14 @@
-import useSdk from "src/utils/sdk/useSdk";
-import { useQuery } from "@tanstack/react-query";
 import { Well } from "@beanstalk/sdk/Wells";
+
 import { TokenValue } from "@beanstalk/sdk";
+
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
 
 export const useWellReserves = (well: Well) => {
   const sdk = useSdk();
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useChainScopedQuery({
     queryKey: ["well", sdk, well.address, "reserves"],
 
     queryFn: async () => {

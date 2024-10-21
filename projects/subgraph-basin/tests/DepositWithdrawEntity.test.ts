@@ -1,7 +1,6 @@
 import { afterEach, assert, beforeEach, clearStore, describe, test } from "matchstick-as/assembly/index";
-import { BEAN_ERC20, WETH } from "../../subgraph-core/utils/Constants";
+import { BEAN_ERC20, WETH } from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { BI_10, ZERO_BI } from "../../subgraph-core/utils/Decimals";
-import { loadWell } from "../src/utils/Well";
 import {
   ACCOUNT_ENTITY_TYPE,
   BEAN_SWAP_AMOUNT,
@@ -16,9 +15,12 @@ import { boreDefaultWell } from "./helpers/Aquifer";
 import { mockAddLiquidity, mockRemoveLiquidity, mockRemoveLiquidityOneBean, loadWithdraw, mockSync } from "./helpers/Liquidity";
 import { loadDeposit } from "./helpers/Liquidity";
 import { BigInt } from "@graphprotocol/graph-ts";
+import { initL1Version } from "./entity-mocking/MockVersion";
+import { loadWell } from "../src/entities/Well";
 
 describe("Deposit/Withdraw Entities", () => {
   beforeEach(() => {
+    initL1Version();
     boreDefaultWell();
   });
 
@@ -69,6 +71,8 @@ describe("Deposit/Withdraw Entities", () => {
 
   test("RemoveLiquidity event", () => {
     const deltaLiquidity = [BEAN_SWAP_AMOUNT, WETH_SWAP_AMOUNT];
+    mockAddLiquidity(deltaLiquidity);
+    mockAddLiquidity(deltaLiquidity);
     let id = mockRemoveLiquidity(deltaLiquidity);
     assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, "id", id);
     assert.fieldEquals(WITHDRAW_ENTITY_TYPE, id, "well", WELL.toHexString());

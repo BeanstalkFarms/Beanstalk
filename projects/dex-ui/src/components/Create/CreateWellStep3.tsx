@@ -1,32 +1,48 @@
 import React from "react";
+
+import { FormProvider, useForm } from "react-hook-form";
+import styled from "styled-components";
+
 import { Divider, Flex } from "src/components/Layout";
 import { Text } from "src/components/Typography";
+import useSdk from "src/utils/sdk/useSdk";
 import { theme } from "src/utils/ui/theme";
-import styled from "styled-components";
+import { useWells } from "src/wells/useWells";
+
 import { CreateWellStepProps, useCreateWell } from "./CreateWellProvider";
-import { FormProvider, useForm } from "react-hook-form";
+import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 import { CreateWellFormProgress } from "./shared/CreateWellFormProgress";
 import { StyledForm, TextInputField } from "../Form";
-import { useWells } from "src/wells/useWells";
-import { CreateWellButtonRow } from "./shared/CreateWellButtonRow";
 
 export type WellDetailsFormValues = CreateWellStepProps["step3"];
 
 // If the user goes back to step 2 changes the well function & returns to this step,
 // the default values will not be updated.
-// TODO: priofity sm.
 const useWellDetailsDefaultValues = () => {
-  const { wellTokens, wellFunction } = useCreateWell();
+  const { wellImplementation, wellTokens, wellFunction } = useCreateWell();
+  const sdk = useSdk();
+
+  const wellDotSolL2 = sdk.wells.addresses.WELL_DOT_SOL.ARBITRUM_MAINNET;
 
   const wellName = wellFunction?.name;
   const wellSymbol = wellFunction?.symbol;
   const token1 = wellTokens?.token1?.symbol;
   const token2 = wellTokens?.token2?.symbol;
 
-  const defaultName =
-    wellName && token1 && token2 ? `${token1}:${token2} ${wellName} Well` : undefined;
+  const upgradeable = wellImplementation?.toLowerCase() === wellDotSolL2.toLowerCase();
+  const upgradeableNameFragment = upgradeable ? " Upgradeable " : "";
+  const upgradeableSymbolFragment = upgradeable ? "U-" : "";
 
-  const defaultSymbol = wellSymbol && token1 && token2 && `${token1}${token2}${wellSymbol}w`;
+  const defaultName =
+    wellName && token1 && token2
+      ? `${token1}:${token2} ${wellName}${upgradeableNameFragment}Well`
+      : undefined;
+
+  const defaultSymbol =
+    wellSymbol &&
+    token1 &&
+    token2 &&
+    `${upgradeableSymbolFragment}${token1}${token2}${wellSymbol}w`;
 
   return {
     name: defaultName,

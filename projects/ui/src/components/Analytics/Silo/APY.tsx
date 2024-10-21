@@ -34,7 +34,7 @@ const metricTitles = {
   Bean3Curve: 'BEAN3CRV 30D vAPY',
   BeanETHWell: 'BEANETH 30D vAPY',
   UnripeBean: 'urBEAN 30D vAPY',
-  UnripeBeanETH: 'urBEANETH 30D vAPY',
+  UnripeBeanETH: 'urBEANWSTETH 30D vAPY',
 };
 
 const APY: FC<{

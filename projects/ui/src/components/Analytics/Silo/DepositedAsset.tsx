@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo } from 'react';
-import { Token } from '~/classes';
 import { tickFormatTruncated } from '~/components/Analytics/formatters';
 import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import SeasonPlot, {
@@ -13,6 +12,7 @@ import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 import { toTokenUnitsBN } from '~/util';
 
 import { FC } from '~/types';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
 
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
@@ -23,7 +23,7 @@ const lineChartProps: Partial<LineChartProps> = {
 const DepositedAsset: FC<{
   height?: SeasonPlotBaseProps['height'];
   account: string;
-  asset: Token;
+  asset: TokenInstance;
 }> = ({ height, account, asset }) => {
   const getValue = useCallback(
     (season: SnapshotData<SeasonalDepositedSiloAssetQuery>) =>
@@ -37,8 +37,8 @@ const DepositedAsset: FC<{
         asset.symbol === 'BEAN'
           ? 'Beans'
           : asset.symbol === 'urBEAN'
-          ? 'Unripe Beans'
-          : asset.name
+            ? 'Unripe Beans'
+            : asset.name
       } at the beginning of every Season.`,
       gap: 0.5,
     }),

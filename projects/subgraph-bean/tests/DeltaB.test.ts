@@ -1,20 +1,27 @@
 import { beforeEach, beforeAll, afterEach, assert, clearStore, describe, test, createMockedFunction } from "matchstick-as/assembly/index";
 import { BigInt, Bytes, BigDecimal, log } from "@graphprotocol/graph-ts";
 // import { log } from "matchstick-as/assembly/log";
-import { handleMetapoolOracle, handleWellOracle } from "../src/BeanstalkHandler";
 import { BI_10, ONE_BI, ZERO_BI } from "../../subgraph-core/utils/Decimals";
 import { createMetapoolOracleEvent, createWellOracleEvent } from "./event-mocking/Beanstalk";
-import { BEAN_3CRV, BEAN_ERC20, BEAN_WETH_CP2_WELL, CRV3_POOL } from "../../subgraph-core/utils/Constants";
+import {
+  BEAN_3CRV,
+  BEAN_ERC20,
+  BEAN_WETH_CP2_WELL,
+  CRV3_POOL,
+  GAUGE_BIP45_BLOCK
+} from "../../subgraph-core/constants/raw/BeanstalkEthConstants";
 import { hourFromTimestamp } from "../../subgraph-core/utils/Dates";
 import { mockBlock } from "../../subgraph-core/tests/event-mocking/Block";
 import { uniswapV2DeltaB } from "../src/utils/price/UniswapPrice";
 import { decodeCumulativeWellReserves } from "../src/utils/price/WellPrice";
 import { mock_virtual_price } from "./event-mocking/Curve";
-import { loadOrCreatePool } from "../src/utils/Pool";
-import { loadBean } from "../src/utils/Bean";
 import { getD, getY, priceFromY } from "../src/utils/price/CurvePrice";
-import { Bytes_bigEndian } from "../../subgraph-core/utils/Bytes";
-import { ABDK_toUInt, pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
+import { pow2toX } from "../../subgraph-core/utils/ABDKMathQuad";
+import { handleWellOracle } from "../src/handlers/BeanstalkHandler";
+import { loadBean } from "../src/entities/Bean";
+import { loadOrCreatePool } from "../src/entities/Pool";
+import { initL1Version } from "./entity-mocking/MockVersion";
+import { handleMetapoolOracle } from "../src/handlers/legacy/LegacyBeanstalkHandler";
 
 const timestamp1 = BigInt.fromU32(1712793374);
 const hour1 = hourFromTimestamp(timestamp1).toString();
@@ -28,9 +35,10 @@ describe("DeltaB", () => {
     mock_virtual_price(CRV3_POOL, BigInt.fromString("1000000000000000000"));
     mock_virtual_price(BEAN_3CRV, BigInt.fromString("1000000000000000000"));
   });
-
+  beforeEach(() => {
+    initL1Version();
+  });
   afterEach(() => {
-    // log.debug("clearing the store", []);
     clearStore();
   });
 
@@ -122,10 +130,10 @@ describe("DeltaB", () => {
       ];
 
       // Set liquidity so weighted twa prices can be set
-      let pool = loadOrCreatePool(BEAN_3CRV.toHexString(), b2.number);
+      let pool = loadOrCreatePool(BEAN_3CRV, b2.number);
       pool.liquidityUSD = BigDecimal.fromString("10000");
       pool.save();
-      let bean = loadBean(BEAN_ERC20.toHexString());
+      let bean = loadBean(BEAN_ERC20);
       bean.liquidityUSD = BigDecimal.fromString("10000");
       bean.save();
 
@@ -153,6 +161,10 @@ describe("DeltaB", () => {
     });
 
     test("WellOracle", () => {
+      const pool = loadOrCreatePool(BEAN_WETH_CP2_WELL, GAUGE_BIP45_BLOCK);
+      pool.reserves = [BigInt.fromString("2000000000"), BigInt.fromString("1000000000000000000")];
+      pool.save();
+
       // 2 consecutive seasons used for test
       // https://etherscan.io/tx/0xe62ebdb74a9908760f709408944ab2d50f0bc4fd95614a05dcc053a7117e6b33#eventlog
       const event1 = createWellOracleEvent(

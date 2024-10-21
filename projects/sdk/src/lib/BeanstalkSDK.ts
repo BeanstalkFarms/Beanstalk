@@ -9,14 +9,16 @@ import { Silo } from "./silo";
 import { Sun } from "./sun";
 import { Farm } from "./farm/farm";
 import { Permit } from "./permit";
-import { Root } from "./root";
 import { Sdk as Queries, getSdk as getQueries } from "../constants/generated-gql/graphql";
 import { Swap } from "src/lib/swap/Swap";
 import { Bean } from "./bean";
 import { Pools } from "./pools";
 import defaultSettings from "src/defaultSettings.json";
 import { WellsSDK } from "@beanstalk/sdk-wells";
-import { ChainId } from "@beanstalk/sdk-core";
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
+import { Field } from "./field";
+import { ZeroX } from "./matcha";
+import { BeanSwap } from "./swapV2/BeanSwap";
 
 export type Provider = ethers.providers.JsonRpcProvider;
 export type Signer = ethers.Signer;
@@ -28,6 +30,7 @@ export type BeanstalkConfig = Partial<{
   subgraphUrl: string;
   source: DataSource;
   DEBUG: boolean;
+  zeroXApiKey?: string;
 }>;
 
 type Reconfigurable = Pick<BeanstalkConfig, "source">;
@@ -55,21 +58,24 @@ export class BeanstalkSDK {
   public readonly pools: Pools;
   public readonly graphql: GraphQLClient;
   public readonly queries: Queries;
+  public readonly zeroX: ZeroX;
 
   public readonly farm: Farm;
   public readonly silo: Silo;
+  public readonly field: Field;
   public readonly events: EventManager;
   public readonly sun: Sun;
   public readonly permit: Permit;
-  public readonly root: Root;
   public readonly swap: Swap;
   public readonly bean: Bean;
   public readonly wells: WellsSDK;
+  public readonly beanSwap: BeanSwap;
 
   constructor(config?: BeanstalkConfig) {
     this.handleConfig(config);
 
-    this.chainId = enumFromValue(this.provider?.network?.chainId ?? 1, ChainId);
+    this.chainId = this.deriveChainId();
+    this.subgraphUrl = config?.subgraphUrl || this.deriveSubgraphURL(this.chainId);
     this.source = config?.source || DataSource.SUBGRAPH;
 
     // Beanstalk
@@ -82,21 +88,24 @@ export class BeanstalkSDK {
     this.pools = new Pools(this);
     this.graphql = new GraphQLClient(this.subgraphUrl);
     this.queries = getQueries(this.graphql);
+    this.zeroX = new ZeroX(this, config?.zeroXApiKey);
 
-    // Internal
+    // // Internal
     this.events = new EventManager(this);
     this.permit = new Permit(this);
 
-    // Facets
+    // // Facets
     this.silo = new Silo(this);
     this.sun = new Sun(this);
     this.farm = new Farm(this);
+    this.field = new Field(this);
 
-    // Ecosystem
-    this.root = new Root(this);
+    // // Ecosystem
+    /** @deprecated  */
     this.swap = new Swap(this);
+    this.beanSwap = new BeanSwap(this);
 
-    // Wells
+    // // Wells
     this.wells = new WellsSDK(config);
   }
 
@@ -122,7 +131,7 @@ export class BeanstalkSDK {
 
   handleConfig(config: BeanstalkConfig = {}) {
     if (config.rpcUrl) {
-      config.provider = this.getProviderFromUrl(config.rpcUrl);
+      config.provider = this.getProviderFromUrl(config.rpcUrl, config);
     }
 
     this.signer = config.signer;
@@ -138,29 +147,47 @@ export class BeanstalkSDK {
     this.DEBUG = config.DEBUG ?? false;
 
     this.source = DataSource.LEDGER; // FIXME
-
-    this.subgraphUrl = config.subgraphUrl || defaultSettings.subgraphUrl;
   }
 
   deriveSource<T extends { source?: DataSource }>(config?: T): DataSource {
     return config?.source || this.source;
   }
 
-  deriveConfig<T extends BeanstalkConfig>(key: keyof Reconfigurable, _config?: T): BeanstalkConfig[typeof key] {
+  deriveConfig<T extends BeanstalkConfig>(
+    key: keyof Reconfigurable,
+    _config?: T
+  ): BeanstalkConfig[typeof key] {
     return _config?.[key] || this[key];
   }
 
   ////// Private
 
-  private getProviderFromUrl(url: string): Provider {
+  private getProviderFromUrl(url: string, config: BeanstalkConfig): Provider {
+    const provider = config.signer ? (config.signer.provider as Provider) : config.provider;
+    const networkish = provider?._network || provider?.network || ChainResolver.defaultChainId;
+
     if (url.startsWith("ws")) {
-      return new ethers.providers.WebSocketProvider(url);
+      return new ethers.providers.WebSocketProvider(url, networkish);
     }
     if (url.startsWith("http")) {
-      return new ethers.providers.JsonRpcProvider(url);
+      return new ethers.providers.JsonRpcProvider(url, networkish);
     }
 
     throw new Error("Invalid rpcUrl");
+  }
+
+  private deriveSubgraphURL(_chainId: ChainId) {
+    if (ChainResolver.isL1Chain(_chainId)) {
+      return defaultSettings.subgraphUrlEth;
+    }
+    return defaultSettings.subgraphUrl;
+  }
+
+  private deriveChainId() {
+    const { _network, network } = this.provider || {};
+    const providerChainId = _network?.chainId || network?.chainId || ChainResolver.defaultChainId;
+
+    return enumFromValue(providerChainId, ChainId);
   }
 
   async getAccount(_account?: string): Promise<string> {

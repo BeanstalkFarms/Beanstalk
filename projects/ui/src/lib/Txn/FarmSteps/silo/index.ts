@@ -1,4 +1,3 @@
-export * from './ClaimFarmStep';
 export * from './ConvertFarmStep';
 export * from './DepositFarmStep';
 export * from './EnrootFarmStep';

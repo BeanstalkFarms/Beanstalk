@@ -23,10 +23,10 @@ import { displayBN } from '~/util';
 import { ZERO_BN } from '~/constants';
 import { ApplicableBalance, FarmerBalances } from '~/state/farmer/balances';
 import { FarmerSilo } from '~/state/farmer/silo';
-import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
 import Row from '~/components/Common/Row';
-import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
 import useSdk from '~/hooks/sdk';
+import { BeanstalkPalette, FontSize, IconSize } from '../../App/muiTheme';
+import BalanceFromRow, { BalanceFrom } from './BalanceFromRow';
 
 export enum TokenSelectMode {
   MULTI,
@@ -107,15 +107,18 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
     const [selectedInternal, setSelectedInternal] = useState<Set<Token>>(
       new Set()
     );
-    const [balanceFromInternal, setBalanceFromInternal] = useState<BalanceFrom>(BalanceFrom.TOTAL);
+    const [balanceFromInternal, setBalanceFromInternal] = useState<BalanceFrom>(
+      BalanceFrom.TOTAL
+    );
 
     const getBalance = useCallback(
       (addr: string) => {
         if (!_balances) return ZERO_BN;
         if (balancesType === 'farm')
           return (
-            (_balances as TokenBalanceMode['farm'])?.[addr]?.[balanceFromInternal] ||
-            ZERO_BN
+            (_balances as TokenBalanceMode['farm'])?.[addr]?.[
+              balanceFromInternal
+            ] || ZERO_BN
           );
         return (
           (_balances as TokenBalanceMode['silo-deposits'])?.[addr]?.deposited
@@ -177,7 +180,7 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
     const setBalanceFromAndClose = useCallback(() => {
       if (setBalanceFrom) {
         setBalanceFrom(balanceFromInternal);
-      };
+      }
       handleClose(); // hide dialog
     }, [handleClose, setBalanceFrom, balanceFromInternal]);
 
@@ -189,7 +192,8 @@ const TokenSelectDialogNew: TokenSelectDialogC = React.memo(
       (_newSelection: Set<Token>) => () => {
         handleSubmit(_newSelection); // update form state
         setBalanceFromAndClose();
-      }, [handleSubmit, setBalanceFromAndClose]
+      },
+      [handleSubmit, setBalanceFromAndClose]
     );
 
     // Click an item in the token list.

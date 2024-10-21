@@ -1,11 +1,11 @@
 const { to18, to6 } = require("./utils/helpers.js");
 const { EXTERNAL, INTERNAL, INTERNAL_EXTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
-const { WETH, BEANSTALK } = require("./utils/constants");
-const { getWeth } = require("../../utils/contracts.js");
+const { L2_WETH, BEANSTALK, MAX_UINT256 } = require("./utils/constants");
+const { getL2Weth } = require("../../utils/contracts.js");
 const { expect } = require("chai");
 const { deploy } = require("../../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
-const { signTokenPermit } = require("../../utils");
+const { signTokenPermitWithChainId } = require("../../utils");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
 
 describe("Token", function () {
@@ -22,7 +22,7 @@ describe("Token", function () {
     this.recipient = r;
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
 
-    // `beanstalk` contains all functions that the regualar beanstalk has.
+    // `beanstalk` contains all functions that the regular beanstalk has.
     // `mockBeanstalk` has functions that are only available in the mockFacets.
     [beanstalk, mockBeanstalk] = await getAllBeanstalkContracts(contracts.beanstalkDiamond.address);
 
@@ -39,7 +39,7 @@ describe("Token", function () {
     await this.token2.connect(this.user).mint(this.user.address, "1000");
     await this.token2.connect(this.user).approve(beanstalk.address, to18("1000000000000000"));
 
-    this.weth = await getWeth();
+    this.weth = await getL2Weth();
     await this.weth.connect(this.user).approve(beanstalk.address, to18("1000000000000000"));
 
     const MockERC1155Token = await ethers.getContractFactory("MockERC1155");
@@ -639,7 +639,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("deposit WETH to external, not all", async function () {
@@ -650,7 +650,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("deposit WETH to external, not all, farm", async function () {
@@ -665,7 +665,7 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("1"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
     it("withdraw WETH from external", async function () {
@@ -677,10 +677,10 @@ describe("Token", function () {
         to18("-0.999")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
 
-    it("deposit WETH to external", async function () {
+    it("deposit WETH to internal", async function () {
       const ethBefore = await ethers.provider.getBalance(this.user.address);
       await beanstalk.connect(this.user).wrapEth(to18("1"), INTERNAL, { value: to18("1") });
       expect(ethBefore.sub(await ethers.provider.getBalance(this.user.address))).to.be.within(
@@ -688,10 +688,10 @@ describe("Token", function () {
         to18("1.001")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("1"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("1"));
     });
 
-    it("withdraw WETH from exteranl", async function () {
+    it("withdraw WETH from internal", async function () {
       await beanstalk.connect(this.user).wrapEth(to18("1"), INTERNAL, { value: to18("1") });
       const ethBefore = await ethers.provider.getBalance(this.user.address);
       await beanstalk.connect(this.user).unwrapEth(to18("1"), INTERNAL);
@@ -700,7 +700,7 @@ describe("Token", function () {
         to18("-0.999")
       );
       expect(await this.weth.balanceOf(this.user.address)).to.eq(to18("0"));
-      expect(await beanstalk.getInternalBalance(this.user.address, WETH)).to.eq(to18("0"));
+      expect(await beanstalk.getInternalBalance(this.user.address, L2_WETH)).to.eq(to18("0"));
     });
   });
 
@@ -783,7 +783,7 @@ describe("Token", function () {
       describe("reverts", function () {
         it("reverts if tokenPermitDomainSeparator is invalid", async function () {
           expect(await beanstalk.connect(this.user).tokenPermitDomainSeparator()).to.be.equal(
-            "0xd74031d32a83121ee5d7c0c14f2aac23c5603bf832f855c2e075ba6d0b20612e"
+            "0x365aa549a79416ab768b3ed4d27191ad9d69b7ab2ea17646d1b3340db35768f6"
           );
         });
       });
@@ -792,14 +792,15 @@ describe("Token", function () {
         describe("reverts", function () {
           it("reverts if permit expired", async function () {
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
               nonce,
-              1000
+              1000,
+              1337
             );
             await expect(
               beanstalk
@@ -819,13 +820,15 @@ describe("Token", function () {
 
           it("reverts if permit invalid signature", async function () {
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             await expect(
               beanstalk
@@ -848,13 +851,15 @@ describe("Token", function () {
           beforeEach(async function () {
             // Create permit
             const nonce = await beanstalk.connect(this.user).tokenPermitNonces(this.user.address);
-            const signature = await signTokenPermit(
+            const signature = await signTokenPermitWithChainId(
               this.user,
               this.user.address,
               this.user2.address,
               this.token.address,
               "1000",
-              nonce
+              nonce,
+              MAX_UINT256,
+              1337
             );
             this.result = await beanstalk
               .connect(this.user)

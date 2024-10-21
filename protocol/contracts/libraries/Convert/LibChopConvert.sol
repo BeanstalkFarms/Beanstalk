@@ -44,6 +44,6 @@ library LibChopConvert {
         uint256 amountIn
     ) internal view returns (uint256 amount) {
         // tokenIn == unripe bean address
-        amount = LibUnripe._getPenalizedUnderlying(tokenIn, amountIn, IBean(tokenIn).totalSupply());
+        amount = LibUnripe.getPenalizedUnderlying(tokenIn, amountIn, IBean(tokenIn).totalSupply());
     }
 }

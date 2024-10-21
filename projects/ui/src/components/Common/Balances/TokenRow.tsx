@@ -2,12 +2,12 @@ import React from 'react';
 import { Typography, Tooltip } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-import { Token } from '~/classes';
-import TokenIcon from '../TokenIcon';
 import Dot from '~/components/Common/Dot';
 import Row from '~/components/Common/Row';
 
 import { FC } from '~/types';
+import { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import TokenIcon from '../TokenIcon';
 
 const TokenRow: FC<{
   /* Label */
@@ -19,7 +19,7 @@ const TokenRow: FC<{
   /* */
   showColor?: boolean;
   /* If this row represents a Token, pass it */
-  token?: Token;
+  token?: TokenInstance;
   /* The amount of Token */
   amount?: string | JSX.Element;
   /* Display a tooltip when hovering over the amount */
@@ -93,7 +93,10 @@ const TokenRow: FC<{
         </Tooltip>
       )}
     </Row>
-    <Tooltip title={amountTooltip || ''} placement={amountTooltipLocation || "top-end"}>
+    <Tooltip
+      title={amountTooltip || ''}
+      placement={amountTooltipLocation || 'top-end'}
+    >
       <div>
         <Row gap={0.5}>
           {token && <TokenIcon token={token} />}

@@ -4,10 +4,10 @@
 
 pragma solidity ^0.8.20;
 
-import {C} from "contracts/C.sol";
 import {LibTransfer} from "contracts/libraries/Token/LibTransfer.sol";
 import {LibMarket} from "contracts/libraries/LibMarket.sol";
 import {Listing} from "./Listing.sol";
+import {BeanstalkERC20} from "contracts/tokens/ERC20/BeanstalkERC20.sol";
 
 /**
  * @author Beanjoyer, Malteasy, funderbrker
@@ -110,7 +110,7 @@ contract Order is Listing {
         s.sys.podOrders[id] = s.sys.podOrders[id] - costInBeans;
         s.sys.orderLockedBeans -= costInBeans;
 
-        LibTransfer.sendToken(C.bean(), costInBeans, filler, mode);
+        LibTransfer.sendToken(BeanstalkERC20(s.sys.tokens.bean), costInBeans, filler, mode);
 
         if (s.sys.podListings[podOrder.fieldId][index] != bytes32(0)) {
             LibMarket._cancelPodListing(filler, podOrder.fieldId, index);
@@ -141,7 +141,12 @@ contract Order is Listing {
         bytes32 id = _getOrderId(podOrder);
         uint256 amountBeans = s.sys.podOrders[id];
         s.sys.orderLockedBeans -= amountBeans;
-        LibTransfer.sendToken(C.bean(), amountBeans, podOrder.orderer, mode);
+        LibTransfer.sendToken(
+            BeanstalkERC20(s.sys.tokens.bean),
+            amountBeans,
+            podOrder.orderer,
+            mode
+        );
         delete s.sys.podOrders[id];
         emit PodOrderCancelled(podOrder.orderer, id);
     }

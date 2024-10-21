@@ -41,12 +41,22 @@ library LibChainlinkOracle {
         address priceAggregatorAddress,
         uint256 maxTimeout,
         uint256 tokenDecimals,
-        uint256 lookback
+        uint256 lookback,
+        bool isMillion
     ) internal view returns (uint256 price) {
         return
             lookback > 0
-                ? getTwap(priceAggregatorAddress, maxTimeout, tokenDecimals, lookback)
-                : getPrice(priceAggregatorAddress, maxTimeout, tokenDecimals);
+                ? getTwap(priceAggregatorAddress, maxTimeout, tokenDecimals, lookback, isMillion)
+                : getPrice(priceAggregatorAddress, maxTimeout, tokenDecimals, isMillion);
+    }
+
+    function getTokenPrice(
+        address priceAggregatorAddress,
+        uint256 maxTimeout,
+        uint256 tokenDecimals,
+        uint256 lookback
+    ) internal view returns (uint256 price) {
+        return getTokenPrice(priceAggregatorAddress, maxTimeout, tokenDecimals, lookback, false);
     }
 
     /**
@@ -59,7 +69,8 @@ library LibChainlinkOracle {
     function getPrice(
         address priceAggregatorAddress,
         uint256 maxTimeout,
-        uint256 tokenDecimals
+        uint256 tokenDecimals,
+        bool isMillion
     ) internal view returns (uint256 price) {
         IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
         // First, try to get current decimal precision:
@@ -88,6 +99,9 @@ library LibChainlinkOracle {
 
             // if token decimals is greater than 0, return the TOKEN2/TOKEN1 price instead (i.e invert the price).
             if (tokenDecimals > 0) {
+                // if `isMillion` is set, return `MillionTOKEN2/TOKEN1` Price instead
+                // (i.e, the amount of TOKEN1 equal to a million of TOKEN2)
+                if (isMillion) tokenDecimals = tokenDecimals + 6;
                 price = uint256(10 ** (tokenDecimals + decimals)).div(uint256(answer));
             } else {
                 // Adjust to 6 decimal precision.
@@ -109,12 +123,12 @@ library LibChainlinkOracle {
         address priceAggregatorAddress,
         uint256 maxTimeout,
         uint256 tokenDecimals,
-        uint256 lookback
+        uint256 lookback,
+        bool isMillion
     ) internal view returns (uint256 price) {
-        IChainlinkAggregator priceAggregator = IChainlinkAggregator(priceAggregatorAddress);
         // First, try to get current decimal precision:
         uint8 decimals;
-        try priceAggregator.decimals() returns (uint8 _decimals) {
+        try IChainlinkAggregator(priceAggregatorAddress).decimals() returns (uint8 _decimals) {
             // If call to Chainlink succeeds, record the current decimal precision
             decimals = _decimals;
         } catch {
@@ -123,7 +137,7 @@ library LibChainlinkOracle {
         }
 
         // Secondly, try to get latest price data:
-        try priceAggregator.latestRoundData() returns (
+        try IChainlinkAggregator(priceAggregatorAddress).latestRoundData() returns (
             uint80 roundId,
             int256 answer,
             uint256 /* startedAt */,
@@ -139,6 +153,11 @@ library LibChainlinkOracle {
             TwapVariables memory t;
 
             t.endTimestamp = block.timestamp.sub(lookback);
+
+            if (isMillion) {
+                // if `isMillion` flag is enabled,
+                tokenDecimals = tokenDecimals + 6;
+            }
             // Check if last round was more than `lookback` ago.
             if (timestamp <= t.endTimestamp) {
                 if (tokenDecimals > 0) {
@@ -161,7 +180,10 @@ library LibChainlinkOracle {
                     );
                     roundId -= 1;
                     t.lastTimestamp = timestamp;
-                    (answer, timestamp) = getRoundData(priceAggregator, roundId);
+                    (answer, timestamp) = getRoundData(
+                        IChainlinkAggregator(priceAggregatorAddress),
+                        roundId
+                    );
                     if (
                         checkForInvalidTimestampOrAnswer(
                             timestamp,

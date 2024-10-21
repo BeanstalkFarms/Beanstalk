@@ -18,11 +18,11 @@ import { FarmerBalances } from '~/state/farmer/balances';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import { ZERO_BN } from '~/constants';
+import { BeanstalkPalette } from '~/components/App/muiTheme';
 import BorderEffect from './BorderEffect';
 import { BalanceFrom } from './BalanceFromRow';
 import FieldWrapper from './FieldWrapper';
 import NumberFormatInput from './NumberFormatInput';
-import { BeanstalkPalette } from '~/components/App/muiTheme';
 
 export type TokenInputCustomProps = {
   /**
@@ -74,6 +74,10 @@ export type TokenInputCustomProps = {
    *
    */
   belowComponent?: JSX.Element;
+  /**
+   * Disables updating the input but not in the disabled greyed-out state.
+   */
+  outputOnlyMode?: boolean;
 };
 
 // const preventNegative = (e: React.)
@@ -139,6 +143,7 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
   InputProps,
   label,
   belowComponent,
+  outputOnlyMode = false,
   ...textFieldProps
 }) => {
   const [displayAmount, setDisplayAmount] = useState<string>(
@@ -152,9 +157,10 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
           inputMode: 'numeric',
         },
         inputComponent: NumberFormatInput as any,
+        readOnly: outputOnlyMode,
         ...InputProps,
-      } as TextFieldProps['InputProps']),
-    [InputProps]
+      }) as TextFieldProps['InputProps'],
+    [InputProps, outputOnlyMode]
   );
 
   // Unpack balance
@@ -345,7 +351,7 @@ const TokenInput: FC<TokenInputProps & FieldProps> = ({
 
   return (
     <FieldWrapper label={label}>
-      <BorderEffect disabled={isInputDisabled}>
+      <BorderEffect outputOnlyMode={outputOnlyMode} disabled={isInputDisabled}>
         <Stack width="100%">
           <Box
             width="100%"

@@ -2,8 +2,33 @@ import BigNumber from 'bignumber.js';
 import { DateTime, Duration } from 'luxon';
 import { Beanstalk } from '~/generated';
 import { bigNumberResult } from '~/util';
-import { APPROX_SECS_PER_BLOCK } from './morning';
 import { BlockInfo } from '~/hooks/chain/useFetchLatestBlock';
+import {
+  APPROX_L2_BLOCK_PER_L1_BLOCK,
+  APPROX_SECS_PER_L2_BLOCK,
+  INTERVALS_PER_MORNING,
+  SECONDS_PER_MORNING_INTERVAL,
+} from './morning';
+
+export interface Morning {
+  /**
+   * The L2 Block Number that represents the start of the current morning interval.
+   */
+  blockNumber: BigNumber;
+  /**
+   * Whether it is morning
+   */
+  isMorning: boolean;
+  /**
+   * The index (0 - 24) of the current morning.
+   * Can think of this as 12 second intervals (L1 blocks) since sunrise
+   */
+  index: BigNumber;
+  /**
+   * The DateTime of the next expected morning interval update
+   */
+  next: DateTime;
+}
 
 export type Sun = {
   // season: BigNumber;
@@ -13,8 +38,6 @@ export type Sun = {
     awaiting: boolean;
     /** The DateTime of the next expected Sunrise */
     next: DateTime;
-    /** The Duration remaining until the next Sunrise. Updated once per second. */
-    remaining: Duration;
   };
   season: {
     current: BigNumber;
@@ -30,20 +53,7 @@ export type Sun = {
     period: BigNumber;
     timestamp: DateTime;
   };
-  morning: {
-    /** The current Block Number on chain */
-    blockNumber: BigNumber;
-    /** */
-    isMorning: boolean;
-    /** */
-    index: BigNumber;
-  };
-  morningTime: {
-    /** the Duration remaining until the next block update  */
-    remaining: Duration;
-    /** The DateTime of the next expected block update */
-    next: DateTime;
-  };
+  morning: Morning;
 };
 
 export const getNextExpectedSunrise = () => {
@@ -51,7 +61,7 @@ export const getNextExpectedSunrise = () => {
   return now.set({ minute: 0, second: 0, millisecond: 0 }).plus({ hour: 1 });
 };
 
-export const getNextExpectedBlockUpdate = (
+export const getNextMorningIntervalUpdate = (
   from: DateTime = getNextExpectedSunrise()
 ) => from.plus({ seconds: 12 });
 
@@ -61,7 +71,7 @@ export const parseSeasonResult = (
 ): Sun['season'] => ({
   current: bigNumberResult(result.current), /// The current Season in Beanstalk.
   lastSop: bigNumberResult(result.lastSop), /// The Season in which the most recent consecutive series of Seasons of Plenty started.
-  withdrawSeasons: bigNumberResult(result.withdrawSeasons), /// The number of Seasons required to Withdraw a Deposit.
+  withdrawSeasons: bigNumberResult(1), /// The number of Seasons required to Withdraw a Deposit.
   lastSopSeason: bigNumberResult(result.lastSopSeason), /// The Season in which the most recent consecutive series of Seasons of Plenty ended.
   rainStart: bigNumberResult(result.rainStart), /// The most recent Season in which Rain started.
   raining: result.raining, /// True if it is Raining (P > 1, Pod Rate Excessively Low).
@@ -73,12 +83,20 @@ export const parseSeasonResult = (
   timestamp: DateTime.fromSeconds(bigNumberResult(result.timestamp).toNumber()), /// The timestamp of the start of the current Season.
 });
 
+/**
+ * diff between some data & now rounded down to the nearest second
+ * @param dt - the DateTime to calculate the difference from
+ * @param _now - the current DateTime (defaults to now)
+ */
 export const getDiffNow = (dt: DateTime, _now?: DateTime) => {
   const now = (_now || DateTime.now()).toSeconds();
   const nowRounded = Math.floor(now);
   return dt.diff(DateTime.fromSeconds(nowRounded));
 };
 
+/**
+ * current timestamp rounded down to the nearest second
+ */
 export const getNowRounded = () => {
   const now = Math.floor(DateTime.now().toSeconds());
   return DateTime.fromSeconds(now);
@@ -91,42 +109,59 @@ export const getNowRounded = () => {
  * Ethereum block times don't include MS, so we use the current timestamp
  * rounded down to the nearest second.
  *
- * We determine the current block using the difference in seconds between
+ * We approximate the current block using the difference in seconds between
  * the current timestamp & the sunriseBlock timestamp.
  *
- * We determine it is morning by calcuating whether we are within 5 mins
+ * We determine it is morning by calculating whether we are within 5 mins
  * since sunrise was called.
  *
  */
 export const getMorningResult = ({
   timestamp: sunriseTime,
   blockNumber: sunriseBlock,
-}: BlockInfo): Pick<Sun, 'morning' | 'morningTime'> => {
-  const sunriseSecs = sunriseTime.toSeconds();
+}: BlockInfo): Morning & {
+  remaining: Duration;
+} => {
+  // sunrise timestamp in seconds
+  const sunriseSecs = Math.floor(sunriseTime.toSeconds());
+  // current timestamp in seconds
   const nowSecs = getNowRounded().toSeconds();
-  const secondsDiff = nowSecs - sunriseSecs;
-  const index = new BigNumber(Math.floor(secondsDiff / APPROX_SECS_PER_BLOCK));
-  const isMorning = index.lt(25) && index.gte(0) && sunriseBlock.gt(0);
+  // seconds since sunrise
+  const secondsSinceSunrise = Math.floor(nowSecs - sunriseSecs);
 
-  const blockNumber = sunriseBlock.plus(index);
-  const seconds = index.times(12).toNumber();
+  // The morning interval index (0 - 24)
+  const index = new BigNumber(
+    Math.floor(secondsSinceSunrise / SECONDS_PER_MORNING_INTERVAL)
+  );
+  // The approximate blockNumber that represents the start the current morning interval
+  const deltaBlocks = index.times(APPROX_L2_BLOCK_PER_L1_BLOCK);
+
+  // It is considered morning if...
+  // - SunriseBlock has been fetched
+  // - We are within the first 25 L1 blocks (1200 L2 blocks) since sunrise
+  const isMorning =
+    index.gte(0) && index.lt(INTERVALS_PER_MORNING) && sunriseBlock.gt(0);
+
+  // The L2 Block Number that represents the start of the current morning interval
+  const blockNumber = sunriseBlock.plus(deltaBlocks);
+
+  // we could use secondsSinceSunrise, but this is more precise.
+  // Using secondsSinceSunrise results in 0.5s inaccuracy.
+  const elapsedSeconds = deltaBlocks.times(APPROX_SECS_PER_L2_BLOCK);
+
   const curr = isMorning
-    ? sunriseTime.plus({ seconds })
-    : getNextExpectedSunrise().plus({ seconds });
+    ? sunriseTime.plus({ seconds: elapsedSeconds.toNumber() })
+    : getNextExpectedSunrise().plus({ seconds: 12 });
 
-  const next = getNextExpectedBlockUpdate(curr);
+  const next = getNextMorningIntervalUpdate(curr);
   const remaining = getDiffNow(next);
 
   return {
-    morning: {
-      isMorning,
-      blockNumber,
-      index: new BigNumber(index),
-    },
-    morningTime: {
-      next,
-      remaining,
-    },
+    remaining,
+    isMorning,
+    blockNumber,
+    index,
+    next,
   };
 };
 

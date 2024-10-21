@@ -4,6 +4,11 @@
   status = 308
 
 [[redirects]]
+  from = "/05-08-24-multi-flow-codehawks-report"
+  to = "https://codehawks.cyfrin.io/c/2024-04-Beanstalk-DIB/results?lt=contest&page=1&sc=reward&sj=reward&t=report"
+  status = 200
+
+[[redirects]]
   from = "/06-16-23-cyfrin-report"
   to = "https://arweave.net/usT3ClfjHwpX32OXnh5De1aH79csX1PMoXJCghXBaps"
   status = 200

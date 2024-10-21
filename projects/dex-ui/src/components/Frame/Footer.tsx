@@ -1,7 +1,10 @@
 import React from "react";
+
 import styled from "styled-components";
-import { BeanstalkLogoBlack, Discord, Github, Twitter } from "../Icons";
+
 import { mediaQuery, size } from "src/breakpoints";
+
+import { BeanstalkLogoBlack, Discord, Github, Twitter } from "../Icons";
 
 export const Footer = () => (
   <Container>
@@ -27,7 +30,11 @@ export const Footer = () => (
     <SmallBox href="https://twitter.com/basinexchange" rel="noopener noreferrer" target="_blank">
       <Twitter width={20} />
     </SmallBox>
-    <SmallBox href="https://github.com/BeanstalkFarms/Basin" rel="noopener noreferrer" target="_blank">
+    <SmallBox
+      href="https://github.com/BeanstalkFarms/Basin"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
       <Github width={20} />
     </SmallBox>
     <SmallBox href="https://bean.money" rel="noopener noreferrer" target="_blank">

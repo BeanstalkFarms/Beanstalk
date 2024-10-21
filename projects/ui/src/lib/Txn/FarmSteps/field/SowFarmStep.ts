@@ -1,8 +1,8 @@
 import {
   BeanstalkSDK,
+  BeanSwapOperation,
   ERC20Token,
   FarmFromMode,
-  FarmToMode,
   NativeToken,
   StepGenerator,
   TokenValue,
@@ -13,17 +13,21 @@ import { ClaimAndDoX, FarmStep } from '~/lib/Txn/Interface';
 import { makeLocalOnlyStep } from '../../util';
 
 export class SowFarmStep extends FarmStep {
-  constructor(_sdk: BeanstalkSDK, private _account: string) {
+  constructor(
+    _sdk: BeanstalkSDK,
+    private _account: string
+  ) {
     super(_sdk);
     this._account = _account;
   }
 
   build(
     tokenIn: ERC20Token | NativeToken,
-    _amountIn: TokenValue,
+    amountIn: TokenValue,
     _minTemperature: TokenValue,
     _minSoil: TokenValue,
     _fromMode: FarmFromMode,
+    operation: BeanSwapOperation | undefined,
     claimAndDoX: ClaimAndDoX
   ) {
     this.clear();
@@ -37,16 +41,10 @@ export class SowFarmStep extends FarmStep {
 
     let fromMode = _fromMode;
 
-    if (!usingBean && _amountIn.gt(0)) {
-      const swap = this._sdk.swap.buildSwap(
-        tokenIn,
-        BEAN,
-        this._account,
-        _fromMode,
-        FarmToMode.INTERNAL
-      );
-      const swapSteps = [...swap.getFarm().generators] as StepGenerator[];
-      this.pushInput({ input: swapSteps });
+    if (!usingBean && operation) {
+      this.pushInput({ 
+        input: [...operation.getFarm().generators] 
+      });
       fromMode = FarmFromMode.INTERNAL_TOLERANT;
     }
 
@@ -55,7 +53,7 @@ export class SowFarmStep extends FarmStep {
         makeLocalOnlyStep({
           name: 'claimable-pre-sow',
           amount: {
-            additionalAmount: addiitonalBean,
+            additionalAmount: !operation ? addiitonalBean.add(amountIn) : addiitonalBean,
           },
         })
       );
@@ -91,39 +89,12 @@ export class SowFarmStep extends FarmStep {
     return this;
   }
 
-  static async getAmountOut(
-    sdk: BeanstalkSDK,
-    tokenIn: ERC20Token | NativeToken,
-    amountIn: TokenValue,
-    fromMode: FarmFromMode,
-    account: string
-  ) {
-    if (!account) {
-      throw new Error('Signer Required');
-    }
-
-    const swap = sdk.swap.buildSwap(
-      tokenIn,
-      sdk.tokens.BEAN,
-      account,
-      fromMode,
-      FarmToMode.INTERNAL
-    );
-
-    const estimate = await swap.estimate(amountIn);
-
-    console.debug('[SowFarmStep][getAmountOut]: estimate', estimate.toHuman());
-
-    return estimate;
-  }
-
   /// estimate the maximum amount of tokenIn that can be deposited given the amount of soil
   static async getMaxForToken(
     sdk: BeanstalkSDK,
     tokenIn: ERC20Token | NativeToken,
-    account: string,
-    fromMode: FarmFromMode,
-    soil: TokenValue
+    soil: TokenValue,
+    slippage: number
   ) {
     if (soil.lte(0)) {
       return tokenIn.amount('0');
@@ -138,21 +109,14 @@ export class SowFarmStep extends FarmStep {
       return soil;
     }
 
-    const swap = sdk.swap.buildSwap(
-      tokenIn,
-      sdk.tokens.BEAN,
-      account,
-      fromMode,
-      FarmToMode.INTERNAL
-    );
+    const quote = await sdk.beanSwap.quoter.route(tokenIn, sdk.tokens.BEAN, soil, slippage);
 
-    const estimate = await swap.estimateReversed(soil);
     console.debug(
       '[SowFarmStep][getMaxForToken]: estimate = ',
-      estimate.toHuman(),
+      quote.buyAmount.toHuman(),
       tokenIn.symbol
     );
-    return estimate;
+    return quote.buyAmount;
   }
 
   static getPreferredTokens(tokens: BeanstalkSDK['tokens']): {
@@ -161,9 +125,9 @@ export class SowFarmStep extends FarmStep {
   } {
     const preferred: PreferredToken[] = [
       { token: tokens.BEAN, minimum: new BigNumber(1) }, // $1
+      { token: tokens.WSTETH, minimum: new BigNumber(0.00075) }, // ~$2-4
       { token: tokens.ETH, minimum: new BigNumber(0.001) }, // ~$2-4
       { token: tokens.WETH, minimum: new BigNumber(0.001) }, // ~$2-4
-      { token: tokens.CRV3, minimum: new BigNumber(1) }, // $1
       { token: tokens.DAI, minimum: new BigNumber(1) }, // $1
       { token: tokens.USDC, minimum: new BigNumber(1) }, // $1
       { token: tokens.USDT, minimum: new BigNumber(1) }, // $1

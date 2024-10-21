@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { FC } from "src/types";
-import { Row, TBody, THead, Table, Td, Th } from "./Table";
+
 import { Well } from "@beanstalk/sdk/Wells";
 import styled from "styled-components";
-import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
+
 import { Token } from "@beanstalk/sdk";
-import { Skeleton } from "../Skeleton";
-import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
+
+import { size } from "src/breakpoints";
+import { FC } from "src/types";
+import { displayTokenSymbol } from "src/utils/format";
+import { useIsMultiFlowPump } from "src/wells/pump/utils";
 import { useWellImplementations } from "src/wells/useWellImplementations";
+
+import { Row, TBody, THead, Table, Td, Th } from "./Table";
+import { useWhitelistedWellComponents } from "../Create/useWhitelistedWellComponents";
+import { Skeleton } from "../Skeleton";
 
 type Props = { well: Well };
 
@@ -17,6 +22,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
   const {
     lookup: { pumps: pumpLookup }
   } = useWhitelistedWellComponents();
+  const { isMultiFlow } = useIsMultiFlowPump(well);
 
   const [items, setItems] = useState<{ name: string; address: string }[]>([]);
   const [wellFunctionName, setWellFunctionName] = useState<string>("");
@@ -47,6 +53,11 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
           name: pumpInfo?.fullName || pumpInfo.name,
           address: pump.address
         });
+      } else if (isMultiFlow) {
+        data.push({
+          name: "Multi Flow Pump",
+          address: pump.address
+        });
       } else {
         data.push({
           name: "Pump",
@@ -68,14 +79,7 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
     });
 
     setItems(data);
-  }, [
-    implementationAddress,
-    pumpLookup,
-    well.aquifer?.address,
-    well.pumps,
-    well.wellFunction?.address,
-    wellFunctionName
-  ]);
+  }, [implementationAddress, pumpLookup, well, wellFunctionName, isMultiFlow]);
 
   return (
     <div>

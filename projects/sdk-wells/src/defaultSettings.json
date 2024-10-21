@@ -1,3 +1,4 @@
 {
-  "subgraphUrl": "https://graph.node.bean.money/subgraphs/name/beanstalk-2-0-3"
+  "subgraphUrl": "https://graph.bean.money/beanstalk-dev",
+  "subgraphUrlEth": "https://graph.bean.money/beanstalk-dev_eth"
 }

@@ -1,14 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
-import { loadSiloAPYData } from "./apyFetcher";
-import { Well } from "@beanstalk/sdk/Wells";
 import { useCallback } from "react";
 
-export const useBeanstalkSiloAPYs = () => {
-  const query = useQuery({
-    queryKey: ["wells", "APYs"],
+import { Well } from "@beanstalk/sdk/Wells";
 
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useChainScopedQuery } from "src/utils/query/useChainScopedQuery";
+import useSdk from "src/utils/sdk/useSdk";
+
+import { loadSiloAPYData } from "./apyFetcher";
+
+export const useBeanstalkSiloAPYs = () => {
+  const sdk = useSdk();
+
+  const query = useChainScopedQuery({
+    queryKey: queryKeys.siloWellAPYs,
     queryFn: async () => {
-      const data = await loadSiloAPYData();
+      const data = await loadSiloAPYData(sdk);
       return data;
     },
 

@@ -13,3 +13,15 @@ export const normaliseTV = (
     ? token.amount(amount.toString())
     : amount;
 };
+
+export const formatTV = (
+  value: TokenValue | undefined | null,
+  decimals?: number,
+  mode?: BigNumber.RoundingMode
+) => {
+  const rounded = new BigNumber(value?.toHuman() ?? 0);
+  return rounded.toFormat(
+    decimals ?? value?.decimals ?? 2,
+    mode ?? BigNumber.ROUND_HALF_DOWN
+  );
+};

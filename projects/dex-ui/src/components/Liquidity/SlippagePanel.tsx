@@ -1,12 +1,16 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { MouseEvent, useCallback, useState } from "react";
+
 import styled from "styled-components";
+
 import gearIcon from "/src/assets/images/gear.svg";
+
 import x from "src/assets/images/x.svg";
-import { ImageButton } from "../ImageButton";
-import { BottomDrawer } from "../BottomDrawer";
 import { size } from "src/breakpoints";
+
+import { BottomDrawer } from "../BottomDrawer";
+import { ImageButton } from "../ImageButton";
 
 type SlippagePanelProps = {
   slippageValue: number;
@@ -36,33 +40,52 @@ const SlippagePanel = ({ handleSlippageValueChange, slippageValue }: SlippagePan
           <ModalContainer data-trace="true" onMouseDown={dontStealFocus}>
             <ModalHeader>
               <div id="dialog-title">Adjust Slippage</div>
-              <ImageButton src={x} alt="Close token selector modal" size={10} onClick={closeModal} />
+              <ImageButton
+                src={x}
+                alt="Close token selector modal"
+                size={10}
+                onClick={closeModal}
+              />
             </ModalHeader>
             <ModalContent>
               <InputContainer>
-                <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
+                <StyledInput
+                  type="text"
+                  defaultValue={slippageValue}
+                  onChange={(e) => handleSlippageValueChange(e.target.value)}
+                />
                 <InputAdornment>Slippage Amount</InputAdornment>
               </InputContainer>
-              Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that
-              you are willing to tolerate.
+              Slippage tolerance is the % change in token price caused by external factors between
+              transaction submission and execution that you are willing to tolerate.
               <SlippageTextBottom>
-                Your transaction will revert if the price changes by more than the percentage specified.
+                Your transaction will revert if the price changes by more than the percentage
+                specified.
               </SlippageTextBottom>
             </ModalContent>
           </ModalContainer>
         </DesktopModal>
       )}
       <MobileDrawer>
-        <BottomDrawer showDrawer={modalOpen} headerText={"Adjust Slippage"} toggleDrawer={setModalOpen}>
+        <BottomDrawer
+          showDrawer={modalOpen}
+          headerText={"Adjust Slippage"}
+          toggleDrawer={setModalOpen}
+        >
           <ModalContent>
             <InputContainer>
-              <StyledInput type="text" defaultValue={slippageValue} onChange={(e) => handleSlippageValueChange(e.target.value)} />
+              <StyledInput
+                type="text"
+                defaultValue={slippageValue}
+                onChange={(e) => handleSlippageValueChange(e.target.value)}
+              />
               <InputAdornment>Slippage</InputAdornment>
             </InputContainer>
-            Slippage tolerance is the % change in token price caused by external factors between transaction submission and execution that
-            you are willing to tolerate.
+            Slippage tolerance is the % change in token price caused by external factors between
+            transaction submission and execution that you are willing to tolerate.
             <SlippageTextBottom>
-              Your transaction will revert if the price changes by more than the percentage specified.
+              Your transaction will revert if the price changes by more than the percentage
+              specified.
             </SlippageTextBottom>
           </ModalContent>
         </BottomDrawer>

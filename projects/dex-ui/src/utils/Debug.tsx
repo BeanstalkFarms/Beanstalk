@@ -1,5 +1,6 @@
-import { useChains } from "connectkit";
 import React from "react";
+
+import { useChains } from "connectkit";
 import { useAccount } from "wagmi";
 
 export const Debug = () => {

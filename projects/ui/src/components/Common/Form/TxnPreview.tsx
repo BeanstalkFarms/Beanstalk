@@ -6,7 +6,6 @@ import { FarmFromMode, FarmToMode } from '@beanstalk/sdk';
 import TokenIcon from '~/components/Common/TokenIcon';
 import { FERTILIZER_ICONS } from '~/components/Barn/FertilizerImage';
 import siloIcon from '~/img/beanstalk/silo-icon.svg';
-import Token from '~/classes/Token';
 import {
   Action,
   ActionType,
@@ -18,11 +17,14 @@ import {
   SwapAction,
   TransferBalanceAction,
 } from '~/util/Actions';
-import { SupportedChainId } from '~/constants/chains';
-import { BEAN, PODS, SEEDS, SPROUTS, STALK, WETH } from '~/constants/tokens';
 import AddressIcon from '~/components/Common/AddressIcon';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
+import {
+  TokenInstance,
+  useBeanstalkTokens,
+  useTokens,
+} from '~/hooks/beanstalk/useTokens';
 import { BeanstalkPalette } from '../../App/muiTheme';
 
 // -----------------------------------------------------------------------
@@ -46,7 +48,7 @@ const AltIconRow: FC<{ gap?: number }> = ({ children, gap = 5 }) => (
   </Row>
 );
 
-const ActionTokenImage: FC<{ token: Token }> = ({ token }) => (
+const ActionTokenImage: FC<{ token: TokenInstance }> = ({ token }) => (
   <img
     key={token.address}
     src={token.logo}
@@ -97,6 +99,8 @@ const TxnStep: FC<{
   actions: Action[];
   highlighted: ActionType | undefined;
 }> = ({ type, actions, highlighted }) => {
+  const { STALK, SEEDS, PODS, SPROUTS } = useBeanstalkTokens();
+  const { BEAN, WSTETH } = useTokens();
   let step;
   switch (type) {
     /// SWAP
@@ -219,7 +223,7 @@ const TxnStep: FC<{
           <Typography fontWeight="bold" sx={{ fontSize: 20 }}>
             🔥
           </Typography>
-          <TokenIcon token={BEAN[1]} css={{ height: '100%' }} />
+          <TokenIcon token={BEAN} css={{ height: '100%' }} />
         </IconRow>
       );
       break;
@@ -240,7 +244,7 @@ const TxnStep: FC<{
     case ActionType.RECEIVE_BEANS:
       step = (
         <IconRow>
-          <TokenIcon token={BEAN[1]} css={{ height: '100%' }} />
+          <TokenIcon token={BEAN} css={{ height: '100%' }} />
         </IconRow>
       );
       break;
@@ -263,7 +267,7 @@ const TxnStep: FC<{
     case ActionType.CREATE_ORDER:
       step = (
         <IconRow>
-          <TokenIcon token={BEAN[1]} css={{ height: '100%', marginTop: 0 }} />
+          <TokenIcon token={BEAN} css={{ height: '100%', marginTop: 0 }} />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
           <TokenIcon token={PODS} css={{ height: '100%', marginTop: 0 }} />
         </IconRow>
@@ -288,10 +292,7 @@ const TxnStep: FC<{
     case ActionType.BUY_FERTILIZER:
       step = (
         <IconRow>
-          <TokenIcon
-            token={WETH[SupportedChainId.MAINNET]}
-            css={{ height: '100%', marginTop: 0 }}
-          />
+          <TokenIcon token={WSTETH} css={{ height: '100%', marginTop: 0 }} />
           <DoubleArrowIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
           <img
             src={FERTILIZER_ICONS.unused}
@@ -348,10 +349,10 @@ const TxnStep: FC<{
         width: '80px',
         height: '100%', // of TXN_PREVIEW_HEIGHT
         textAlign: 'center',
-        '&:first-child': {
+        '&:first-of-type': {
           textAlign: 'left',
         },
-        '&:last-child': {
+        '&:last-of-type': {
           textAlign: 'right',
         },
       }}

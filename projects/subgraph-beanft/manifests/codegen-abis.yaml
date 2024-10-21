@@ -1,0 +1,37 @@
+# This file exists solely for the purpose of facilitating all codegen in a shared location such that all ABIs
+# or templates are expanded independently of being used in all chains. Most of the information here is irrelevant,
+# the only important part is in the `abis` and `templates` sections.
+#  - For abis, its only the list of abis that is relevant. The name of the dataSource is also visible.
+#  - For templates, it is only the name of the template that is relevant.
+specVersion: 0.0.9
+schema:
+  file: ../schema.graphql
+dataSources:
+  - kind: ethereum
+    name: BeaNFT-ABIs
+    network: not_relevant
+    source:
+      address: "0xa755A670Aaf1FeCeF2bea56115E65e03F7722A79"
+      abi: genesis
+      startBlock: 13323594
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BeaNFTUser
+        - Collection
+      abis:
+        - name: genesis
+          file: ../abis/genesis.json
+        - name: winter
+          file: ../abis/winter.json
+        - name: barnraise
+          file: ../abis/barnraise.json
+        - name: basin
+          file: ../abis/basin.json
+      blockHandlers:
+        - handler: handleInitVersion
+          filter:
+            kind: once
+      file: ../src/utils/constants/Version.ts

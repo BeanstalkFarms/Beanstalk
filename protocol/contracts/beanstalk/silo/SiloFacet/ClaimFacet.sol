@@ -96,7 +96,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
         uint256 plenty = s.accts[account].sop.perWellPlenty[well].plenty;
         if (plenty > 0 && LibWhitelistedTokens.wellIsOrWasSoppable(well)) {
             IERC20[] memory tokens = IWell(well).tokens();
-            IERC20 sopToken = tokens[0] != C.bean() ? tokens[0] : tokens[1];
+            IERC20 sopToken = tokens[0] != IERC20(s.sys.tokens.bean) ? tokens[0] : tokens[1];
             LibTransfer.sendToken(sopToken, plenty, LibTractor._user(), toMode);
             s.accts[account].sop.perWellPlenty[well].plenty = 0;
 
@@ -170,12 +170,12 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
         // Need to Mow for `account` before we calculate the balance of
         // Earned Beans.
 
-        LibSilo._mow(account, C.BEAN);
+        LibSilo._mow(account, s.sys.tokens.bean);
         uint256 accountStalk = s.accts[account].stalk;
 
         // Calculate balance of Earned Beans.
         beans = LibSilo._balanceOfEarnedBeans(accountStalk, s.accts[account].roots);
-        stemTip = LibTokenSilo.stemTipForToken(C.BEAN);
+        stemTip = LibTokenSilo.stemTipForToken(s.sys.tokens.bean);
         if (beans == 0) return (0, stemTip);
 
         // Reduce the Silo's supply of Earned Beans.
@@ -185,7 +185,7 @@ contract ClaimFacet is Invariable, ReentrancyGuard {
         // Deposit Earned Beans if there are any. Note that 1 Bean = 1 BDV.
         LibTokenSilo.addDepositToAccount(
             account,
-            C.BEAN,
+            s.sys.tokens.bean,
             stemTip,
             beans, // amount
             beans, // bdv

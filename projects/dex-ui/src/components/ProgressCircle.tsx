@@ -1,7 +1,10 @@
 import React from "react";
+
 import styled, { css, keyframes } from "styled-components";
-import { CheckIcon, XIcon } from "./Icons";
+
 import { theme } from "src/utils/ui/theme";
+
+import { CheckIcon, XIcon } from "./Icons";
 
 interface ProgressCircleProps {
   size: number; // Size of the circle

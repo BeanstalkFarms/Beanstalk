@@ -1,8 +1,11 @@
-import { exists } from "src/utils/check";
 import type { CSSProperties } from "react";
+
 import { css } from "styled-components";
-import { theme } from "../theme";
+
+import { exists } from "src/utils/check";
+
 import { CommonCssProps, CommonCssStyles, makeCssStyle } from "./common";
+import { theme } from "../theme";
 
 type FlexModelDirection = "row" | "column" | "row-reverse" | "column-reverse";
 

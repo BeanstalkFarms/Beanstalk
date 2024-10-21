@@ -1,13 +1,16 @@
 import React, { useMemo } from "react";
+
 import { useFormContext, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { theme } from "src/utils/ui/theme";
 import styled from "styled-components";
+
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
+import { theme } from "src/utils/ui/theme";
+
 import { ButtonPrimary } from "../../Button";
 import { LeftArrow, RightArrow } from "../../Icons";
 import { Flex } from "../../Layout";
 import { useCreateWell } from "../CreateWellProvider";
-import { ActionWalletButtonWrapper } from "src/components/Wallet";
 
 const ButtonLabels = [
   {
@@ -72,7 +75,7 @@ export const CreateWellButtonRow = ({
   const goNextEnabled = noErrors && hasRequiredValues;
 
   const goBackLabel = ButtonLabels[step].back || "Back";
-  const nextLabel = disabled && disabledMessage || ButtonLabels[step].next || "Next";
+  const nextLabel = (disabled && disabledMessage) || ButtonLabels[step].next || "Next";
 
   return (
     <Flex $fullWidth $direction="row" $justifyContent="space-between" $gap={2}>

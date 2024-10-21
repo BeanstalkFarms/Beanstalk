@@ -1,6 +1,8 @@
 import React from "react";
-import { theme } from "src/utils/ui/theme";
+
 import styled from "styled-components";
+
+import { theme } from "src/utils/ui/theme";
 
 // Styled components
 

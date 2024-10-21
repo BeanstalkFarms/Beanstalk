@@ -1,32 +1,24 @@
 import React from 'react';
 import { CardProps, Card, CircularProgress } from '@mui/material';
-import { useSelector } from 'react-redux';
-import Stat from '../Common/Stat';
-import { displayFullBN } from '../../util';
 import StatsCard, { StatItem } from '~/components/Common/StatsCard';
-import { /* SEEDS , */ SPROUTS, STALK, PODS } from '~/constants/tokens';
-import { AppState } from '~/state';
+import { useAppSelector } from '~/state';
 import BeanstalkBalances from '~/components/Common/Balances/BeanstalkBalances';
 import useBeanstalkSiloBreakdown from '~/hooks/beanstalk/useBeanstalkBalancesBreakdown';
 import { NEW_BN } from '~/constants';
 
 import { FC } from '~/types';
+import { useBeanstalkTokens } from '~/hooks/beanstalk/useTokens';
+import Stat from '../Common/Stat';
+import { displayFullBN } from '../../util';
 
 const LiquidityByState: FC<CardProps> = ({ sx }) => {
+  const totalBeanSupply = useAppSelector((s) => s._bean.token.supply);
+  const beanstalkField = useAppSelector((s) => s._beanstalk.field);
+  const beanstalkSilo = useAppSelector((s) => s._beanstalk.silo);
+  const beanstalkBarn = useAppSelector((s) => s._beanstalk.barn);
+
+  const { STALK, SPROUTS, PODS } = useBeanstalkTokens();
   const breakdown = useBeanstalkSiloBreakdown();
-  const beanstalkSilo = useSelector<AppState, AppState['_beanstalk']['silo']>(
-    (state) => state._beanstalk.silo
-  );
-  const beanstalkField = useSelector<AppState, AppState['_beanstalk']['field']>(
-    (state) => state._beanstalk.field
-  );
-  const beanstalkBarn = useSelector<AppState, AppState['_beanstalk']['barn']>(
-    (state) => state._beanstalk.barn
-  );
-  const totalBeanSupply = useSelector<
-    AppState,
-    AppState['_bean']['token']['supply']
-  >((state) => state._bean.token.supply);
 
   /// Total Balances
   const STAT_ITEMS: StatItem[] = [
@@ -37,13 +29,6 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
       token: STALK,
       amount: beanstalkSilo.stalk.total,
     },
-   /* {
-      title: 'Seeds',
-      tooltip:
-        'This is the total Seed supply. Each Seed yields 1/10000 Grown Stalk each Season.',
-      token: SEEDS,
-      amount: beanstalkSilo.seeds.total,
-    }, */
     {
       title: 'Pods',
       tooltip:
@@ -85,3 +70,11 @@ const LiquidityByState: FC<CardProps> = ({ sx }) => {
 };
 
 export default LiquidityByState;
+
+/* {
+  title: 'Seeds',
+  tooltip:
+    'This is the total Seed supply. Each Seed yields 1/10000 Grown Stalk each Season.',
+  token: SEEDS,
+  amount: beanstalkSilo.seeds.total,
+}, */

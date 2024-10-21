@@ -11,7 +11,7 @@ import { FC } from '~/types';
 import { SeasonalSeedsDocument, SeasonalSeedsQuery } from '~/generated/graphql';
 
 const getValue = (season: SnapshotData<SeasonalSeedsQuery>) =>
-  toTokenUnitsBN(season.seeds, SEEDS.decimals).toNumber();
+  toTokenUnitsBN(season.grownStalkPerSeason, SEEDS.decimals).toNumber();
 const formatValue = (value: number) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const statProps = {

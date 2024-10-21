@@ -1,13 +1,12 @@
 import { createAction } from '@reduxjs/toolkit';
-import type { EthPriceResponse } from '~/functions/ethprice/ethprice';
-import { Globals, Settings } from '.';
+import { EthGasPrices, Globals, Settings } from '.';
 
 // export const setAlmanacView = createAction<boolean>(
 //   'app/setAlmanacView'
 // );
 
-export const setEthPrices = createAction<EthPriceResponse | null>(
-  'app/setEthPrices'
+export const setGasPrices = createAction<EthGasPrices | null>(
+  'app/setGasPrices'
 );
 
 type SettingsPayload<T extends keyof Settings> = {

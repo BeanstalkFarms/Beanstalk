@@ -1,7 +1,10 @@
 import React from "react";
-import { size } from "src/breakpoints";
+
 import styled, { keyframes } from "styled-components";
+
 import { images } from "src/assets/images/tokens";
+import { size } from "src/breakpoints";
+
 import { Image } from "../Image";
 
 const randomKey = () => Math.random().toString(36).substring(2, 7);

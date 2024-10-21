@@ -108,6 +108,7 @@ export const BeanstalkPalette = {
   blue: '#C1DEF2',
   textBlue: '#122540',
   lightBlue: '#DAEBF7',
+  lighterBlue: '#E2F2FE',
   lightestBlue: '#F6FAFE',
   darkBlue: '#1F78B4',
   nightBlue: '#162B49',
@@ -126,6 +127,7 @@ export const BeanstalkPalette = {
 
   // Reds
   // #FBE6E0
+  red: '#DA2C38',
   washedRed: '#c35f42',
   mediumRed: lighten('#c35f42', 0.55),
   hoverRed: '#fef9f8',
@@ -293,10 +295,9 @@ const muiThemeBase: ThemeOptions = {
       contrastText: '#ffffff',
     },
     naked: {
-      main: 'transparent',
+      main: BeanstalkPalette.white,
       contrastText: BeanstalkPalette.black,
     },
-    //
     text: {
       primary: BeanstalkPalette.textBlue,
       secondary: BeanstalkPalette.grey,
@@ -387,6 +388,7 @@ const muiThemeBase: ThemeOptions = {
     subtitle1: {
       fontSize: FontSize.lg, // 18px
       fontWeight: FontWeight.normal,
+      lineHeight: 1.5,
     },
     subtitle2: {
       fontSize: FontSize.base, // 16px
@@ -481,6 +483,29 @@ const muiThemeBase: ThemeOptions = {
               },
             }),
         },
+        {
+          props: {
+            variant: 'outlined-secondary',
+            color: 'secondary',
+            size: 'small',
+          },
+          style: (t) =>
+            t.theme.unstable_sx({
+              px: 1,
+              py: 0.75,
+              borderRadius: '4px',
+              width: 'fit-content',
+              fontWeight: FontWeight.medium,
+              color: 'text.primary',
+              borderColor: 'divider',
+              backgroundColor: BeanstalkPalette.white,
+              whiteSpace: 'nowrap',
+              ':hover': {
+                borderColor: 'primary.main',
+                background: BeanstalkPalette.lightestGreen,
+              },
+            }),
+        },
       ],
       defaultProps: {
         disableElevation: true,
@@ -523,10 +548,12 @@ const muiThemeBase: ThemeOptions = {
         startIcon: (t) =>
           t.theme.unstable_sx({
             marginLeft: 0, // prevent adornment from pulling close to right margin
+            marginRight: 0.5,
           }),
         endIcon: (t) =>
           t.theme.unstable_sx({
             marginRight: 0, // prevent adornment from pulling close to right margin
+            marginLeft: 0.5,
           }),
       },
     },
@@ -706,7 +733,7 @@ const muiThemeBase: ThemeOptions = {
         scrollButtons: {
           '&.Mui-disabled': {
             opacity: 0.3,
-          }
+          },
         },
       },
     },

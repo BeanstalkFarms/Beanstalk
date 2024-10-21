@@ -254,4 +254,19 @@ export const ebipList = [
         id: '',
       }
     },
+    {
+      id: 'ebip-17',
+      title: 'EBIP-17: Misc Bug Fixes',
+      choices: [],
+      type: '',
+      state: 'closed',
+      start: 1721485607,
+      end: 1721485607,
+      scores: [],
+      scores_total: 0,
+      snapshot: '',
+      space: {
+        id: '',
+      }
+    },
   ];

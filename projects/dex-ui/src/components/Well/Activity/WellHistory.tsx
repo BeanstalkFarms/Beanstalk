@@ -1,15 +1,18 @@
 import React, { ReactElement, useState } from "react";
 
 import { Well } from "@beanstalk/sdk/Wells";
-import useWellHistory, { EVENT_TYPE, WellEvent } from "src/wells/useWellHistory";
 import styled from "styled-components";
-import { renderEvent } from "./eventRender";
-import { Row, TBody, THead, Table, Td, Th } from "src/components/Well/Table";
+
 import { TokenValue } from "@beanstalk/sdk";
-import { TabButton } from "src/components/TabButton";
+
 import { size } from "src/breakpoints";
-import { useTokenSupply } from "src/tokens/useTokenSupply";
 import { LoadingTemplate } from "src/components/LoadingTemplate";
+import { TabButton } from "src/components/TabButton";
+import { Row, TBody, THead, Table, Td, Th } from "src/components/Well/Table";
+import { useTokenSupply } from "src/tokens/useTokenSupply";
+import useWellHistory, { EVENT_TYPE, WellEvent } from "src/wells/useWellHistory";
+
+import { renderEvent } from "./eventRender";
 
 type BaseWellHistoryProps = {
   tokenPrices: (TokenValue | null)[];
@@ -77,7 +80,10 @@ const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, res
 
   const lpTokenSupply = useTokenSupply(well.lpToken!);
   const isNonEmptyWell = lpTokenSupply.totalSupply && lpTokenSupply.totalSupply.gt(0);
-  const lpTokenPrice = lpTokenSupply.totalSupply && isNonEmptyWell ? reservesUSD.div(lpTokenSupply.totalSupply) : TokenValue.ZERO;
+  const lpTokenPrice =
+    lpTokenSupply.totalSupply && isNonEmptyWell
+      ? reservesUSD.div(lpTokenSupply.totalSupply)
+      : TokenValue.ZERO;
 
   if (loading) {
     return <WellHistorySkeleton />;
@@ -86,7 +92,10 @@ const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, res
   const eventRows: JSX.Element[] = (events || [])
     .filter((e: WellEvent) => filter === null || e.type == filter)
     .map<ReactElement>(
-      (e, index): any => index >= newestEventOnPage && index <= oldestEventOnPage && renderEvent(e, well, tokenPrices, lpTokenPrice)
+      (e, index): any =>
+        index >= newestEventOnPage &&
+        index <= oldestEventOnPage &&
+        renderEvent(e, well, tokenPrices, lpTokenPrice)
     );
 
   return (
@@ -132,7 +141,9 @@ const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, res
                     <StyledTabButton
                       active
                       pageLimit={currentPage === totalPages}
-                      onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                      onClick={() =>
+                        setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)
+                      }
                     >
                       →
                     </StyledTabButton>
@@ -153,7 +164,9 @@ const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, res
                     <StyledTabButton
                       active
                       pageLimit={currentPage === totalPages}
-                      onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                      onClick={() =>
+                        setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)
+                      }
                     >
                       →
                     </StyledTabButton>
@@ -168,12 +181,20 @@ const WellHistoryContent: React.FC<WellHistoryProps> = ({ well, tokenPrices, res
   );
 };
 
-export const WellHistory: React.FC<BaseWellHistoryProps & { well: Well | undefined; loading?: boolean }> = (props) => {
+export const WellHistory: React.FC<
+  BaseWellHistoryProps & { well: Well | undefined; loading?: boolean }
+> = (props) => {
   if (props.loading || !props.well) {
     return <WellHistorySkeleton />;
   }
 
-  return <WellHistoryContent well={props.well} tokenPrices={props.tokenPrices} reservesUSD={props.reservesUSD} />;
+  return (
+    <WellHistoryContent
+      well={props.well}
+      tokenPrices={props.tokenPrices}
+      reservesUSD={props.reservesUSD}
+    />
+  );
 };
 
 const DesktopOnlyTd = styled(Td)`

@@ -1,10 +1,13 @@
 import React from "react";
-import { theme } from "src/utils/ui/theme";
+
 import styled from "styled-components";
+
 import { Flex } from "src/components/Layout";
+import { theme } from "src/utils/ui/theme";
+import { useBoolean } from "src/utils/ui/useBoolean";
+
 import { ChevronDown, CircleEmptyIcon, CircleFilledCheckIcon } from "./Icons";
 import { ImageButton } from "./ImageButton";
-import { useBoolean } from "src/utils/ui/useBoolean";
 
 
 type SelectnIndicatorIconProps = {

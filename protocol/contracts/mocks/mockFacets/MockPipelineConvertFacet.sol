@@ -32,12 +32,4 @@ contract MockPipelineConvertFacet is PipelineConvertFacet {
             outputTokenAmountInDirectionOfPeg
         );
     }
-
-    function calculateDeltaBFromReservesE(
-        address well,
-        uint256[] memory reserves,
-        uint256 lookback
-    ) external view returns (int256) {
-        return LibDeltaB.calculateDeltaBFromReserves(well, reserves, lookback);
-    }
 }

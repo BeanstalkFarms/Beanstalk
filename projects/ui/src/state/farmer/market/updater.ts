@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
+import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetFarmerMarket } from './actions';
 
 export const useFetchFarmerMarket = () => {
@@ -23,13 +23,11 @@ export const useFetchFarmerMarket = () => {
 const FarmerMarketUpdater = () => {
   const [fetch, initialized, clear] = useFetchFarmerMarket();
   const account = useAccount();
-  const chainId = useChainId();
 
-  useEffect(() => {
+  useL2OnlyEffect(() => {
     clear();
     if (account && initialized) fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, chainId, initialized]);
+  }, [account, initialized]);
 
   return null;
 };
