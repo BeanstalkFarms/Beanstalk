@@ -19,6 +19,8 @@ contract TransmitOutFacet is Invariable {
     /**
      * @notice Process the outbound migration and transfer necessary assets to destination.
      * @dev Reverts if failure to burn assets or destination fails.
+     * @param assets Contains abi encoded deposits, plots, and fertilizer.
+     * @param data Currently unused but remains available for paramaters such as minimum output requirements.
      */
     function transmitOut(
         address destination,
