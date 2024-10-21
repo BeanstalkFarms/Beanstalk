@@ -6,6 +6,7 @@ import { Time } from 'lightweight-charts';
 import { useQueries } from '@tanstack/react-query';
 import { fetchAllSeasonData } from '~/util/Graph';
 import { RESEED_SEASON } from '~/constants';
+import { exists, mayFunctionToValue } from '~/util';
 import ChartV2 from './ChartV2';
 import { useChartSetupData } from './useChartSetupData';
 
@@ -43,6 +44,8 @@ const MiniCharts: FC<{}> = () => {
       const valueFormatter = params.valueFormatter;
       const priceKey = params.priceScaleKey;
 
+      const timestamps = new Set<number>();
+
       return {
         queryKey: ['analytics', 'mini', params.id, season.toNumber()],
         queryFn: async () => {
@@ -53,16 +56,17 @@ const MiniCharts: FC<{}> = () => {
           );
           const output = allSeasonData.map((seasonData) => {
             const time = Number(seasonData[params.timeScaleKey]);
-            const data = dataFormatter
-              ? dataFormatter?.(seasonData)
-              : seasonData;
-            const _value = valueFormatter(data[priceKey]);
-            let value;
-            if (typeof _value === 'function') {
-              value = _value(season.lte(RESEED_SEASON - 2) ? 'l1' : 'l2');
-            } else {
-              value = _value;
-            }
+            const data = dataFormatter ? dataFormatter?.(seasonData) : seasonData;
+            
+            const value = mayFunctionToValue<number>(
+              valueFormatter(data[priceKey]),
+              seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
+            );
+
+            const invalidTime = !exists(time) || timestamps.has(time) || time <= 0;
+            if (invalidTime || !exists(value)) return undefined;
+
+            timestamps.add(time);
 
             return {
               time,
@@ -72,7 +76,7 @@ const MiniCharts: FC<{}> = () => {
               },
             } as QueryData;
           });
-          return [output.filter(Boolean)];
+          return [output.filter(Boolean)] as QueryData[][];
         },
         enabled: season.gt(0),
         staleTime: Infinity,

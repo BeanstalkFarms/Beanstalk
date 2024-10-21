@@ -9,7 +9,6 @@ import { NEW_BN } from '~/constants';
 import { FC } from '~/types';
 import { useBeanstalkTokens } from '~/hooks/beanstalk/useTokens';
 import BigNumber from 'bignumber.js';
-import useSdk from '~/hooks/sdk';
 import { displayFullBN } from '~/util';
 import Stat from '~/components/Common/Stat';
 
@@ -18,31 +17,13 @@ import Stat from '~/components/Common/Stat';
 }
 
 const LiquidityByState: FC<CardProps> = ({ sx }) => {
-  const sdk = useSdk();
   const totalBeanSupply = useAppSelector((s) => s._bean.token.supply);
   const beanstalkField = useAppSelector((s) => s._beanstalk.field);
   const beanstalkSilo = useAppSelector((s) => s._beanstalk.silo);
   const beanstalkBarn = useAppSelector((s) => s._beanstalk.barn);
 
-  React.useEffect(() => {
-    console.log({
-      totalBeanSupply: totalBeanSupply.toNumber(),
-      beanstalkField: beanstalkField.podLine.toNumber(),
-      beanstalkSilo: beanstalkSilo.stalk.total.toNumber(),
-      beanstalkBarn: beanstalkBarn.unfertilized.toNumber(),
-    });
-  }, [totalBeanSupply, beanstalkField, beanstalkSilo, beanstalkBarn]);
-
-  React.useEffect(() => {
-    console.log(sdk);
-  }, [sdk]);
-
   const { STALK, SPROUTS, PODS } = useBeanstalkTokens();
   const breakdown = useBeanstalkSiloBreakdown();
-
-  React.useEffect(() => {
-    console.log(breakdown);
-  }, [breakdown]);
 
   /// Total Balances
   const STAT_ITEMS: StatItem[] = [
