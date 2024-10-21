@@ -100,7 +100,7 @@ contract BeanstalkDeployer is Utils {
             initialDeployFacetAddresses,
             cutActions
         );
-        d = deployDiamondAtAddress(deployer, BEANSTALK);
+        d = deployDiamondAtAddress(deployer, diamondAddr);
 
         // if mocking, set the diamond address to
         // the canonical beanstalk address.
