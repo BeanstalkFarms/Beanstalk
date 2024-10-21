@@ -8,7 +8,6 @@ pragma solidity ^0.8.20;
  *         Only contains address constants that diverge from actual Beanstalk.
  */
 library LibAltC {
-
     address constant BEANSTALK = 0x00F84c1cF4Ca7fa8A8b0Dc923DA91ACA148B865C;
     address internal constant BEAN = 0x006DD9acC7cDf83128C4aDF46847c301f94406ab;
 
@@ -20,5 +19,4 @@ library LibAltC {
 
     // address constant PRICE_DEPLOYER = ;
     // address constant PRICE = ;
-
 }
