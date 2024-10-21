@@ -346,7 +346,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         const dataIndex = mode === 'last' ? selectedData.length - 1 : 0; 
         _time = Math.max(_time, selectedData[dataIndex]?.time.valueOf() as number);
         _season = Math.max(_season, selectedData[dataIndex]?.customValues?.season);
-        _value.push(selectedData[dataIndex].value);
+        _value.push(selectedData[dataIndex]?.value);
       });
 
       return {

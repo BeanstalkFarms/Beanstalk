@@ -365,49 +365,77 @@ export const subgraphQueryConfigs = {
     document: SeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.beanstalkRRoR,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, { 
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
     queryKey: subgraphQueryKeys.beanstalkMaxTemperature,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, {
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkUnharvestablePods: {
     document: SeasonalPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkUnharvestablePods,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, { 
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkPodRate: {
     document: SeasonalPodRateDocument,
     queryKey: subgraphQueryKeys.beanstalkPodRate,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, { 
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkSownBeans: {
     document: SeasonalSownDocument,
     queryKey: subgraphQueryKeys.beanstalkSownBeans,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, {
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkHarvestedPods: {
     document: SeasonalHarvestedPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkHarvestedPods,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, {
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption,
   },
   beanstalkTotalSowers: {
     document: SeasonalTotalSowersDocument,
     queryKey: subgraphQueryKeys.beanstalkTotalSowers,
     queryOptions: (
-      (chain) => makeOptions(chain)
+      (chain) => makeOptions(chain, {
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
     ) satisfies DynamicSGQueryOption, 
   }
 };
@@ -526,7 +554,7 @@ export async function fetchAllSeasonData(
   const apolloRequests = options
     .map((opts) => ({
       id: getRequstIdWithParams(opts, params, fetchAll),
-      request: () => apolloClient.query({ ...opts, fetchPolicy: 'no-cache' }),
+      request: () => apolloClient.query({ ...opts, fetchPolicy: 'network-only' }),
     }))
 
   if (apolloRequests.length > 0) {

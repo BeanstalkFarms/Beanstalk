@@ -2,14 +2,13 @@ import React from 'react';
 
 import { Card, Tabs, Tab } from '@mui/material';
 import useTabs from '~/hooks/display/useTabs';
+import { FC } from '~/types';
 import HarvestedPods from './HarvestedPods';
 import PodRate from './PodRate';
 import Pods from './Pods';
 import Temperature from './Temperature';
 import Sown from './Sown';
-import TotalSowers from './TotalSowers';
 import RRoR from './RRoR';
-import { FC } from '~/types';
 
 const SLUGS = [
   'rror',
@@ -44,7 +43,7 @@ const FieldAnalytics: FC<{}> = () => {
       {tab === 3 && <PodRate height={300} />}
       {tab === 4 && <Sown height={300} />}
       {tab === 5 && <HarvestedPods height={300} />}
-      {tab === 6 && <TotalSowers height={300} />}
+
     </Card>
   );
 };

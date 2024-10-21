@@ -14,6 +14,7 @@ import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 import { AppState } from '~/state';
 
 import { FC } from '~/types';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const getValue = (snapshot: SnapshotData<SeasonalTemperatureQuery>) =>
   snapshot.temperature;
@@ -47,6 +48,7 @@ const Temperature: FC<{
       StatProps={statProps}
       LineChartProps={lineChartProps}
       statsRowFullWidth={statsRowFullWidth}
+      name={subgraphQueryKeys.beanstalkMaxTemperature}
     />
   );
 };

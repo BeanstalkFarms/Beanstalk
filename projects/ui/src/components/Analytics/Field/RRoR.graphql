@@ -1,7 +1,7 @@
-query SeasonalRRoR($season_lte: Int, $first: Int) {
+query SeasonalRRoR($season_lte: Int, $first: Int, $field: String) {
   seasons: fieldHourlySnapshots(
     where: {
-      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
+      field: $field,
       season_lte: $season_lte
     }
     first: $first
