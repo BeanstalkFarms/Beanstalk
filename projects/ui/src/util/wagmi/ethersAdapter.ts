@@ -8,7 +8,7 @@ const SHOW_DEV = import.meta.env.VITE_SHOW_DEV_CHAINS;
 
 const fallbackChain = {
   chainId: SHOW_DEV ? ChainId.LOCALHOST : ChainId.ARBITRUM_MAINNET,
-  name: SHOW_DEV ? 'locahost:8545' : 'arbitrum',
+  name: SHOW_DEV ? 'locahost:8545' : 'Arbitrum One',
 } as const;
 
 export function clientToProvider(client: Client<Transport, Chain>) {

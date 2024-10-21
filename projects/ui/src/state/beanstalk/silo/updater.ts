@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { tokenIshEqual, transform } from '~/util';
+import { tokenIshEqual, transform, getTokenIndex } from '~/util';
 import useSdk from '~/hooks/sdk';
-import { Token } from '@beanstalk/sdk';
-import { ContractFunctionParameters } from 'viem';
-import { multicall } from '@wagmi/core';
-import { config } from '~/util/wagmi/config';
+import {
+  BeanstalkSDK,
+  Token,
+  Clipboard,
+  AdvancedPipeStruct,
+} from '@beanstalk/sdk';
 import BNJS from 'bignumber.js';
 import {
-  ABISnippets,
   BEAN_TO_SEEDS,
   BEAN_TO_STALK,
   ONE_BN,
@@ -20,12 +21,6 @@ import { ethers } from 'ethers';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { resetBeanstalkSilo, updateBeanstalkSilo } from './actions';
 import { BeanstalkSiloBalance } from '.';
-
-// limit to maximum of 20 calls per multicall. (5 * 4 = 20)
-const MAX_BUCKETS = 5;
-
-// 4 queries per token
-const QUERIES_PER_TK = 4;
 
 export const useFetchBeanstalkSilo = () => {
   const dispatch = useDispatch();
@@ -39,33 +34,24 @@ export const useFetchBeanstalkSilo = () => {
       if (!beanstalk) return;
 
       const BEAN = sdk.tokens.BEAN;
-      const STALK = sdk.tokens.STALK;
 
       const wl = await sdk.contracts.beanstalk.getWhitelistedTokens();
       const whitelist = wl
         .map((t) => sdk.tokens.findByAddress(t))
         .filter(Boolean) as Token[];
 
-      const wlContractCalls = buildWhitelistMultiCall(beanstalk, whitelist);
-      const siloCalls = buildBeanstalkSiloMultiCall(beanstalk.address);
-
-      const [stemTips, siloResults, wlResults] = await Promise.all([
+      const [stemTips, siloResults, wlResults, bdvs] = await Promise.all([
         sdk.silo.getStemTips(),
-        multicall(config, { contracts: siloCalls }),
-        Promise.all(
-          wlContractCalls.map((calls) =>
-            multicall(config, { contracts: calls })
-          )
-        ),
+        getSiloResults(sdk),
+        getWhitelistResults(sdk, whitelist),
+        getBDVs(sdk, whitelist),
       ]);
 
-      const parsedSiloData = siloResults.map((r) => parseCallResult(r));
-      const stalkTotal = transform(parsedSiloData[0], 'bnjs', STALK);
-      const rootsTotal = transform(parsedSiloData[1], 'bnjs');
-      const earnedBeansTotal = transform(parsedSiloData[2], 'bnjs', BEAN);
+      const stalkTotal = siloResults.totalStalk;
+      const rootsTotal = siloResults.totalRoots;
+      const earnedBeansTotal = siloResults.totalEarnedBeans;
       const bdvTotal = ZERO_BN;
 
-      const chunked = chunkArray(wlResults.flat(), QUERIES_PER_TK);
       const whitelistedAssetTotals: ({
         address: string;
         deposited: BNJS;
@@ -75,9 +61,8 @@ export const useFetchBeanstalkSilo = () => {
         stemTip: ethers.BigNumber;
       } | null)[] = [];
 
-      chunked.forEach((chunk, i) => {
+      Object.values(wlResults).forEach((datas, i) => {
         const token = whitelist[i];
-        const data = chunk.map((d) => parseCallResult(d));
 
         const stemTip = stemTips.get(token.address);
         if (!stemTip) {
@@ -86,12 +71,10 @@ export const useFetchBeanstalkSilo = () => {
 
         whitelistedAssetTotals.push({
           address: token.address,
-          deposited: transform(data[0], 'bnjs', token),
-          depositedBdv: tokenIshEqual(token, sdk.tokens.BEAN)
-            ? ONE_BN
-            : transform(data[1], 'bnjs', token),
-          totalGerminating: transform(data[2], 'bnjs', token),
-          bdvPerToken: transform(data[3], 'bnjs', BEAN),
+          deposited: datas.deposited,
+          depositedBdv: datas.depositedBdv,
+          totalGerminating: datas.germinating,
+          bdvPerToken: bdvs[i],
           stemTip: stemTips.get(token.address) || ethers.BigNumber.from(0),
         });
       });
@@ -107,7 +90,7 @@ export const useFetchBeanstalkSilo = () => {
       // because 1 bean = 1 stalk, 2 seeds
       const activeStalkTotal = stalkTotal;
       const earnedStalkTotal = earnedBeansTotal.times(BEAN_TO_STALK);
-      const earnedSeedTotal = earnedBeansTotal.times(BEAN_TO_SEEDS);
+      const earnedSeedTotal = earnedBeansTotal.times(BEAN_TO_SEEDS); // FIX ME
 
       /// Aggregate balances
       const balances = whitelistedAssetTotals.reduce((agg, curr) => {
@@ -195,96 +178,129 @@ const BeanstalkSiloUpdater = () => {
 
 export default BeanstalkSiloUpdater;
 
-// -- Helper Types
+async function getSiloResults(sdk: BeanstalkSDK) {
+  const beanstalk = sdk.contracts.beanstalk;
+  const iBeanstalk = beanstalk.interface;
 
-type CallParams = ContractFunctionParameters<typeof ABISnippets.siloGetters>;
-
-type CallResult = Awaited<
-  ReturnType<typeof multicall<typeof config, CallParams[]>>
->[number];
-
-// -- Helpers
-
-function parseCallResult(
-  result: CallResult,
-  defaultValue: bigint = -1n
-): bigint {
-  if (result.error) return defaultValue;
-  return result.result;
-}
-
-function buildWhitelistMultiCall(
-  beanstalk: ReturnType<typeof useSdk>['contracts']['beanstalk'],
-  // ensure silo whitelist is order is consistent w/ the multiCall results
-  whitelist: Token[]
-): CallParams[][] {
-  const beanstalkAddress = beanstalk.address as `0x{string}`;
-  const contractCalls: CallParams[][] = [];
-
-  const shared = {
-    address: beanstalkAddress,
-    abi: ABISnippets.siloGetters,
+  const common = {
+    target: beanstalk.address,
+    clipboard: Clipboard.encode([]),
   };
 
-  let callBucket: CallParams[] = [];
-  whitelist.forEach((token, i) => {
-    const tokenAddress = token.address as `0x{string}`;
-    const calls: CallParams[] = [
-      {
-        ...shared,
-        functionName: 'getTotalDeposited',
-        args: [tokenAddress],
-      },
-      {
-        ...shared,
-        functionName: 'getTotalDepositedBdv',
-        args: [tokenAddress],
-      },
-      {
-        ...shared,
-        functionName: 'getGerminatingTotalDeposited',
-        args: [tokenAddress],
-      },
-      {
-        ...shared,
-        functionName: 'bdv',
-        args: [tokenAddress, BigInt(token.fromHuman(1).blockchainString)],
-      },
-    ];
-    callBucket.push(...calls);
+  const fnNames = ['totalStalk', 'totalRoots', 'totalEarnedBeans'] as const;
 
-    if (i % MAX_BUCKETS === MAX_BUCKETS - 1) {
-      contractCalls.push(callBucket);
-      callBucket = [];
-    }
-  });
+  const calls: AdvancedPipeStruct[] = fnNames.map((fnName) => ({
+    ...common,
+    callData: iBeanstalk.encodeFunctionData(fnName as any),
+  }));
 
-  if (callBucket.length) contractCalls.push(callBucket);
+  const result = await beanstalk.callStatic.advancedPipe(calls, '0');
 
-  return contractCalls;
+  const _totalStalk = iBeanstalk.decodeFunctionResult(
+    'totalStalk',
+    result[0]
+  )[0];
+  const _totalRoots = iBeanstalk.decodeFunctionResult(
+    'totalRoots',
+    result[1]
+  )[0];
+  const _totalEarnedBeans = iBeanstalk.decodeFunctionResult(
+    'totalEarnedBeans',
+    result[2]
+  )[0];
+
+  return {
+    calls,
+    totalStalk: transform(_totalStalk, 'bnjs', sdk.tokens.STALK),
+    totalRoots: transform(_totalRoots, 'bnjs'),
+    totalEarnedBeans: transform(_totalEarnedBeans, 'bnjs', sdk.tokens.BEAN),
+  };
 }
 
-function buildBeanstalkSiloMultiCall(beanstalkAddress: string): CallParams[] {
-  const shared = {
-    address: beanstalkAddress as `0x{string}`,
-    abi: ABISnippets.siloGetters,
+interface WhitelistPipeResult {
+  deposited: BNJS;
+  depositedBdv: BNJS;
+  germinating: BNJS;
+}
+
+async function getWhitelistResults(sdk: BeanstalkSDK, whitelist: Token[]) {
+  const beanstalk = sdk.contracts.beanstalk;
+  const iBeanstalk = beanstalk.interface;
+
+  const common = {
+    target: beanstalk.address,
+    clipboard: Clipboard.encode([]),
   };
 
-  return [
-    {
-      ...shared,
-      functionName: 'totalStalk',
-      args: [],
-    },
-    {
-      ...shared,
-      functionName: 'totalRoots',
-      args: [],
-    },
-    {
-      ...shared,
-      functionName: 'totalEarnedBeans',
-      args: [],
-    },
-  ];
+  const allCalls: AdvancedPipeStruct[] = whitelist
+    .map((token) => {
+      const tokenAddress = token.address;
+      const calls = [
+        iBeanstalk.encodeFunctionData('getTotalDeposited', [tokenAddress]),
+        iBeanstalk.encodeFunctionData('getTotalDepositedBdv', [tokenAddress]),
+        iBeanstalk.encodeFunctionData('getGerminatingTotalDeposited', [
+          tokenAddress,
+        ]),
+      ];
+
+      return calls.map((c) => ({
+        ...common,
+        callData: c,
+      }));
+    })
+    .flat();
+
+  const results = await beanstalk.callStatic.advancedPipe(allCalls, '0');
+
+  const chunkedByToken = chunkArray(results, 3);
+
+  return whitelist.reduce<TokenMap<WhitelistPipeResult>>((prev, token, i) => {
+    const tokenChunk = chunkedByToken[i];
+
+    const deposited = iBeanstalk.decodeFunctionResult(
+      'getTotalDeposited',
+      tokenChunk[0]
+    )[0];
+    const depositedBdv = iBeanstalk.decodeFunctionResult(
+      'getTotalDepositedBdv',
+      tokenChunk[1]
+    )[0];
+    const germinating = iBeanstalk.decodeFunctionResult(
+      'getGerminatingTotalDeposited',
+      tokenChunk[2]
+    )[0];
+
+    prev[getTokenIndex(token)] = {
+      deposited: transform(deposited, 'bnjs', token),
+      depositedBdv: transform(depositedBdv, 'bnjs', sdk.tokens.BEAN),
+      germinating: transform(germinating, 'bnjs', token),
+    };
+
+    return prev;
+  }, {});
+}
+
+async function getBDVs(sdk: BeanstalkSDK, whitelist: Token[]) {
+  const beanstalk = sdk.contracts.beanstalk;
+
+  return Promise.all(
+    whitelist.map((token) =>
+      beanstalk
+        .bdv(token.address, token.fromHuman(1).blockchainString)
+        .then((r) => {
+          if (tokenIshEqual(token, sdk.tokens.BEAN)) {
+            return ONE_BN;
+          }
+          return transform(r, 'bnjs', sdk.tokens.BEAN) as BNJS;
+        })
+        .catch((e) => {
+          console.debug(
+            '[beanstalk/silo/updater] bdv failed for token',
+            token.address,
+            e
+          );
+          return ZERO_BN;
+        })
+    )
+  );
 }
