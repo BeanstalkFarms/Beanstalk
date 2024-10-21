@@ -284,7 +284,7 @@ const SettingsDialog: FC<{ open: boolean; onClose?: () => void }> = ({
                       color="primary"
                     />
                     <Typography>
-                      <Tooltip title="View on Etherscan">
+                      <Tooltip title={`View on ${CHAIN_INFO[chainId].explorerName}`}>
                         <Link
                           underline="hover"
                           color="text.primary"

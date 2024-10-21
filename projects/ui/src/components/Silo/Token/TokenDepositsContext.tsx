@@ -9,14 +9,16 @@ import React, {
   SyntheticEvent,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 import useTabs from '~/hooks/display/useTabs';
 import useFarmerSiloBalanceSdk from '~/hooks/farmer/useFarmerSiloBalanceSdk';
+import useAccount from '~/hooks/ledger/useAccount';
 import { exists } from '~/util/UI';
 
-export type TokenDepositsSelectType = 'single' | 'multi';
+export type TokenDepositsSelectType = 'single' | 'multi' | 'none';
 
 export type SiloTokenSlug = 'token' | 'transfer' | 'lambda' | 'anti-lambda';
 
@@ -71,6 +73,7 @@ export const TokenDepositsProvider = (props: {
   children: React.ReactNode;
   token: ERC20Token;
 }) => {
+  const account = useAccount();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [slugIndex, setSlugIndex] = useTabs(SLUGS, 'content', 0);
 
@@ -129,6 +132,12 @@ export const TokenDepositsProvider = (props: {
     },
     [setSlugIndex]
   );
+
+  useEffect(() => {
+    if (account) {
+      clear();
+    }
+  }, [account, clear]);
 
   return (
     <TokenDepositsContext.Provider
