@@ -35,6 +35,7 @@ const MarketCap: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
       formatValue={formatValue}
       StatProps={statProps}
       LineChartProps={lineChartProps}
+      name="seasonalMarketCap"
     />
   );
 };

@@ -59,4 +59,5 @@ export * from './links';
 export * from './values';
 export * from './rpc';
 export * from './tooltips';
+export * from './seasons';
 export { BEANSTALK_ABI_SNIPPETS as ABISnippets };

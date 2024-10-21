@@ -12,6 +12,7 @@ query FarmerSiloAssetSnapshots(
           deltaDepositedAmount #hourly Deposited Amount
           depositedBDV # total Deposited BDV
           createdAt
+          depositedAmount
         }
       }
     }

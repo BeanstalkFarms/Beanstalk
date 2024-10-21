@@ -2,18 +2,15 @@ import { useCallback, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { useDispatch } from 'react-redux';
 import throttle from 'lodash/throttle';
-import { multicall } from '@wagmi/core';
 
-import { displayBeanPrice, tokenResult } from '~/util';
+import { displayBeanPrice, getTokenIndex, tokenResult } from '~/util';
 import useSdk from '~/hooks/sdk';
-import { ContractFunctionParameters, erc20Abi } from 'viem';
-import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
-import { config } from '~/util/wagmi/config';
-import { ERC20Token, Pool } from '@beanstalk/sdk';
+import { AdvancedPipeStruct, BeanstalkSDK, Clipboard, Pool } from '@beanstalk/sdk';
 import { chunkArray } from '~/util/UI';
 import { getExtractMulticallResult } from '~/util/Multicall';
 import { transform } from '~/util/BigNumber';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
+import { TokenMap } from '~/constants';
 import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
 
@@ -36,54 +33,23 @@ export const useFetchPools = () => {
         const poolsArr = [...whitelistedPools.values()];
         const BEAN = sdk.tokens.BEAN;
 
-        const priceAndBeanCalls = [
-          makeTokenTotalSupplyMulticall(BEAN),
-          makeTotalDeltaBMulticall(beanstalk.address),
-        ];
-        const lpMulticall = makeLPMulticall(beanstalk.address, poolsArr);
+        
 
-        const [priceResult, poolsResult, _lpResults] = await Promise.all([
+        const [priceResult, beanTotalSupply, totalDeltaB, lpResults] = await Promise.all([
           beanstalkPrice.price(),
-          multicall(config, {
-            contracts: priceAndBeanCalls,
-            allowFailure: true,
-          }),
-          // fetch [poolDeltaB, totalSupply] for each pool, in chunks of 20
-          Promise.all(
-            lpMulticall.calls.map((lpCall) =>
-              multicall(config, {
-                contracts: lpCall,
-                allowFailure: true,
-              })
-            )
-          ).then((result) => chunkArray(result.flat(), lpMulticall.chunkSize)),
+          BEAN.getContract().totalSupply().then(tokenResult(BEAN)),
+          beanstalk.totalDeltaB().then(tokenResult(BEAN)),
+          fetchPoolsData(sdk, poolsArr)
         ]);
 
-        console.debug(`${pageContext} MULTICALL RESULTS: `, {
-          lpMulticall,
+        console.debug(`${pageContext} FETCH: `, {
           priceResult,
-          priceAndBeanCalls,
-          _lpResults,
-          poolsResult,
+          lpResults,
+          beanTotalSupply,
+          totalDeltaB,
         });
 
-        const [beanTotalSupply, totalDeltaB] = [
-          extract(poolsResult[0], 'bean.totalSupply'),
-          extract(poolsResult[1], 'totalDeltaB'),
-        ];
-
-        const lpResults = _lpResults.reduce<Record<string, LPResultType>>(
-          (prev, [_deltaB, _supply], i) => {
-            const lp = poolsArr[i].lpToken;
-
-            prev[lp.address.toLowerCase()] = {
-              deltaB: extract(_deltaB, `${lp.symbol} poolDeltaB`),
-              supply: extract(_supply, `${lp.symbol} totalSupply`),
-            };
-            return prev;
-          },
-          {}
-        );
+        
         if (priceResult) {
           const price = tokenResult(BEAN)(priceResult.price.toString());
 
@@ -91,9 +57,9 @@ export const useFetchPools = () => {
             (acc, poolData) => {
               const address = poolData.pool.toLowerCase();
               const pool = sdk.pools.getPoolByLPToken(address);
-              const lpResult = lpResults[address];
-
+              
               if (pool) {
+                const lpResult = lpResults[getTokenIndex(pool.lpToken)];
                 const payload: UpdatePoolPayload = {
                   address: address,
                   pool: {
@@ -102,10 +68,8 @@ export const useFetchPools = () => {
                       transform(poolData.balances[0], 'bnjs', pool.tokens[0]),
                       transform(poolData.balances[1], 'bnjs', pool.tokens[1]),
                     ],
-                    deltaB: transform(poolData.deltaB, 'bnjs', BEAN),
-                    supply: lpResult.supply
-                      ? transform(lpResult.supply, 'bnjs', pool.lpToken)
-                      : new BigNumber(0),
+                    deltaB: lpResult.deltaB,
+                    supply: lpResult.totalSupply,
                     // Liquidity: always denominated in USD for the price contract
                     liquidity: transform(poolData.liquidity, 'bnjs', BEAN),
                     // USD value of 1 LP token == liquidity / supply
@@ -137,7 +101,7 @@ export const useFetchPools = () => {
         }
 
         if (beanTotalSupply) {
-          dispatch(updateSupply(transform(beanTotalSupply, 'bnjs', BEAN)));
+          dispatch(updateSupply(beanTotalSupply));
         }
 
         if (totalDeltaB) {
@@ -148,7 +112,7 @@ export const useFetchPools = () => {
       console.debug(`${pageContext} FAILED`, e);
       console.error(e);
     }
-  }, [sdk.contracts, sdk.pools, sdk.tokens.BEAN, dispatch]);
+  }, [sdk, dispatch]);
 
   const clear = useCallback(() => {
     dispatch(resetPools());
@@ -182,76 +146,46 @@ const PoolsUpdater = () => {
 
 export default PoolsUpdater;
 
-// ------------------------------------------
-// Types
+async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
+  const { beanstalk } = sdk.contracts;
 
-type LPResultType = {
-  deltaB: bigint | null;
-  supply: bigint | null;
-};
-
-// ------------------------------------------
-// Helpers
-
-function makeTokenTotalSupplyMulticall(
-  token: ERC20Token
-): ContractFunctionParameters<typeof erc20Abi> {
-  return {
-    address: token.address as `0x${string}`,
-    abi: erc20Abi,
-    functionName: 'totalSupply',
-    args: [],
-  };
-}
-
-function makeTotalDeltaBMulticall(
-  beanstalkAddress: string
-): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.totalDeltaB> {
-  return {
-    address: beanstalkAddress as `0x${string}`,
-    abi: BEANSTALK_ABI_SNIPPETS.totalDeltaB,
-    functionName: 'totalDeltaB',
-    args: [],
-  };
-}
-
-function makePriceMulticall(
-  address: string
-): ContractFunctionParameters<typeof BEANSTALK_ABI_SNIPPETS.price> {
-  return {
-    address: address as `0x${string}`,
-    abi: BEANSTALK_ABI_SNIPPETS.price,
-    functionName: 'price',
-    args: [],
-  };
-}
-
-function makeLPMulticall(
-  beanstalkAddress: string,
-  pools: Pool[]
-): {
-  calls: ContractFunctionParameters[][];
-  chunkSize: number;
-} {
-  const calls: ContractFunctionParameters[] = [];
-
-  pools.forEach((pool) => {
-    const address = pool.address as `0x${string}`;
-    const deltaBCall: ContractFunctionParameters<
-      typeof BEANSTALK_ABI_SNIPPETS.poolDeltaB
-    > = {
-      address: beanstalkAddress as `0x${string}`,
-      abi: BEANSTALK_ABI_SNIPPETS.poolDeltaB,
-      functionName: 'poolDeltaB',
-      args: [address],
+  const calls: AdvancedPipeStruct[] = pools.map((pool) => {
+    const deltaBCall = {
+      target: beanstalk.address,
+      callData: beanstalk.interface.encodeFunctionData('poolDeltaB', [pool.address]),
+      clipboard: Clipboard.encode([])
     };
-    const totalSupplyCall = makeTokenTotalSupplyMulticall(pool.lpToken);
+    const supplyCall = {
+      target: pool.lpToken.address,
+      callData: pool.lpToken.getContract().interface.encodeFunctionData('totalSupply'),
+      clipboard: Clipboard.encode([])
+    };
 
-    calls.push(deltaBCall, totalSupplyCall);
-  });
+    return [deltaBCall, supplyCall];
+  }).flat();
 
-  return {
-    calls: chunkArray(calls, 20),
-    chunkSize: 2,
-  };
+  const result = await sdk.contracts.beanstalk.callStatic.advancedPipe(calls, '0');
+  const chunkedByPool = chunkArray(result, 2);
+  
+  const datas = pools.reduce<TokenMap<{
+    totalSupply: BigNumber;
+    deltaB: BigNumber;
+  }>>((prev, curr, i) => {
+    const [deltaBResult, totalSupplyResult] = chunkedByPool[i];
+
+    const deltaB = beanstalk.interface.decodeFunctionResult('poolDeltaB', deltaBResult)[0];
+    const totalSupply = curr.lpToken.getContract().interface.decodeFunctionResult(
+      'totalSupply', 
+      totalSupplyResult
+    )[0];
+
+    prev[getTokenIndex(curr)] = {
+      totalSupply: transform(totalSupply, 'bnjs', curr.lpToken),
+      deltaB: transform(deltaB, 'bnjs', sdk.tokens.BEAN),
+    }
+    return prev;
+  }, {})
+
+  return datas;
+
 }

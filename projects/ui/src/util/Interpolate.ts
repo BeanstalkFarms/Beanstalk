@@ -7,16 +7,13 @@ import {
   SeasonalInstantPriceQuery,
   WhitelistTokenRewardsQuery,
 } from '~/generated/graphql';
-import {
-  // bnToTokenValue,
-  secondsToDate,
-  toTokenUnitsBN,
-  // tokenValueToBN,
-} from '~/util';
+import { secondsToDate, toTokenUnitsBN } from '~/util';
 import { BaseDataPoint } from '~/components/Common/Charts/ChartPropProvider';
 import { FarmerSiloTokenBalance } from '~/state/farmer/silo';
-import { Token } from '@beanstalk/sdk';
-import { useWhitelistedTokens } from '~/hooks/beanstalk/useTokens';
+import {
+  TokenInstance,
+  useGetChainAgnosticLegacyToken,
+} from '~/hooks/beanstalk/useTokens';
 
 export type Snapshot = {
   id: string;
@@ -41,7 +38,7 @@ export type SnapshotBeanstalk = {
 export const addBufferSeasons = (
   points: BaseDataPoint[],
   num: number = 24,
-  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist'],
+  whitelist: TokenInstance[],
   itemizeByToken: boolean = false
 ) => {
   if (points.length === 0) return [];
@@ -82,7 +79,8 @@ export const interpolateFarmerStalk = (
   season: BigNumber,
   bufferSeasons: number = 24,
   farmerSiloBalances: TokenMap<FarmerSiloTokenBalance>,
-  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist']
+  whitelist: TokenInstance[],
+  getChainAgnosticToken: ReturnType<typeof useGetChainAgnosticLegacyToken>
 ) => {
   // Sequence
   let j = 0;
@@ -106,11 +104,14 @@ export const interpolateFarmerStalk = (
     whitelist.forEach((token) => {
       if (farmerSiloBalances[token.address]) {
         const deposits = farmerSiloBalances[token.address].deposited;
-        const index = whitelistSnapshots.findLastIndex(
-          (snapshot) =>
+        const index = whitelistSnapshots.findLastIndex((snapshot) => {
+          const resultToken = getChainAgnosticToken(snapshot.token.id).address;
+          const currToken = getChainAgnosticToken(token.address).address;
+          return (
             snapshot.season <= _season &&
-            snapshot.token.id === token.address.toLowerCase()
-        );
+            resultToken.toLowerCase() === currToken.toLowerCase()
+          );
+        });
         if (index >= 0) {
           const seedsPerBdv = BigNumber(
             whitelistSnapshots[index].stalkEarnedPerSeason
@@ -189,8 +190,8 @@ export const interpolateFarmerDepositedValue = (
   _prices: SeasonalInstantPriceQuery['seasons'], // most recent season first
   itemizeByToken: boolean = true,
   bufferSeasons: number = 24,
-  whitelist: ReturnType<typeof useWhitelistedTokens>['whitelist'],
-  normaliseChainToken: (token: string) => Token | undefined
+  whitelist: TokenInstance[],
+  normaliseChainToken: (token: string) => TokenInstance
 ) => {
   const prices = Array.from(_prices).reverse(); // FIXME: inefficient
   if (!prices.length || !snapshots.length) return [];

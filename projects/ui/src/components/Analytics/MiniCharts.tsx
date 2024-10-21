@@ -1,9 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { FC } from '~/types';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Box, Card, CircularProgress } from '@mui/material';
-import { apolloClient } from '~/graph/client';
 import { Time } from 'lightweight-charts';
+import { useQueries } from '@tanstack/react-query';
+import { fetchAllSeasonData } from '~/util/Graph';
+import { RESEED_SEASON } from '~/constants';
+import { exists, mayFunctionToValue } from '~/util';
 import ChartV2 from './ChartV2';
 import { useChartSetupData } from './useChartSetupData';
 
@@ -15,18 +18,14 @@ type QueryData = {
   };
 };
 
+const chartsToUse = ['Bean Price', 'Market Cap', 'Supply', 'Total Liquidity'];
+
 const MiniCharts: FC<{}> = () => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
   const selectedCharts: number[] = useMemo(() => {
-    const chartsToUse = [
-      'Bean Price',
-      'Market Cap',
-      'Supply',
-      'Total Liquidity',
-    ];
-    const output: any[] = [];
+    const output: number[] = [];
     chartsToUse.forEach((chartName) => {
       const chartId = chartSetupData.findIndex(
         (setupData) => setupData.name === chartName
@@ -38,107 +37,52 @@ const MiniCharts: FC<{}> = () => {
     return output;
   }, [chartSetupData]);
 
-  const [queryData, setQueryData] = useState<QueryData[][]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<boolean>(false);
+  const queries = useQueries({
+    queries: selectedCharts.map((chartId) => {
+      const params = chartSetupData[chartId];
+      const dataFormatter = params.dataFormatter;
+      const valueFormatter = params.valueFormatter;
+      const priceKey = params.priceScaleKey;
 
-  useMemo(() => {
-    async function getSeasonData(getAllData?: boolean) {
-      const promises: any[] = [];
-      const output: any[] = [];
-      const timestamps = new Map();
+      const timestamps = new Set<number>();
 
-      const maxRetries = 8;
-      for (let retries = 0; retries < maxRetries; retries += 1) {
-        console.debug('[MiniChart] Fetching data...');
-        try {
-          for (let i = 0; i < selectedCharts.length; i += 1) {
-            const chartId = selectedCharts[i];
-            const queryConfig = chartSetupData[chartId].queryConfig;
-            const document = chartSetupData[chartId].document;
-            const entity = chartSetupData[chartId].documentEntity;
+      return {
+        queryKey: ['analytics', 'mini', params.id, season.toNumber()],
+        queryFn: async () => {
+          const allSeasonData = await fetchAllSeasonData(
+            params,
+            season.toNumber(),
+            false
+          );
+          const output = allSeasonData.map((seasonData) => {
+            const time = Number(seasonData[params.timeScaleKey]);
+            const data = dataFormatter ? dataFormatter?.(seasonData) : seasonData;
+            
+            const value = mayFunctionToValue<number>(
+              valueFormatter(data[priceKey]),
+              seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
+            );
 
-            const currentSeason = season.toNumber();
+            const invalidTime = !exists(time) || timestamps.has(time) || time <= 0;
+            if (invalidTime || !exists(value)) return undefined;
 
-            const iterations = getAllData
-              ? Math.ceil(currentSeason / 1000) + 1
-              : 1;
-            for (let j = 0; j < iterations; j += 1) {
-              const startSeason = getAllData
-                ? currentSeason - j * 1000
-                : 999999999;
-              if (startSeason <= 0) continue;
-              promises.push(
-                apolloClient
-                  .query({
-                    ...queryConfig,
-                    query: document,
-                    variables: {
-                      ...queryConfig?.variables,
-                      first: 1000,
-                      season_lte: startSeason,
-                    },
-                    notifyOnNetworkStatusChange: true,
-                    fetchPolicy: 'cache-first',
-                  })
-                  .then((r) => {
-                    r.data[entity].forEach((seasonData: any) => {
-                      if (seasonData?.season) {
-                        if (!output[chartId]?.length) {
-                          output[chartId] = [];
-                        }
-                        if (!timestamps.has(seasonData.season)) {
-                          timestamps.set(
-                            seasonData.season,
-                            Number(
-                              seasonData[chartSetupData[chartId].timeScaleKey]
-                            )
-                          );
-                        }
-                        const fmt = chartSetupData[chartId]?.dataFormatter;
-                        const _seasonData = fmt?.(seasonData) || seasonData;
-                        const formattedTime = timestamps.get(
-                          _seasonData.season
-                        );
-                        const formattedValue = chartSetupData[
-                          chartId
-                        ].valueFormatter(
-                          _seasonData[chartSetupData[chartId].priceScaleKey]
-                        );
-                        output[chartId][_seasonData.season] = {
-                          time: formattedTime,
-                          value: formattedValue,
-                          customValues: {
-                            season: _seasonData.season,
-                          },
-                        };
-                      }
-                    });
-                  })
-              );
-            }
-          }
-          await Promise.all(promises);
-          output.forEach((dataSet, index) => {
-            output[index] = dataSet.filter(Boolean);
+            timestamps.add(time);
+
+            return {
+              time,
+              value,
+              customValues: {
+                season: data.season,
+              },
+            } as QueryData;
           });
-          setQueryData(output);
-          console.debug('[MiniChart] Fetched data successfully!');
-          break;
-        } catch (e) {
-          console.debug('[MiniChart] Failed to fetch data');
-          console.error(e);
-          if (retries === maxRetries - 1) {
-            setError(true);
-          }
-        }
-      }
-    }
-
-    setLoading(true);
-    getSeasonData();
-    setLoading(false);
-  }, [chartSetupData, selectedCharts, season]);
+          return [output.filter(Boolean)] as QueryData[][];
+        },
+        enabled: season.gt(0),
+        staleTime: Infinity,
+      };
+    }),
+  });
 
   return (
     <>
@@ -148,7 +92,7 @@ const MiniCharts: FC<{}> = () => {
             key={`selectedMiniChart${index}`}
             sx={{ width: '100%', height: '15vh', minHeight: 150 }}
           >
-            {loading ? (
+            {!queries?.[index].data?.length || queries[index]?.isLoading ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -159,7 +103,7 @@ const MiniCharts: FC<{}> = () => {
               >
                 <CircularProgress variant="indeterminate" />
               </Box>
-            ) : error ? (
+            ) : queries[index]?.error ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -172,7 +116,7 @@ const MiniCharts: FC<{}> = () => {
               </Box>
             ) : (
               <ChartV2
-                formattedData={queryData}
+                formattedData={queries[index].data ?? [[]]}
                 selected={[chart]}
                 size="mini"
               />

@@ -73,9 +73,16 @@ export function createBottleneck(options?: BottleneckOptions) {
   return limiter;
 }
 
+export interface FetchWithBottleneckLimiterOptions {
+  throws?: boolean;
+  partialData?: boolean;
+  errorMessage?: string;
+}
+
 export async function fetchWithBottleneckLimiter<T>(
   limiter: Bottleneck,
-  requests: Array<RequestWithId<T>>
+  requests: Array<RequestWithId<T>>,
+  options?: FetchWithBottleneckLimiterOptions
 ): Promise<T[]> {
   // Schedule all the requests at once, assigning the id
   const scheduledPromises = requests.map(({ id, request }) =>
@@ -86,7 +93,7 @@ export async function fetchWithBottleneckLimiter<T>(
         // Handle failure
         error.requestId = id;
         if (!isRateLimitError(error)) {
-          console.warn(`[Request ${id} failed]:`, error);
+          console.debug(`[Request ${id} failed]:`, error);
           // Instead of throwing, return an object indicating the error
           return { id, error };
         }
@@ -112,9 +119,18 @@ export async function fetchWithBottleneckLimiter<T>(
     }
   }
 
+  const throws = options?.throws ?? true;
+  const partialData = options?.partialData ?? false;
+
   if (errors.length > 0) {
     console.error('Some requests failed:', errors);
-    throw new Error('Swap requests failed:');
+    if (throws) {
+      throw new Error(options?.errorMessage ?? 'Requests failed');
+    }
+    if (partialData) {
+      return finalResults;
+    }
+    return [] as T[];
   }
 
   return finalResults;
@@ -149,7 +165,36 @@ export async function fetch0xWithLimiter<T>(requests: Array<RequestWithId<T>>) {
 
 function isRateLimitError(error: any) {
   if ('message' in error && typeof error.message === 'string') {
-    return error.message?.includes('Rate limit');
+    return error.message?.toLowerCase().includes('rate limit');
   }
   return false;
+}
+
+/**
+ *
+ * max 25 requests / 250ms
+ * 10ms between requests
+ */
+const apolloLimiter = new Bottleneck({
+  reservoir: 50,
+  reservoirRefreshAmount: 50,
+  reservoirRefreshInterval: 250,
+  maxConcurrent: 50,
+  minTime: 5,
+});
+
+apolloLimiter.on('failed', (error, info) => {
+  if (info.retryCount < 8) {
+    console.debug('[Apollo Limiter] retrying', info, error);
+    return 50;
+  }
+  console.debug('[Apollo Limiter] too many retries, giving up', info, error);
+  return null;
+});
+
+export async function fetchApolloWithLimiter<T>(
+  requests: Array<RequestWithId<T>>,
+  options?: FetchWithBottleneckLimiterOptions
+) {
+  return fetchWithBottleneckLimiter(apolloLimiter, requests, options);
 }

@@ -4,9 +4,13 @@ import { Box, Button, Card, CircularProgress, Drawer } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import useToggle from '~/hooks/display/useToggle';
-import { apolloClient } from '~/graph/client';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { Range, Time } from 'lightweight-charts';
+import { useQueries } from '@tanstack/react-query';
+import { fetchAllSeasonData } from '~/util/Graph';
+import { exists, mayFunctionToValue } from '~/util';
+import { RESEED_SEASON } from '~/constants';
+import useOnAnimationFrame from '~/hooks/display/useOnAnimationFrame';
 import ChartV2 from './ChartV2';
 import DropdownIcon from '../Common/DropdownIcon';
 import SelectDialog from './SelectDialog';
@@ -27,9 +31,11 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const season = useSeason();
   const chartSetupData = useChartSetupData();
 
+  // wait to mount before fetching data
+  const ready = useOnAnimationFrame();
+
   const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
   const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
-
   const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
   const storedSelectedCharts = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
 
@@ -37,120 +43,88 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const [selectedCharts, setSelectedCharts] = useState<number[]>(storedSelectedCharts || [0]);
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
-  const [queryData, setQueryData] = useState<QueryData[][]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<boolean>(false);
+  const queries = useQueries({
+    queries: selectedCharts.map((chartId) => {
+      const params = chartSetupData[chartId];
+      const queryKey = ['analytics', params.id, season.toNumber()];
+      return {
+        queryKey,
+        queryFn: async () => {
+          const dataFormatter = params.dataFormatter;
+          const valueFormatter = params.valueFormatter;
+          const priceKey = params.priceScaleKey;
+          const timestamps = new Set<number>();
 
-  useMemo(() => {
-    async function getSeasonData(getAllData?: boolean) {
-      const promises: any[] = [];
-      const output: any[] = [];
-      const timestamps = new Map();
-
-      const maxRetries = 8
-      for (let retries = 0; retries < maxRetries; retries += 1) {
-        console.debug('[AdvancedChart] Fetching data...');
-        try {
-          for (let i = 0; i < selectedCharts.length; i += 1) {
-            const chartId = selectedCharts[i];
-            const queryConfig = chartSetupData[chartId].queryConfig;
-            const document = chartSetupData[chartId].document;
-            const entity = chartSetupData[chartId].documentEntity;
-
-            const currentSeason = season.toNumber();
-
-            const iterations = getAllData ? Math.ceil(currentSeason / 1000) + 1 : 1;
-            for (let j = 0; j < iterations; j += 1) {
-              const startSeason = getAllData ? currentSeason - j * 1000 : 999999999;
-              if (startSeason <= 0) continue;
-              promises.push(
-                apolloClient
-                  .query({
-                    ...queryConfig,
-                    query: document,
-                    variables: {
-                      ...queryConfig?.variables,
-                      first: 1000,
-                      season_lte: startSeason,
-                    },
-                    notifyOnNetworkStatusChange: true,
-                    fetchPolicy: 'no-cache', // Hitting the network every time is MUCH faster than the cache
-                  })
-                  .then((r) => {
-                    r.data[entity].forEach((seasonData: any) => {
-                      if (seasonData?.season && seasonData.season) {
-                        if (!output[chartId]?.length) {
-                          output[chartId] = [];
-                        }
-                        if (!timestamps.has(seasonData.season)) {
-                          timestamps.set(
-                            seasonData.season,
-                            Number(seasonData[chartSetupData[chartId].timeScaleKey])
-                          );
-                        };
-                        // Some charts will occasionally return two seasons as having the 
-                        // same timestamp, here we ensure we only have one datapoint per timestamp
-                        if (timestamps.get(seasonData.season + 1) !== timestamps.get(seasonData.season)
-                          && timestamps.get(seasonData.season - 1) !== timestamps.get(seasonData.season)
-                        ) {
-                          const formattedTime = timestamps.get(seasonData.season);
-                          const dataFormatter = chartSetupData[chartId].dataFormatter;
-                          const _seasonData = dataFormatter ? dataFormatter(seasonData) : seasonData;
-
-                          const formattedValue = chartSetupData[
-                            chartId
-                          ].valueFormatter(
-                            _seasonData[chartSetupData[chartId].priceScaleKey]
-                          );
-                          if (formattedTime > 0) {
-                            output[chartId][_seasonData.season] = {
-                              time: formattedTime, 
-                              value: formattedValue,
-                              customValues: {
-                                season: _seasonData.season
-                              }
-                            };
-                          };
-                        };
-                      };
-                    });
-                  })
+          const allSeasonData = await fetchAllSeasonData(params, season.toNumber());
+          const output = allSeasonData.map((seasonData) => {
+            try {
+              const time = Number(seasonData[params.timeScaleKey]);
+              const data = dataFormatter ? dataFormatter?.(seasonData): seasonData;
+              const value = mayFunctionToValue<number>(
+                valueFormatter(data[priceKey]), 
+                seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
               );
-            }
-          };
-          await Promise.all(promises);
-          output.forEach((dataSet, index) => {
-            output[index] = dataSet.filter(Boolean);
-          });
-          setQueryData(output);
-          console.debug('[AdvancedChart] Fetched data successfully!');
-          break;
-        } catch (e) {
-          console.debug('[AdvancedChart] Failed to fetch data.');
-          console.error(e);
-          if (retries === maxRetries - 1) {
-            setError(true);
-          };
-        };
-      };
-    };
 
-    setLoading(true);
-    getSeasonData(true);
-    setLoading(false);
-  }, [chartSetupData, selectedCharts, season]);
+              const invalidTime = !exists(time) || timestamps.has(time) || time <= 0;
+              if (invalidTime || !exists(value)) return undefined;
+
+              timestamps.add(time);
+
+              return {
+                time: time as Time,
+                value,
+                customValues: {
+                  season: data.season,
+                },
+              } as QueryData;
+            } catch (e) {
+              console.debug(`[advancedChart] failed to process some data for ${queryKey}`, e);
+              return undefined;
+            }
+          }).filter(Boolean) as QueryData[];
+
+          // Sort by time
+          const data = output.sort((a, b) => Number(a.time) - Number(b.time));
+          console.debug(`[advancedChart] ${queryKey}`, data);
+          return data as QueryData[];
+        },
+        retry: false,
+        enabled: ready && season.gt(0),
+        staleTime: Infinity,
+      };
+    }),
+  });
+
+  const error = useMemo(() => queries.find((a) => !!a.error)?.error, [queries]);
+
+  const loading = queries.every((q) => q.isLoading) && queries.length > 0;
+
+  const queryData = useMemo(
+    () => queries.map((q) => q.data).filter(Boolean) as QueryData[][],
+    [queries]
+  );
 
   function handleDeselectChart(selectionIndex: number) {
     const newSelection = [...selectedCharts];
     newSelection.splice(selectionIndex, 1);
     setSelectedCharts(newSelection);
-    localStorage.setItem('advancedChartSelectedCharts', JSON.stringify(newSelection));
-  };
+    localStorage.setItem(
+      'advancedChartSelectedCharts',
+      JSON.stringify(newSelection)
+    );
+  }
 
   return (
     <>
       <Box display="flex" flexDirection="row" gap={2}>
-        <Card sx={{ position: 'relative', width: '100%', height: '70vh', overflow: 'clip' }}>
+        <Card
+          sx={{
+            position: 'relative',
+            width: '100%',
+            height: '70vh',
+            overflow: 'clip',
+          }}
+        >
           {!isMobile ? (
             <Card
               sx={{
@@ -162,7 +136,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                 marginTop: '-1px',
                 transition: 'left 0.3s',
                 borderRadius: 0,
-                borderLeftColor: 'transparent'
+                borderLeftColor: 'transparent',
               }}
             >
               <SelectDialog
@@ -217,7 +191,9 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                       paddingX: 0.75,
                     }}
                     endIcon={
-                      <CloseIcon sx={{ color: 'inherit', marginTop: '0.5px' }} />
+                      <CloseIcon
+                        sx={{ color: 'inherit', marginTop: '0.5px' }}
+                      />
                     }
                     onClick={() => handleDeselectChart(index)}
                   >
@@ -245,7 +221,12 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                     paddingY: 0.25,
                     paddingX: 0.75,
                   }}
-                  endIcon={<DropdownIcon open={false} sx={{ fontSize: 20, marginTop: '0.5px' }} />}
+                  endIcon={
+                    <DropdownIcon
+                      open={false}
+                      sx={{ fontSize: 20, marginTop: '0.5px' }}
+                    />
+                  }
                   onClick={() => showDialog()}
                 >
                   {selectedCharts.length === 1
@@ -278,7 +259,13 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
                       color: 'primary.contrastText',
                     },
                   }}
-                  endIcon={<AddRoundedIcon fontSize="small" color="inherit" sx={{ marginTop: '0.5px' }} />}
+                  endIcon={
+                    <AddRoundedIcon
+                      fontSize="small"
+                      color="inherit"
+                      sx={{ marginTop: '0.5px' }}
+                    />
+                  }
                   onClick={() => showDialog()}
                 >
                   Add Data
@@ -300,8 +287,7 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
             >
               <CircularProgress variant="indeterminate" />
             </Box>
-          ) : 
-          error ? (
+          ) : error ? (
             <Box
               sx={{
                 display: 'flex',
@@ -312,18 +298,24 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
             >
               Error fetching data
             </Box>
-          ) :
-          (
-            selectedCharts.length > 0 ? (
-              <ChartV2
-                formattedData={queryData}
-                selected={selectedCharts}
-                drawPegLine
-                timePeriod={timePeriod}
-              />
-            ) : (
-              <Box sx={{display: 'flex', height: '90%', justifyContent: 'center', alignItems: 'center'}}>Click the Add Data button to start charting</Box>
-            )
+          ) : selectedCharts.length > 0 ? (
+            <ChartV2
+              formattedData={queryData}
+              selected={selectedCharts}
+              drawPegLine
+              timePeriod={timePeriod}
+            />
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                height: '90%',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              Click the Add Data button to start charting
+            </Box>
           )}
         </Card>
       </Box>

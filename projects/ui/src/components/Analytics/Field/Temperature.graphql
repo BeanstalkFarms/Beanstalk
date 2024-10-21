@@ -1,8 +1,8 @@
-query SeasonalTemperature($season_lte: Int, $first: Int) {
+query SeasonalTemperature($season_lte: Int, $first: Int, $field: String) {
   seasons: fieldHourlySnapshots(
     where: {
       season_lte: $season_lte,
-      field: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
+      field: $field,
     }
     first: $first
     orderBy: season

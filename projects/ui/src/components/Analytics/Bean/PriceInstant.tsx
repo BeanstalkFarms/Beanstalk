@@ -14,6 +14,10 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
+import {
+  subgraphQueryConfigs,
+  subgraphQueryKeys,
+} from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalInstantPriceQuery>) =>
   parseFloat(season.price);
@@ -22,11 +26,6 @@ const statProps = {
   title: 'Bean Price',
   titleTooltip: 'The USD price of 1 Bean at the beginning of every Season.',
   gap: 0.25,
-};
-
-const queryConfig = {
-  variables: { season_gte: 1 },
-  context: { subgraph: 'bean' },
 };
 
 const lineChartProps: Partial<LineChartProps> = {
@@ -47,10 +46,11 @@ const Price: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => {
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
       formatValue={formatValue}
-      queryConfig={queryConfig}
+      queryConfig={subgraphQueryConfigs.priceInstantBEAN.queryOptions}
       StatProps={statProps}
       LineChartProps={lineChartProps}
       dateKey="timestamp"
+      name={subgraphQueryKeys.priceInstantBEAN}
     />
   );
 };

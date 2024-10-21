@@ -1,6 +1,6 @@
-query SeasonalInstantPrice($season_lte: Int, $first: Int, $season_gte: Int) {
+query SeasonalInstantPrice($season_lte: Int, $first: Int, $season_gt: Int) {
   seasons: beanHourlySnapshots(
-    where: { season_lte: $season_lte, season_gte: $season_gte }
+    where: { season_lte: $season_lte, season_gt: $season_gt }
     first: $first
     orderBy: season
     orderDirection: desc

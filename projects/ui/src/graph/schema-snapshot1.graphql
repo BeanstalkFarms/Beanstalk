@@ -223,6 +223,7 @@ input ProposalWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  labels_in: [String]
   network: String
   network_in: [String]
   plugins_contains: String

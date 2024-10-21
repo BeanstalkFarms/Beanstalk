@@ -1,0 +1,22 @@
+query SeasonalTokenChopRate($token: String!, $season_lte: Int, $season_gt: Int, $first: Int) {
+  seasons: unripeTokenHourlySnapshots(
+    first: $first, 
+    where: { 
+      season_lte: $season_lte,
+      season_gt: $season_gt,
+      unripeToken: $token
+    },
+    orderBy: season, 
+    orderDirection: desc
+  ) {
+    id
+    unripeToken {
+			id
+    }
+    season
+    createdAt
+    chopRate
+    deltaChopRate
+    choppableBdvOne
+  }
+}

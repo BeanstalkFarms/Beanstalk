@@ -4,11 +4,11 @@ import { useMemo } from 'react';
 import type { Account, Chain, Client, Transport } from 'viem';
 import { Config, useClient, useConnectorClient } from 'wagmi';
 
-const IS_DEVELOPMENT_ENV = process.env.NODE_ENV !== 'production';
+const SHOW_DEV = import.meta.env.VITE_SHOW_DEV_CHAINS;
 
 const fallbackChain = {
-  chainId: IS_DEVELOPMENT_ENV ? ChainId.LOCALHOST : ChainId.ARBITRUM_MAINNET,
-  name: IS_DEVELOPMENT_ENV ? 'locahost:8545' : 'arbitrum',
+  chainId: SHOW_DEV ? ChainId.LOCALHOST : ChainId.ARBITRUM_MAINNET,
+  name: SHOW_DEV ? 'locahost:8545' : 'Arbitrum One',
 } as const;
 
 export function clientToProvider(client: Client<Transport, Chain>) {

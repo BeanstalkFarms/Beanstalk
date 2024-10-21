@@ -135,14 +135,18 @@ export class BeanstalkSDK {
     }
 
     this.signer = config.signer;
-    if (!config.provider && !config.signer) {
+
+    if (config.signer?.provider){
+      this.provider = config.signer.provider as Provider;
+    } else if (config.provider) {
+      this.provider = config.provider;
+    } else {
       console.log("WARNING: No provider or signer specified, using DefaultProvider.");
       this.provider = ethers.getDefaultProvider() as Provider;
-    } else {
-      this.provider = (config.signer?.provider as Provider) ?? config.provider!;
     }
-    this.readProvider = config.readProvider;
-    this.providerOrSigner = config.signer ?? config.provider!;
+
+    this.readProvider = config.readProvider ?? this.provider;
+    this.providerOrSigner = this.signer ?? this.provider;
 
     this.DEBUG = config.DEBUG ?? false;
 

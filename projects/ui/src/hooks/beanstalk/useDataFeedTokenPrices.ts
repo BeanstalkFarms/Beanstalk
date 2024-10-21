@@ -1,22 +1,17 @@
 import { useCallback, useMemo } from 'react';
-import { Token } from '@beanstalk/sdk';
+import { AdvancedPipeStruct, BeanstalkSDK, Clipboard, ERC20Token } from '@beanstalk/sdk';
 import { BigNumber } from 'bignumber.js';
 import { useDispatch } from 'react-redux';
-import { ContractFunctionParameters } from 'viem';
 
 import { useAggregatorV3Contract } from '~/hooks/ledger/useContract';
 import { updateTokenPrices } from '~/state/beanstalk/tokenPrices/actions';
-import { chunkArray, bigNumberResult, getTokenIndex } from '~/util';
-import BEANSTALK_ABI_SNIPPETS from '~/constants/abi/Beanstalk/abiSnippets';
+import { chunkArray, bigNumberResult, getTokenIndex, tokenIshEqual } from '~/util';
 import { TokenMap } from '~/constants/index';
 import { DAI_CHAINLINK_ADDRESSES } from '~/constants/addresses';
 import { useAppSelector } from '~/state/index';
 import useSdk from '~/hooks/sdk';
 import { useTokens } from '~/hooks/beanstalk/useTokens';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
-import { multicall } from '@wagmi/core';
-import { config } from '~/util/wagmi/config';
-import { extractMulticallResult } from '~/util/Multicall';
 
 const getBNResult = (result: any, decimals: number) => {
   const bnResult = bigNumberResult(result);
@@ -36,7 +31,6 @@ export default function useDataFeedTokenPrices() {
 
   const sdk = useSdk();
   const tokens = useTokens();
-  const beanstalk = sdk.contracts.beanstalk;
 
   const daiPriceFeed = useAggregatorV3Contract(DAI_CHAINLINK_ADDRESSES);
   const dispatch = useDispatch();
@@ -57,16 +51,10 @@ export default function useDataFeedTokenPrices() {
 
     console.debug('[beanstalk/tokenPrices/useDataFeedTokenPrices] FETCH');
 
-    const calls = makeMultiCall(beanstalk.address, underlyingTokens);
-
     const [daiPriceData, daiPriceDecimals, oracleResults] = await Promise.all([
       daiPriceFeed.latestRoundData(),
       daiPriceFeed.decimals(),
-      Promise.all(
-        calls.contracts.map((oracleCalls) =>
-          multicall(config, { contracts: oracleCalls })
-        )
-      ).then((results) => chunkArray(results.flat(), calls.chunkSize)),
+      fetchOraclePrices(sdk, underlyingTokens)
     ]);
 
     const priceDataCache: TokenMap<BigNumber> = {};
@@ -78,24 +66,18 @@ export default function useDataFeedTokenPrices() {
       );
     }
 
-    oracleResults.forEach((result, index) => {
-      const price = extractMulticallResult(result[0]);
-      const twap = extractMulticallResult(result[1]);
-      const token = underlyingTokens[index];
+    Object.values(oracleResults).forEach((result) => {
+      const usd = result.usd;
+      const twa = result.twa;
+      const token = result.token;
       if (!token) return;
 
-      if (price) {
-        priceDataCache[getTokenIndex(token)] = getBNResult(price.toString(), 6);
-      }
-      if (twap) {
-        priceDataCache[`${token.symbol}-TWA`] = getBNResult(twap.toString(), 6);
-      }
+      priceDataCache[getTokenIndex(token)] = usd;
+      priceDataCache[`${token.symbol}-TWA`] = twa;
 
-      // add it for ETH as well
-      if (token.equals(tokens.WETH)) {
-        priceDataCache[getTokenIndex(tokens.ETH)] =
-          priceDataCache[getTokenIndex(tokens.WETH)];
-        priceDataCache[`ETH-TWA`] = priceDataCache[`${token.symbol}-TWA`];
+      if (tokenIshEqual(token, tokens.WETH)) {
+        priceDataCache[getTokenIndex(tokens.ETH)] = usd;
+        priceDataCache[`ETH-TWA`] = twa;
       }
     });
 
@@ -105,7 +87,7 @@ export default function useDataFeedTokenPrices() {
     );
 
     return priceDataCache;
-  }, [hasEntries, daiPriceFeed, beanstalk, tokens]);
+  }, [hasEntries, daiPriceFeed, sdk, tokens]);
 
   const handleUpdatePrices = useCallback(async () => {
     const prices = await fetch();
@@ -119,37 +101,43 @@ export default function useDataFeedTokenPrices() {
   return useMemo(() => ({ ...tokenPriceMap }), [tokenPriceMap]);
 }
 
-type OraclePriceCall = ContractFunctionParameters<
-  typeof BEANSTALK_ABI_SNIPPETS.oraclePrices
->;
-function makeMultiCall(beanstalkAddress: string, tokens: Token[]) {
-  const calls: OraclePriceCall[] = [];
-
-  const contract = {
-    address: beanstalkAddress as `0x${string}`,
-    abi: BEANSTALK_ABI_SNIPPETS.oraclePrices,
-  };
-
-  let address: `0x${string}` = '0x';
-
-  for (const token of tokens) {
-    address = token.address as `0x${string}`;
-    const instantPriceCall: OraclePriceCall = {
-      ...contract,
-      functionName: 'getTokenUsdPrice',
-      args: [address as `0x${string}`],
-    };
-    const twapPriceCall: OraclePriceCall = {
-      ...contract,
-      functionName: 'getTokenUsdTwap',
-      args: [address as `0x${string}`, 3600n],
+async function fetchOraclePrices(sdk: BeanstalkSDK, tokens: ERC20Token[]) {
+  const beanstalk = sdk.contracts.beanstalk;
+  const calls: AdvancedPipeStruct[] = tokens.map((token) => {
+    const instantPriceCall: AdvancedPipeStruct = {
+      target: beanstalk.address,
+      callData: beanstalk.interface.encodeFunctionData('getTokenUsdPrice', [token.address]),
+      clipboard: Clipboard.encode([]),
     };
 
-    calls.push(instantPriceCall, twapPriceCall);
-  }
+    const twaPriceCall: AdvancedPipeStruct = {
+      target: beanstalk.address,
+      callData: beanstalk.interface.encodeFunctionData('getTokenUsdTwap', [token.address, 3600n]),
+      clipboard: Clipboard.encode([]),
+    };
 
-  return {
-    contracts: chunkArray(calls, 20),
-    chunkSize: 2,
-  };
+    return [instantPriceCall, twaPriceCall];
+  }).flat();
+
+  const results = await beanstalk.callStatic.advancedPipe(calls, '0');
+
+  const chunkedByToken = chunkArray(results, 2);
+
+  return tokens.reduce<TokenMap<{
+    usd: BigNumber;
+    twa: BigNumber;
+    token: ERC20Token;
+  }>>((prev, token, i) => {
+    const tokenChunk = chunkedByToken[i];
+
+    const usd = beanstalk.interface.decodeFunctionResult('getTokenUsdPrice', tokenChunk[0])[0];
+    const twa = beanstalk.interface.decodeFunctionResult('getTokenUsdTwap', tokenChunk[1])[0];
+
+    prev[getTokenIndex(token)] = {
+      usd: getBNResult(usd ?? "0", 6),
+      twa: getBNResult(twa ?? "0", 6),
+      token,
+    };
+    return prev;
+  }, {});
 }

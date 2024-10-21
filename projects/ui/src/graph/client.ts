@@ -8,116 +8,147 @@ import {
 import { LocalStorageWrapper, persistCacheSync } from 'apollo3-cache-persist';
 import { SGEnvironments, SUBGRAPH_ENVIRONMENTS } from '~/graph/endpoints';
 import store from '~/state';
+import { exists } from '~/util';
+import { binarySearchSeasons } from '~/util/Graph';
 
 /// ///////////////////////// Field policies ////////////////////////////
 
+// prettier-ignore
 const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
-  // Don't cache separate results based on
-  // any of this field's arguments.
   keyArgs,
-
-  /**
-   */
   read(existing, { args, readField }) {
-    const first = args?.first;
-    const startSeason = args?.where?.season_lte; // could be larger than the biggest season
+    if (!existing) return;
+
+    const first = args?.first as number | undefined;
+    const season_lte = args?.where?.season_lte as number | undefined;
+    const seasonGt = args?.where?.season_gt as number | undefined;
+    const seasonGte = args?.where?.season_gte as number | undefined;
+
+    const season_gt = seasonGt ?? ((seasonGte && typeof seasonGte === 'number') ? seasonGte - 1 : undefined);
 
     console.debug(
-      `[apollo/client/read@seasons] read first = ${first} startSeason = ${startSeason} for ${
-        existing?.length || 0
-      } existing items`,
+      `[apollo/client/read@seasons] first=${first}, season_lte=${season_lte}, season_gt=${seasonGt}, season_gte=${seasonGte} for ${existing?.length || 0} existing items`,
       existing
     );
 
-    if (!existing) return;
+    let data: any[] | undefined = [];
 
-    let dataset;
-    if (!first) {
-      dataset = existing;
-    } else {
-      const maxSeason = Math.min(
-        startSeason || existing.length,
-        existing.length
-      );
-
-      // 0 = latest season; always defined
-      // maxSeason = 6073
-      // existing.length = 6074
-      // left = 1
-      // right = 1+1000 = 1001
-      //
-      // Length 6074
-      // -----------
-      // 0    6074
-      // 1    6073
-      // ....
-      // 6071 2
-      // 6072 1
-      // 6073 0 (this doesnt exist)
-      const left = Math.max(
-        0, // clamp to first index
-        existing.length - maxSeason //
-      );
-
-      // n = oldest season
-      const right = Math.min(
-        left + first - 1, //
-        existing.length - 1 // clamp to last index
-      );
-
-      // If one of the endpoints is missing, force refresh
-      if (!existing[left] || !existing[right]) return;
-
-      // first = 1000
-      // existing.length = 6074
-      // startIndex = 5074
-      // endIndex = 6074
-      dataset = existing.slice(left, right + 1); // slice = [left, right)
+    // Prepare seasons array. We know that this is in descending order.
+    const seasons: number[] = [];
+    for (const item of existing) {
+      const season = readField('season', item) as number;
+      if (exists(season) && season > 0) {
+        seasons.push(season);
+      }
     }
 
-    return dataset;
+    // Function to compare seasons in descending order
+    const compareDesc = (season: number, target: number) => season - target;
+
+    // Find the start index
+    let startIndex = 0;
+    if (season_lte !== undefined) {
+      startIndex = binarySearchSeasons<number>(seasons, season_lte, compareDesc);
+    }
+
+    // Find the end index
+    let endIndex = existing.length - 1;
+    if (season_gt !== undefined) {
+      endIndex = binarySearchSeasons<number>(seasons, season_gt, compareDesc) + 1;
+    }
+
+    // Ensure indices are within bounds
+    startIndex = Math.max(0, startIndex);
+    endIndex = Math.min(existing.length - 1, endIndex);
+
+    // Slice the array
+    const slicedData = existing.slice(startIndex, endIndex + 1);
+
+    // Return the first N items
+    const _data = first ? slicedData.slice(0, first) : slicedData;
+    if (exists(first) && first > 1000) {
+      console.debug('[apollo/client/read@seasons] cache', {
+        first,
+        season_gt,
+        startIndex,
+        endIndex,
+        existing,
+        slicedData,
+        _data,
+      });
+      data = slicedData;
+    } else {
+      data = first && Array.isArray(_data) && _data.length === first ? _data : undefined;
+    }
+
+    console.debug(
+      `[apollo/client/read@seasons] read ${data?.length} items`,
+      data
+    );
+
+    // Return undefined if no data is found.
+    return data;
   },
   merge(existing = [], incoming, { fieldName, args, readField }) {
+    // Ensure that this merge function maintains the 'existing' data points in sorted order.
+    // Time complexity is O(n + m) where n and m are the lengths of the existing and incoming arrays.
+    // We make sure it's in descending order so we can utilize binary search in the read function.
+
     console.debug(
-      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(
-        args
-      )}): Merging ${incoming?.length || 0} incoming data points into ${
-        existing?.length || 0
-      } existing data points.`,
+      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(args)}): Merging ${incoming?.length || 0} incoming data points into ${existing?.length || 0} existing data points.`,
       { existing, incoming, args }
     );
 
-    // Slicing is necessary because the existing data is
-    // immutable, and frozen in development.
-    let merged = existing ? existing.slice(0).reverse() : [];
+    const merged = [];
 
-    // Seasons are indexed by season (could also parseInt the "id" field)
-    // This structures stores seasons in ascending order such that
-    // merged[0] = undefined
-    // merged[1] = Season 1
-    // merged[2] = ...
-    for (let i = 0; i < incoming.length; i += 1) {
-      const season = readField('season', incoming[i]);
-      if ((season as number) - 1 < 0) continue;
-      if (!season) throw new Error('Seasons queried without season');
-      // Season 1 = Index 0
-      merged[(season as number) - 1] = incoming[i];
+    let i = 0; // index for existing
+    let j = 0; // index for incoming
+
+    // Iterate through both arrays and merge them
+    while (i < existing.length && j < incoming.length) {
+      const seasonExisting = readField('season', existing[i]) as number;
+      const seasonIncoming = readField('season', incoming[j]) as number | undefined;
+
+      // Skip undefined items with season below 0
+      if (!exists(seasonIncoming) || seasonIncoming < 0) {
+        j += 1;
+        continue;
+      }
+
+      if (seasonExisting > seasonIncoming) {
+        merged.push(existing[i]);
+        i += 1;
+      } else if (seasonExisting < seasonIncoming) {
+        merged.push(incoming[j]);
+        j += 1;
+      } else {
+        // Seasons are equal, prefer incoming data
+        merged.push(incoming[j]);
+        i += 1;
+        j += 1;
+      }
     }
 
-    merged = merged.reverse();
+    // Add any remaining items
+    while (i < existing.length) {
+      merged.push(existing[i]);
+      i += 1;
+    }
 
+    while (j < incoming.length) {
+      const seasonIncoming = readField('season', incoming[j]) as number;
+      if (exists(seasonIncoming) && seasonIncoming > 0) {
+        merged.push(incoming[j]);
+      }
+      j += 1;
+    }
+
+    // prettier-ignore
     console.debug(
-      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(
-        args
-      )}:) Merged into ${merged.length} points.`,
+      `[apollo/client/merge@seasons] ${fieldName}(${JSON.stringify(args)}): Merged into ${merged.length} points.`,
       { merged }
     );
 
-    // We complete operations on the array in ascending order,
-    // but reverse it before saving back to the cache.
-    // Reverse is O(n) while sorting during the read operation
-    // is O(n*log(n)) and likely called more often.
-    // return merged.reverse();
     return merged;
   },
 });
@@ -144,6 +175,8 @@ try {
   persistCacheSync({
     cache,
     storage: new LocalStorageWrapper(window.localStorage),
+    trigger: 'write',
+    debounce: 500,
   });
 } catch (e) {
   console.error('Failed to persist cache, skipping.');

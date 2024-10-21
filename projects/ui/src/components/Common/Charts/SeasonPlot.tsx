@@ -14,6 +14,7 @@ import useTimeTabState from '~/hooks/app/useTimeTabState';
 import BaseSeasonPlot, {
   QueryData,
 } from '~/components/Common/Charts/BaseSeasonPlot';
+import { DynamicSGQueryOption } from '~/util/Graph';
 
 export const defaultValueFormatter = (value: number) => `$${value.toFixed(4)}`;
 
@@ -47,6 +48,10 @@ export type SeasonPlotBaseProps = {
   height?: number | string;
   /** True if this plot should be a StackedAreaChard */
   stackedArea?: boolean;
+  /**
+   * Name of query. For React-Query query key.
+   */
+  name: string;
 };
 
 type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
@@ -60,7 +65,7 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
      */
     formatValue?: (value: number) => string | JSX.Element;
     dateKey?: 'timestamp' | 'createdAt';
-    queryConfig?: Partial<QueryOptions>;
+    queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
@@ -85,6 +90,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   stackedArea,
   statsRowFullWidth,
   fetchType = 'both',
+  name,
 }: SeasonPlotFinalProps<T>) {
   const timeTabParams = useTimeTabState();
   const getDisplayValue = useCallback((v?: BaseDataPoint[]) => {
@@ -94,6 +100,7 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   }, []);
 
   const seasonsQuery = useSeasonsQuery<T>(
+    name,
     document,
     timeTabParams[0][1],
     queryConfig,

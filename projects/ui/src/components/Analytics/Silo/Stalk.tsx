@@ -10,6 +10,7 @@ import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import { tickFormatTruncated } from '~/components/Analytics/formatters';
 
 import { FC } from '~/types';
+import { subgraphQueryKeys } from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalStalkQuery>) =>
   toTokenUnitsBN(season.stalk, STALK.decimals).toNumber();
@@ -38,6 +39,7 @@ const Stalk: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({ height }) => (
     StatProps={statProps}
     LineChartProps={lineChartProps}
     queryConfig={queryConfig}
+    name={subgraphQueryKeys.beanstalkTotalStalk}
   />
 );
 

@@ -43,7 +43,7 @@ export type ChartMultiStyles = {
   [key: string]: BaseChartMultiStyle;
 };
 
-type ChartStyleConfig = {
+export type ChartStyleConfig = {
   // id: string;
   to: string;
   from: string;
@@ -70,7 +70,7 @@ export type ChartSharedValuesProps = {
   };
 };
 
-type Scales = {
+export type Scales = {
   xScale: ScaleLinear<number, number, never>;
   dScale: ScaleTime<number, number, never>;
   yScale: ScaleLinear<number, number, never>;
@@ -261,7 +261,7 @@ const xTickLabelProps = () =>
     fontSize: 12,
     fontFamily: 'Futura PT',
     textAnchor: 'middle',
-  } as const);
+  }) as const;
 
 const yTickLabelProps = () =>
   ({
@@ -269,7 +269,7 @@ const yTickLabelProps = () =>
     fontSize: 12,
     fontFamily: 'Futura PT',
     textAnchor: 'end',
-  } as const);
+  }) as const;
 
 /**
  * chart curve types

@@ -8,8 +8,13 @@ import { NEW_BN } from '~/constants';
 
 import { FC } from '~/types';
 import { useBeanstalkTokens } from '~/hooks/beanstalk/useTokens';
-import Stat from '../Common/Stat';
-import { displayFullBN } from '../../util';
+import BigNumber from 'bignumber.js';
+import { displayFullBN } from '~/util';
+import Stat from '~/components/Common/Stat';
+
+(BigNumber.prototype as any)[Symbol.for('nodejs.util.inspect.custom')] = function logBN() {
+  return this.toNumber();
+}
 
 const LiquidityByState: FC<CardProps> = ({ sx }) => {
   const totalBeanSupply = useAppSelector((s) => s._bean.token.supply);

@@ -387,8 +387,8 @@ const makeEntry = (
   a: ChainConstant<string>,
   t: ChainConstant<LegacyToken>
 ) => ({
-  ...(a[cARB] && t[cARB] ? { [a[cARB]]: t } : {}),
-  ...(a[cETH] && t[cETH] ? { [a[cETH]]: t } : {}),
+  ...(a[cARB] && t[cARB] ? { [a[cARB]?.toLowerCase()]: t } : {}),
+  ...(a[cETH] && t[cETH] ? { [a[cETH]?.toLowerCase()]: t } : {}),
 });
 
 const A = ADDRESSES;
@@ -422,11 +422,12 @@ const ADDRESS_TO_CHAIN_CONSTANT: Record<string, ChainConstant<LegacyToken>> = {
   ...makeEntry(A.BEANUSDT_WELL_ADDRESSES, L.BEAN_USDT_WELL_LP),
 
   // Deprecated
-  // ...makeEntry(A.CRV3_ADDRESSES, L.CRV3),
-  // ...makeEntry(A.BEAN_CRV3_ADDRESSES, L.BEAN_CRV3_LP),
-  // ...makeEntry(A.BEAN_LUSD_ADDRESSES, L.BEAN_LUSD_LP),
-  // ...makeEntry(A.LUSD_ADDRESSES, L.LUSD),
-  // ...makeEntry(A.BEAN_ETH_UNIV2_LP_ADDRESSES, L.BEAN_ETH_UNIV2_LP),
+  ...makeEntry(A.CRV3_ADDRESSES, L.CRV3),
+  ...makeEntry(A.BEAN_CRV3_ADDRESSES, L.BEAN_CRV3_LP),
+  ...makeEntry(A.BEAN_CRV3_V1_ADDRESSES, L.BEAN_CRV3_V1_LP),
+  ...makeEntry(A.BEAN_LUSD_ADDRESSES, L.BEAN_LUSD_LP),
+  ...makeEntry(A.LUSD_ADDRESSES, L.LUSD),
+  ...makeEntry(A.BEAN_ETH_UNIV2_LP_ADDRESSES, L.BEAN_ETH_UNIV2_LP),
 } as const;
 
 /**
@@ -454,4 +455,79 @@ export const useGetNormaliseChainToken = () => {
   );
 
   return getToken;
+};
+
+export const getMultiChainToken = (_address: string) => {
+  const chainConstant = ADDRESS_TO_CHAIN_CONSTANT[_address.toLowerCase()];
+
+  if (!chainConstant) {
+    throw new Error(`Could not find legacy token with address: ${_address}`);
+  }
+
+  return {
+    l2: chainConstant[cARB],
+    l1: chainConstant[cETH],
+  };
+};
+
+export const getChainAgnosticToken = (
+  chainId: SupportedChainId,
+  _address: string
+): LegacyToken => {
+  const otherChain = chainId === cARB ? cETH : cARB;
+
+  const chainConstant = ADDRESS_TO_CHAIN_CONSTANT[_address.toLowerCase()];
+
+  if (!chainConstant) {
+    throw new Error(`Could not find legacy token with address: ${_address}`);
+  }
+
+  return chainConstant[chainId] ?? chainConstant[otherChain];
+};
+
+/**
+ * Takes an address (chain agnostic) and returns the legacy token instance.
+ * If the token doesn't exist on the current chain, it will return the token from the other chain.
+ * @throws If the no Legacy token instance is found for the given address
+ */
+export const useGetChainAgnosticLegacyToken = () => {
+  const chainId = useResolvedChainId();
+
+  /**
+   * returns the sdk token instance for the chain the user is currently on if available
+   * if not available, returns the token from the other chain
+   */
+  const getToken = useCallback(
+    (_address: string): LegacyToken => getChainAgnosticToken(chainId, _address),
+    [chainId]
+  );
+
+  return getToken;
+};
+
+export const useHistoricalWhitelistedTokens = (): TokenInstance[] => {
+  const getLegacyToken = useGetChainAgnosticLegacyToken();
+
+  return useMemo(() => {
+    const addresses = [
+      A.BEAN_ADDRESSES[cARB],
+      // wells
+      A.BEAN_WSTETH_ADDRESSS[cARB],
+      A.BEAN_ETH_WELL_ADDRESSES[cARB],
+      A.BEANWEETH_WELL_ADDRESSES[cARB],
+      A.BEANWBTC_WELL_ADDRESSES[cARB],
+      A.BEANUSDC_WELL_ADDRESSES[cARB],
+      A.BEANUSDT_WELL_ADDRESSES[cARB],
+      // unripe
+      A.UNRIPE_BEAN_ADDRESSES[cARB],
+      A.UNRIPE_BEAN_WSTETH_ADDRESSES[cARB],
+      // legacy
+      A.BEAN_CRV3_ADDRESSES[cETH],
+      A.BEAN_ETH_UNIV2_LP_ADDRESSES[cETH],
+      A.BEAN_CRV3_V1_ADDRESSES[cETH],
+      A.BEAN_LUSD_ADDRESSES[cETH],
+    ];
+
+    return addresses.map(getLegacyToken);
+  }, [getLegacyToken]);
 };

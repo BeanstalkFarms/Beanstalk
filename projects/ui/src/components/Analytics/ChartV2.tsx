@@ -60,6 +60,47 @@ export type ChartV2DataProps = {
   selected: number[];
 };
 
+function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
+  let timestamp
+  if (utcTime instanceof Date) {
+    timestamp = utcTime.getTime() / 1000
+  } else {
+    timestamp = utcTime
+  };
+  const correctedTime = new Date((timestamp * 1000));
+  let options = {};
+  switch(tickMarkType) {
+    case TickMarkType.Year:
+        options = {
+           year: 'numeric'
+        }
+        break
+    case TickMarkType.Month:
+        options = {
+            month: 'short'
+        }
+        break
+    case TickMarkType.DayOfMonth:
+        options = {
+            day: '2-digit'
+        }
+        break
+    case TickMarkType.Time:
+        options = {
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+        break
+    default:
+        options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            seconds: '2-digit'
+        };
+  };
+  return correctedTime.toLocaleString('en-GB', options);
+};
+
 const ChartV2: FC<ChartV2DataProps> = ({
   formattedData,
   drawPegLine,
@@ -76,47 +117,6 @@ const ChartV2: FC<ChartV2DataProps> = ({
   const [lastDataPoint, setLastDataPoint] = useState<any>();
   const [firstDataPoint, setFirstDataPoint] = useState<any>();
   const [dataPoint, setDataPoint] = useState<any>();
-
-  function getTimezoneCorrectedTime(utcTime: Date, tickMarkType: TickMarkType) {
-    let timestamp
-    if (utcTime instanceof Date) {
-      timestamp = utcTime.getTime() / 1000
-    } else {
-      timestamp = utcTime
-    };
-    const correctedTime = new Date((timestamp * 1000));
-    let options = {};
-    switch(tickMarkType) {
-      case TickMarkType.Year:
-          options = {
-             year: 'numeric'
-          }
-          break
-      case TickMarkType.Month:
-          options = {
-              month: 'short'
-          }
-          break
-      case TickMarkType.DayOfMonth:
-          options = {
-              day: '2-digit'
-          }
-          break
-      case TickMarkType.Time:
-          options = {
-              hour: '2-digit',
-              minute: '2-digit'
-          }
-          break
-      default:
-          options = {
-              hour: '2-digit',
-              minute: '2-digit',
-              seconds: '2-digit'
-          };
-    };
-    return correctedTime.toLocaleString('en-GB', options);
-  };
 
   // Menu
   const [leftAnchorEl, setLeftAnchorEl] = useState<null | HTMLElement>(null);
@@ -322,13 +322,12 @@ const ChartV2: FC<ChartV2DataProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timePeriod]);
 
-  useEffect(() => {
+  useEffect(() => {    
     if (!chart.current || !formattedData) return;
-
     const numberOfCharts = selected?.length || 0;
     for (let i = 0; i < numberOfCharts; i += 1) {
-      if (!formattedData[selected[i]]) return;
-      areaSeries.current[i].setData(formattedData[selected[i]]);
+      if (!formattedData[i]) return;
+      areaSeries.current[i].setData(formattedData[i]);
     };
 
     const storedSetting = localStorage.getItem('advancedChartTimePeriod');
@@ -342,13 +341,12 @@ const ChartV2: FC<ChartV2DataProps> = ({
       let _time = 0;
       const _value: number[] = [];
       let _season = 0;
-
-      selected.forEach((selection) => {
-        const selectedData = formattedData[selection];
+      selected.forEach((_, i) => {
+        const selectedData = formattedData[i];
         const dataIndex = mode === 'last' ? selectedData.length - 1 : 0; 
-        _time = Math.max(_time, selectedData[dataIndex].time.valueOf() as number);
-        _season = Math.max(_season, selectedData[dataIndex].customValues.season);
-        _value.push(selectedData[dataIndex].value);
+        _time = Math.max(_time, selectedData[dataIndex]?.time.valueOf() as number);
+        _season = Math.max(_season, selectedData[dataIndex]?.customValues?.season);
+        _value.push(selectedData[dataIndex]?.value);
       });
 
       return {
@@ -371,7 +369,7 @@ const ChartV2: FC<ChartV2DataProps> = ({
         const seriesValueAfter = series.dataByIndex(param.logical?.valueOf() as number, 1);
         // @ts-ignore
         hoveredValues.push(seriesValueBefore && seriesValueAfter ? seriesValueBefore?.value : 0);
-        hoveredSeason = Math.max(hoveredSeason, (seriesValueBefore?.customValues!.season as number || 0));
+        hoveredSeason = Math.max(hoveredSeason, (seriesValueBefore?.customValues?.season as number || 0));
       });
       if (!param.time) {
         setDataPoint(undefined);
@@ -388,8 +386,8 @@ const ChartV2: FC<ChartV2DataProps> = ({
     function timeRangeChangeHandler(param: Range<Time> | null) {
       if (!param) return;
       const lastTimestamp = new Date(param.to.valueOf() as number * 1000);
-      const lastValues = selected.map((selection) => (formattedData[selection].find((value) => value.time === param.to))?.value);
-      const lastSeasons = selected.map((selection) => (formattedData[selection].find((value) => value.time === param.to))?.customValues.season || 0);
+      const lastValues = selected.map((_, i) => (formattedData[i].find((value) => value.time === param.to))?.value);
+      const lastSeasons = selected.map((_, i) => (formattedData[i].find((value) => value.time === param.to))?.customValues?.season || 0);
       const lastSeason = Math.max(...lastSeasons);
       setLastDataPoint({
         time: lastTimestamp?.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short', }),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { AreaStack, Line, LinePath } from '@visx/shape';
 import { Group } from '@visx/group';
@@ -16,10 +17,12 @@ import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { displayBN } from '~/util';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { SILO_WHITELIST } from '~/constants/tokens';
-import ChartPropProvider, {
+import {
   BaseChartProps,
   BaseDataPoint,
-  ProviderChartProps,
+  ChartStyleConfig,
+  Scales,
+  chartHelpers,
 } from './ChartPropProvider';
 import Row from '../Row';
 import { defaultValueFormatter } from './SeasonPlot';
@@ -27,38 +30,41 @@ import { defaultValueFormatter } from './SeasonPlot';
 type Props = {
   width: number;
   height: number;
-} & BaseChartProps &
-  ProviderChartProps;
+} & BaseChartProps;
+
+const {
+  common: {
+    margin,
+    axisHeight,
+    strokeBuffer,
+    yAxisWidth,
+    axisColor,
+    xTickLabelProps,
+    yTickLabelProps,
+    getChartStyles,
+  },
+  accessors: { getX, getY0, getY1 },
+  utils: { generateScale, getPointerValue, getCurve },
+} = chartHelpers;
 
 const Graph = (props: Props) => {
-  const siloTokens = useTokenMap(props.useCustomTokenList || SILO_WHITELIST);
   const {
     // Chart sizing
     width,
     height,
     // props
-    useCustomTooltipNames,
     series,
     curve: _curve,
     keys,
-    tooltip = false,
     isTWAP,
     stylesConfig,
     children,
-    onCursor,
-    getDisplayValue,
-    formatValue = defaultValueFormatter,
-    // chart prop provider
-    common,
-    accessors,
-    utils,
   } = props;
-  const { getX, getY0, getY, getY1, getYByAsset } = accessors;
-  const { generateScale, generatePathFromStack, getPointerValue, getCurve } =
-    utils;
+  // const { getX, getY0, getY1 } = accessors;
+  // const { generateScale, getPointerValue, getCurve } = utils;
 
   // get curve type
-  const curveType = useMemo(() => getCurve(_curve), [_curve, getCurve]);
+  const curveType = useMemo(() => getCurve(_curve), [_curve]);
 
   // data for stacked area chart will always be T[];
   const data = useMemo(
@@ -69,7 +75,7 @@ const Graph = (props: Props) => {
   // generate scales
   const scales = useMemo(
     () => generateScale(series, height, width, keys, true, isTWAP),
-    [generateScale, series, height, width, isTWAP, keys]
+    [series, height, width, isTWAP, keys]
   );
 
   // generate ticks
@@ -113,46 +119,6 @@ const Graph = (props: Props) => {
     forceRefreshBounds();
   }, [forceRefreshBounds]);
 
-  const handleMouseLeave = useCallback(() => {
-    hideTooltip();
-    onCursor?.(undefined);
-  }, [hideTooltip, onCursor]);
-
-  const handlePointerMove = useCallback(
-    (
-      event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
-    ) => {
-      if (series[0].length === 0) return;
-      forceRefreshBounds();
-      const containerX =
-        ('clientX' in event ? event.clientX : 0) - containerBounds.left;
-      const containerY =
-        ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
-      const pointerData = getPointerValue(event, scales, series)[0];
-      showTooltip({
-        tooltipLeft: containerX,
-        tooltipTop: containerY,
-        tooltipData: pointerData,
-      });
-      onCursor?.(
-        pointerData.season,
-        getDisplayValue([pointerData]),
-        pointerData.date,
-        pointerData
-      );
-    },
-    [
-      containerBounds,
-      forceRefreshBounds,
-      getPointerValue,
-      scales,
-      series,
-      showTooltip,
-      onCursor,
-      getDisplayValue,
-    ]
-  );
-
   // tick format + styles
   const xTickFormat = useCallback(
     (_: any, i: number) => tickDates[i],
@@ -164,49 +130,56 @@ const Graph = (props: Props) => {
   );
 
   // styles are defined in ChartPropProvider as defaultChartStyles
-  const { styles, getStyle } = useMemo(() => {
-    const { getChartStyles } = common;
-    return getChartStyles(stylesConfig);
-  }, [common, stylesConfig]);
+  const { styles, getStyle } = useMemo(
+    () => getChartStyles(stylesConfig),
+    [stylesConfig]
+  );
 
-  if (data.length === 0) return null;
+  const dataRegion = useMemo(
+    () => ({
+      yTop: margin.top, // chart edge to data region first pixel
+      yBottom:
+        height - // chart edge to data region first pixel
+        axisHeight - // chart edge to data region first pixel
+        margin.bottom - // chart edge to data region first pixel
+        strokeBuffer,
+    }),
+    [height]
+  );
 
-  const dataRegion = {
-    yTop: common.margin.top, // chart edge to data region first pixel
-    yBottom:
-      height - // chart edge to data region first pixel
-      common.axisHeight - // chart edge to data region first pixel
-      common.margin.bottom - // chart edge to data region first pixel
-      common.strokeBuffer,
-  };
+  const reversedKeys = useMemo(() => keys.slice().reverse(), [keys]);
 
   /**
    * Gets the Y value for the line that borders
    * the top of each stacked area.
    */
-  const getLineHeight = (d: BaseDataPoint, tokenAddr: string) => {
-    if (d[tokenAddr] < 0.01) return 0;
-    const indexOfToken = keys.indexOf(tokenAddr);
-    return keys.reduce<number>((prev, curr, currentIndex) => {
-      if (currentIndex <= indexOfToken) {
-        prev += d[curr];
+  const getLineHeight = useCallback(
+    (d: BaseDataPoint, tokenAddr: string) => {
+      if (d[tokenAddr] < 0.01) return 0;
+      const indexOfToken = keys.indexOf(tokenAddr);
+      return keys.reduce<number>((prev, curr, currentIndex) => {
+        if (currentIndex <= indexOfToken) {
+          prev += d[curr];
+          return prev;
+        }
         return prev;
-      }
-      return prev;
-    }, 0);
-  };
+      }, 0);
+    },
+    [keys]
+  );
 
-  const reversedKeys = keys.slice().reverse();
+  const tooltipLeftAttached = useMemo(
+    () => (tooltipData ? scales[0].xScale(getX(tooltipData)) : undefined),
+    [tooltipData, scales]
+  );
 
-  const tooltipLeftAttached = tooltipData
-    ? scales[0].xScale(getX(tooltipData))
-    : undefined;
+  if (data.length === 0) return null;
 
   return (
     <div style={{ position: 'relative' }}>
       <svg width={width} height={height}>
         <Group
-          width={width - common.yAxisWidth}
+          width={width - yAxisWidth}
           height={dataRegion.yBottom - dataRegion.yTop}
         >
           <rect
@@ -219,8 +192,8 @@ const Graph = (props: Props) => {
           />
           {children && children({ scales, dataRegion, ...props })}
           <AreaStack<BaseDataPoint>
-            top={common.margin.top}
-            left={common.margin.left}
+            top={margin.top}
+            left={margin.left}
             keys={keys}
             data={data}
             height={height}
@@ -267,10 +240,10 @@ const Graph = (props: Props) => {
             key="axis"
             orientation={Orientation.bottom}
             scale={scales[0].xScale}
-            stroke={common.axisColor}
+            stroke={axisColor}
             tickFormat={xTickFormat}
-            tickStroke={common.axisColor}
-            tickLabelProps={common.xTickLabelProps}
+            tickStroke={axisColor}
+            tickLabelProps={xTickLabelProps}
             tickValues={tickSeasons}
           />
         </g>
@@ -279,171 +252,321 @@ const Graph = (props: Props) => {
             key="axis"
             orientation={Orientation.right}
             scale={scales[0].yScale}
-            stroke={common.axisColor}
+            stroke={axisColor}
             tickFormat={yTickFormat}
-            tickStroke={common.axisColor}
-            tickLabelProps={common.yTickLabelProps}
+            tickStroke={axisColor}
+            tickLabelProps={yTickLabelProps}
             numTicks={6}
             strokeWidth={0}
           />
         </g>
         {tooltipData && (
-          <Group>
-            <Line
-              from={{ x: tooltipLeft, y: dataRegion.yTop }}
-              to={{ x: tooltipLeft, y: dataRegion.yBottom }}
-              stroke={BeanstalkPalette.lightGrey}
-              strokeWidth={1}
-              pointerEvents="none"
-            />
-            {reversedKeys.map((key, index) => {
-              const lenKeys = keys.length;
-              return (
-                <circle
-                  key={index}
-                  cx={tooltipLeftAttached}
-                  cy={scales[0].yScale(getLineHeight(tooltipData, key)) ?? 0}
-                  r={lenKeys === 1 ? 4 : 2}
-                  fill={
-                    lenKeys === 1
-                      ? 'black'
-                      : getStyle(key, reversedKeys.length - index - 1).to
-                  }
-                  fillOpacity={lenKeys === 1 ? 0.1 : 0.4}
-                  stroke={
-                    lenKeys === 1
-                      ? 'black'
-                      : getStyle(key, reversedKeys.length - index - 1).stroke
-                  }
-                  strokeOpacity={lenKeys === 1 ? 0.1 : 0.4}
-                  strokeWidth={2}
-                  pointerEvents="none"
-                />
-              );
-            })}
-          </Group>
+          <TooltipItem
+            reversedKeys={reversedKeys}
+            keys={keys}
+            tooltipLeft={tooltipLeft}
+            dataRegion={dataRegion}
+            tooltipLeftAttached={tooltipLeftAttached}
+            scales={scales}
+            tooltipData={tooltipData}
+            getStyle={getStyle}
+            getLineHeight={getLineHeight}
+          />
         )}
       </svg>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: dataRegion.yTop,
-          left: 0,
-          width: width - common.yAxisWidth,
-          height: dataRegion.yBottom,
-          zIndex: 9,
-        }}
-        ref={containerRef}
-        onTouchStart={handlePointerMove}
-        onTouchMove={handlePointerMove}
-        onMouseMove={handlePointerMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        {tooltipData && (
-          <Group>
-            <Line
-              from={{ x: tooltipLeft, y: dataRegion.yTop }}
-              to={{ x: tooltipLeft, y: dataRegion.yBottom }}
-              stroke={BeanstalkPalette.lightGrey}
-              strokeWidth={1}
-              pointerEvents="none"
-            />
-            {tooltip ? (
-              <div>
-                <TooltipWithBounds
-                  key={Math.random()}
-                  left={tooltipLeft}
-                  top={tooltipTop}
-                  style={{
-                    width: 'fit-content',
-                    position: 'absolute',
-                  }}
-                >
-                  <Card
-                    sx={{
-                      p: 1,
-                      backgroundColor: BeanstalkPalette.lightestBlue,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    {typeof tooltip === 'boolean' ? (
-                      <Stack gap={0.5}>
-                        {reversedKeys.map((key, index) => {
-                          const seasonFilter = props.tokenPerSeasonFilter;
-                          if (
-                            !seasonFilter ||
-                            (tooltipData.season >= seasonFilter[key]?.from &&
-                              tooltipData.season <= seasonFilter[key]?.to)
-                          ) {
-                            return (
-                              <Row
-                                key={index}
-                                justifyContent="space-between"
-                                gap={3}
-                              >
-                                <Row gap={1}>
-                                  <Box
-                                    sx={{
-                                      width: '12px',
-                                      height: '12px',
-                                      borderRadius: '50%',
-                                      background: getStyle(
-                                        key,
-                                        reversedKeys.length - index - 1
-                                      ).to,
-                                      border: 1,
-                                      borderColor: getStyle(
-                                        key,
-                                        reversedKeys.length - index - 1
-                                      ).stroke,
-                                    }}
-                                  />
-                                  <Typography>
-                                    {useCustomTooltipNames
-                                      ? useCustomTooltipNames[key]
-                                      : siloTokens[key]?.symbol}
-                                  </Typography>
-                                </Row>
-                                <Typography textAlign="right">
-                                  {formatValue(tooltipData[key])}
-                                </Typography>
-                              </Row>
-                            );
-                          }
-                          return null;
-                        })}
-                      </Stack>
-                    ) : (
-                      tooltip({ d: [tooltipData] })
-                    )}
-                  </Card>
-                </TooltipWithBounds>
-              </div>
-            ) : null}
-          </Group>
-        )}
-      </div>
+      <TooltipComponent
+        {...props}
+        containerRef={containerRef}
+        containerBounds={containerBounds}
+        forceRefreshBounds={forceRefreshBounds}
+        showTooltip={showTooltip}
+        hideTooltip={hideTooltip}
+        tooltipData={tooltipData}
+        tooltipLeft={tooltipLeft}
+        tooltipTop={tooltipTop}
+        dataRegion={dataRegion}
+        width={width}
+        reversedKeys={reversedKeys}
+        getStyle={getStyle}
+        scales={scales}
+        series={series}
+      />
     </div>
   );
 };
 
 // For reference on how to use this chart, refer to BeanVs3Crv.tsx
 const StackedAreaChart: React.FC<BaseChartProps> = (props) => (
-  <ChartPropProvider>
-    {({ ...providerProps }) => (
-      <ParentSize debounceTime={50}>
-        {({ width: visWidth, height: visHeight }) => (
-          <Graph
-            width={visWidth}
-            height={visHeight}
-            {...providerProps}
-            {...props}
-          />
-        )}
-      </ParentSize>
+  <ParentSize debounceTime={50}>
+    {({ width: visWidth, height: visHeight }) => (
+      <Graph width={visWidth} height={visHeight} {...props} />
     )}
-  </ChartPropProvider>
+  </ParentSize>
 );
 
 export default StackedAreaChart;
+
+// ---------- Helper Functions ----------
+
+type ITooltipComponentRaw = Pick<
+  BaseChartProps,
+  | 'tooltip'
+  | 'useCustomTokenList'
+  | 'tokenPerSeasonFilter'
+  | 'useCustomTooltipNames'
+  | 'formatValue'
+  | 'getDisplayValue'
+  | 'onCursor'
+>;
+
+function TooltipComponentRaw({
+  dataRegion,
+  width,
+  reversedKeys,
+  useCustomTooltipNames,
+  tooltip = false,
+  scales,
+  series,
+  tooltipData,
+  tooltipLeft = 0,
+  tooltipTop = 0,
+  useCustomTokenList,
+  tokenPerSeasonFilter,
+  containerBounds,
+  getDisplayValue,
+  getStyle,
+  onCursor,
+  showTooltip,
+  containerRef,
+  hideTooltip,
+  formatValue = defaultValueFormatter,
+  forceRefreshBounds,
+}: {
+  width: number;
+  dataRegion: {
+    yTop: number;
+    yBottom: number;
+  };
+  reversedKeys: string[];
+  getStyle: (k: string, i: number) => ChartStyleConfig;
+  scales: Scales[];
+  series: BaseDataPoint[][];
+} & ITooltipComponentRaw &
+  Pick<
+    ReturnType<typeof useTooltip<BaseDataPoint | undefined>>,
+    'showTooltip' | 'hideTooltip' | 'tooltipData' | 'tooltipTop' | 'tooltipLeft'
+  > &
+  Pick<
+    ReturnType<typeof useTooltipInPortal>,
+    'containerRef' | 'containerBounds' | 'forceRefreshBounds'
+  >) {
+  const siloTokens = useTokenMap(useCustomTokenList || SILO_WHITELIST);
+
+  const handleMouseLeave = useCallback(() => {
+    hideTooltip();
+    onCursor?.(undefined);
+  }, [hideTooltip, onCursor]);
+
+  const handlePointerMove = useCallback(
+    (
+      event: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>
+    ) => {
+      if (series[0].length === 0) return;
+      forceRefreshBounds();
+      const containerX =
+        ('clientX' in event ? event.clientX : 0) - containerBounds.left;
+      const containerY =
+        ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
+      const pointerData = getPointerValue(event, scales, series)[0];
+      showTooltip({
+        tooltipLeft: containerX,
+        tooltipTop: containerY,
+        tooltipData: pointerData,
+      });
+      onCursor?.(
+        pointerData.season,
+        getDisplayValue([pointerData]),
+        pointerData.date,
+        pointerData
+      );
+    },
+    [
+      containerBounds,
+      forceRefreshBounds,
+      scales,
+      series,
+      showTooltip,
+      onCursor,
+      getDisplayValue,
+    ]
+  );
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: dataRegion.yTop,
+        left: 0,
+        width: width - yAxisWidth,
+        height: dataRegion.yBottom,
+        zIndex: 9,
+      }}
+      ref={containerRef}
+      onTouchStart={handlePointerMove}
+      onTouchMove={handlePointerMove}
+      onMouseMove={handlePointerMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {tooltipData && (
+        <Group>
+          <Line
+            from={{ x: tooltipLeft, y: dataRegion.yTop }}
+            to={{ x: tooltipLeft, y: dataRegion.yBottom }}
+            stroke={BeanstalkPalette.lightGrey}
+            strokeWidth={1}
+            pointerEvents="none"
+          />
+          {tooltip ? (
+            <div>
+              <TooltipWithBounds
+                key={Math.random()}
+                left={tooltipLeft}
+                top={tooltipTop}
+                style={{
+                  width: 'fit-content',
+                  position: 'absolute',
+                }}
+              >
+                <Card
+                  sx={{
+                    p: 1,
+                    backgroundColor: BeanstalkPalette.lightestBlue,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  {typeof tooltip === 'boolean' ? (
+                    <Stack gap={0.5}>
+                      {reversedKeys.map((key, index) => {
+                        const seasonFilter = tokenPerSeasonFilter;
+                        if (
+                          !seasonFilter ||
+                          (tooltipData.season >= seasonFilter[key]?.from &&
+                            tooltipData.season <= seasonFilter[key]?.to)
+                        ) {
+                          return (
+                            <Row
+                              key={index}
+                              justifyContent="space-between"
+                              gap={3}
+                            >
+                              <Row gap={1}>
+                                <Box
+                                  sx={{
+                                    width: '12px',
+                                    height: '12px',
+                                    borderRadius: '50%',
+                                    background: getStyle(
+                                      key,
+                                      reversedKeys.length - index - 1
+                                    ).to,
+                                    border: 1,
+                                    borderColor: getStyle(
+                                      key,
+                                      reversedKeys.length - index - 1
+                                    ).stroke,
+                                  }}
+                                />
+                                <Typography>
+                                  {useCustomTooltipNames
+                                    ? useCustomTooltipNames[key]
+                                    : siloTokens[key]?.symbol}
+                                </Typography>
+                              </Row>
+                              <Typography textAlign="right">
+                                {formatValue(tooltipData[key])}
+                              </Typography>
+                            </Row>
+                          );
+                        }
+                        return null;
+                      })}
+                    </Stack>
+                  ) : (
+                    tooltip({ d: [tooltipData] })
+                  )}
+                </Card>
+              </TooltipWithBounds>
+            </div>
+          ) : null}
+        </Group>
+      )}
+    </div>
+  );
+}
+
+function TooltipItemNonMemoized({
+  reversedKeys,
+  keys,
+  tooltipLeft,
+  dataRegion,
+  tooltipLeftAttached,
+  scales,
+  tooltipData,
+  getStyle,
+  getLineHeight,
+}: {
+  reversedKeys: string[];
+  keys: string[];
+  tooltipLeft: number;
+  dataRegion: {
+    yTop: number;
+    yBottom: number;
+  };
+  tooltipLeftAttached: number | undefined;
+  scales: Scales[];
+  tooltipData: BaseDataPoint;
+  getStyle: (k: string, i: number) => ChartStyleConfig;
+  getLineHeight: (d: BaseDataPoint, tokenAddr: string) => number;
+}) {
+  return (
+    <Group>
+      <Line
+        from={{ x: tooltipLeft, y: dataRegion.yTop }}
+        to={{ x: tooltipLeft, y: dataRegion.yBottom }}
+        stroke={BeanstalkPalette.lightGrey}
+        strokeWidth={1}
+        pointerEvents="none"
+      />
+      {reversedKeys.map((key, index) => {
+        const lenKeys = keys.length;
+        return (
+          <circle
+            key={index}
+            cx={tooltipLeftAttached}
+            cy={scales[0].yScale(getLineHeight(tooltipData, key)) ?? 0}
+            r={lenKeys === 1 ? 4 : 2}
+            fill={
+              lenKeys === 1
+                ? 'black'
+                : getStyle(key, reversedKeys.length - index - 1).to
+            }
+            fillOpacity={lenKeys === 1 ? 0.1 : 0.4}
+            stroke={
+              lenKeys === 1
+                ? 'black'
+                : getStyle(key, reversedKeys.length - index - 1).stroke
+            }
+            strokeOpacity={lenKeys === 1 ? 0.1 : 0.4}
+            strokeWidth={2}
+            pointerEvents="none"
+          />
+        );
+      })}
+    </Group>
+  );
+}
+
+const TooltipItem = React.memo(TooltipItemNonMemoized);
+
+const TooltipComponent = React.memo(TooltipComponentRaw);

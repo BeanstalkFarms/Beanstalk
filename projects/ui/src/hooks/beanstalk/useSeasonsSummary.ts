@@ -168,7 +168,7 @@ const useSeasonsSummary = () => {
     variables: {
       season_lte: currentSeason,
     },
-    skip: skipQuery,
+    skip: skipQuery || true,
   });
 
   const { data: liquidityAndPrice, loading: liquidityAndPricesLoading } =
@@ -181,7 +181,7 @@ const useSeasonsSummary = () => {
         pools: sdk.tokens.wellLPAddresses.map((address) => address),
       },
       context: { subgraph: 'bean' },
-      skip: skipQuery || !Object.keys(pools).length,
+      skip: skipQuery || !Object.keys(pools).length || true,
     });
 
   const instantaneousDeltaB = sdk.tokens.wellLPAddresses.reduce(

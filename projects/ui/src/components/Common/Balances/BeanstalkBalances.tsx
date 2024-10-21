@@ -4,12 +4,11 @@ import BigNumber from 'bignumber.js';
 import ResizablePieChart, {
   PieDataPoint,
 } from '~/components/Common/Charts/PieChart';
-import { displayBN, displayFullBN } from '~/util';
+import { displayBN, displayFullBN, tokenIshEqual } from '~/util';
 import useBeanstalkSiloBreakdown, {
   StateID,
   STATE_CONFIG,
 } from '~/hooks/beanstalk/useBeanstalkBalancesBreakdown';
-import useWhitelist from '~/hooks/beanstalk/useWhitelist';
 import TokenRow from '~/components/Common/Balances/TokenRow';
 import useChainConstant from '~/hooks/chain/useChainConstant';
 import { BEAN, UNRIPE_BEAN, UNRIPE_BEAN_WSTETH } from '~/constants/tokens';
@@ -17,15 +16,16 @@ import { FC } from '~/types';
 import { useAppSelector } from '~/state';
 import useGetChainToken from '~/hooks/chain/useGetChainToken';
 import useUnripeUnderlyingMap from '~/hooks/beanstalk/useUnripeUnderlying';
-import { ERC20Token } from '~/classes/Token';
+
 import useSiloTokenToFiat from '~/hooks/beanstalk/useSiloTokenToFiat';
+import { useWhitelistedTokens, TokenInstance } from '~/hooks/beanstalk/useTokens';
 import StatHorizontal from '../StatHorizontal';
 
 const BeanstalkBalances: FC<{
   breakdown: ReturnType<typeof useBeanstalkSiloBreakdown>;
 }> = ({ breakdown }) => {
   // Constants
-  const WHITELIST = useWhitelist();
+  const { tokenMap: WHITELIST } = useWhitelistedTokens();
   const getChainToken = useGetChainToken();
   const Bean = useChainConstant(BEAN);
   const urBean = getChainToken(UNRIPE_BEAN);
@@ -85,7 +85,7 @@ const BeanstalkBalances: FC<{
   const hoverToken = hoverAddress ? WHITELIST[hoverAddress] : undefined;
   const assetLabel = hoverToken?.name || 'Token';
 
-  function getUnripeBreakdown(token: ERC20Token, amount: BigNumber) {
+  function getUnripeBreakdown(token: TokenInstance, amount: BigNumber) {
     if (!token || !amount || !isTokenUnripe(token.address) || loadingUnripe)
       return { bdv: BigNumber(0), usd: BigNumber(0) };
 
@@ -99,7 +99,7 @@ const BeanstalkBalances: FC<{
   }
 
   function amountTooltip(
-    token: ERC20Token,
+    token: TokenInstance,
     amount: BigNumber,
     isBreakdown?: boolean
   ) {
@@ -267,7 +267,7 @@ const BeanstalkBalances: FC<{
                           2
                         )}
                         labelTooltip={STATE_CONFIG[state][2](
-                          hoverToken === Bean ? 'Beans' : hoverToken.symbol
+                          tokenIshEqual(hoverToken, Bean) ? 'Beans' : hoverToken.symbol
                         )}
                         amountTooltip={amountTooltip(
                           hoverToken,

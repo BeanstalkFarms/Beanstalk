@@ -60,3 +60,11 @@ export function arrayifyIfSet<T>(obj: T[] | Set<T>): T[] {
 export function isFunction<T extends Function>(value: any): value is T {
   return typeof value === 'function';
 }
+
+export function mayFunctionToValue<T>(valueOrFunction: any, ...vars: any[]): T {
+  if (isFunction(valueOrFunction)) {
+    return valueOrFunction(...vars) satisfies T;
+  }
+
+  return valueOrFunction satisfies T;
+}
