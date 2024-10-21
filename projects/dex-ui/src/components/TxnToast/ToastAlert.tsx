@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import styled from "styled-components";
 
 import { ImageButton } from "src/components/ImageButton";
+import { explorerName, explorerUrl, useSdkChainId } from "src/utils/chain";
 
 import { Copy, X } from "../Icons";
 import { BodyCaps, BodyS, LinksTextLink } from "../Typography";
@@ -30,14 +31,15 @@ export function ToastAlert({
   id?: any;
 }) {
   const handleClick = useCallback(() => (id !== null ? dismissErrors(id) : dismissErrors()), [id]);
+  const chainId = useSdkChainId();
 
   return (
     <Container>
       <Text>
         <Title>{desc}</Title>
         {hash && (
-          <Link href={`https://etherscan.io/tx/${hash}`} target="_blank" rel="noreferrer">
-            View on Etherscan
+          <Link href={`${explorerUrl(chainId)}/tx/${hash}`} target="_blank" rel="noreferrer">
+            View on {explorerName(chainId)}
           </Link>
         )}
 

@@ -10,6 +10,7 @@ import CyrfinLogo from "src/assets/images/cyrfin-logo.svg";
 import HalbornLogo from "src/assets/images/halborn-logo.png";
 import { AddressMap } from "src/types";
 import { toAddressMap } from "src/utils/addresses";
+import { explorerUrl } from "src/utils/chain";
 import useSdk from "src/utils/sdk/useSdk";
 import { usePumps } from "src/wells/pump/usePumps";
 import { useWellImplementations } from "src/wells/useWellImplementations";
@@ -51,8 +52,6 @@ export type WellComponentInfo = {
   info: ComponentInfo[];
   links: {
     explorer?: string;
-    // arbiscan?: string;
-    // etherscan?: string;
     github?: string;
     learnMore?: string;
   };
@@ -179,7 +178,7 @@ const getComponentWithUpdateLinks = (
   chainId: ChainId,
   address: string
 ) => {
-  const explorer = `https://${ChainResolver.isL2Chain(chainId) ? "arbiscan" : "etherscan"}.io/address/${address}`;
+  const explorer = explorerUrl(chainId) + `/address/${address}`;
 
   return {
     ...wellComponent,

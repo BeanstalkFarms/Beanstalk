@@ -8,6 +8,8 @@ import { BEAN, PODS, SILO_WHITELIST } from '~/constants/tokens';
 import { SupportedChainId } from '~/constants/chains';
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
+import { CHAIN_INFO } from '~/constants';
+import useChainConstant from '~/hooks/chain/useChainConstant';
 import TokenIcon from '../Common/TokenIcon';
 import useTokenMap from '../../hooks/chain/useTokenMap';
 
@@ -47,6 +49,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
   let amountOut;
 
   const siloTokens = useTokenMap(SILO_WHITELIST);
+  const chainInfo = useChainConstant(CHAIN_INFO);
 
   const processTokenEvent = (
     e: EventManager.Event,
@@ -209,7 +212,7 @@ const EventItem: FC<EventItemProps> = ({ event, account }) => {
                   textDecoration: 'none',
                   '&:hover': { textDecoration: 'underline' },
                 }}
-                href={`https://etherscan.io/tx/${event.transactionHash}`}
+                href={`${chainInfo.explorer}/tx/${event.transactionHash}`}
                 target="_blank"
                 rel="noreferrer"
               >

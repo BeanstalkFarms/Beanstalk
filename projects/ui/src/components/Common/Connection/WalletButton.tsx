@@ -133,7 +133,7 @@ const WalletButton: FC<{ showFullText?: boolean } & ButtonProps> = ({
           <Row gap={1}>
             <img
               src={chain.explorerLogoUrl || etherscanIcon}
-              alt="Etherscan"
+              alt="Etherscan/Arbiscan"
               width={20}
             />
             <Typography variant="body1" color="text.primary">

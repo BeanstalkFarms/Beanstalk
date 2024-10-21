@@ -71,7 +71,7 @@ const SmartSubmitButton: FC<
     loading?: boolean;
   } & ButtonProps
 > = ({ contract, tokens, mode = 'auto', nowApproving, children, ...props }) => {
-  const { explorer } = useChainConstant(CHAIN_INFO); // fallback to mainnet
+  const { explorer, explorerName } = useChainConstant(CHAIN_INFO); // fallback to mainnet
   const { values, setFieldValue } = useFormikContext<
     FormState | FormStateNew
   >();
@@ -253,7 +253,7 @@ const SmartSubmitButton: FC<
                 before executing this transaction.
               </Typography>
               <Typography>
-                View on Etherscan:{' '}
+                View on {explorerName}:{' '}
                 <Link
                   href={`${explorer}/address/${contract.address}`}
                   target="_blank"

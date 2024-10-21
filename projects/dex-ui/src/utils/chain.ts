@@ -1,4 +1,4 @@
-import { ChainResolver } from "@beanstalk/sdk-core";
+import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 
 import useSdk from "./sdk/useSdk";
 
@@ -17,3 +17,21 @@ export function useResolvedChainId() {
 
   return ChainResolver.resolveToMainnetChainId(sdkChainId);
 }
+
+export const explorerUrl = (chainId: ChainId) => {
+  switch (ChainResolver.resolveToMainnetChainId(chainId)) {
+    case ChainId.ARBITRUM_MAINNET:
+      return `https://arbiscan.io`;
+    default:
+      return `https://etherscan.io`;
+  }
+};
+
+export const explorerName = (chainId: ChainId) => {
+  switch (ChainResolver.resolveToMainnetChainId(chainId)) {
+    case ChainId.ARBITRUM_MAINNET:
+      return "Arbiscan";
+    default:
+      return "Etherscan";
+  }
+};
