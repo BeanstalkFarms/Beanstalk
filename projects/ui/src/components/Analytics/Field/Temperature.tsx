@@ -5,16 +5,13 @@ import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import SeasonPlot, {
   SeasonPlotBaseProps,
 } from '~/components/Common/Charts/SeasonPlot';
-import {
-  SeasonalTemperatureDocument,
-  SeasonalTemperatureQuery,
-} from '~/generated/graphql';
+import { SeasonalTemperatureQuery } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 import { AppState } from '~/state';
 
 import { FC } from '~/types';
-import { subgraphQueryKeys } from '~/util/Graph';
+import { subgraphQueryConfigs } from '~/util/Graph';
 
 const getValue = (snapshot: SnapshotData<SeasonalTemperatureQuery>) =>
   snapshot.temperature;
@@ -40,7 +37,7 @@ const Temperature: FC<{
   return (
     <SeasonPlot<SeasonalTemperatureQuery>
       height={height}
-      document={SeasonalTemperatureDocument}
+      document={subgraphQueryConfigs.beanstalkMaxTemperature.document}
       defaultValue={temperature?.gt(0) ? temperature.toNumber() : 0}
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
@@ -48,7 +45,8 @@ const Temperature: FC<{
       StatProps={statProps}
       LineChartProps={lineChartProps}
       statsRowFullWidth={statsRowFullWidth}
-      name={subgraphQueryKeys.beanstalkMaxTemperature}
+      queryConfig={subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions}
+      name={subgraphQueryConfigs.beanstalkMaxTemperature.queryKey}
     />
   );
 };
