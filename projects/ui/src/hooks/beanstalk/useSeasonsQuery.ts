@@ -104,9 +104,9 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
         const fetchL2 = fetchType !== 'l1-only';
         const fetchL1 = fetchType !== 'l2-only';
-        
+
         const reseedSeasonDiff = getNow2ReseedSeasonsDiff();
-        
+
         const baseVariables: OperationVariables = {
           first: PAGE_SIZE,
           season_lte: INIT_SEASON_LTE,
@@ -117,7 +117,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         const l1Config = mergeQueryOptions(queryOptions.l1, {
           variables: { ...baseVariables, ...baseL1Variables },
         });
-        
+
         const pushPromise = (
           promise: Promise<ApolloQueryResult<MinimumViableSnapshotQuery>>,
           callback?: (data: MinimumViableSnapshot) => void
@@ -133,7 +133,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
         if (range !== SeasonRange.ALL) {
           const numSeasons = SEASON_RANGE_TO_COUNT[_range];
-          if (l2Config.variables) { // should always be the truthy
+          if (l2Config.variables) {
+            // should always be the truthy
             l2Config.variables.first = numSeasons;
           }
 
@@ -182,7 +183,11 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             console.debug('[useSeasonsQuery]: l2 numQueries', numQueries);
 
             /// Query Seasons from network
-            for (const fetchData of getQueriesWithNumQueries(numQueries, latestL1, l1Config)) {
+            for (const fetchData of getQueriesWithNumQueries(
+              numQueries,
+              latestL1,
+              l1Config
+            )) {
               pushPromise(fetchData());
             }
           }
@@ -197,13 +202,20 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               latestL1 = Math.max(Math.min(latestL1, seasonData.season), 0);
             });
 
-            const numQueries = calcNumQueries(latestL1, l1Config.variables?.season_gt ?? 1);
+            const numQueries = calcNumQueries(
+              latestL1,
+              l1Config.variables?.season_gt ?? 1
+            );
             console.debug(
               `[useSeasonsQuery] numQueries = ${numQueries}, seasonsQueryFrom = ${latestL1} `
             );
 
             /// Query Seasons from network
-            const queries = getQueriesWithNumQueries(numQueries, latestL1, l1Config);
+            const queries = getQueriesWithNumQueries(
+              numQueries,
+              latestL1,
+              l1Config
+            );
             for (const fetchData of queries) {
               pushPromise(fetchData());
             }
@@ -228,7 +240,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
       }
       return data;
     },
-    staleTime: 1000 * 5, // 5 seconds
+    staleTime: 1000 * 60 * 5, // 5 seconds
     // staleTime: 1000 * 60 * 20, // 20 minutes
   });
 

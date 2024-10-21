@@ -465,8 +465,8 @@ export const getMultiChainToken = (_address: string) => {
   }
 
   return {
-    arb: chainConstant[cARB],
-    eth: chainConstant[cETH],
+    l2: chainConstant[cARB],
+    l1: chainConstant[cETH],
   };
 };
 

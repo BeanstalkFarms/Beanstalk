@@ -14,7 +14,10 @@ import useSeason from '~/hooks/beanstalk/useSeason';
 import { SnapshotData } from '~/hooks/beanstalk/useSeasonsQuery';
 
 import { FC } from '~/types';
-import { subgraphQueryConfigs, subgraphQueryKeys } from '~/util/Graph';
+import {
+  subgraphQueryConfigs,
+  subgraphQueryKeys,
+} from '~/util/Graph';
 
 const getValue = (season: SnapshotData<SeasonalInstantPriceQuery>) =>
   parseFloat(season.price);
