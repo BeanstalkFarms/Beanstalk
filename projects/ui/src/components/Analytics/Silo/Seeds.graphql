@@ -1,9 +1,9 @@
-query SeasonalSeeds($season_lte: Int, $season_gt: Int, $first: Int) {
+query SeasonalSeeds($season_lte: Int, $season_gt: Int, $first: Int, $silo: String) {
   seasons: siloHourlySnapshots(
     where: {
       season_lte: $season_lte
       season_gt: $season_gt
-      silo: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
+      silo: $silo
     }
     first: $first
     orderBy: season

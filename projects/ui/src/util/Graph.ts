@@ -356,7 +356,8 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { 
         ctx: "beanstalk",
         vars: { 
-          season_gt: chain === "l2" ? L2_MIN_SEASON : REPLANT_SEASON - 1
+          season_gt: chain === "l2" ? L2_MIN_SEASON : REPLANT_SEASON - 1,
+          silo: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
     ) satisfies DynamicSGQueryOption,
