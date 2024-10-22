@@ -395,6 +395,14 @@ library LibGerminate {
         );
     }
 
+    function isGerminating(address token, int96 stem) internal view returns (bool) {
+        (GerminationSide germinationState, ) = getGerminationState(token, stem);
+        if (germinationState == GerminationSide.NOT_GERMINATING) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * @notice determines whether a deposit (token + stem) should be germinating or not.
      * If germinating, determines whether the deposit should be set to even or odd.

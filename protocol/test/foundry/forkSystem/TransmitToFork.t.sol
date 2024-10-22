@@ -81,6 +81,37 @@ contract TransmitToForkTest is TestHelper {
         int96 lpStem = bs.stemTipForToken(BEAN_ETH_WELL);
         passGermination();
 
+        // attempt to transfer germinating deposits
+        {
+            depositForUser(user, BEAN, beanDepositAmount);
+            int96 secondBeanStem = bs.stemTipForToken(BEAN);
+
+            IMockFBeanstalk.SourceDeposit[] memory deposits = new IMockFBeanstalk.SourceDeposit[](
+                1
+            );
+            deposits[0] = IMockFBeanstalk.SourceDeposit(
+                BEAN,
+                beanDepositAmount,
+                secondBeanStem,
+                new uint256[](2), // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
+                0, // Not used for Bean deposits.
+                0, // populated by source
+                0, // populated by source
+                address(0), // populated by source
+                0 // populated by source
+            );
+
+            bytes[] memory assets = new bytes[](3);
+            assets[0] = abi.encode(deposits);
+            assets[1] = abi.encode(new IMockFBeanstalk.SourcePlot[](0));
+            assets[2] = abi.encode(new IMockFBeanstalk.SourceFertilizer[](0));
+
+            vm.expectRevert("Transmit: Cannot transmit germinating deposits");
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, assets, abi.encode(""));
+        }
+
         // Capture Source state.
         (, uint256 beanDepositBdv) = bs.getDeposit(user, BEAN, beanStem);
         require(beanDepositBdv > 0, "Source Bean deposit bdv");

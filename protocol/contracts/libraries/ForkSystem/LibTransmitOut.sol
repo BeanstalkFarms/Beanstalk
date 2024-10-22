@@ -18,6 +18,7 @@ import {LibMarket} from "contracts/libraries/LibMarket.sol";
 import {LibField} from "contracts/libraries/LibField.sol";
 import {IBean} from "contracts/interfaces/IBean.sol";
 import {IFertilizer} from "contracts/interfaces/IFertilizer.sol";
+import {LibGerminate} from "contracts/libraries/Silo/LibGerminate.sol";
 
 /**
  * @title LibTransmitOut
@@ -95,6 +96,11 @@ library LibTransmitOut {
                     LibSilo._mow(user, deposits[i].token);
                     break;
                 }
+            }
+
+            // if the deposit is germinating, it cannot be transmitted
+            if (LibGerminate.isGerminating(deposits[i].token, deposits[i].stem)) {
+                revert("Transmit: Cannot transmit germinating deposits");
             }
 
             // Withdraw deposit from Silo.
