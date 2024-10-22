@@ -97,10 +97,10 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
               <Detail>{wellTokenDetail} Well</Detail>
             </Td>
             <DesktopTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
+              <Link href={`https://arbiscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.address}`}>
+              <Link href={`https://arbiscan.io/address/${well.address}`}>
                 {well.address.substr(0, 5) + "..." + well.address.substr(well.address.length - 5)}
               </Link>
             </MobileTd>
@@ -110,10 +110,10 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
               <Detail>Well LP Token - {displayTokenSymbol(well.lpToken as Token)}</Detail>
             </Td>
             <DesktopTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.address}`}>{well.address}</Link>
+              <Link href={`https://arbiscan.io/address/${well.address}`}>{well.address}</Link>
             </DesktopTd>
             <MobileTd align={"right"}>
-              <Link href={`https://etherscan.io/address/${well.address}`}>
+              <Link href={`https://arbiscan.io/address/${well.address}`}>
                 {well.address.substr(0, 5) + "..." + well.address.substr(well.address.length - 5)}
               </Link>
             </MobileTd>
@@ -128,8 +128,8 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                   <Link
                     href={
                       token
-                        ? `https://etherscan.io/address/${token.address}`
-                        : `https://etherscan.io/`
+                        ? `https://arbiscan.io/address/${token.address}`
+                        : `https://arbiscan.io/`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -141,8 +141,8 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                   <Link
                     href={
                       token
-                        ? `https://etherscan.io/address/${token.address}`
-                        : `https://etherscan.io/`
+                        ? `https://arbiscan.io/address/${token.address}`
+                        : `https://arbiscan.io/`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -162,12 +162,12 @@ const OtherSectionContent: FC<Props> = ({ well }) => {
                   <Detail>{tableItem.name}</Detail>
                 </Td>
                 <DesktopTd align={"right"}>
-                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>
+                  <Link href={`https://arbiscan.io/address/${tableItem.address}`}>
                     {tableItem.address}
                   </Link>
                 </DesktopTd>
                 <MobileTd align={"right"}>
-                  <Link href={`https://etherscan.io/address/${tableItem.address}`}>
+                  <Link href={`https://arbiscan.io/address/${tableItem.address}`}>
                     {tableItem.address.substr(0, 5) +
                       "..." +
                       tableItem.address.substr(tableItem.address.length - 5)}

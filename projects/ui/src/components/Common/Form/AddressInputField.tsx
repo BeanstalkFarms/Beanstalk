@@ -19,11 +19,11 @@ import { ethers } from 'ethers';
 import useChainId from '~/hooks/chain/useChainId';
 import useAccount from '~/hooks/ledger/useAccount';
 import { CHAIN_INFO } from '~/constants';
+import Row from '~/components/Common/Row';
+import { FC } from '~/types';
 import OutputField from './OutputField';
 import BorderEffect from './BorderEffect';
 import { trimAddress } from '../../../util';
-import Row from '~/components/Common/Row';
-import { FC } from '~/types';
 
 export type AddressInputFieldProps = Partial<TextFieldProps> & {
   name: string;
@@ -153,7 +153,7 @@ const AddressInputFieldInner: FC<FieldProps & AddressInputFieldProps> = ({
               color="primary"
             />
             <Typography>
-              <Tooltip title="View on Etherscan">
+              <Tooltip title={`View on ${CHAIN_INFO[chainId].explorerName}`}>
                 <Link
                   underline="hover"
                   color="text.primary"

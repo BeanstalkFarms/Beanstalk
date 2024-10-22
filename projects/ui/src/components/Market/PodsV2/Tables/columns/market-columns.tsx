@@ -27,11 +27,10 @@ import { PodListing, PodOrder, PricingType } from '~/state/farmer/market';
 import { displayBN, displayFullBN, MinBN } from '~/util';
 import Row from '~/components/Common/Row';
 import TokenIcon from '~/components/Common/TokenIcon';
-import { BEAN, PODS } from '~/constants/tokens';
+import { ARB, BEAN, PODS } from '~/constants/tokens';
 import { ZERO_BN } from '~/constants';
 import { BeanstalkPalette, FontSize } from '~/components/App/muiTheme';
 import { FarmerMarketOrder } from '~/hooks/farmer/market/useFarmerMarket2';
-import etherscanIcon from '~/img/beanstalk/interface/nav/etherscan.svg';
 import EntityIcon from '~/components/Market/PodsV2/Common/EntityIcon';
 import { MarketEvent } from '~/hooks/beanstalk/useMarketActivityData';
 import { FC } from '~/types';
@@ -143,7 +142,7 @@ export const MarketColumns = {
           <>
             {params.row[hashKey] ? (
               <Link
-                href={`https://etherscan.io/tx/${params.row[hashKey]}`}
+                href={`https://arbiscan.io/tx/${params.row[hashKey]}`}
                 rel="noreferrer"
                 target="_blank"
                 underline="hover"
@@ -154,7 +153,7 @@ export const MarketColumns = {
                 <Row>
                   <span>{params.formattedValue}</span>
                   <img
-                    src={etherscanIcon}
+                    src={ARB[1].logo}
                     alt=""
                     css={{ height: 12, marginLeft: 5, display: 'none' }}
                   />
@@ -162,12 +161,12 @@ export const MarketColumns = {
               </Link>
             ) : (
               <Typography color="text.secondary" sx={{ fontSize: 'inherit' }}>
-                {params.formattedValue}  
+                {params.formattedValue}
               </Typography>
             )}
           </>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
     /** */
     pricePerPod: (flex: number, align?: 'left' | 'right') =>
       ({
@@ -186,7 +185,7 @@ export const MarketColumns = {
           ) : (
             '-'
           ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     placeInLine: (
@@ -237,7 +236,7 @@ export const MarketColumns = {
             </TooltipPill>
           );
         },
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     expiry: (flex: number, align?: 'left' | 'right') =>
@@ -280,7 +279,7 @@ export const MarketColumns = {
             </TooltipPill>
           );
         },
-      } as GridColumns[number]),
+      }) as GridColumns[number],
   },
 
   /** "MARKET ACTVITY" */
@@ -306,7 +305,7 @@ export const MarketColumns = {
           ) : (
             '-'
           ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
   },
 
   /** "YOUR ORDERS" */
@@ -340,7 +339,7 @@ export const MarketColumns = {
             </Row>
           </TooltipPill>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     amountPods: (flex: number, align?: 'left' | 'right') =>
@@ -360,7 +359,7 @@ export const MarketColumns = {
           ) : (
             '-'
           ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     fillPct: (flex: number, align?: 'left' | 'right') =>
@@ -423,7 +422,7 @@ export const MarketColumns = {
             </TooltipPill>
           );
         },
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     amountBeans: (flex: number, align?: 'left' | 'right') =>
@@ -443,7 +442,7 @@ export const MarketColumns = {
           ) : (
             '-'
           ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     status: (flex: number, align?: 'left' | 'right') =>
@@ -464,11 +463,13 @@ export const MarketColumns = {
 
           return (
             <Typography sx={{ fontSize: 'inherit', color: color }}>
-              {key === 'cancelled_partial' ? `CANCELLED (PARTIAL)` : params.value.toString().toUpperCase()}
+              {key === 'cancelled_partial'
+                ? `CANCELLED (PARTIAL)`
+                : params.value.toString().toUpperCase()}
             </Typography>
           );
         },
-      } as GridColumns[number]),
+      }) as GridColumns[number],
   },
 
   /** "BUY NOW" (Pod Listings) */
@@ -487,7 +488,7 @@ export const MarketColumns = {
             <span>{params.value}</span>
           </Row>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     placeInLine: (
@@ -520,7 +521,7 @@ export const MarketColumns = {
             </Typography>
           </>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     remainingAmount: (flex: number, align?: 'left' | 'right') =>
@@ -540,7 +541,7 @@ export const MarketColumns = {
             </Typography>
           </Row>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
   },
 
   /** "SELL NOW" (Pod Orders) */
@@ -559,7 +560,7 @@ export const MarketColumns = {
             <span>{params.value.substring(0, 8)}</span>
           </Row>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** */
     podAmountRemaining: (flex: number, align?: 'left' | 'right') =>
@@ -589,7 +590,7 @@ export const MarketColumns = {
             </Row>
           </TooltipPill>
         ),
-      } as GridColumns[number]),
+      }) as GridColumns[number],
 
     /** For orders, place in line is a range from 0 - maxPlaceInLine. */
     maxPlaceInLine: (flex: number, align?: 'left' | 'right') =>
@@ -618,6 +619,6 @@ export const MarketColumns = {
             </Typography>
           </>
         ),
-      } as GridColumns<FarmerMarketOrder>[number]),
+      }) as GridColumns<FarmerMarketOrder>[number],
   },
 };

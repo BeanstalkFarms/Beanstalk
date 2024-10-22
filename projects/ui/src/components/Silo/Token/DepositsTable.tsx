@@ -30,9 +30,10 @@ import {
 } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { useAppSelector } from '~/state';
 import { minimizeWindowIcon } from '~/img/icon';
+import { useResolvedChainId } from '~/hooks/chain/useChainId';
+import useSdk from '~/hooks/sdk';
 import {
   TokenDepositsContextType,
   TokenDepositsSelectType,
@@ -252,133 +253,149 @@ const SingleTokenDepositDialogContent = ({
   token: Token;
   account: string;
   setSlug: TokenDepositsContextType['setSlug'];
-}) => (
-  <Stack p={2} gap={2} width="100%" maxWidth={{ xs: '100%', md: '491px' }}>
-    {/* Deposit */}
-    <Row justifyContent="space-between" alignItems="flex-start">
-      <Typography>Deposit Owner</Typography>
-      <Row gap={0.5}>
-        <AddressIcon address={account} size={IconSize.xs} />
-        <Typography>{trimAddress(account)}</Typography>
-      </Row>
-    </Row>
-    <Row justifyContent="space-between" alignItems="flex-start">
-      <Typography>Deposit Id</Typography>
-      <Typography>{trimDepositId(row.key)}</Typography>
-    </Row>
-    {/* Deposit Amount */}
-    <Row justifyContent="space-between" alignItems="flex-start">
-      <Typography>Value</Typography>
-      <Stack justifyContent="flex-start" alignItems="flex-end">
+}) => {
+  const chainId = useResolvedChainId();
+  const sdk = useSdk();
+
+  return (
+    <Stack p={2} gap={2} width="100%" maxWidth={{ xs: '100%', md: '491px' }}>
+      {/* Deposit */}
+      <Row justifyContent="space-between" alignItems="flex-start">
+        <Typography>Deposit Owner</Typography>
         <Row gap={0.5}>
-          <TokenIcon token={token} css={{ height: '16px' }} />
-          <Typography>
-            {formatTV(row.amount, 2, BigNumberJS.ROUND_HALF_CEIL)}
+          <AddressIcon address={account} size={IconSize.xs} />
+          <Typography>{trimAddress(account)}</Typography>
+        </Row>
+      </Row>
+      <Row justifyContent="space-between" alignItems="flex-start">
+        <Typography>Deposit Id</Typography>
+        <Typography>{trimDepositId(row.key)}</Typography>
+      </Row>
+      {/* Deposit Amount */}
+      <Row justifyContent="space-between" alignItems="flex-start">
+        <Typography>Value</Typography>
+        <Stack justifyContent="flex-start" alignItems="flex-end">
+          <Row gap={0.5}>
+            <TokenIcon token={token} css={{ height: '16px' }} />
+            <Typography>
+              {formatTV(row.amount, 2, BigNumberJS.ROUND_HALF_CEIL)}
+            </Typography>
+          </Row>
+          <Typography color="text.secondary" variant="bodySmall">
+            <Fiat token={token} amount={row.amount} />
+          </Typography>
+        </Stack>
+      </Row>
+      {/* Deposit Stalk */}
+      <Stack>
+        <Row justifyContent="space-between" alignItems="flex-start">
+          <Typography>Stalk</Typography>
+          <Row gap={0.25}>
+            <TokenIcon token={STALK} css={{ maxHeight: '1em' }} />
+            <Typography>
+              {formatTV(row.stalk.total, 2, BigNumberJS.ROUND_HALF_CEIL)}
+            </Typography>
+          </Row>
+        </Row>
+        <Row justifyContent="space-between" alignItems="flex-start">
+          <Typography
+            color="text.secondary"
+            variant="bodySmall"
+            fontWeight={FontWeight.normal}
+          >
+            At time of Deposit
+          </Typography>
+          <Typography
+            color="text.secondary"
+            variant="bodySmall"
+            fontWeight={FontWeight.normal}
+          >
+            {formatTV(row.stalk.base, 2, BigNumberJS.ROUND_HALF_CEIL)}
           </Typography>
         </Row>
-        <Typography color="text.secondary" variant="bodySmall">
-          <Fiat token={token} amount={row.amount} />
-        </Typography>
+        <Row justifyContent="space-between" alignItems="flex-start">
+          <Typography
+            color="text.secondary"
+            variant="bodySmall"
+            fontWeight={FontWeight.normal}
+          >
+            Grown since Deposit
+          </Typography>
+          <Typography
+            color="text.secondary"
+            variant="bodySmall"
+            fontWeight={FontWeight.normal}
+          >
+            {formatTV(row.stalk.grown, 2, BigNumberJS.ROUND_HALF_CEIL)}
+          </Typography>
+        </Row>
       </Stack>
-    </Row>
-    {/* Deposit Stalk */}
-    <Stack>
       <Row justifyContent="space-between" alignItems="flex-start">
-        <Typography>Stalk</Typography>
-        <Row gap={0.25}>
-          <TokenIcon token={STALK} css={{ maxHeight: '1em' }} />
+        <Typography>Seed</Typography>
+        <Row gap={0.3}>
+          <TokenIcon token={SEEDS} css={{ height: '16px' }} />
           <Typography>
-            {formatTV(row.stalk.total, 2, BigNumberJS.ROUND_HALF_CEIL)}
+            {formatTV(row.seeds, 2, BigNumberJS.ROUND_HALF_CEIL)}
           </Typography>
         </Row>
       </Row>
-      <Row justifyContent="space-between" alignItems="flex-start">
-        <Typography
-          color="text.secondary"
-          variant="bodySmall"
-          fontWeight={FontWeight.normal}
+      <Row
+        direction={{ xs: 'column', md: 'row' }}
+        gap={1}
+        justifyContent="space-between"
+        sx={{
+          button: {
+            width: '100%',
+            'img, svg': {
+              height: '16px',
+              width: 'auto',
+            },
+          },
+        }}
+      >
+        <Button
+          variant="outlined-secondary"
+          color="secondary"
+          size="small"
+          startIcon={<Box component="img" src={minimizeWindowIcon} />}
+          onClick={() => setSlug('transfer')}
         >
-          At time of Deposit
-        </Typography>
-        <Typography
-          color="text.secondary"
-          variant="bodySmall"
-          fontWeight={FontWeight.normal}
+          Transfer
+        </Button>
+        <Button
+          variant="outlined-secondary"
+          color="secondary"
+          size="small"
+          startIcon={<Box component="img" src={minimizeWindowIcon} />}
+          onClick={() => setSlug('lambda')}
         >
-          {formatTV(row.stalk.base, 2, BigNumberJS.ROUND_HALF_CEIL)}
-        </Typography>
-      </Row>
-      <Row justifyContent="space-between" alignItems="flex-start">
-        <Typography
-          color="text.secondary"
-          variant="bodySmall"
-          fontWeight={FontWeight.normal}
+          Update Deposit
+        </Button>
+        {/**
+         * Keeping this for now. This doesn't work b/c OpenSea hasn't
+         * indexed the events
+         */}
+        {/* <Button
+          variant="outlined-secondary"
+          color="secondary"
+          size="small"
+          endIcon={<NorthEastIcon />}
+          onClick={() => {
+            window.open(
+              `https://opensea.io/assets/${
+                chainId === SupportedChainId.ARBITRUM_MAINNET ? 'arbitrum/' : ''
+              }${sdk.contracts.beanstalk.address}/${row.id.toString()}`,
+              '_blank',
+              'noopener,noreferrer'
+            );
+          }}
         >
-          Grown since Deposit
-        </Typography>
-        <Typography
-          color="text.secondary"
-          variant="bodySmall"
-          fontWeight={FontWeight.normal}
-        >
-          {formatTV(row.stalk.grown, 2, BigNumberJS.ROUND_HALF_CEIL)}
-        </Typography>
+          View on OpenSea
+        </Button> */}
       </Row>
     </Stack>
-    <Row justifyContent="space-between" alignItems="flex-start">
-      <Typography>Seed</Typography>
-      <Row gap={0.3}>
-        <TokenIcon token={SEEDS} css={{ height: '16px' }} />
-        <Typography>
-          {formatTV(row.seeds, 2, BigNumberJS.ROUND_HALF_CEIL)}
-        </Typography>
-      </Row>
-    </Row>
-    <Row
-      direction={{ xs: 'column', sm: 'row' }}
-      gap={1}
-      justifyContent="space-between"
-      sx={(t) => ({
-        button: {
-          [t.breakpoints.down('sm')]: {
-            width: '100%',
-          },
-          'img, svg': {
-            height: '16px',
-            width: 'auto',
-          },
-        },
-      })}
-    >
-      <Button
-        variant="outlined-secondary"
-        color="secondary"
-        size="small"
-        startIcon={<Box component="img" src={minimizeWindowIcon} />}
-        onClick={() => setSlug('transfer')}
-      >
-        Transfer
-      </Button>
-      <Button
-        variant="outlined-secondary"
-        color="secondary"
-        size="small"
-        startIcon={<Box component="img" src={minimizeWindowIcon} />}
-        onClick={() => setSlug('lambda')}
-      >
-        Update Deposit
-      </Button>
-      <Button
-        variant="outlined-secondary"
-        color="secondary"
-        size="small"
-        endIcon={<NorthEastIcon />}
-      >
-        View on Etherscan
-      </Button>
-    </Row>
-  </Stack>
-);
+  );
+};
 
 // ---------- Components ----------
 

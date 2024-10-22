@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { TokenValue } from "@beanstalk/sdk";
 
 import { size } from "src/breakpoints";
+import { explorerUrl } from "src/utils/chain";
 import {
   AddEvent,
   EVENT_TYPE,
@@ -92,7 +93,7 @@ export const renderEvent = (
     <Row key={event.tx}>
       <Td>
         <Action
-          href={`https://etherscan.io/tx/${event.tx}`}
+          href={`${explorerUrl(well.sdk.chainId)}/tx/${event.tx}`}
           target="_blank"
           rel="noopener noreferrer"
         >
