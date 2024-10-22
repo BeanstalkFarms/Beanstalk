@@ -30,10 +30,9 @@ import {
 } from '~/components/App/muiTheme';
 import Row from '~/components/Common/Row';
 import AddressIcon from '~/components/Common/AddressIcon';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { useAppSelector } from '~/state';
 import { minimizeWindowIcon } from '~/img/icon';
-import { Link } from 'react-router-dom';
+import { useResolvedChainId } from '~/hooks/chain/useChainId';
 import useSdk from '~/hooks/sdk';
 import {
   TokenDepositsContextType,
@@ -255,7 +254,9 @@ const SingleTokenDepositDialogContent = ({
   account: string;
   setSlug: TokenDepositsContextType['setSlug'];
 }) => {
+  const chainId = useResolvedChainId();
   const sdk = useSdk();
+
   return (
     <Stack p={2} gap={2} width="100%" maxWidth={{ xs: '100%', md: '491px' }}>
       {/* Deposit */}
@@ -339,20 +340,18 @@ const SingleTokenDepositDialogContent = ({
         </Row>
       </Row>
       <Row
-        direction={{ xs: 'column', sm: 'row' }}
+        direction={{ xs: 'column', md: 'row' }}
         gap={1}
         justifyContent="space-between"
-        sx={(t) => ({
+        sx={{
           button: {
-            [t.breakpoints.down('sm')]: {
-              width: '100%',
-            },
+            width: '100%',
             'img, svg': {
               height: '16px',
               width: 'auto',
             },
           },
-        })}
+        }}
       >
         <Button
           variant="outlined-secondary"
@@ -372,22 +371,27 @@ const SingleTokenDepositDialogContent = ({
         >
           Update Deposit
         </Button>
-        <Button
+        {/**
+         * Keeping this for now. This doesn't work b/c OpenSea hasn't
+         * indexed the events
+         */}
+        {/* <Button
           variant="outlined-secondary"
           color="secondary"
           size="small"
           endIcon={<NorthEastIcon />}
-          LinkComponent={Link}
           onClick={() => {
             window.open(
-              `https://arbiscan.io/1155/${row.id.toHexString()}`,
+              `https://opensea.io/assets/${
+                chainId === SupportedChainId.ARBITRUM_MAINNET ? 'arbitrum/' : ''
+              }${sdk.contracts.beanstalk.address}/${row.id.toString()}`,
               '_blank',
               'noopener,noreferrer'
             );
           }}
         >
-          View on Arbiscan
-        </Button>
+          View on OpenSea
+        </Button> */}
       </Row>
     </Stack>
   );
