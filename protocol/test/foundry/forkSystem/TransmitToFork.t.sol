@@ -114,10 +114,10 @@ contract TransmitToForkTest is TestHelper {
 
         // Capture Source state.
         (, uint256 beanDepositBdv) = bs.getDeposit(user, BEAN, beanStem);
-        require(beanDepositBdv > 0, "Source Bean deposit bdv");
+        assertGt(beanDepositBdv, 0, "Source Bean deposit bdv");
         uint256 lpDepositBdv;
         (lpDepositAmount, lpDepositBdv) = bs.getDeposit(user, BEAN_ETH_WELL, lpStem);
-        require(lpDepositBdv > 0, "Source LP deposit bdv");
+        assertGt(lpDepositBdv, 0, "Source LP deposit bdv");
 
         uint256 migrationAmountLp = lpDepositAmount / 2;
 
@@ -205,42 +205,43 @@ contract TransmitToForkTest is TestHelper {
                 BEAN,
                 beanStem
             );
-            require(sourceDepositAmount == 0, "Source bean deposit amt");
-            require(sourceDepositBdv == 0, "Source bean deposit bdv");
+            assertEq(sourceDepositAmount, 0, "Source bean deposit amt");
+            assertEq(sourceDepositBdv, 0, "Source bean deposit bdv");
             (sourceDepositAmount, sourceDepositBdv) = bs.getDeposit(user, BEAN_ETH_WELL, lpStem);
-            require(
-                sourceDepositAmount == lpDepositAmount - migrationAmountLp,
+            assertEq(
+                sourceDepositAmount,
+                lpDepositAmount - migrationAmountLp,
                 "Source lp deposit amt"
             );
-            require(sourceDepositBdv < lpDepositBdv, "Source lp deposit bdv");
+            assertLt(sourceDepositBdv, lpDepositBdv, "Source lp deposit bdv");
         }
         // Verify Destination deposits.
         {
             uint256[] memory destDepositIds = newBs
                 .getTokenDepositsForAccount(user, BEAN)
                 .depositIds;
-            require(destDepositIds.length == 1, "Dest deposit count");
+            assertEq(destDepositIds.length, 1, "Dest deposit count");
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
             (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = newBs.getDeposit(
                 user,
                 BEAN,
                 stem
             );
-            require(stem < newBs.stemTipForToken(token), "Dest Bean deposit stem too high");
-            require(beanDepositAmount == destinationDepositAmount, "Dest Bean deposit amount");
-            require(beanDepositBdv == destinationDepositBdv, "Dest Bean deposit bdv");
+            assertLt(stem, newBs.stemTipForToken(token), "Dest Bean deposit stem too high");
+            assertEq(beanDepositAmount, destinationDepositAmount, "Dest Bean deposit amount");
+            assertEq(beanDepositBdv, destinationDepositBdv, "Dest Bean deposit bdv");
 
             destDepositIds = newBs.getTokenDepositsForAccount(user, BEAN_ETH_WELL).depositIds;
-            require(destDepositIds.length == 1, "Dest deposit count");
+            assertEq(destDepositIds.length, 1, "Dest deposit count");
             (token, stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
             (destinationDepositAmount, destinationDepositBdv) = newBs.getDeposit(
                 user,
                 BEAN_ETH_WELL,
                 stem
             );
-            require(stem < newBs.stemTipForToken(BEAN_ETH_WELL), "Dest lp dep stem too high");
-            require(migrationAmountLp == destinationDepositAmount, "Dest lp deposit amount");
-            require(0 < destinationDepositBdv, "Dest lp deposit bdv");
+            assertLt(stem, newBs.stemTipForToken(BEAN_ETH_WELL), "Dest lp dep stem too high");
+            assertEq(migrationAmountLp, destinationDepositAmount, "Dest lp deposit amount");
+            assertLt(0, destinationDepositBdv, "Dest lp deposit bdv");
         }
     }
 
@@ -284,18 +285,18 @@ contract TransmitToForkTest is TestHelper {
 
         // Verify Source plots.
         {
-            require(bs.plot(user, SRC_FIELD, 0) == 0, "1st src amt");
-            require(bs.plot(user, SRC_FIELD, partialAmt) == remainingAmt, "1.5 src amt");
-            require(bs.plot(user, SRC_FIELD, podsPerSow) == 0, "2nd src amt");
-            require(bs.plot(ZERO_ADDR, SRC_FIELD, 0) == partialAmt, "1st src null amt");
-            require(bs.plot(ZERO_ADDR, SRC_FIELD, partialAmt) == 0, "1.5 src null amt");
-            require(bs.plot(ZERO_ADDR, SRC_FIELD, podsPerSow) == podsPerSow, "2nd src null amt");
+            assertEq(bs.plot(user, SRC_FIELD, 0), 0, "1st src amt");
+            assertEq(bs.plot(user, SRC_FIELD, partialAmt), remainingAmt, "1.5 src amt");
+            assertEq(bs.plot(user, SRC_FIELD, podsPerSow), 0, "2nd src amt");
+            assertEq(bs.plot(ZERO_ADDR, SRC_FIELD, 0), partialAmt, "1st src null amt");
+            assertEq(bs.plot(ZERO_ADDR, SRC_FIELD, partialAmt), 0, "1.5 src null amt");
+            assertEq(bs.plot(ZERO_ADDR, SRC_FIELD, podsPerSow), podsPerSow, "2nd src null amt");
         }
         // Verify Destination plots.
         {
-            require(newBs.plot(user, DEST_FIELD, 0) == partialAmt, "1st dest amt");
-            require(newBs.plot(ZERO_ADDR, DEST_FIELD, partialAmt) == remainingAmt, "1.5 dest amt");
-            require(newBs.plot(user, DEST_FIELD, podsPerSow) == podsPerSow, "2nd dest amt");
+            assertEq(newBs.plot(user, DEST_FIELD, 0), partialAmt, "1st dest amt");
+            assertEq(newBs.plot(ZERO_ADDR, DEST_FIELD, partialAmt), remainingAmt, "1.5 dest amt");
+            assertEq(newBs.plot(user, DEST_FIELD, podsPerSow), podsPerSow, "2nd dest amt");
         }
 
         // Migrate a plot that is already harvestable and a plot that is beyond the source init length.
@@ -345,19 +346,19 @@ contract TransmitToForkTest is TestHelper {
             emit IMockFBeanstalk.Harvest(farmers[5], SRC_FIELD, plotIndices, 0);
             vm.prank(farmers[5]);
             bs.harvest(0, plotIndices, 0);
-            require(bean.balanceOf(farmers[5]) == initBeanBalance, "Beans received from slashing");
+            assertEq(bean.balanceOf(farmers[5]), initBeanBalance, "Beans received from slashing");
             // at this point, only slashed plots have been processed, no beans harvested
-            require(bs.totalHarvested(SRC_FIELD) == 0, "total harvested");
-            require(bs.totalSlashed(SRC_FIELD) == bs.totalProcessed(SRC_FIELD), "total slashed");
+            assertEq(bs.totalHarvested(SRC_FIELD), 0, "total harvested");
+            assertEq(bs.totalSlashed(SRC_FIELD), bs.totalProcessed(SRC_FIELD), "total slashed");
         }
         // Verify Destination plots by harvesting.
         {
             newBs.sunSunrise(10_000_000e6, 0);
             uint256[] memory plotIds = newBs.getPlotIndexesFromAccount(user, DEST_FIELD);
             for (uint256 i; i < plotIds.length; i++) {
-                require(plotIds[i] >= SRC_INIT_PODS, "plot not pushed");
+                assertGe(plotIds[i], SRC_INIT_PODS, "plot not pushed");
             }
-            require(plotIds.length == 2, "dest plot count");
+            assertEq(plotIds.length, 2, "dest plot count");
             vm.expectEmit();
             emit IMockFBeanstalk.Harvest(user, DEST_FIELD, plotIds, pods);
             vm.prank(user);
@@ -430,20 +431,20 @@ contract TransmitToForkTest is TestHelper {
 
         // Verify Source fertilizer state.
         {
-            require(bs.totalUnfertilizedBeans() < srcInitUnfert, "Src unfert amt");
-            require(bs.getActiveFertilizer() == srcInitActiveFert - totalTrans, "Src afert amt");
+            assertLt(bs.totalUnfertilizedBeans(), srcInitUnfert, "Src unfert amt");
+            assertEq(bs.getActiveFertilizer(), srcInitActiveFert - totalTrans, "Src afert amt");
         }
         // Verify Destination fertilizer.
         {
-            require(newBs.getFertilizer(id0) == transAmount0, "Dest fert0 amt");
-            require(newBs.getFertilizer(id1) == transAmount1, "Dest fert1 amt");
-            require(newBs.totalUnfertilizedBeans() > totalTrans, "Dest unfert");
-            require(newBs.getActiveFertilizer() == totalTrans, "Dest fert1 amt");
+            assertEq(newBs.getFertilizer(id0), transAmount0, "Dest fert0 amt");
+            assertEq(newBs.getFertilizer(id1), transAmount1, "Dest fert1 amt");
+            assertGt(newBs.totalUnfertilizedBeans(), totalTrans, "Dest unfert");
+            assertEq(newBs.getActiveFertilizer(), totalTrans, "Dest fert1 amt");
         }
         // Balance of Fertilizer is unchanged, since both src and dest use the same Fert contract.
         {
-            require(fertilizer.balanceOf(user, id0) == fertAmount0, "fert0 amt");
-            require(fertilizer.balanceOf(user, id1) == fertAmount1, "fert1 amt");
+            assertEq(fertilizer.balanceOf(user, id0), fertAmount0, "fert0 amt");
+            assertEq(fertilizer.balanceOf(user, id1), fertAmount1, "fert1 amt");
         }
         // Fert is rinsible at destination.
         {
