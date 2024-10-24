@@ -7,9 +7,7 @@ import {LibTransmitOut} from "contracts/libraries/ForkSystem/LibTransmitOut.sol"
 interface ITransmitOutFacet {
     function transmitOut(
         address destination,
-        LibTransmitOut.SourceDeposit[] calldata sourceDeposits,
-        LibTransmitOut.SourcePlot[] calldata sourcePlots,
-        LibTransmitOut.SourceFertilizer[] calldata sourceFertilizer,
+        bytes[] calldata assets,
         bytes calldata data
     ) external;
 }
