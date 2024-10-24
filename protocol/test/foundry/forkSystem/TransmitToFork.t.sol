@@ -110,6 +110,13 @@ contract TransmitToForkTest is TestHelper {
             vm.expectRevert("Transmit: Cannot transmit germinating deposits");
             vm.prank(user);
             bs.transmitOut(newBsAddr, _assets, abi.encode(""));
+
+            // if one season passes, the deposit is still germinating, it should revert
+
+            bs.siloSunrise(0);
+            vm.expectRevert("Transmit: Cannot transmit germinating deposits");
+            vm.prank(user);
+            bs.transmitOut(newBsAddr, _assets, abi.encode(""));
         }
 
         // Capture Source state.
