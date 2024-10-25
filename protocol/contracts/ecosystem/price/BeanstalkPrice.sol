@@ -36,4 +36,13 @@ contract BeanstalkPrice is WellPrice {
         }
         p.price = p.price.div(p.liquidity);
     }
+
+    /**
+     * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
+     * Bean in the specified liquidity pools.
+     * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
+     **/
+    function poolPrice(address pool) public view returns (P.Pool memory p) {
+        return getWell(pool);
+    }
 }
