@@ -3,10 +3,10 @@ import { FarmFromMode } from '@beanstalk/sdk';
 import BigNumber from 'bignumber.js';
 import { useCallback } from 'react';
 import { displayTokenAmount, getTokenIndex } from '~/util';
-import Token from '~/classes/Token';
 import useFarmerBalances from '../farmer/useFarmerBalances';
 import { ZERO_BN } from '../../constants';
 import { Balance } from '../../state/farmer/balances';
+import { TokenInstance } from './useTokens';
 
 // Define partial types to avoid clashing between sdk & UI token types
 type TokenIsh = { address: string; symbol: string };
@@ -31,7 +31,7 @@ export type AmountsBySource = {
  */
 export const displayAmountsBySource = (
   amounts: AmountsBySource,
-  token: Token,
+  token: TokenInstance,
   between?: string, // inject a str between amounts and owner
   owner?: string // defaults to 'your'
 ) => {
@@ -39,10 +39,10 @@ export const displayAmountsBySource = (
   const ownerStr = owner || 'your';
 
   const internal = amounts.internal.gt(0)
-    ? `${displayTokenAmount(amounts.internal, token)}${middle}from ${ownerStr} Farm Balance`
+    ? `${displayTokenAmount(amounts.internal, token, { showName: false, showSymbol: true })}${middle}from ${ownerStr} Farm Balance`
     : undefined;
   const external = amounts.external.gt(0)
-    ? `${displayTokenAmount(amounts.external, token)}${middle}from ${ownerStr} Circulating Balance`
+    ? `${displayTokenAmount(amounts.external, token, { showName: false, showSymbol: true })}${middle}from ${ownerStr} Circulating Balance`
     : undefined;
 
   const combined = `${internal || ''}${internal && external ? ' and ' : ''}${external || ''}`;

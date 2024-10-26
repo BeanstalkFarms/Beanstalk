@@ -1,0 +1,27 @@
+query SeasonalLiquidityAndPriceByPool(
+  $first: Int,
+  $season_lte: Int!
+  $season_gte: Int!
+  $pools: [String!]
+) {
+  seasons: poolHourlySnapshots(
+    first: $first
+    orderBy: season
+    orderDirection: desc
+    where: {
+      season_lte: $season_lte, 
+      season_gte: $season_gte, 
+      liquidityUSD_not: "0", 
+      pool_in: $pools
+    }
+  ) {
+    id
+    season
+    pool {
+      id
+      lastPrice
+      liquidityUSD
+    }
+    createdAt
+  }
+}

@@ -76,18 +76,26 @@ export function emptyBigDecimalArray(length: i32): BigDecimal[] {
   return array;
 }
 
-export function deltaBigIntArray(current: BigInt[], prior: BigInt[]): BigInt[] {
-  let finalArray = emptyBigIntArray(current.length);
-  for (let i = 0; i < current.length; i++) {
-    finalArray[i] = current[i].minus(prior[i]);
+export function addBigIntArray(a: BigInt[], b: BigInt[]): BigInt[] {
+  let finalArray = emptyBigIntArray(a.length);
+  for (let i = 0; i < a.length; i++) {
+    finalArray[i] = a[i].plus(b[i]);
   }
   return finalArray;
 }
 
-export function deltaBigDecimalArray(current: BigDecimal[], prior: BigDecimal[]): BigDecimal[] {
-  let finalArray = emptyBigDecimalArray(current.length);
-  for (let i = 0; i < current.length; i++) {
-    finalArray[i] = current[i].minus(prior[i]);
+export function subBigIntArray(a: BigInt[], b: BigInt[]): BigInt[] {
+  let finalArray = emptyBigIntArray(a.length);
+  for (let i = 0; i < a.length; i++) {
+    finalArray[i] = a[i].minus(b[i]);
+  }
+  return finalArray;
+}
+
+export function subBigDecimalArray(a: BigDecimal[], b: BigDecimal[]): BigDecimal[] {
+  let finalArray = emptyBigDecimalArray(a.length);
+  for (let i = 0; i < a.length; i++) {
+    finalArray[i] = a[i].minus(b[i]);
   }
   return finalArray;
 }
@@ -104,4 +112,13 @@ export function BigDecimal_isClose(value: BigDecimal, target: BigDecimal, window
 
 export function BigDecimal_round(value: BigDecimal): BigDecimal {
   return value.plus(BigDecimal.fromString("0.5")).truncate(0);
+}
+
+export function allNonzero_BI(a: BigInt[]): boolean {
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] == ZERO_BI) {
+      return false;
+    }
+  }
+  return true;
 }

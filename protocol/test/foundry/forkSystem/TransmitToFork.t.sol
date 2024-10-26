@@ -42,7 +42,7 @@ contract TransmitToForkTest is TestHelper {
         maxApproveBeanstalk(farmers);
 
         // Initialize well to balances. Both source and Destination share this well.
-        setReserves(C.BEAN_ETH_WELL, 1_000_000e6, 1000e18);
+        setReserves(BEAN_ETH_WELL, 1_000_000e6, 1000e18);
         initializeUnripeTokens(farmers[0], 100e6, 100e18);
 
         setUpSiloDeposits(10_000e6, farmers);
@@ -75,17 +75,17 @@ contract TransmitToForkTest is TestHelper {
         address user = farmers[2];
 
         passGermination();
-        depositForUser(user, C.BEAN, beanDepositAmount);
-        int96 beanStem = bs.stemTipForToken(C.BEAN);
-        depositForUser(user, C.BEAN_ETH_WELL, lpDepositAmount);
-        int96 lpStem = bs.stemTipForToken(C.BEAN_ETH_WELL);
+        depositForUser(user, BEAN, beanDepositAmount);
+        int96 beanStem = bs.stemTipForToken(BEAN);
+        depositForUser(user, BEAN_ETH_WELL, lpDepositAmount);
+        int96 lpStem = bs.stemTipForToken(BEAN_ETH_WELL);
         passGermination();
 
         // Capture Source state.
-        (, uint256 beanDepositBdv) = bs.getDeposit(user, C.BEAN, beanStem);
+        (, uint256 beanDepositBdv) = bs.getDeposit(user, BEAN, beanStem);
         require(beanDepositBdv > 0, "Source Bean deposit bdv");
         uint256 lpDepositBdv;
-        (lpDepositAmount, lpDepositBdv) = bs.getDeposit(user, C.BEAN_ETH_WELL, lpStem);
+        (lpDepositAmount, lpDepositBdv) = bs.getDeposit(user, BEAN_ETH_WELL, lpStem);
         require(lpDepositBdv > 0, "Source LP deposit bdv");
 
         uint256 migrationAmountLp = lpDepositAmount / 2;
@@ -96,7 +96,7 @@ contract TransmitToForkTest is TestHelper {
             uint256 migrationAmount1 = beanDepositAmount - migrationAmount0;
 
             deposits[0] = IMockFBeanstalk.SourceDeposit(
-                C.BEAN,
+                BEAN,
                 migrationAmount0,
                 beanStem,
                 new uint256[](2), // Not used for Bean deposits.
@@ -108,7 +108,7 @@ contract TransmitToForkTest is TestHelper {
                 0 // populated by source
             );
             deposits[1] = IMockFBeanstalk.SourceDeposit(
-                C.BEAN,
+                BEAN,
                 migrationAmount1,
                 beanStem,
                 new uint256[](2), // Not used for Bean deposits.
@@ -123,7 +123,7 @@ contract TransmitToForkTest is TestHelper {
             minTokensOut[0] = 1;
             minTokensOut[1] = 1;
             deposits[2] = IMockFBeanstalk.SourceDeposit(
-                C.BEAN_ETH_WELL,
+                BEAN_ETH_WELL,
                 migrationAmountLp,
                 lpStem,
                 minTokensOut,
@@ -172,12 +172,12 @@ contract TransmitToForkTest is TestHelper {
         {
             (uint256 sourceDepositAmount, uint256 sourceDepositBdv) = bs.getDeposit(
                 user,
-                C.BEAN,
+                BEAN,
                 beanStem
             );
             require(sourceDepositAmount == 0, "Source bean deposit amt");
             require(sourceDepositBdv == 0, "Source bean deposit bdv");
-            (sourceDepositAmount, sourceDepositBdv) = bs.getDeposit(user, C.BEAN_ETH_WELL, lpStem);
+            (sourceDepositAmount, sourceDepositBdv) = bs.getDeposit(user, BEAN_ETH_WELL, lpStem);
             require(
                 sourceDepositAmount == lpDepositAmount - migrationAmountLp,
                 "Source lp deposit amt"
@@ -187,28 +187,28 @@ contract TransmitToForkTest is TestHelper {
         // Verify Destination deposits.
         {
             uint256[] memory destDepositIds = newBs
-                .getTokenDepositsForAccount(user, C.BEAN)
+                .getTokenDepositsForAccount(user, BEAN)
                 .depositIds;
             require(destDepositIds.length == 1, "Dest deposit count");
             (address token, int96 stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
             (uint256 destinationDepositAmount, uint256 destinationDepositBdv) = newBs.getDeposit(
                 user,
-                C.BEAN,
+                BEAN,
                 stem
             );
             require(stem < newBs.stemTipForToken(token), "Dest Bean deposit stem too high");
             require(beanDepositAmount == destinationDepositAmount, "Dest Bean deposit amount");
             require(beanDepositBdv == destinationDepositBdv, "Dest Bean deposit bdv");
 
-            destDepositIds = newBs.getTokenDepositsForAccount(user, C.BEAN_ETH_WELL).depositIds;
+            destDepositIds = newBs.getTokenDepositsForAccount(user, BEAN_ETH_WELL).depositIds;
             require(destDepositIds.length == 1, "Dest deposit count");
             (token, stem) = LibBytes.unpackAddressAndStem(destDepositIds[0]);
             (destinationDepositAmount, destinationDepositBdv) = newBs.getDeposit(
                 user,
-                C.BEAN_ETH_WELL,
+                BEAN_ETH_WELL,
                 stem
             );
-            require(stem < newBs.stemTipForToken(C.BEAN_ETH_WELL), "Dest lp dep stem too high");
+            require(stem < newBs.stemTipForToken(BEAN_ETH_WELL), "Dest lp dep stem too high");
             require(migrationAmountLp == destinationDepositAmount, "Dest lp deposit amount");
             require(0 < destinationDepositBdv, "Dest lp deposit bdv");
         }
@@ -451,7 +451,7 @@ contract TransmitToForkTest is TestHelper {
 
             // Revert Deposit does not exist.
             deposits[0] = IMockFBeanstalk.SourceDeposit(
-                C.BEAN,
+                BEAN,
                 100e6,
                 1,
                 new uint256[](2),
@@ -468,15 +468,15 @@ contract TransmitToForkTest is TestHelper {
 
             // Revert LP amount out too high.
             uint256 lpDepositAmount = 100e18;
-            depositForUser(user, C.BEAN_ETH_WELL, lpDepositAmount);
-            int96 lpStem = bs.stemTipForToken(C.BEAN_ETH_WELL);
+            depositForUser(user, BEAN_ETH_WELL, lpDepositAmount);
+            int96 lpStem = bs.stemTipForToken(BEAN_ETH_WELL);
             passGermination();
             uint256[] memory minTokensOut = new uint256[](2);
             minTokensOut[0] = 1;
             minTokensOut[1] = 1;
             uint256 lpAmountOut = 1_000_000e18;
             deposits[0] = IMockFBeanstalk.SourceDeposit(
-                C.BEAN_ETH_WELL,
+                BEAN_ETH_WELL,
                 lpDepositAmount,
                 lpStem,
                 minTokensOut,
@@ -558,11 +558,11 @@ contract TransmitToForkTest is TestHelper {
             memory fertilizer = new IMockFBeanstalk.SourceFertilizer[](1);
 
         uint256 beanDepositAmount = 10_000e6;
-        depositForUser(user, C.BEAN, beanDepositAmount);
-        int96 beanStem = bs.stemTipForToken(C.BEAN);
+        depositForUser(user, BEAN, beanDepositAmount);
+        int96 beanStem = bs.stemTipForToken(BEAN);
         passGermination();
         deposits[0] = IMockFBeanstalk.SourceDeposit(
-            C.BEAN,
+            BEAN,
             beanDepositAmount,
             beanStem,
             new uint256[](2), // Not used for Bean deposits.

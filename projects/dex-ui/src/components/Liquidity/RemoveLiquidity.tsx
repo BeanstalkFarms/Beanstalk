@@ -1,29 +1,34 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TokenInput } from "src/components/Swap/TokenInput";
-import { Token, TokenValue } from "@beanstalk/sdk";
-import styled from "styled-components";
-import { images } from "src/assets/images/tokens";
-import { useAccount } from "wagmi";
+
 import { Well } from "@beanstalk/sdk/Wells";
+import styled from "styled-components";
+import { useAccount } from "wagmi";
+
+import { Token, TokenValue } from "@beanstalk/sdk";
+
+import { size } from "src/breakpoints";
+import { TokenInput } from "src/components/Swap/TokenInput";
+import { ActionWalletButtonWrapper } from "src/components/Wallet";
+import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
+import { displayTokenSymbol } from "src/utils/format";
+import { getPrice } from "src/utils/price/usePrice";
+import { queryKeys } from "src/utils/query/queryKeys";
+import { useInvalidateQueries } from "src/utils/query/useInvalidateQueries";
+import useSdk from "src/utils/sdk/useSdk";
 import { useLiquidityQuote } from "src/wells/useLiquidityQuote";
-import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
-import { Button } from "../Swap/Button";
+import { useWellReserves } from "src/wells/useWellReserves";
+
 import { ensureAllowance, hasMinimumAllowance } from "./allowance";
-import { Log } from "../../utils/logger";
 import QuoteDetails from "./QuoteDetails";
+import { LIQUIDITY_OPERATION_TYPE, REMOVE_LIQUIDITY_MODE } from "./types";
+import { Log } from "../../utils/logger";
+import { Checkbox } from "../Checkbox";
+import { LoadingTemplate } from "../LoadingTemplate";
+import { Button } from "../Swap/Button";
 import { TabButton } from "../TabButton";
 import { TransactionToast } from "../TxnToast/TransactionToast";
-import useSdk from "src/utils/sdk/useSdk";
-import { getPrice } from "src/utils/price/usePrice";
-import { useWellReserves } from "src/wells/useWellReserves";
-import { Checkbox } from "../Checkbox";
-import { size } from "src/breakpoints";
-import { displayTokenSymbol } from "src/utils/format";
-import { LoadingTemplate } from "../LoadingTemplate";
-import { useLPPositionSummary } from "src/tokens/useLPPositionSummary";
-import { ActionWalletButtonWrapper } from "src/components/Wallet";
 
 type BaseRemoveLiquidityProps = {
   slippage: number;
@@ -35,22 +40,30 @@ type RemoveLiquidityProps = {
   well: Well;
 } & BaseRemoveLiquidityProps;
 
-const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, handleSlippageValueChange }: RemoveLiquidityProps) => {
+const RemoveLiquidityContent = ({
+  well,
+  slippage,
+  slippageSettingsClickHandler,
+  handleSlippageValueChange
+}: RemoveLiquidityProps) => {
   const { address } = useAccount();
-
   const [wellLpToken, setWellLpToken] = useState<Token | null>(null);
   const [lpTokenAmount, setLpTokenAmount] = useState<TokenValue | undefined>();
-  const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(REMOVE_LIQUIDITY_MODE.Balanced);
+  const [removeLiquidityMode, setRemoveLiquidityMode] = useState<REMOVE_LIQUIDITY_MODE>(
+    REMOVE_LIQUIDITY_MODE.Balanced
+  );
   const [singleTokenIndex, setSingleTokenIndex] = useState<number>(0);
   const [amounts, setAmounts] = useState<TokenValue[]>([]);
   const [prices, setPrices] = useState<(TokenValue | null)[]>();
   const [tokenAllowance, setTokenAllowance] = useState<boolean>(false);
 
-  const { getPositionWithWell } = useLPPositionSummary();
+  const { getPositionWithWell, refetch: refetchLPSummary } = useLPPositionSummary();
+  const position = getPositionWithWell(well);
+  const invalidateScopedQuery = useInvalidateQueries();
+
   const { reserves: wellReserves, refetch: refetchWellReserves } = useWellReserves(well);
   const sdk = useSdk();
-
-  const lpBalance = useMemo(() => getPositionWithWell(well)?.external, [getPositionWithWell, well]);
+  const lpBalance = position?.external || TokenValue.ZERO;
 
   useEffect(() => {
     const run = async () => {
@@ -74,14 +87,13 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   const { oneTokenQuote } = oneToken;
   const { customRatioQuote } = custom;
 
-  const hasEnoughBalance = !address || !wellLpToken || !lpTokenAmount || !lpBalance ? false : lpTokenAmount.lte(lpBalance);
+  const hasEnoughBalance =
+    !address || !wellLpToken || !lpTokenAmount || !lpBalance ? false : lpTokenAmount.lte(lpBalance);
 
   useEffect(() => {
     if (well.lpToken) {
-      let lpTokenWithMetadata = well.lpToken;
-      lpTokenWithMetadata.setMetadata({ logo: images[well.lpToken.symbol] ?? images.DEFAULT });
       setLpTokenAmount(undefined);
-      setWellLpToken(lpTokenWithMetadata);
+      setWellLpToken(well.lpToken);
     }
   }, [well.lpToken]);
 
@@ -133,29 +145,46 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
             return;
           }
           const quoteAmountLessSlippage = balancedQuote.quote.map((q) => q.subSlippage(slippage));
-          removeLiquidityTxn = await well.removeLiquidity(lpTokenAmount, quoteAmountLessSlippage, address, undefined, {
-            gasLimit: balancedQuote.estimate.mul(1.2).toBigNumber()
-          });
+          removeLiquidityTxn = await well.removeLiquidity(
+            lpTokenAmount,
+            quoteAmountLessSlippage,
+            address,
+            undefined,
+            {
+              gasLimit: balancedQuote.estimate.mul(1.2).toBigNumber()
+            }
+          );
           toast.confirming(removeLiquidityTxn);
         } else {
           if (!customRatioQuote) {
             return;
           }
           const quoteAmountWithSlippage = lpTokenAmount.addSlippage(slippage);
-          removeLiquidityTxn = await well.removeLiquidityImbalanced(quoteAmountWithSlippage, amounts, address, undefined, {
-            gasLimit: customRatioQuote.estimate.mul(1.2).toBigNumber()
-          });
+          removeLiquidityTxn = await well.removeLiquidityImbalanced(
+            quoteAmountWithSlippage,
+            amounts,
+            address,
+            undefined,
+            {
+              gasLimit: customRatioQuote.estimate.mul(1.2).toBigNumber()
+            }
+          );
           toast.confirming(removeLiquidityTxn);
         }
         const receipt = await removeLiquidityTxn.wait();
         toast.success(receipt);
         resetState();
         refetchWellReserves();
+        refetchLPSummary();
+        invalidateScopedQuery(queryKeys.tokenBalance(wellLpToken?.address));
+        invalidateScopedQuery(queryKeys.tokenBalance(well?.tokens?.[0]?.address));
+        invalidateScopedQuery(queryKeys.tokenBalance(well?.tokens?.[1]?.address));
       } catch (error) {
         Log.module("RemoveLiquidity").error("Error removing liquidity: ", (error as Error).message);
         toast.error(error);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     well,
     lpTokenAmount,
@@ -172,8 +201,11 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   ]);
 
   const handleSwitchRemoveMode = (newMode: REMOVE_LIQUIDITY_MODE) => {
-    const currentMode = removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom || removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced;
-    const _newMode = newMode === REMOVE_LIQUIDITY_MODE.Custom || newMode === REMOVE_LIQUIDITY_MODE.Balanced;
+    const currentMode =
+      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ||
+      removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced;
+    const _newMode =
+      newMode === REMOVE_LIQUIDITY_MODE.Custom || newMode === REMOVE_LIQUIDITY_MODE.Balanced;
     if (currentMode && _newMode) {
       setRemoveLiquidityMode(newMode);
     } else {
@@ -215,7 +247,12 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
   );
 
   const buttonLabel = useMemo(
-    () => (lpTokenAmountNonZero ? (hasEnoughBalance ? "Remove Liquidity →" : "Insufficient Balance") : "Input Token Amount"),
+    () =>
+      lpTokenAmountNonZero
+        ? hasEnoughBalance
+          ? "Remove Liquidity →"
+          : "Insufficient Balance"
+        : "Input Token Amount",
     [hasEnoughBalance, lpTokenAmountNonZero]
   );
 
@@ -225,7 +262,12 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
     }
 
     if (lpTokenAmount && lpTokenAmount.gt(0)) {
-      const tokenHasMinAllowance = await hasMinimumAllowance(address, well.address, wellLpToken, lpTokenAmount);
+      const tokenHasMinAllowance = await hasMinimumAllowance(
+        address,
+        well.address,
+        wellLpToken,
+        lpTokenAmount
+      );
       Log.module("addliquidity").debug(
         `Token ${wellLpToken.symbol} with amount ${lpTokenAmount.toHuman()} has approval ${tokenHasMinAllowance}`
       );
@@ -259,7 +301,8 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
     checkMinAllowanceForLpToken();
   }, [well.tokens, address, lpTokenAmount, checkMinAllowanceForLpToken]);
 
-  const approveButtonDisabled = !tokenAllowance && !!lpTokenAmount && lpTokenAmount.lte(TokenValue.ZERO);
+  const approveButtonDisabled =
+    !tokenAllowance && !!lpTokenAmount && lpTokenAmount.lte(TokenValue.ZERO);
 
   const selectedQuote = useMemo(() => {
     if (removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken) {
@@ -315,8 +358,16 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
                     active={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
                     stretch
                   >
-                    <Checkbox checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken} mode={"checkOnly"} checkboxColor="#46b955" />
-                    <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}>Single Token</TabLabel>
+                    <Checkbox
+                      checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken}
+                      mode={"checkOnly"}
+                      checkboxColor="#46b955"
+                    />
+                    <TabLabel
+                      onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.OneToken)}
+                    >
+                      Single Token
+                    </TabLabel>
                   </TabButton>
                 </Tab>
                 <Tab>
@@ -325,8 +376,16 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
                     active={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
                     stretch
                   >
-                    <Checkbox checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken} mode={"checkOnly"} checkboxColor="#46b955" />
-                    <TabLabel onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}>Multiple Tokens</TabLabel>
+                    <Checkbox
+                      checked={removeLiquidityMode !== REMOVE_LIQUIDITY_MODE.OneToken}
+                      mode={"checkOnly"}
+                      checkboxColor="#46b955"
+                    />
+                    <TabLabel
+                      onClick={() => handleSwitchRemoveMode(REMOVE_LIQUIDITY_MODE.Balanced)}
+                    >
+                      Multiple Tokens
+                    </TabLabel>
                   </TabButton>
                 </Tab>
               </Tabs>
@@ -360,13 +419,22 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
             {removeLiquidityMode === REMOVE_LIQUIDITY_MODE.OneToken && (
               <MediumGapContainer>
                 {well.tokens!.map((token: Token, index: number) => (
-                  <ContainerSingleTokenRow key={`token${index}`} onClick={() => handleSwitchSingleToken(index)}>
+                  <ContainerSingleTokenRow
+                    key={`token${index}`}
+                    onClick={() => handleSwitchSingleToken(index)}
+                  >
                     <ReadOnlyTokenValueRow selected={singleTokenIndex === index}>
-                      <Checkbox checked={singleTokenIndex === index} mode={"checkOnly"} checkboxColor="#46b955" />
+                      <Checkbox
+                        checked={singleTokenIndex === index}
+                        mode={"checkOnly"}
+                        checkboxColor="#46b955"
+                      />
                       <SmallTokenLogo src={token.logo} />
                       <TokenSymbol>{token.symbol}</TokenSymbol>
                       {singleTokenIndex === index ? (
-                        <TokenAmount>{oneTokenQuote ? oneTokenQuote.quote.toHuman() : "0"}</TokenAmount>
+                        <TokenAmount>
+                          {oneTokenQuote ? oneTokenQuote.quote.toHuman() : "0"}
+                        </TokenAmount>
                       ) : (
                         <TokenAmount>{"0"}</TokenAmount>
                       )}
@@ -383,7 +451,9 @@ const RemoveLiquidityContent = ({ well, slippage, slippageSettingsClickHandler, 
                 checked={removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Balanced}
                 onClick={() =>
                   handleSwitchRemoveMode(
-                    removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom ? REMOVE_LIQUIDITY_MODE.Balanced : REMOVE_LIQUIDITY_MODE.Custom
+                    removeLiquidityMode === REMOVE_LIQUIDITY_MODE.Custom
+                      ? REMOVE_LIQUIDITY_MODE.Balanced
+                      : REMOVE_LIQUIDITY_MODE.Custom
                   )
                 }
               />
@@ -460,7 +530,9 @@ const RemoveLiquidityLoading = () => (
   </LargeGapContainer>
 );
 
-export const RemoveLiquidity: React.FC<{ well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps> = (props) => {
+export const RemoveLiquidity: React.FC<
+  { well: Well | undefined; loading: boolean } & BaseRemoveLiquidityProps
+> = (props) => {
   if (!props.well || props.loading) {
     return <RemoveLiquidityLoading />;
   }

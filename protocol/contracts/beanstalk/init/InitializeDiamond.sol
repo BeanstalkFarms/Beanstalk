@@ -29,7 +29,7 @@ contract InitializeDiamond {
 
     // INITIAL CONSTANTS //
     uint128 constant INIT_BEAN_TO_MAX_LP_GP_RATIO = 33_333_333_333_333_333_333; // 33%
-    uint128 constant INIT_AVG_GSPBDV = 3e6;
+    uint128 constant INIT_AVG_GSPBDV = 3e12;
     uint32 constant INIT_BEAN_STALK_EARNED_PER_SEASON = 2e6;
     uint32 constant INIT_BEAN_TOKEN_WELL_STALK_EARNED_PER_SEASON = 4e6;
     uint48 constant INIT_STALK_ISSUED_PER_BDV = 1e10;
@@ -53,6 +53,15 @@ contract InitializeDiamond {
     // Excessive price threshold constant
     uint256 internal constant EXCESSIVE_PRICE_THRESHOLD = 1.05e6;
 
+    /// @dev When the Pod Rate is high, issue less Soil.
+    uint256 private constant SOIL_COEFFICIENT_HIGH = 0.5e18;
+
+    /// @dev When the Pod Rate is low, issue more Soil.
+    uint256 private constant SOIL_COEFFICIENT_LOW = 1.5e18;
+
+    /// @dev Base BEAN reward to cover cost of operating a bot.
+    uint256 internal constant BASE_REWARD = 5e6; // 5 BEAN
+
     // Gauge
     uint256 internal constant TARGET_SEASONS_TO_CATCHUP = 4320;
     uint256 internal constant MAX_BEAN_MAX_LP_GP_PER_BDV_RATIO = 100e18;
@@ -68,6 +77,7 @@ contract InitializeDiamond {
      */
     function initializeDiamond(address bean, address beanTokenWell) internal {
         addInterfaces();
+        initializeTokens(bean);
         initializeSeason();
         initializeField();
         initializeFarmAndTractor();
@@ -79,7 +89,7 @@ contract InitializeDiamond {
         tokens[1] = beanTokenWell;
 
         // note: bean and assets that are not in the gauge system
-        // do not need to initalize the gauge system.
+        // do not need to initialize the gauge system.
         Implementation memory impl = Implementation(address(0), bytes4(0), bytes1(0), new bytes(0));
         Implementation memory liquidityWeightImpl = Implementation(
             address(0),
@@ -125,7 +135,7 @@ contract InitializeDiamond {
 
         whitelistPools(tokens, assetSettings);
 
-        // init usdTokenPrice. C.Bean_eth_well should be
+        // init usdTokenPrice. beanTokenWell should be
         // a bean well w/ the native token of the network.
         s.sys.usdTokenPrice[beanTokenWell] = 1;
         s.sys.twaReserves[beanTokenWell].reserve0 = 1;
@@ -149,6 +159,10 @@ contract InitializeDiamond {
         ds.supportedInterfaces[0x0e89341c] = true; // ERC1155Metadata
     }
 
+    function initializeTokens(address bean) internal {
+        s.sys.tokens.bean = bean;
+    }
+
     /**
      * @notice Initializes field parameters.
      */
@@ -164,9 +178,6 @@ contract InitializeDiamond {
     function initializeSeason() internal {
         // set current season to 1.
         s.sys.season.current = 1;
-
-        // set withdraw seasons to 0. Kept here for verbosity.
-        s.sys.season.withdrawSeasons = 0;
 
         // initialize the duration of 1 season in seconds.
         s.sys.season.period = C.getSeasonPeriod();
@@ -238,7 +249,7 @@ contract InitializeDiamond {
             s.sys.silo.assetSettings[tokens[i]] = assetSettings[i];
 
             bool isLPandWell = true;
-            if (tokens[i] == C.BEAN) {
+            if (tokens[i] == s.sys.tokens.bean) {
                 isLPandWell = false;
             }
             bool isUnripe = LibUnripe.isUnripe(tokens[i]);
@@ -269,6 +280,9 @@ contract InitializeDiamond {
         s.sys.evaluationParameters.lpToSupplyRatioOptimal = LP_TO_SUPPLY_RATIO_OPTIMAL;
         s.sys.evaluationParameters.lpToSupplyRatioLowerBound = LP_TO_SUPPLY_RATIO_LOWER_BOUND;
         s.sys.evaluationParameters.excessivePriceThreshold = EXCESSIVE_PRICE_THRESHOLD;
+        s.sys.evaluationParameters.soilCoefficientHigh = SOIL_COEFFICIENT_HIGH;
+        s.sys.evaluationParameters.soilCoefficientLow = SOIL_COEFFICIENT_LOW;
+        s.sys.evaluationParameters.baseReward = BASE_REWARD;
     }
 
     function initializeFarmAndTractor() internal {

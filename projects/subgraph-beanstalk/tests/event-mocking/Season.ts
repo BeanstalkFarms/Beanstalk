@@ -1,6 +1,5 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Incentivization } from "../../generated/Season-Replanted/Beanstalk";
-
+import { Incentivization } from "../../generated/Beanstalk-ABIs/Reseed";
 import { mockBeanstalkEvent } from "../../../subgraph-core/tests/event-mocking/Util";
 
 export function createSunriseEvent(season: BigInt): void {}

@@ -1,7 +1,16 @@
-# Custommized base schema from Messari
-# Subgraph Schema: DEX AMM (Extended)
-# Version: 3.0.3
-# See https://github.com/messari/subgraphs/blob/master/docs/Schema.md for details
+# This same entity schema is intended for use across the subgraphs
+type Version @entity {
+  "= 'subgraph'"
+  id: ID!
+  "= 'beanstalk'"
+  subgraphName: String!
+  "Verison number of the subgraph"
+  versionNumber: String!
+  "Address of Beanstalk protocol"
+  protocolAddress: Bytes!
+  "Which blockchain is being indexed, i.e. 'ethereum', 'arbitrum', etc."
+  chain: String!
+}
 
 enum LiquidityEvent {
   # Additions
@@ -46,14 +55,12 @@ type Aquifer @entity {
 }
 
 type WellFunction @entity {
-  " {Well address}-{Well Function address}"
-  id: ID!
-  " Contract address of the well function"
-  target: Bytes!
+  " Well Function address "
+  id: Bytes!
   " Calldata passed to the well function "
   data: Bytes!
-  " Well associated with this well function"
-  well: Well!
+  " Wells associated with this well function"
+  wells: [Well!]! @derivedFrom(field: "wellFunction")
 }
 
 type Pump @entity {
@@ -71,8 +78,14 @@ type Well @entity {
   " Smart contract address of the well "
   id: Bytes!
 
-  " The aquifer this well belongs to "
+  " The aquifer used to bore this well "
   aquifer: Aquifer!
+
+  " Pricing function contract used with this well "
+  wellFunction: WellFunction!
+
+  " The well implementation used to deploy this well "
+  implementation: Bytes!
 
   " Name of liquidity well (e.g. Curve.fi DAI/USDC/USDT) "
   name: String
@@ -86,14 +99,8 @@ type Well @entity {
   " The order of the tokens in the Well. The above `tokens` association will be sorted by id on any retrieval. "
   tokenOrder: [Bytes!]!
 
-  " Pricing function contract used with this well "
-  wellFunction: WellFunction! @derivedFrom(field: "well")
-
   " Pumps associated with this well "
   pumps: [Pump!]! @derivedFrom(field: "well")
-
-  " The well implementation used to deploy this well "
-  implementation: Bytes!
 
   " Creation timestamp "
   createdTimestamp: BigInt!
@@ -108,6 +115,9 @@ type Well @entity {
 
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
+
+  " The current amount of each token needed to exchange for one of the other token. "
+  tokenPrice: [BigInt!]!
 
   " Amount of each token in the well. The ordering should be the same as the well's `tokens` field. "
   reserves: [BigInt!]!
@@ -237,6 +247,9 @@ type WellDailySnapshot @entity {
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
 
+  " The current amount of each token needed to exchange for one of the other token. "
+  tokenPrice: [BigInt!]!
+
   " All trade volume occurred for a specific token, in native amount. Volume for an individual token is defined as a purchase of that token. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
   cumulativeTradeVolumeReserves: [BigInt!]!
 
@@ -329,6 +342,9 @@ type WellHourlySnapshot @entity {
 
   " The sum of all active and non-active liquidity in USD for this well. "
   totalLiquidityUSD: BigDecimal!
+
+  " The current amount of each token needed to exchange for one of the other token. "
+  tokenPrice: [BigInt!]!
 
   " All trade volume occurred for a specific token, in native amount. Volume for an individual token is defined as a purchase of that token. This includes any net trading activity as a result of add/remove liquidity. The ordering should be the same as the well's `tokens` field. "
   cumulativeTradeVolumeReserves: [BigInt!]!
@@ -425,7 +441,7 @@ type Deposit @entity(immutable: true) {
   " Nonce of the transaction that emitted this event "
   nonce: BigInt!
 
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  " Event log index. "
   logIndex: Int!
 
   " Gas limit of the transaction that emitted this event "
@@ -446,12 +462,6 @@ type Deposit @entity(immutable: true) {
   " The well involving this event "
   well: Well!
 
-  " Block number of this event "
-  blockNumber: BigInt!
-
-  " Timestamp of this event "
-  timestamp: BigInt!
-
   " Amount of liquidity tokens minted "
   liquidity: BigInt!
 
@@ -463,6 +473,15 @@ type Deposit @entity(immutable: true) {
 
   " USD-normalized value of the transaction of the underlying (e.g. sum of tokens deposited into a well) "
   amountUSD: BigDecimal!
+
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
+  tokenPrice: [BigInt!]!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
 }
 
 " This maps to RemoveLiquidity and RemoveLiquidityOneToken events "
@@ -476,7 +495,7 @@ type Withdraw @entity(immutable: true) {
   " Nonce of the transaction that emitted this event "
   nonce: BigInt!
 
-  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  " Event log index. "
   logIndex: Int!
 
   " Gas limit of the transaction that emitted this event "
@@ -497,12 +516,6 @@ type Withdraw @entity(immutable: true) {
   " The well involving this event "
   well: Well!
 
-  " Block number of this event "
-  blockNumber: BigInt!
-
-  " Timestamp of this event "
-  timestamp: BigInt!
-
   " Amount of liquidity tokens burned "
   liquidity: BigInt!
 
@@ -514,6 +527,15 @@ type Withdraw @entity(immutable: true) {
 
   " USD-normalized value of the transaction of the underlying (e.g. sum of tokens withdrawn from a well) "
   amountUSD: BigDecimal!
+
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
+  tokenPrice: [BigInt!]!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
 }
 
 type Swap @entity(immutable: true) {
@@ -547,12 +569,6 @@ type Swap @entity(immutable: true) {
   " Well involving this event "
   well: Well!
 
-  " Block number of this event "
-  blockNumber: BigInt!
-
-  " Timestamp of this event "
-  timestamp: BigInt!
-
   " Token deposited into the well "
   fromToken: Token!
 
@@ -564,4 +580,13 @@ type Swap @entity(immutable: true) {
 
   " Amount of the token withdrawn from the well in native units "
   amountOut: BigInt!
+
+  " The current amount of each token needed to exchange for one of the other token, after this event. "
+  tokenPrice: [BigInt!]!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
 }

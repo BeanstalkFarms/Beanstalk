@@ -9,8 +9,15 @@ const BorderEffect: FC<
     enabled?: boolean;
     fullWidth?: boolean;
     disabled?: boolean;
+    outputOnlyMode?: boolean;
   } & BoxProps
-> = ({ children, enabled = true, fullWidth = false, disabled = false }) => {
+> = ({
+  children,
+  enabled = true,
+  fullWidth = false,
+  disabled = false,
+  outputOnlyMode = false,
+}) => {
   // ref for this component to control border color
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -21,22 +28,26 @@ const BorderEffect: FC<
 
   const actions = useMemo(() => {
     const handleMouseOver = () => {
+      if (outputOnlyMode) return;
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.textBlue}`;
     };
 
     const handleMouseLeave = () => {
+      if (outputOnlyMode) return;
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
     };
 
     const handleOnClick = () => {
+      if (outputOnlyMode) return;
       if (!ref.current || activeRef.current || disabled) return;
       ref.current.style.boxShadow = `inset 0 0 0 2px ${theme.palette.primary.main}`;
       activeRef.current = true;
     };
 
     const handleClickAway = () => {
+      if (outputOnlyMode) return;
       if (!ref.current || !activeRef.current || disabled) return;
       ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
       activeRef.current = false;
@@ -48,12 +59,13 @@ const BorderEffect: FC<
       handleOnClick,
       handleClickAway,
     };
-  }, [disabled, theme]);
+  }, [disabled, theme, outputOnlyMode]);
 
   useEffect(() => {
     if (!enabled || !ref.current) return;
     if (disabled) {
       ref.current.style.borderColor = BeanstalkPalette.inputGrey;
+      ref.current.style.boxShadow = `inset 0 0 0 1px ${BeanstalkPalette.inputGrey}`;
     }
   }, [enabled, disabled]);
 

@@ -6,6 +6,9 @@ import { SwapOperation } from "./SwapOperation";
 import { getSwapGraph } from "./graph";
 import { StepClass } from "src/classes/Workflow";
 
+/**
+ * @deprecated
+ */
 export class Swap {
   private static sdk: BeanstalkSDK;
   router: Router;
@@ -28,14 +31,22 @@ export class Swap {
     this.router = new Router(sdk, graph, selfEdgeBuilder);
   }
 
-  public buildSwap(tokenIn: Token, tokenOut: Token, account: string, _from?: FarmFromMode, _to?: FarmToMode) {
+  public buildSwap(
+    tokenIn: Token,
+    tokenOut: Token,
+    account: string,
+    _from?: FarmFromMode,
+    _to?: FarmToMode
+  ) {
     const route = this.router.getRoute(tokenIn.symbol, tokenOut.symbol);
     const workflow = Swap.sdk.farm.createAdvancedFarm(`Swap ${tokenIn.symbol}->${tokenOut.symbol}`);
 
     // Handle Farm Modes
     // For a single step swap (ex, ETH > WETH, or BEAN > BEAN), use the passed modes, if available
     if (route.length === 1) {
-      workflow.add(route.getStep(0).build(account, _from || FarmFromMode.EXTERNAL, _to || FarmToMode.EXTERNAL));
+      workflow.add(
+        route.getStep(0).build(account, _from || FarmFromMode.EXTERNAL, _to || FarmToMode.EXTERNAL)
+      );
     }
     // for a multi step swap (ex, ETH -> WETH -> USDT -> BEAN), we want the user's choices for
     // FarmFromMode and FarmToMode, if supplied, to only apply to the first and last legs

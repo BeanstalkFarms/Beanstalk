@@ -1,21 +1,28 @@
-const MAX_INT =
-  "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+const MAX_INT = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-async function getDomain() {
+async function getSiloDomain() {
+  return getSiloDomainWithChainId(1);
+}
+
+async function getSiloDomainWithChainId(chainId) {
   return {
     name: "SiloDeposit",
     version: "1",
-    chainId: 1,
-    verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
+    chainId: chainId,
+    verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
   };
 }
 
 async function getTokenDomain() {
+  return getTokenDomainWithChainId(1);
+}
+
+async function getTokenDomainWithChainId(chainId) {
   return {
     name: "Token",
     version: "1",
-    chainId: 1,
-    verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5",
+    chainId: chainId,
+    verifyingContract: "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
   };
 }
 
@@ -23,7 +30,7 @@ const EIP712Domain = [
   { name: "name", type: "string" },
   { name: "version", type: "string" },
   { name: "chainId", type: "uint256" },
-  { name: "verifyingContract", type: "address" },
+  { name: "verifyingContract", type: "address" }
 ];
 
 function splitSignatureToRSV(signature) {
@@ -44,7 +51,7 @@ async function signWithEthers(signer, fromAddress, typeData) {
     ? signer.signTypedData(typeData.domain, types, typeData.message)
     : signer._signTypedData(typeData.domain, types, typeData.message));
 
-  return { rawSignature, split: {...splitSignatureToRSV(rawSignature) }};
+  return { rawSignature, split: { ...splitSignatureToRSV(rawSignature) } };
 }
 
 const createTypedDepositTokensPermitData = (message, domain) => {
@@ -57,12 +64,12 @@ const createTypedDepositTokensPermitData = (message, domain) => {
         { name: "tokens", type: "address[]" },
         { name: "values", type: "uint256[]" },
         { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-      ],
+        { name: "deadline", type: "uint256" }
+      ]
     },
     primaryType: "Permit",
     domain,
-    message,
+    message
   };
 
   return typedData;
@@ -78,12 +85,12 @@ const createTypedDepositTokenPermitData = (message, domain) => {
         { name: "token", type: "address" },
         { name: "value", type: "uint256" },
         { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-      ],
+        { name: "deadline", type: "uint256" }
+      ]
     },
     primaryType: "Permit",
     domain,
-    message,
+    message
   };
 
   return typedData;
@@ -99,12 +106,12 @@ const createTypedTokenPermitData = (message, domain) => {
         { name: "token", type: "address" },
         { name: "value", type: "uint256" },
         { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-      ],
+        { name: "deadline", type: "uint256" }
+      ]
     },
     primaryType: "Permit",
     domain,
-    message,
+    message
   };
 
   return typedData;
@@ -117,7 +124,29 @@ async function signSiloDepositTokensPermit(
   tokens,
   values,
   nonce,
+  deadline
+) {
+  return signSiloDepositTokensPermitWithChainId(
+    provider,
+    owner,
+    spender,
+    tokens,
+    values,
+    nonce,
+    deadline,
+    1
+  );
+}
+
+async function signSiloDepositTokensPermitWithChainId(
+  provider,
+  owner,
+  spender,
+  tokens,
+  values,
+  nonce,
   deadline,
+  chainId
 ) {
   const message = {
     owner,
@@ -125,17 +154,21 @@ async function signSiloDepositTokensPermit(
     tokens,
     values,
     nonce,
-    deadline: deadline || MAX_INT,
+    deadline: deadline || MAX_INT
   };
 
-  const domain = await getDomain();
+  const domain = await getSiloDomainWithChainId(chainId);
   const typedData = createTypedDepositTokensPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 
   return { ...sig, ...message };
 }
 
-async function signSiloDepositTokenPermit(
+async function signSiloDepositTokenPermit(provider, owner, spender, token, value, nonce, deadline) {
+  signSiloDepositTokenPermitWithChainId(provider, owner, spender, token, value, nonce, deadline, 1);
+}
+
+async function signSiloDepositTokenPermitWithChainId(
   provider,
   owner,
   spender,
@@ -143,6 +176,7 @@ async function signSiloDepositTokenPermit(
   value,
   nonce,
   deadline,
+  chainId
 ) {
   const message = {
     owner,
@@ -150,17 +184,21 @@ async function signSiloDepositTokenPermit(
     token,
     value,
     nonce,
-    deadline: deadline || MAX_INT,
+    deadline: deadline || MAX_INT
   };
 
-  const domain = await getDomain();
+  const domain = await getSiloDomainWithChainId(chainId);
   const typedData = createTypedDepositTokenPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 
   return { ...sig, ...message };
 }
 
-async function signTokenPermit(
+async function signTokenPermit(provider, owner, spender, token, value, nonce, deadline) {
+  signTokenPermitWithChainId(provider, owner, spender, token, value, nonce, deadline, 1);
+}
+
+async function signTokenPermitWithChainId(
   provider,
   owner,
   spender,
@@ -168,6 +206,7 @@ async function signTokenPermit(
   value,
   nonce,
   deadline,
+  chainId
 ) {
   const message = {
     owner,
@@ -175,10 +214,10 @@ async function signTokenPermit(
     token,
     value,
     nonce,
-    deadline: deadline || MAX_INT,
+    deadline: deadline || MAX_INT
   };
 
-  const domain = await getTokenDomain();
+  const domain = await getTokenDomainWithChainId(chainId);
   const typedData = createTypedTokenPermitData(message, domain);
   const sig = await signWithEthers(provider, owner, typedData);
 
@@ -186,5 +225,8 @@ async function signTokenPermit(
 }
 
 exports.signSiloDepositTokenPermit = signSiloDepositTokenPermit;
+exports.signSiloDepositTokenPermitWithChainId = signSiloDepositTokenPermitWithChainId;
 exports.signTokenPermit = signTokenPermit;
+exports.signTokenPermitWithChainId = signTokenPermitWithChainId;
 exports.signSiloDepositTokensPermit = signSiloDepositTokensPermit;
+exports.signSiloDepositTokensPermitWithChainId = signSiloDepositTokensPermitWithChainId;

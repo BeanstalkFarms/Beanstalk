@@ -33,6 +33,7 @@ type BoostSettings {
 type DelegationPortal {
   delegationApi: String!
   delegationContract: String!
+  delegationNetwork: String!
   delegationType: String!
 }
 
@@ -67,6 +68,13 @@ input FollowWhere {
 type Item {
   id: String!
   spacesCount: Int
+}
+
+type Label {
+  color: String
+  description: String
+  id: String
+  name: String
 }
 
 type Leaderboard {
@@ -145,6 +153,11 @@ type Metrics {
   total: Int
 }
 
+type Option {
+  name: String
+  value: String
+}
+
 enum OrderDirection {
   asc
   desc
@@ -161,6 +174,7 @@ type Proposal {
   flagged: Boolean
   id: String!
   ipfs: String
+  labels: [String]!
   link: String
   network: String!
   plugins: Any!
@@ -172,7 +186,7 @@ type Proposal {
   scores_state: String
   scores_total: Float
   scores_updated: Int
-  snapshot: String
+  snapshot: Int
   space: Space
   start: Int!
   state: String
@@ -243,6 +257,7 @@ type Query {
   leaderboards(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: LeaderboardsWhere): [Leaderboard]
   messages(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: MessageWhere): [Message]
   networks: [Item]
+  options: [Option]
   plugins: [Item]
   proposal(id: String!): Proposal
   proposals(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: ProposalWhere): [Proposal]
@@ -295,6 +310,7 @@ type Space {
   categories: [String]
   children: [Space]
   coingecko: String
+  cover: String
   created: Int!
   delegationPortal: DelegationPortal
   domain: String
@@ -307,6 +323,7 @@ type Space {
   guidelines: String
   hibernated: Boolean
   id: String!
+  labels: [Label]
   location: String
   members: [String]
   moderators: [String]
@@ -316,7 +333,9 @@ type Space {
   plugins: Any
   private: Boolean
   proposalsCount: Int
+  proposalsCount1d: Int
   proposalsCount7d: Int
+  proposalsCount30d: Int
   rank: Float
   skin: String
   strategies: [Strategy]
@@ -360,10 +379,12 @@ input SpaceWhere {
   created_in: [Int]
   created_lt: Int
   created_lte: Int
+  domain: String
   id: String
   id_in: [String]
   plugin: String
   strategy: String
+  verified: Boolean
 }
 
 type Statement {
@@ -374,6 +395,7 @@ type Statement {
   id: String!
   ipfs: String!
   network: String
+  source: String
   space: String!
   statement: String
   status: String
@@ -393,6 +415,9 @@ input StatementsWhere {
   id_in: [String]
   ipfs: String
   ipfs_in: [String]
+  network: String
+  source: String
+  source_in: [String]
   space: String
   space_in: [String]
 }

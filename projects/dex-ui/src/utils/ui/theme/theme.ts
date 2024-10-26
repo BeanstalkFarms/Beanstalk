@@ -1,7 +1,8 @@
-import { THEME_COLORS, getFontColor } from "./colors";
-import { themeSpacing } from "./spacing";
-import { getFontSize, getFontVariantStyles, getTextAlignStyles } from "./font";
 import { mediaQuery, size } from "src/breakpoints";
+
+import { THEME_COLORS, getFontColor } from "./colors";
+import { getFontSize, getFontVariantStyles, getTextAlignStyles } from "./font";
+import { themeSpacing } from "./spacing";
 
 export const theme = {
   colors: THEME_COLORS,
