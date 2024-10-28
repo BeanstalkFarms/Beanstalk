@@ -450,6 +450,67 @@ contract OracleTest is TestHelper {
                 }
             }
         }
+
+        // test priceForWells
+        {
+            address[] memory wells = new address[](2);
+            wells[0] = BEAN_USDC_WELL;
+            wells[1] = BEAN_WBTC_WELL;
+
+            BeanstalkPrice.Prices memory price = BeanstalkPrice(beanstalkPrice).priceForWells(
+                wells
+            );
+            console.log("priceForWells");
+            console.log(price.price);
+            console.log(price.liquidity);
+            console.logInt(price.deltaB);
+            assertEq(price.price, 0.446798e6, "bean price from price for wells"); // $0.44
+            assertEq(price.liquidity, 58483498011, "bean liq from price for wells"); // $0.44
+            assertEq(price.deltaB, -43649902941, "deltaB from price for wells"); // $0.44
+
+            // check individual well prices
+            assertEq(
+                price.ps[0].price,
+                0.446792e6,
+                "bean price from usdc pool from price for wells"
+            ); // $0.44
+            assertEq(
+                price.ps[0].liquidity,
+                58462.524718e6,
+                "liquidity from usdc pool from price for wells"
+            );
+            assertEq(
+                price.ps[0].beanLiquidity,
+                41275.454618e6,
+                "beanLiquidity from usdc pool from price for wells"
+            );
+            assertEq(
+                price.ps[0].nonBeanLiquidity,
+                17187.070100e6,
+                "nonBeanLiquidity from usdc pool from price for wells"
+            );
+
+            assertEq(
+                price.ps[1].price,
+                0.464261e6,
+                "bean price from wbtc pool from price for wells"
+            );
+            assertEq(
+                price.ps[1].liquidity,
+                20.973293e6,
+                "liquidity from wbtc pool from price for wells"
+            );
+            assertEq(
+                price.ps[1].beanLiquidity,
+                10.253756e6,
+                "bean liquidity from wbtc pool from price for wells"
+            );
+            assertEq(
+                price.ps[1].nonBeanLiquidity,
+                10.719537e6,
+                "wbtc liquidity from wbtc pool from price for wells"
+            );
+        }
     }
 
     //////////// Helper Functions ////////////

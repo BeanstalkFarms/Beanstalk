@@ -23,12 +23,19 @@ contract BeanstalkPrice is WellPrice {
      **/
     function price() external view returns (Prices memory p) {
         address[] memory wells = beanstalk.getWhitelistedWellLpTokens();
+        return priceForWells(wells);
+    }
+
+    /**
+     * @notice Returns the non-manipulation resistant on-chain liquidiy, deltaB and price data for
+     * Bean for the passed in wells.
+     * @dev No protocol should use this function to calculate manipulation resistant Bean price data.
+     **/
+    function priceForWells(address[] memory wells) public view returns (Prices memory p) {
         p.ps = new P.Pool[](wells.length);
         for (uint256 i = 0; i < wells.length; i++) {
             p.ps[i] = getWell(wells[i]);
         }
-
-        // assumes that liquidity and prices on all pools uses the same precision.
         for (uint256 i = 0; i < p.ps.length; i++) {
             p.price += p.ps[i].price.mul(p.ps[i].liquidity);
             p.liquidity += p.ps[i].liquidity;

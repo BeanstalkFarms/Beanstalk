@@ -41,11 +41,10 @@ contract BasinDeployer is Utils {
     address constant MFP = address(0xBA510f10E3095B83a0F33aa9ad2544E22570a87C);
     address constant WELL_IMPLMENTATION = address(0xBA510e11eEb387fad877812108a3406CA3f43a4B);
 
-    // extra wells addreses (used for convert testing)
-    // addresses were randomly generated and are not on-chain.
-    address constant BEAN_USDC_WELL = address(0x4444F7394455A8d1af37E8BEa52F2FCf6D39f158);
-    address constant BEAN_USDT_WELL = address(0x55554AF7c7CEe28994c7484C364768620C726D68);
-    address constant BEAN_WBTC_WELL = address(0x7777F3d631f856b4738Da79E0f4c10EE25C75B31);
+    // addresses reflect wells deployed on arbitrum
+    address constant BEAN_USDC_WELL = address(0xBea00ee04D8289aEd04f92EA122a96dC76A91bd7);
+    address constant BEAN_USDT_WELL = address(0xbEA00fF437ca7E8354B174339643B4d1814bED33);
+    address constant BEAN_WBTC_WELL = address(0xBea00DDe4b34ACDcB1a30442bD2B39CA8Be1b09c);
 
     string constant BEAN_WETH_WELL_NAME = "BEAN:WETH Constant Product 2 Well";
     string constant BEAN_WETH_WELL_SYMBOL = "BEANWETHCP2w";
