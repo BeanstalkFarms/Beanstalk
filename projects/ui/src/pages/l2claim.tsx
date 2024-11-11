@@ -283,7 +283,7 @@ export default function L2Claim() {
                                     <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                                 </Box>
                                 <Typography sx={{ padding: 1 }}>
-                                    This page will periodically check Arbitrum One for the arrival of migration data. The button below will automatically
+                                    This page checks Arbitrum One for the arrival of migration data every few seconds. The button below will automatically
                                     enable itself when this data becomes available.
                                 </Typography>
                                 <Button
