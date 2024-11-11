@@ -153,7 +153,7 @@ async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
     .map((pool) => {
       const deltaBCall = {
         target: beanstalk.address,
-        callData: beanstalk.interface.encodeFunctionData('poolDeltaB', [
+        callData: beanstalk.interface.encodeFunctionData('poolCurrentDeltaB', [
           pool.address,
         ]),
         clipboard: Clipboard.encode([]),
@@ -185,7 +185,7 @@ async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
     const [deltaBResult, totalSupplyResult] = chunkedByPool[i];
 
     const deltaB = beanstalk.interface.decodeFunctionResult(
-      'poolDeltaB',
+      'poolCurrentDeltaB',
       deltaBResult
     )[0];
     const totalSupply = curr.lpToken
