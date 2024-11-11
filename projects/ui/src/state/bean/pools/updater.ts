@@ -12,7 +12,6 @@ import {
   Pool,
 } from '@beanstalk/sdk';
 import { chunkArray } from '~/util/UI';
-import { getExtractMulticallResult } from '~/util/Multicall';
 import { transform } from '~/util/BigNumber';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { TokenMap } from '~/constants';
@@ -20,8 +19,6 @@ import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
 
 const pageContext = '[bean/pools/useGetPools]';
-
-const extract = getExtractMulticallResult(pageContext);
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
@@ -79,8 +76,8 @@ export const useFetchPools = () => {
                     totalCrosses: new BigNumber(0),
                     lpUsd: transform(poolData.lpUsd, 'bnjs', BEAN),
                     lpBdv: transform(poolData.lpBdv, 'bnjs', BEAN),
-                    twaDeltaB: lpResult.deltaB
-                      ? transform(lpResult.deltaB, 'bnjs', BEAN)
+                    twaDeltaB: lpResult.twaDeltaB
+                      ? transform(lpResult.twaDeltaB, 'bnjs', BEAN)
                       : null,
                   },
                 } as UpdatePoolPayload;
@@ -182,7 +179,7 @@ async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
   const datas = pools.reduce<
     TokenMap<{
       totalSupply: BigNumber;
-      deltaB: BigNumber;
+      twaDeltaB: BigNumber;
     }>
   >((prev, curr, i) => {
     const [deltaBResult, totalSupplyResult] = chunkedByPool[i];
@@ -197,7 +194,7 @@ async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
 
     prev[getTokenIndex(curr)] = {
       totalSupply: transform(totalSupply, 'bnjs', curr.lpToken),
-      deltaB: transform(deltaB, 'bnjs', sdk.tokens.BEAN),
+      twaDeltaB: transform(deltaB, 'bnjs', sdk.tokens.BEAN),
     };
     return prev;
   }, {});
