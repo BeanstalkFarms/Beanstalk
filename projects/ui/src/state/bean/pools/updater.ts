@@ -5,9 +5,13 @@ import throttle from 'lodash/throttle';
 
 import { displayBeanPrice, getTokenIndex, tokenResult } from '~/util';
 import useSdk from '~/hooks/sdk';
-import { AdvancedPipeStruct, BeanstalkSDK, Clipboard, Pool } from '@beanstalk/sdk';
+import {
+  AdvancedPipeStruct,
+  BeanstalkSDK,
+  Clipboard,
+  Pool,
+} from '@beanstalk/sdk';
 import { chunkArray } from '~/util/UI';
-import { getExtractMulticallResult } from '~/util/Multicall';
 import { transform } from '~/util/BigNumber';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { TokenMap } from '~/constants';
@@ -15,8 +19,6 @@ import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
 
 const pageContext = '[bean/pools/useGetPools]';
-
-const extract = getExtractMulticallResult(pageContext);
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
@@ -33,14 +35,13 @@ export const useFetchPools = () => {
         const poolsArr = [...whitelistedPools.values()];
         const BEAN = sdk.tokens.BEAN;
 
-        
-
-        const [priceResult, beanTotalSupply, totalDeltaB, lpResults] = await Promise.all([
-          beanstalkPrice.price(),
-          BEAN.getContract().totalSupply().then(tokenResult(BEAN)),
-          beanstalk.totalDeltaB().then(tokenResult(BEAN)),
-          fetchPoolsData(sdk, poolsArr)
-        ]);
+        const [priceResult, beanTotalSupply, totalDeltaB, lpResults] =
+          await Promise.all([
+            beanstalkPrice.price(),
+            BEAN.getContract().totalSupply().then(tokenResult(BEAN)),
+            beanstalk.totalDeltaB().then(tokenResult(BEAN)),
+            fetchPoolsData(sdk, poolsArr),
+          ]);
 
         console.debug(`${pageContext} FETCH: `, {
           priceResult,
@@ -49,7 +50,6 @@ export const useFetchPools = () => {
           totalDeltaB,
         });
 
-        
         if (priceResult) {
           const price = tokenResult(BEAN)(priceResult.price.toString());
 
@@ -57,7 +57,7 @@ export const useFetchPools = () => {
             (acc, poolData) => {
               const address = poolData.pool.toLowerCase();
               const pool = sdk.pools.getPoolByLPToken(address);
-              
+
               if (pool) {
                 const lpResult = lpResults[getTokenIndex(pool.lpToken)];
                 const payload: UpdatePoolPayload = {
@@ -68,7 +68,7 @@ export const useFetchPools = () => {
                       transform(poolData.balances[0], 'bnjs', pool.tokens[0]),
                       transform(poolData.balances[1], 'bnjs', pool.tokens[1]),
                     ],
-                    deltaB: lpResult.deltaB,
+                    deltaB: transform(poolData.deltaB, 'bnjs', BEAN),
                     supply: lpResult.totalSupply,
                     // Liquidity: always denominated in USD for the price contract
                     liquidity: transform(poolData.liquidity, 'bnjs', BEAN),
@@ -76,8 +76,8 @@ export const useFetchPools = () => {
                     totalCrosses: new BigNumber(0),
                     lpUsd: transform(poolData.lpUsd, 'bnjs', BEAN),
                     lpBdv: transform(poolData.lpBdv, 'bnjs', BEAN),
-                    twaDeltaB: lpResult.deltaB
-                      ? transform(lpResult.deltaB, 'bnjs', BEAN)
+                    twaDeltaB: lpResult.twaDeltaB
+                      ? transform(lpResult.twaDeltaB, 'bnjs', BEAN)
                       : null,
                   },
                 } as UpdatePoolPayload;
@@ -149,43 +149,55 @@ export default PoolsUpdater;
 async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
   const { beanstalk } = sdk.contracts;
 
-  const calls: AdvancedPipeStruct[] = pools.map((pool) => {
-    const deltaBCall = {
-      target: beanstalk.address,
-      callData: beanstalk.interface.encodeFunctionData('poolDeltaB', [pool.address]),
-      clipboard: Clipboard.encode([])
-    };
-    const supplyCall = {
-      target: pool.lpToken.address,
-      callData: pool.lpToken.getContract().interface.encodeFunctionData('totalSupply'),
-      clipboard: Clipboard.encode([])
-    };
+  const calls: AdvancedPipeStruct[] = pools
+    .map((pool) => {
+      const deltaBCall = {
+        target: beanstalk.address,
+        callData: beanstalk.interface.encodeFunctionData('poolCurrentDeltaB', [
+          pool.address,
+        ]),
+        clipboard: Clipboard.encode([]),
+      };
+      const supplyCall = {
+        target: pool.lpToken.address,
+        callData: pool.lpToken
+          .getContract()
+          .interface.encodeFunctionData('totalSupply'),
+        clipboard: Clipboard.encode([]),
+      };
 
-    return [deltaBCall, supplyCall];
-  }).flat();
+      return [deltaBCall, supplyCall];
+    })
+    .flat();
 
-  const result = await sdk.contracts.beanstalk.callStatic.advancedPipe(calls, '0');
+  const result = await sdk.contracts.beanstalk.callStatic.advancedPipe(
+    calls,
+    '0'
+  );
   const chunkedByPool = chunkArray(result, 2);
-  
-  const datas = pools.reduce<TokenMap<{
-    totalSupply: BigNumber;
-    deltaB: BigNumber;
-  }>>((prev, curr, i) => {
+
+  const datas = pools.reduce<
+    TokenMap<{
+      totalSupply: BigNumber;
+      twaDeltaB: BigNumber;
+    }>
+  >((prev, curr, i) => {
     const [deltaBResult, totalSupplyResult] = chunkedByPool[i];
 
-    const deltaB = beanstalk.interface.decodeFunctionResult('poolDeltaB', deltaBResult)[0];
-    const totalSupply = curr.lpToken.getContract().interface.decodeFunctionResult(
-      'totalSupply', 
-      totalSupplyResult
+    const deltaB = beanstalk.interface.decodeFunctionResult(
+      'poolCurrentDeltaB',
+      deltaBResult
     )[0];
+    const totalSupply = curr.lpToken
+      .getContract()
+      .interface.decodeFunctionResult('totalSupply', totalSupplyResult)[0];
 
     prev[getTokenIndex(curr)] = {
       totalSupply: transform(totalSupply, 'bnjs', curr.lpToken),
-      deltaB: transform(deltaB, 'bnjs', sdk.tokens.BEAN),
-    }
+      twaDeltaB: transform(deltaB, 'bnjs', sdk.tokens.BEAN),
+    };
     return prev;
-  }, {})
+  }, {});
 
   return datas;
-
 }
