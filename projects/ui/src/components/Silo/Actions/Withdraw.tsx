@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack } from '@mui/material';
 import BigNumber from 'bignumber.js';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useSelector } from 'react-redux';
@@ -44,10 +44,6 @@ import useFormTxnContext from '~/hooks/sdk/useFormTxnContext';
 import { FormTxn, PlantAndDoX, WithdrawFarmStep } from '~/lib/Txn';
 import FarmModeField from '~/components/Common/Form/FarmModeField';
 import useToggle from '~/hooks/display/useToggle';
-import PillRow from '~/components/Common/Form/PillRow';
-import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
-import TokenSelectDialogNew from '~/components/Common/Form/TokenSelectDialogNew';
-import TokenIcon from '~/components/Common/TokenIcon';
 import { QuoteHandlerWithParams } from '~/hooks/ledger/useQuoteWithParams';
 import TokenQuoteProviderWithParams from '~/components/Common/Form/TokenQuoteProviderWithParams';
 import copy from '~/constants/copy';
@@ -70,7 +66,7 @@ type WithdrawFormValues = FormStateNew &
       slippage: number;
     };
     destination: FarmToMode | undefined;
-    tokenOut: ERC20Token | undefined;
+    // tokenOut: ERC20Token | undefined;
   };
 
 const WithdrawForm: FC<
@@ -214,14 +210,15 @@ const WithdrawForm: FC<
   const isReady =
     withdrawResult && !withdrawResult.amount.lt(0) && values.destination;
 
-  const isLPReady = whitelistedToken.isLP
-    ? values.tokenOut !== undefined
-    : true;
+  const isLPReady = true;
+  // const isLPReady = whitelistedToken.isLP
+  //   ? values.tokenOut !== undefined
+  //   : true;
 
-  const removingLiquidity =
-    whitelistedToken.isLP &&
-    values.tokenOut &&
-    !whitelistedToken.equals(values.tokenOut);
+  // const removingLiquidity =
+  //   whitelistedToken.isLP &&
+  //   values.tokenOut &&
+  //   !whitelistedToken.equals(values.tokenOut);
 
   const disabledActions = useMemo(
     () => (whitelistedToken.isUnripe ? [FormTxn.ENROOT] : undefined),
@@ -252,7 +249,7 @@ const WithdrawForm: FC<
           name="tokens.0"
           token={whitelistedToken}
           state={values.tokens[0]}
-          tokenOut={values.tokenOut || values.tokens[0].token}
+          tokenOut={values.tokens[0].token}
           handleQuote={handleQuote}
           balance={toBN(depositedBalance || TokenValue.ZERO) || ZERO_BN}
           balanceLabel="Deposited Balance"
@@ -264,7 +261,7 @@ const WithdrawForm: FC<
           <FarmModeField name="destination" />
           {/** Token Out (If LP) */}
           <>
-            {whitelistedToken.isLP ? (
+            {/* {whitelistedToken.isLP ? (
               <PillRow
                 isOpen={isTokenSelectVisible}
                 label="Withdraw LP as"
@@ -275,8 +272,8 @@ const WithdrawForm: FC<
                   {values.tokenOut?.symbol || 'Select Output'}
                 </Typography>
               </PillRow>
-            ) : null}
-            <TokenSelectDialogNew
+            ) : null} */}
+            {/* <TokenSelectDialogNew
               open={isTokenSelectVisible}
               handleClose={hideTokenSelect}
               handleSubmit={handleSelectTokens}
@@ -284,7 +281,7 @@ const WithdrawForm: FC<
               balances={undefined} // hide balances from right side of selector
               tokenList={claimableTokens as Token[]}
               mode={TokenSelectMode.SINGLE}
-            />
+            /> */}
           </>
         </Stack>
         <AddPlantTxnToggle plantAndDoX={plantAndDoX} actionText="Withdraw" />
@@ -344,21 +341,19 @@ const WithdrawForm: FC<
                       stalk: toBN(withdrawResult.stalk.mul(-1)),
                       seeds: toBN(withdrawResult.seeds.mul(-1)),
                     },
-                    removingLiquidity && amountOut && values.tokenOut
-                      ? {
-                          type: ActionType.SWAP,
-                          amountIn: toBN(withdrawResult.amount),
-                          tokenIn: getLegacyToken(whitelistedToken),
-                          amountOut: toBN(amountOut),
-                          tokenOut: getLegacyToken(values.tokenOut),
-                        }
-                      : undefined,
+                    // removingLiquidity && amountOut && values.tokenOut
+                    //   ? {
+                    //       type: ActionType.SWAP,
+                    //       amountIn: toBN(withdrawResult.amount),
+                    //       tokenIn: getLegacyToken(whitelistedToken),
+                    //       amountOut: toBN(amountOut),
+                    //       tokenOut: getLegacyToken(values.tokenOut),
+                    //     }
+                    //   : undefined,
                     {
                       type: ActionType.IN_TRANSIT,
                       amount: toBN(withdrawResult.amount),
-                      token: getLegacyToken(
-                        values.tokenOut || whitelistedToken
-                      ),
+                      token: getLegacyToken(whitelistedToken),
                       destination: values.destination || FarmToMode.EXTERNAL,
                       withdrawSeasons,
                     },
@@ -420,7 +415,6 @@ const WithdrawPropProvider: FC<{
         },
       ],
       destination: undefined,
-      tokenOut: undefined,
       farmActions: {
         preset: sdk.tokens.BEAN.equals(token) ? 'plant' : 'noPrimary',
         primary: undefined,
@@ -448,7 +442,7 @@ const WithdrawPropProvider: FC<{
         const primaryActions = values.farmActions.primary;
         const destination = values.destination;
         const tokenIn = formData.token;
-        const tokenOut = values.tokenOut;
+        const tokenOut = token;
         const amountOut =
           tokenOut && tokenOut.equals(tokenIn)
             ? formData.amount
@@ -498,10 +492,7 @@ const WithdrawPropProvider: FC<{
           token.displayDecimals
         );
 
-        const messageAmount =
-          values.tokenOut && amountOut
-            ? displayTokenAmount(amountOut, values.tokenOut)
-            : displayTokenAmount(totalAmount, token);
+        const messageAmount = displayTokenAmount(totalAmount, token);
 
         txToast = new TransactionToast({
           loading: `Withdrawing ${withdrawAmtStr} ${token.name} from the Silo...`,
