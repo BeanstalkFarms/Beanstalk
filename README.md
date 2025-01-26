@@ -46,7 +46,7 @@ Beanstalk is a permissionless fiat stablecoin protocol built on Ethereum.
 | [`dex-ui`][proj-basin-ui]     | The Basin UI hosted at [basin.exchange](https://basin.exchange).                                       |
 | [`sdk-wells`][proj-basin-sdk] | A Typescript SDK for interacting with Basin its components' contracts.                                 |
 
-Note that the [Basin][basin-protocol] and [Pipeline][pipeline-protocol] contracts are in separate repostitories.
+Note that the [Basin][basin-protocol] and [Pipeline][pipeline-protocol] contracts are in separate repositories.
 
 ## Development
 
