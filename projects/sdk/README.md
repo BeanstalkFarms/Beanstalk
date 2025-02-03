@@ -18,7 +18,7 @@ import { BeanstalkSDK } from "@beanstalk/sdk";
 const sdk = new BeanstalkSDK(options);
 ```
 
-SDK contructor options:
+SDK constructor options:
 
 ```javascript
 const options = {
