@@ -88,7 +88,7 @@ export class BeanstalkSDK {
     this.pools = new Pools(this);
     this.graphql = new GraphQLClient(this.subgraphUrl);
     this.queries = getQueries(this.graphql);
-    this.zeroX = new ZeroX(this, config?.zeroXApiKey);
+    this.zeroX = new ZeroX(this);
 
     // // Internal
     this.events = new EventManager(this);
@@ -136,7 +136,7 @@ export class BeanstalkSDK {
 
     this.signer = config.signer;
 
-    if (config.signer?.provider){
+    if (config.signer?.provider) {
       this.provider = config.signer.provider as Provider;
     } else if (config.provider) {
       this.provider = config.provider;

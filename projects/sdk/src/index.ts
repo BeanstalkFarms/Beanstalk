@@ -29,11 +29,7 @@ export type {
   AdvancedPipeCallStruct as AdvancedPipeStruct
 } from "src/lib/depot";
 
-export type {
-  MinimumViableSwapQuote,
-  ZeroExQuoteResponse,
-  ZeroExAPIRequestParams
-} from "src/lib/matcha/types";
+export type { ZeroXQuoteV2Response, ZeroXQuoteV2Params } from "src/lib/matcha/types";
 
 // Utilities
 export * as TestUtils from "./utils/TestUtils";

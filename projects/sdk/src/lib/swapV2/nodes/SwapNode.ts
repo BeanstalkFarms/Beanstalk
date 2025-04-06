@@ -12,7 +12,7 @@ export interface ISwapNodeSettable {
 }
 export interface ISwapNode extends ISwapNodeSettable {
   sellToken: Token;
-  buyToken: Token; 
+  buyToken: Token;
 }
 
 type BuildStepParams = Partial<{
@@ -29,13 +29,13 @@ export abstract class SwapNode implements ISwapNode {
 
   /** Token to exchange */
   readonly sellToken: Token;
-  
+
   /** Token to receive */
   readonly buyToken: Token;
 
   /** Amount of SellToken to exchange */
   sellAmount: TokenValue;
-  
+
   /** Max amount of of buyToken received */
   buyAmount: TokenValue;
 
@@ -52,7 +52,13 @@ export abstract class SwapNode implements ISwapNode {
    * Build the swap step
    * @param args copySlot, fromMode, toMode
    */
-  abstract buildStep(args?: BuildStepParams): StepFunction<AdvancedPipePreparedResult> | StepClass<AdvancedPipePreparedResult>;
+  abstract buildStep(
+    args?: BuildStepParams
+  ):
+    | StepFunction<AdvancedPipePreparedResult>
+    | StepClass<AdvancedPipePreparedResult>
+    | StepClass<AdvancedPipePreparedResult>[]
+    | StepFunction<AdvancedPipePreparedResult>[];
 
   /**
    * The tag for the amount out for THIS node. Subsequent nodes will copy from this value.
@@ -76,13 +82,13 @@ export abstract class SwapNode implements ISwapNode {
     return this;
   }
 
-  /// ----------------------------------------  
+  /// ----------------------------------------
   /// ------------ VALIDATION ------------ ///
   protected makeErrorWithContext(msg: string) {
     return new Error(`Error: building swap step in ${this.name}: ${msg}`);
   }
   protected validateIsERC20Token(token: Token) {
-    if (!(isERC20Token(token))) {
+    if (!isERC20Token(token)) {
       throw this.makeErrorWithContext(`Expected ERC20 token but got ${token.symbol}.`);
     }
   }
@@ -94,11 +100,13 @@ export abstract class SwapNode implements ISwapNode {
       throw this.makeErrorWithContext("buy token is required.");
     }
     if (this.sellToken.equals(this.buyToken)) {
-      throw this.makeErrorWithContext(`Expected unique tokens. ${this.sellToken.symbol} and ${this.buyToken.symbol}`);
+      throw this.makeErrorWithContext(
+        `Expected unique tokens. ${this.sellToken.symbol} and ${this.buyToken.symbol}`
+      );
     }
   }
   protected validateSellAmount() {
-    if (!this.sellAmount) {  
+    if (!this.sellAmount) {
       throw this.makeErrorWithContext("sell amount is required.");
     }
     if (this.sellAmount.lte(0)) {
