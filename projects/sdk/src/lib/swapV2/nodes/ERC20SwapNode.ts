@@ -69,7 +69,7 @@ export abstract class ERC20SwapNode extends SwapNode implements IERC20SwapNode {
     if (this.slippage === null || this.slippage === undefined) {
       throw this.makeErrorWithContext("Slippage is required");
     }
-    if (this.slippage < 0 || this.slippage > 1) {
+    if (this.slippage < 0 || this.slippage > 100) {
       throw this.makeErrorWithContext(
         `Expected slippage to be between 0 and 100% but got ${this.slippage}`
       );
@@ -252,8 +252,9 @@ export class ZeroXSwapNode extends ERC20SwapNode {
       chainId: ChainResolver.resolveToMainnetChainId(ZeroXSwapNode.sdk.chainId),
       sellToken: this.sellToken.address,
       buyToken: this.buyToken.address,
-      sellAmount: this.sellAmount.blockchainString,
+      sellAmount: this.sellAmount.toBigNumber().toString(),
       taker: ZeroXSwapNode.sdk.contracts.pipeline.address,
+      txOrigin: ZeroXSwapNode.sdk.contracts.pipeline.address,
       sellEntireBalance: true,
       slippageBps: ZeroX.slippageToSlippageBps(this.slippage)
     });
@@ -262,7 +263,9 @@ export class ZeroXSwapNode extends ERC20SwapNode {
 
     this.quote = quote;
     const buyAmount = this.buyToken.fromBlockchain(quote.buyAmount);
-    this.setFields({ buyAmount, minBuyAmount: buyAmount });
+    const minBuyAmount = this.buyToken.fromBlockchain(quote.minBuyAmount);
+    this.setFields({ buyAmount, minBuyAmount });
+    ZeroXSwapNode.sdk.debug("[ZeroXSwapNode/quoteForward] result: ", this.quote);
     return this;
   }
 
@@ -281,7 +284,7 @@ export class ZeroXSwapNode extends ERC20SwapNode {
         amountOut: this.minBuyAmount.toBigNumber(),
         value: BigNumber.from(0),
         prepare: () => {
-          ZeroXSwapNode.sdk.debug(`>[${this.name}].buildStep()`, {
+          ZeroXSwapNode.sdk.debug(`>[${this.name}.swap].buildStep()`, {
             sellToken: this.sellToken,
             buyToken: this.buyToken,
             sellAmount: this.sellAmount,
@@ -307,7 +310,7 @@ export class ZeroXSwapNode extends ERC20SwapNode {
         amountOut: this.sellAmount.toBigNumber(),
         value: BigNumber.from(0),
         prepare: () => {
-          ZeroXSwapNode.sdk.debug(`>[${this.name}].buildStep()`, {
+          ZeroXSwapNode.sdk.debug(`>[${this.name}.balanceOf].buildStep()`, {
             token: this.buyToken,
             functionName: "balanceOf",
             balancePublicKey: ZeroXSwapNode.sdk.contracts.pipeline.address

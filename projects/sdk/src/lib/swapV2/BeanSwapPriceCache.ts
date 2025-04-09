@@ -156,7 +156,7 @@ export class BeanSwapPriceCache {
   private decodeGetTokenUsdPrice(result: string) {
     try {
       const priceDecoded = BeanSwapPriceCache.sdk.contracts.beanstalk.interface.decodeFunctionResult(
-        "getTokenUsdPrice", 
+        "getTokenUsdPrice",
         result
       )[0];
 
@@ -175,7 +175,7 @@ export class BeanSwapPriceCache {
 
     try {
       const decoded = BeanSwapPriceCache.sdk.contracts.beanstalkPrice.interface.decodeFunctionResult(
-        "price", 
+        "price",
         result
       )[0] as BeanstalkPrice.PricesStructOutput;
 
