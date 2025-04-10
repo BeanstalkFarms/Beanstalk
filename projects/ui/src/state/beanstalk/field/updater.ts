@@ -2,13 +2,13 @@ import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { bigNumberResult, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
-import { useBeanstalkContract } from '~/hooks/ledger/useContract';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
+import useSdk from '~/hooks/sdk';
 import { resetBeanstalkField, updateBeanstalkField } from './actions';
 
 export const useFetchBeanstalkField = () => {
   const dispatch = useDispatch();
-  const beanstalk = useBeanstalkContract();
+  const beanstalk = useSdk().contracts.beanstalk;
 
   // Handlers
   const fetch = useCallback(async () => {

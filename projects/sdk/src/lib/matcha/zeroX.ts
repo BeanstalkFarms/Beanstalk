@@ -1,72 +1,54 @@
-import Bottleneck from "bottleneck";
 import { BeanstalkSDK } from "src/lib/BeanstalkSDK";
-import { ZeroExAPIRequestParams, ZeroExQuoteResponse } from "./types";
-import { fetchWithBottleneckLimiter, isRateLimitError } from "./utils";
-
-const RETRY_AFTER_MS = 200;
-
-const MAX_RETRY_COUNT = 3;
+import { ZeroXQuoteV2Params, ZeroXQuoteV2Response } from "./types";
+import { ChainResolver } from "@beanstalk/sdk-core";
+import { isAddress } from "ethers/lib/utils";
 
 type RequestParams = Omit<RequestInit, "headers" | "method">;
 
 export class ZeroX {
   static sdk: BeanstalkSDK;
 
-  private static limiter: Bottleneck;
+  private static endpoint = "https://0x.bean.money/swap/allowance-holder/quote";
 
-  readonly swapV1Endpoint = "https://arbitrum.api.0x.org/swap/v1/quote";
-
-  constructor(
-    sdk: BeanstalkSDK,
-    private _apiKey: string = ""
-  ) {
+  constructor(sdk: BeanstalkSDK) {
     ZeroX.sdk = sdk;
-
-    // Keep the limiter in memory across instances to avoid request leaks between re-initializations of the SDK
-    if (!ZeroX.limiter) {
-      ZeroX.limiter = ZeroX.initializeLimiter();
-    }
-  }
-
-  /**
-   * Exposing here to allow other modules to use their own API key if needed
-   */
-  setApiKey(_apiKey: string) {
-    this._apiKey = _apiKey;
   }
 
   /**
    * Fetches quotes from the 0x API
    *
-   * @note Utilizes Bottleneck limiter to prevent rate limiting.
-   * - In the case of a rate limit, it will retry until up to 3 times every 200ms.
-   *
    * @param args - a single request or an array of requests
    * @param requestInit - optional request init params
    * @returns
    */
-  async quote<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
+  async quote<T extends ZeroXQuoteV2Params = ZeroXQuoteV2Params>(
     args: T | T[],
     requestInit?: RequestParams
-  ): Promise<ZeroExQuoteResponse[]> {
-    this.validateAPIKey();
+  ): Promise<ZeroXQuoteV2Response[]> {
+    if (!ZeroX.endpoint) {
+      throw new Error("ERROR: Router endpoint is not set");
+    }
 
     const fetchArgs = Array.isArray(args) ? args : [args];
 
     const requests = fetchArgs.map((params) => {
+      if (!params.buyToken && !params.sellToken) {
+        throw new Error("buyToken and sellToken and required");
+      }
+
+      if (!params.sellAmount) {
+        throw new Error("sellAmount is required");
+      }
+
       const urlParams = new URLSearchParams(
         this.generateQuoteParams(params) as unknown as Record<string, string>
       );
 
-      return {
-        id: this.generateRequestId(params),
-        request: () => this.send0xRequest(urlParams, requestInit)
-      };
+      return () => this.send0xRequest(urlParams, requestInit);
     });
 
-    return fetchWithBottleneckLimiter<ZeroExQuoteResponse>(ZeroX.limiter, requests);
+    return Promise.all(requests.map((r) => r()));
   }
-
   private async send0xRequest(
     urlParams: URLSearchParams,
     requestInit?: Omit<RequestInit, "headers" | "method">
@@ -76,14 +58,13 @@ export class ZeroX {
       method: "GET",
       headers: new Headers({
         "Content-Type": "application/json",
-        Accept: "application/json",
-        "0x-api-key": this._apiKey
+        Accept: "application/json"
       })
     };
 
-    const url = `${this.swapV1Endpoint}?${urlParams.toString()}`;
+    const url = `${ZeroX.endpoint}/?${urlParams.toString()}`;
 
-    return fetch(url, options).then((r) => r.json()) as Promise<ZeroExQuoteResponse>;
+    return fetch(url, options).then((r) => r.json()) as Promise<ZeroXQuoteV2Response>;
   }
 
   /**
@@ -92,38 +73,32 @@ export class ZeroX {
    *
    * @returns the params for the 0x API
    */
-  private generateQuoteParams<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(
+  private generateQuoteParams<T extends ZeroXQuoteV2Params = ZeroXQuoteV2Params>(
     params: T
-  ): ZeroExAPIRequestParams {
-    if (!params.buyToken && !params.sellToken) {
-      throw new Error("buyToken and sellToken and required");
+  ): ZeroXQuoteV2Params {
+    if (!ZeroX.isValidQuoteParams(params)) {
+      throw new Error("ERROR: Invalid quote params");
     }
 
-    if (!params.sellAmount && !params.buyAmount) {
-      throw new Error("sellAmount or buyAmount is required");
-    }
-
-    const quoteParams = {
-      sellToken: params.sellToken,
+    const quoteParams: ZeroXQuoteV2Params = {
+      chainId: ChainResolver.resolveToMainnetChainId(params.chainId),
       buyToken: params.buyToken,
+      sellToken: params.sellToken,
       sellAmount: params.sellAmount,
-      buyAmount: params.buyAmount,
-      slippagePercentage: params.slippagePercentage ?? "0.01",
+      taker: params.taker,
+      txOrigin: params.txOrigin ?? undefined,
+      swapFeeRecipient: params.swapFeeRecipient ?? undefined,
+      swapFeeBps: params.swapFeeBps ?? undefined,
+      tradeSurplusRecipient: params.tradeSurplusRecipient ?? undefined,
       gasPrice: params.gasPrice,
-      takerAddress: params.takerAddress,
+      slippageBps: params.slippageBps ?? 10, // default 0.1% slippage
       excludedSources: params.excludedSources,
-      includedSources: params.includedSources,
-      skipValidation: params.skipValidation ?? true, // defaults to true b/c most of our swaps go through advFarm / pipeline calls
-      feeRecipient: params.feeRecipient,
-      buyTokenPercentageFee: params.buyTokenPercentageFee,
-      priceImpactProtectionPercentage: params.priceImpactProtectionPercentage,
-      feeRecipientTradeSurplus: params.feeRecipientTradeSurplus,
-      shouldSellEntireBalance: params.shouldSellEntireBalance ?? false
+      sellEntireBalance: params.sellEntireBalance ?? false
     };
 
     Object.keys(quoteParams).forEach((_key) => {
-      const key = _key as keyof typeof quoteParams;
-      if (quoteParams[key] === undefined || quoteParams[key] === null) {
+      const key = _key as keyof ZeroXQuoteV2Params;
+      if (!quoteParams[key]) {
         delete quoteParams[key];
       }
     });
@@ -131,48 +106,34 @@ export class ZeroX {
     return quoteParams;
   }
 
-  private generateRequestId<T extends ZeroExAPIRequestParams = ZeroExAPIRequestParams>(args: T) {
-    const sellToken = args.sellToken || "";
-    const buyToken = args.buyToken || "";
-    const sellAmount = args.sellAmount || "0";
-    const buyAmount = args.buyAmount || "0";
-    const slippagePercentage = args.slippagePercentage || "0.01";
-    const timestamp = new Date().getTime();
+  static isValidQuoteParams(params: ZeroXQuoteV2Params) {
+    const sellToken = ZeroX.sdk.tokens.findByAddress(params.sellToken);
 
-    return `0x-${sellToken}-${buyToken}-${sellAmount}-${buyAmount}-${slippagePercentage}-${timestamp}`;
+    if (!sellToken) {
+      return false;
+    }
+
+    const sellAmount = sellToken.fromHuman(params.sellAmount);
+
+    if (
+      !params.chainId ||
+      !params.buyToken ||
+      !params.sellToken ||
+      !sellAmount.gt(0) ||
+      !isAddress(params.buyToken) ||
+      !isAddress(params.sellToken)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
-  private static initializeLimiter() {
-    // 0x has rate limit of 10 requests per second.
-    // We set the reservoir to 4, so we can make 4 requests per every 500ms, with a minimum of 125ms between each request.
-    const limiter = new Bottleneck({
-      reservoir: 4,
-      reservoirRefreshInterval: 500,
-      reservoirRefreshAmount: 4,
-      maxConcurrent: 4,
-      minTime: 125
-    });
-
-    limiter.on("failed", (error, info) => {
-      // If we are being rate limited, retry after 100ms. We try until we get a successful response
-      if (isRateLimitError(error)) {
-        ZeroX.sdk.debug("[ZeroX Limiter]: quote failed: ... retrying id: ", info.options.id);
-        if (info.retryCount < MAX_RETRY_COUNT) {
-          return RETRY_AFTER_MS;
-        }
-        return null;
-      }
-
-      // Non rate limit errors are not retried
-      return null;
-    });
-
-    return limiter;
-  }
-
-  private validateAPIKey() {
-    if (!this._apiKey) {
-      throw new Error("Cannot fetch from 0x without an API key");
+  static slippageToSlippageBps(slippage: number | string) {
+    try {
+      return Number(slippage.toString()) * 100;
+    } catch (e) {
+      throw new Error(`Invalid slippage input: ${slippage}`);
     }
   }
 }

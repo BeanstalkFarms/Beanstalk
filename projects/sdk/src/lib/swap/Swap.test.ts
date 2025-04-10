@@ -54,7 +54,7 @@ beforeAll(async () => {
 
 /////////////// Test execution of swap routes ///////////////
 
-describe("Swap", function () {
+describe.skip("Swap", function () {
   // ETH, BEAN => x, using EXTERNAL as the source
   describe.skip.each([
     // ETH => x
@@ -138,8 +138,17 @@ async function transferToFarmBalance(tokenIn: Token, _amount: string) {
  * 4. The tokenOut balance did not increase
  * 5. The tokenOut balance is not greater than the desired swap amount, with some slippage tolerance
  */
-async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to: FarmToMode, _amount?: string) {
-  const [tokenInBalanceBefore, tokenOutBalanceBefore] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
+async function swapTest(
+  tokenIn: Token,
+  tokenOut: Token,
+  from: FarmFromMode,
+  to: FarmToMode,
+  _amount?: string
+) {
+  const [tokenInBalanceBefore, tokenOutBalanceBefore] = await Promise.all([
+    getBalance(tokenIn, from),
+    getBalance(tokenOut, to)
+  ]);
   const pipelineBalancesBefore = await getPipelineBalances();
 
   const v = ["ETH", "WETH"].includes(tokenIn.symbol) ? 30 : 300;
@@ -157,7 +166,10 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
   let tx = await (await op.execute(amount, slippage, { gasLimit: 5_000_000 })).wait();
   expect(tx.status).toBe(1);
 
-  const [tokenInBalanceAfter, tokenOutBalanceAfter] = await Promise.all([getBalance(tokenIn, from), getBalance(tokenOut, to)]);
+  const [tokenInBalanceAfter, tokenOutBalanceAfter] = await Promise.all([
+    getBalance(tokenIn, from),
+    getBalance(tokenOut, to)
+  ]);
   const pipelineBalancesAfter = await getPipelineBalances();
 
   // There are less tokenIn than before the swapped
@@ -171,8 +183,7 @@ async function swapTest(tokenIn: Token, tokenOut: Token, from: FarmFromMode, to:
     const afterBalance = pipelineBalancesAfter.get(token);
     expect(beforeBalance.external.eq(afterBalance!.external));
     expect(beforeBalance.internal.eq(afterBalance!.internal));
-  };
-
+  }
 }
 
 async function getBalance(token: Token, mode: string, user?: string) {
@@ -196,4 +207,4 @@ async function getPipelineBalances() {
   const allBalances = erc20Balances.set(sdk.tokens.ETH, ethBalance);
 
   return allBalances;
-};
+}

@@ -4,17 +4,19 @@
 import {
   BeanstalkSDK,
   BasinWell,
-  MinimumViableSwapQuote,
   Clipboard,
   ERC20Token,
   TokenValue,
   AdvancedPipeStruct,
   Deposit,
+  ZeroXQuoteV2Params,
+  ZeroXQuoteV2Response,
 } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
 import { multicall } from '@wagmi/core';
 import { config } from '~/util/wagmi/config';
 import Utils from './utils';
+
 /**
  * @notes Space-bean
  *
@@ -169,15 +171,15 @@ export class PipelineConvert {
     sellToken: ERC20Token,
     sellAmount: TokenValue,
     slippage: number
-  ) {
+  ): ZeroXQuoteV2Params {
     return {
+      chainId: PipelineConvert.sdk.chainId,
       sellToken: sellToken.address,
       buyToken: buyToken.address,
       sellAmount: sellAmount.blockchainString,
-      takerAddress: PipelineConvert.sdk.contracts.pipeline.address,
-      shouldSellEntireBalance: true,
-      skipValidation: true,
-      slippagePercentage: slippage.toString(),
+      taker: PipelineConvert.sdk.contracts.pipeline.address,
+      sellEntireBalance: true,
+      slippageBps: Number(slippage * 100),
     };
   }
 
@@ -263,7 +265,7 @@ export class PipelineConvert {
     swap: {
       buyToken: ERC20Token;
       sellToken: ERC20Token;
-      quote: MinimumViableSwapQuote;
+      quote: ZeroXQuoteV2Response;
     };
     target: {
       well: BasinWell;
@@ -300,16 +302,24 @@ export class PipelineConvert {
     pipe.push(
       PipelineConvert.snippets.erc20Approve(
         swap.sellToken,
-        swap.quote.allowanceTarget
+        swap.quote.transaction.to
       )
     );
 
     // 3: Swap non-bean token of well 1 for non-bean token of well 2
     pipe.push({
-      target: swap.quote.to,
-      callData: swap.quote.data,
+      target: swap.quote.transaction.to,
+      callData: swap.quote.transaction.data,
       clipboard: Clipboard.encode([]),
     });
+
+    // 4. Get Balance of buyToken
+    pipe.push(
+      PipelineConvert.snippets.erc20BalanceOf(
+        swap.buyToken,
+        this.sdk.contracts.pipeline.address
+      )
+    );
 
     // 4: transfer swap result to target well
     pipe.push(
@@ -317,7 +327,7 @@ export class PipelineConvert {
         swap.buyToken,
         target.well.address,
         TokenValue.ZERO, // overriden w/ clipboard
-        Clipboard.encodeSlot(3, 0, 1)
+        Clipboard.encodeSlot(4, 0, 1)
       )
     );
 
@@ -377,6 +387,19 @@ export class PipelineConvert {
             recipient,
             amount.toBigNumber(),
           ]),
+        clipboard,
+      };
+    },
+    erc20BalanceOf: (
+      token: ERC20Token,
+      address: string,
+      clipboard: string = Clipboard.encode([])
+    ): AdvancedPipeStruct => {
+      return {
+        target: token.address,
+        callData: token
+          .getContract()
+          .interface.encodeFunctionData('balanceOf', [address]),
         clipboard,
       };
     },

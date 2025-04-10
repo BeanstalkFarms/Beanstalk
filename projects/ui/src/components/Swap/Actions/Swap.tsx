@@ -319,7 +319,7 @@ const SwapForm: FC<
       getAmountOut(tokenIn, amountIn, quoterParams);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIn, tokenOut]);
+  }, [tokenIn, tokenOut, quoterParams.slippage]);
 
   //
   const handleInputFromMode = useCallback(

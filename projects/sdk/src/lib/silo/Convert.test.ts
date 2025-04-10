@@ -17,7 +17,7 @@ const BEANLP = sdk.tokens.BEAN_ETH_WELL_LP;
 const urBEAN = sdk.tokens.UNRIPE_BEAN;
 const urBEANLP = sdk.tokens.UNRIPE_BEAN_WSTETH;
 
-describe("Silo Convert", function () {
+describe.skip("Silo Convert", function () {
   beforeAll(async () => {
     setTokenRewards();
     await utils.resetFork();

@@ -79,7 +79,6 @@ describe("Workflow", () => {
         // Setup
         const farm = sdk.farm.create();
         farm.add([
-          // sdk.farm.presets.usdt2weth(),
           async () => "0xCALLDATA100000000000000000000000000000000000000",
           [
             async () => "0xCALLDATA200000000000000000000000000000000000000",
@@ -93,16 +92,25 @@ describe("Workflow", () => {
 
         // Estimation
         await farm.estimate(ethers.BigNumber.from(1000_000000));
+
         // @ts-ignore testing private value
-        expect(farm._steps[1].prepare(ethers.BigNumber.from(0))).toMatchObject({
+        expect(farm._steps[0].prepare(ethers.BigNumber.from(0))).toMatchObject({
           callData: "0xCALLDATA100000000000000000000000000000000000000"
         });
         // @ts-ignore testing private value
-        expect(farm._steps[2].prepare(ethers.BigNumber.from(0))).toMatchObject({
+        expect(farm._steps[1].prepare(ethers.BigNumber.from(0))).toMatchObject({
           callData: "0xCALLDATA200000000000000000000000000000000000000"
         });
         // @ts-ignore testing private value
-        expect(farm._steps[5].prepare(ethers.BigNumber.from(0))).toMatchObject({
+        expect(farm._steps[2].prepare(ethers.BigNumber.from(0))).toMatchObject({
+          callData: "0xCALLDATA300000000000000000000000000000000000000"
+        });
+        // @ts-ignore testing private value
+        expect(farm._steps[3].prepare(ethers.BigNumber.from(0))).toMatchObject({
+          callData: "0xCALLDATA400000000000000000000000000000000000000"
+        });
+        // @ts-ignore testing private value
+        expect(farm._steps[4].prepare(ethers.BigNumber.from(0))).toMatchObject({
           callData: "0xCALLDATA200000000000000000000000000000000000000"
         });
       });

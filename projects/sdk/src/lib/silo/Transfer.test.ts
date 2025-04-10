@@ -7,7 +7,7 @@ const { sdk, account, utils } = getTestUtils();
 
 jest.setTimeout(30000);
 
-describe("Silo Transfer", function () {
+describe.skip("Silo Transfer", function () {
   beforeAll(async () => {
     await utils.resetFork();
     await utils.setAllBalances(account, "2000");

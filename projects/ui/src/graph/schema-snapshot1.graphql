@@ -153,6 +153,13 @@ type Metrics {
   total: Int
 }
 
+type Network {
+  id: String!
+  name: String!
+  premium: Boolean
+  spacesCount: Int
+}
+
 type Option {
   name: String
   value: String
@@ -250,6 +257,11 @@ input ProposalWhere {
   updated_lt: Int
   updated_lte: Int
   validation: String
+  votes: Int
+  votes_gt: Int
+  votes_gte: Int
+  votes_lt: Int
+  votes_lte: Int
 }
 
 type Query {
@@ -257,7 +269,7 @@ type Query {
   follows(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: FollowWhere): [Follow]
   leaderboards(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: LeaderboardsWhere): [Leaderboard]
   messages(first: Int! = 20, orderBy: String, orderDirection: OrderDirection, skip: Int! = 0, where: MessageWhere): [Message]
-  networks: [Item]
+  networks: [Network]
   options: [Option]
   plugins: [Item]
   proposal(id: String!): Proposal
@@ -302,6 +314,19 @@ input RolesWhere {
   address: String!
 }
 
+type SkinSettings {
+  bg_color: String
+  border_color: String
+  content_color: String
+  header_color: String
+  heading_color: String
+  link_color: String
+  logo: String
+  primary_color: String
+  text_color: String
+  theme: String
+}
+
 type Space {
   about: String
   activeProposals: Int
@@ -314,6 +339,8 @@ type Space {
   cover: String
   created: Int!
   delegationPortal: DelegationPortal
+  discourseCategory: Int
+  discussions: String
   domain: String
   email: String
   filters: SpaceFilters
@@ -339,12 +366,14 @@ type Space {
   proposalsCount30d: Int
   rank: Float
   skin: String
+  skinSettings: SkinSettings
   strategies: [Strategy]
   symbol: String
   template: String
   terms: String
   treasuries: [Treasury]
   turbo: Boolean
+  turbo_expiration: Int
   twitter: String
   validation: Validation
   verified: Boolean
@@ -432,10 +461,12 @@ type Strategy {
 type StrategyItem {
   about: String
   author: String
+  disabled: Boolean
   examples: [Any]
   id: String!
   schema: Any
   spacesCount: Int
+  verifiedSpacesCount: Int
   version: String
 }
 

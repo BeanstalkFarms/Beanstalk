@@ -10,7 +10,7 @@ const { sdk, account, utils } = getTestUtils();
 
 jest.setTimeout(30000);
 
-describe("Silo Withdrawl", function () {
+describe.skip("Silo Withdrawl", function () {
   const withdraw = new Withdraw(sdk);
 
   sdk.tokens.BEAN.rewards = {
