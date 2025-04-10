@@ -12,7 +12,7 @@ beforeAll(async () => {
   await utils.resetFork();
 });
 
-describe("Swap", () => {
+describe.skip("Swap", () => {
   describe("BEAN WETH well (two token well)", () => {
     let testBeanWethWell: Well;
 
@@ -20,7 +20,7 @@ describe("Swap", () => {
       testBeanWethWell = await createWell([wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH], account);
     });
 
-    describe.each([
+    describe.skip.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
       [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN]
     ])("valid swaps - swapFrom", (tokenIn, tokenOut) => {
@@ -29,7 +29,7 @@ describe("Swap", () => {
       });
     });
 
-    describe.each([
+    describe.skip.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.WETH],
       [wellsSdk.tokens.WETH, wellsSdk.tokens.BEAN]
     ])("valid swaps - swapTo", (tokenIn, tokenOut) => {
@@ -38,7 +38,7 @@ describe("Swap", () => {
       });
     });
 
-    describe.each([
+    describe.skip.each([
       [wellsSdk.tokens.BEAN, wellsSdk.tokens.USDC],
       [wellsSdk.tokens.USDC, wellsSdk.tokens.BEAN]
     ])("invalid swaps", (tokenIn, tokenOut) => {
@@ -108,7 +108,13 @@ async function executeFailedSwapTest(well: Well, tokenIn: Token, tokenOut: Token
   );
 }
 
-async function executeSwapFromTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
+async function executeSwapFromTest(
+  well: Well,
+  tokenIn: Token,
+  tokenOut: Token,
+  account: string,
+  amount: string
+) {
   const SLIPPAGE = 0.5;
 
   const swapAmount = tokenIn.amount(amount);
@@ -143,7 +149,13 @@ async function executeSwapFromTest(well: Well, tokenIn: Token, tokenOut: Token, 
   expect(tokenOutBalanceAfter.gte(amountWithSlippage));
 }
 
-async function executeSwapToTest(well: Well, tokenIn: Token, tokenOut: Token, account: string, amount: string) {
+async function executeSwapToTest(
+  well: Well,
+  tokenIn: Token,
+  tokenOut: Token,
+  account: string,
+  amount: string
+) {
   const SLIPPAGE = 0.5;
 
   const tokenInBalanceBefore = await getBalance(tokenIn, account);

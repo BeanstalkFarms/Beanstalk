@@ -7,7 +7,7 @@ const { sdk } = getTestUtils();
 
 jest.setTimeout(30000);
 
-describe("Silo Utils", function () {
+describe.skip("Silo Utils", function () {
   // Crates no longer used. Switched to stems. TODO: Add some stem tests
 
   // describe("pickCrates()", function () {

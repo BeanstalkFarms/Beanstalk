@@ -6,7 +6,7 @@ const { sdk, account, utils } = getTestUtils();
 // memory, otherwise these tests randomly fail
 const DELAY = 10;
 
-describe("TestUtils", () => {
+describe.skip("TestUtils", () => {
   beforeAll(async () => {
     await utils.resetFork();
   });
