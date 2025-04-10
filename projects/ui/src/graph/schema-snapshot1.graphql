@@ -257,6 +257,11 @@ input ProposalWhere {
   updated_lt: Int
   updated_lte: Int
   validation: String
+  votes: Int
+  votes_gt: Int
+  votes_gte: Int
+  votes_lt: Int
+  votes_lte: Int
 }
 
 type Query {

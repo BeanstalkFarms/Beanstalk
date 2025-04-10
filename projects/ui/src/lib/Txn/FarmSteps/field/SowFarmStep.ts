@@ -42,8 +42,8 @@ export class SowFarmStep extends FarmStep {
     let fromMode = _fromMode;
 
     if (!usingBean && operation) {
-      this.pushInput({ 
-        input: [...operation.getFarm().generators] 
+      this.pushInput({
+        input: [...operation.getFarm().generators],
       });
       fromMode = FarmFromMode.INTERNAL_TOLERANT;
     }
@@ -53,7 +53,9 @@ export class SowFarmStep extends FarmStep {
         makeLocalOnlyStep({
           name: 'claimable-pre-sow',
           amount: {
-            additionalAmount: !operation ? addiitonalBean.add(amountIn) : addiitonalBean,
+            additionalAmount: !operation
+              ? addiitonalBean.add(amountIn)
+              : addiitonalBean,
           },
         })
       );
@@ -109,7 +111,12 @@ export class SowFarmStep extends FarmStep {
       return soil;
     }
 
-    const quote = await sdk.beanSwap.quoter.route(tokenIn, sdk.tokens.BEAN, soil, slippage);
+    const quote = await sdk.beanSwap.quoter.route(
+      sdk.tokens.BEAN,
+      tokenIn,
+      soil,
+      slippage
+    );
 
     console.debug(
       '[SowFarmStep][getMaxForToken]: estimate = ',
