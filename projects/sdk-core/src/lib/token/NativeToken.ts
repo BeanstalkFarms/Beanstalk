@@ -34,6 +34,9 @@ export class NativeToken extends Token {
   }
 
   public equals(other: NativeToken): boolean {
-    return this.chainId === other.chainId;
+    if (other instanceof NativeToken) {
+      return this.chainId === other.chainId;
+    }
+    return false;
   }
 }

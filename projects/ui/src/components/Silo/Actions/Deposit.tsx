@@ -160,7 +160,7 @@ const DepositForm: FC<
   const handleQuoteClaim = useCallback<
     QuoteHandlerWithParams<{ slippage: number }>
   >(
-    async (tokenIn, _amountIn, tokenOut, { slippage }) => {
+    async (tokenIn, _amountIn, tokenOut, { slippage: _ }) => {
       if (!account) {
         throw new Error('Signer Required.');
       }
