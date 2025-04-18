@@ -111,7 +111,8 @@ contract ReseedStateTest is TestHelper {
         IMockFBeanstalk.AssetSettings memory assetSettings = l2Beanstalk.tokenSettings(L2BEAN);
 
         // log milestone stem and season
-        console.log("Milestone stem: ", assetSettings.milestoneStem);
+        console.log("Milestone stem: ");
+        console.logInt(assetSettings.milestoneStem);
         console.log("Milestone season: ", assetSettings.milestoneSeason);
     }
 
