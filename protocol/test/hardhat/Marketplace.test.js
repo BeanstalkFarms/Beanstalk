@@ -758,6 +758,12 @@ describe("Marketplace", function () {
             ).to.revertedWith("Marketplace: Invalid Plot.");
           });
 
+          it("Fill Listing zero payment fails", async function () {
+            await expect(
+              mockBeanstalk.connect(user).fillPodListing(this.podListing, 0, EXTERNAL)
+            ).to.be.revertedWith("Marketplace: Zero payment.");
+          });
+
           it("plot amount too large", async function () {
             await expect(
               mockBeanstalk.connect(user2).fillPodOrder(this.podOrder, 1000, 700, 500, INTERNAL)

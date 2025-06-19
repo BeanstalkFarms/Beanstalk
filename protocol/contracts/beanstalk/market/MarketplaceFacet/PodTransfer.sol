@@ -101,7 +101,7 @@ contract PodTransfer is ReentrancyGuard {
         uint256 amount
     ) internal {
         uint256 currentAllowance = allowancePods(owner, spender, fieldId);
-        if (currentAllowance < amount) {
+        if (currentAllowance < amount || currentAllowance == 0) {
             revert("Field: Insufficient approval.");
         }
         setAllowancePods(owner, spender, fieldId, currentAllowance - amount);

@@ -165,7 +165,7 @@ contract MarketplaceFacet is Invariable, Order {
             LibTractor._user() != sender &&
             allowancePods(sender, LibTractor._user(), fieldId) != type(uint256).max
         ) {
-            decrementAllowancePods(sender, LibTractor._user(), totalAmount, fieldId);
+            decrementAllowancePods(sender, LibTractor._user(), fieldId, totalAmount);
         }
     }
 
