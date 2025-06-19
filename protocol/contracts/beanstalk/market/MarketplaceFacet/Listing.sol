@@ -102,6 +102,7 @@ contract Listing is PodTransfer {
             s.sys.podListings[podListing.fieldId][podListing.index] == _hashListing(podListing),
             "Marketplace: Listing does not exist."
         );
+        require(beanPayAmount > 0, "Marketplace: Zero payment.");
         uint256 plotSize = s.accts[podListing.lister].fields[podListing.fieldId].plots[
             podListing.index
         ];
@@ -122,7 +123,7 @@ contract Listing is PodTransfer {
         );
 
         // Round.
-        if (podListing.podAmount - podReceiveAmount <= (1000000 / podListing.pricePerPod)) {
+        if (podListing.podAmount - podReceiveAmount < (1000000 / podListing.pricePerPod)) {
             podReceiveAmount = podListing.podAmount;
         }
 
