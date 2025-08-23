@@ -1,5 +1,4 @@
 [discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
-[discord-url]: https://discord.gg/beanstalk
 [proj-protocol]: /protocol
 [proj-ui]: /projects/ui
 [proj-sdk]: /projects/sdk
@@ -16,8 +15,6 @@
 <img src="https://github.com/BeanstalkFarms/Beanstalk-Brand-Assets/blob/main/BEAN/bean-128x128.png" alt="Beanstalk logo" align="right" width="120" />
 
 # Beanstalk
-
-[![Discord][discord-badge]][discord-url]
 
 Code Version: `3.0.1` <br>
 Whitepaper Version: `2.7.2`
