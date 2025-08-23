@@ -2,11 +2,6 @@
 
 # Beanstalk Protocol
 
-[![Discord][discord-badge]][discord-url]
-
-[discord-badge]: https://img.shields.io/discord/880413392916054098?label=Beanstalk
-[discord-url]: https://discord.gg/beanstalk
-
 Code Version: `2.3.1` <br>
 Whitepaper Version: `2.3.0`
 
