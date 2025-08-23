@@ -7873,12 +7873,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomicfoundation/slang@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@nomicfoundation/slang@npm:1.1.0"
+"@nomicfoundation/slang@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@nomicfoundation/slang@npm:1.2.0"
   dependencies:
     "@bytecodealliance/preview2-shim": "npm:0.17.2"
-  checksum: 10/7f4f24a03aec625813c6eb87390406869534896e5be90b2473b8b55abadfd48537958345629c75c4896dd38e4ad7aaaeff151be752a9ab468a6290a55e999e34
+  checksum: 10/694f67c16192ca0c8d8e76026722fdd192420746f654bd4789951a56d14df9dd4e1986b35223c32ce1e62f05023e9216cc692278b36d6cc2eb18bf059ad49429
   languageName: node
   linkType: hard
 
@@ -33935,16 +33935,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-solidity@npm:2.0.0":
-  version: 2.0.0
-  resolution: "prettier-plugin-solidity@npm:2.0.0"
+"prettier-plugin-solidity@npm:2.1.0":
+  version: 2.1.0
+  resolution: "prettier-plugin-solidity@npm:2.1.0"
   dependencies:
-    "@nomicfoundation/slang": "npm:1.1.0"
+    "@nomicfoundation/slang": "npm:1.2.0"
     "@solidity-parser/parser": "npm:^0.20.1"
-    semver: "npm:^7.7.1"
+    semver: "npm:^7.7.2"
   peerDependencies:
     prettier: ">=3.0.0"
-  checksum: 10/b5ef1d64902b181478e3bd557a37d11c5437e9353402e43c1ef0909e596d76f1e72b0fd59726a381564d303a6bcb4f0b6b9a9310caf942b27236dc6913819de1
+  checksum: 10/35ae366b7cbb434c31d33f793d13839e136eeb778cb74bc4ffa0eb65a6a3eace34b1b3158a02daf42072c8a120991fcf86842b67c51341b2fa8287747b71ae41
   languageName: node
   linkType: hard
 
@@ -33957,12 +33957,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.5.3":
-  version: 3.5.3
-  resolution: "prettier@npm:3.5.3"
+"prettier@npm:3.6.2":
+  version: 3.6.2
+  resolution: "prettier@npm:3.6.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/7050c08f674d9e49fbd9a4c008291d0715471f64e94cc5e4b01729affce221dfc6875c8de7e66b728c64abc9352eefb7eaae071b5f79d30081be207b53774b78
+  checksum: 10/1213691706bcef1371d16ef72773c8111106c3533b660b1cc8ec158bd109cdf1462804125f87f981f23c4a3dba053b6efafda30ab0114cc5b4a725606bb9ff26
   languageName: node
   linkType: hard
 
@@ -36254,8 +36254,8 @@ __metadata:
     jest: "npm:29.2.2"
     jest-serial-runner: "npm:1.2.1"
     lint-staged: "npm:13.3.0"
-    prettier: "npm:3.5.3"
-    prettier-plugin-solidity: "npm:2.0.0"
+    prettier: "npm:3.6.2"
+    prettier-plugin-solidity: "npm:2.1.0"
     ts-jest: "npm:29.1.2"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.3.3"
@@ -36668,7 +36668,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.7.1":
+"semver@npm:^7.7.2":
   version: 7.7.2
   resolution: "semver@npm:7.7.2"
   bin:
