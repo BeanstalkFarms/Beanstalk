@@ -366,8 +366,7 @@ const MigrationPreview: FC<{}> = () => {
                     Circulating Balances and smart contract account balances are
                     not migrated automatically.
                   </b>{' '}
-                  See <a href="https://discord.gg/beanstalk">Discord</a>
-                  &nbsp;and{' '}
+                  See{' '}
                   <a href="https://github.com/BeanstalkFarms/Beanstalk/pull/909">
                     BIP-50
                   </a>{' '}
