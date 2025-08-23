@@ -12,21 +12,8 @@ export default function MigrationMessage({ message }: { message?: string }) {
       <Typography variant="h1">
         {message || isArbitrum ? "We're migrating!" : "We're on Arbitrum One!"}
       </Typography>
-      <Typography variant="body1" textAlign="center" sx={{ display: 'inline-flex', gap: 0.5 }}>
-        Please check
-        <Link
-          color="primary"
-          display="flex"
-          flexDirection="row"
-          gap={1}
-          alignItems="center"
-          target="_blank"
-          rel="noreferrer"
-          href={'https://discord.gg/beanstalk'}
-        >
-          Discord
-        </Link>
-        for details.
+      <Typography variant="body1" textAlign="center">
+        Please check our official channels for details.
       </Typography>
       {!isArbitrum &&
         <Button

@@ -119,12 +119,6 @@ const ROUTES: { [key in RouteKeys]: RouteData[] } = {
       icon: immunefiIcon,
     },
     {
-      path: 'discord',
-      href: 'https://discord.gg/beanstalk',
-      title: 'Discord',
-      icon: discordIcon,
-    },
-    {
       path: 'twitter',
       href: 'https://twitter.com/beanstalkmoney',
       title: 'Twitter',
