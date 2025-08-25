@@ -11,7 +11,7 @@ import {
   useTooltipInPortal,
   TooltipWithBounds,
 } from '@visx/tooltip';
-import { Box, Card, Stack, Typography } from '@mui/material';
+import { Box, Card, Stack, Typography, useTheme } from '@mui/material';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { displayBN } from '~/util';
@@ -360,7 +360,28 @@ function TooltipComponentRaw({
     ReturnType<typeof useTooltipInPortal>,
     'containerRef' | 'containerBounds' | 'forceRefreshBounds'
   >) {
+  
+  const theme = useTheme();
   const siloTokens = useTokenMap(useCustomTokenList || SILO_WHITELIST);
+  const tooltipPadding = 1;
+  
+  // Calculate tooltip height based on visible data items
+  const calculateTooltipHeight = useCallback((data: BaseDataPoint) => {
+    let visibleItems = 0;
+    reversedKeys.forEach((key) => {
+      const seasonFilter = tokenPerSeasonFilter;
+      if (
+        !seasonFilter ||
+        (data.season >= seasonFilter[key]?.from &&
+          data.season <= seasonFilter[key]?.to)
+      ) {
+        visibleItems++;
+      }
+    });
+
+    // Base height = Card padding + (item height * number of items)
+    return parseInt(theme.spacing(tooltipPadding)) + (visibleItems * 25); // base, 25px per item
+  }, [reversedKeys, tokenPerSeasonFilter]);
 
   const handleMouseLeave = useCallback(() => {
     hideTooltip();
@@ -375,14 +396,19 @@ function TooltipComponentRaw({
       forceRefreshBounds();
       const containerX =
         ('clientX' in event ? event.clientX : 0) - containerBounds.left;
-      const containerY =
+      const rawContainerY = 
         ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
+      
       const pointerData = getPointerValue(event, scales, series)[0];
+      const tooltipHeight = calculateTooltipHeight(pointerData);
+      const containerY = Math.max(0, Math.min(rawContainerY, containerBounds.height - tooltipHeight - 20));
+      
       showTooltip({
         tooltipLeft: containerX,
         tooltipTop: containerY,
         tooltipData: pointerData,
       });
+      
       onCursor?.(
         pointerData.season,
         getDisplayValue([pointerData]),
@@ -439,7 +465,7 @@ function TooltipComponentRaw({
               >
                 <Card
                   sx={{
-                    p: 1,
+                    p: tooltipPadding,
                     backgroundColor: BeanstalkPalette.lightestBlue,
                     border: '1px solid',
                     borderColor: 'divider',
