@@ -124,8 +124,11 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         ) => {
           const seasonPromise = promise.then((data) => {
             data.data?.seasons.forEach((seasonData) => {
-              output[seasonData.season] = seasonData;
-              callback?.(seasonData);
+              const seasonNum = getSeasonNumber(seasonData);
+              if (!Number.isNaN(seasonNum)) {
+                output[seasonNum] = { ...seasonData, season: seasonNum };
+                callback?.({ ...seasonData, season: seasonNum });
+              }
             });
           });
           promises.push(seasonPromise);
@@ -157,13 +160,13 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
           if (fetchL2) {
             console.debug('[useSeasonsQuery] run l2 config: ', l2Config);
             pushPromise(apolloClient.query(l2Config), (data) => {
-              latestL2 = Math.max(latestL2, data.season);
+              latestL2 = Math.max(latestL2, getSeasonNumber(data));
             });
           }
           if (fetchL1) {
             console.debug('[useSeasonsQuery] run l1 config', l1Config);
             pushPromise(apolloClient.query(l1Config), (data) => {
-              latestL1 = Math.max(latestL1, data.season);
+              latestL1 = Math.max(latestL1, getSeasonNumber(data));
             });
           }
 
@@ -175,8 +178,11 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               season_gt: RESEED_SEASON - 1,
             });
             cachedL2Data?.seasons.forEach((seasonData) => {
-              output[seasonData.season] = seasonData;
-              latestL2 = Math.max(Math.min(latestL2, seasonData.season), 0);
+              const seasonNum = getSeasonNumber(seasonData);
+              if (!Number.isNaN(seasonNum)) {
+                output[seasonNum] = { ...seasonData, season: seasonNum };
+                latestL2 = Math.max(Math.min(latestL2, seasonNum), 0);
+              }
             });
 
             const numQueries = calcNumQueries(latestL2, RESEED_SEASON - 1);
@@ -198,8 +204,11 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
               season_gt: 1,
             });
             cachedL1Data?.seasons.forEach((seasonData) => {
-              output[seasonData.season] = seasonData;
-              latestL1 = Math.max(Math.min(latestL1, seasonData.season), 0);
+              const seasonNum = getSeasonNumber(seasonData);
+              if (!Number.isNaN(seasonNum)) {
+                output[seasonNum] = { ...seasonData, season: seasonNum };
+                latestL1 = Math.max(Math.min(latestL1, seasonNum), 0);
+              }
             });
 
             const numQueries = calcNumQueries(
@@ -290,7 +299,8 @@ function getQueriesWithNumQueries<T extends MinimumViableSnapshotQuery>(
 
     const options = mergeQueryOptions(config, {
       variables: {
-        first: season < 1000 ? season - 1 : 1000,
+        // first: season < 1000 ? season - 1 : 1000,
+        first: 1000,
         season_lte: season,
       },
     });
@@ -317,10 +327,28 @@ function getNow2ReseedSeasonsDiff() {
   return Math.floor(secondsDiff / 60 / 60);
 }
 
+/**
+ * Subgraph queries like SeasonalLiquidityPerPool return season as { season: number }
+ * (nested Season entity). Others return season as number. Use this so we always
+ * get a numeric season for keys and sorting.
+ */
+function getSeasonNumber(
+  snapshot: MinimumViableSnapshot | null | undefined
+): number {
+  if (!snapshot) return Number.NaN;
+  const s = (snapshot as any).season;
+  if (typeof s === 'number' && !Number.isNaN(s)) return s;
+  if (s && typeof s === 'object' && typeof (s as any).season === 'number')
+    return (s as any).season;
+  return Number.NaN;
+}
+
 function sortSeasonOutputDesc<T extends MinimumViableSnapshot>(a: T, b: T) {
-  if (!a.season) return 1;
-  if (!b.season) return -1;
-  return b.season - a.season;
+  const aNum = getSeasonNumber(a);
+  const bNum = getSeasonNumber(b);
+  if (Number.isNaN(aNum)) return 1;
+  if (Number.isNaN(bNum)) return -1;
+  return bNum - aNum;
 }
 
 function isFunction(fn: unknown): fn is Function {

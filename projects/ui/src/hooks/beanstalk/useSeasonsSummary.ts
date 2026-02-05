@@ -6,7 +6,7 @@ import {
 } from '~/generated/graphql';
 import { useAppSelector } from '~/state';
 import BigNumber from 'bignumber.js';
-import { toBNWithDecimals } from '~/util';
+import { toBNWithDecimals, toSeasonNumber } from '~/util';
 import { useMemo } from 'react';
 import { BeanstalkSDK } from '@beanstalk/sdk';
 import { LibCases } from '~/lib/Beanstalk/LibCases';
@@ -111,9 +111,9 @@ const castQueries = (
     });
   });
 
-  // Process liquidity and price data
+  // Process liquidity and price data (season can be number or { season: number } from subgraph)
   prices.forEach((data) => {
-    const seasonIndex = data.season;
+    const seasonIndex = toSeasonNumber(data.season);
     const existingData = mergedData.get(seasonIndex) || {};
     const poolLiquidity = new BigNumber(data.pool.liquidityUSD);
     const poolPrice = new BigNumber(data.pool.lastPrice);

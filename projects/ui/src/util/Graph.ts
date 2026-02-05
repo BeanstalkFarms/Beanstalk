@@ -31,7 +31,15 @@ import {
 } from '~/generated/graphql';
 import { apolloClient } from '~/graph/client';
 import { getMultiChainToken, TokenInstance } from '~/hooks/beanstalk/useTokens';
-import { BEAN_CRV3_LP, BEAN_CRV3_V1_LP, BEAN_ETH_UNIV2_LP, BEAN_ETH_WELL_LP, BEAN_LUSD_LP, BEAN_WSTETH_WELL_LP } from '~/constants/tokens';
+import {
+  BEAN_CRV3_LP,
+  BEAN_CRV3_V1_LP,
+  BEAN_ETH_UNIV2_LP,
+  BEAN_ETH_WELL_LP,
+  BEAN_LUSD_LP,
+  BEAN_WSTETH_WELL_LP,
+} from '~/constants/tokens';
+import { toSeasonNumber } from '~/util/Season';
 import { fetchApolloWithLimiter } from './Bottleneck';
 
 // ==========================================================
@@ -180,8 +188,8 @@ const l1TokenSeasonsFilters = {
   [BEAN_CRV3_LP[1].symbol]: { start: REPLANT_SEASON - 1 },
   [BEAN_ETH_UNIV2_LP[1].symbol]: { start: 0, end: REPLANT_SEASON },
   [BEAN_LUSD_LP[1].symbol]: { start: 0, end: REPLANT_SEASON },
-  [BEAN_CRV3_V1_LP[1].symbol]: { start: 3658, end: REPLANT_SEASON }
-}
+  [BEAN_CRV3_V1_LP[1].symbol]: { start: 3658, end: REPLANT_SEASON },
+};
 
 const getSeasonalUnripeChopRateOptions =
   (address: string): DynamicSGQueryOption =>
@@ -199,13 +207,13 @@ const depositedSiloTokenOptions =
     const tkn = getMultiChainToken(token.address);
     const options = makeOptions(chain, {
       vars: {
-        siloAsset: `${(chain === "l1" ? beanstalkETH : beanstalkARB).toLowerCase()}-${tkn[chain].address.toLowerCase()}`,
+        siloAsset: `${(chain === 'l1' ? beanstalkETH : beanstalkARB).toLowerCase()}-${tkn[chain].address.toLowerCase()}`,
       },
-      add: ['gt']
+      add: ['gt'],
     });
 
-    if (chain === "l2") return options;
-        
+    if (chain === 'l2') return options;
+
     const l1Filters = l1TokenSeasonsFilters[token.symbol];
 
     if (l1Filters.start) {
@@ -217,18 +225,18 @@ const depositedSiloTokenOptions =
 
     return options;
   };
-const apyOptions = 
-  (token: TokenInstance): DynamicSGQueryOption => 
+const apyOptions =
+  (token: TokenInstance): DynamicSGQueryOption =>
   (chain) => {
     const tkn = getMultiChainToken(token.address);
-    const options =  makeOptions(chain, {
+    const options = makeOptions(chain, {
       vars: {
         token: tkn[chain].address.toLowerCase(),
-        season_gt: chain === "l1" ? REPLANT_SEASON - 1 : L2_MIN_SEASON,
+        season_gt: chain === 'l1' ? REPLANT_SEASON - 1 : L2_MIN_SEASON,
       },
     });
 
-    if (chain === "l2") {
+    if (chain === 'l2') {
       return options;
     }
 
@@ -241,18 +249,18 @@ const apyOptions =
     }
 
     return options;
-  }
-const tokenLiquidityOptions = 
-  (token: TokenInstance): DynamicSGQueryOption => 
+  };
+const tokenLiquidityOptions =
+  (token: TokenInstance): DynamicSGQueryOption =>
   (chain) => {
     const tkn = getMultiChainToken(token.address);
     return makeOptions(chain, {
       vars: {
         pool: tkn[chain].address.toLowerCase(),
       },
-      ctx: "bean"
+      ctx: 'bean',
     });
-  }
+  };
 
 // prettier-ignore
 export const subgraphQueryConfigs = {
@@ -545,8 +553,9 @@ export async function fetchAllSeasonData(
     const cachedSeasons: number[] = [];
     const cachedData = readCachedData(params, chain);
     cachedData?.[params.documentEntity].forEach((sd: any) => {
-      cachedSeasons.push(sd.season);
-      output[sd.season] = sd;
+      const seasonNum = toSeasonNumber(sd.season);
+      cachedSeasons.push(seasonNum);
+      output[seasonNum] = { ...sd, season: seasonNum };
     });
 
     const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
@@ -566,7 +575,8 @@ export async function fetchAllSeasonData(
     });
     results.forEach((result) => {
       result.data?.[params.documentEntity]?.forEach((sd: any) => {
-        output[sd.season] = sd;
+        const seasonNum = toSeasonNumber(sd.season);
+        output[seasonNum] = { ...sd, season: seasonNum };
       })
     })
   }
