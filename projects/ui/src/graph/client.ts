@@ -236,6 +236,11 @@ const beanLinks = {
   }),
 };
 
+// Cache
+const cacheLink = new HttpLink({
+  uri: sgEnv.subgraphs.cache,
+});
+
 // BS3TODO: Is this dfferent for Arbitrum?
 const snapshotLink = new HttpLink({
   uri: 'https://hub.snapshot.org/graphql',
@@ -260,15 +265,19 @@ export const apolloClient = new ApolloClient({
       ({ getContext }) => getContext().subgraph === 'beanstalk_eth',
       beanstalkLinks.eth, // true
       ApolloLink.split(
-        ({ getContext }) => getContext().subgraph === 'snapshot',
-        snapshotLink, // true
+        ({ getContext }) => getContext().subgraph === 'cache',
+        cacheLink, // true
         ApolloLink.split(
-          ({ getContext }) => getContext().subgraph === 'snapshot-labs',
-          snapshotLabsLink, // true
+          ({ getContext }) => getContext().subgraph === 'snapshot',
+          snapshotLink, // true
           ApolloLink.split(
-            ({ getContext }) => getContext().subgraph === 'bean',
-            beanLinks.arb, // true
-            beanstalkLinks.arb // false
+            ({ getContext }) => getContext().subgraph === 'snapshot-labs',
+            snapshotLabsLink, // true
+            ApolloLink.split(
+              ({ getContext }) => getContext().subgraph === 'bean',
+              beanLinks.arb, // true
+              beanstalkLinks.arb // false
+            )
           )
         )
       )

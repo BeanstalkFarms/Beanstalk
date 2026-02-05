@@ -11,6 +11,7 @@ type SGEnvironment = {
     bean: string;
     beanstalk_eth: string;
     bean_eth: string;
+    cache: string;
   };
 };
 
@@ -24,6 +25,7 @@ export const SUBGRAPH_ENVIRONMENTS: Record<SGEnvironments, SGEnvironment> = {
       bean: `${BASE_SUBGRAPH_URL}/bean`,
       beanstalk_eth: `${BASE_SUBGRAPH_URL}/beanstalk_eth`,
       bean_eth: `${BASE_SUBGRAPH_URL}/bean_eth`,
+      cache: `${BASE_SUBGRAPH_URL}/cache`,
     },
   },
   // [SGEnvironments.BF_DEV]: {

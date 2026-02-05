@@ -1,0 +1,236 @@
+scalar BigDecimal
+
+scalar BigInt
+
+scalar Bytes
+
+type CachedBeanHourlySnapshot {
+  blockNumber: BigInt!
+  crosses: Int!
+  deltaCrosses: Int!
+  deltaLiquidityUSD: BigDecimal!
+  deltaVolume: BigInt!
+  deltaVolumeUSD: BigDecimal!
+  id: ID!
+  instantaneousDeltaB: BigInt!
+  liquidityUSD: BigDecimal!
+  lockedBeans: BigInt!
+  marketCap: BigDecimal!
+  price: BigDecimal!
+  season: Int!
+  supply: BigInt!
+  supplyInPegLP: BigDecimal!
+  timestamp: BigInt!
+  twaDeltaB: BigInt!
+  twaPrice: BigDecimal!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+type CachedFieldHourlySnapshot {
+  blocksToSoldOutSoil: BigInt
+  caseId: BigInt
+  createdAt: BigInt!
+  deltaHarvestableIndex: BigInt!
+  deltaHarvestablePods: BigInt!
+  deltaHarvestedPods: BigInt!
+  deltaIssuedSoil: BigInt!
+  deltaNumberOfSowers: Int!
+  deltaNumberOfSows: Int!
+  deltaPodIndex: BigInt!
+  deltaPodRate: BigDecimal!
+  deltaRealRateOfReturn: BigDecimal!
+  deltaSoil: BigInt!
+  deltaSownBeans: BigInt!
+  deltaTemperature: Int!
+  deltaUnharvestablePods: BigInt!
+  harvestableIndex: BigInt!
+  harvestablePods: BigInt!
+  harvestedPods: BigInt!
+  id: ID!
+  issuedSoil: BigInt!
+  numberOfSowers: Int!
+  numberOfSows: Int!
+  podIndex: BigInt!
+  podRate: BigDecimal!
+  realRateOfReturn: BigDecimal!
+  season: Int!
+  seasonBlock: BigInt!
+  soil: BigInt!
+  soilSoldOut: Boolean!
+  sownBeans: BigInt!
+  temperature: Int!
+  unharvestablePods: BigInt!
+  updatedAt: BigInt!
+}
+
+type CachedPodMarketplaceHourlySnapshot {
+  availableListedPods: BigInt!
+  availableOrderBeans: BigInt!
+  beanVolume: BigInt!
+  cancelledListedPods: BigInt!
+  cancelledOrderBeans: BigInt!
+  createdAt: BigInt!
+  deltaAvailableListedPods: BigInt!
+  deltaAvailableOrderBeans: BigInt!
+  deltaBeanVolume: BigInt!
+  deltaCancelledListedPods: BigInt!
+  deltaCancelledOrderBeans: BigInt!
+  deltaExpiredListedPods: BigInt!
+  deltaFilledListedPods: BigInt!
+  deltaFilledOrderBeans: BigInt!
+  deltaFilledOrderedPods: BigInt!
+  deltaListedPods: BigInt!
+  deltaOrderBeans: BigInt!
+  deltaPodVolume: BigInt!
+  expiredListedPods: BigInt!
+  filledListedPods: BigInt!
+  filledOrderBeans: BigInt!
+  filledOrderedPods: BigInt!
+  id: ID!
+  listedPods: BigInt!
+  orderBeans: BigInt!
+  podVolume: BigInt!
+  season: Int!
+  updatedAt: BigInt!
+}
+
+type CachedPoolHourlySnapshot {
+  createdAt: BigInt!
+  crosses: Int!
+  deltaBeans: BigInt!
+  deltaCrosses: Int!
+  deltaLiquidityUSD: BigDecimal!
+  deltaReserves: [BigInt!]!
+  deltaVolume: BigInt!
+  deltaVolumeUSD: BigDecimal!
+  id: ID!
+  lastPrice: BigDecimal!
+  liquidityUSD: BigDecimal!
+  reserves: [BigInt!]!
+  season: Int!
+  twaDeltaBeans: BigInt!
+  twaPrice: BigDecimal!
+  twaToken2Price: BigDecimal
+  updatedAt: BigInt!
+  utilization: BigDecimal!
+  volume: BigInt!
+  volumeUSD: BigDecimal!
+}
+
+type CachedSeason {
+  beans: BigInt!
+  createdAt: BigInt!
+  deltaB: BigInt!
+  deltaBeans: BigInt!
+  id: ID!
+  incentiveBeans: BigInt!
+  marketCap: BigDecimal!
+  price: BigDecimal!
+  rewardBeans: BigInt!
+  season: Int!
+  sunriseBlock: BigInt!
+  unmigratedL1Beans: BigInt
+}
+
+type CachedSiloAssetHourlySnapshot {
+  createdAt: BigInt!
+  deltaDepositedAmount: BigInt!
+  deltaDepositedBDV: BigInt!
+  deltaFarmAmount: BigInt!
+  deltaWithdrawnAmount: BigInt!
+  depositedAmount: BigInt!
+  depositedBDV: BigInt!
+  farmAmount: BigInt!
+  id: ID!
+  season: Int!
+  updatedAt: BigInt!
+  withdrawnAmount: BigInt!
+}
+
+type CachedSiloHourlySnapshot {
+  activeFarmers: Int!
+  beanMints: BigInt!
+  beanToMaxLpGpPerBdvRatio: BigInt
+  caseId: BigInt
+  createdAt: BigInt!
+  deltaActiveFarmers: Int!
+  deltaBeanMints: BigInt!
+  deltaDepositedBDV: BigInt!
+  deltaGerminatingStalk: BigInt!
+  deltaGrownStalkPerSeason: BigInt!
+  deltaPlantableStalk: BigInt!
+  deltaRoots: BigInt!
+  deltaStalk: BigInt!
+  depositedBDV: BigInt!
+  germinatingStalk: BigInt!
+  grownStalkPerSeason: BigInt!
+  id: ID!
+  plantableStalk: BigInt!
+  roots: BigInt!
+  season: Int!
+  stalk: BigInt!
+  updatedAt: BigInt!
+}
+
+type CachedUnripeTokenHourlySnapshot {
+  amountUnderlyingOne: BigInt!
+  bdvUnderlyingOne: BigInt!
+  chopRate: BigDecimal!
+  choppableAmountOne: BigInt!
+  choppableBdvOne: BigInt!
+  createdAt: BigInt!
+  deltaAmountUnderlyingOne: BigInt!
+  deltaBdvUnderlyingOne: BigInt!
+  deltaChopRate: BigDecimal!
+  deltaChoppableAmountOne: BigInt!
+  deltaChoppableBdvOne: BigInt!
+  deltaRecapPercent: BigDecimal!
+  deltaTotalChoppedAmount: BigInt!
+  deltaTotalChoppedBdv: BigInt!
+  deltaTotalChoppedBdvReceived: BigInt!
+  deltaTotalUnderlying: BigInt!
+  deltaUnderlyingToken: Boolean!
+  id: ID!
+  recapPercent: BigDecimal!
+  season: Int!
+  totalChoppedAmount: BigInt!
+  totalChoppedBdv: BigInt!
+  totalChoppedBdvReceived: BigInt!
+  totalUnderlying: BigInt!
+  updatedAt: BigInt!
+}
+
+type CachedWhitelistTokenHourlySnapshot {
+  bdv: BigInt
+  createdAt: BigInt!
+  deltaBdv: BigInt
+  deltaGaugePoints: BigInt
+  deltaIsGaugeEnabled: Boolean!
+  deltaMilestoneSeason: Int!
+  deltaOptimalPercentDepositedBdv: BigInt
+  deltaStalkEarnedPerSeason: BigInt!
+  deltaStalkIssuedPerBdv: BigInt!
+  gaugePoints: BigInt
+  id: ID!
+  isGaugeEnabled: Boolean!
+  milestoneSeason: Int!
+  optimalPercentDepositedBdv: BigInt
+  season: Int!
+  selector: Bytes!
+  stalkEarnedPerSeason: BigInt!
+  stalkIssuedPerBdv: BigInt!
+  updatedAt: BigInt!
+}
+
+type Query {
+  cache_beanHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedBeanHourlySnapshot!]!
+  cache_fieldHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedFieldHourlySnapshot!]!
+  cache_podMarketplaceHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedPodMarketplaceHourlySnapshot!]!
+  cache_poolHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedPoolHourlySnapshot!]!
+  cache_seasons(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSeason!]!
+  cache_siloAssetHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSiloAssetHourlySnapshot!]!
+  cache_siloHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSiloHourlySnapshot!]!
+  cache_unripeTokenHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedUnripeTokenHourlySnapshot!]!
+  cache_whitelistTokenHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedWhitelistTokenHourlySnapshot!]!
+}

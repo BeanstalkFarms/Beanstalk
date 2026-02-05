@@ -83,6 +83,7 @@ type Leaderboard {
   space: String
   user: String
   votesCount: Int
+  vpValue: Float
 }
 
 input LeaderboardsWhere {
@@ -564,6 +565,7 @@ type Vote {
   vp: Float
   vp_by_strategy: [Float]
   vp_state: String
+  vp_value: Float
 }
 
 input VoteWhere {

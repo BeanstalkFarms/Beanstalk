@@ -6,6 +6,7 @@ import {
   SupportedChainId,
 } from '~/constants';
 import {
+  CachedSeasonalRRoRDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -67,6 +68,7 @@ export const subgraphQueryKeys = {
   // ------ Beanstalk Silo ------
   beanstalkTotalStalk: 'seasonalBeanstalkTotalStalk',
   beanstalkRRoR: 'seasonalBeanstalkRRoR',
+  cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
   siloToken30DvAPY: (
     token: TokenInstance | string
@@ -83,7 +85,7 @@ export const subgraphQueryKeys = {
   beanstalkHarvestedPods: 'seasonalBeanstalkHarvestedPods',
   beanstalkTotalSowers: 'seasonalBeanstalkTotalSowers',
   beanstalkTotalSeeds: 'seasonalBeanstalkTotalSeeds',
-  
+
   // ------ Farmer Silo ------
   farmerSiloRewards: (account: string | undefined) => ['farmerSiloRewards', account ?? "no-account"].join("-"),
   farmerSiloAssetSnapshots: (account: string | undefined) => ['farmerSiloAssetSnapshots', account ?? "no-account"].join("-"),
@@ -147,6 +149,10 @@ const CONTEXT_FRAGMENTS = {
   beanstalk: {
     l2: 'beanstalk',
     l1: 'beanstalk_eth',
+  },
+  cache: {
+    l2: 'cache',
+    l1: 'cache',
   },
 };
 
@@ -335,7 +341,7 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gt"] })
     ) satisfies DynamicSGQueryOption,
   },
-  
+
 
   // --------------------- Beanstalk ---------------------
   tokenLiquidity: (token: TokenInstance) => ({
@@ -362,9 +368,9 @@ export const subgraphQueryConfigs = {
     document: SeasonalStalkDocument,
     queryKey: subgraphQueryKeys.beanstalkTotalStalk,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         ctx: "beanstalk",
-        vars: { 
+        vars: {
           season_gt: chain === "l2" ? L2_MIN_SEASON : REPLANT_SEASON - 1,
           silo: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
@@ -375,10 +381,22 @@ export const subgraphQueryConfigs = {
     document: SeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.beanstalkRRoR,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
-        }
+        },
+      })
+    ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkRRoR: {
+    document: CachedSeasonalRRoRDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
+    queryOptions: (
+      (chain) => makeOptions(chain, {
+        vars: {
+          where: "field: __protocol__, season_lte: $season_lte"
+        },
+        ctx: 'cache',
       })
     ) satisfies DynamicSGQueryOption,
   },
@@ -397,7 +415,7 @@ export const subgraphQueryConfigs = {
     document: SeasonalPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkUnharvestablePods,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
@@ -408,7 +426,7 @@ export const subgraphQueryConfigs = {
     document: SeasonalPodRateDocument,
     queryKey: subgraphQueryKeys.beanstalkPodRate,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
@@ -446,7 +464,7 @@ export const subgraphQueryConfigs = {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
-    ) satisfies DynamicSGQueryOption, 
+    ) satisfies DynamicSGQueryOption,
   }
 };
 
@@ -569,9 +587,9 @@ export async function fetchAllSeasonData(
     }))
 
   if (apolloRequests.length > 0) {
-    const results = await fetchApolloWithLimiter(apolloRequests, { 
-      throws: false, 
-      partialData: true 
+    const results = await fetchApolloWithLimiter(apolloRequests, {
+      throws: false,
+      partialData: true
     });
     results.forEach((result) => {
       result.data?.[params.documentEntity]?.forEach((sd: any) => {

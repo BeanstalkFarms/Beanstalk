@@ -13,6 +13,11 @@ generates:
       - https://graph.bean.money/bean
     plugins:
       - 'schema-ast'
+  ./src/graph/schema-cache.graphql:
+    schema:
+      - https://graph.bean.money/cache
+    plugins:
+      - 'schema-ast'
   ./src/graph/schema-snapshot1.graphql:
     schema:
       - https://hub.snapshot.org/graphql
