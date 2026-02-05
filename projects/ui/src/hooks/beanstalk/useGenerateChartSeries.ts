@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ApolloError } from '@apollo/client';
 import BigNumber from 'bignumber.js';
+import { secondsToDate, sortSeasons, toSeasonNumber } from '~/util';
 import { BaseDataPoint } from '../../components/Common/Charts/ChartPropProvider';
 import { TimeTabState } from '../../components/Common/Charts/TimeTabs';
 import useSeasonsQuery, {
@@ -8,7 +9,6 @@ import useSeasonsQuery, {
   MinimumViableSnapshotQuery,
   SeasonAggregation,
 } from './useSeasonsQuery';
-import { secondsToDate, sortSeasons } from '~/util';
 
 type SeasonData = Omit<MinimumViableSnapshot, 'id'> & any;
 
@@ -44,16 +44,17 @@ const reduceSeasonsQueries = <T extends MinimumViableSnapshotQuery>(
     query.data.seasons.forEach((s) => {
       // if no season data, skip
       if (!s) return;
-      const prev = seasonsRecord[s.season];
+      const seasonNum = toSeasonNumber(s.season);
+      const prev = seasonsRecord[seasonNum];
       if (!prev) {
-        seasonsRecord[s.season] = {
-          season: s.season,
+        seasonsRecord[seasonNum] = {
+          season: seasonNum,
           timestamp: s.timestamp,
           [key]: getValue(s),
         };
       } else {
-        seasonsRecord[s.season] = {
-          ...seasonsRecord[s.season],
+        seasonsRecord[seasonNum] = {
+          ...seasonsRecord[seasonNum],
           [key]: getValue(s),
         };
       }
@@ -79,10 +80,13 @@ const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
   if (seasonAggregation === SeasonAggregation.DAY) {
     const data = seasonsData.reverse();
     const lastIndex = data.length - 1;
-    let agg = keys.reduce((acc, _key) => {
-      acc[_key] = 0;
-      return acc;
-    }, {} as { [k: string]: number }); // value aggregator
+    let agg = keys.reduce(
+      (acc, _key) => {
+        acc[_key] = 0;
+        return acc;
+      },
+      {} as { [k: string]: number }
+    ); // value aggregator
     let i = 0; // total iterations
     let j = 0; // points averaged into this day
     let d: Date | undefined; // current date for this avg
@@ -99,7 +103,7 @@ const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
       }
       if (j === 0) {
         d = secondsToDate(season[dateKey]);
-        s = season.season as number;
+        s = toSeasonNumber(season.season);
         j += 1;
       } else if (i === lastIndex || j === 24) {
         for (const _k of keys) {
@@ -121,7 +125,7 @@ const generateStackedAreaSeriesData = <T extends MinimumViableSnapshotQuery>(
     for (const seasonData of seasonsData) {
       points.push({
         ...seasonData,
-        season: seasonData.season as number,
+        season: toSeasonNumber(seasonData.season),
         date: secondsToDate(seasonData[dateKey]),
       } as BaseDataPoint);
     }
@@ -156,7 +160,7 @@ const generateSeriesData = <T extends MinimumViableSnapshotQuery>(
         v += getValue(season);
         if (j === 0) {
           d = secondsToDate(season.createdAt);
-          s = season.season as number;
+          s = toSeasonNumber(season.season);
           j += 1;
         } else if (
           i === lastIndex || // last iteration
@@ -176,9 +180,10 @@ const generateSeriesData = <T extends MinimumViableSnapshotQuery>(
       }
     } else {
       for (const season of data.seasons) {
-        if (!season || !season.season) continue;
+        const seasonNum = toSeasonNumber(season?.season);
+        if (!season || !seasonNum) continue;
         _points.push({
-          season: season.season as number,
+          season: seasonNum,
           date: secondsToDate(season[dateKey]),
           value: getValue(season),
         } as unknown as BaseDataPoint);

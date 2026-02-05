@@ -17,6 +17,7 @@ import { Line } from '@visx/shape';
 import { SeriesPoint } from '@visx/shape/lib/types';
 import { TickFormatter } from '@visx/axis';
 import { localPoint } from '@visx/event';
+import { toSeasonNumber } from '~/util/Season';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
 import { ERC20Token } from '~/classes/Token';
 
@@ -306,9 +307,9 @@ export const SCALES = {
 const bisectSeason = bisector<BaseDataPoint, number>((d) => d.season).left;
 
 /**
- * access 'season' property given from a BaseDataPoint
+ * access 'season' property given from a BaseDataPoint (normalized to number; GraphQL may return { season: number })
  */
-const getX = (d: BaseDataPoint) => d.season;
+const getX = (d: BaseDataPoint) => toSeasonNumber(d.season);
 
 /**
  * access 'value' property from BaseDataPoint
@@ -518,7 +519,7 @@ const generatePathFromStack = <K extends keyof BaseDataPoint>(
   data: Series<BaseDataPoint, K>
 ) =>
   data.map((stack: SeriesPoint<BaseDataPoint>) => ({
-    season: stack.data.season,
+    season: toSeasonNumber(stack.data.season),
     date: stack.data.date,
     value: getY1(stack) ?? 0,
   })) as unknown as BaseDataPoint[];

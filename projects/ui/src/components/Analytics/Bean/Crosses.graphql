@@ -2,7 +2,7 @@ query SeasonalCrosses($season_lte: Int, $first: Int) {
   seasons: beanHourlySnapshots(
     where: { season_: { season_lte: $season_lte } }
     first: $first
-    orderBy: season
+    orderBy: season__season
     orderDirection: desc
   ) {
     id

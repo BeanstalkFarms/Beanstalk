@@ -5,6 +5,7 @@ import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { Axis, Orientation } from '@visx/axis';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
+import { toSeasonNumber } from '~/util/Season';
 import ChartPropProvider, {
   BaseChartProps,
   BaseDataPoint,
@@ -87,7 +88,9 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
         tooltipLeft: containerX, // in pixels
         tooltipTop: containerY, // in pixels
       });
-      const season = pointerData.length ? pointerData[0].season : undefined;
+      const season = pointerData.length
+        ? toSeasonNumber(pointerData[0].season)
+        : undefined;
       onCursor?.(season, getDisplayValue(pointerData), pointerData[0].date);
     },
     [
@@ -112,7 +115,7 @@ const MultiLineChartInner: React.FC<Props> = (props) => {
     return series[0].reduce<[number[], string[]]>(
       (prev, curr, i) => {
         if (i % interval === shift) {
-          prev[0].push(curr.season);
+          prev[0].push(toSeasonNumber(curr.season));
           prev[1].push(`${curr.date.getMonth() + 1}/${curr.date.getDate()}`);
         }
         return prev;

@@ -13,6 +13,21 @@ import { binarySearchSeasons } from '~/util/Graph';
 
 /// ///////////////////////// Field policies ////////////////////////////
 
+/** Resolve season to a number whether the field is a number or a nested object like { season: number }. */
+function getSeasonNumber(
+  readField: (field: string, obj: any) => unknown,
+  item: any
+): number | undefined {
+  const val = readField('season', item);
+  if (val == null) return undefined;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'object') {
+    const inner = readField('season', val);
+    return typeof inner === 'number' ? inner : undefined;
+  }
+  return undefined;
+}
+
 // prettier-ignore
 const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
   keyArgs,
@@ -36,7 +51,7 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     // Prepare seasons array. We know that this is in descending order.
     const seasons: number[] = [];
     for (const item of existing) {
-      const season = readField('season', item) as number;
+      const season = getSeasonNumber(readField, item);
       if (exists(season) && season > 0) {
         seasons.push(season);
       }
@@ -106,8 +121,8 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
 
     // Iterate through both arrays and merge them
     while (i < existing.length && j < incoming.length) {
-      const seasonExisting = readField('season', existing[i]) as number;
-      const seasonIncoming = readField('season', incoming[j]) as number | undefined;
+      const seasonExisting = getSeasonNumber(readField, existing[i]);
+      const seasonIncoming = getSeasonNumber(readField, incoming[j]);
 
       // Skip undefined items with season below 0
       if (!exists(seasonIncoming) || seasonIncoming < 0) {
@@ -115,10 +130,10 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
         continue;
       }
 
-      if (seasonExisting > seasonIncoming) {
+      if ((seasonExisting ?? 0) > seasonIncoming) {
         merged.push(existing[i]);
         i += 1;
-      } else if (seasonExisting < seasonIncoming) {
+      } else if ((seasonExisting ?? 0) < seasonIncoming) {
         merged.push(incoming[j]);
         j += 1;
       } else {
@@ -136,7 +151,7 @@ const mergeUsingSeasons: (keyArgs: string[]) => FieldPolicy = (keyArgs) => ({
     }
 
     while (j < incoming.length) {
-      const seasonIncoming = readField('season', incoming[j]) as number;
+      const seasonIncoming = getSeasonNumber(readField, incoming[j]);
       if (exists(seasonIncoming) && seasonIncoming > 0) {
         merged.push(incoming[j]);
       }
