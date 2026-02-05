@@ -234,11 +234,6 @@ const snapshotLabsLink = new HttpLink({
   uri: `https://gateway-arbitrum.network.thegraph.com/api/${import.meta.env.VITE_THEGRAPH_API_KEY}/subgraphs/id/5MkoYVE5KREBTe2x45FuPdqWKGc2JgrHDteMzi6irSGD`,
 });
 
-// BS3TODO: Do we need to keep this?
-const beanftLink = new HttpLink({
-  uri: sgEnv.subgraphs.beanft,
-});
-
 /// ///////////////////////// Client ////////////////////////////
 
 export const apolloClient = new ApolloClient({
@@ -256,14 +251,9 @@ export const apolloClient = new ApolloClient({
           ({ getContext }) => getContext().subgraph === 'snapshot-labs',
           snapshotLabsLink, // true
           ApolloLink.split(
-            // BS3TODO: Do we need to keep beaNFT support?
-            ({ getContext }) => getContext().subgraph === 'beanft_eth',
-            beanftLink, // true
-            ApolloLink.split(
-              ({ getContext }) => getContext().subgraph === 'bean',
-              beanLinks.arb, // true
-              beanstalkLinks.arb // false
-            )
+            ({ getContext }) => getContext().subgraph === 'bean',
+            beanLinks.arb, // true
+            beanstalkLinks.arb // false
           )
         )
       )

@@ -1,12 +1,14 @@
 query SeasonalLiquidityPerPool($first: Int, $season_lte: Int, $pool: String!) {
   seasons: poolHourlySnapshots(
-    where: { season_lte: $season_lte, season_gt: 0, pool: $pool }
+    where: { pool: $pool, season_: { season_lte: $season_lte, season_gte: 0 } }
     first: $first
-    orderBy: season
+    orderBy: season__season
     orderDirection: desc
   ) {
     id
-    season
+    season {
+      season
+    }
     liquidityUSD
     updatedAt
   }

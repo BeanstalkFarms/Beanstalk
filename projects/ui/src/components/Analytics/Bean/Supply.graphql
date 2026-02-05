@@ -2,7 +2,7 @@ query SeasonalSupply($season_lte: Int, $first: Int) {
   seasons: seasons(
     where: { season_lte: $season_lte },
     first: $first,
-    orderBy: season,
+    orderBy: season
     orderDirection: desc,
   ) {
     id

@@ -6,17 +6,18 @@ query SeasonalLiquidityAndPriceByPool(
 ) {
   seasons: poolHourlySnapshots(
     first: $first
-    orderBy: season
+    orderBy: season__season
     orderDirection: desc
     where: {
-      season_lte: $season_lte, 
-      season_gte: $season_gte, 
+      season_: { season_lte: $season_lte, season_gte: $season_gte }
       liquidityUSD_not: "0", 
       pool_in: $pools
     }
   ) {
     id
-    season
+    season {
+      season
+    }
     pool {
       id
       lastPrice

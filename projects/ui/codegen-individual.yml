@@ -18,12 +18,6 @@ generates:
       - https://hub.snapshot.org/graphql
     plugins:
       - 'schema-ast'
-  # BSTODO: Do we need beanft subgraph?
-  ./src/graph/schema-beanft.graphql:
-    schema:
-      - https://graph.bean.money/beanft_eth
-    plugins:
-      - 'schema-ast'
   #./src/graph/schema-snapshot2.graphql:
   #  schema:
   #    - https://api.thegraph.com/subgraphs/name/snapshot-labs/snapshot

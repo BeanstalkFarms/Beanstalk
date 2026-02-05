@@ -1,12 +1,14 @@
 query LiquiditySupplyRatio($season_lte: Int, $first: Int, $season_gt: Int) {
   seasons: beanHourlySnapshots(
     first: $first
-    where: { season_lte: $season_lte, season_gte: $season_gt }
-    orderBy: season
+    where: { season_: { season_lte: $season_lte, season_gte: $season_gt } }
+    orderBy: season__season
     orderDirection: desc
   ) {
     id
-    season
+    season {
+      season
+    }
     timestamp
     supplyInPegLP
   }
