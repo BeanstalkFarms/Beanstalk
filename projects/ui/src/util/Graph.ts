@@ -6,8 +6,13 @@ import {
   SupportedChainId,
 } from '~/constants';
 import {
+  CachedSeasonalHarvestedPodsDocument,
+  CachedSeasonalPodRateDocument,
+  CachedSeasonalPodsDocument,
   CachedSeasonalRRoRDocument,
+  CachedSeasonalSownDocument,
   CachedSeasonalTemperatureDocument,
+  CachedSeasonalTotalSowersDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -82,11 +87,17 @@ export const subgraphQueryKeys = {
   beanstalkMaxTemperature: 'seasonalBeanstalkMaxTemperature',
   cachedBeanstalkMaxTemperature: 'cachedSeasonalBeanstalkMaxTemperature',
   beanstalkUnharvestablePods: 'seasonalBeanstalkUnharvestablePods',
+  cachedBeanstalkUnharvestablePods: 'cachedSeasonalBeanstalkUnharvestablePods',
   beanstalkPodRate: 'seasonalBeanstalkPodRate',
+  cachedBeanstalkPodRate: 'cachedSeasonalBeanstalkPodRate',
   beanstalkSownBeans: 'seasonalBeanstalkSownBeans',
+  cachedBeanstalkSownBeans: 'cachedSeasonalBeanstalkSownBeans',
   beanstalkHarvestedPods: 'seasonalBeanstalkHarvestedPods',
+  cachedBeanstalkHarvestedPods: 'cachedSeasonalBeanstalkHarvestedPods',
   beanstalkTotalSowers: 'seasonalBeanstalkTotalSowers',
+  cachedBeanstalkTotalSowers: 'cachedSeasonalBeanstalkTotalSowers',
   beanstalkTotalSeeds: 'seasonalBeanstalkTotalSeeds',
+  cachedBeanstalkTotalSeeds: 'cachedSeasonalBeanstalkTotalSeeds',
 
   // ------ Farmer Silo ------
   farmerSiloRewards: (account: string | undefined) => ['farmerSiloRewards', account ?? "no-account"].join("-"),
@@ -492,7 +503,6 @@ export const subgraphQueryConfigs = {
     document: CachedSeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
     where: 'field: __protocol__',
-    // queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
@@ -509,7 +519,6 @@ export const subgraphQueryConfigs = {
     document: CachedSeasonalTemperatureDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkMaxTemperature,
     where: 'field: __protocol__',
-    // queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkUnharvestablePods: {
     document: SeasonalPodsDocument,
@@ -522,6 +531,11 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkUnharvestablePods: {
+    document: CachedSeasonalPodsDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkUnharvestablePods,
+    where: 'field: __protocol__',
+  },
   beanstalkPodRate: {
     document: SeasonalPodRateDocument,
     queryKey: subgraphQueryKeys.beanstalkPodRate,
@@ -532,6 +546,11 @@ export const subgraphQueryConfigs = {
         }
       })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkPodRate: {
+    document: CachedSeasonalPodRateDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkPodRate,
+    where: 'field: __protocol__',
   },
   beanstalkSownBeans: {
     document: SeasonalSownDocument,
@@ -544,6 +563,11 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkSownBeans: {
+    document: CachedSeasonalSownDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkSownBeans,
+    where: 'field: __protocol__',
+  },
   beanstalkHarvestedPods: {
     document: SeasonalHarvestedPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkHarvestedPods,
@@ -555,6 +579,11 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkHarvestedPods: {
+    document: CachedSeasonalHarvestedPodsDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkHarvestedPods,
+    where: 'field: __protocol__',
+  },
   beanstalkTotalSowers: {
     document: SeasonalTotalSowersDocument,
     queryKey: subgraphQueryKeys.beanstalkTotalSowers,
@@ -565,7 +594,12 @@ export const subgraphQueryConfigs = {
         }
       })
     ) satisfies DynamicSGQueryOption,
-  }
+  },
+  cachedBeanstalkTotalSowers: {
+    document: CachedSeasonalTotalSowersDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkTotalSowers,
+    where: 'field: __protocol__',
+  },
 };
 
 // ==========================================================

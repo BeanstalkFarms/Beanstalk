@@ -391,7 +391,6 @@ export function useChartSetupData() {
     ];
 
     const fieldCharts: ChartSetupBase[] = [
-      // TODO(cache): add more here
       {
         id: subgraphQueryConfigs.beanstalkRRoR.queryKey,
         document: subgraphQueryConfigs.beanstalkRRoR.document,
@@ -438,6 +437,13 @@ export function useChartSetupData() {
       },
       {
         id: subgraphQueryConfigs.beanstalkUnharvestablePods.queryKey,
+        queryConfig: subgraphQueryConfigs.beanstalkUnharvestablePods.queryOptions,
+        document: subgraphQueryConfigs.beanstalkUnharvestablePods.document,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.document,
+          where: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.where
+        },
         name: 'Pods',
         tooltipTitle: 'Pods',
         tooltipHoverText: 'The total number of Unharvestable Pods at the beginning of every Season.',
@@ -445,16 +451,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'unharvestablePods',
         valueAxisType: 'PODS_amount',
-        document: subgraphQueryConfigs.beanstalkUnharvestablePods.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkUnharvestablePods.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkPodRate.queryKey,
+        document: subgraphQueryConfigs.beanstalkPodRate.document,
+        queryConfig: subgraphQueryConfigs.beanstalkPodRate.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkPodRate.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkPodRate.document,
+          where: subgraphQueryConfigs.cachedBeanstalkPodRate.where
+        },
         name: 'Pod Rate',
         tooltipTitle: 'Pod Rate',
         tooltipHoverText: 'The ratio of Unharvestable Pods per Bean, displayed as a percentage, at the beginning of every Season. The Pod Rate is used by Beanstalk as a proxy for its health.',
@@ -462,16 +473,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'podRate',
         valueAxisType: 'podRate',
-        document: subgraphQueryConfigs.beanstalkPodRate.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkPodRate.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
       },
       {
         id: subgraphQueryConfigs.beanstalkSownBeans.queryKey,
+        document: subgraphQueryConfigs.beanstalkSownBeans.document,
+        queryConfig: subgraphQueryConfigs.beanstalkSownBeans.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkSownBeans.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkSownBeans.document,
+          where: subgraphQueryConfigs.cachedBeanstalkSownBeans.where
+        },
         name: 'Beans Sown',
         tooltipTitle: 'Beans Sown',
         tooltipHoverText: 'The total number of Beans Sown at the beginning of every Season.',
@@ -479,16 +495,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'sownBeans',
         valueAxisType: 'BEAN_amount',
-        document: subgraphQueryConfigs.beanstalkSownBeans.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkSownBeans.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkHarvestedPods.queryKey,
+        document: subgraphQueryConfigs.beanstalkHarvestedPods.document,
+        queryConfig: subgraphQueryConfigs.beanstalkHarvestedPods.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.document,
+          where: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.where
+        },
         name: 'Pods Harvested',
         tooltipTitle: 'Pods Harvested',
         tooltipHoverText: 'The total number of Pods Harvested at the beginning of every Season.',
@@ -496,16 +517,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'harvestedPods',
         valueAxisType: 'PODS_amount',
-        document: subgraphQueryConfigs.beanstalkHarvestedPods.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkHarvestedPods.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkTotalSowers.queryKey,
+        document: subgraphQueryConfigs.beanstalkTotalSowers.document,
+        queryConfig: subgraphQueryConfigs.beanstalkTotalSowers.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkTotalSowers.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkTotalSowers.document,
+          where: subgraphQueryConfigs.cachedBeanstalkTotalSowers.where
+        },
         name: 'Total Sowers',
         tooltipTitle: 'Total Sowers',
         tooltipHoverText: 'The total number of unique Sowers at the beginning of every Season.',
@@ -513,10 +539,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'numberOfSowers',
         valueAxisType: 'totalSowers',
-        document: subgraphQueryConfigs.beanstalkTotalSowers.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkTotalSowers.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: (v: number) => v.toFixed(0).toString(),
         shortTickFormatter: (v: number) => v.toFixed(0).toString(),
