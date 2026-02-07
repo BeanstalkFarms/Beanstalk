@@ -1,0 +1,14 @@
+query CachedSeasonalTokenChopRate($where: String) {
+  seasons: cache_unripeTokenHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    createdAt
+    chopRate
+    deltaChopRate
+    choppableBdvOne
+  }
+}

@@ -417,6 +417,13 @@ export function useChartSetupData() {
       ...depositCharts,
       {
         id: subgraphQueryConfigs.beanstalkTotalStalk.queryKey,
+        document: subgraphQueryConfigs.beanstalkTotalStalk.document,
+        queryConfig: subgraphQueryConfigs.beanstalkTotalStalk.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedBeanstalkTotalStalk,
+          document: subgraphQueryConfigs.cachedBeanstalkTotalStalk.document,
+          where: subgraphQueryConfigs.cachedBeanstalkTotalStalk.where,
+        },
         name: `Stalk`,
         tooltipTitle: `Stalk`,
         tooltipHoverText: `The total number of Stalk at the beginning of every Season.`,
@@ -424,10 +431,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'stalk',
         valueAxisType: 'stalk',
-        document: subgraphQueryConfigs.beanstalkTotalStalk.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkTotalStalk.queryOptions,
         valueFormatter:
           (value: any) =>
             (chain: "l1" | "l2") => Number(

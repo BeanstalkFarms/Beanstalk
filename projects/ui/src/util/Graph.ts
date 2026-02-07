@@ -17,6 +17,7 @@ import {
   CachedSeasonalPodsDocument,
   CachedSeasonalRRoRDocument,
   CachedSeasonalSownDocument,
+  CachedSeasonalStalkDocument,
   CachedSeasonalSupplyDocument,
   CachedSeasonalTemperatureDocument,
   CachedSeasonalTotalSowersDocument,
@@ -93,6 +94,7 @@ export const subgraphQueryKeys = {
   // --------------------- Beanstalk ---------------------
   // ------ Beanstalk Silo ------
   beanstalkTotalStalk: 'seasonalBeanstalkTotalStalk',
+  cachedBeanstalkTotalStalk: 'cachedSeasonalBeanstalkTotalStalk',
   beanstalkRRoR: 'seasonalBeanstalkRRoR',
   cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
@@ -116,8 +118,6 @@ export const subgraphQueryKeys = {
   cachedBeanstalkHarvestedPods: 'cachedSeasonalBeanstalkHarvestedPods',
   beanstalkTotalSowers: 'seasonalBeanstalkTotalSowers',
   cachedBeanstalkTotalSowers: 'cachedSeasonalBeanstalkTotalSowers',
-  beanstalkTotalSeeds: 'seasonalBeanstalkTotalSeeds',
-  cachedBeanstalkTotalSeeds: 'cachedSeasonalBeanstalkTotalSeeds',
 
   // ------ Farmer Silo ------
   farmerSiloRewards: (account: string | undefined) => ['farmerSiloRewards', account ?? "no-account"].join("-"),
@@ -525,7 +525,7 @@ export const subgraphQueryConfigs = {
 
 
   // --------------------- Beanstalk ---------------------
-  tokenLiquidity: (token: TokenInstance) => ({
+  tokenLiquidity: (token: TokenInstance) => ({ // TODO(cache): this is actually bean
     document: SeasonalLiquidityPerPoolDocument,
     queryKey: subgraphQueryKeys.tokenLiquidity(token),
     queryOptions: tokenLiquidityOptions(token),
@@ -557,6 +557,11 @@ export const subgraphQueryConfigs = {
         }
       })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkTotalStalk: {
+    document: CachedSeasonalStalkDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkTotalStalk,
+    where: 'silo: __protocol__',
   },
   beanstalkRRoR: {
     document: SeasonalRRoRDocument,

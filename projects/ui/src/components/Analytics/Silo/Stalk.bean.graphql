@@ -1,6 +1,6 @@
 query SeasonalStalk(
-  $season_lte: Int, 
-  $season_gt: Int, 
+  $season_lte: Int,
+  $season_gt: Int,
   $first: Int,
   $silo: String
 ) {
@@ -13,7 +13,7 @@ query SeasonalStalk(
     first: $first
     orderBy: season
     orderDirection: desc
-  ) { 
+  ) {
     id
     season
     createdAt
