@@ -7,6 +7,7 @@ import {
 } from '~/constants';
 import {
   CachedSeasonalRRoRDocument,
+  CachedSeasonalTemperatureDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -19,6 +20,7 @@ import {
   SeasonalMarketCapDocument,
   SeasonalPodRateDocument,
   SeasonalPodsDocument,
+  SeasonalRRoRDocument,
   SeasonalSownDocument,
   SeasonalStalkDocument,
   SeasonalSupplyDocument,
@@ -66,6 +68,7 @@ export const subgraphQueryKeys = {
   // --------------------- Beanstalk ---------------------
   // ------ Beanstalk Silo ------
   beanstalkTotalStalk: 'seasonalBeanstalkTotalStalk',
+  beanstalkRRoR: 'seasonalBeanstalkRRoR',
   cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
   siloToken30DvAPY: (
@@ -77,6 +80,7 @@ export const subgraphQueryKeys = {
 
   // ----- Field -----
   beanstalkMaxTemperature: 'seasonalBeanstalkMaxTemperature',
+  cachedBeanstalkMaxTemperature: 'cachedSeasonalBeanstalkMaxTemperature',
   beanstalkUnharvestablePods: 'seasonalBeanstalkUnharvestablePods',
   beanstalkPodRate: 'seasonalBeanstalkPodRate',
   beanstalkSownBeans: 'seasonalBeanstalkSownBeans',
@@ -92,9 +96,107 @@ export const subgraphQueryKeys = {
 // ==========================================================
 // Types & Interfaces
 // ==========================================================
-export type EvmLayer = 'l1' | 'l2';
 
+export type EvmLayer = 'l1' | 'l2';
 export type SeasonsQueryFetchType = 'l1-only' | 'l2-only' | 'both';
+
+export interface SGQueryParameters {
+  /**
+   * Id of this chart.
+   */
+  id: string;
+  /**
+   * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
+   */
+  timeScaleKey: string;
+  /**
+   * The field in the GraphQL request that corresponds to the value that will be charted.
+   */
+  priceScaleKey: string;
+  /**
+   * The Apollo document of the GraphQL query.
+   */
+  document: DocumentNode;
+  /**
+   * The entity that contains the data in your GraphQL request. Usually "seasons".
+   */
+  documentEntity: string;
+  /**
+   *
+   */
+  fetchType: SeasonsQueryFetchType;
+  /**
+   * Sets up things like variables and context for the GraphQL queries.
+   */
+  queryConfig: DynamicSGQueryOption;
+}
+
+export interface ChartSetupBase extends SGQueryParameters {
+  /**
+   * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
+   * are currently selected, therefore ideally it should be short and to the point.
+   */
+  name: string;
+  /**
+   * Title shown in the actual chart after the user
+   * makes their selection.
+   */
+  tooltipTitle: string;
+  /**
+   * Text description shown when user hovers the tooltip icon next to the tooltip title.
+   */
+  tooltipHoverText: string | JSX.Element;
+  /**
+   * Short description shown in the Select Dialog.
+   */
+  shortDescription: string;
+  /**
+   * Short identifier for the output of this chart. Lightweight Charts only supports
+   * two price scales, so we use this to group charts that have similar
+   * outputs in the same price scale.
+   */
+  valueAxisType: string;
+  /**
+   * Formats the raw output from the query into a number for Lightweight Charts.
+   */
+  valueFormatter:
+    | ((v: string) => number | undefined)
+    | ((v: string) => (chain: 'l1' | 'l2') => number | undefined);
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
+  /**
+   * Formats the number used by Lightweight Charts into a string that's shown at the top
+   * of the chart.
+   */
+  tickFormatter: (v: number) => string | undefined;
+  /**
+   * Formats the number used by Lightweight Charts into a string for the
+   * price scales.
+   */
+  shortTickFormatter: (v: number) => string | undefined;
+  /**
+   * For making the same query, but to the cache subgraph endpoint.
+   */
+  cached?: {
+    id: string;
+    document: DocumentNode;
+    where: string;
+  };
+}
+
+export type ChartSetup = ChartSetupBase & {
+  /**
+   * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow
+   * the user to quickly filter the available charts.
+   */
+  type: string;
+  /**
+   * Id of this chart in the chart data array.
+   */
+  index: number;
+};
 
 interface SeasonRange {
   start: number;
@@ -375,10 +477,22 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  beanstalkRRoR: {
+    document: SeasonalRRoRDocument,
+    queryKey: subgraphQueryKeys.beanstalkRRoR,
+    queryOptions: (
+      (chain) => makeOptions(chain, {
+        vars: {
+          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
+        }
+      })
+    ) satisfies DynamicSGQueryOption,
+  },
   cachedBeanstalkRRoR: {
     document: CachedSeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
-    queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
+    where: 'field: __protocol__',
+    // queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
@@ -390,6 +504,12 @@ export const subgraphQueryConfigs = {
         }
       })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkMaxTemperature: {
+    document: CachedSeasonalTemperatureDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkMaxTemperature,
+    where: 'field: __protocol__',
+    // queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkUnharvestablePods: {
     document: SeasonalPodsDocument,
@@ -491,41 +611,6 @@ export function binarySearchSeasons<T>(
   return high;
 }
 
-export interface SGQueryParameters {
-  /**
-   * Id of this chart.
-   */
-  id: string;
-  /**
-   * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
-   */
-  timeScaleKey: string;
-  /**
-   * The field in the GraphQL request that corresponds to the value that will be charted.
-   */
-  priceScaleKey: string;
-  /**
-   * The Apollo document of the GraphQL query.
-   */
-  document: DocumentNode;
-  /**
-   * The entity that contains the data in your GraphQL request. Usually "seasons".
-   */
-  documentEntity: string;
-  /**
-   *
-   */
-  fetchType: SeasonsQueryFetchType;
-  /**
-   * Sets up things like variables and context for the GraphQL queries.
-   */
-  queryConfig: DynamicSGQueryOption;
-  /**
-   * True when the query is to the cache subgraph endpoint.
-   */
-  isCacheSg?: boolean;
-}
-
 const EVM_LAYERS: EvmLayer[] = ['l2', 'l1'];
 
 const shouldFetchWithChain = (params: SGQueryParameters, chain: EvmLayer) => {
@@ -539,7 +624,7 @@ const shouldFetchWithChain = (params: SGQueryParameters, chain: EvmLayer) => {
 
 // prettier-ignore
 export async function fetchAllSeasonData(
-  params: SGQueryParameters,
+  params: ChartSetupBase,
   season: number,
   fetchAll: boolean = true
 ) {
@@ -547,7 +632,20 @@ export async function fetchAllSeasonData(
 
   const options: QueryOptions[] = [];
 
-  if (!params.isCacheSg) {
+  if (fetchAll && params.cached) {
+    // TODO(cache): might need to apply some season range filter here? since its no longer
+    // done at the query level. Could be applied using "first" if the latest season # is available.
+    // OR
+    // Can it be smart enough to use the cache query if ALL seasons selected, and the other queries
+    // if there is some range requested?
+    options.push({
+      context: { subgraph: 'cache' },
+      query: params.cached.document,
+      variables: {
+        where: params.cached.where ?? ''
+      },
+    });
+  } else {
     for (const chain of EVM_LAYERS) {
       if (!shouldFetchWithChain(params, chain)) {
         continue;
@@ -564,19 +662,6 @@ export async function fetchAllSeasonData(
       const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
       options.push(...chainOptions);
     }
-  } else {
-    // TODO(cache): might need to apply some season range filter here? since its no longer
-    // done at the query level. Could be applied using "first" if the latest season # is available.
-    // OR
-    // Can it be smart enough to use the cache query if ALL seasons selected, and the other queries
-    // if there is some range requested?
-    options.push({
-      context: { subgraph: 'cache' },
-      query: params.document,
-      variables: {
-        where: params.queryConfig('l2').variables?.where ?? ''
-      },
-    });
   }
 
   const apolloRequests = options

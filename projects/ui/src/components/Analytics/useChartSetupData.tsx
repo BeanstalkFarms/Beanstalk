@@ -20,7 +20,8 @@ import { Typography } from '@mui/material';
 import { SupportedChainId } from '~/constants';
 import { getMultiChainToken, TokenInstance } from '~/hooks/beanstalk/useTokens';
 import {
-  SGQueryParameters,
+  ChartSetup,
+  ChartSetupBase,
   subgraphQueryConfigs,
   subgraphQueryKeys,
 } from '~/util/Graph';
@@ -32,65 +33,6 @@ import {
   tickFormatUSD,
   valueFormatBeanAmount,
 } from './formatters';
-
-interface ChartSetupBase extends SGQueryParameters {
-  /**
-   * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
-   * are currently selected, therefore ideally it should be short and to the point.
-   */
-  name: string;
-  /**
-   * Title shown in the actual chart after the user
-   * makes their selection.
-   */
-  tooltipTitle: string;
-  /**
-   * Text description shown when user hovers the tooltip icon next to the tooltip title.
-   */
-  tooltipHoverText: string | JSX.Element;
-  /**
-   * Short description shown in the Select Dialog.
-   */
-  shortDescription: string;
-  /**
-   * Short identifier for the output of this chart. Lightweight Charts only supports
-   * two price scales, so we use this to group charts that have similar
-   * outputs in the same price scale.
-   */
-  valueAxisType: string;
-  /**
-   * Formats the raw output from the query into a number for Lightweight Charts.
-   */
-  valueFormatter:
-    | ((v: string) => number | undefined)
-    | ((v: string) => (chain: 'l1' | 'l2') => number | undefined);
-  /**
-   *
-   */
-  dataFormatter?: (v: any) => any;
-  /**
-   * Formats the number used by Lightweight Charts into a string that's shown at the top
-   * of the chart.
-   */
-  tickFormatter: (v: number) => string | undefined;
-  /**
-   * Formats the number used by Lightweight Charts into a string for the
-   * price scales.
-   */
-  shortTickFormatter: (v: number) => string | undefined;
-}
-
-type ChartSetup = ChartSetupBase & {
-  /**
-   * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow
-   * the user to quickly filter the available charts.
-   */
-  type: string;
-  /**
-   * Id of this chart in the chart data array.
-   */
-  index: number;
-};
 
 function getFetchTypeWithToken(
   _token: TokenInstance
@@ -451,8 +393,14 @@ export function useChartSetupData() {
     const fieldCharts: ChartSetupBase[] = [
       // TODO(cache): add more here
       {
-        id: subgraphQueryConfigs.cachedBeanstalkRRoR.queryKey,
-        isCacheSg: true,
+        id: subgraphQueryConfigs.beanstalkRRoR.queryKey,
+        document: subgraphQueryConfigs.beanstalkRRoR.document,
+        queryConfig: subgraphQueryConfigs.beanstalkRRoR.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkRRoR.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkRRoR.document,
+          where: subgraphQueryConfigs.cachedBeanstalkRRoR.where
+        },
         name: 'Real Rate of Return',
         tooltipTitle: 'Real Rate of Return',
         tooltipHoverText: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
@@ -460,16 +408,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'realRateOfReturn',
         valueAxisType: 'RRoR',
-        document: subgraphQueryConfigs.cachedBeanstalkRRoR.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.cachedBeanstalkRRoR.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
       },
       {
         id: subgraphQueryConfigs.beanstalkMaxTemperature.queryKey,
+        document: subgraphQueryConfigs.beanstalkMaxTemperature.document,
+        queryConfig: subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.document,
+          where: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.where
+        },
         name: 'Max Temperature',
         tooltipTitle: 'Max Temperature',
         tooltipHoverText: 'The maximum interest rate for Sowing Beans every Season.',
@@ -477,10 +430,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'temperature',
         valueAxisType: 'maxTemp',
-        document: subgraphQueryConfigs.beanstalkMaxTemperature.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
