@@ -19,7 +19,6 @@ import {
   SeasonalMarketCapDocument,
   SeasonalPodRateDocument,
   SeasonalPodsDocument,
-  SeasonalRRoRDocument,
   SeasonalSownDocument,
   SeasonalStalkDocument,
   SeasonalSupplyDocument,
@@ -67,7 +66,6 @@ export const subgraphQueryKeys = {
   // --------------------- Beanstalk ---------------------
   // ------ Beanstalk Silo ------
   beanstalkTotalStalk: 'seasonalBeanstalkTotalStalk',
-  beanstalkRRoR: 'seasonalBeanstalkRRoR',
   cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
   siloToken30DvAPY: (
@@ -377,29 +375,9 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
-  beanstalkRRoR: {
-    document: SeasonalRRoRDocument,
-    queryKey: subgraphQueryKeys.beanstalkRRoR,
-    queryOptions: (
-      (chain) => makeOptions(chain, {
-        vars: {
-          field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
-        },
-      })
-    ) satisfies DynamicSGQueryOption,
-  },
   cachedBeanstalkRRoR: {
     document: CachedSeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
-    // queryOptions: (
-    //   (chain) => makeOptions(chain, {
-    //     vars: {
-    //       // TODO(cache): need better passing for season_lte option
-    //       where: "field: __protocol__, season_lte: $season_lte"
-    //     },
-    //     ctx: 'cache',
-    //   })
-    // ) satisfies DynamicSGQueryOption,
     queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkMaxTemperature: {
@@ -587,6 +565,11 @@ export async function fetchAllSeasonData(
       options.push(...chainOptions);
     }
   } else {
+    // TODO(cache): might need to apply some season range filter here? since its no longer
+    // done at the query level. Could be applied using "first" if the latest season # is available.
+    // OR
+    // Can it be smart enough to use the cache query if ALL seasons selected, and the other queries
+    // if there is some range requested?
     options.push({
       context: { subgraph: 'cache' },
       query: params.document,
