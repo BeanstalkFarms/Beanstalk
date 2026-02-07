@@ -6,13 +6,23 @@ import {
   SupportedChainId,
 } from '~/constants';
 import {
+  CachedLiquiditySupplyRatioDocument,
+  CachedSeasonalCrossesDocument,
   CachedSeasonalHarvestedPodsDocument,
+  CachedSeasonalInstantDeltaBDocument,
+  CachedSeasonalInstantPriceDocument,
+  CachedSeasonalLiquidityDocument,
+  CachedSeasonalMarketCapDocument,
   CachedSeasonalPodRateDocument,
   CachedSeasonalPodsDocument,
   CachedSeasonalRRoRDocument,
   CachedSeasonalSownDocument,
+  CachedSeasonalSupplyDocument,
   CachedSeasonalTemperatureDocument,
   CachedSeasonalTotalSowersDocument,
+  CachedSeasonalVolumeDocument,
+  CachedSeasonalWeightedDeltaBDocument,
+  CachedSeasonalWeightedPriceDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -56,15 +66,25 @@ import { fetchApolloWithLimiter } from './Bottleneck';
 export const subgraphQueryKeys = {
   // ----------------------- Bean ------------------------
   priceInstantBEAN: 'seasonalInstantPrice',
+  cachedPriceInstantBEAN: 'cachedSeasonalInstantPrice',
   volumeBEAN: 'seasonalVolume-BEAN',
+  cachedVolumeBEAN: 'cachedSeasonalVolume',
   totalLiquidityBEAN: 'seasonalTotalLiquidity-BEAN',
+  cachedTotalLiquidityBEAN: 'cachedSeasonalLiquidity',
   marketCapBEAN: 'seasonalMarketCap-BEAN',
+  cachedMarketCapBEAN: 'cachedSeasonalMarketCap',
   supplyBEAN: 'seasonalSupply-BEAN',
+  cachedSupplyBEAN: 'cachedSeasonalSupply',
   crossesBEAN: 'seasonalCrosses-BEAN',
+  cachedCrossesBEAN: 'cachedSeasonalCrosses',
   instantaneousDeltaBBEAN: 'seasonalInstantaneousDeltaB-BEAN',
+  cachedInstantaneousDeltaBBEAN: 'cachedSeasonalInstantaneousDeltaB',
   twaDeltaBBEAN: 'seasonalTWADeltaB-BEAN',
+  cachedTwaDeltaBBEAN: 'cachedSeasonalTWADeltaB',
   twaPriceBEAN: 'seasonalTWAPrice-BEAN',
+  cachedTwaPriceBEAN: 'cachedSeasonalTWAPrice',
   l2srBEAN: 'seasonalL2SR-BEAN',
+  cachedL2srBEAN: 'cachedSeasonalL2SR',
 
   // Token
   tokenLiquidity: (token: TokenInstance) => ['seasonalTokenLiquidity', token.symbol].join("-"),
@@ -389,12 +409,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gt'] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedPriceInstantBEAN: {
+    document: CachedSeasonalInstantPriceDocument,
+    queryKey: subgraphQueryKeys.cachedPriceInstantBEAN,
+    where: ""
+  },
   volumeBEAN: {
     document: SeasonalVolumeDocument,
     queryKey: subgraphQueryKeys.volumeBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gte'] })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedVolumeBEAN: {
+    document: CachedSeasonalVolumeDocument,
+    queryKey: subgraphQueryKeys.cachedVolumeBEAN,
+    where: ""
   },
   totalLiquidityBEAN: {
     document: SeasonalLiquidityDocument,
@@ -403,12 +433,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gt'] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedTotalLiquidityBEAN: {
+    document: CachedSeasonalLiquidityDocument,
+    queryKey: subgraphQueryKeys.cachedTotalLiquidityBEAN,
+    where: ""
+  },
   marketCapBEAN: {
     document: SeasonalMarketCapDocument,
     queryKey: subgraphQueryKeys.marketCapBEAN,
     queryOptions: (
       (chain) => makeOptions(chain)
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedMarketCapBEAN: {
+    document: CachedSeasonalMarketCapDocument,
+    queryKey: subgraphQueryKeys.cachedMarketCapBEAN,
+    where: ""
   },
   supplyBEAN: {
     document: SeasonalSupplyDocument,
@@ -417,12 +457,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain)
     ) satisfies DynamicSGQueryOption,
   },
+  cachedSupplyBEAN: {
+    document: CachedSeasonalSupplyDocument,
+    queryKey: subgraphQueryKeys.cachedSupplyBEAN,
+    where: ""
+  },
   crossesBEAN: {
     document: SeasonalCrossesDocument,
     queryKey: subgraphQueryKeys.crossesBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: "bean" })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedCrossesBEAN: {
+    document: CachedSeasonalCrossesDocument,
+    queryKey: subgraphQueryKeys.cachedCrossesBEAN,
+    where: ""
   },
   instantaneousDeltaBBEAN: {
     document: SeasonalInstantDeltaBDocument,
@@ -431,12 +481,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedInstantaneousDeltaBBEAN: {
+    document: CachedSeasonalInstantDeltaBDocument,
+    queryKey: subgraphQueryKeys.cachedInstantaneousDeltaBBEAN,
+    where: ""
+  },
   twaDeltaBBEAN: {
     document: SeasonalWeightedDeltaBDocument,
     queryKey: subgraphQueryKeys.twaDeltaBBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedTwaDeltaBBEAN: {
+    document: CachedSeasonalWeightedDeltaBDocument,
+    queryKey: subgraphQueryKeys.cachedTwaDeltaBBEAN,
+    where: ""
   },
   twaPriceBEAN: {
     document: SeasonalWeightedPriceDocument,
@@ -445,12 +505,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedTwaPriceBEAN: {
+    document: CachedSeasonalWeightedPriceDocument,
+    queryKey: subgraphQueryKeys.cachedTwaPriceBEAN,
+    where: ""
+  },
   l2srBEAN: {
     document: LiquiditySupplyRatioDocument,
     queryKey: subgraphQueryKeys.l2srBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gt"] })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedL2srBEAN: {
+    document: CachedLiquiditySupplyRatioDocument,
+    queryKey: subgraphQueryKeys.cachedL2srBEAN,
+    where: ""
   },
 
 
