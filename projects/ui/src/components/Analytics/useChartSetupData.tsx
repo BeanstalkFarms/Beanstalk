@@ -436,12 +436,12 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         fetchType: "both",
         queryConfig: subgraphQueryConfigs.beanstalkTotalStalk.queryOptions,
-        valueFormatter: 
-          (value: any) => 
-          (chain: "l1" | "l2") => Number(
-            // pre-reseed migration stalk had 10 decimals
-            formatUnits(value, chain === "l1" ? 10 : stalk.decimals)
-          ),
+        valueFormatter:
+          (value: any) =>
+            (chain: "l1" | "l2") => Number(
+              // pre-reseed migration stalk had 10 decimals
+              formatUnits(value, chain === "l1" ? 10 : stalk.decimals)
+            ),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
@@ -462,6 +462,25 @@ export function useChartSetupData() {
         documentEntity: 'seasons',
         fetchType: "both",
         queryConfig: subgraphQueryConfigs.beanstalkRRoR.queryOptions,
+        valueFormatter: (v: string) => Number(v) * 100,
+        tickFormatter: tickFormatPercentage,
+        shortTickFormatter: tickFormatPercentage,
+      },
+      // TODO(cache): remove this later
+      {
+        id: subgraphQueryConfigs.cachedBeanstalkRRoR.queryKey,
+        isCacheSg: true,
+        name: '(Cached) Real Rate of Return',
+        tooltipTitle: '(Cached) Real Rate of Return',
+        tooltipHoverText: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
+        shortDescription: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
+        timeScaleKey: 'createdAt',
+        priceScaleKey: 'realRateOfReturn',
+        valueAxisType: 'RRoR',
+        document: subgraphQueryConfigs.cachedBeanstalkRRoR.document,
+        documentEntity: 'seasons',
+        fetchType: "both",
+        queryConfig: subgraphQueryConfigs.cachedBeanstalkRRoR.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,

@@ -1,4 +1,5 @@
 {
     "editor.formatOnSave": true,
-    "solidity.formatter": "prettier"
+    "solidity.formatter": "prettier",
+    "chatgpt.commentCodeLensEnabled": false
 }

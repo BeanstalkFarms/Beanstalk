@@ -391,14 +391,16 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkRRoR: {
     document: CachedSeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
-    queryOptions: (
-      (chain) => makeOptions(chain, {
-        vars: {
-          where: "field: __protocol__, season_lte: $season_lte"
-        },
-        ctx: 'cache',
-      })
-    ) satisfies DynamicSGQueryOption,
+    // queryOptions: (
+    //   (chain) => makeOptions(chain, {
+    //     vars: {
+    //       // TODO(cache): need better passing for season_lte option
+    //       where: "field: __protocol__, season_lte: $season_lte"
+    //     },
+    //     ctx: 'cache',
+    //   })
+    // ) satisfies DynamicSGQueryOption,
+    queryOptions: (_chain: EvmLayer) => ({ variables: { where: 'field: __protocol__' } }),
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
@@ -540,6 +542,10 @@ export interface SGQueryParameters {
    * Sets up things like variables and context for the GraphQL queries.
    */
   queryConfig: DynamicSGQueryOption;
+  /**
+   * True when the query is to the cache subgraph endpoint.
+   */
+  isCacheSg?: boolean;
 }
 
 const EVM_LAYERS: EvmLayer[] = ['l2', 'l1'];
@@ -563,21 +569,31 @@ export async function fetchAllSeasonData(
 
   const options: QueryOptions[] = [];
 
-  for (const chain of EVM_LAYERS) {
-    if (!shouldFetchWithChain(params, chain)) {
-      continue;
+  if (!params.isCacheSg) {
+    for (const chain of EVM_LAYERS) {
+      if (!shouldFetchWithChain(params, chain)) {
+        continue;
+      }
+
+      const cachedSeasons: number[] = [];
+      const cachedData = readCachedData(params, chain);
+      cachedData?.[params.documentEntity].forEach((sd: any) => {
+        const seasonNum = toSeasonNumber(sd.season);
+        cachedSeasons.push(seasonNum);
+        output[seasonNum] = { ...sd, season: seasonNum };
+      });
+
+      const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
+      options.push(...chainOptions);
     }
-
-    const cachedSeasons: number[] = [];
-    const cachedData = readCachedData(params, chain);
-    cachedData?.[params.documentEntity].forEach((sd: any) => {
-      const seasonNum = toSeasonNumber(sd.season);
-      cachedSeasons.push(seasonNum);
-      output[seasonNum] = { ...sd, season: seasonNum };
+  } else {
+    options.push({
+      context: { subgraph: 'cache' },
+      query: params.document,
+      variables: {
+        where: params.queryConfig('l2').variables?.where ?? ''
+      },
     });
-
-    const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
-    options.push(...chainOptions);
   }
 
   const apolloRequests = options
