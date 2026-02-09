@@ -63,7 +63,6 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
           const priceKey = params.priceScaleKey;
           const timestamps = new Set<number>();
 
-          // TODO(cache): this should be returning all datapoints
           const allSeasonData = await fetchAllSeasonData(
             params,
             season.toNumber()

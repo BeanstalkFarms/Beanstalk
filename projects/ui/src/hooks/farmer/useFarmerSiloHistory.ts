@@ -94,34 +94,40 @@ export const useMergedFarmerSiloAssetSnapshotsQuery = (
       const l1Result = await execute({
         context: { subgraph: 'beanstalk_eth' },
       }).then((result) => result.data?.farmer?.silo?.assets ?? []);
-      
-      for (const siloAssetFragment of l2Result) {      
+
+      for (const siloAssetFragment of l2Result) {
         const token = getToken(siloAssetFragment.token);
-        const map = siloAssetFragment.hourlySnapshots.reduce<SeasonToFarmerSiloAssetSnapshot>((acc, curr) => {
-          if (curr.season !== RESEED_SEASON - 1) {
-            acc[curr.season] = curr as FarmerSiloAssetSnapshot;
-          }
-          return acc;
-        }, {});
-        
+        const map =
+          siloAssetFragment.hourlySnapshots.reduce<SeasonToFarmerSiloAssetSnapshot>(
+            (acc, curr) => {
+              if (curr.season !== RESEED_SEASON - 1) {
+                acc[curr.season] = curr as FarmerSiloAssetSnapshot;
+              }
+              return acc;
+            },
+            {}
+          );
+
         output[getTokenIndex(token)] = { ...map };
       }
 
       for (const siloAssetFragment of l1Result) {
         const token = getToken(siloAssetFragment.token);
         const map = { ...(output[getTokenIndex(token)] || {}) };
-        siloAssetFragment.hourlySnapshots.forEach(snapshot => {
+        siloAssetFragment.hourlySnapshots.forEach((snapshot) => {
           map[snapshot.season] = snapshot as FarmerSiloAssetSnapshot;
-        })
+        });
         output[getTokenIndex(token)] = map;
       }
 
       const assets = Object.entries(output).map(
         ([tokenAddress, snapshots]) => ({
-            token: tokenAddress,
-            // sort in ascending order
-            hourlySnapshots: Object.values(snapshots).sort((a, b) => a.season - b.season),
-          })
+          token: tokenAddress,
+          // sort in ascending order
+          hourlySnapshots: Object.values(snapshots).sort(
+            (a, b) => a.season - b.season
+          ),
+        })
       );
 
       console.debug('[useMergedFarmerSiloAssetSnapshotsQuery] result', assets);
@@ -157,22 +163,6 @@ const useFarmerSiloHistory = (
     subgraphQueryConfigs.priceInstantBEAN.queryOptions,
     'both'
   );
-
-  // const urBeanChopRateQuery = useSeasonsQuery<SeasonalTokenChopRateQuery>(
-  //   queryKeys.seasonalUrBeanChopRate(),
-  //   subgraphQueryConfigs.seasonalUrBeanChopRate.document,
-  //   SeasonRange.ALL,
-  //   subgraphQueryConfigs.seasonalUrBeanChopRate.queryOptions,
-  //   'both'
-  // )
-
-  // const urBeanLPChopRateQuery = useSeasonsQuery<SeasonalTokenChopRateQuery>(
-  //   queryKeys.seasonalUrBeanLPChopRate(),
-  //   subgraphQueryConfigs.seasonalUrBeanLPChopRate.document,
-  //   SeasonRange.ALL,
-  //   subgraphQueryConfigs.seasonalUrBeanLPChopRate.queryOptions,
-  //   'both'
-  // )
 
   /// Interpolate
   const depositData = useInterpolateDeposits(

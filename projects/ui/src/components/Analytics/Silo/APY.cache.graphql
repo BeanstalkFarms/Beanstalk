@@ -1,0 +1,11 @@
+query CachedSeasonalAPY($where: String) {
+  seasons: cache_tokenYields(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    season
+    beanAPY
+    createdAt
+  }
+}

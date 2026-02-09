@@ -41,7 +41,6 @@ import {
   SeasonalStalkDocument,
   SeasonalSupplyDocument,
   SeasonalTemperatureDocument,
-  SeasonalTokenChopRateDocument,
   SeasonalTotalSowersDocument,
   SeasonalVolumeDocument,
   SeasonalWeightedDeltaBDocument,
@@ -101,9 +100,6 @@ export const subgraphQueryKeys = {
   siloToken30DvAPY: (
     token: TokenInstance | string
   ) => ['seasonal30DvAPY', typeof token === 'string' ? token : token.symbol].join("-"),
-
-  // Unripe
-  seasonalChopRate: (token: TokenInstance) => ['seasonalTokenChopRate', token.symbol].join("-"),
 
   // ----- Field -----
   beanstalkMaxTemperature: 'seasonalBeanstalkMaxTemperature',
@@ -328,16 +324,6 @@ const l1TokenSeasonsFilters = {
   [BEAN_CRV3_V1_LP[1].symbol]: { start: 3658, end: REPLANT_SEASON },
 };
 
-const getSeasonalUnripeChopRateOptions =
-  (address: string): DynamicSGQueryOption =>
-  (chain) =>
-    makeOptions(chain, {
-      add: ['gt'],
-      vars: {
-        token: getMultiChainToken(address)[chain].address.toLowerCase(),
-      },
-    });
-
 const depositedSiloTokenOptions =
   (token: TokenInstance): DynamicSGQueryOption =>
   (chain) => {
@@ -522,28 +508,26 @@ export const subgraphQueryConfigs = {
     queryKey: subgraphQueryKeys.cachedL2srBEAN,
     where: ""
   },
-
-
-  // --------------------- Beanstalk ---------------------
-  tokenLiquidity: (token: TokenInstance) => ({ // TODO(cache): this is actually bean
+  // where: { pool: $pool, season_: { season_lte: $season_lte, season_gte: 0 } }
+  tokenLiquidity: (token: TokenInstance) => ({
     document: SeasonalLiquidityPerPoolDocument,
     queryKey: subgraphQueryKeys.tokenLiquidity(token),
     queryOptions: tokenLiquidityOptions(token),
   }),
-  siloToken30DvAPY: (token: TokenInstance) => ({
+
+
+  // --------------------- Beanstalk ---------------------
+  // where: { season_lte: $season_lte, season_gt: $season_gt, token: $token, siloYield_: {emaWindow: ROLLING_30_DAY} }
+  siloToken30DvAPY: (token: TokenInstance) => ({ // TODO(cache): does this still exist?
     document: SeasonalApyDocument,
     queryKey: subgraphQueryKeys.siloToken30DvAPY(token),
     queryOptions: apyOptions(token),
   }),
+  // where: { season_lte: $season_lte, season_gt:  $season_gt, siloAsset: $siloAsset }
   depositedSiloToken: (token: TokenInstance) => ({
     document: SeasonalDepositedSiloAssetDocument,
     queryKey: subgraphQueryKeys.depositedSiloToken(token),
     queryOptions: depositedSiloTokenOptions(token),
-  }),
-  seasonalChopRate: (token: TokenInstance) => ({
-    document: SeasonalTokenChopRateDocument,
-    queryKey: subgraphQueryKeys.seasonalChopRate(token),
-    queryOptions: getSeasonalUnripeChopRateOptions(token.address),
   }),
   beanstalkTotalStalk: {
     document: SeasonalStalkDocument,

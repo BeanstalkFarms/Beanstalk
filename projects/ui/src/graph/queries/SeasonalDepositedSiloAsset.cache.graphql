@@ -1,0 +1,12 @@
+query CachedSeasonalDepositedSiloAsset($where: String) {
+  seasons: cache_siloAssetHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) { 
+    id
+    season
+    createdAt
+    depositedAmount
+  }
+}
