@@ -25,6 +25,7 @@ import {
   subgraphQueryConfigs,
   subgraphQueryKeys,
 } from '~/util/Graph';
+import { ERC20Token } from '@beanstalk/sdk-core';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -85,10 +86,28 @@ export function useChartSetupData() {
     const depositCharts: ChartSetupBase[] = [];
     const apyCharts: ChartSetupBase[] = [];
 
+    const cacheTokenRewrite = (token: ERC20Token) => {
+      if (token.symbol === 'BEAN') return '__bean__';
+      if (token.symbol === 'BEANETH') return '__beanweth__';
+      if (token.symbol === 'BEANwstETH') return '__beanwsteth__';
+      if (token.symbol === 'urBEAN') return '__urbean__';
+      if (token.symbol.startsWith('ur')) return '__urlp__';
+
+      return token.address.toLowerCase();
+    }
+
     depositedTokensToChart.forEach((token) => {
       const depositedConfig = subgraphQueryConfigs.depositedSiloToken(token);
+      const cachedDepositedConfig = subgraphQueryConfigs.cachedDepositedSiloToken(cacheTokenRewrite(token));
       const depositedChart: ChartSetupBase = {
         id: depositedConfig.queryKey,
+        document: depositedConfig.document,
+        queryConfig: depositedConfig.queryOptions,
+        cached: {
+          id: cachedDepositedConfig.queryKey,
+          document: cachedDepositedConfig.document,
+          where: cachedDepositedConfig.where,
+        },
         name: `Deposited ${token.symbol}`,
         tooltipTitle: `Total Deposited ${token.symbol}`,
         tooltipHoverText: `The total number of Deposited ${token.symbol === 'BEAN' ? 'Beans' : token.symbol === 'urBEAN' ? 'Unripe Beans' : `${token.name}`} at the beginning of every Season.`,
@@ -96,17 +115,23 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'depositedAmount',
         valueAxisType: token.isUnripe ? 'depositedUnripeAmount' : 'depositedAmount',
-        document: depositedConfig.document,
         documentEntity: 'seasons',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: depositedConfig.queryOptions,
         valueFormatter: (value: any) => Number(formatUnits(value, token.decimals)),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       };
       const apyConfig = subgraphQueryConfigs.siloToken30DvAPY(token);
+      const cachedApyConfig = subgraphQueryConfigs.cachedSiloToken30DvAPY(cacheTokenRewrite(token));
       const apyChart: ChartSetupBase = {
         id: apyConfig.queryKey,
+        document: apyConfig.document,
+        queryConfig: apyConfig.queryOptions,
+        cached: {
+          id: cachedApyConfig.queryKey,
+          document: cachedApyConfig.document,
+          where: cachedApyConfig.where,
+        },
         name: `${token.symbol} 30D vAPY`,
         tooltipTitle: `${token.symbol} 30D vAPY`,
         tooltipHoverText: `The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.`,
@@ -114,10 +139,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'beanAPY',
         valueAxisType: 'apy',
-        document: apyConfig.document,
         documentEntity: 'seasons',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: apyConfig.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -130,19 +153,25 @@ export function useChartSetupData() {
     lpTokensToChart.forEach((token) => {
       const tokenSymbol = token.symbol;
       const liqConfig = subgraphQueryConfigs.tokenLiquidity(token);
+      const cacheLiqConfig = subgraphQueryConfigs.cachedTokenLiquidity(cacheTokenRewrite(token));
       const lpChart: ChartSetupBase = {
         id: liqConfig.queryKey,
+        document: liqConfig.document,
+        queryConfig: liqConfig.queryOptions,
+        cached: {
+          id: cacheLiqConfig.queryKey,
+          document: cacheLiqConfig.document,
+          where: cacheLiqConfig.where,
+        },
         name: `${tokenSymbol} Liquidity`,
         tooltipTitle: `${tokenSymbol} Liquidity`,
         tooltipHoverText: `The total USD value of ${tokenSymbol} in liquidity pools on the Minting Whitelist.`,
         shortDescription: `${tokenSymbol} Liquidity.`,
         timeScaleKey: 'updatedAt',
         priceScaleKey: 'liquidityUSD',
-        document: liqConfig.document,
         documentEntity: 'seasons',
         valueAxisType: 'usdLiquidity',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: liqConfig.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,

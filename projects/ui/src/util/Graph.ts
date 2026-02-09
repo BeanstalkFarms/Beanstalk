@@ -7,11 +7,14 @@ import {
 } from '~/constants';
 import {
   CachedLiquiditySupplyRatioDocument,
+  CachedSeasonalApyDocument,
   CachedSeasonalCrossesDocument,
+  CachedSeasonalDepositedSiloAssetDocument,
   CachedSeasonalHarvestedPodsDocument,
   CachedSeasonalInstantDeltaBDocument,
   CachedSeasonalInstantPriceDocument,
   CachedSeasonalLiquidityDocument,
+  CachedSeasonalLiquidityPerPoolDocument,
   CachedSeasonalMarketCapDocument,
   CachedSeasonalPodRateDocument,
   CachedSeasonalPodsDocument,
@@ -88,6 +91,7 @@ export const subgraphQueryKeys = {
 
   // Token
   tokenLiquidity: (token: TokenInstance) => ['seasonalTokenLiquidity', token.symbol].join("-"),
+  cachedTokenLiquidity: (token: string) => ['cachedSeasonalTokenLiquidity', token].join("-"),
   whitelistTokenRewards: () => ['whitelistTokenRewards'],
 
   // --------------------- Beanstalk ---------------------
@@ -97,9 +101,11 @@ export const subgraphQueryKeys = {
   beanstalkRRoR: 'seasonalBeanstalkRRoR',
   cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
+  cachedDepositedSiloToken: (token: string) => ['cachedSeasonalSiloTokenDeposited', token].join("-"),
   siloToken30DvAPY: (
     token: TokenInstance | string
   ) => ['seasonal30DvAPY', typeof token === 'string' ? token : token.symbol].join("-"),
+  cachedSiloToken30DvAPY: (token: string) => ['cachedSeasonal30DvAPY', token].join("-"),
 
   // ----- Field -----
   beanstalkMaxTemperature: 'seasonalBeanstalkMaxTemperature',
@@ -508,26 +514,37 @@ export const subgraphQueryConfigs = {
     queryKey: subgraphQueryKeys.cachedL2srBEAN,
     where: ""
   },
-  // where: { pool: $pool, season_: { season_lte: $season_lte, season_gte: 0 } }
   tokenLiquidity: (token: TokenInstance) => ({
     document: SeasonalLiquidityPerPoolDocument,
     queryKey: subgraphQueryKeys.tokenLiquidity(token),
     queryOptions: tokenLiquidityOptions(token),
   }),
-
+  cachedTokenLiquidity: (token: string) => ({
+    document: CachedSeasonalLiquidityPerPoolDocument,
+    queryKey: subgraphQueryKeys.cachedTokenLiquidity(token),
+    where: `pool: "${token}"`,
+  }),
 
   // --------------------- Beanstalk ---------------------
-  // where: { season_lte: $season_lte, season_gt: $season_gt, token: $token, siloYield_: {emaWindow: ROLLING_30_DAY} }
   siloToken30DvAPY: (token: TokenInstance) => ({ // TODO(cache): does this still exist?
     document: SeasonalApyDocument,
     queryKey: subgraphQueryKeys.siloToken30DvAPY(token),
     queryOptions: apyOptions(token),
   }),
-  // where: { season_lte: $season_lte, season_gt:  $season_gt, siloAsset: $siloAsset }
+  cachedSiloToken30DvAPY: (token: string) => ({
+    document: CachedSeasonalApyDocument,
+    queryKey: subgraphQueryKeys.cachedSiloToken30DvAPY(token),
+    where: `token: "${token}", siloYield_: {emaWindow: ROLLING_30_DAY}`,
+  }),
   depositedSiloToken: (token: TokenInstance) => ({
     document: SeasonalDepositedSiloAssetDocument,
     queryKey: subgraphQueryKeys.depositedSiloToken(token),
     queryOptions: depositedSiloTokenOptions(token),
+  }),
+  cachedDepositedSiloToken: (token: string) => ({
+    document: CachedSeasonalDepositedSiloAssetDocument,
+    queryKey: subgraphQueryKeys.cachedDepositedSiloToken(token),
+    where: `siloAsset: "__protocol__-${token}"`,
   }),
   beanstalkTotalStalk: {
     document: SeasonalStalkDocument,
@@ -545,7 +562,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkTotalStalk: {
     document: CachedSeasonalStalkDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkTotalStalk,
-    where: 'silo: __protocol__',
+    where: 'silo: "__protocol__"',
   },
   beanstalkRRoR: {
     document: SeasonalRRoRDocument,
@@ -561,7 +578,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkRRoR: {
     document: CachedSeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
@@ -577,7 +594,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkMaxTemperature: {
     document: CachedSeasonalTemperatureDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkMaxTemperature,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkUnharvestablePods: {
     document: SeasonalPodsDocument,
@@ -593,7 +610,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkUnharvestablePods: {
     document: CachedSeasonalPodsDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkUnharvestablePods,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkPodRate: {
     document: SeasonalPodRateDocument,
@@ -609,7 +626,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkPodRate: {
     document: CachedSeasonalPodRateDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkPodRate,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkSownBeans: {
     document: SeasonalSownDocument,
@@ -625,7 +642,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkSownBeans: {
     document: CachedSeasonalSownDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkSownBeans,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkHarvestedPods: {
     document: SeasonalHarvestedPodsDocument,
@@ -641,7 +658,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkHarvestedPods: {
     document: CachedSeasonalHarvestedPodsDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkHarvestedPods,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
   beanstalkTotalSowers: {
     document: SeasonalTotalSowersDocument,
@@ -657,7 +674,7 @@ export const subgraphQueryConfigs = {
   cachedBeanstalkTotalSowers: {
     document: CachedSeasonalTotalSowersDocument,
     queryKey: subgraphQueryKeys.cachedBeanstalkTotalSowers,
-    where: 'field: __protocol__',
+    where: 'field: "__protocol__"',
   },
 };
 

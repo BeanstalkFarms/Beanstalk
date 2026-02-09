@@ -173,6 +173,15 @@ type CachedSiloHourlySnapshot {
   updatedAt: BigInt!
 }
 
+type CachedTokenYield {
+  beanAPY: BigDecimal!
+  createdAt: BigInt!
+  id: Bytes!
+  season: Int!
+  stalkAPY: BigDecimal!
+  token: Bytes!
+}
+
 type CachedUnripeTokenHourlySnapshot {
   amountUnderlyingOne: BigInt!
   bdvUnderlyingOne: BigInt!
@@ -231,6 +240,7 @@ type Query {
   cache_seasons(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSeason!]!
   cache_siloAssetHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSiloAssetHourlySnapshot!]!
   cache_siloHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedSiloHourlySnapshot!]!
+  cache_tokenYields(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedTokenYield!]!
   cache_unripeTokenHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedUnripeTokenHourlySnapshot!]!
   cache_whitelistTokenHourlySnapshots(first: Int, orderBy: String, orderDirection: String, skip: Int, where: String): [CachedWhitelistTokenHourlySnapshot!]!
 }
