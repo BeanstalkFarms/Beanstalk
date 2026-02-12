@@ -4,12 +4,13 @@ import {
   DocumentNode,
   OperationVariables,
   QueryOptions,
-  gql,
 } from '@apollo/client';
 import { apolloClient } from '~/graph/client';
 import { useQuery } from '@tanstack/react-query';
 import { RESEED_SEASON } from '~/constants';
 import { DynamicSGQueryOption, SeasonsQueryFetchType } from '~/util/Graph';
+import { fetchApolloWithLimiter } from '~/util/Bottleneck';
+import { toSeasonNumber } from '~/util/Season';
 
 const PAGE_SIZE = 1000;
 
@@ -62,6 +63,12 @@ const baseL1Variables = {
   season_lte: RESEED_SEASON - 1,
 };
 
+export type SeasonsQueryConfig = {
+  document: DocumentNode;
+  queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption;
+  where?: string;
+};
+
 /**
  * Iteratively query entities that have a `season` entity.
  * This allows for loading of full datasets when the user
@@ -74,17 +81,12 @@ const baseL1Variables = {
  */
 const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   name: string,
-  document: DocumentNode = gql`
-    query MyQuery {
-      _meta {
-        hasIndexingErrors
-      }
-    }
-  `,
+  config: SeasonsQueryConfig,
+  cachedConfig: SeasonsQueryConfig | null,
   range: SeasonRange,
-  queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption,
   fetchType: SeasonsQueryFetchType = 'both'
 ) => {
+  const { document, queryConfig } = config;
   const queryOptions = {
     l2: deriveQueryConfig('l2', queryConfig, document),
     l1: deriveQueryConfig('l1', queryConfig, document),
@@ -153,6 +155,30 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             pushPromise(apolloClient.query(l1Config));
           }
           await Promise.all(promises);
+        } else if (cachedConfig) {
+          const opts = {
+            context: { subgraph: 'cache' },
+            query: cachedConfig.document,
+            variables: {
+              where: cachedConfig.where ?? ''
+            },
+          }
+
+          const apolloRequest = {
+            id: `${name}-${cachedConfig.where}-all`,
+            request: () => apolloClient.query({ ...opts, fetchPolicy: 'network-only' }),
+          }
+
+          const results = await fetchApolloWithLimiter([apolloRequest], {
+            throws: false,
+            partialData: true
+          });
+          results.forEach((result) => {
+            result.data?.seasons?.forEach((sd: any) => {
+              const seasonNum = toSeasonNumber(sd.season);
+              output[seasonNum] = { ...sd, season: seasonNum };
+            })
+          });
         } else {
           let latestL2 = 0; // latest L2 season
           let latestL1 = 0; // latest L1 season

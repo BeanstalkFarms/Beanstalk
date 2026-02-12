@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { Box, Card, CardProps } from '@mui/material';
-import { SeasonalLiquidityPerPoolDocument } from '~/generated/graphql';
+import {
+  CachedSeasonalLiquidityPerPoolDocument,
+  SeasonalLiquidityPerPoolDocument,
+} from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 import { FC } from '~/types';
 import useSeasonsQuery, {
@@ -20,7 +23,19 @@ import {
   BEAN_WEETH_WELL_LP,
   BEAN_WSTETH_WELL_LP,
 } from '~/constants/tokens';
-import { ChainConstant, RESEED_SEASON, SupportedChainId } from '~/constants';
+import {
+  BEAN_CRV3_ADDRESSES,
+  BEAN_CRV3_V1_ADDRESSES,
+  BEAN_ETH_UNIV2_LP_ADDRESSES,
+  BEAN_LUSD_ADDRESSES,
+  BEANUSDC_WELL_ADDRESSES,
+  BEANUSDT_WELL_ADDRESSES,
+  BEANWBTC_WELL_ADDRESSES,
+  BEANWEETH_WELL_ADDRESSES,
+  ChainConstant,
+  RESEED_SEASON,
+  SupportedChainId,
+} from '~/constants';
 import { DynamicSGQueryOption } from '~/util/Graph';
 import {
   BaseDataPoint,
@@ -244,72 +259,132 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
 
   const beanEthWell = useSeasonsQuery(
     'seasonalLiquidityBeanETH',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanETH,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: 'pool: "__beanweth__"',
+    },
     timeTabParams[0][1],
-    configs.beanETH,
     'both'
   );
   const beanWstEthWell = useSeasonsQuery(
     'seasonalLiquidityBeanwstETH',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanWstETH,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: 'pool: "__beanwsteth__"',
+    },
     timeTabParams[0][1],
-    configs.beanWstETH,
     'both'
   );
   const beanWeETHWell = useSeasonsQuery(
-    'seasonalLiquidityBeanETH',
-    SeasonalLiquidityPerPoolDocument,
+    'seasonalLiquidityBeanWeETH',
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanWeETH,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEANWEETH_WELL_ADDRESSES[SupportedChainId.ARBITRUM_MAINNET]}"`,
+    },
     timeTabParams[0][1],
-    configs.beanWeETH,
     'l2-only'
   );
   const beanWBTCWell = useSeasonsQuery(
     'seasonalLiquidityBeanWBTC',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanWBTC,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEANWBTC_WELL_ADDRESSES[SupportedChainId.ARBITRUM_MAINNET]}"`,
+    },
     timeTabParams[0][1],
-    configs.beanWBTC,
     'l2-only'
   );
   const beanUSDCWell = useSeasonsQuery(
     'seasonalLiquidityBeanUSDC',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanUSDC,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEANUSDC_WELL_ADDRESSES[SupportedChainId.ARBITRUM_MAINNET]}"`,
+    },
     timeTabParams[0][1],
-    configs.beanUSDC,
     'l2-only'
   );
   const beanUSDTWell = useSeasonsQuery(
     'seasonalLiquidityBeanUSDT',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanUSDT,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEANUSDT_WELL_ADDRESSES[SupportedChainId.ARBITRUM_MAINNET]}"`,
+    },
     timeTabParams[0][1],
-    configs.beanUSDT,
     'l2-only'
   );
   const beanCrv3L1 = useSeasonsQuery(
     'seasonalLiquidityBeanCRV3L1',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanCrv3L1,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEAN_CRV3_V1_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
+    },
     timeTabParams[0][1],
-    configs.beanCrv3L1,
     'l1-only'
   );
   const beanEthOld = useSeasonsQuery(
     'seasonalLiquidityBeanETHOld',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanETHOld,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEAN_ETH_UNIV2_LP_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
+    },
     SeasonRange.ALL,
-    configs.beanETHOld,
     'l1-only'
   );
   const beanLusdOld = useSeasonsQuery(
     'seasonalLiquidityBeanLUSDOld',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanLusdOld,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEAN_LUSD_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
+    },
     SeasonRange.ALL,
-    configs.beanLusdOld,
     'l1-only'
   );
   const beanCrv3Old = useSeasonsQuery(
     'seasonalLiquidityBeanCrv3Old',
-    SeasonalLiquidityPerPoolDocument,
+    {
+      document: SeasonalLiquidityPerPoolDocument,
+      queryConfig: configs.beanCrv3Old,
+    },
+    {
+      document: CachedSeasonalLiquidityPerPoolDocument,
+      where: `pool: "${BEAN_CRV3_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
+    },
     SeasonRange.ALL,
-    configs.beanCrv3Old,
     'l1-only'
   );
 

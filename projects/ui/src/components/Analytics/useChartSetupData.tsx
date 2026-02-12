@@ -25,7 +25,6 @@ import {
   subgraphQueryConfigs,
   subgraphQueryKeys,
 } from '~/util/Graph';
-import { ERC20Token } from '@beanstalk/sdk-core';
 import {
   tickFormatBeanAmount,
   tickFormatBeanPrice,
@@ -86,7 +85,7 @@ export function useChartSetupData() {
     const depositCharts: ChartSetupBase[] = [];
     const apyCharts: ChartSetupBase[] = [];
 
-    const cacheTokenRewrite = (token: ERC20Token) => {
+    const cacheTokenRewrite = (token: TokenInstance) => {
       if (token.symbol === 'BEAN') return '__bean__';
       if (token.symbol === 'BEANETH') return '__beanweth__';
       if (token.symbol === 'BEANwstETH') return '__beanwsteth__';
