@@ -4,10 +4,11 @@ import { LineChartProps } from '~/components/Common/Charts/LineChart';
 import SeasonPlot, {
   SeasonPlotBaseProps,
 } from '~/components/Common/Charts/SeasonPlot';
-import { Season, SeasonalMarketCapDocument } from '~/generated/graphql';
+import { Season } from '~/generated/graphql';
 import useSeason from '~/hooks/beanstalk/useSeason';
 
 import { FC } from '~/types';
+import { subgraphQueryConfigs } from '~/util/Graph';
 
 const getValue = (season: Season) => parseFloat(season.marketCap);
 const formatValue = (value: number) =>
@@ -28,8 +29,11 @@ const MarketCap: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
   const season = useSeason();
   return (
     <SeasonPlot
-      document={SeasonalMarketCapDocument}
       height={height}
+      document={subgraphQueryConfigs.marketCapBEAN.document}
+      queryConfig={subgraphQueryConfigs.marketCapBEAN.queryOptions}
+      cacheDocument={subgraphQueryConfigs.cachedMarketCapBEAN.document}
+      cacheWhere={subgraphQueryConfigs.cachedMarketCapBEAN.where}
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
       formatValue={formatValue}

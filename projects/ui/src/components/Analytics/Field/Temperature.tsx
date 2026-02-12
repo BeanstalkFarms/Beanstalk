@@ -38,6 +38,11 @@ const Temperature: FC<{
     <SeasonPlot<SeasonalTemperatureQuery>
       height={height}
       document={subgraphQueryConfigs.beanstalkMaxTemperature.document}
+      queryConfig={subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions}
+      cacheDocument={
+        subgraphQueryConfigs.cachedBeanstalkMaxTemperature.document
+      }
+      cacheWhere={subgraphQueryConfigs.cachedBeanstalkMaxTemperature.where}
       defaultValue={temperature?.gt(0) ? temperature.toNumber() : 0}
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
@@ -45,7 +50,6 @@ const Temperature: FC<{
       StatProps={statProps}
       LineChartProps={lineChartProps}
       statsRowFullWidth={statsRowFullWidth}
-      queryConfig={subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions}
       name={subgraphQueryConfigs.beanstalkMaxTemperature.queryKey}
     />
   );

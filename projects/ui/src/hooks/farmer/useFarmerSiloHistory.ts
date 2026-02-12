@@ -158,9 +158,12 @@ const useFarmerSiloHistory = (
 
   const priceQuery = useSeasonsQuery<SeasonalInstantPriceQuery>(
     subgraphQueryConfigs.priceInstantBEAN.queryKey,
-    subgraphQueryConfigs.priceInstantBEAN.document,
+    {
+      document: subgraphQueryConfigs.priceInstantBEAN.document,
+      queryConfig: subgraphQueryConfigs.priceInstantBEAN.queryOptions,
+    },
+    null,
     SeasonRange.ALL,
-    subgraphQueryConfigs.priceInstantBEAN.queryOptions,
     'both'
   );
 
