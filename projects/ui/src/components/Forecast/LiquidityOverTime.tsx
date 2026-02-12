@@ -461,7 +461,19 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
     }
 
     const seasonCount = SEASON_RANGE_TO_COUNT[timeTabParams[0][1]];
-    const processed = processedSeasons.filter(Boolean).slice(0, seasonCount);
+    let processed = processedSeasons.filter(Boolean).slice(0, seasonCount);
+
+    // Downsample only when "All" is selected so the chart remains hoverable (e.g. ~35k seasons → ~1k points)
+    const DOWNSAMPLE_EVERY_N_SEASONS = 20;
+    if (
+      timeTabParams[0][1] === SeasonRange.ALL &&
+      processed.length > DOWNSAMPLE_EVERY_N_SEASONS * 2
+    ) {
+      const lastIdx = processed.length - 1;
+      processed = processed.filter(
+        (_, i) => i % DOWNSAMPLE_EVERY_N_SEASONS === 0 || i === lastIdx
+      );
+    }
 
     const data: QueryData = {
       data: [processed.reverse()],
