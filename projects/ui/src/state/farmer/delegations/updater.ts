@@ -10,17 +10,16 @@ import { STALK } from '~/constants/tokens';
 import { useAppSelector } from '~/state';
 import { AddressMap, ZERO_ADDRESS } from '~/constants';
 import {
+  useDelegatorsStalkLazyQuery,
+  useVoterDelegatesLazyQuery,
+  useVoterDelegatorsLazyQuery,
+} from '~/generated/graphql';
+import {
   setDelegatorsVotingPower,
   setFarmerDelegates,
   setFarmerDelegators,
 } from './actions';
 import { FarmerDelegation, GovSpaceAddressMap } from '.';
-import {
-  useBeaNftUsersLazyQuery,
-  useDelegatorsStalkLazyQuery,
-  useVoterDelegatesLazyQuery,
-  useVoterDelegatorsLazyQuery,
-} from '~/generated/graphql';
 import { getDefaultGovSpaceMap } from './reducer';
 
 export function useReadDelegatesDev() {
@@ -193,58 +192,19 @@ export function useFetchFarmerDelegators() {
   return [fetch, clear] as const;
 }
 
+// BeaNFT GraphQL endpoint no longer exists; fetch dispatches empty voting power.
 export function useFetchNFTVotingPower() {
-  const farmerDelegators = useAppSelector(
-    (state) => state._farmer.delegations.delegators.users
-  );
-
-  const account = useAccount();
-
   const dispatch = useDispatch();
 
-  const delegators = useMemo(() => {
-    if (!account) return [];
-    const bySpace = farmerDelegators[GovSpace.BeanNFT] || {};
-    const addresses = Object.keys(bySpace).map((a) => a.toLowerCase());
-    return [...new Set(addresses)];
-  }, [account, farmerDelegators]);
-
-  const [triggerQuery] = useBeaNftUsersLazyQuery({
-    variables: { id_in: delegators },
-    fetchPolicy: 'cache-and-network',
-    context: { subgraph: 'beanf_eth' },
-  });
-
-  /// handlers
   const fetch = useCallback(async () => {
-    try {
-      if (!account || !delegators.length) return;
-      const data = await triggerQuery();
-      const byUser = data.data?.beaNFTUsers || [];
-      const votingPower = byUser.reduce<AddressMap<BigNumber>>((acc, curr) => {
-        const genesis = curr.genesis?.length || 0;
-        const winter = curr.winter?.length || 0;
-        const barnRaise = curr.barnRaise?.length || 0;
-        const basin = curr.basin?.length || 0;
-        acc[curr.id] = new BigNumber(genesis + winter + barnRaise + basin);
-        return acc;
-      }, {});
-
-      dispatch(
-        setDelegatorsVotingPower({
-          space: GovSpace.BeanNFT,
-          data: votingPower,
-        })
-      );
-
-      console.debug('[useFetchNFTVotingPower/fetch] RESULT = ', votingPower);
-
-      return votingPower;
-    } catch (err) {
-      console.debug('[useFetchNFTVotingPower/fetch] FAILED:', err);
-      return undefined;
-    }
-  }, [account, delegators, dispatch, triggerQuery]);
+    dispatch(
+      setDelegatorsVotingPower({
+        space: GovSpace.BeanNFT,
+        data: {},
+      })
+    );
+    return {} as AddressMap<BigNumber>;
+  }, [dispatch]);
 
   const clear = useCallback(() => {
     dispatch(

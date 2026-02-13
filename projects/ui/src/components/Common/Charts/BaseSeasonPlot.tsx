@@ -2,19 +2,20 @@ import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { ApolloError } from '@apollo/client';
+import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
+import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
+import { toSeasonNumber } from '~/util/Season';
 import {
   BaseChartProps,
   BaseDataPoint,
   ExploitLine,
 } from './ChartPropProvider';
 import ChartInfoOverlay from './ChartInfoOverlay';
-import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import MultiLineChart from './MultiLineChart';
 import QueryState from './QueryState';
 import Row from '../Row';
 import StackedAreaChart from './StackedAreaChart';
 import { StatProps } from '../Stat';
-import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
 import TimeTabs from './TimeTabs';
 import { defaultValueFormatter } from './SeasonPlot';
 
@@ -97,17 +98,18 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
 
   const handleCursor = useCallback(
     (
-      season: number | undefined,
+      season: number | { season?: number } | undefined,
       value?: number | undefined,
       date?: Date | undefined
     ) => {
-      if (!season || !value) {
+      const seasonNum = toSeasonNumber(season);
+      if (!seasonNum || !value) {
         setDisplaySeason(undefined);
         setDisplayValue(undefined);
         setDisplayDate(undefined);
         return;
       }
-      setDisplaySeason(season);
+      setDisplaySeason(seasonNum);
       setDisplayValue(value);
       setDisplayDate(date);
     },
@@ -135,7 +137,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
       const currDepositedAmount = stacked[stacked.length - 1];
       if (currDepositedAmount && 'season' in currDepositedAmount) {
         d.value = getVal([currDepositedAmount]);
-        d.season = currDepositedAmount.season;
+        d.season = toSeasonNumber(currDepositedAmount.season);
       }
     } else {
       const lineData = seriesInput.map((s) => s[s.length - 1]);
@@ -143,7 +145,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
         d.value = getVal(lineData);
         const curr = lineData[0];
         if (curr && 'season' in curr) {
-          d.season = curr.season;
+          d.season = toSeasonNumber(curr.season);
         }
       }
     }
@@ -161,7 +163,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   if (!seriesInput || !queryData) {
     return null;
   }
-  const currentSeason = (
+  const currentSeason = toSeasonNumber(
     displaySeason !== undefined ? displaySeason : defaults.season
   ).toFixed();
 

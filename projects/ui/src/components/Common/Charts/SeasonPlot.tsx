@@ -56,6 +56,9 @@ export type SeasonPlotBaseProps = {
 
 type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
   SeasonPlotBaseProps & {
+    queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption;
+    cacheDocument?: DocumentNode;
+    cacheWhere?: string;
     /**
      * Which value to display from the Season object
      */
@@ -65,7 +68,6 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
      */
     formatValue?: (value: number) => string | JSX.Element;
     dateKey?: 'timestamp' | 'createdAt';
-    queryConfig?: Partial<QueryOptions> | DynamicSGQueryOption;
     StatProps: Omit<StatProps, 'amount' | 'subtitle'>;
     LineChartProps?: Pick<BaseChartProps, 'curve' | 'isTWAP' | 'pegLine'>;
     statsRowFullWidth?: boolean;
@@ -77,6 +79,9 @@ type SeasonPlotFinalProps<T extends MinimumViableSnapshotQuery> =
  */
 function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   document,
+  queryConfig,
+  cacheDocument,
+  cacheWhere,
   defaultValue: _defaultValue,
   defaultSeason: _defaultSeason,
   defaultDate: _defaultDate,
@@ -86,7 +91,6 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
   StatProps: statProps, // renamed to prevent type collision
   LineChartProps,
   dateKey = 'createdAt',
-  queryConfig,
   stackedArea,
   statsRowFullWidth,
   fetchType = 'both',
@@ -101,9 +105,9 @@ function SeasonPlot<T extends MinimumViableSnapshotQuery>({
 
   const seasonsQuery = useSeasonsQuery<T>(
     name,
-    document,
+    { document, queryConfig },
+    cacheDocument ? { document: cacheDocument, where: cacheWhere } : null,
     timeTabParams[0][1],
-    queryConfig,
     fetchType
   );
 

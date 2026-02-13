@@ -83,6 +83,7 @@ type Leaderboard {
   space: String
   user: String
   votesCount: Int
+  vpValue: Float
 }
 
 input LeaderboardsWhere {
@@ -178,6 +179,7 @@ type Proposal {
   created: Int!
   discussion: String!
   end: Int!
+  flagCode: Int
   flagged: Boolean
   id: String!
   ipfs: String
@@ -192,6 +194,7 @@ type Proposal {
   scores_by_strategy: Any
   scores_state: String
   scores_total: Float
+  scores_total_value: Float
   scores_updated: Int
   snapshot: Int
   space: Space
@@ -204,6 +207,7 @@ type Proposal {
   updated: Int
   validation: Validation
   votes: Int
+  vp_value_by_strategy: Any
 }
 
 input ProposalWhere {
@@ -236,6 +240,12 @@ input ProposalWhere {
   plugins_contains: String
   scores_state: String
   scores_state_in: [String]
+  scores_total_value: Float
+  scores_total_value_gt: Float
+  scores_total_value_gte: Float
+  scores_total_value_in: [Float]
+  scores_total_value_lt: Float
+  scores_total_value_lte: Float
   space: String
   space_in: [String]
   space_verified: Boolean
@@ -343,7 +353,9 @@ type Space {
   discussions: String
   domain: String
   email: String
+  farcaster: String
   filters: SpaceFilters
+  flagCode: Int
   flagged: Boolean
   followersCount: Int
   followersCount7d: Int
@@ -373,7 +385,7 @@ type Space {
   terms: String
   treasuries: [Treasury]
   turbo: Boolean
-  turbo_expiration: Int
+  turboExpiration: Int
   twitter: String
   validation: Validation
   verified: Boolean
@@ -413,6 +425,7 @@ input SpaceWhere {
   id: String
   id_in: [String]
   plugin: String
+  search: String
   strategy: String
   verified: Boolean
 }
@@ -464,6 +477,8 @@ type StrategyItem {
   disabled: Boolean
   examples: [Any]
   id: String!
+  name: String
+  override: Boolean
   schema: Any
   spacesCount: Int
   verifiedSpacesCount: Int
@@ -550,6 +565,7 @@ type Vote {
   vp: Float
   vp_by_strategy: [Float]
   vp_state: String
+  vp_value: Float
 }
 
 input VoteWhere {

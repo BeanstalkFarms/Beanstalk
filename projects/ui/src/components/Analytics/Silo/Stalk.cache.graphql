@@ -1,0 +1,12 @@
+query CachedSeasonalStalk($where: String) {
+  seasons: cache_siloHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    createdAt
+    stalk
+  }
+}

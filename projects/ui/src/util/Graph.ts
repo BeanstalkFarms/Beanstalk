@@ -6,6 +6,27 @@ import {
   SupportedChainId,
 } from '~/constants';
 import {
+  CachedLiquiditySupplyRatioDocument,
+  CachedSeasonalApyDocument,
+  CachedSeasonalCrossesDocument,
+  CachedSeasonalDepositedSiloAssetDocument,
+  CachedSeasonalHarvestedPodsDocument,
+  CachedSeasonalInstantDeltaBDocument,
+  CachedSeasonalInstantPriceDocument,
+  CachedSeasonalLiquidityDocument,
+  CachedSeasonalLiquidityPerPoolDocument,
+  CachedSeasonalMarketCapDocument,
+  CachedSeasonalPodRateDocument,
+  CachedSeasonalPodsDocument,
+  CachedSeasonalRRoRDocument,
+  CachedSeasonalSownDocument,
+  CachedSeasonalStalkDocument,
+  CachedSeasonalSupplyDocument,
+  CachedSeasonalTemperatureDocument,
+  CachedSeasonalTotalSowersDocument,
+  CachedSeasonalVolumeDocument,
+  CachedSeasonalWeightedDeltaBDocument,
+  CachedSeasonalWeightedPriceDocument,
   LiquiditySupplyRatioDocument,
   SeasonalApyDocument,
   SeasonalCrossesDocument,
@@ -23,7 +44,6 @@ import {
   SeasonalStalkDocument,
   SeasonalSupplyDocument,
   SeasonalTemperatureDocument,
-  SeasonalTokenChopRateDocument,
   SeasonalTotalSowersDocument,
   SeasonalVolumeDocument,
   SeasonalWeightedDeltaBDocument,
@@ -31,7 +51,15 @@ import {
 } from '~/generated/graphql';
 import { apolloClient } from '~/graph/client';
 import { getMultiChainToken, TokenInstance } from '~/hooks/beanstalk/useTokens';
-import { BEAN_CRV3_LP, BEAN_CRV3_V1_LP, BEAN_ETH_UNIV2_LP, BEAN_ETH_WELL_LP, BEAN_LUSD_LP, BEAN_WSTETH_WELL_LP } from '~/constants/tokens';
+import {
+  BEAN_CRV3_LP,
+  BEAN_CRV3_V1_LP,
+  BEAN_ETH_UNIV2_LP,
+  BEAN_ETH_WELL_LP,
+  BEAN_LUSD_LP,
+  BEAN_WSTETH_WELL_LP,
+} from '~/constants/tokens';
+import { toSeasonNumber } from '~/util/Season';
 import { fetchApolloWithLimiter } from './Bottleneck';
 
 // ==========================================================
@@ -41,41 +69,58 @@ import { fetchApolloWithLimiter } from './Bottleneck';
 export const subgraphQueryKeys = {
   // ----------------------- Bean ------------------------
   priceInstantBEAN: 'seasonalInstantPrice',
+  cachedPriceInstantBEAN: 'cachedSeasonalInstantPrice',
   volumeBEAN: 'seasonalVolume-BEAN',
+  cachedVolumeBEAN: 'cachedSeasonalVolume',
   totalLiquidityBEAN: 'seasonalTotalLiquidity-BEAN',
+  cachedTotalLiquidityBEAN: 'cachedSeasonalLiquidity',
   marketCapBEAN: 'seasonalMarketCap-BEAN',
+  cachedMarketCapBEAN: 'cachedSeasonalMarketCap',
   supplyBEAN: 'seasonalSupply-BEAN',
+  cachedSupplyBEAN: 'cachedSeasonalSupply',
   crossesBEAN: 'seasonalCrosses-BEAN',
+  cachedCrossesBEAN: 'cachedSeasonalCrosses',
   instantaneousDeltaBBEAN: 'seasonalInstantaneousDeltaB-BEAN',
+  cachedInstantaneousDeltaBBEAN: 'cachedSeasonalInstantaneousDeltaB',
   twaDeltaBBEAN: 'seasonalTWADeltaB-BEAN',
+  cachedTwaDeltaBBEAN: 'cachedSeasonalTWADeltaB',
   twaPriceBEAN: 'seasonalTWAPrice-BEAN',
+  cachedTwaPriceBEAN: 'cachedSeasonalTWAPrice',
   l2srBEAN: 'seasonalL2SR-BEAN',
+  cachedL2srBEAN: 'cachedSeasonalL2SR',
 
   // Token
   tokenLiquidity: (token: TokenInstance) => ['seasonalTokenLiquidity', token.symbol].join("-"),
+  cachedTokenLiquidity: (token: string) => ['cachedSeasonalTokenLiquidity', token].join("-"),
   whitelistTokenRewards: () => ['whitelistTokenRewards'],
 
   // --------------------- Beanstalk ---------------------
   // ------ Beanstalk Silo ------
   beanstalkTotalStalk: 'seasonalBeanstalkTotalStalk',
+  cachedBeanstalkTotalStalk: 'cachedSeasonalBeanstalkTotalStalk',
   beanstalkRRoR: 'seasonalBeanstalkRRoR',
+  cachedBeanstalkRRoR: 'cachedSeasonalBeanstalkRRoR',
   depositedSiloToken: (token: TokenInstance) => ['seasonalSiloTokenDeposited', token.symbol].join("-"),
+  cachedDepositedSiloToken: (token: string) => ['cachedSeasonalSiloTokenDeposited', token].join("-"),
   siloToken30DvAPY: (
     token: TokenInstance | string
   ) => ['seasonal30DvAPY', typeof token === 'string' ? token : token.symbol].join("-"),
-
-  // Unripe
-  seasonalChopRate: (token: TokenInstance) => ['seasonalTokenChopRate', token.symbol].join("-"),
+  cachedSiloToken30DvAPY: (token: string) => ['cachedSeasonal30DvAPY', token].join("-"),
 
   // ----- Field -----
   beanstalkMaxTemperature: 'seasonalBeanstalkMaxTemperature',
+  cachedBeanstalkMaxTemperature: 'cachedSeasonalBeanstalkMaxTemperature',
   beanstalkUnharvestablePods: 'seasonalBeanstalkUnharvestablePods',
+  cachedBeanstalkUnharvestablePods: 'cachedSeasonalBeanstalkUnharvestablePods',
   beanstalkPodRate: 'seasonalBeanstalkPodRate',
+  cachedBeanstalkPodRate: 'cachedSeasonalBeanstalkPodRate',
   beanstalkSownBeans: 'seasonalBeanstalkSownBeans',
+  cachedBeanstalkSownBeans: 'cachedSeasonalBeanstalkSownBeans',
   beanstalkHarvestedPods: 'seasonalBeanstalkHarvestedPods',
+  cachedBeanstalkHarvestedPods: 'cachedSeasonalBeanstalkHarvestedPods',
   beanstalkTotalSowers: 'seasonalBeanstalkTotalSowers',
-  beanstalkTotalSeeds: 'seasonalBeanstalkTotalSeeds',
-  
+  cachedBeanstalkTotalSowers: 'cachedSeasonalBeanstalkTotalSowers',
+
   // ------ Farmer Silo ------
   farmerSiloRewards: (account: string | undefined) => ['farmerSiloRewards', account ?? "no-account"].join("-"),
   farmerSiloAssetSnapshots: (account: string | undefined) => ['farmerSiloAssetSnapshots', account ?? "no-account"].join("-"),
@@ -84,9 +129,107 @@ export const subgraphQueryKeys = {
 // ==========================================================
 // Types & Interfaces
 // ==========================================================
-export type EvmLayer = 'l1' | 'l2';
 
+export type EvmLayer = 'l1' | 'l2';
 export type SeasonsQueryFetchType = 'l1-only' | 'l2-only' | 'both';
+
+export interface SGQueryParameters {
+  /**
+   * Id of this chart.
+   */
+  id: string;
+  /**
+   * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
+   */
+  timeScaleKey: string;
+  /**
+   * The field in the GraphQL request that corresponds to the value that will be charted.
+   */
+  priceScaleKey: string;
+  /**
+   * The Apollo document of the GraphQL query.
+   */
+  document: DocumentNode;
+  /**
+   * The entity that contains the data in your GraphQL request. Usually "seasons".
+   */
+  documentEntity: string;
+  /**
+   *
+   */
+  fetchType: SeasonsQueryFetchType;
+  /**
+   * Sets up things like variables and context for the GraphQL queries.
+   */
+  queryConfig: DynamicSGQueryOption;
+}
+
+export interface ChartSetupBase extends SGQueryParameters {
+  /**
+   * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
+   * are currently selected, therefore ideally it should be short and to the point.
+   */
+  name: string;
+  /**
+   * Title shown in the actual chart after the user
+   * makes their selection.
+   */
+  tooltipTitle: string;
+  /**
+   * Text description shown when user hovers the tooltip icon next to the tooltip title.
+   */
+  tooltipHoverText: string | JSX.Element;
+  /**
+   * Short description shown in the Select Dialog.
+   */
+  shortDescription: string;
+  /**
+   * Short identifier for the output of this chart. Lightweight Charts only supports
+   * two price scales, so we use this to group charts that have similar
+   * outputs in the same price scale.
+   */
+  valueAxisType: string;
+  /**
+   * Formats the raw output from the query into a number for Lightweight Charts.
+   */
+  valueFormatter:
+    | ((v: string) => number | undefined)
+    | ((v: string) => (chain: 'l1' | 'l2') => number | undefined);
+  /**
+   *
+   */
+  dataFormatter?: (v: any) => any;
+  /**
+   * Formats the number used by Lightweight Charts into a string that's shown at the top
+   * of the chart.
+   */
+  tickFormatter: (v: number) => string | undefined;
+  /**
+   * Formats the number used by Lightweight Charts into a string for the
+   * price scales.
+   */
+  shortTickFormatter: (v: number) => string | undefined;
+  /**
+   * For making the same query, but to the cache subgraph endpoint.
+   */
+  cached?: {
+    id: string;
+    document: DocumentNode;
+    where: string;
+  };
+}
+
+export type ChartSetup = ChartSetupBase & {
+  /**
+   * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow
+   * the user to quickly filter the available charts.
+   */
+  type: string;
+  /**
+   * Id of this chart in the chart data array.
+   */
+  index: number;
+};
 
 interface SeasonRange {
   start: number;
@@ -140,6 +283,10 @@ const CONTEXT_FRAGMENTS = {
     l2: 'beanstalk',
     l1: 'beanstalk_eth',
   },
+  cache: {
+    l2: 'cache',
+    l1: 'cache',
+  },
 };
 
 // ==========================================================
@@ -180,18 +327,8 @@ const l1TokenSeasonsFilters = {
   [BEAN_CRV3_LP[1].symbol]: { start: REPLANT_SEASON - 1 },
   [BEAN_ETH_UNIV2_LP[1].symbol]: { start: 0, end: REPLANT_SEASON },
   [BEAN_LUSD_LP[1].symbol]: { start: 0, end: REPLANT_SEASON },
-  [BEAN_CRV3_V1_LP[1].symbol]: { start: 3658, end: REPLANT_SEASON }
-}
-
-const getSeasonalUnripeChopRateOptions =
-  (address: string): DynamicSGQueryOption =>
-  (chain) =>
-    makeOptions(chain, {
-      add: ['gt'],
-      vars: {
-        token: getMultiChainToken(address)[chain].address.toLowerCase(),
-      },
-    });
+  [BEAN_CRV3_V1_LP[1].symbol]: { start: 3658, end: REPLANT_SEASON },
+};
 
 const depositedSiloTokenOptions =
   (token: TokenInstance): DynamicSGQueryOption =>
@@ -199,13 +336,13 @@ const depositedSiloTokenOptions =
     const tkn = getMultiChainToken(token.address);
     const options = makeOptions(chain, {
       vars: {
-        siloAsset: `${(chain === "l1" ? beanstalkETH : beanstalkARB).toLowerCase()}-${tkn[chain].address.toLowerCase()}`,
+        siloAsset: `${(chain === 'l1' ? beanstalkETH : beanstalkARB).toLowerCase()}-${tkn[chain].address.toLowerCase()}`,
       },
-      add: ['gt']
+      add: ['gt'],
     });
 
-    if (chain === "l2") return options;
-        
+    if (chain === 'l2') return options;
+
     const l1Filters = l1TokenSeasonsFilters[token.symbol];
 
     if (l1Filters.start) {
@@ -217,18 +354,18 @@ const depositedSiloTokenOptions =
 
     return options;
   };
-const apyOptions = 
-  (token: TokenInstance): DynamicSGQueryOption => 
+const apyOptions =
+  (token: TokenInstance): DynamicSGQueryOption =>
   (chain) => {
     const tkn = getMultiChainToken(token.address);
-    const options =  makeOptions(chain, {
+    const options = makeOptions(chain, {
       vars: {
         token: tkn[chain].address.toLowerCase(),
-        season_gt: chain === "l1" ? REPLANT_SEASON - 1 : L2_MIN_SEASON,
+        season_gt: chain === 'l1' ? REPLANT_SEASON - 1 : L2_MIN_SEASON,
       },
     });
 
-    if (chain === "l2") {
+    if (chain === 'l2') {
       return options;
     }
 
@@ -241,18 +378,18 @@ const apyOptions =
     }
 
     return options;
-  }
-const tokenLiquidityOptions = 
-  (token: TokenInstance): DynamicSGQueryOption => 
+  };
+const tokenLiquidityOptions =
+  (token: TokenInstance): DynamicSGQueryOption =>
   (chain) => {
     const tkn = getMultiChainToken(token.address);
     return makeOptions(chain, {
       vars: {
         pool: tkn[chain].address.toLowerCase(),
       },
-      ctx: "bean"
+      ctx: 'bean',
     });
-  }
+  };
 
 // prettier-ignore
 export const subgraphQueryConfigs = {
@@ -264,12 +401,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gt'] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedPriceInstantBEAN: {
+    document: CachedSeasonalInstantPriceDocument,
+    queryKey: subgraphQueryKeys.cachedPriceInstantBEAN,
+    where: ""
+  },
   volumeBEAN: {
     document: SeasonalVolumeDocument,
     queryKey: subgraphQueryKeys.volumeBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gte'] })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedVolumeBEAN: {
+    document: CachedSeasonalVolumeDocument,
+    queryKey: subgraphQueryKeys.cachedVolumeBEAN,
+    where: ""
   },
   totalLiquidityBEAN: {
     document: SeasonalLiquidityDocument,
@@ -278,12 +425,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: 'bean', add: ['gt'] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedTotalLiquidityBEAN: {
+    document: CachedSeasonalLiquidityDocument,
+    queryKey: subgraphQueryKeys.cachedTotalLiquidityBEAN,
+    where: ""
+  },
   marketCapBEAN: {
     document: SeasonalMarketCapDocument,
     queryKey: subgraphQueryKeys.marketCapBEAN,
     queryOptions: (
       (chain) => makeOptions(chain)
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedMarketCapBEAN: {
+    document: CachedSeasonalMarketCapDocument,
+    queryKey: subgraphQueryKeys.cachedMarketCapBEAN,
+    where: ""
   },
   supplyBEAN: {
     document: SeasonalSupplyDocument,
@@ -292,12 +449,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain)
     ) satisfies DynamicSGQueryOption,
   },
+  cachedSupplyBEAN: {
+    document: CachedSeasonalSupplyDocument,
+    queryKey: subgraphQueryKeys.cachedSupplyBEAN,
+    where: ""
+  },
   crossesBEAN: {
     document: SeasonalCrossesDocument,
     queryKey: subgraphQueryKeys.crossesBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: "bean" })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedCrossesBEAN: {
+    document: CachedSeasonalCrossesDocument,
+    queryKey: subgraphQueryKeys.cachedCrossesBEAN,
+    where: ""
   },
   instantaneousDeltaBBEAN: {
     document: SeasonalInstantDeltaBDocument,
@@ -306,12 +473,22 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedInstantaneousDeltaBBEAN: {
+    document: CachedSeasonalInstantDeltaBDocument,
+    queryKey: subgraphQueryKeys.cachedInstantaneousDeltaBBEAN,
+    where: ""
+  },
   twaDeltaBBEAN: {
     document: SeasonalWeightedDeltaBDocument,
     queryKey: subgraphQueryKeys.twaDeltaBBEAN,
     queryOptions: (
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedTwaDeltaBBEAN: {
+    document: CachedSeasonalWeightedDeltaBDocument,
+    queryKey: subgraphQueryKeys.cachedTwaDeltaBBEAN,
+    where: ""
   },
   twaPriceBEAN: {
     document: SeasonalWeightedPriceDocument,
@@ -320,6 +497,11 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gte"] })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedTwaPriceBEAN: {
+    document: CachedSeasonalWeightedPriceDocument,
+    queryKey: subgraphQueryKeys.cachedTwaPriceBEAN,
+    where: ""
+  },
   l2srBEAN: {
     document: LiquiditySupplyRatioDocument,
     queryKey: subgraphQueryKeys.l2srBEAN,
@@ -327,52 +509,76 @@ export const subgraphQueryConfigs = {
       (chain) => makeOptions(chain, { ctx: "bean", add: ["gt"] })
     ) satisfies DynamicSGQueryOption,
   },
-  
-
-  // --------------------- Beanstalk ---------------------
+  cachedL2srBEAN: {
+    document: CachedLiquiditySupplyRatioDocument,
+    queryKey: subgraphQueryKeys.cachedL2srBEAN,
+    where: ""
+  },
   tokenLiquidity: (token: TokenInstance) => ({
     document: SeasonalLiquidityPerPoolDocument,
     queryKey: subgraphQueryKeys.tokenLiquidity(token),
     queryOptions: tokenLiquidityOptions(token),
   }),
-  siloToken30DvAPY: (token: TokenInstance) => ({
+  cachedTokenLiquidity: (token: string) => ({
+    document: CachedSeasonalLiquidityPerPoolDocument,
+    queryKey: subgraphQueryKeys.cachedTokenLiquidity(token),
+    where: `pool: "${token}"`,
+  }),
+
+  // --------------------- Beanstalk ---------------------
+  siloToken30DvAPY: (token: TokenInstance) => ({ // TODO(cache): does this still exist?
     document: SeasonalApyDocument,
     queryKey: subgraphQueryKeys.siloToken30DvAPY(token),
     queryOptions: apyOptions(token),
+  }),
+  cachedSiloToken30DvAPY: (token: string) => ({
+    document: CachedSeasonalApyDocument,
+    queryKey: subgraphQueryKeys.cachedSiloToken30DvAPY(token),
+    where: `token: "${token}", siloYield_: {emaWindow: ROLLING_30_DAY}`,
   }),
   depositedSiloToken: (token: TokenInstance) => ({
     document: SeasonalDepositedSiloAssetDocument,
     queryKey: subgraphQueryKeys.depositedSiloToken(token),
     queryOptions: depositedSiloTokenOptions(token),
   }),
-  seasonalChopRate: (token: TokenInstance) => ({
-    document: SeasonalTokenChopRateDocument,
-    queryKey: subgraphQueryKeys.seasonalChopRate(token),
-    queryOptions: getSeasonalUnripeChopRateOptions(token.address),
+  cachedDepositedSiloToken: (token: string) => ({
+    document: CachedSeasonalDepositedSiloAssetDocument,
+    queryKey: subgraphQueryKeys.cachedDepositedSiloToken(token),
+    where: `siloAsset: "__protocol__-${token}"`,
   }),
   beanstalkTotalStalk: {
     document: SeasonalStalkDocument,
     queryKey: subgraphQueryKeys.beanstalkTotalStalk,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         ctx: "beanstalk",
-        vars: { 
+        vars: {
           season_gt: chain === "l2" ? L2_MIN_SEASON : REPLANT_SEASON - 1,
           silo: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkTotalStalk: {
+    document: CachedSeasonalStalkDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkTotalStalk,
+    where: 'silo: "__protocol__"',
+  },
   beanstalkRRoR: {
     document: SeasonalRRoRDocument,
     queryKey: subgraphQueryKeys.beanstalkRRoR,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkRRoR: {
+    document: CachedSeasonalRRoRDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkRRoR,
+    where: 'field: "__protocol__"',
   },
   beanstalkMaxTemperature: {
     document: SeasonalTemperatureDocument,
@@ -385,27 +591,42 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkMaxTemperature: {
+    document: CachedSeasonalTemperatureDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkMaxTemperature,
+    where: 'field: "__protocol__"',
+  },
   beanstalkUnharvestablePods: {
     document: SeasonalPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkUnharvestablePods,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkUnharvestablePods: {
+    document: CachedSeasonalPodsDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkUnharvestablePods,
+    where: 'field: "__protocol__"',
+  },
   beanstalkPodRate: {
     document: SeasonalPodRateDocument,
     queryKey: subgraphQueryKeys.beanstalkPodRate,
     queryOptions: (
-      (chain) => makeOptions(chain, { 
+      (chain) => makeOptions(chain, {
         vars: {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
     ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkPodRate: {
+    document: CachedSeasonalPodRateDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkPodRate,
+    where: 'field: "__protocol__"',
   },
   beanstalkSownBeans: {
     document: SeasonalSownDocument,
@@ -418,6 +639,11 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkSownBeans: {
+    document: CachedSeasonalSownDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkSownBeans,
+    where: 'field: "__protocol__"',
+  },
   beanstalkHarvestedPods: {
     document: SeasonalHarvestedPodsDocument,
     queryKey: subgraphQueryKeys.beanstalkHarvestedPods,
@@ -429,6 +655,11 @@ export const subgraphQueryConfigs = {
       })
     ) satisfies DynamicSGQueryOption,
   },
+  cachedBeanstalkHarvestedPods: {
+    document: CachedSeasonalHarvestedPodsDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkHarvestedPods,
+    where: 'field: "__protocol__"',
+  },
   beanstalkTotalSowers: {
     document: SeasonalTotalSowersDocument,
     queryKey: subgraphQueryKeys.beanstalkTotalSowers,
@@ -438,8 +669,13 @@ export const subgraphQueryConfigs = {
           field: (chain === "l2" ? beanstalkARB : beanstalkETH).toLowerCase()
         }
       })
-    ) satisfies DynamicSGQueryOption, 
-  }
+    ) satisfies DynamicSGQueryOption,
+  },
+  cachedBeanstalkTotalSowers: {
+    document: CachedSeasonalTotalSowersDocument,
+    queryKey: subgraphQueryKeys.cachedBeanstalkTotalSowers,
+    where: 'field: "__protocol__"',
+  },
 };
 
 // ==========================================================
@@ -485,37 +721,6 @@ export function binarySearchSeasons<T>(
   return high;
 }
 
-export interface SGQueryParameters {
-  /**
-   * Id of this chart.
-   */
-  id: string;
-  /**
-   * The field in the GraphQL request that corresponds to a timestamp. Usually "createdAt" or "timestamp".
-   */
-  timeScaleKey: string;
-  /**
-   * The field in the GraphQL request that corresponds to the value that will be charted.
-   */
-  priceScaleKey: string;
-  /**
-   * The Apollo document of the GraphQL query.
-   */
-  document: DocumentNode;
-  /**
-   * The entity that contains the data in your GraphQL request. Usually "seasons".
-   */
-  documentEntity: string;
-  /**
-   *
-   */
-  fetchType: SeasonsQueryFetchType;
-  /**
-   * Sets up things like variables and context for the GraphQL queries.
-   */
-  queryConfig: DynamicSGQueryOption;
-}
-
 const EVM_LAYERS: EvmLayer[] = ['l2', 'l1'];
 
 const shouldFetchWithChain = (params: SGQueryParameters, chain: EvmLayer) => {
@@ -529,7 +734,7 @@ const shouldFetchWithChain = (params: SGQueryParameters, chain: EvmLayer) => {
 
 // prettier-ignore
 export async function fetchAllSeasonData(
-  params: SGQueryParameters,
+  params: ChartSetupBase,
   season: number,
   fetchAll: boolean = true
 ) {
@@ -537,20 +742,36 @@ export async function fetchAllSeasonData(
 
   const options: QueryOptions[] = [];
 
-  for (const chain of EVM_LAYERS) {
-    if (!shouldFetchWithChain(params, chain)) {
-      continue;
-    }
-
-    const cachedSeasons: number[] = [];
-    const cachedData = readCachedData(params, chain);
-    cachedData?.[params.documentEntity].forEach((sd: any) => {
-      cachedSeasons.push(sd.season);
-      output[sd.season] = sd;
+  if (fetchAll && params.cached) {
+    // TODO(cache): might need to apply some season range filter here? since its no longer
+    // done at the query level. Could be applied using "first" if the latest season # is available.
+    // OR
+    // Can it be smart enough to use the cache query if ALL seasons selected, and the other queries
+    // if there is some range requested?
+    options.push({
+      context: { subgraph: 'cache' },
+      query: params.cached.document,
+      variables: {
+        where: params.cached.where ?? ''
+      },
     });
+  } else {
+    for (const chain of EVM_LAYERS) {
+      if (!shouldFetchWithChain(params, chain)) {
+        continue;
+      }
 
-    const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
-    options.push(...chainOptions);
+      const cachedSeasons: number[] = [];
+      const cachedData = readCachedData(params, chain);
+      cachedData?.[params.documentEntity].forEach((sd: any) => {
+        const seasonNum = toSeasonNumber(sd.season);
+        cachedSeasons.push(seasonNum);
+        output[seasonNum] = { ...sd, season: seasonNum };
+      });
+
+      const chainOptions = optimizeQueriesWithCached(params, cachedSeasons, season, chain, fetchAll);
+      options.push(...chainOptions);
+    }
   }
 
   const apolloRequests = options
@@ -560,13 +781,14 @@ export async function fetchAllSeasonData(
     }))
 
   if (apolloRequests.length > 0) {
-    const results = await fetchApolloWithLimiter(apolloRequests, { 
-      throws: false, 
-      partialData: true 
+    const results = await fetchApolloWithLimiter(apolloRequests, {
+      throws: false,
+      partialData: true
     });
     results.forEach((result) => {
       result.data?.[params.documentEntity]?.forEach((sd: any) => {
-        output[sd.season] = sd;
+        const seasonNum = toSeasonNumber(sd.season);
+        output[seasonNum] = { ...sd, season: seasonNum };
       })
     })
   }

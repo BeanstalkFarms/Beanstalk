@@ -14,7 +14,7 @@ import {
 import { Box, Card, Stack, Typography, useTheme } from '@mui/material';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { BeanstalkPalette } from '~/components/App/muiTheme';
-import { displayBN } from '~/util';
+import { displayBN, toSeasonNumber } from '~/util';
 import useTokenMap from '~/hooks/chain/useTokenMap';
 import { SILO_WHITELIST } from '~/constants/tokens';
 import {
@@ -87,11 +87,12 @@ const Graph = (props: Props) => {
     return data.reduce<[number[], string[]]>(
       (prev, curr, i) => {
         if (i % interval === shift) {
-          prev[0].push(curr.season);
+          const seasonNum = toSeasonNumber(curr.season);
+          prev[0].push(seasonNum);
           prev[1].push(
             curr.date
               ? `${curr.date.getMonth() + 1}/${curr.date.getDate()}`
-              : curr.season.toString() // fallback to season if no date provided
+              : String(seasonNum) // fallback to season if no date provided
           );
         }
         return prev;
@@ -360,28 +361,31 @@ function TooltipComponentRaw({
     ReturnType<typeof useTooltipInPortal>,
     'containerRef' | 'containerBounds' | 'forceRefreshBounds'
   >) {
-  
   const theme = useTheme();
   const siloTokens = useTokenMap(useCustomTokenList || SILO_WHITELIST);
   const tooltipPadding = 1;
-  
-  // Calculate tooltip height based on visible data items
-  const calculateTooltipHeight = useCallback((data: BaseDataPoint) => {
-    let visibleItems = 0;
-    reversedKeys.forEach((key) => {
-      const seasonFilter = tokenPerSeasonFilter;
-      if (
-        !seasonFilter ||
-        (data.season >= seasonFilter[key]?.from &&
-          data.season <= seasonFilter[key]?.to)
-      ) {
-        visibleItems++;
-      }
-    });
 
-    // Base height = Card padding + (item height * number of items)
-    return parseInt(theme.spacing(tooltipPadding)) + (visibleItems * 25); // base, 25px per item
-  }, [reversedKeys, tokenPerSeasonFilter]);
+  // Calculate tooltip height based on visible data items
+  const calculateTooltipHeight = useCallback(
+    (data: BaseDataPoint) => {
+      let visibleItems = 0;
+      const seasonNum = toSeasonNumber(data.season);
+      reversedKeys.forEach((key) => {
+        const seasonFilter = tokenPerSeasonFilter;
+        if (
+          !seasonFilter ||
+          (seasonNum >= seasonFilter[key]?.from &&
+            seasonNum <= seasonFilter[key]?.to)
+        ) {
+          visibleItems += 1;
+        }
+      });
+
+      // Base height = Card padding + (item height * number of items)
+      return parseInt(theme.spacing(tooltipPadding), 10) + visibleItems * 25; // base, 25px per item
+    },
+    [reversedKeys, tokenPerSeasonFilter, theme]
+  );
 
   const handleMouseLeave = useCallback(() => {
     hideTooltip();
@@ -396,21 +400,24 @@ function TooltipComponentRaw({
       forceRefreshBounds();
       const containerX =
         ('clientX' in event ? event.clientX : 0) - containerBounds.left;
-      const rawContainerY = 
+      const rawContainerY =
         ('clientY' in event ? event.clientY : 0) - containerBounds.top - 10;
-      
+
       const pointerData = getPointerValue(event, scales, series)[0];
       const tooltipHeight = calculateTooltipHeight(pointerData);
-      const containerY = Math.max(0, Math.min(rawContainerY, containerBounds.height - tooltipHeight - 20));
-      
+      const containerY = Math.max(
+        0,
+        Math.min(rawContainerY, containerBounds.height - tooltipHeight - 20)
+      );
+
       showTooltip({
         tooltipLeft: containerX,
         tooltipTop: containerY,
         tooltipData: pointerData,
       });
-      
+
       onCursor?.(
-        pointerData.season,
+        toSeasonNumber(pointerData.season),
         getDisplayValue([pointerData]),
         pointerData.date,
         pointerData
@@ -424,6 +431,7 @@ function TooltipComponentRaw({
       showTooltip,
       onCursor,
       getDisplayValue,
+      calculateTooltipHeight,
     ]
   );
 
@@ -477,8 +485,10 @@ function TooltipComponentRaw({
                         const seasonFilter = tokenPerSeasonFilter;
                         if (
                           !seasonFilter ||
-                          (tooltipData.season >= seasonFilter[key]?.from &&
-                            tooltipData.season <= seasonFilter[key]?.to)
+                          (toSeasonNumber(tooltipData.season) >=
+                            seasonFilter[key]?.from &&
+                            toSeasonNumber(tooltipData.season) <=
+                              seasonFilter[key]?.to)
                         ) {
                           return (
                             <Row

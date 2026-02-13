@@ -1,0 +1,12 @@
+query CachedSeasonalLiquidityPerPool($where: String) {
+  seasons: cache_poolHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    liquidityUSD
+    updatedAt
+  }
+}

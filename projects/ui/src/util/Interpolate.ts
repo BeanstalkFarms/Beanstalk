@@ -199,7 +199,7 @@ export const interpolateFarmerDepositedValue = (
   // Sequence
   let j = 0;
   const minSeason = snapshots[j].season;
-  const maxSeason = prices[prices.length - 1].season;
+  const maxSeason = prices[prices.length - 1].season.season;
   let currBDV: BigNumber = ZERO_BN;
   let nextSnapshotSeason: number | undefined = minSeason;
 
@@ -213,7 +213,8 @@ export const interpolateFarmerDepositedValue = (
 
   // Price data goes all the way back to season 0, find the price index
   // where we should start iterating based on the user's oldest deposit
-  let currPriceIndex = prices.findIndex((p) => p && minSeason <= p.season) + 1;
+  let currPriceIndex =
+    prices.findIndex((p) => p && minSeason <= p.season.season) + 1;
   if (currPriceIndex < 0) currPriceIndex = 0;
 
   // FIXME: p returning null sometimes during state transitions
@@ -235,7 +236,7 @@ export const interpolateFarmerDepositedValue = (
     // If there's another price and the season associated with the price is
     // either [the price for this season OR in the past], we'll save this price
     // and use it next time in case some data points are missed
-    if (nextPriceEntity && nextPriceEntity?.season <= s) {
+    if (nextPriceEntity && nextPriceEntity.season.season <= s) {
       currPriceIndex += 1;
     }
 

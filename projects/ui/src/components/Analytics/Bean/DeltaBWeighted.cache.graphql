@@ -1,0 +1,12 @@
+query CachedSeasonalWeightedDeltaB($where: String) {
+  seasons: cache_beanHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    timestamp
+    twaDeltaB
+  }
+}

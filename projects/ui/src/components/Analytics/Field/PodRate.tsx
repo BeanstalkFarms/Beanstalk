@@ -51,13 +51,15 @@ const PodRate: FC<{ height?: SeasonPlotBaseProps['height'] }> = ({
     <SeasonPlot<SeasonalPodRateQuery>
       height={height}
       document={subgraphQueryConfigs.beanstalkPodRate.document}
+      queryConfig={queryConfig}
+      cacheDocument={subgraphQueryConfigs.cachedBeanstalkPodRate.document}
+      cacheWhere={subgraphQueryConfigs.cachedBeanstalkPodRate.where}
       defaultValue={podRate?.gt(0) ? podRate.toNumber() : 0}
       defaultSeason={season?.gt(0) ? season.toNumber() : 0}
       getValue={getValue}
       formatValue={formatValue}
       StatProps={statProps}
       LineChartProps={lineChartProps}
-      queryConfig={queryConfig}
       name={subgraphQueryConfigs.beanstalkPodRate.queryKey}
     />
   );

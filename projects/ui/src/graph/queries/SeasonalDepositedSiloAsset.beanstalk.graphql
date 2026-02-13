@@ -5,11 +5,7 @@ query SeasonalDepositedSiloAsset(
   $siloAsset: String!
 ) {
   seasons: siloAssetHourlySnapshots(
-    where: {
-      season_lte: $season_lte,
-      season_gt:  $season_gt,
-      siloAsset: $siloAsset
-    }
+    where: { season_lte: $season_lte, season_gt:  $season_gt, siloAsset: $siloAsset }
     first: $first
     orderBy: season
     orderDirection: desc

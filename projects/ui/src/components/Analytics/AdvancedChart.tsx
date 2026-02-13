@@ -35,12 +35,20 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
   const ready = useOnAnimationFrame();
 
   const storedSetting1 = localStorage.getItem('advancedChartTimePeriod');
-  const storedTimePeriod = storedSetting1 ? JSON.parse(storedSetting1) : undefined;
+  const storedTimePeriod = storedSetting1
+    ? JSON.parse(storedSetting1)
+    : undefined;
   const storedSetting2 = localStorage.getItem('advancedChartSelectedCharts');
-  const storedSelectedCharts = storedSetting2 ? JSON.parse(storedSetting2) : undefined;
+  const storedSelectedCharts = storedSetting2
+    ? JSON.parse(storedSetting2)
+    : undefined;
 
-  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(storedTimePeriod);
-  const [selectedCharts, setSelectedCharts] = useState<number[]>(storedSelectedCharts || [0]);
+  const [timePeriod, setTimePeriod] = useState<Range<Time> | undefined>(
+    storedTimePeriod
+  );
+  const [selectedCharts, setSelectedCharts] = useState<number[]>(
+    storedSelectedCharts || [0]
+  );
 
   const [dialogOpen, showDialog, hideDialog] = useToggle();
   const queries = useQueries({
@@ -55,33 +63,44 @@ const AdvancedChart: FC<{ isMobile?: boolean }> = ({ isMobile = false }) => {
           const priceKey = params.priceScaleKey;
           const timestamps = new Set<number>();
 
-          const allSeasonData = await fetchAllSeasonData(params, season.toNumber());
-          const output = allSeasonData.map((seasonData) => {
-            try {
-              const time = Number(seasonData[params.timeScaleKey]);
-              const data = dataFormatter ? dataFormatter?.(seasonData): seasonData;
-              const value = mayFunctionToValue<number>(
-                valueFormatter(data[priceKey]), 
-                seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
-              );
+          const allSeasonData = await fetchAllSeasonData(
+            params,
+            season.toNumber()
+          );
+          const output = allSeasonData
+            .map((seasonData) => {
+              try {
+                const time = Number(seasonData[params.timeScaleKey]);
+                const data = dataFormatter
+                  ? dataFormatter?.(seasonData)
+                  : seasonData;
+                const value = mayFunctionToValue<number>(
+                  valueFormatter(data[priceKey]),
+                  seasonData.season <= RESEED_SEASON - 1 ? 'l1' : 'l2'
+                );
 
-              const invalidTime = !exists(time) || timestamps.has(time) || time <= 0;
-              if (invalidTime || !exists(value)) return undefined;
+                const invalidTime =
+                  !exists(time) || timestamps.has(time) || time <= 0;
+                if (invalidTime || !exists(value)) return undefined;
 
-              timestamps.add(time);
+                timestamps.add(time);
 
-              return {
-                time: time as Time,
-                value,
-                customValues: {
-                  season: data.season,
-                },
-              } as QueryData;
-            } catch (e) {
-              console.debug(`[advancedChart] failed to process some data for ${queryKey}`, e);
-              return undefined;
-            }
-          }).filter(Boolean) as QueryData[];
+                return {
+                  time: time as Time,
+                  value,
+                  customValues: {
+                    season: data.season,
+                  },
+                } as QueryData;
+              } catch (e) {
+                console.debug(
+                  `[advancedChart] failed to process some data for ${queryKey}`,
+                  e
+                );
+                return undefined;
+              }
+            })
+            .filter(Boolean) as QueryData[];
 
           // Sort by time
           const data = output.sort((a, b) => Number(a.time) - Number(b.time));

@@ -1,0 +1,12 @@
+query CachedSeasonalSupply($where: String) {
+  seasons: cache_seasons(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    createdAt
+    beans
+  }
+}

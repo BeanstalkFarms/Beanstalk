@@ -1,12 +1,14 @@
 query SeasonalLiquidity($season_lte: Int, $first: Int, $season_gt: Int) {
   seasons: beanHourlySnapshots(
+    where: { season_: { season_lte: $season_lte, season_gte: $season_gt } }
     first: $first
-    where: { season_lte: $season_lte, season_gte: $season_gt }
-    orderBy: season
+    orderBy: season__season
     orderDirection: desc
   ) {
     id
-    season
+    season {
+      season
+    }
     timestamp
     liquidityUSD
   }

@@ -19,10 +19,9 @@ function useBeanNFTsMintedByBlockQuery(
     `,
     {
       variables: { blockNumber },
-      context: { subgraph: 'beanft' },
       fetchPolicy: 'network-only',
       nextFetchPolicy: 'cache-only',
-      skip: options?.skip || !blockNumber,
+      skip: true, // BeaNFT subgraph removed
     }
   );
 }

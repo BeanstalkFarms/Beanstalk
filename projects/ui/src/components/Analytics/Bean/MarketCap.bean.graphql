@@ -1,4 +1,4 @@
-query SeasonalSupply($season_lte: Int, $first: Int) {
+query SeasonalMarketCap($season_lte: Int, $first: Int) {
   seasons: seasons(
     where: { season_lte: $season_lte },
     first: $first,
@@ -8,6 +8,6 @@ query SeasonalSupply($season_lte: Int, $first: Int) {
     id
     season
     createdAt
-    beans
+    marketCap
   }
 }

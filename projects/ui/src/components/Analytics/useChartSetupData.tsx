@@ -20,7 +20,8 @@ import { Typography } from '@mui/material';
 import { SupportedChainId } from '~/constants';
 import { getMultiChainToken, TokenInstance } from '~/hooks/beanstalk/useTokens';
 import {
-  SGQueryParameters,
+  ChartSetup,
+  ChartSetupBase,
   subgraphQueryConfigs,
   subgraphQueryKeys,
 } from '~/util/Graph';
@@ -32,65 +33,6 @@ import {
   tickFormatUSD,
   valueFormatBeanAmount,
 } from './formatters';
-
-interface ChartSetupBase extends SGQueryParameters {
-  /**
-   * Name of this chart. Mainly used in the Select Dialog and the chips that show which charts
-   * are currently selected, therefore ideally it should be short and to the point.
-   */
-  name: string;
-  /**
-   * Title shown in the actual chart after the user
-   * makes their selection.
-   */
-  tooltipTitle: string;
-  /**
-   * Text description shown when user hovers the tooltip icon next to the tooltip title.
-   */
-  tooltipHoverText: string | JSX.Element;
-  /**
-   * Short description shown in the Select Dialog.
-   */
-  shortDescription: string;
-  /**
-   * Short identifier for the output of this chart. Lightweight Charts only supports
-   * two price scales, so we use this to group charts that have similar
-   * outputs in the same price scale.
-   */
-  valueAxisType: string;
-  /**
-   * Formats the raw output from the query into a number for Lightweight Charts.
-   */
-  valueFormatter:
-    | ((v: string) => number | undefined)
-    | ((v: string) => (chain: 'l1' | 'l2') => number | undefined);
-  /**
-   *
-   */
-  dataFormatter?: (v: any) => any;
-  /**
-   * Formats the number used by Lightweight Charts into a string that's shown at the top
-   * of the chart.
-   */
-  tickFormatter: (v: number) => string | undefined;
-  /**
-   * Formats the number used by Lightweight Charts into a string for the
-   * price scales.
-   */
-  shortTickFormatter: (v: number) => string | undefined;
-}
-
-type ChartSetup = ChartSetupBase & {
-  /**
-   * Used in the "Bean/Field/Silo" buttons in the Select Dialog to allow
-   * the user to quickly filter the available charts.
-   */
-  type: string;
-  /**
-   * Id of this chart in the chart data array.
-   */
-  index: number;
-};
 
 function getFetchTypeWithToken(
   _token: TokenInstance
@@ -143,10 +85,28 @@ export function useChartSetupData() {
     const depositCharts: ChartSetupBase[] = [];
     const apyCharts: ChartSetupBase[] = [];
 
+    const cacheTokenRewrite = (token: TokenInstance) => {
+      if (token.symbol === 'BEAN') return '__bean__';
+      if (token.symbol === 'BEANETH') return '__beanweth__';
+      if (token.symbol === 'BEANwstETH') return '__beanwsteth__';
+      if (token.symbol === 'urBEAN') return '__urbean__';
+      if (token.symbol.startsWith('ur')) return '__urlp__';
+
+      return token.address.toLowerCase();
+    }
+
     depositedTokensToChart.forEach((token) => {
       const depositedConfig = subgraphQueryConfigs.depositedSiloToken(token);
+      const cachedDepositedConfig = subgraphQueryConfigs.cachedDepositedSiloToken(cacheTokenRewrite(token));
       const depositedChart: ChartSetupBase = {
         id: depositedConfig.queryKey,
+        document: depositedConfig.document,
+        queryConfig: depositedConfig.queryOptions,
+        cached: {
+          id: cachedDepositedConfig.queryKey,
+          document: cachedDepositedConfig.document,
+          where: cachedDepositedConfig.where,
+        },
         name: `Deposited ${token.symbol}`,
         tooltipTitle: `Total Deposited ${token.symbol}`,
         tooltipHoverText: `The total number of Deposited ${token.symbol === 'BEAN' ? 'Beans' : token.symbol === 'urBEAN' ? 'Unripe Beans' : `${token.name}`} at the beginning of every Season.`,
@@ -154,17 +114,23 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'depositedAmount',
         valueAxisType: token.isUnripe ? 'depositedUnripeAmount' : 'depositedAmount',
-        document: depositedConfig.document,
         documentEntity: 'seasons',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: depositedConfig.queryOptions,
         valueFormatter: (value: any) => Number(formatUnits(value, token.decimals)),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       };
       const apyConfig = subgraphQueryConfigs.siloToken30DvAPY(token);
+      const cachedApyConfig = subgraphQueryConfigs.cachedSiloToken30DvAPY(cacheTokenRewrite(token));
       const apyChart: ChartSetupBase = {
         id: apyConfig.queryKey,
+        document: apyConfig.document,
+        queryConfig: apyConfig.queryOptions,
+        cached: {
+          id: cachedApyConfig.queryKey,
+          document: cachedApyConfig.document,
+          where: cachedApyConfig.where,
+        },
         name: `${token.symbol} 30D vAPY`,
         tooltipTitle: `${token.symbol} 30D vAPY`,
         tooltipHoverText: `The Variable Bean APY uses a moving average of Beans earned by Stalkholders during recent Seasons to estimate a future rate of return, accounting for Stalk growth.`,
@@ -172,10 +138,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'beanAPY',
         valueAxisType: 'apy',
-        document: apyConfig.document,
         documentEntity: 'seasons',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: apyConfig.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -188,19 +152,25 @@ export function useChartSetupData() {
     lpTokensToChart.forEach((token) => {
       const tokenSymbol = token.symbol;
       const liqConfig = subgraphQueryConfigs.tokenLiquidity(token);
+      const cacheLiqConfig = subgraphQueryConfigs.cachedTokenLiquidity(cacheTokenRewrite(token));
       const lpChart: ChartSetupBase = {
         id: liqConfig.queryKey,
+        document: liqConfig.document,
+        queryConfig: liqConfig.queryOptions,
+        cached: {
+          id: cacheLiqConfig.queryKey,
+          document: cacheLiqConfig.document,
+          where: cacheLiqConfig.where,
+        },
         name: `${tokenSymbol} Liquidity`,
         tooltipTitle: `${tokenSymbol} Liquidity`,
         tooltipHoverText: `The total USD value of ${tokenSymbol} in liquidity pools on the Minting Whitelist.`,
         shortDescription: `${tokenSymbol} Liquidity.`,
         timeScaleKey: 'updatedAt',
         priceScaleKey: 'liquidityUSD',
-        document: liqConfig.document,
         documentEntity: 'seasons',
         valueAxisType: 'usdLiquidity',
         fetchType: getFetchTypeWithToken(token),
-        queryConfig: liqConfig.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
@@ -215,23 +185,35 @@ export function useChartSetupData() {
     const beanCharts: ChartSetupBase[] = [
       {
         id: subgraphQueryKeys.priceInstantBEAN,
+        document: subgraphQueryConfigs.priceInstantBEAN.document,
+        queryConfig: subgraphQueryConfigs.priceInstantBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedPriceInstantBEAN,
+          document: subgraphQueryConfigs.cachedPriceInstantBEAN.document,
+          where: subgraphQueryConfigs.cachedPriceInstantBEAN.where,
+        },
         name: 'Bean Price',
         tooltipTitle: 'Current Bean Price',
         tooltipHoverText: 'The Current Price of Bean in USD',
         shortDescription: 'The USD price of 1 Bean.',
         timeScaleKey: 'timestamp',
         priceScaleKey: 'price',
-        document: subgraphQueryConfigs.priceInstantBEAN.document,
         documentEntity: 'seasons',
         valueAxisType: 'BEAN_price',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.priceInstantBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
         shortTickFormatter: tickFormatBeanPrice,
       },
       {
         id: subgraphQueryConfigs.volumeBEAN.queryKey,
+        document: subgraphQueryConfigs.volumeBEAN.document,
+        queryConfig: subgraphQueryConfigs.volumeBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedVolumeBEAN,
+          document: subgraphQueryConfigs.cachedVolumeBEAN.document,
+          where: subgraphQueryConfigs.cachedVolumeBEAN.where,
+        },
         name: 'Volume',
         tooltipTitle: 'Volume',
         tooltipHoverText:
@@ -239,17 +221,22 @@ export function useChartSetupData() {
         shortDescription: 'The total USD volume in liquidity pools.',
         timeScaleKey: 'timestamp',
         priceScaleKey: 'deltaVolumeUSD',
-        document: subgraphQueryConfigs.volumeBEAN.document,
         documentEntity: 'seasons',
         valueAxisType: 'volume',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.volumeBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
       },
       {
         id: subgraphQueryConfigs.totalLiquidityBEAN.queryKey,
+        document: subgraphQueryConfigs.totalLiquidityBEAN.document,
+        queryConfig: subgraphQueryConfigs.totalLiquidityBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedTotalLiquidityBEAN,
+          document: subgraphQueryConfigs.cachedTotalLiquidityBEAN.document,
+          where: subgraphQueryConfigs.cachedTotalLiquidityBEAN.where,
+        },
         name: 'Total Liquidity',
         tooltipTitle: 'Liquidity',
         tooltipHoverText:
@@ -258,11 +245,9 @@ export function useChartSetupData() {
           'The total USD value of tokens in liquidity pools on the Minting Whitelist.',
         timeScaleKey: 'timestamp',
         priceScaleKey: 'liquidityUSD',
-        document: subgraphQueryConfigs.totalLiquidityBEAN.document,
         documentEntity: 'seasons',
         valueAxisType: 'usdLiquidity',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.totalLiquidityBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
@@ -270,6 +255,13 @@ export function useChartSetupData() {
       ...lpCharts,
       {
         id: subgraphQueryConfigs.marketCapBEAN.queryKey,
+        document: subgraphQueryConfigs.marketCapBEAN.document,
+        queryConfig: subgraphQueryConfigs.marketCapBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedMarketCapBEAN,
+          document: subgraphQueryConfigs.cachedMarketCapBEAN.document,
+          where: subgraphQueryConfigs.cachedMarketCapBEAN.where,
+        },
         name: 'Market Cap',
         tooltipTitle: 'Market Cap',
         tooltipHoverText:
@@ -278,16 +270,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'marketCap',
         valueAxisType: 'marketCap',
-        document: subgraphQueryConfigs.marketCapBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.marketCapBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatUSD,
         shortTickFormatter: tickFormatUSD,
       },
       {
         id: subgraphQueryConfigs.supplyBEAN.queryKey,
+        document: subgraphQueryConfigs.supplyBEAN.document,
+        queryConfig: subgraphQueryConfigs.supplyBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedSupplyBEAN,
+          document: subgraphQueryConfigs.cachedSupplyBEAN.document,
+          where: subgraphQueryConfigs.cachedSupplyBEAN.where,
+        },
         name: 'Supply',
         tooltipTitle: 'Bean Supply',
         tooltipHoverText:
@@ -296,16 +293,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'beans',
         valueAxisType: 'BEAN_amount',
-        document: subgraphQueryConfigs.supplyBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.supplyBEAN.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.crossesBEAN.queryKey,
+        document: subgraphQueryConfigs.crossesBEAN.document,
+        queryConfig: subgraphQueryConfigs.crossesBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedCrossesBEAN,
+          document: subgraphQueryConfigs.cachedCrossesBEAN.document,
+          where: subgraphQueryConfigs.cachedCrossesBEAN.where,
+        },
         name: 'Crosses',
         tooltipTitle: 'Peg Crosses',
         tooltipHoverText:
@@ -314,16 +316,21 @@ export function useChartSetupData() {
         timeScaleKey: 'timestamp',
         priceScaleKey: 'crosses',
         valueAxisType: 'pegCrosses',
-        document: subgraphQueryConfigs.crossesBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.crossesBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatBeanAmount,
       },
       {
         id: subgraphQueryConfigs.instantaneousDeltaBBEAN.queryKey,
+        document: subgraphQueryConfigs.instantaneousDeltaBBEAN.document,
+        queryConfig: subgraphQueryConfigs.instantaneousDeltaBBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedInstantaneousDeltaBBEAN,
+          document: subgraphQueryConfigs.cachedInstantaneousDeltaBBEAN.document,
+          where: subgraphQueryConfigs.cachedInstantaneousDeltaBBEAN.where,
+        },
         name: 'Inst. deltaB',
         tooltipTitle: 'Cumulative Instantaneous deltaB',
         tooltipHoverText:
@@ -333,16 +340,21 @@ export function useChartSetupData() {
         timeScaleKey: 'timestamp',
         priceScaleKey: 'instantaneousDeltaB',
         valueAxisType: 'deltaB',
-        document: subgraphQueryConfigs.instantaneousDeltaBBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.instantaneousDeltaBBEAN.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatBeanAmount,
       },
       {
         id: subgraphQueryConfigs.twaDeltaBBEAN.queryKey,
+        document: subgraphQueryConfigs.twaDeltaBBEAN.document,
+        queryConfig: subgraphQueryConfigs.twaDeltaBBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedTwaDeltaBBEAN,
+          document: subgraphQueryConfigs.cachedTwaDeltaBBEAN.document,
+          where: subgraphQueryConfigs.cachedTwaDeltaBBEAN.where,
+        },
         name: 'TWA deltaB',
         tooltipTitle: 'Cumulative TWA deltaB',
         tooltipHoverText:
@@ -352,16 +364,21 @@ export function useChartSetupData() {
         timeScaleKey: 'timestamp',
         priceScaleKey: 'twaDeltaB',
         valueAxisType: 'deltaB',
-        document: subgraphQueryConfigs.twaDeltaBBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.twaDeltaBBEAN.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatBeanAmount,
       },
       {
         id: subgraphQueryConfigs.twaPriceBEAN.queryKey,
+        document: subgraphQueryConfigs.twaPriceBEAN.document,
+        queryConfig: subgraphQueryConfigs.twaPriceBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedTwaPriceBEAN,
+          document: subgraphQueryConfigs.cachedTwaPriceBEAN.document,
+          where: subgraphQueryConfigs.cachedTwaPriceBEAN.where,
+        },
         name: 'TWA Bean Price',
         tooltipTitle: 'TWA Bean Price',
         tooltipHoverText:
@@ -371,16 +388,21 @@ export function useChartSetupData() {
         timeScaleKey: 'timestamp',
         priceScaleKey: 'twaPrice',
         valueAxisType: 'BEAN_price',
-        document: subgraphQueryConfigs.twaPriceBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.twaPriceBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatBeanPrice,
         shortTickFormatter: tickFormatBeanPrice,
       },
       {
         id: subgraphQueryConfigs.l2srBEAN.queryKey,
+        document: subgraphQueryConfigs.l2srBEAN.document,
+        queryConfig: subgraphQueryConfigs.l2srBEAN.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedL2srBEAN,
+          document: subgraphQueryConfigs.cachedL2srBEAN.document,
+          where: subgraphQueryConfigs.cachedL2srBEAN.where,
+        },
         name: 'Liquidity to Supply Ratio',
         tooltipTitle: 'Liquidity to Supply Ratio',
         tooltipHoverText: (
@@ -411,10 +433,8 @@ export function useChartSetupData() {
         timeScaleKey: 'timestamp',
         priceScaleKey: 'supplyInPegLP',
         valueAxisType: 'L2SR',
-        document: subgraphQueryConfigs.l2srBEAN.document,
         documentEntity: 'seasons',
         fetchType: 'both',
-        queryConfig: subgraphQueryConfigs.l2srBEAN.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
@@ -425,6 +445,13 @@ export function useChartSetupData() {
       ...depositCharts,
       {
         id: subgraphQueryConfigs.beanstalkTotalStalk.queryKey,
+        document: subgraphQueryConfigs.beanstalkTotalStalk.document,
+        queryConfig: subgraphQueryConfigs.beanstalkTotalStalk.queryOptions,
+        cached: {
+          id: subgraphQueryKeys.cachedBeanstalkTotalStalk,
+          document: subgraphQueryConfigs.cachedBeanstalkTotalStalk.document,
+          where: subgraphQueryConfigs.cachedBeanstalkTotalStalk.where,
+        },
         name: `Stalk`,
         tooltipTitle: `Stalk`,
         tooltipHoverText: `The total number of Stalk at the beginning of every Season.`,
@@ -432,16 +459,14 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'stalk',
         valueAxisType: 'stalk',
-        document: subgraphQueryConfigs.beanstalkTotalStalk.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkTotalStalk.queryOptions,
-        valueFormatter: 
-          (value: any) => 
-          (chain: "l1" | "l2") => Number(
-            // pre-reseed migration stalk had 10 decimals
-            formatUnits(value, chain === "l1" ? 10 : stalk.decimals)
-          ),
+        valueFormatter:
+          (value: any) =>
+            (chain: "l1" | "l2") => Number(
+              // pre-reseed migration stalk had 10 decimals
+              formatUnits(value, chain === "l1" ? 10 : stalk.decimals)
+            ),
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
@@ -451,6 +476,13 @@ export function useChartSetupData() {
     const fieldCharts: ChartSetupBase[] = [
       {
         id: subgraphQueryConfigs.beanstalkRRoR.queryKey,
+        document: subgraphQueryConfigs.beanstalkRRoR.document,
+        queryConfig: subgraphQueryConfigs.beanstalkRRoR.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkRRoR.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkRRoR.document,
+          where: subgraphQueryConfigs.cachedBeanstalkRRoR.where
+        },
         name: 'Real Rate of Return',
         tooltipTitle: 'Real Rate of Return',
         tooltipHoverText: 'The return for sowing Beans, accounting for Bean price. RRoR = (1 + Temperature) / TWAP.',
@@ -458,16 +490,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'realRateOfReturn',
         valueAxisType: 'RRoR',
-        document: subgraphQueryConfigs.beanstalkRRoR.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkRRoR.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
       },
       {
         id: subgraphQueryConfigs.beanstalkMaxTemperature.queryKey,
+        document: subgraphQueryConfigs.beanstalkMaxTemperature.document,
+        queryConfig: subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.document,
+          where: subgraphQueryConfigs.cachedBeanstalkMaxTemperature.where
+        },
         name: 'Max Temperature',
         tooltipTitle: 'Max Temperature',
         tooltipHoverText: 'The maximum interest rate for Sowing Beans every Season.',
@@ -475,16 +512,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'temperature',
         valueAxisType: 'maxTemp',
-        document: subgraphQueryConfigs.beanstalkMaxTemperature.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkMaxTemperature.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
       },
       {
         id: subgraphQueryConfigs.beanstalkUnharvestablePods.queryKey,
+        queryConfig: subgraphQueryConfigs.beanstalkUnharvestablePods.queryOptions,
+        document: subgraphQueryConfigs.beanstalkUnharvestablePods.document,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.document,
+          where: subgraphQueryConfigs.cachedBeanstalkUnharvestablePods.where
+        },
         name: 'Pods',
         tooltipTitle: 'Pods',
         tooltipHoverText: 'The total number of Unharvestable Pods at the beginning of every Season.',
@@ -492,16 +534,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'unharvestablePods',
         valueAxisType: 'PODS_amount',
-        document: subgraphQueryConfigs.beanstalkUnharvestablePods.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkUnharvestablePods.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkPodRate.queryKey,
+        document: subgraphQueryConfigs.beanstalkPodRate.document,
+        queryConfig: subgraphQueryConfigs.beanstalkPodRate.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkPodRate.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkPodRate.document,
+          where: subgraphQueryConfigs.cachedBeanstalkPodRate.where
+        },
         name: 'Pod Rate',
         tooltipTitle: 'Pod Rate',
         tooltipHoverText: 'The ratio of Unharvestable Pods per Bean, displayed as a percentage, at the beginning of every Season. The Pod Rate is used by Beanstalk as a proxy for its health.',
@@ -509,16 +556,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'podRate',
         valueAxisType: 'podRate',
-        document: subgraphQueryConfigs.beanstalkPodRate.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkPodRate.queryOptions,
         valueFormatter: (v: string) => Number(v) * 100,
         tickFormatter: tickFormatPercentage,
         shortTickFormatter: tickFormatPercentage,
       },
       {
         id: subgraphQueryConfigs.beanstalkSownBeans.queryKey,
+        document: subgraphQueryConfigs.beanstalkSownBeans.document,
+        queryConfig: subgraphQueryConfigs.beanstalkSownBeans.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkSownBeans.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkSownBeans.document,
+          where: subgraphQueryConfigs.cachedBeanstalkSownBeans.where
+        },
         name: 'Beans Sown',
         tooltipTitle: 'Beans Sown',
         tooltipHoverText: 'The total number of Beans Sown at the beginning of every Season.',
@@ -526,16 +578,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'sownBeans',
         valueAxisType: 'BEAN_amount',
-        document: subgraphQueryConfigs.beanstalkSownBeans.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkSownBeans.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkHarvestedPods.queryKey,
+        document: subgraphQueryConfigs.beanstalkHarvestedPods.document,
+        queryConfig: subgraphQueryConfigs.beanstalkHarvestedPods.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.document,
+          where: subgraphQueryConfigs.cachedBeanstalkHarvestedPods.where
+        },
         name: 'Pods Harvested',
         tooltipTitle: 'Pods Harvested',
         tooltipHoverText: 'The total number of Pods Harvested at the beginning of every Season.',
@@ -543,16 +600,21 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'harvestedPods',
         valueAxisType: 'PODS_amount',
-        document: subgraphQueryConfigs.beanstalkHarvestedPods.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkHarvestedPods.queryOptions,
         valueFormatter: valueFormatBeanAmount,
         tickFormatter: tickFormatBeanAmount,
         shortTickFormatter: tickFormatTruncated,
       },
       {
         id: subgraphQueryConfigs.beanstalkTotalSowers.queryKey,
+        document: subgraphQueryConfigs.beanstalkTotalSowers.document,
+        queryConfig: subgraphQueryConfigs.beanstalkTotalSowers.queryOptions,
+        cached: {
+          id: subgraphQueryConfigs.cachedBeanstalkTotalSowers.queryKey,
+          document: subgraphQueryConfigs.cachedBeanstalkTotalSowers.document,
+          where: subgraphQueryConfigs.cachedBeanstalkTotalSowers.where
+        },
         name: 'Total Sowers',
         tooltipTitle: 'Total Sowers',
         tooltipHoverText: 'The total number of unique Sowers at the beginning of every Season.',
@@ -560,10 +622,8 @@ export function useChartSetupData() {
         timeScaleKey: 'createdAt',
         priceScaleKey: 'numberOfSowers',
         valueAxisType: 'totalSowers',
-        document: subgraphQueryConfigs.beanstalkTotalSowers.document,
         documentEntity: 'seasons',
         fetchType: "both",
-        queryConfig: subgraphQueryConfigs.beanstalkTotalSowers.queryOptions,
         valueFormatter: (v: string) => Number(v),
         tickFormatter: (v: number) => v.toFixed(0).toString(),
         shortTickFormatter: (v: number) => v.toFixed(0).toString(),

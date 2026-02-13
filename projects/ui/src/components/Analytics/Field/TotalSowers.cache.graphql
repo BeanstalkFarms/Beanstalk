@@ -1,0 +1,12 @@
+query CachedSeasonalTotalSowers($where: String) {
+  seasons: cache_fieldHourlySnapshots(
+    where: $where
+    orderBy: "season"
+    orderDirection: "desc"
+  ) {
+    id
+    season
+    createdAt
+    numberOfSowers
+  }
+}

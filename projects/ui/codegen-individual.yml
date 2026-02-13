@@ -13,15 +13,14 @@ generates:
       - https://graph.bean.money/bean
     plugins:
       - 'schema-ast'
+  ./src/graph/schema-cache.graphql:
+    schema:
+      - https://graph.bean.money/cache
+    plugins:
+      - 'schema-ast'
   ./src/graph/schema-snapshot1.graphql:
     schema:
       - https://hub.snapshot.org/graphql
-    plugins:
-      - 'schema-ast'
-  # BSTODO: Do we need beanft subgraph?
-  ./src/graph/schema-beanft.graphql:
-    schema:
-      - https://graph.bean.money/beanft_eth
     plugins:
       - 'schema-ast'
   #./src/graph/schema-snapshot2.graphql:

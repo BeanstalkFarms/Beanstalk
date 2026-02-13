@@ -1,4 +1,3 @@
-import { useBeaNftUsersQuery } from '~/generated/graphql';
 import useAccount from '../ledger/useAccount';
 
 export enum BeaNFTCollection {
@@ -14,54 +13,17 @@ export type FarmerBeaNFTsMap = {
   };
 };
 
-const parseBeaNFTsResult = (_data: ReturnType<typeof useBeaNftUsersQuery>) => {
-  const data = _data.data?.beaNFTUsers || [];
-  return data.reduce<{
-    [farmerAddress: string]: FarmerBeaNFTsMap;
-  }>((acc, curr) => {
-    const account = curr.id;
-
-    acc[account] = {
-      [BeaNFTCollection.BARN_RAISE]: {
-        ids: curr.barnRaise || [],
-      },
-      [BeaNFTCollection.WINTER]: {
-        ids: curr.winter || [],
-      },
-      [BeaNFTCollection.GENESIS]: {
-        ids: curr.genesis || [],
-      },
-    };
-
-    return acc;
-  }, {});
-};
-
+// BeaNFT GraphQL endpoint no longer exists; hook returns empty data.
 export default function useFarmerBeaNFTs(
   _addresses?: string[],
-  skip?: boolean
+  _skip?: boolean
 ) {
-  const account = useAccount();
-
-  const addresses = _addresses || (account ? [account] : undefined);
-
-  const query = useBeaNftUsersQuery({
-    variables: {
-      id_in: addresses,
-    },
-    context: {
-      subgraph: 'beanft',
-    },
-    fetchPolicy: 'cache-and-network',
-    skip: !addresses || !addresses.length || skip,
-  });
-
-  const parsedNFTData = parseBeaNFTsResult(query);
+  useAccount(); // keep signature compatible
 
   return {
-    data: parsedNFTData,
-    loading: query.loading,
-    error: query.error,
-    refetch: query.refetch,
+    data: {} as { [farmerAddress: string]: FarmerBeaNFTsMap },
+    loading: false,
+    error: undefined,
+    refetch: () => Promise.resolve(undefined),
   };
 }

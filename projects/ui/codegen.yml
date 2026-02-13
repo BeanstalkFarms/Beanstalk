@@ -5,9 +5,10 @@ generates:
     schema:
       - src/graph/schema-beanstalk.graphql
       - src/graph/schema-bean.graphql
+      - src/graph/schema-cache.graphql
       - src/graph/schema-snapshot1.graphql
       - src/graph/schema-snapshot2.graphql
-      - src/graph/schema-beanft.graphql
+      # - src/graph/schema-beanft.graphql  # endpoint no longer exists
     plugins:
       - "typescript"
       - "typescript-operations"
@@ -17,8 +18,9 @@ generates:
     schema:
       - src/graph/schema-beanstalk.graphql
       - src/graph/schema-bean.graphql
+      - src/graph/schema-cache.graphql
       - src/graph/schema-snapshot1.graphql
       - src/graph/schema-snapshot2.graphql
-      - src/graph/schema-beanft.graphql
+      # - src/graph/schema-beanft.graphql  # endpoint no longer exists
     plugins:
       - "introspection"

@@ -1,3 +1,5 @@
+# BeaNFT GraphQL endpoint no longer exists - schema kept for reference only.
+# Excluded from codegen.yml.
 """
 creates a virtual field on the entity that may be queried but cannot be set manually through the mappings API.
 """
