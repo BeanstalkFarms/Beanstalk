@@ -53,7 +53,7 @@ const {
   bipSeedGauge,
   bipMiscellaneousImprovements
 } = require("./scripts/bips.js");
-const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19 } = require("./scripts/ebips.js");
+const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19, ebip22 } = require("./scripts/ebips.js");
 const { impersonateMockArbitrumSys } = require("./scripts/impersonate.js");
 
 //////////////////////// UTILITIES ////////////////////////
@@ -605,6 +605,10 @@ task("ebip11", async function () {
 
 task("ebip10", async function () {
   await ebip10();
+});
+
+task("ebip22", async function () {
+  await ebip22();
 });
 
 task("ebip9", async function () {
