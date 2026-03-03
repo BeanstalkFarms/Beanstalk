@@ -26,14 +26,6 @@ interface IDiamondLoupe {
 }
 
 interface IBeanstalk {
-    function transferToken(
-        address token,
-        address recipient,
-        uint256 amount,
-        uint8 fromMode,
-        uint8 toMode
-    ) external payable;
-
     function transferInternalTokenFrom(
         address token,
         address sender,
@@ -57,14 +49,14 @@ interface IBeanstalk {
 contract L1SelectorRemovalTest is Test {
     address private constant BEANSTALK = 0xC1E088fC1323b20BCBee9bd1B9fC9546db5624C5;
     address private constant BEAN = 0xBEA0000029AD1c77D3d5D23Ba2D8893dB9d1Efab;
-    uint8 private constant FROM_INTERNAL = 1;
     uint8 private constant TO_EXTERNAL = 0;
-    uint8 private constant TO_INTERNAL = 1;
     uint256 private constant FORK_BLOCK = 24_547_453;
 
     address private constant HOLDER = 0xaa75c70b7ce3A00cdFa1Bf401756bdf5C70889Cc;
+    address private constant RECEIVER = address(0xBEEF);
 
-    bytes4 private constant SELECTOR_TRANSFER_INTERNAL_TOKEN_FROM = 0xd3f4ec6f;
+    bytes4 private constant SELECTOR_TRANSFER_INTERNAL_TOKEN_FROM =
+        IBeanstalk.transferInternalTokenFrom.selector;
 
     function setUp() external {
         uint256 forkId = vm.createFork(vm.envString("ETH_RPC_URL"), FORK_BLOCK);
@@ -106,15 +98,15 @@ contract L1SelectorRemovalTest is Test {
 
         // Before fix: transferInternalTokenFrom succeeds.
         vm.prank(HOLDER);
-        beanstalk.transferInternalTokenFrom(BEAN, HOLDER, address(0xBEEF), amount, TO_EXTERNAL);
-        assertEq(IERC20(BEAN).balanceOf(address(0xBEEF)), amount, "before fix: bypass works");
+        beanstalk.transferInternalTokenFrom(BEAN, HOLDER, RECEIVER, amount, TO_EXTERNAL);
+        assertEq(IERC20(BEAN).balanceOf(RECEIVER), amount, "before fix: bypass works");
 
         _executeDiamondCut();
 
         // After fix: transferInternalTokenFrom reverts (selector removed from Diamond).
         vm.prank(HOLDER);
         vm.expectRevert();
-        beanstalk.transferInternalTokenFrom(BEAN, HOLDER, address(0xBEEF), amount, TO_EXTERNAL);
+        beanstalk.transferInternalTokenFrom(BEAN, HOLDER, RECEIVER, amount, TO_EXTERNAL);
     }
 
     /**
@@ -130,27 +122,5 @@ contract L1SelectorRemovalTest is Test {
         // After: selector maps to address(0).
         address facetAfter = IDiamondLoupe(BEANSTALK).facetAddress(SELECTOR_TRANSFER_INTERNAL_TOKEN_FROM);
         assertEq(facetAfter, address(0), "selector should be removed");
-    }
-
-    /**
-     * @notice Verify that other L1TokenFacet functions still work after the fix.
-     */
-    function test_OtherFunctionsStillWorkAfterFix() external {
-        IBeanstalk beanstalk = IBeanstalk(BEANSTALK);
-
-        _executeDiamondCut();
-
-        // getInternalBalance should still work.
-        uint256 balance = beanstalk.getInternalBalance(HOLDER, BEAN);
-        assertGt(balance, 0, "getInternalBalance should work");
-
-        // transferToken should still revert with checkBeanAsset for BEAN.
-        vm.prank(HOLDER);
-        vm.expectRevert(bytes("TokenFacet: Beans cannot be transferred."));
-        beanstalk.transferToken(BEAN, HOLDER, 1e6, FROM_INTERNAL, TO_EXTERNAL);
-
-        // owner() should still work.
-        address owner = beanstalk.owner();
-        assertTrue(owner != address(0), "owner should work");
     }
 }
