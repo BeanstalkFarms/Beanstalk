@@ -295,6 +295,22 @@ async function ebip19(mock = true, account = undefined) {
   });
 }
 
+async function ebip22(mock = true, account = undefined) {
+  if (account == undefined) {
+    account = await impersonateBeanstalkOwner();
+    await mintEth(account.address);
+  }
+
+  const dc = {
+    diamondCut: [
+      [ethers.constants.AddressZero, "2", ["0xd3f4ec6f"]]
+    ],
+    initFacetAddress: ethers.constants.AddressZero,
+    functionCall: "0x"
+  };
+  await bipDiamondCut("EBIP-22", dc, account, mock);
+}
+
 async function bipDiamondCut(name, dc, account, mock = true) {
   beanstalk = await getBeanstalk();
   if (mock) {
@@ -330,3 +346,4 @@ exports.ebip15 = ebip15;
 exports.ebip16 = ebip16;
 exports.ebip17 = ebip17;
 exports.ebip19 = ebip19;
+exports.ebip22 = ebip22;
