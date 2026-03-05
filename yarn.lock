@@ -2334,10 +2334,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bytecodealliance/preview2-shim@npm:0.17.2":
-  version: 0.17.2
-  resolution: "@bytecodealliance/preview2-shim@npm:0.17.2"
-  checksum: 10/24bf1698fcf8c1cd25089b46eccbdae2db5585ca1d69ec15e5ad5a095f19d710bb73071bb17ed1a4745bd2707cc68754d0c17ce13800cd1aa465cce3c6aaff88
+"@bytecodealliance/preview2-shim@npm:^0.17.2":
+  version: 0.17.8
+  resolution: "@bytecodealliance/preview2-shim@npm:0.17.8"
+  checksum: 10/a528da2a4412847a70ae4c1e420393f30e48b3b39b87ed718490d85bc49063ee78343b710eaa99d6ba9943749f408109d339b8c95aba282467c39a44d3789e24
   languageName: node
   linkType: hard
 
@@ -7873,12 +7873,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomicfoundation/slang@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@nomicfoundation/slang@npm:1.1.0"
+"@nomicfoundation/slang@npm:1.3.1":
+  version: 1.3.1
+  resolution: "@nomicfoundation/slang@npm:1.3.1"
   dependencies:
-    "@bytecodealliance/preview2-shim": "npm:0.17.2"
-  checksum: 10/7f4f24a03aec625813c6eb87390406869534896e5be90b2473b8b55abadfd48537958345629c75c4896dd38e4ad7aaaeff151be752a9ab468a6290a55e999e34
+    "@bytecodealliance/preview2-shim": "npm:^0.17.2"
+  checksum: 10/c05e6fbb031616a7c59dfb6d318be139dcd5c3d5391a9d79aa5e9fd04db414727c9ddc4b45b6e0134f154f1d7bde350a99b31611b6513b76bb1099780613eb20
   languageName: node
   linkType: hard
 
@@ -10622,10 +10622,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solidity-parser/parser@npm:^0.20.1":
-  version: 0.20.1
-  resolution: "@solidity-parser/parser@npm:0.20.1"
-  checksum: 10/6497d74c67386ad3c91c906fbea4cf46df1b0eb3f597c7c881c5bbf33a5c689b36d22211fedc36e023e59facf8a6d7cff315dc117d3215d38cc5be95ecc106db
+"@solidity-parser/parser@npm:^0.20.2":
+  version: 0.20.2
+  resolution: "@solidity-parser/parser@npm:0.20.2"
+  checksum: 10/405009cd712cc410df60e45510ddd2ca615d208b152903be71cef4b9440720287ffd3792f88a92eb0de375c2ea66b442e84c843cb810612d6b6e45fd51a2b49b
   languageName: node
   linkType: hard
 
@@ -33935,16 +33935,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-solidity@npm:2.0.0":
-  version: 2.0.0
-  resolution: "prettier-plugin-solidity@npm:2.0.0"
+"prettier-plugin-solidity@npm:2.2.1":
+  version: 2.2.1
+  resolution: "prettier-plugin-solidity@npm:2.2.1"
   dependencies:
-    "@nomicfoundation/slang": "npm:1.1.0"
-    "@solidity-parser/parser": "npm:^0.20.1"
-    semver: "npm:^7.7.1"
+    "@nomicfoundation/slang": "npm:1.3.1"
+    "@solidity-parser/parser": "npm:^0.20.2"
+    semver: "npm:^7.7.3"
   peerDependencies:
     prettier: ">=3.0.0"
-  checksum: 10/b5ef1d64902b181478e3bd557a37d11c5437e9353402e43c1ef0909e596d76f1e72b0fd59726a381564d303a6bcb4f0b6b9a9310caf942b27236dc6913819de1
+  checksum: 10/007fa19131366937465ec8ded6e1540264d07892f235c0679929ce08caf5f0081abf3be065984f7476071c3525d4fd67d02bc996a2a94e28c611fcd214fd16e4
   languageName: node
   linkType: hard
 
@@ -33957,12 +33957,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.5.3":
-  version: 3.5.3
-  resolution: "prettier@npm:3.5.3"
+"prettier@npm:3.8.1":
+  version: 3.8.1
+  resolution: "prettier@npm:3.8.1"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/7050c08f674d9e49fbd9a4c008291d0715471f64e94cc5e4b01729affce221dfc6875c8de7e66b728c64abc9352eefb7eaae071b5f79d30081be207b53774b78
+  checksum: 10/3da1cf8c1ef9bea828aa618553696c312e951f810bee368f6887109b203f18ee869fe88f66e65f9cf60b7cb1f2eae859892c860a300c062ff8ec69c381fc8dbd
   languageName: node
   linkType: hard
 
@@ -36254,8 +36254,8 @@ __metadata:
     jest: "npm:29.2.2"
     jest-serial-runner: "npm:1.2.1"
     lint-staged: "npm:13.3.0"
-    prettier: "npm:3.5.3"
-    prettier-plugin-solidity: "npm:2.0.0"
+    prettier: "npm:3.8.1"
+    prettier-plugin-solidity: "npm:2.2.1"
     ts-jest: "npm:29.1.2"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.3.3"
@@ -36668,12 +36668,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.7.1":
-  version: 7.7.2
-  resolution: "semver@npm:7.7.2"
+"semver@npm:^7.7.3":
+  version: 7.7.4
+  resolution: "semver@npm:7.7.4"
   bin:
     semver: bin/semver.js
-  checksum: 10/7a24cffcaa13f53c09ce55e05efe25cd41328730b2308678624f8b9f5fc3093fc4d189f47950f0b811ff8f3c3039c24a2c36717ba7961615c682045bf03e1dda
+  checksum: 10/26bdc6d58b29528f4142d29afb8526bc335f4fc04c4a10f2b98b217f277a031c66736bf82d3d3bb354a2f6a3ae50f18fd62b053c4ac3f294a3d10a61f5075b75
   languageName: node
   linkType: hard
 
