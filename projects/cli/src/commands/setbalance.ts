@@ -48,9 +48,13 @@ export const setbalance = async (sdk, chain, { account, symbol, amount }) => {
       if (symbol === "BEANUSDC") t = sdk.tokens.BEAN_USDC_WELL_LP;
       if (symbol === "BEANUSDT") t = sdk.tokens.BEAN_USDT_WELL_LP;
     }
-    if (typeof chain[`set${symbol}Balance`] !== "function")
-      throw new Error(`${symbol} is not a valid token or the method ${chalk.bold.whiteBright("")}`);
+    const setterName = `set${symbol}Balance`;
+    if (typeof chain[setterName] !== "function") {
+      throw new Error(
+        `${symbol} has no ${setterName} helper on this chain fork (token may be unknown or anvil hook missing)`
+      );
+    }
 
-    await chain[`set${symbol}Balance`](account, t.amount(amount));
+    await chain[setterName](account, t.amount(amount));
   }
 };
