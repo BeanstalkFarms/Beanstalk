@@ -32,6 +32,8 @@ import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
 import useChainState from '~/hooks/chain/useChainState';
 
+const L1_MIGRATION_READ_INTERVAL = 60_000;
+
 export default function L1Delegate() {
 
     const account = useAccount();
@@ -190,7 +192,9 @@ export default function L1Delegate() {
         ],
         query: {
             enabled: Boolean(account),
-            refetchInterval: 10000
+            staleTime: L1_MIGRATION_READ_INTERVAL,
+            refetchInterval: L1_MIGRATION_READ_INTERVAL,
+            refetchIntervalInBackground: false,
         }
     }).data;
 

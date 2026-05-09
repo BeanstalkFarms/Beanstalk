@@ -11,6 +11,7 @@ import theme from '~/components/App/muiTheme';
 import { apolloClient } from '~/graph/client';
 import store from '~/state';
 import { FC } from '~/types';
+import AppVersionGuard from '~/components/AppVersionGuard';
 import SdkProvider from './SdkProvider';
 
 const queryClient = new QueryClient();
@@ -23,7 +24,10 @@ const Wrapper: FC<{}> = ({ children }) => (
           <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={theme}>
               <CssBaseline />
-              <SdkProvider>{children}</SdkProvider>
+              <SdkProvider>
+                {children}
+                <AppVersionGuard />
+              </SdkProvider>
             </ThemeProvider>
           </QueryClientProvider>
         </WagmiProvider>
