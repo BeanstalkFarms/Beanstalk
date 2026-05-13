@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { useERC20Contract } from '~/hooks/ledger/useContract';
+import { AdvancedPipeStruct, Clipboard } from '@beanstalk/sdk';
 import { tokenResult, bigNumberResult } from '~/util';
-import useChainId from '~/hooks/chain/useChainId';
 import { ZERO_BN } from '~/constants';
 import useSdk from '~/hooks/sdk';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
@@ -28,35 +27,104 @@ export const useFetchBeanstalkBarn = () => {
   const dispatch = useDispatch();
   const sdk = useSdk();
 
-  // Contracts
-  const beanstalk = sdk.contracts.beanstalk;
-  const fertContract = sdk.contracts.fertilizer;
-  const [usdcContract] = useERC20Contract(sdk.tokens.USDC.address);
-
   // Handlers
   const fetch = useCallback(async () => {
     const { BEAN, UNRIPE_BEAN } = sdk.tokens;
-    if (fertContract && usdcContract) {
+    const beanstalk = sdk.contracts.beanstalk;
+
+    if (beanstalk) {
       console.debug('[beanstalk/fertilizer/updater] FETCH');
-      const [
-        remainingRecapitalization,
-        humidity,
-        currentBpf,
-        endBpf,
-        unfertilized,
-        fertilized,
-        recapFundedPct,
-      ] = await Promise.all([
-        beanstalk.remainingRecapitalization().then(tokenResult(BEAN)),
-        beanstalk.getCurrentHumidity().then(bigNumberResult),
-        beanstalk.beansPerFertilizer().then(bigNumberResult),
-        beanstalk.getEndBpf().then(bigNumberResult),
-        beanstalk.totalUnfertilizedBeans().then(tokenResult(BEAN)),
-        beanstalk.totalFertilizedBeans().then(tokenResult(BEAN)),
-        beanstalk
-          .getRecapFundedPercent(UNRIPE_BEAN.address)
-          .then(tokenResult(UNRIPE_BEAN)),
-      ] as const);
+
+      const common = {
+        target: beanstalk.address,
+        clipboard: Clipboard.encode([]),
+      };
+
+      const calls: AdvancedPipeStruct[] = [
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'remainingRecapitalization'
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'getCurrentHumidity'
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'beansPerFertilizer'
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('getEndBpf'),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'totalUnfertilizedBeans'
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'totalFertilizedBeans'
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'getRecapFundedPercent',
+            [UNRIPE_BEAN.address]
+          ),
+        },
+      ];
+
+      const results = await beanstalk.callStatic.advancedPipe(calls, '0');
+      const remainingRecapitalization = tokenResult(BEAN)(
+        beanstalk.interface.decodeFunctionResult(
+          'remainingRecapitalization',
+          results[0]
+        )[0]
+      );
+      const humidity = bigNumberResult(
+        beanstalk.interface.decodeFunctionResult(
+          'getCurrentHumidity',
+          results[1]
+        )[0]
+      );
+      const currentBpf = bigNumberResult(
+        beanstalk.interface.decodeFunctionResult(
+          'beansPerFertilizer',
+          results[2]
+        )[0]
+      );
+      const endBpf = bigNumberResult(
+        beanstalk.interface.decodeFunctionResult('getEndBpf', results[3])[0]
+      );
+      const unfertilized = tokenResult(BEAN)(
+        beanstalk.interface.decodeFunctionResult(
+          'totalUnfertilizedBeans',
+          results[4]
+        )[0]
+      );
+      const fertilized = tokenResult(BEAN)(
+        beanstalk.interface.decodeFunctionResult(
+          'totalFertilizedBeans',
+          results[5]
+        )[0]
+      );
+      const recapFundedPct = tokenResult(UNRIPE_BEAN)(
+        beanstalk.interface.decodeFunctionResult(
+          'getRecapFundedPercent',
+          results[6]
+        )[0]
+      );
+
       console.debug(
         `[beanstalk/fertilizer/updater] RESULT: remaining = ${remainingRecapitalization.toFixed(
           2
@@ -75,7 +143,7 @@ export const useFetchBeanstalkBarn = () => {
         })
       );
     }
-  }, [sdk.tokens, fertContract, usdcContract, beanstalk, dispatch]);
+  }, [sdk, dispatch]);
   const clear = useCallback(() => {
     dispatch(resetBarn());
   }, [dispatch]);
@@ -85,7 +153,6 @@ export const useFetchBeanstalkBarn = () => {
 
 const BarnUpdater = () => {
   const [fetch, clear] = useFetchBeanstalkBarn();
-  const chainId = useChainId();
 
   useL2OnlyEffect(() => {
     clear();
