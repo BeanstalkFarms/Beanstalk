@@ -37,6 +37,34 @@ describe('RFF API client', () => {
     });
   });
 
+  it('fails closed when the service points the UI at the wrong chain or tokens', async () => {
+    const wrongChain = new RffApiClient('https://rff.bean.money', async () =>
+      Response.json({
+        chainId: 1,
+        safeAddress: '0x1111111111111111111111111111111111111111',
+        beanAddress: BEAN_ADDRESS,
+        wstethAddress: WSTETH_ADDRESS,
+        turnstileSiteKey: '0x4AAAA-test',
+      })
+    );
+    const wrongBean = new RffApiClient('https://rff.bean.money', async () =>
+      Response.json({
+        chainId: 42161,
+        safeAddress: '0x1111111111111111111111111111111111111111',
+        beanAddress: '0x2222222222222222222222222222222222222222',
+        wstethAddress: WSTETH_ADDRESS,
+        turnstileSiteKey: '0x4AAAA-test',
+      })
+    );
+
+    await expect(wrongChain.getConfig()).rejects.toThrow(
+      'RFF service is configured for the wrong chain'
+    );
+    await expect(wrongBean.getConfig()).rejects.toThrow(
+      'RFF service returned an unexpected BEAN address'
+    );
+  });
+
   it('creates and verifies a wallet session using the service challenge', async () => {
     const captured: Request[] = [];
     const responses = [

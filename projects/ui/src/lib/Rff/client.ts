@@ -1,6 +1,12 @@
-import type { Address, Hex } from 'viem';
+import { getAddress, type Address, type Hex } from 'viem';
 
-import type { BalanceMode, RffSwapRequest } from './request';
+import {
+  ARBITRUM_CHAIN_ID,
+  BEAN_ADDRESS,
+  WSTETH_ADDRESS,
+  type BalanceMode,
+  type RffSwapRequest,
+} from './request';
 
 type Fetch = typeof fetch;
 type FetchInit = Parameters<Fetch>[1];
@@ -103,8 +109,26 @@ export class RffApiClient {
     return body;
   }
 
-  getConfig(): Promise<RffRuntimeConfig> {
-    return this.request('/v1/config');
+  async getConfig(): Promise<RffRuntimeConfig> {
+    const config = await this.request<RffRuntimeConfig>('/v1/config');
+    if (config.chainId !== ARBITRUM_CHAIN_ID) {
+      throw new Error('RFF service is configured for the wrong chain');
+    }
+    if (getAddress(config.beanAddress) !== BEAN_ADDRESS) {
+      throw new Error('RFF service returned an unexpected BEAN address');
+    }
+    if (getAddress(config.wstethAddress) !== WSTETH_ADDRESS) {
+      throw new Error('RFF service returned an unexpected wstETH address');
+    }
+    if (!config.turnstileSiteKey?.trim()) {
+      throw new Error('RFF service did not provide a Turnstile site key');
+    }
+    return {
+      ...config,
+      safeAddress: getAddress(config.safeAddress),
+      beanAddress: getAddress(config.beanAddress),
+      wstethAddress: getAddress(config.wstethAddress),
+    };
   }
 
   getSession(): Promise<{ requester: Address }> {
