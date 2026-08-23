@@ -10,6 +10,49 @@ import type {
 import { useRffTurnstile } from './useRff';
 
 describe('useRffTurnstile', () => {
+  it('shares one broker when security checks begin during initialization', async () => {
+    const renders: TurnstileRenderOptions[] = [];
+    const api: TurnstileApi = {
+      render: (_container, options) => {
+        renders.push(options);
+        return `widget-${renders.length}`;
+      },
+      execute: () => undefined,
+      remove: () => undefined,
+    };
+    (window as typeof window & { turnstile?: TurnstileApi }).turnstile = api;
+
+    let getToken: ((action: string) => Promise<string>) | undefined;
+    const Harness: React.FC = () => {
+      const turnstile = useRffTurnstile('site-key');
+      useEffect(() => {
+        getToken = turnstile.getToken;
+      }, [turnstile.getToken]);
+      return <div ref={turnstile.containerRef} />;
+    };
+    const view = render(<Harness />);
+
+    let first: Promise<string> | undefined;
+    let second: Promise<string> | undefined;
+    await act(async () => {
+      first = getToken!('rff_quote');
+      second = getToken!('rff_submit');
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(renders).toHaveLength(1);
+    renders[0]!.callback('first');
+    await expect(first).resolves.toBe('first');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(renders).toHaveLength(2);
+    renders[1]!.callback('second');
+    await expect(second).resolves.toBe('second');
+
+    view.unmount();
+    delete (window as typeof window & { turnstile?: TurnstileApi }).turnstile;
+  });
+
   it('rebinds the security widget when a dialog container is remounted', async () => {
     const renders: Array<{
       container: HTMLElement;

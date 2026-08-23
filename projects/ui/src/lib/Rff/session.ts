@@ -39,7 +39,10 @@ export async function listRffRequestsForAccount<T>(
 ): Promise<T[]> {
   const session = await client.getSession();
   assertRffSessionRequester(account, session.requester);
-  return client.listRequests();
+  const requests = await client.listRequests();
+  const sessionAfterList = await client.getSession();
+  assertRffSessionRequester(account, sessionAfterList.requester);
+  return requests;
 }
 
 export class RffSessionManager {

@@ -41,6 +41,28 @@ describe('RFF wallet session manager', () => {
     expect(listed).toBe(false);
   });
 
+  it('rechecks session ownership after listing to close cross-tab cookie races', async () => {
+    let sessionCheck = 0;
+    await expect(
+      listRffRequestsForAccount(
+        {
+          getSession: async () => {
+            sessionCheck += 1;
+            return {
+              requester:
+                (sessionCheck === 1
+                  ? REQUESTER
+                  : '0x2222222222222222222222222222222222222222') as Address,
+            };
+          },
+          listRequests: async () => ['wrong-wallet-request'],
+        },
+        REQUESTER
+      )
+    ).rejects.toThrow(RffSessionAccountMismatchError);
+    expect(sessionCheck).toBe(2);
+  });
+
   it('reuses a session already attached to the connected wallet', async () => {
     const events: string[] = [];
     const manager = new RffSessionManager({

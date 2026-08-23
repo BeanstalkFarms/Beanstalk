@@ -38,6 +38,8 @@ export function useRffRequests(account?: string, enabled = true) {
 export function useRffTurnstile(siteKey?: string) {
   const containerNodeRef = useRef<HTMLDivElement | null>(null);
   const brokerRef = useRef<TurnstileTokenBroker | null>(null);
+  const siteKeyRef = useRef(siteKey);
+  siteKeyRef.current = siteKey;
 
   const containerRef = useCallback((node: HTMLDivElement | null) => {
     if (containerNodeRef.current === node) return;
@@ -60,13 +62,23 @@ export function useRffTurnstile(siteKey?: string) {
       if (!containerNodeRef.current) {
         throw new Error('Request security is still loading.');
       }
+      const container = containerNodeRef.current;
+      const requestedSiteKey = siteKey;
       if (!brokerRef.current) {
         const api = await loadTurnstileApi();
-        brokerRef.current = new TurnstileTokenBroker(
-          api,
-          containerNodeRef.current,
-          siteKey
-        );
+        if (
+          containerNodeRef.current !== container ||
+          siteKeyRef.current !== requestedSiteKey
+        ) {
+          throw new Error('Request security was reset. Try again.');
+        }
+        if (!brokerRef.current) {
+          brokerRef.current = new TurnstileTokenBroker(
+            api,
+            container,
+            requestedSiteKey
+          );
+        }
       }
       return brokerRef.current.getToken(action);
     },
