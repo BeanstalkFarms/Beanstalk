@@ -123,9 +123,62 @@ export function minimumAmountOut(
   return (quotedAmountOut * BigInt(10_000 - slippageBps)) / 10_000n;
 }
 
+export function buildRffRequest(input: {
+  requester: Address;
+  recipient?: Address;
+  tokenIn: Address;
+  requestedAmountIn: bigint;
+  quotedAmountOut: bigint;
+  sourceMode: BalanceMode;
+  slippageBps: number;
+  nonce: bigint;
+  nowSeconds: number;
+}): RffSwapRequest {
+  const tokenIn = getAddress(input.tokenIn);
+  const tokenOut =
+    tokenIn.toLowerCase() === BEAN_ADDRESS.toLowerCase()
+      ? WSTETH_ADDRESS
+      : tokenIn.toLowerCase() === WSTETH_ADDRESS.toLowerCase()
+        ? BEAN_ADDRESS
+        : null;
+  if (tokenOut === null) throw new Error('Unsupported RFF input token');
+  if (input.requestedAmountIn <= 0n) {
+    throw new Error('Requested input must be positive');
+  }
+  const minAmountOutAtRequestedIn = minimumAmountOut(
+    input.quotedAmountOut,
+    input.slippageBps
+  );
+  if (minAmountOutAtRequestedIn <= 0n) {
+    throw new Error('Minimum output must be positive');
+  }
+
+  return {
+    requester: getAddress(input.requester),
+    recipient: getAddress(input.recipient ?? input.requester),
+    tokenIn,
+    tokenOut,
+    requestedAmountIn: input.requestedAmountIn,
+    minAmountOutAtRequestedIn,
+    sourceMode: input.sourceMode,
+    destinationMode: BalanceMode.EXTERNAL,
+    nonce: input.nonce,
+    deadline: deadlineOneMonthFrom(input.nowSeconds),
+  };
+}
+
 export function deadlineOneMonthFrom(nowSeconds: number): bigint {
   if (!Number.isSafeInteger(nowSeconds) || nowSeconds < 0) {
     throw new Error('Current time must be a non-negative integer');
   }
   return BigInt(nowSeconds + 30 * 24 * 60 * 60);
+}
+
+export function rffNonceFromBytes(bytes: Uint8Array): bigint {
+  if (bytes.length === 0) throw new Error('RFF nonce requires random bytes');
+  return bytes.reduce((nonce, byte) => nonce * 256n + BigInt(byte), 0n);
+}
+
+export function randomRffNonce(): bigint {
+  return rffNonceFromBytes(crypto.getRandomValues(new Uint8Array(32)));
 }

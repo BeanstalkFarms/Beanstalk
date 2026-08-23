@@ -4,10 +4,12 @@ import {
   BalanceMode,
   BEAN_ADDRESS,
   WSTETH_ADDRESS,
+  buildRffRequest,
   buildCancelRffSwapTypedData,
   buildRffSwapRequestTypedData,
   deadlineOneMonthFrom,
   minimumAmountOut,
+  rffNonceFromBytes,
 } from './request';
 
 describe('RFF request schema', () => {
@@ -54,6 +56,31 @@ describe('RFF request schema', () => {
 
     expect(typedData.digest).toBe(
       '0x0e860c7e66ec57e07c5f421fa4ccfb364a1d23a6506cd60f6ee1ae70aada5444'
+    );
+  });
+
+  it('builds the UX request with the other token and Circulating output', () => {
+    const request = buildRffRequest({
+      requester: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      tokenIn: WSTETH_ADDRESS,
+      requestedAmountIn: 2_000_000_000_000_000_000n,
+      quotedAmountOut: 3_000_000n,
+      sourceMode: BalanceMode.INTERNAL,
+      slippageBps: 100,
+      nonce: 99n,
+      nowSeconds: 1_700_000_000,
+    });
+
+    expect(request.recipient).toBe(request.requester);
+    expect(request.tokenOut).toBe(BEAN_ADDRESS);
+    expect(request.minAmountOutAtRequestedIn).toBe(2_970_000n);
+    expect(request.destinationMode).toBe(BalanceMode.EXTERNAL);
+    expect(request.deadline).toBe(1_702_592_000n);
+  });
+
+  it('converts all browser-random nonce bytes without precision loss', () => {
+    expect(rffNonceFromBytes(Uint8Array.from([0x01, 0x02, 0xff]))).toBe(
+      66_303n
     );
   });
 });

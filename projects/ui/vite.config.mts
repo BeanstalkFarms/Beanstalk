@@ -6,6 +6,9 @@ import strip from '@rollup/plugin-strip';
 import analyze from 'rollup-plugin-analyzer';
 import removeHTMLAttributes from 'vite-plugin-react-remove-attributes';
 
+const RFF_STAGING_ORIGIN =
+  'https://rff-service-staging.rff-service.workers.dev';
+
 type CSPData = {
   'default-src': string[];
   'connect-src': string[];
@@ -43,6 +46,7 @@ const CSP = buildCSP({
     'https://gateway-arbitrum.network.thegraph.com', // Decentralized subgraph
     '*.0x.org', // 0x API
     '*.tenderly.co', // Tenderly API
+    'https://rff-service-staging.rff-service.workers.dev', // RFF staging API
   ],
   'style-src': [
     "'self'",
@@ -52,6 +56,7 @@ const CSP = buildCSP({
     "'self'",
     '*.google-analytics.com',
     '*.googletagmanager.com',
+    'https://challenges.cloudflare.com', // Cloudflare Turnstile
     "'sha256-D0XQFeW9gcWWp4NGlqN0xpmiObsjqCewnVFeAsys7qM='", // GA inline script
   ],
   'img-src': [
@@ -68,6 +73,7 @@ const CSP = buildCSP({
   'frame-src': [
     'https://verify.walletconnect.com/',
     'https://verify.walletconnect.org',
+    'https://challenges.cloudflare.com', // Cloudflare Turnstile
   ], // for walletconnect
 });
 
@@ -79,6 +85,26 @@ export default defineConfig(({ command }) => ({
   server: {
     hmr: {
       overlay: true,
+    },
+    proxy: {
+      '/rff-api': {
+        target: RFF_STAGING_ORIGIN,
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/rff-api/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyRequest) => {
+            proxyRequest.setHeader('Origin', RFF_STAGING_ORIGIN);
+          });
+          proxy.on('proxyRes', (proxyResponse) => {
+            const cookies = proxyResponse.headers['set-cookie'];
+            if (cookies) {
+              proxyResponse.headers['set-cookie'] = cookies.map((cookie) =>
+                cookie.replace('Path=/v1', 'Path=/rff-api/v1')
+              );
+            }
+          });
+        },
+      },
     },
   },
   plugins: [

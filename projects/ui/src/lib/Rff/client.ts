@@ -107,6 +107,10 @@ export class RffApiClient {
     return this.request('/v1/config');
   }
 
+  getSession(): Promise<{ requester: Address }> {
+    return this.request('/v1/session');
+  }
+
   createSessionChallenge(
     requester: Address,
     turnstileToken: string

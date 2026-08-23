@@ -74,6 +74,16 @@ describe('RFF API client', () => {
     });
   });
 
+  it('reads the wallet attached to the active opaque session', async () => {
+    const client = new RffApiClient('https://rff.bean.money', async () =>
+      Response.json({ requester: REQUEST.requester.toLowerCase() })
+    );
+
+    await expect(client.getSession()).resolves.toEqual({
+      requester: REQUEST.requester.toLowerCase(),
+    });
+  });
+
   it('submits decimal-string integers with credentialed browser requests', async () => {
     let captured: Request | undefined;
     const client = new RffApiClient(
