@@ -24,7 +24,11 @@ export class TurnstileTokenBroker {
 
   private widgetId: string | null = null;
 
-  private pending = false;
+  private queue: Promise<void> = Promise.resolve();
+
+  private rejectActive: ((error: Error) => void) | null = null;
+
+  private generation = 0;
 
   constructor(api: TurnstileApi, container: HTMLElement, siteKey: string) {
     this.api = api;
@@ -33,19 +37,31 @@ export class TurnstileTokenBroker {
   }
 
   getToken(action: string): Promise<string> {
-    if (this.pending) {
-      return Promise.reject(new Error('Security check already in progress.'));
-    }
     if (!/^[a-zA-Z0-9_-]{1,32}$/.test(action)) {
       return Promise.reject(new Error('Invalid security-check action.'));
     }
-    this.pending = true;
 
+    const generation = this.generation;
+    const token = this.queue.then(() => {
+      if (generation !== this.generation) {
+        throw new Error('Security check was reset. Try again.');
+      }
+      return this.executeToken(action);
+    });
+    this.queue = token.then(
+      () => undefined,
+      () => undefined
+    );
+    return token;
+  }
+
+  private executeToken(action: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
+      this.rejectActive = reject;
       const finish = (result: { token: string } | { error: Error }) => {
         const widgetId = this.widgetId;
         this.widgetId = null;
-        this.pending = false;
+        this.rejectActive = null;
         if (widgetId !== null) this.api.remove(widgetId);
         if ('token' in result) resolve(result.token);
         else reject(result.error);
@@ -71,9 +87,11 @@ export class TurnstileTokenBroker {
   }
 
   dispose(): void {
+    this.generation += 1;
     if (this.widgetId !== null) this.api.remove(this.widgetId);
+    this.rejectActive?.(new Error('Security check was reset. Try again.'));
+    this.rejectActive = null;
     this.widgetId = null;
-    this.pending = false;
   }
 }
 

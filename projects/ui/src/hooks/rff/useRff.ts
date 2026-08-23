@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { rffApi } from '~/lib/Rff/runtime';
+import {
+  listRffRequestsForAccount,
+} from '~/lib/Rff/session';
 import { loadTurnstileApi, TurnstileTokenBroker } from '~/lib/Rff/turnstile';
 
 export const rffQueryKeys = {
@@ -22,7 +25,10 @@ export function useRffConfig(enabled = true) {
 export function useRffRequests(account?: string, enabled = true) {
   return useQuery({
     queryKey: rffQueryKeys.requests(account),
-    queryFn: () => rffApi.listRequests(),
+    queryFn: async () => {
+      if (!account) return [];
+      return listRffRequestsForAccount(rffApi, account);
+    },
     enabled: enabled && !!account,
     retry: false,
     refetchInterval: 30_000,
@@ -30,8 +36,15 @@ export function useRffRequests(account?: string, enabled = true) {
 }
 
 export function useRffTurnstile(siteKey?: string) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerNodeRef = useRef<HTMLDivElement | null>(null);
   const brokerRef = useRef<TurnstileTokenBroker | null>(null);
+
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    if (containerNodeRef.current === node) return;
+    brokerRef.current?.dispose();
+    brokerRef.current = null;
+    containerNodeRef.current = node;
+  }, []);
 
   useEffect(
     () => () => {
@@ -44,14 +57,14 @@ export function useRffTurnstile(siteKey?: string) {
   const getToken = useCallback(
     async (action: string) => {
       if (!siteKey) throw new Error('Request security is not configured.');
-      if (!containerRef.current) {
+      if (!containerNodeRef.current) {
         throw new Error('Request security is still loading.');
       }
       if (!brokerRef.current) {
         const api = await loadTurnstileApi();
         brokerRef.current = new TurnstileTokenBroker(
           api,
-          containerRef.current,
+          containerNodeRef.current,
           siteKey
         );
       }

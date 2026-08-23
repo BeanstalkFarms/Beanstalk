@@ -14,6 +14,34 @@ type SessionClient = {
   ) => Promise<{ requester: Address; expiresAt: number }>;
 };
 
+export class RffSessionAccountMismatchError extends Error {
+  constructor() {
+    super('Verify the connected wallet to load its fill requests.');
+    this.name = 'RffSessionAccountMismatchError';
+  }
+}
+
+export function assertRffSessionRequester(
+  expected: string,
+  actual: string
+): void {
+  if (expected.toLowerCase() !== actual.toLowerCase()) {
+    throw new RffSessionAccountMismatchError();
+  }
+}
+
+export async function listRffRequestsForAccount<T>(
+  client: {
+    getSession: () => Promise<{ requester: Address }>;
+    listRequests: () => Promise<T[]>;
+  },
+  account: string
+): Promise<T[]> {
+  const session = await client.getSession();
+  assertRffSessionRequester(account, session.requester);
+  return client.listRequests();
+}
+
 export class RffSessionManager {
   private readonly client: SessionClient;
 
@@ -45,8 +73,6 @@ export class RffSessionManager {
       challenge.challengeId,
       signature
     );
-    if (session.requester.toLowerCase() !== input.requester.toLowerCase()) {
-      throw new Error('RFF session was created for a different wallet.');
-    }
+    assertRffSessionRequester(input.requester, session.requester);
   }
 }

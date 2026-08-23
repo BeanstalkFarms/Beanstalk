@@ -21,6 +21,7 @@ describe('RFF Turnstile token broker', () => {
     const broker = new TurnstileTokenBroker(api, {} as HTMLElement, 'site-key');
 
     const tokenPromise = broker.getToken('rff_quote');
+    await Promise.resolve();
     options!.callback('fresh-token');
 
     await expect(tokenPromise).resolves.toBe('fresh-token');
@@ -47,11 +48,39 @@ describe('RFF Turnstile token broker', () => {
     const broker = new TurnstileTokenBroker(api, {} as HTMLElement, 'site-key');
 
     const tokenPromise = broker.getToken('rff_submit');
+    await Promise.resolve();
     options!['error-callback']('network-error');
 
     await expect(tokenPromise).rejects.toThrow(
       'Security check failed (network-error). Try again.'
     );
     expect(removed).toEqual(['widget-2']);
+  });
+
+  it('serializes rapid token requests instead of dropping the latest action', async () => {
+    const rendered: TurnstileRenderOptions[] = [];
+    const api: TurnstileApi = {
+      render: (_container, options) => {
+        rendered.push(options);
+        return `widget-${rendered.length}`;
+      },
+      execute: () => undefined,
+      remove: () => undefined,
+    };
+    const broker = new TurnstileTokenBroker(api, {} as HTMLElement, 'site-key');
+
+    const first = broker.getToken('rff_quote');
+    const second = broker.getToken('rff_quote');
+    await Promise.resolve();
+    expect(rendered).toHaveLength(1);
+
+    rendered[0]!.callback('first-token');
+    await first;
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(rendered).toHaveLength(2);
+    rendered[1]!.callback('second-token');
+
+    await expect(second).resolves.toBe('second-token');
   });
 });

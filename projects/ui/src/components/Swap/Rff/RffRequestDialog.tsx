@@ -18,6 +18,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import type { Address, Hex } from 'viem';
+import {
+  useAccount as useWagmiAccount,
+  useSwitchChain,
+} from 'wagmi';
 
 import {
   StyledDialog,
@@ -53,7 +57,13 @@ import { RffSessionManager } from '~/lib/Rff/session';
 import type { RffQuote } from '~/lib/Rff/client';
 import { displayFullBN, getTokenIndex } from '~/util';
 
-import { balanceForSource, balanceModeForSource } from './model';
+import {
+  balanceForSource,
+  balanceModeForSource,
+  isRffChain,
+  recipientForConnectedAccount,
+  rffQuoteKey,
+} from './model';
 
 type Props = {
   open: boolean;
@@ -71,6 +81,8 @@ function errorMessage(error: unknown): string {
 const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   const sdk = useSdk();
   const account = useAccount();
+  const { chainId } = useWagmiAccount();
+  const { isPending: isSwitchingChain, switchChain } = useSwitchChain();
   const { data: signer } = useSigner();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -83,10 +95,13 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   const [tokenIn, setTokenIn] = useState(sdk.tokens.BEAN);
   const [source, setSource] = useState(BalanceFrom.EXTERNAL);
   const [amount, setAmount] = useState('');
-  const [recipient, setRecipient] = useState(account || '');
+  const [recipient, setRecipient] = useState(
+    recipientForConnectedAccount(account)
+  );
   const [advanced, setAdvanced] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [quote, setQuote] = useState<RffQuote | null>(null);
+  const [quoteKey, setQuoteKey] = useState<string | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -95,13 +110,14 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   const quoteSequence = useRef(0);
 
   useEffect(() => {
-    if (account && !recipient) setRecipient(account);
-  }, [account, recipient]);
+    setRecipient(recipientForConnectedAccount(account));
+  }, [account, open]);
 
   useEffect(() => {
     if (!open) {
       setAmount('');
       setQuote(null);
+      setQuoteKey(null);
       setQuoteError(null);
       setSubmitError(null);
       setRequestId(null);
@@ -130,11 +146,13 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     amountIn > 0n && tokenBalance.gte(tokenIn.fromBlockchain(amountIn).toHuman());
   const recipientIsValid = ethers.utils.isAddress(recipient);
   const sourceMode = balanceModeForSource(source);
+  const isCorrectChain = !!config && isRffChain(chainId, config.chainId);
   const approval = useRffApproval({
     token: tokenIn.address as Address,
     safeAddress: config?.safeAddress,
     sourceMode,
     requestedAmountIn: amountIn,
+    expectedChainId: config?.chainId,
   });
 
   const fetchQuote = useCallback(async () => {
@@ -149,17 +167,24 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   }, [amountIn, config, getToken, tokenIn.address, tokenOut.address]);
 
   useEffect(() => {
-    setQuote(null);
-    setQuoteError(null);
-    if (!open || !config || amountIn <= 0n) return undefined;
-
     quoteSequence.current += 1;
     const sequence = quoteSequence.current;
+    setQuote(null);
+    setQuoteKey(null);
+    setQuoteError(null);
+    if (!open || !config || amountIn <= 0n) {
+      setQuoteLoading(false);
+      return undefined;
+    }
+
     const timeout = window.setTimeout(async () => {
       setQuoteLoading(true);
       try {
         const nextQuote = await fetchQuote();
-        if (quoteSequence.current === sequence) setQuote(nextQuote);
+        if (quoteSequence.current === sequence) {
+          setQuote(nextQuote);
+          setQuoteKey(rffQuoteKey(tokenIn.address, amountIn));
+        }
       } catch (error) {
         if (quoteSequence.current === sequence) {
           setQuoteError(errorMessage(error));
@@ -170,9 +195,12 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     }, 450);
 
     return () => window.clearTimeout(timeout);
-  }, [amountIn, config, fetchQuote, open]);
+  }, [amountIn, config, fetchQuote, open, tokenIn.address]);
 
-  const minAmountOut = quote
+  const quoteIsCurrent =
+    !!quote && quoteKey === rffQuoteKey(tokenIn.address, amountIn);
+
+  const minAmountOut = quoteIsCurrent
     ? minimumAmountOut(quote.amountOut, DEFAULT_SLIPPAGE_BPS)
     : 0n;
   const formatTokenAmount = (value: bigint) =>
@@ -197,7 +225,10 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     setSubmitError(null);
     setSubmitting(true);
     try {
-      let freshQuote = quote;
+      if (!isCorrectChain) {
+        throw new Error('Switch to Arbitrum One before submitting.');
+      }
+      let freshQuote = quoteIsCurrent ? quote : null;
       if (!freshQuote || freshQuote.expiresAt * 1_000 <= Date.now()) {
         freshQuote = await fetchQuote();
       }
@@ -255,10 +286,11 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     !!account &&
     !!signer &&
     !!config &&
+    isCorrectChain &&
     amountIn > 0n &&
     balanceIsEnough &&
     recipientIsValid &&
-    !!quote &&
+    quoteIsCurrent &&
     approval.isApproved &&
     !quoteLoading;
 
@@ -370,7 +402,7 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                     <Typography variant="h4">
                       {quoteLoading ? (
                         <CircularProgress size={18} />
-                      ) : quote ? (
+                      ) : quoteIsCurrent ? (
                         formatTokenAmount(quote.amountOut)
                       ) : (
                         '—'
@@ -385,7 +417,9 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                     Minimum received
                   </Typography>
                   <Typography>
-                    {quote ? `${formatTokenAmount(minAmountOut)} ${tokenOut.symbol}` : '—'}
+                    {quoteIsCurrent
+                      ? `${formatTokenAmount(minAmountOut)} ${tokenOut.symbol}`
+                      : '—'}
                   </Typography>
                 </Stack>
                 <Stack direction="row" justifyContent="space-between">
@@ -456,6 +490,21 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
 
               {!account ? (
                 <WalletButton showFullText variant="contained" color="primary" />
+              ) : !isCorrectChain && config ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  disabled={isSwitchingChain}
+                  onClick={() => switchChain({ chainId: config.chainId })}
+                  startIcon={
+                    isSwitchingChain ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : undefined
+                  }
+                >
+                  {isSwitchingChain ? 'Switching…' : 'Switch to Arbitrum One'}
+                </Button>
               ) : (
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                   <Button
@@ -465,6 +514,8 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                     disabled={
                       amountIn <= 0n ||
                       !balanceIsEnough ||
+                      !config ||
+                      !approval.isCorrectChain ||
                       approval.isApproving ||
                       approval.isApproved
                     }
@@ -511,7 +562,12 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
               )}
             </Stack>
           )}
-          <Box ref={containerRef} sx={{ minHeight: 1 }} aria-hidden />
+          <Box
+            ref={containerRef}
+            sx={{ minHeight: 1 }}
+            aria-live="polite"
+            aria-label="Security verification challenge"
+          />
         </StyledDialogContent>
       </StyledDialog>
     </>

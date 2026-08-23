@@ -64,3 +64,10 @@ export function adaptiveInputAmount(
     (minimum, value) => (value < minimum ? value : minimum)
   );
 }
+
+export function isExactRffAllowance(
+  allowance: bigint,
+  requestedAmountIn: bigint
+): boolean {
+  return requestedAmountIn > 0n && allowance === requestedAmountIn;
+}

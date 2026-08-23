@@ -2,10 +2,15 @@ import { useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 import type { Address } from 'viem';
+import { useAccount as useWagmiAccount } from 'wagmi';
 
 import useAccount from '~/hooks/ledger/useAccount';
 import { useSigner } from '~/hooks/ledger/useSigner';
-import { BEANSTALK_ADDRESS, buildApprovalCall } from '~/lib/Rff/approval';
+import {
+  BEANSTALK_ADDRESS,
+  buildApprovalCall,
+  isExactRffAllowance,
+} from '~/lib/Rff/approval';
 import { BalanceMode } from '~/lib/Rff/request';
 
 const ERC20_ALLOWANCE_ABI = [
@@ -20,14 +25,19 @@ export default function useRffApproval(input: {
   safeAddress?: Address;
   sourceMode: BalanceMode;
   requestedAmountIn: bigint;
+  expectedChainId?: number;
 }) {
   const account = useAccount();
+  const { chainId } = useWagmiAccount();
   const { data: signer } = useSigner();
+  const isCorrectChain =
+    !!input.expectedChainId && chainId === input.expectedChainId;
   const enabled =
     !!account &&
     !!signer &&
     !!input.token &&
     !!input.safeAddress &&
+    isCorrectChain &&
     input.requestedAmountIn > 0n;
 
   const queryKey = useMemo(
@@ -38,8 +48,17 @@ export default function useRffApproval(input: {
       input.token,
       input.safeAddress,
       input.sourceMode,
+      chainId,
+      input.expectedChainId,
     ],
-    [account, input.safeAddress, input.sourceMode, input.token]
+    [
+      account,
+      chainId,
+      input.expectedChainId,
+      input.safeAddress,
+      input.sourceMode,
+      input.token,
+    ]
   );
 
   const allowance = useQuery({
@@ -77,6 +96,9 @@ export default function useRffApproval(input: {
       if (!signer || !input.token || !input.safeAddress) {
         throw new Error('Connect a wallet to approve this request.');
       }
+      if (!isCorrectChain) {
+        throw new Error('Switch to Arbitrum One before approving.');
+      }
       const call = buildApprovalCall(
         input.sourceMode,
         input.token,
@@ -93,7 +115,11 @@ export default function useRffApproval(input: {
   return {
     allowance: allowance.data ?? 0n,
     isLoading: allowance.isLoading,
-    isApproved: (allowance.data ?? 0n) >= input.requestedAmountIn,
+    isApproved: isExactRffAllowance(
+      allowance.data ?? 0n,
+      input.requestedAmountIn
+    ),
+    isCorrectChain,
     error: allowance.error ?? approval.error,
     approve: approval.mutateAsync,
     isApproving: approval.isPending,

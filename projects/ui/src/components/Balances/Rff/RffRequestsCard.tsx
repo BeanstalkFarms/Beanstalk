@@ -35,7 +35,10 @@ import {
   BalanceMode,
   buildCancelRffSwapTypedData,
 } from '~/lib/Rff/request';
-import { RffSessionManager } from '~/lib/Rff/session';
+import {
+  RffSessionAccountMismatchError,
+  RffSessionManager,
+} from '~/lib/Rff/session';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { requestStatusText, requestTokenSymbol } from './requestDisplay';
@@ -77,7 +80,8 @@ const RffRequestsCard: React.FC = () => {
   );
   const selected = sortedRequests.find((request) => request.id === selectedId);
   const needsSession =
-    requests.error instanceof RffApiError && requests.error.status === 401;
+    (requests.error instanceof RffApiError && requests.error.status === 401) ||
+    requests.error instanceof RffSessionAccountMismatchError;
 
   const ensureSession = async () => {
     if (!account || !signer) throw new Error('Connect a wallet to continue.');
@@ -344,10 +348,15 @@ const RffRequestsCard: React.FC = () => {
               variant="wide"
               title="A smaller fill may execute if your approval or selected-source wallet balance drops below the requested input. That fill completes the request; no remainder stays open."
             >
-              <InfoOutlinedIcon
+              <IconButton
                 aria-label="About smaller fills"
-                sx={{ fontSize: 16, color: 'text.secondary' }}
-              />
+                size="small"
+                sx={{ p: 0.25 }}
+              >
+                <InfoOutlinedIcon
+                  sx={{ fontSize: 16, color: 'text.secondary' }}
+                />
+              </IconButton>
             </Tooltip>
           </Stack>
         ) : null}
@@ -356,7 +365,12 @@ const RffRequestsCard: React.FC = () => {
           <Alert severity="warning">That request could not be found.</Alert>
         ) : null}
         {actionError ? <Alert severity="error">{actionError}</Alert> : null}
-        <Box ref={containerRef} sx={{ minHeight: 1 }} aria-hidden />
+        <Box
+          ref={containerRef}
+          sx={{ minHeight: 1 }}
+          aria-live="polite"
+          aria-label="Wallet verification challenge"
+        />
       </Stack>
     </Card>
   );

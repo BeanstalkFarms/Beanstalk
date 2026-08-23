@@ -7,6 +7,7 @@ import {
   INTERNAL_APPROVAL_ABI,
   adaptiveInputAmount,
   buildApprovalCall,
+  isExactRffAllowance,
 } from './approval';
 import { BalanceMode, BEAN_ADDRESS } from './request';
 
@@ -52,5 +53,11 @@ describe('RFF approval gate', () => {
     expect(adaptiveInputAmount(1_000_000n, 2_000_000n, 800_000n)).toBe(
       800_000n
     );
+  });
+
+  it('requires an exact allowance instead of accepting a stale unlimited approval', () => {
+    expect(isExactRffAllowance(1_000_000n, 1_000_000n)).toBe(true);
+    expect(isExactRffAllowance(2_000_000n, 1_000_000n)).toBe(false);
+    expect(isExactRffAllowance(999_999n, 1_000_000n)).toBe(false);
   });
 });

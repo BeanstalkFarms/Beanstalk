@@ -2,11 +2,45 @@ import { describe, expect, it } from 'vitest';
 import type { Address } from 'viem';
 
 import { RffApiError } from './client';
-import { RffSessionManager } from './session';
+import {
+  assertRffSessionRequester,
+  listRffRequestsForAccount,
+  RffSessionAccountMismatchError,
+  RffSessionManager,
+} from './session';
 
 const REQUESTER = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
 describe('RFF wallet session manager', () => {
+  it('rejects a cookie session belonging to a different connected wallet', () => {
+    expect(() =>
+      assertRffSessionRequester(
+        REQUESTER,
+        '0x2222222222222222222222222222222222222222'
+      )
+    ).toThrow(RffSessionAccountMismatchError);
+  });
+
+  it('does not load private requests from another wallet session', async () => {
+    let listed = false;
+    await expect(
+      listRffRequestsForAccount(
+        {
+          getSession: async () => ({
+            requester:
+              '0x2222222222222222222222222222222222222222' as Address,
+          }),
+          listRequests: async () => {
+            listed = true;
+            return ['private-request'];
+          },
+        },
+        REQUESTER
+      )
+    ).rejects.toThrow(RffSessionAccountMismatchError);
+    expect(listed).toBe(false);
+  });
+
   it('reuses a session already attached to the connected wallet', async () => {
     const events: string[] = [];
     const manager = new RffSessionManager({
