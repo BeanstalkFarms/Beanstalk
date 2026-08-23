@@ -6,8 +6,8 @@ import strip from '@rollup/plugin-strip';
 import analyze from 'rollup-plugin-analyzer';
 import removeHTMLAttributes from 'vite-plugin-react-remove-attributes';
 
-const RFF_STAGING_ORIGIN =
-  'https://rff-service-staging.rff-service.workers.dev';
+const RFF_STAGING_ORIGIN = 'https://rff-staging.bean.money';
+const RFF_UI_ORIGIN = 'https://app.bean.money';
 
 type CSPData = {
   'default-src': string[];
@@ -46,7 +46,6 @@ const CSP = buildCSP({
     'https://gateway-arbitrum.network.thegraph.com', // Decentralized subgraph
     '*.0x.org', // 0x API
     '*.tenderly.co', // Tenderly API
-    'https://rff-service-staging.rff-service.workers.dev', // RFF staging API
   ],
   'style-src': [
     "'self'",
@@ -93,7 +92,7 @@ export default defineConfig(({ command }) => ({
         rewrite: (requestPath) => requestPath.replace(/^\/rff-api/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyRequest) => {
-            proxyRequest.setHeader('Origin', RFF_STAGING_ORIGIN);
+            proxyRequest.setHeader('Origin', RFF_UI_ORIGIN);
           });
           proxy.on('proxyRes', (proxyResponse) => {
             const cookies = proxyResponse.headers['set-cookie'];
