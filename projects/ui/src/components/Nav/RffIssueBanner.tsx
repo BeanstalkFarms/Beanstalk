@@ -1,7 +1,7 @@
 import React from 'react';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { Alert, Box, IconButton, Link, Stack, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 import {
   RFF_BANNER_HEIGHT,
@@ -15,16 +15,7 @@ type Props = {
 };
 
 const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
-  const navigate = useNavigate();
   const { isVisible, dismiss } = useRffBannerVisibility();
-
-  const navigateToRff = () => navigate('/swap');
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      navigateToRff();
-    }
-  };
 
   const handleDismiss = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -36,18 +27,8 @@ const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
 
   return (
     <Box
-      role="link"
-      tabIndex={0}
-      aria-label="Open Swap and Request a Fill"
-      onClick={navigateToRff}
-      onKeyDown={handleKeyDown}
       sx={{
-        cursor: 'pointer',
-        '&:focus-visible': {
-          outline: '2px solid',
-          outlineColor: 'primary.main',
-          outlineOffset: -2,
-        },
+        position: 'relative',
       }}
     >
       <Alert
@@ -56,7 +37,7 @@ const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
         aria-label="RFF liquidity migration notice"
         sx={{
           position: 'relative',
-          height: {
+          minHeight: {
             xs: RFF_BANNER_HEIGHT_MOBILE,
             sm: RFF_BANNER_HEIGHT,
           },
@@ -71,7 +52,27 @@ const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
           '& .MuiAlert-message': { width: '100%', py: 0 },
         }}
       >
-        <Stack gap={0.25} alignItems="center" textAlign="center">
+        <Box
+          component={RouterLink}
+          to="/swap"
+          aria-label="Open Swap and Request a Fill"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: -2,
+            },
+          }}
+        />
+        <Stack
+          gap={0.25}
+          alignItems="center"
+          textAlign="center"
+          sx={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}
+        >
           <Typography
             color="text.secondary"
             lineHeight={1.3}
@@ -95,8 +96,7 @@ const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
                 rel="noreferrer"
                 color="inherit"
                 fontWeight="fontWeightBold"
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
+                sx={{ pointerEvents: 'auto' }}
               >
                 Read more about it here
               </Link>
@@ -117,6 +117,7 @@ const RffIssueBanner: FC<Props> = ({ announcementUrl }) => {
             top: '50%',
             transform: 'translateY(-50%)',
             color: 'text.secondary',
+            zIndex: 3,
           }}
         >
           <CloseRoundedIcon fontSize="small" />

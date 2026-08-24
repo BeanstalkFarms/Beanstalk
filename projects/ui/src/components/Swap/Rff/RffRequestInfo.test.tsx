@@ -13,7 +13,10 @@ describe('RffRequestInfo', () => {
   it('describes the RFF intent and links to the EBIP', () => {
     render(
       <ThemeProvider theme={theme}>
-        <RffRequestInfo announcementUrl="https://example.com/ebip" />
+        <RffRequestInfo
+          announcementUrl="https://example.com/ebip"
+          safeAddress="0x1111111111111111111111111111111111111111"
+        />
       </ThemeProvider>
     );
 
@@ -23,6 +26,11 @@ describe('RffRequestInfo', () => {
     expect(
       screen.getByRole('link', { name: 'See EBIP →' }).getAttribute('href')
     ).toBe('https://example.com/ebip');
+    expect(
+      screen.getByRole('link', { name: 'RFF Multisig' }).getAttribute('href')
+    ).toBe(
+      'https://app.safe.global/home?safe=arb1:0x1111111111111111111111111111111111111111'
+    );
   });
 
   it('explains the executable amount beside Minimum received', async () => {

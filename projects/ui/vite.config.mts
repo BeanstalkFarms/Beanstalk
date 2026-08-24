@@ -55,7 +55,6 @@ const CSP = buildCSP({
     "'self'",
     '*.google-analytics.com',
     '*.googletagmanager.com',
-    'https://challenges.cloudflare.com', // Cloudflare Turnstile
     "'sha256-D0XQFeW9gcWWp4NGlqN0xpmiObsjqCewnVFeAsys7qM='", // GA inline script
   ],
   'img-src': [
@@ -72,7 +71,6 @@ const CSP = buildCSP({
   'frame-src': [
     'https://verify.walletconnect.com/',
     'https://verify.walletconnect.org',
-    'https://challenges.cloudflare.com', // Cloudflare Turnstile
   ], // for walletconnect
 });
 

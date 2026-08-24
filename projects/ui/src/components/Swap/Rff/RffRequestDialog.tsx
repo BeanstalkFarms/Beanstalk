@@ -36,8 +36,6 @@ import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
-import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
-import usePrice from '~/hooks/beanstalk/usePrice';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useSdk from '~/hooks/sdk';
@@ -45,6 +43,7 @@ import type { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import useRffApproval from '~/hooks/rff/useRffApproval';
 import { rffQueryKeys, useRffConfig } from '~/hooks/rff/useRff';
 import { rffApi } from '~/lib/Rff/runtime';
+import { fetchInstantTokenUsdPrices } from '~/lib/Rff/oracle';
 import {
   buildRffRequest,
   buildRffSwapRequestTypedData,
@@ -57,6 +56,7 @@ import {
   balanceForSource,
   balanceModeForSource,
   isRffChain,
+  isRffOracleQuoteFresh,
   oracleAmountOut,
   recipientForConnectedAccount,
 } from './model';
@@ -91,8 +91,6 @@ const RffRequestDialog: React.FC<Props> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const balances = useFarmerBalances();
-  const beanPrice = usePrice();
-  const tokenPrices = useDataFeedTokenPrices();
   const { data: config, error: configError } = useRffConfig(open);
 
   const [tokenIn, setTokenIn] = useState(sdk.tokens.BEAN);
@@ -106,6 +104,42 @@ const RffRequestDialog: React.FC<Props> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<Hex | null>(null);
+  const [oraclePrices, setOraclePrices] = useState<{
+    bean: BigNumber;
+    wsteth: BigNumber;
+    fetchedAt: number;
+  } | null>(null);
+  const [oracleLoading, setOracleLoading] = useState(false);
+  const [oracleError, setOracleError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    let active = true;
+
+    const refreshOraclePrices = async () => {
+      setOracleLoading(true);
+      try {
+        const [bean, wsteth] = await fetchInstantTokenUsdPrices(sdk, [
+          sdk.tokens.BEAN,
+          sdk.tokens.WSTETH,
+        ]);
+        if (!active) return;
+        setOraclePrices({ bean, wsteth, fetchedAt: Date.now() });
+        setOracleError(null);
+      } catch (error) {
+        if (active) setOracleError(new Error(errorMessage(error)));
+      } finally {
+        if (active) setOracleLoading(false);
+      }
+    };
+
+    refreshOraclePrices();
+    const refreshTimer = window.setInterval(refreshOraclePrices, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(refreshTimer);
+    };
+  }, [open, sdk]);
 
   useEffect(() => {
     setRecipient(recipientForConnectedAccount(account));
@@ -137,8 +171,8 @@ const RffRequestDialog: React.FC<Props> = ({
     }
   }, [amount, tokenIn]);
 
-  const wstethPrice =
-    tokenPrices[getTokenIndex(sdk.tokens.WSTETH)] || new BigNumber(0);
+  const beanPrice = oraclePrices?.bean || new BigNumber(0);
+  const wstethPrice = oraclePrices?.wsteth || new BigNumber(0);
   const tokenInIsBean = tokenIn.equals(sdk.tokens.BEAN);
   const tokenInUsd = tokenInIsBean ? beanPrice : wstethPrice;
   const tokenOutUsd = tokenInIsBean ? wstethPrice : beanPrice;
@@ -153,8 +187,16 @@ const RffRequestDialog: React.FC<Props> = ({
       }),
     [amountIn, tokenIn.decimals, tokenInUsd, tokenOut.decimals, tokenOutUsd]
   );
+  const oracleQuoteIsFresh = isRffOracleQuoteFresh(
+    oraclePrices?.fetchedAt,
+    Date.now()
+  );
   const quoteLoading =
-    amountIn > 0n && (tokenInUsd.lte(0) || tokenOutUsd.lte(0));
+    amountIn > 0n &&
+    (oracleLoading ||
+      !oracleQuoteIsFresh ||
+      tokenInUsd.lte(0) ||
+      tokenOutUsd.lte(0));
 
   const balanceIsEnough =
     amountIn > 0n && tokenBalance.gte(tokenIn.fromBlockchain(amountIn).toHuman());
@@ -169,7 +211,7 @@ const RffRequestDialog: React.FC<Props> = ({
     expectedChainId: config?.chainId,
   });
 
-  const quoteIsCurrent = quotedAmountOut > 0n;
+  const quoteIsCurrent = quotedAmountOut > 0n && oracleQuoteIsFresh;
   const minAmountOut = quoteIsCurrent
     ? minimumAmountOut(quotedAmountOut, DEFAULT_SLIPPAGE_BPS)
     : 0n;
@@ -197,6 +239,9 @@ const RffRequestDialog: React.FC<Props> = ({
     try {
       if (!isCorrectChain) {
         throw new Error('Switch to Arbitrum One before submitting.');
+      }
+      if (!isRffOracleQuoteFresh(oraclePrices?.fetchedAt, Date.now())) {
+        throw new Error('Oracle prices are refreshing. Please try again.');
       }
       if (!quoteIsCurrent) throw new Error('Oracle prices are still loading.');
 
@@ -277,7 +322,10 @@ const RffRequestDialog: React.FC<Props> = ({
             </Stack>
           ) : (
             <Stack gap={2}>
-              <RffRequestInfo announcementUrl={announcementUrl} />
+              <RffRequestInfo
+                announcementUrl={announcementUrl}
+                safeAddress={config?.safeAddress}
+              />
 
               <TokenSelectDialog
                 title="Select Input"
@@ -427,10 +475,10 @@ const RffRequestDialog: React.FC<Props> = ({
                 </Collapse>
               </Box>
 
-              {configError || submitError || approval.error ? (
+              {configError || oracleError || submitError || approval.error ? (
                 <Alert severity="error">
                   {errorMessage(
-                    configError || submitError || approval.error
+                    configError || oracleError || submitError || approval.error
                   )}
                 </Alert>
               ) : null}

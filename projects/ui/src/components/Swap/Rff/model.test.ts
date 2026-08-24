@@ -6,6 +6,7 @@ import {
   balanceForSource,
   balanceModeForSource,
   isRffChain,
+  isRffOracleQuoteFresh,
   oracleAmountOut,
   recipientForConnectedAccount,
 } from './model';
@@ -93,5 +94,13 @@ describe('RFF form model', () => {
     expect(isRffChain(42_161, 42_161)).toBe(true);
     expect(isRffChain(1, 42_161)).toBe(false);
     expect(isRffChain(undefined, 42_161)).toBe(false);
+  });
+
+  it('rejects oracle quotes older than two minutes', () => {
+    const now = 1_000_000;
+
+    expect(isRffOracleQuoteFresh(now - 119_999, now)).toBe(true);
+    expect(isRffOracleQuoteFresh(now - 120_001, now)).toBe(false);
+    expect(isRffOracleQuoteFresh(undefined, now)).toBe(false);
   });
 });

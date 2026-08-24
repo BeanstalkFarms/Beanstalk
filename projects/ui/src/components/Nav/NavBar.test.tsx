@@ -71,8 +71,21 @@ describe('NavBar', () => {
         .getAttribute('href')
     ).toBe('https://example.com/ebip');
     expect(banner.querySelector('.MuiAlert-icon')).toBeNull();
+    const swapLink = screen.getByRole('link', {
+      name: 'Open Swap and Request a Fill',
+    });
+    expect(
+      swapLink.contains(
+        screen.getByRole('button', { name: 'Dismiss liquidity notice' })
+      )
+    ).toBe(false);
+    expect(
+      swapLink.contains(
+        screen.getByRole('link', { name: 'Read more about it here' })
+      )
+    ).toBe(false);
 
-    fireEvent.click(banner);
+    fireEvent.click(swapLink);
     expect(screen.getByText('/swap')).toBeTruthy();
   });
 

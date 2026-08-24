@@ -64,3 +64,15 @@ export function isRffChain(
 ): boolean {
   return connectedChainId === configuredChainId;
 }
+
+const RFF_ORACLE_QUOTE_MAX_AGE_MS = 2 * 60 * 1000;
+
+export function isRffOracleQuoteFresh(
+  fetchedAtMs: number | undefined,
+  nowMs: number
+): boolean {
+  return (
+    fetchedAtMs !== undefined &&
+    nowMs - fetchedAtMs <= RFF_ORACLE_QUOTE_MAX_AGE_MS
+  );
+}

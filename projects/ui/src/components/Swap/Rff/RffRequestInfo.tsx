@@ -4,24 +4,29 @@ import { IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
 
 type InfoProps = {
   announcementUrl: string;
+  safeAddress?: string;
 };
 
-const RFF_SAFE_URL =
-  'https://app.safe.global/home?safe=arb1:0x2B25b6F1c75231E30e89EF670999E2A3B1029CcE';
-
-const RffRequestInfo: React.FC<InfoProps> = ({ announcementUrl }) => (
+const RffRequestInfo: React.FC<InfoProps> = ({
+  announcementUrl,
+  safeAddress,
+}) => (
   <Typography color="text.secondary">
     Submit an intent to swap Bean ↔ wstETH, utilizing the full reserves held by
     the{' '}
-    <Link
-      href={RFF_SAFE_URL}
-      target="_blank"
-      rel="noreferrer"
-      color="primary"
-      fontWeight="fontWeightBold"
-    >
-      RFF Multisig
-    </Link>
+    {safeAddress ? (
+      <Link
+        href={`https://app.safe.global/home?safe=arb1:${safeAddress}`}
+        target="_blank"
+        rel="noreferrer"
+        color="primary"
+        fontWeight="fontWeightBold"
+      >
+        RFF Multisig
+      </Link>
+    ) : (
+      'RFF Multisig'
+    )}
     .{' '}
     {announcementUrl ? (
       <Link
