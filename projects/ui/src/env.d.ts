@@ -26,6 +26,12 @@ interface ImportMetaEnv {
    * API key for used for ZeroX Swap API
    */
   readonly VITE_ZERO_X_API_KEY: string;
+
+  /** Same-site Cloudflare Worker origin for Request for Fill. */
+  readonly VITE_RFF_API_URL?: string;
+
+  /** Discord announcement explaining the temporary liquidity removal. */
+  readonly VITE_RFF_ANNOUNCEMENT_URL?: string;
 }
 
 interface ImportMeta {

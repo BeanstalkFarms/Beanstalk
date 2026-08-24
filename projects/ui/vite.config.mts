@@ -6,6 +6,9 @@ import strip from '@rollup/plugin-strip';
 import analyze from 'rollup-plugin-analyzer';
 import removeHTMLAttributes from 'vite-plugin-react-remove-attributes';
 
+const RFF_STAGING_ORIGIN = 'https://rff-staging.bean.money';
+const RFF_UI_ORIGIN = 'https://app.bean.money';
+
 type CSPData = {
   'default-src': string[];
   'connect-src': string[];
@@ -79,6 +82,26 @@ export default defineConfig(({ command }) => ({
   server: {
     hmr: {
       overlay: true,
+    },
+    proxy: {
+      '/rff-api': {
+        target: RFF_STAGING_ORIGIN,
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/rff-api/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyRequest) => {
+            proxyRequest.setHeader('Origin', RFF_UI_ORIGIN);
+          });
+          proxy.on('proxyRes', (proxyResponse) => {
+            const cookies = proxyResponse.headers['set-cookie'];
+            if (cookies) {
+              proxyResponse.headers['set-cookie'] = cookies.map((cookie) =>
+                cookie.replace('Path=/v1', 'Path=/rff-api/v1')
+              );
+            }
+          });
+        },
+      },
     },
   },
   plugins: [

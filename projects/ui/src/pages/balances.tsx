@@ -7,6 +7,7 @@ import BalancesActions from '~/components/Balances/Actions';
 import BalancesHeader from '~/components/Balances/Header';
 import SiloBalancesHistory from '~/components/Balances/SiloBalancesHistory';
 import SiloBalances from '~/components/Balances/SiloBalances';
+import RffRequestsCard from '~/components/Balances/Rff/RffRequestsCard';
 
 const BalancesPage: FC<{}> = () => (
   <Container sx={{ maxWidth: `${XXLWidth}px !important`, width: '100%' }}>
@@ -15,11 +16,16 @@ const BalancesPage: FC<{}> = () => (
         <Typography variant="h1">Balances</Typography>
         <BalancesHeader />
       </Stack>
+      <Stack gap={2} direction={{ xs: 'column', lg: 'row' }}>
+        <Card sx={{ pt: 2, pb: 0, minWidth: 0, width: '100%' }}>
+          <SiloBalancesHistory />
+        </Card>
+        <Box width={{ xs: '100%', lg: 380 }} flexShrink={0}>
+          <RffRequestsCard />
+        </Box>
+      </Stack>
       <Stack gap={2} direction="row">
         <Stack sx={{ minWidth: 0 }} width="100%" gap={2}>
-          <Card sx={{ pt: 2, pb: 0 }}>
-            <SiloBalancesHistory />
-          </Card>
           {/* Deposit Balances */}
           <Card>
             <SiloBalances />

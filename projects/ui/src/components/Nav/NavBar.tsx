@@ -10,12 +10,14 @@ import {
 import Row from '~/components/Common/Row';
 import { FC } from '~/types';
 import useChainState from '~/hooks/chain/useChainState';
+import { RFF_ANNOUNCEMENT_URL } from '~/lib/Rff/runtime';
 import PriceButton from './Buttons/PriceButton';
 import SunButton from './Buttons/SunButton';
 import LinkButton from './Buttons/LinkButton';
 import AboutButton from './Buttons/AboutButton';
 import ROUTES from './routes';
 import HoverMenu from './HoverMenu';
+import RffIssueBanner from './RffIssueBanner';
 
 import { PAGE_BORDER_COLOR } from '../App/muiTheme';
 import BeanProgressIcon from '../Common/BeanProgressIcon';
@@ -65,7 +67,7 @@ const L1NavBar = ({ isMobile }: { isMobile: boolean }) => (
 );
 
 const NavBar: FC<{}> = ({ children }) => {
-  const { isArbitrum, isArbMainnet } = useChainState();
+  const { isArbitrum } = useChainState();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -86,6 +88,7 @@ const NavBar: FC<{}> = ({ children }) => {
         zIndex: 80,
       }}
     >
+      <RffIssueBanner announcementUrl={RFF_ANNOUNCEMENT_URL} />
       {children}
       <Row
         justifyContent="space-between"

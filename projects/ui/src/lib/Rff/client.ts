@@ -1,0 +1,240 @@
+import { getAddress, type Address, type Hex } from 'viem';
+
+import {
+  ARBITRUM_CHAIN_ID,
+  BEAN_ADDRESS,
+  WSTETH_ADDRESS,
+  type BalanceMode,
+  type RffSwapRequest,
+} from './request';
+
+type Fetch = typeof fetch;
+type FetchInit = Parameters<Fetch>[1];
+
+export class RffApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+    this.name = 'RffApiError';
+  }
+}
+
+export type CreateRffRequestResponse = {
+  requestId: Hex;
+  estimatedAmountIn: bigint;
+  created: boolean;
+};
+
+export type RffRuntimeConfig = {
+  chainId: number;
+  safeAddress: Address;
+  beanAddress: Address;
+  wstethAddress: Address;
+};
+
+export type RffRequestStatus =
+  | 'OPEN'
+  | 'LOCKED'
+  | 'SAFE_PROPOSED'
+  | 'EXECUTED'
+  | 'CANCELLED'
+  | 'EXPIRED';
+
+export type RffRequestRecord = RffSwapRequest & {
+  id: Hex;
+  signature: Hex;
+  status: RffRequestStatus;
+  lockedBy: string | null;
+  lockedAt: number | null;
+  safeTxHash: Hex | null;
+  actualAmountIn: bigint | null;
+  actualAmountOut: bigint | null;
+  scaledMinAmountOut: bigint | null;
+  quoteBlock: bigint | null;
+  executedTxHash: Hex | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
+function integer(value: unknown, field: string): bigint {
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) {
+    throw new Error(`RFF service returned an invalid ${field}`);
+  }
+  return BigInt(value);
+}
+
+function nullableInteger(value: unknown, field: string): bigint | null {
+  return value === null ? null : integer(value, field);
+}
+
+export class RffApiClient {
+  private readonly baseUrl: string;
+
+  constructor(
+    baseUrl: string,
+    private readonly fetchImpl: Fetch = (input, init) =>
+      globalThis.fetch(input, init)
+  ) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  private async request<T>(path: string, init?: FetchInit): Promise<T> {
+    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...init?.headers,
+      },
+    });
+    const body = (await response.json()) as T & { error?: unknown };
+    if (!response.ok) {
+      throw new RffApiError(
+        typeof body.error === 'string'
+          ? body.error
+          : 'RFF service request failed',
+        response.status
+      );
+    }
+    return body;
+  }
+
+  async getConfig(): Promise<RffRuntimeConfig> {
+    const config = await this.request<RffRuntimeConfig>('/v1/config');
+    if (config.chainId !== ARBITRUM_CHAIN_ID) {
+      throw new Error('RFF service is configured for the wrong chain');
+    }
+    if (getAddress(config.beanAddress) !== BEAN_ADDRESS) {
+      throw new Error('RFF service returned an unexpected BEAN address');
+    }
+    if (getAddress(config.wstethAddress) !== WSTETH_ADDRESS) {
+      throw new Error('RFF service returned an unexpected wstETH address');
+    }
+    return {
+      ...config,
+      safeAddress: getAddress(config.safeAddress),
+      beanAddress: getAddress(config.beanAddress),
+      wstethAddress: getAddress(config.wstethAddress),
+    };
+  }
+
+  getSession(): Promise<{ requester: Address }> {
+    return this.request('/v1/session');
+  }
+
+  createSessionChallenge(
+    requester: Address
+  ): Promise<{ challengeId: string; message: string; expiresAt: number }> {
+    return this.request('/v1/session/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ requester }),
+    });
+  }
+
+  verifySession(
+    challengeId: string,
+    signature: Hex
+  ): Promise<{ requester: Address; expiresAt: number }> {
+    return this.request('/v1/session/verify', {
+      method: 'POST',
+      body: JSON.stringify({ challengeId, signature }),
+    });
+  }
+
+  async createRequest(
+    request: RffSwapRequest,
+    signature: Hex
+  ): Promise<CreateRffRequestResponse> {
+    const response = await this.request<{
+      requestId: Hex;
+      estimatedAmountIn: string;
+      created: boolean;
+    }>('/v1/requests', {
+      method: 'POST',
+      body: JSON.stringify({
+        request: {
+          ...request,
+          requestedAmountIn: request.requestedAmountIn.toString(),
+          minAmountOutAtRequestedIn:
+            request.minAmountOutAtRequestedIn.toString(),
+          nonce: request.nonce.toString(),
+          deadline: request.deadline.toString(),
+        },
+        signature,
+      }),
+    });
+
+    return {
+      ...response,
+      estimatedAmountIn: integer(
+        response.estimatedAmountIn,
+        'estimatedAmountIn'
+      ),
+    };
+  }
+
+  async listRequests(): Promise<RffRequestRecord[]> {
+    const response = await this.request<{
+      requests: Array<
+        Omit<
+          RffRequestRecord,
+          | 'requestedAmountIn'
+          | 'minAmountOutAtRequestedIn'
+          | 'nonce'
+          | 'deadline'
+          | 'actualAmountIn'
+          | 'actualAmountOut'
+          | 'scaledMinAmountOut'
+          | 'quoteBlock'
+        > & {
+          requestedAmountIn: string;
+          minAmountOutAtRequestedIn: string;
+          nonce: string;
+          deadline: string;
+          sourceMode: BalanceMode;
+          actualAmountIn: string | null;
+          actualAmountOut: string | null;
+          scaledMinAmountOut: string | null;
+          quoteBlock: string | null;
+        }
+      >;
+    }>('/v1/requests');
+
+    return response.requests.map((request) => ({
+      ...request,
+      requestedAmountIn: integer(
+        request.requestedAmountIn,
+        'requestedAmountIn'
+      ),
+      minAmountOutAtRequestedIn: integer(
+        request.minAmountOutAtRequestedIn,
+        'minAmountOutAtRequestedIn'
+      ),
+      nonce: integer(request.nonce, 'nonce'),
+      deadline: integer(request.deadline, 'deadline'),
+      actualAmountIn: nullableInteger(request.actualAmountIn, 'actualAmountIn'),
+      actualAmountOut: nullableInteger(
+        request.actualAmountOut,
+        'actualAmountOut'
+      ),
+      scaledMinAmountOut: nullableInteger(
+        request.scaledMinAmountOut,
+        'scaledMinAmountOut'
+      ),
+      quoteBlock: nullableInteger(request.quoteBlock, 'quoteBlock'),
+    }));
+  }
+
+  cancelRequest(
+    requestId: Hex,
+    deadline: bigint,
+    signature: Hex
+  ): Promise<{ requestId: Hex; status: 'CANCELLED' }> {
+    return this.request(`/v1/requests/${requestId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ deadline: deadline.toString(), signature }),
+    });
+  }
+}

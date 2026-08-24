@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Stack } from '@mui/material';
 import SwapActions from '~/components/Swap/Actions';
+import RequestForFill from '~/components/Swap/Rff';
 import PageHeader from '~/components/Common/PageHeader';
 import GuideButton from '~/components/Common/Guide/GuideButton';
 import { HOW_TO_TRANSFER_BALANCES, HOW_TO_TRADE_BEANS } from '~/util/Guides';
@@ -22,6 +23,7 @@ const SwapPage: FC<{}> = () => (
         }
       />
       <SwapActions />
+      <RequestForFill />
     </Stack>
   </Container>
 );
