@@ -21,14 +21,6 @@ export class RffApiError extends Error {
   }
 }
 
-export type RffQuote = {
-  amountOut: bigint;
-  reserveBean: bigint;
-  reserveWsteth: bigint;
-  blockNumber: bigint;
-  expiresAt: number;
-};
-
 export type CreateRffRequestResponse = {
   requestId: Hex;
   estimatedAmountIn: bigint;
@@ -40,7 +32,6 @@ export type RffRuntimeConfig = {
   safeAddress: Address;
   beanAddress: Address;
   wstethAddress: Address;
-  turnstileSiteKey: string;
 };
 
 export type RffRequestStatus =
@@ -83,7 +74,8 @@ export class RffApiClient {
 
   constructor(
     baseUrl: string,
-    private readonly fetchImpl: Fetch = fetch
+    private readonly fetchImpl: Fetch = (input, init) =>
+      globalThis.fetch(input, init)
   ) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
@@ -120,9 +112,6 @@ export class RffApiClient {
     if (getAddress(config.wstethAddress) !== WSTETH_ADDRESS) {
       throw new Error('RFF service returned an unexpected wstETH address');
     }
-    if (!config.turnstileSiteKey?.trim()) {
-      throw new Error('RFF service did not provide a Turnstile site key');
-    }
     return {
       ...config,
       safeAddress: getAddress(config.safeAddress),
@@ -136,12 +125,11 @@ export class RffApiClient {
   }
 
   createSessionChallenge(
-    requester: Address,
-    turnstileToken: string
+    requester: Address
   ): Promise<{ challengeId: string; message: string; expiresAt: number }> {
     return this.request('/v1/session/challenge', {
       method: 'POST',
-      body: JSON.stringify({ requester, turnstileToken }),
+      body: JSON.stringify({ requester }),
     });
   }
 
@@ -155,41 +143,9 @@ export class RffApiClient {
     });
   }
 
-  async getQuote(
-    tokenIn: Address,
-    tokenOut: Address,
-    amountIn: bigint,
-    turnstileToken: string
-  ): Promise<RffQuote> {
-    const response = await this.request<{
-      amountOut: string;
-      reserveBean: string;
-      reserveWsteth: string;
-      blockNumber: string;
-      expiresAt: number;
-    }>('/v1/quote', {
-      method: 'POST',
-      body: JSON.stringify({
-        tokenIn,
-        tokenOut,
-        amountIn: amountIn.toString(),
-        turnstileToken,
-      }),
-    });
-
-    return {
-      amountOut: integer(response.amountOut, 'amountOut'),
-      reserveBean: integer(response.reserveBean, 'reserveBean'),
-      reserveWsteth: integer(response.reserveWsteth, 'reserveWsteth'),
-      blockNumber: integer(response.blockNumber, 'blockNumber'),
-      expiresAt: response.expiresAt,
-    };
-  }
-
   async createRequest(
     request: RffSwapRequest,
-    signature: Hex,
-    turnstileToken: string
+    signature: Hex
   ): Promise<CreateRffRequestResponse> {
     const response = await this.request<{
       requestId: Hex;
@@ -207,7 +163,6 @@ export class RffApiClient {
           deadline: request.deadline.toString(),
         },
         signature,
-        turnstileToken,
       }),
     });
 

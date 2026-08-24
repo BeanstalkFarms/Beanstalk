@@ -27,7 +27,6 @@ import {
   rffQueryKeys,
   useRffConfig,
   useRffRequests,
-  useRffTurnstile,
 } from '~/hooks/rff/useRff';
 import { rffApi } from '~/lib/Rff/runtime';
 import { RffApiError, type RffRequestRecord } from '~/lib/Rff/client';
@@ -63,9 +62,6 @@ const RffRequestsCard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('request');
   const { data: config } = useRffConfig(!!account);
-  const { containerRef, getToken } = useRffTurnstile(
-    config?.turnstileSiteKey
-  );
   const requests = useRffRequests(account);
   const [verifying, setVerifying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -88,7 +84,6 @@ const RffRequestsCard: React.FC = () => {
     const session = new RffSessionManager(rffApi);
     await session.ensureSession({
       requester: account as Address,
-      getToken,
       signMessage: async (message) =>
         (await signer.signMessage(message)) as Hex,
     });
@@ -365,12 +360,6 @@ const RffRequestsCard: React.FC = () => {
           <Alert severity="warning">That request could not be found.</Alert>
         ) : null}
         {actionError ? <Alert severity="error">{actionError}</Alert> : null}
-        <Box
-          ref={containerRef}
-          sx={{ minHeight: 1 }}
-          aria-live="polite"
-          aria-label="Wallet verification challenge"
-        />
       </Stack>
     </Card>
   );

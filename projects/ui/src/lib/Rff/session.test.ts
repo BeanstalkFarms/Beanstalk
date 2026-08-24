@@ -81,10 +81,6 @@ describe('RFF wallet session manager', () => {
 
     await manager.ensureSession({
       requester: REQUESTER,
-      getToken: async () => {
-        events.push('turnstile');
-        return 'unused';
-      },
       signMessage: async () => {
         events.push('sign');
         return '0x1234';
@@ -101,8 +97,8 @@ describe('RFF wallet session manager', () => {
         events.push('check');
         throw new RffApiError('Authentication required', 401);
       },
-      createSessionChallenge: async (requester, token) => {
-        events.push(`challenge:${requester}:${token}`);
+      createSessionChallenge: async (requester) => {
+        events.push(`challenge:${requester}`);
         return {
           challengeId: 'challenge-id',
           message: 'Beanstalk RFF authentication',
@@ -117,10 +113,6 @@ describe('RFF wallet session manager', () => {
 
     await manager.ensureSession({
       requester: REQUESTER,
-      getToken: async (action) => {
-        events.push(`turnstile:${action}`);
-        return 'fresh-token';
-      },
       signMessage: async (message) => {
         events.push(`sign:${message}`);
         return '0x1234';
@@ -129,8 +121,7 @@ describe('RFF wallet session manager', () => {
 
     expect(events).toEqual([
       'check',
-      'turnstile:rff_session',
-      `challenge:${REQUESTER}:fresh-token`,
+      `challenge:${REQUESTER}`,
       'sign:Beanstalk RFF authentication',
       'verify:challenge-id:0x1234',
     ]);

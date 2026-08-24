@@ -22,8 +22,8 @@ const SwapPage: FC<{}> = () => (
           />
         }
       />
-      <RequestForFill />
       <SwapActions />
+      <RequestForFill />
     </Stack>
   </Container>
 );

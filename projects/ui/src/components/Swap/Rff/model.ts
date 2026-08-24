@@ -25,8 +25,33 @@ export function balanceModeForSource(source: BalanceFrom): BalanceMode {
   throw new Error('RFF requires a single balance source');
 }
 
-export function rffQuoteKey(tokenIn: string, amountIn: bigint): string {
-  return `${tokenIn.toLowerCase()}:${amountIn.toString()}`;
+export function oracleAmountOut(input: {
+  amountIn: bigint;
+  tokenInDecimals: number;
+  tokenOutDecimals: number;
+  tokenInUsd: BigNumber;
+  tokenOutUsd: BigNumber;
+}): bigint {
+  if (
+    input.amountIn <= 0n ||
+    !input.tokenInUsd.isFinite() ||
+    !input.tokenOutUsd.isFinite() ||
+    input.tokenInUsd.lte(0) ||
+    input.tokenOutUsd.lte(0)
+  ) {
+    return 0n;
+  }
+
+  const humanAmountIn = new BigNumber(input.amountIn.toString()).shiftedBy(
+    -input.tokenInDecimals
+  );
+  const rawAmountOut = humanAmountIn
+    .times(input.tokenInUsd)
+    .div(input.tokenOutUsd)
+    .shiftedBy(input.tokenOutDecimals)
+    .integerValue(BigNumber.ROUND_DOWN);
+
+  return rawAmountOut.gt(0) ? BigInt(rawAmountOut.toFixed(0)) : 0n;
 }
 
 export function recipientForConnectedAccount(account?: string): string {

@@ -6,8 +6,8 @@ import {
   balanceForSource,
   balanceModeForSource,
   isRffChain,
+  oracleAmountOut,
   recipientForConnectedAccount,
-  rffQuoteKey,
 } from './model';
 
 describe('RFF form model', () => {
@@ -44,10 +44,40 @@ describe('RFF form model', () => {
     );
   });
 
-  it('keys a quote to its exact token and raw input amount', () => {
+  it('quotes Bean to wstETH from the existing USD oracle prices', () => {
     expect(
-      rffQuoteKey('0xBEA0005B8599265D41256905A9B3073D397812E4', 1_000_000n)
-    ).toBe('0xbea0005b8599265d41256905a9b3073d397812e4:1000000');
+      oracleAmountOut({
+        amountIn: 1_000_000_000n,
+        tokenInDecimals: 6,
+        tokenOutDecimals: 18,
+        tokenInUsd: new BigNumber('0.25'),
+        tokenOutUsd: new BigNumber('2500'),
+      })
+    ).toBe(100_000_000_000_000_000n);
+  });
+
+  it('quotes wstETH to Bean from the existing USD oracle prices', () => {
+    expect(
+      oracleAmountOut({
+        amountIn: 100_000_000_000_000_000n,
+        tokenInDecimals: 18,
+        tokenOutDecimals: 6,
+        tokenInUsd: new BigNumber('2500'),
+        tokenOutUsd: new BigNumber('0.25'),
+      })
+    ).toBe(1_000_000_000n);
+  });
+
+  it('does not quote until both oracle prices are usable', () => {
+    expect(
+      oracleAmountOut({
+        amountIn: 1_000_000n,
+        tokenInDecimals: 6,
+        tokenOutDecimals: 18,
+        tokenInUsd: new BigNumber(0),
+        tokenOutUsd: new BigNumber('2500'),
+      })
+    ).toBe(0n);
   });
 
   it('resets the default recipient when the connected wallet changes', () => {

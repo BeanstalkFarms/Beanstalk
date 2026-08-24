@@ -24,7 +24,6 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: BEAN_ADDRESS,
         wstethAddress: WSTETH_ADDRESS,
-        turnstileSiteKey: '0x4AAAA-test',
       })
     );
 
@@ -33,7 +32,6 @@ describe('RFF API client', () => {
       safeAddress: '0x1111111111111111111111111111111111111111',
       beanAddress: BEAN_ADDRESS,
       wstethAddress: WSTETH_ADDRESS,
-      turnstileSiteKey: '0x4AAAA-test',
     });
   });
 
@@ -44,7 +42,6 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: BEAN_ADDRESS,
         wstethAddress: WSTETH_ADDRESS,
-        turnstileSiteKey: '0x4AAAA-test',
       })
     );
     const wrongBean = new RffApiClient('https://rff.bean.money', async () =>
@@ -53,7 +50,6 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: '0x2222222222222222222222222222222222222222',
         wstethAddress: WSTETH_ADDRESS,
-        turnstileSiteKey: '0x4AAAA-test',
       })
     );
 
@@ -86,15 +82,11 @@ describe('RFF API client', () => {
       }
     );
 
-    const challenge = await client.createSessionChallenge(
-      REQUEST.requester,
-      'turnstile-token'
-    );
+    const challenge = await client.createSessionChallenge(REQUEST.requester);
     await client.verifySession(challenge.challengeId, '0x1234');
 
     expect(JSON.parse(await captured[0]!.text())).toEqual({
       requester: REQUEST.requester,
-      turnstileToken: 'turnstile-token',
     });
     expect(JSON.parse(await captured[1]!.text())).toEqual({
       challengeId: '0x1234',
@@ -130,11 +122,7 @@ describe('RFF API client', () => {
       }
     );
 
-    const response = await client.createRequest(
-      REQUEST,
-      '0x1234',
-      'turnstile-token'
-    );
+    const response = await client.createRequest(REQUEST, '0x1234');
     const payload = JSON.parse(await captured!.text());
 
     expect(captured!.url).toBe('https://rff.bean.money/v1/requests');
@@ -144,29 +132,6 @@ describe('RFF API client', () => {
     expect(payload.request.nonce).toBe('12345');
     expect(payload.request.deadline).toBe('2000000000');
     expect(response.estimatedAmountIn).toBe(750_000n);
-  });
-
-  it('parses quote integer fields without losing precision', async () => {
-    const client = new RffApiClient('https://rff.bean.money/', async () =>
-      Response.json({
-        amountOut: '123456789012345678901234',
-        reserveBean: '9000000000000',
-        reserveWsteth: '321000000000000000000',
-        blockNumber: '285000001',
-        expiresAt: 1_800_000_030,
-      })
-    );
-
-    const quote = await client.getQuote(
-      BEAN_ADDRESS,
-      WSTETH_ADDRESS,
-      1_000_000n,
-      'turnstile-token'
-    );
-
-    expect(quote.amountOut).toBe(123_456_789_012_345_678_901_234n);
-    expect(quote.blockNumber).toBe(285_000_001n);
-    expect(quote.expiresAt).toBe(1_800_000_030);
   });
 
   it('surfaces the service error and status for an actionable UI message', async () => {

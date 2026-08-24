@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import BigNumber from 'bignumber.js';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
   Alert,
   Box,
@@ -36,16 +36,14 @@ import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import WalletButton from '~/components/Common/Connection/WalletButton';
 import useFarmerBalances from '~/hooks/farmer/useFarmerBalances';
+import useDataFeedTokenPrices from '~/hooks/beanstalk/useDataFeedTokenPrices';
+import usePrice from '~/hooks/beanstalk/usePrice';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useSdk from '~/hooks/sdk';
 import type { TokenInstance } from '~/hooks/beanstalk/useTokens';
 import useRffApproval from '~/hooks/rff/useRffApproval';
-import {
-  rffQueryKeys,
-  useRffConfig,
-  useRffTurnstile,
-} from '~/hooks/rff/useRff';
+import { rffQueryKeys, useRffConfig } from '~/hooks/rff/useRff';
 import { rffApi } from '~/lib/Rff/runtime';
 import {
   buildRffRequest,
@@ -53,21 +51,23 @@ import {
   minimumAmountOut,
   randomRffNonce,
 } from '~/lib/Rff/request';
-import { RffSessionManager } from '~/lib/Rff/session';
-import type { RffQuote } from '~/lib/Rff/client';
 import { displayFullBN, getTokenIndex } from '~/util';
 
 import {
   balanceForSource,
   balanceModeForSource,
   isRffChain,
+  oracleAmountOut,
   recipientForConnectedAccount,
-  rffQuoteKey,
 } from './model';
+import RffRequestInfo, {
+  RffMinimumReceivedLabel,
+} from './RffRequestInfo';
 
 type Props = {
   open: boolean;
   onClose: () => void;
+  announcementUrl: string;
 };
 
 const DEFAULT_SLIPPAGE_BPS = 100;
@@ -78,7 +78,11 @@ function errorMessage(error: unknown): string {
     : 'Something went wrong. Please try again.';
 }
 
-const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
+const RffRequestDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  announcementUrl,
+}) => {
   const sdk = useSdk();
   const account = useAccount();
   const { chainId } = useWagmiAccount();
@@ -87,10 +91,9 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const balances = useFarmerBalances();
+  const beanPrice = usePrice();
+  const tokenPrices = useDataFeedTokenPrices();
   const { data: config, error: configError } = useRffConfig(open);
-  const { containerRef, getToken } = useRffTurnstile(
-    config?.turnstileSiteKey
-  );
 
   const [tokenIn, setTokenIn] = useState(sdk.tokens.BEAN);
   const [source, setSource] = useState(BalanceFrom.EXTERNAL);
@@ -100,14 +103,9 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   );
   const [advanced, setAdvanced] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [quote, setQuote] = useState<RffQuote | null>(null);
-  const [quoteKey, setQuoteKey] = useState<string | null>(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<Hex | null>(null);
-  const quoteSequence = useRef(0);
 
   useEffect(() => {
     setRecipient(recipientForConnectedAccount(account));
@@ -116,9 +114,6 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
   useEffect(() => {
     if (!open) {
       setAmount('');
-      setQuote(null);
-      setQuoteKey(null);
-      setQuoteError(null);
       setSubmitError(null);
       setRequestId(null);
       setAdvanced(false);
@@ -142,6 +137,25 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     }
   }, [amount, tokenIn]);
 
+  const wstethPrice =
+    tokenPrices[getTokenIndex(sdk.tokens.WSTETH)] || new BigNumber(0);
+  const tokenInIsBean = tokenIn.equals(sdk.tokens.BEAN);
+  const tokenInUsd = tokenInIsBean ? beanPrice : wstethPrice;
+  const tokenOutUsd = tokenInIsBean ? wstethPrice : beanPrice;
+  const quotedAmountOut = useMemo(
+    () =>
+      oracleAmountOut({
+        amountIn,
+        tokenInDecimals: tokenIn.decimals,
+        tokenOutDecimals: tokenOut.decimals,
+        tokenInUsd,
+        tokenOutUsd,
+      }),
+    [amountIn, tokenIn.decimals, tokenInUsd, tokenOut.decimals, tokenOutUsd]
+  );
+  const quoteLoading =
+    amountIn > 0n && (tokenInUsd.lte(0) || tokenOutUsd.lte(0));
+
   const balanceIsEnough =
     amountIn > 0n && tokenBalance.gte(tokenIn.fromBlockchain(amountIn).toHuman());
   const recipientIsValid = ethers.utils.isAddress(recipient);
@@ -155,53 +169,9 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
     expectedChainId: config?.chainId,
   });
 
-  const fetchQuote = useCallback(async () => {
-    if (!config || amountIn <= 0n) return null;
-    const turnstileToken = await getToken('rff_quote');
-    return rffApi.getQuote(
-      tokenIn.address as Address,
-      tokenOut.address as Address,
-      amountIn,
-      turnstileToken
-    );
-  }, [amountIn, config, getToken, tokenIn.address, tokenOut.address]);
-
-  useEffect(() => {
-    quoteSequence.current += 1;
-    const sequence = quoteSequence.current;
-    setQuote(null);
-    setQuoteKey(null);
-    setQuoteError(null);
-    if (!open || !config || amountIn <= 0n) {
-      setQuoteLoading(false);
-      return undefined;
-    }
-
-    const timeout = window.setTimeout(async () => {
-      setQuoteLoading(true);
-      try {
-        const nextQuote = await fetchQuote();
-        if (quoteSequence.current === sequence) {
-          setQuote(nextQuote);
-          setQuoteKey(rffQuoteKey(tokenIn.address, amountIn));
-        }
-      } catch (error) {
-        if (quoteSequence.current === sequence) {
-          setQuoteError(errorMessage(error));
-        }
-      } finally {
-        if (quoteSequence.current === sequence) setQuoteLoading(false);
-      }
-    }, 450);
-
-    return () => window.clearTimeout(timeout);
-  }, [amountIn, config, fetchQuote, open, tokenIn.address]);
-
-  const quoteIsCurrent =
-    !!quote && quoteKey === rffQuoteKey(tokenIn.address, amountIn);
-
+  const quoteIsCurrent = quotedAmountOut > 0n;
   const minAmountOut = quoteIsCurrent
-    ? minimumAmountOut(quote.amountOut, DEFAULT_SLIPPAGE_BPS)
+    ? minimumAmountOut(quotedAmountOut, DEFAULT_SLIPPAGE_BPS)
     : 0n;
   const formatTokenAmount = (value: bigint) =>
     tokenOut.fromBlockchain(value).toHuman('short');
@@ -228,30 +198,18 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
       if (!isCorrectChain) {
         throw new Error('Switch to Arbitrum One before submitting.');
       }
-      let freshQuote = quoteIsCurrent ? quote : null;
-      if (!freshQuote || freshQuote.expiresAt * 1_000 <= Date.now()) {
-        freshQuote = await fetchQuote();
-      }
-      if (!freshQuote) throw new Error('A current quote is required.');
+      if (!quoteIsCurrent) throw new Error('Oracle prices are still loading.');
 
       const request = buildRffRequest({
         requester: account as Address,
         recipient: recipient as Address,
         tokenIn: tokenIn.address as Address,
         requestedAmountIn: amountIn,
-        quotedAmountOut: freshQuote.amountOut,
+        quotedAmountOut,
         sourceMode,
         slippageBps: DEFAULT_SLIPPAGE_BPS,
         nonce: randomRffNonce(),
         nowSeconds: Math.floor(Date.now() / 1_000),
-      });
-
-      const session = new RffSessionManager(rffApi);
-      await session.ensureSession({
-        requester: account as Address,
-        getToken,
-        signMessage: async (message) =>
-          (await signer.signMessage(message)) as Hex,
       });
 
       const typedData = buildRffSwapRequestTypedData(
@@ -265,12 +223,7 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
         typedData.types as unknown as Record<string, ethers.TypedDataField[]>,
         typedData.message
       )) as Hex;
-      const turnstileToken = await getToken('rff_submit');
-      const response = await rffApi.createRequest(
-        request,
-        signature,
-        turnstileToken
-      );
+      const response = await rffApi.createRequest(request, signature);
       setRequestId(response.requestId);
       await queryClient.invalidateQueries({
         queryKey: rffQueryKeys.requests(account),
@@ -324,10 +277,7 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
             </Stack>
           ) : (
             <Stack gap={2}>
-              <Typography color="text.secondary">
-                Request an off-market BEAN ↔ wstETH fill from Beanstalk Farms.
-                Your destination is always your external wallet balance.
-              </Typography>
+              <RffRequestInfo announcementUrl={announcementUrl} />
 
               <TokenSelectDialog
                 title="Select Input"
@@ -394,7 +344,12 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                   p: 1.5,
                 }}
               >
-                <Stack direction="row" justifyContent="space-between" gap={2}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  gap={2}
+                >
                   <Box>
                     <Typography color="text.secondary" variant="bodySmall">
                       Estimated output
@@ -403,7 +358,7 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                       {quoteLoading ? (
                         <CircularProgress size={18} />
                       ) : quoteIsCurrent ? (
-                        formatTokenAmount(quote.amountOut)
+                        formatTokenAmount(quotedAmountOut)
                       ) : (
                         '—'
                       )}
@@ -413,9 +368,7 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                 </Stack>
                 <Divider sx={{ my: 1.25 }} />
                 <Stack direction="row" justifyContent="space-between">
-                  <Typography color="text.secondary">
-                    Minimum received
-                  </Typography>
+                  <RffMinimumReceivedLabel />
                   <Typography>
                     {quoteIsCurrent
                       ? `${formatTokenAmount(minAmountOut)} ${tokenOut.symbol}`
@@ -474,16 +427,10 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
                 </Collapse>
               </Box>
 
-              <Alert severity="info" icon={<InfoOutlinedIcon />}>
-                A smaller fill may execute if your approval or selected balance
-                drops below the requested input. That fill completes this request;
-                no remainder stays open.
-              </Alert>
-
-              {configError || quoteError || submitError || approval.error ? (
+              {configError || submitError || approval.error ? (
                 <Alert severity="error">
                   {errorMessage(
-                    configError || quoteError || submitError || approval.error
+                    configError || submitError || approval.error
                   )}
                 </Alert>
               ) : null}
@@ -562,12 +509,6 @@ const RffRequestDialog: React.FC<Props> = ({ open, onClose }) => {
               )}
             </Stack>
           )}
-          <Box
-            ref={containerRef}
-            sx={{ minHeight: 1 }}
-            aria-live="polite"
-            aria-label="Security verification challenge"
-          />
         </StyledDialogContent>
       </StyledDialog>
     </>

@@ -13,7 +13,11 @@ const RequestForFill: React.FC = () => {
         announcementUrl={RFF_ANNOUNCEMENT_URL}
         onRequest={() => setOpen(true)}
       />
-      <RffRequestDialog open={open} onClose={() => setOpen(false)} />
+      <RffRequestDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        announcementUrl={RFF_ANNOUNCEMENT_URL}
+      />
     </>
   );
 };

@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { rffApi } from '~/lib/Rff/runtime';
 import {
   listRffRequestsForAccount,
 } from '~/lib/Rff/session';
-import { loadTurnstileApi, TurnstileTokenBroker } from '~/lib/Rff/turnstile';
 
 export const rffQueryKeys = {
   config: ['rff', 'config'] as const,
@@ -33,57 +31,4 @@ export function useRffRequests(account?: string, enabled = true) {
     retry: false,
     refetchInterval: 30_000,
   });
-}
-
-export function useRffTurnstile(siteKey?: string) {
-  const containerNodeRef = useRef<HTMLDivElement | null>(null);
-  const brokerRef = useRef<TurnstileTokenBroker | null>(null);
-  const siteKeyRef = useRef(siteKey);
-  siteKeyRef.current = siteKey;
-
-  const containerRef = useCallback((node: HTMLDivElement | null) => {
-    if (containerNodeRef.current === node) return;
-    brokerRef.current?.dispose();
-    brokerRef.current = null;
-    containerNodeRef.current = node;
-  }, []);
-
-  useEffect(
-    () => () => {
-      brokerRef.current?.dispose();
-      brokerRef.current = null;
-    },
-    [siteKey]
-  );
-
-  const getToken = useCallback(
-    async (action: string) => {
-      if (!siteKey) throw new Error('Request security is not configured.');
-      if (!containerNodeRef.current) {
-        throw new Error('Request security is still loading.');
-      }
-      const container = containerNodeRef.current;
-      const requestedSiteKey = siteKey;
-      if (!brokerRef.current) {
-        const api = await loadTurnstileApi();
-        if (
-          containerNodeRef.current !== container ||
-          siteKeyRef.current !== requestedSiteKey
-        ) {
-          throw new Error('Request security was reset. Try again.');
-        }
-        if (!brokerRef.current) {
-          brokerRef.current = new TurnstileTokenBroker(
-            api,
-            container,
-            requestedSiteKey
-          );
-        }
-      }
-      return brokerRef.current.getToken(action);
-    },
-    [siteKey]
-  );
-
-  return { containerRef, getToken };
 }
