@@ -412,6 +412,7 @@ interface IMockFBeanstalk {
         uint256 podAmount,
         uint256 costInBeans
     );
+    event PublishData(bytes compressedData);
     event PublishRequisition(Requisition requisition);
     event Receipt(ShipmentRecipient indexed recipient, uint256 receivedAmount, bytes data);
     event ReceiverApproved(address indexed owner, address receiver);
@@ -1232,6 +1233,10 @@ interface IMockFBeanstalk {
 
     function getPenalty(address unripeToken) external view returns (uint256 penalty);
 
+    function getProtectedUnderlying(
+        address unripeToken
+    ) external view returns (uint256 underlying);
+
     function getPercentPenalty(address unripeToken) external view returns (uint256 penalty);
 
     function getPlotIndexesFromAccount(
@@ -1764,6 +1769,8 @@ interface IMockFBeanstalk {
     function resetState() external;
 
     function resetUnderlying(address unripeToken) external;
+
+    function restoreProtectedUnderlying(uint256 amount) external payable;
 
     function revert_netFlow() external;
 

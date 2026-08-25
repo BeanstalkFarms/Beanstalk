@@ -326,9 +326,12 @@ struct AssetSettings {
 /**
  * @notice Describes the settings for each Unripe Token in Beanstalk.
  * @param underlyingToken The address of the Token underlying the Unripe Token.
- * @param balanceOfUnderlying The number of Tokens underlying the Unripe Tokens (redemption pool).
- * @dev An Unripe Token is a vesting Token that is redeemable for a a pro rata share
- * of the `balanceOfUnderlying`, subject to a penalty based on the percent of
+ * @param balanceOfUnderlying The number of underlying Tokens held by Beanstalk.
+ * @param protectedUnderlying The number of underlying Tokens backing Unripe claims from protected
+ * external custody.
+ * @param protectedUnderlyingCustodian The only address authorized to restore protected backing.
+ * @dev An Unripe Token is a vesting Token that is redeemable for a pro rata share of
+ * `balanceOfUnderlying + protectedUnderlying`, subject to a penalty based on the percent of
  * Unfertilized Beans paid back.
  *
  * There were two Unripe Tokens added at Replant:
@@ -342,6 +345,8 @@ struct AssetSettings {
 struct UnripeSettings {
     address underlyingToken;
     uint256 balanceOfUnderlying;
+    uint256 protectedUnderlying;
+    address protectedUnderlyingCustodian;
 }
 
 /**

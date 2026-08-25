@@ -1,10 +1,19 @@
 const { expect } = require("chai");
+const fs = require("fs");
+const hre = require("hardhat");
 const { EXTERNAL, INTERNAL, INTERNAL_TOLERANT } = require("./utils/balances.js");
 const { deploy } = require("../../scripts/deploy.js");
 const { takeSnapshot, revertToSnapshot } = require("./utils/snapshot");
 const { BEAN, UNRIPE_BEAN, UNRIPE_LP, USDT, ZERO_BYTES } = require("./utils/constants");
 const { to6 } = require("./utils/helpers.js");
 const { getAllBeanstalkContracts } = require("../../utils/contracts");
+const {
+  BEGIN_BARN_RAISE_MIGRATION_SELECTOR,
+  ENROOT_SELECTORS,
+  appendEnrootFacetToArtifact,
+  prepareProtectedUnderlying,
+  upgradeProtectedUnderlying
+} = require("../../scripts/protectedUnderlying");
 
 let user, user2, owner;
 let userAddress, ownerAddress, user2Address;
@@ -13,6 +22,7 @@ describe("Unripe", function () {
   before(async function () {
     [owner, user, user2] = await ethers.getSigners();
     userAddress = await user.address;
+    user2Address = await user2.address;
 
     const contracts = await deploy((verbose = false), (mock = true), (reset = true));
     ownerAddress = contracts.account;
@@ -60,6 +70,289 @@ describe("Unripe", function () {
     expect(await mockBeanstalk.getPenalizedUnderlying(UNRIPE_BEAN, to6("1"))).to.be.equal("0");
     expect(await mockBeanstalk.getUnderlying(UNRIPE_BEAN, to6("1"))).to.be.equal("0");
     expect(await mockBeanstalk.balanceOfUnderlying(UNRIPE_BEAN, userAddress)).to.be.equal("0");
+  });
+
+  it("executes the protected backing diamond cut", async function () {
+    await this.unripeLP.mint(userAddress, to6("100"));
+    await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, to6("100"));
+
+    await upgradeProtectedUnderlying({
+      RFF: ownerAddress,
+      amount: to6("90"),
+      diamondAddress: this.diamond.address,
+      account: owner,
+      execute: true,
+      verbose: false
+    });
+
+    const unripeFacet = await ethers.getContractAt("UnripeFacet", this.diamond.address);
+    expect(await unripeFacet.getProtectedUnderlying(UNRIPE_LP)).to.equal(to6("90"));
+    expect(await unripeFacet.getTotalUnderlying(UNRIPE_LP)).to.equal(to6("100"));
+
+    const migrationCall = ethers.utils.hexConcat([
+      BEGIN_BARN_RAISE_MIGRATION_SELECTOR,
+      ethers.utils.defaultAbiCoder.encode(["address"], [BEAN])
+    ]);
+    await expect(
+      owner.sendTransaction({ to: this.diamond.address, data: migrationCall })
+    ).to.be.revertedWith("Diamond: Function does not exist");
+  });
+
+  it("threads the RFF custodian into generated initializer calldata", async function () {
+    await this.unripeLP.mint(userAddress, to6("100"));
+    await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, to6("100"));
+    await network.provider.send("hardhat_setCode", [
+      user2Address,
+      "0x600260005260206000f3"
+    ]);
+
+    let prepared;
+    try {
+      prepared = await prepareProtectedUnderlying({
+        hre,
+        amount: "90",
+        custodian: user2Address,
+        diamondAddress: this.diamond.address,
+        fork: true,
+        confirm: true
+      });
+
+      const initFactory = await ethers.getContractFactory("InitProtectedUnderlying");
+      const [recipient, amount] = initFactory.interface.decodeFunctionData(
+        "init",
+        prepared.diamondCut.functionCall
+      );
+      expect(recipient).to.equal(user2Address);
+      expect(amount).to.equal(to6("90"));
+    } finally {
+      if (prepared?.outputPath && fs.existsSync(prepared.outputPath)) {
+        fs.unlinkSync(prepared.outputPath);
+      }
+    }
+  });
+
+  it("appends an isolated EnrootFacet replacement to an existing Safe artifact", async function () {
+    const existingFacet = ethers.Wallet.createRandom().address;
+    const enrootFacet = ethers.Wallet.createRandom().address;
+    const baseArtifact = {
+      preflight: { chainId: 42161, diamond: this.diamond.address },
+      diamondCut: {
+        diamondCut: [[existingFacet, 1, ["0x12345678"]]],
+        initFacetAddress: ownerAddress,
+        functionCall: "0xabcdef"
+      },
+      safeTransaction: { to: this.diamond.address, value: "0", data: "0x", operation: 0 }
+    };
+
+    const updated = appendEnrootFacetToArtifact({
+      baseArtifact,
+      enrootFacet,
+      ethers
+    });
+
+    expect(ENROOT_SELECTORS).to.deep.equal(["0xe43b44ee", "0x0b58f073", "0x88fcd169"]);
+    expect(baseArtifact.diamondCut.diamondCut).to.have.length(1);
+    expect(updated.diamondCut.diamondCut).to.deep.equal([
+      [existingFacet, 1, ["0x12345678"]],
+      [ethers.utils.getAddress(enrootFacet), 1, ENROOT_SELECTORS]
+    ]);
+    expect(updated.diamondCut.initFacetAddress).to.equal(ownerAddress);
+    expect(updated.diamondCut.functionCall).to.equal("0xabcdef");
+  });
+
+  it("rejects an Enroot selector already present in the base cut", async function () {
+    const facet = ethers.Wallet.createRandom().address;
+    const baseArtifact = {
+      preflight: { chainId: 42161, diamond: this.diamond.address },
+      diamondCut: {
+        diamondCut: [[facet, 1, [ENROOT_SELECTORS[0]]]],
+        initFacetAddress: ethers.constants.AddressZero,
+        functionCall: "0x"
+      }
+    };
+
+    expect(() =>
+      appendEnrootFacetToArtifact({ baseArtifact, enrootFacet: facet, ethers })
+    ).to.throw("Enroot selector already exists in base cut");
+  });
+
+  describe("protected Unripe LP backing", function () {
+    const totalUnderlying = to6("100");
+    const protectedUnderlying = to6("90");
+
+    beforeEach(async function () {
+      await this.unripeLP.mint(userAddress, to6("100"));
+      await mockBeanstalk.connect(owner).addUnderlying(UNRIPE_LP, totalUnderlying);
+
+      const totalRecapDollarsNeeded = await mockBeanstalk.getTotalRecapDollarsNeeded();
+      await mockBeanstalk.connect(owner).setPenaltyParams(totalRecapDollarsNeeded, 0);
+
+      const initFactory = await ethers.getContractFactory("InitProtectedUnderlying");
+      this.initProtectedUnderlying = await initFactory.deploy();
+      await this.initProtectedUnderlying.deployed();
+
+      const diamondCut = await ethers.getContractAt("DiamondCutFacet", this.diamond.address);
+      const initData = this.initProtectedUnderlying.interface.encodeFunctionData("init", [
+        user2Address,
+        protectedUnderlying
+      ]);
+      await diamondCut
+        .connect(owner)
+        .diamondCut([], this.initProtectedUnderlying.address, initData);
+
+      this.unripeFacet = await ethers.getContractAt("UnripeFacet", this.diamond.address);
+    });
+
+    it("moves LP to protected custody without changing holder claims", async function () {
+      expect(await this.unripeFacet.getProtectedUnderlying(UNRIPE_LP)).to.equal(
+        protectedUnderlying
+      );
+      expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_LP)).to.equal(totalUnderlying);
+      expect(await mockBeanstalk.getUnderlying(UNRIPE_LP, to6("100"))).to.equal(
+        totalUnderlying
+      );
+      expect(await mockBeanstalk.getUnderlyingPerUnripeToken(UNRIPE_LP)).to.equal(to6("1"));
+      expect(await this.bean.balanceOf(this.diamond.address)).to.equal(to6("10"));
+    });
+
+    it("records the configured protected custodian", async function () {
+      const custodianReader = await ethers.getContractAt(
+        ["function getProtectedUnderlyingCustodian(address) view returns (address)"],
+        this.diamond.address
+      );
+
+      expect(await custodianReader.getProtectedUnderlyingCustodian(UNRIPE_LP)).to.equal(
+        user2Address
+      );
+    });
+
+    it("does not allow a later initializer call to replace the protected custodian", async function () {
+      const diamondCut = await ethers.getContractAt("DiamondCutFacet", this.diamond.address);
+      const initData = this.initProtectedUnderlying.interface.encodeFunctionData("init", [
+        userAddress,
+        to6("1")
+      ]);
+
+      await expect(
+        diamondCut.connect(owner).diamondCut([], this.initProtectedUnderlying.address, initData)
+      ).to.be.reverted;
+      expect(await this.unripeFacet.getProtectedUnderlyingCustodian(UNRIPE_LP)).to.equal(
+        user2Address
+      );
+    });
+
+    it("uses local backing for execution and total backing for chop math", async function () {
+      await mockBeanstalk.connect(user).chop(UNRIPE_LP, to6("5"), EXTERNAL, EXTERNAL);
+
+      expect(await this.bean.balanceOf(userAddress)).to.equal(to6("5"));
+      expect(await this.bean.balanceOf(this.diamond.address)).to.equal(to6("5"));
+      expect(await this.unripeFacet.getProtectedUnderlying(UNRIPE_LP)).to.equal(
+        protectedUnderlying
+      );
+      expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_LP)).to.equal(to6("95"));
+    });
+
+    it("keeps the chop quote and payout constant across local and protected splits", async function () {
+      await this.bean.connect(user2).approve(this.diamond.address, protectedUnderlying);
+      await this.unripeFacet.connect(user2).restoreProtectedUnderlying(protectedUnderlying);
+
+      const totalRecapDollarsNeeded = await mockBeanstalk.getTotalRecapDollarsNeeded();
+      await mockBeanstalk
+        .connect(owner)
+        .setPenaltyParams(totalRecapDollarsNeeded.div(2), 0);
+
+      const chopAmount = to6("10");
+      const splits = [to6("0"), to6("50"), to6("90")];
+      let expectedQuote;
+      let expectedPayout;
+
+      for (const amountProtected of splits) {
+        const splitSnapshotId = await takeSnapshot();
+
+        if (!amountProtected.isZero()) {
+          const diamondCut = await ethers.getContractAt(
+            "DiamondCutFacet",
+            this.diamond.address
+          );
+          const initData = this.initProtectedUnderlying.interface.encodeFunctionData("init", [
+            user2Address,
+            amountProtected
+          ]);
+          await diamondCut
+            .connect(owner)
+            .diamondCut([], this.initProtectedUnderlying.address, initData);
+        }
+
+        const quote = await mockBeanstalk.getPenalizedUnderlying(UNRIPE_LP, chopAmount);
+        const balanceBefore = await this.bean.balanceOf(userAddress);
+        await mockBeanstalk.connect(user).chop(UNRIPE_LP, chopAmount, EXTERNAL, EXTERNAL);
+        const payout = (await this.bean.balanceOf(userAddress)).sub(balanceBefore);
+
+        if (expectedQuote === undefined) {
+          expectedQuote = quote;
+          expectedPayout = payout;
+        } else {
+          expect(quote).to.equal(expectedQuote);
+          expect(payout).to.equal(expectedPayout);
+        }
+        expect(payout).to.equal(quote);
+
+        await revertToSnapshot(splitSnapshotId);
+      }
+    });
+
+    it("reduces recapitalization against total backing instead of only local backing", async function () {
+      const totalRecapDollarsNeeded = await mockBeanstalk.getTotalRecapDollarsNeeded();
+      const recapitalizedBefore = totalRecapDollarsNeeded.div(2);
+      await mockBeanstalk.connect(owner).setPenaltyParams(recapitalizedBefore, 0);
+
+      const expectedPayout = to6("5");
+      const expectedRecapReduction = expectedPayout
+        .mul(recapitalizedBefore)
+        .div(totalUnderlying);
+
+      await mockBeanstalk.connect(user).chop(UNRIPE_LP, to6("10"), EXTERNAL, EXTERNAL);
+
+      expect(await this.bean.balanceOf(userAddress)).to.equal(expectedPayout);
+      expect(await mockBeanstalk.getRecapitalized()).to.equal(
+        recapitalizedBefore.sub(expectedRecapReduction)
+      );
+      expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_LP)).to.equal(to6("95"));
+    });
+
+    it("rejects a chop that exceeds local executable backing", async function () {
+      await expect(
+        mockBeanstalk.connect(user).chop(UNRIPE_LP, to6("11"), EXTERNAL, EXTERNAL)
+      ).to.be.revertedWith("Unripe: Insufficient local underlying");
+    });
+
+    it("restores protected LP to local backing before a larger chop", async function () {
+      await this.bean.connect(user2).approve(this.diamond.address, to6("20"));
+      await this.unripeFacet.connect(user2).restoreProtectedUnderlying(to6("20"));
+
+      expect(await this.unripeFacet.getProtectedUnderlying(UNRIPE_LP)).to.equal(to6("70"));
+      expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_LP)).to.equal(totalUnderlying);
+      expect(await this.bean.balanceOf(this.diamond.address)).to.equal(to6("30"));
+
+      await mockBeanstalk.connect(user).chop(UNRIPE_LP, to6("30"), EXTERNAL, EXTERNAL);
+
+      expect(await this.bean.balanceOf(userAddress)).to.equal(to6("30"));
+      expect(await this.bean.balanceOf(this.diamond.address)).to.equal(0);
+      expect(await this.unripeFacet.getProtectedUnderlying(UNRIPE_LP)).to.equal(to6("70"));
+      expect(await mockBeanstalk.getTotalUnderlying(UNRIPE_LP)).to.equal(to6("70"));
+    });
+
+    it("rejects restoration by the Diamond owner when the owner is not the custodian", async function () {
+      await expect(
+        this.unripeFacet.connect(owner).restoreProtectedUnderlying(to6("1"))
+      ).to.be.revertedWith("Unripe: Not protected custodian");
+    });
+
+    it("rejects restoration by any other non-custodian", async function () {
+      await expect(
+        this.unripeFacet.connect(user).restoreProtectedUnderlying(to6("1"))
+      ).to.be.revertedWith("Unripe: Not protected custodian");
+    });
   });
 
   describe("deposit underlying", async function () {

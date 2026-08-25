@@ -19,6 +19,7 @@ import {ReentrancyGuard} from "contracts/beanstalk/ReentrancyGuard.sol";
 import {LibRedundantMath256} from "contracts/libraries/LibRedundantMath256.sol";
 import {LibLockedUnderlying} from "contracts/libraries/LibLockedUnderlying.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {UnripeSettings} from "contracts/beanstalk/storage/System.sol";
 
 /**
  * @title UnripeFacet
@@ -47,6 +48,11 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @param underlying `amount` that has changed.
      */
     event ChangeUnderlying(address indexed token, int256 underlying);
+
+    /**
+     * @notice Emitted when protected underlying is returned to Beanstalk custody.
+     */
+    event RestoreProtectedUnderlying(address indexed account, uint256 underlying);
 
     /**
      * @notice Emitted when the Ripe Token of an unripe asset changes.
@@ -231,11 +237,8 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     function getUnderlyingPerUnripeToken(
         address unripeToken
     ) external view returns (uint256 underlyingPerToken) {
-        underlyingPerToken = s
-            .sys
-            .silo
-            .unripeSettings[unripeToken]
-            .balanceOfUnderlying
+        underlyingPerToken = LibUnripe
+            .getTotalUnderlying(unripeToken)
             .mul(LibUnripe.DECIMALS)
             .div(IERC20(unripeToken).totalSupply());
     }
@@ -246,7 +249,53 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @return underlying The total balance of the token.
      */
     function getTotalUnderlying(address unripeToken) external view returns (uint256 underlying) {
-        return s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying;
+        return LibUnripe.getTotalUnderlying(unripeToken);
+    }
+
+    /**
+     * @notice Returns the amount of underlying backing held in protected external custody.
+     */
+    function getProtectedUnderlying(
+        address unripeToken
+    ) external view returns (uint256 underlying) {
+        return s.sys.silo.unripeSettings[unripeToken].protectedUnderlying;
+    }
+
+    /**
+     * @notice Returns the Safe authorized to restore protected Unripe LP backing.
+     */
+    function getProtectedUnderlyingCustodian(
+        address unripeToken
+    ) external view returns (address custodian) {
+        return s.sys.silo.unripeSettings[unripeToken].protectedUnderlyingCustodian;
+    }
+
+    /**
+     * @notice Returns protected Unripe LP backing to Beanstalk custody without changing total
+     * backing or recapitalization.
+     * @dev The protected custodian must approve Beanstalk to transfer the LP before calling.
+     */
+    function restoreProtectedUnderlying(
+        uint256 amount
+    ) external payable fundsSafu noOutFlow noSupplyChange nonReentrant {
+        require(amount > 0, "Unripe: Protected amount is zero");
+
+        address urLp = s.sys.tokens.urLp;
+        UnripeSettings storage settings = s.sys.silo.unripeSettings[urLp];
+        require(
+            msg.sender == settings.protectedUnderlyingCustodian,
+            "Unripe: Not protected custodian"
+        );
+        require(
+            settings.protectedUnderlying >= amount,
+            "Unripe: Insufficient protected underlying"
+        );
+
+        IERC20(settings.underlyingToken).safeTransferFrom(msg.sender, address(this), amount);
+        settings.protectedUnderlying = settings.protectedUnderlying.sub(amount);
+        settings.balanceOfUnderlying = settings.balanceOfUnderlying.add(amount);
+
+        emit RestoreProtectedUnderlying(msg.sender, amount);
     }
 
     /**
@@ -302,7 +351,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
      * @notice Switches the Ripe Token of an Unripe Token.
      * @param unripeToken The Unripe Token to switch the Ripe Token of.
      * @param newUnderlyingToken The new Ripe Token to switch to.
-     * @dev `s.silo.unripeSettings[unripeToken].balanceOfUnderlying` must be 0.
+     * @dev The Unripe Token must have no local or protected underlying.
      */
     function switchUnderlyingToken(
         address unripeToken,
@@ -310,7 +359,7 @@ contract UnripeFacet is Invariable, ReentrancyGuard {
     ) external payable fundsSafu noNetFlow noSupplyChange nonReentrant {
         LibDiamond.enforceIsContractOwner();
         require(
-            s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0,
+            LibUnripe.getTotalUnderlying(unripeToken) == 0,
             "Unripe: Underlying balance > 0"
         );
         LibUnripe.switchUnderlyingToken(unripeToken, newUnderlyingToken);

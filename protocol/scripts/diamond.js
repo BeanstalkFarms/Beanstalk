@@ -632,13 +632,10 @@ async function upgradeWithNewFacets({
           if (linkedLibraries[name].includes(val)) acc[val] = libraries[val];
           return acc;
         }, {});
-        libraryFactory = await ethers.getContractFactory(
-          name,
-          {
-            libraries: linkedLibrary
-          },
-          account
-        );
+        libraryFactory = await ethers.getContractFactory(name, {
+          libraries: linkedLibrary,
+          signer: account
+        });
       } else {
         libraryFactory = await ethers.getContractFactory(name, account);
       }
@@ -664,13 +661,10 @@ async function upgradeWithNewFacets({
         if (facetLibraries[name].includes(val)) acc[val] = libraries[val];
         return acc;
       }, {});
-      facetFactory = await ethers.getContractFactory(
-        name,
-        {
-          libraries: facetLibrary
-        },
-        account
-      );
+      facetFactory = await ethers.getContractFactory(name, {
+        libraries: facetLibrary,
+        signer: account
+      });
     } else facetFactory = await ethers.getContractFactory(name, account);
     undeployed.push([name, facetFactory]);
   }

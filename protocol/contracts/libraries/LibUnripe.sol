@@ -32,7 +32,7 @@ library LibUnripe {
     function percentBeansRecapped() internal view returns (uint256 percent) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s.sys.silo.unripeSettings[s.sys.tokens.urBean].balanceOfUnderlying.mul(DECIMALS).div(
+            getTotalUnderlying(s.sys.tokens.urBean).mul(DECIMALS).div(
                 IERC20(s.sys.tokens.urBean).totalSupply()
             );
     }
@@ -81,6 +81,17 @@ library LibUnripe {
     }
 
     /**
+     * @notice Returns all underlying backing for an Unripe Token, including backing held in
+     * protected external custody.
+     */
+    function getTotalUnderlying(address unripeToken) internal view returns (uint256 underlying) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        underlying = s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying.add(
+            s.sys.silo.unripeSettings[unripeToken].protectedUnderlying
+        );
+    }
+
+    /**
      * @notice Calculates the amount of Ripe Tokens that underly a given amount of Unripe Tokens.
      * @param unripeToken The address of the Unripe Token
      * @param unripe The amount of Unripe Tokens.
@@ -91,10 +102,7 @@ library LibUnripe {
         uint256 unripe,
         uint256 supply
     ) internal view returns (uint256 underlying) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        underlying = s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying.mul(unripe).div(
-            supply
-        );
+        underlying = getTotalUnderlying(unripeToken).mul(unripe).div(supply);
     }
 
     /**
@@ -107,9 +115,8 @@ library LibUnripe {
         address unripeToken,
         uint256 underlying
     ) internal view returns (uint256 unripe) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
         unripe = IBean(unripeToken).totalSupply().mul(underlying).div(
-            s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying
+            getTotalUnderlying(unripeToken)
         );
     }
 
@@ -123,7 +130,7 @@ library LibUnripe {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (token == s.sys.tokens.urLp) {
             uint256 recapped = underlying.mul(s.sys.fert.recapitalized).div(
-                s.sys.silo.unripeSettings[s.sys.tokens.urLp].balanceOfUnderlying
+                getTotalUnderlying(s.sys.tokens.urLp)
             );
             s.sys.fert.recapitalized = s.sys.fert.recapitalized.add(recapped);
         }
@@ -138,9 +145,13 @@ library LibUnripe {
      */
     function removeUnderlying(address token, uint256 underlying) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(
+            s.sys.silo.unripeSettings[token].balanceOfUnderlying >= underlying,
+            "Unripe: Insufficient local underlying"
+        );
         if (token == s.sys.tokens.urLp) {
             uint256 recapped = underlying.mul(s.sys.fert.recapitalized).div(
-                s.sys.silo.unripeSettings[s.sys.tokens.urLp].balanceOfUnderlying
+                getTotalUnderlying(s.sys.tokens.urLp)
             );
             s.sys.fert.recapitalized = s.sys.fert.recapitalized.sub(recapped);
         }
@@ -149,10 +160,11 @@ library LibUnripe {
 
     /**
      * @dev Switches the underlying token of an unripe token.
-     * Should only be called if `s.silo.unripeSettings[unripeToken].balanceOfUnderlying == 0`.
+     * Should only be called if the Unripe Token has no local or protected underlying.
      */
     function switchUnderlyingToken(address unripeToken, address newUnderlyingToken) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+        require(getTotalUnderlying(unripeToken) == 0, "Unripe: Underlying balance > 0");
         s.sys.silo.unripeSettings[unripeToken].underlyingToken = newUnderlyingToken;
         emit SwitchUnderlyingToken(unripeToken, newUnderlyingToken);
     }
@@ -180,7 +192,7 @@ library LibUnripe {
         // redeem = totalRipeUnderlying * (usdValueRaised/totalUsdNeeded)^2 * UnripeAmountIn/UnripeSupply;
         // But totalRipeUnderlying = CurrentUnderlying * totalUsdNeeded/usdValueRaised to get the total underlying
         // redeem = currentRipeUnderlying * (usdValueRaised/totalUsdNeeded) * UnripeAmountIn/UnripeSupply
-        uint256 underlyingAmount = s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying;
+        uint256 underlyingAmount = getTotalUnderlying(unripeToken);
         if (totalUsdNeeded == 0) {
             // when totalUsdNeeded == 0, the barnraise has been fully recapitalized.
             redeem = underlyingAmount.mul(amount).div(supply);
@@ -283,8 +295,7 @@ library LibUnripe {
         uint256 amount,
         uint256 supply
     ) internal view returns (uint256 redeem) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-        redeem = s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying.mul(amount).div(supply);
+        redeem = getTotalUnderlying(unripeToken).mul(amount).div(supply);
     }
 
     function _getUnderlyingToken(
