@@ -27,11 +27,8 @@ library LibLockedUnderlying {
     ) external view returns (uint256 lockedUnderlying) {
         AppStorage storage s = LibAppStorage.diamondStorage();
         return
-            s
-                .sys
-                .silo
-                .unripeSettings[unripeToken]
-                .balanceOfUnderlying
+            (s.sys.silo.unripeSettings[unripeToken].balanceOfUnderlying +
+                s.sys.silo.unripeSettings[unripeToken].protectedUnderlying)
                 .mul(getPercentLockedUnderlying(unripeToken, recapPercentPaid))
                 .div(1e18);
     }

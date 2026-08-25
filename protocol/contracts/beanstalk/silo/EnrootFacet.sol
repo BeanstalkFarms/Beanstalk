@@ -168,6 +168,9 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
             s.sys.silo.unripeSettings[token].underlyingToken != address(0),
             "Silo: token not unripe"
         );
+
+        _validateEnrootDeposits(LibTractor._user(), token, stems, amounts);
+
         // First, remove Deposits because every deposit is in a different season,
         // we need to get the total Stalk, not just BDV.
         LibSilo.AssetsRemoved memory ar = LibSilo._removeDepositsFromAccount(
@@ -230,6 +233,37 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
     }
 
     /**
+     * @notice Validates an enroot batch before any Deposit accounting is updated.
+     */
+    function _validateEnrootDeposits(
+        address account,
+        address token,
+        int96[] calldata stems,
+        uint256[] calldata amounts
+    ) private view {
+        require(stems.length == amounts.length, "Silo: Crates, amounts are diff lengths.");
+
+        for (uint256 i; i < amounts.length; ++i) {
+            require(amounts[i] > 0, "Silo: Enroot amount is zero.");
+        }
+
+        int96 stemTip = LibTokenSilo.stemTipForToken(token);
+        for (uint256 i; i < stems.length; ++i) {
+            require(stems[i] <= stemTip, "Silo: Enroot stem exceeds tip.");
+            require(
+                s.accts[account]
+                    .deposits[LibBytes.packAddressAndStem(token, stems[i])]
+                    .amount > 0,
+                "Silo: Enroot deposit does not exist."
+            );
+
+            for (uint256 j; j < i; ++j) {
+                require(stems[i] != stems[j], "Silo: Enroot duplicate stem.");
+            }
+        }
+    }
+
+    /**
      * @notice Gets data needed for enrooting a token.
      * @dev placed outside for stack overflow reasons.
      */
@@ -263,6 +297,8 @@ contract EnrootFacet is Invariable, ReentrancyGuard {
         int96 stemTip,
         uint48 stalkPerBdv
     ) private returns (uint256 stalkAdded) {
+        require(amount > 0 || bdv == 0, "Silo: Invalid enroot deposit.");
+
         LibTokenSilo.addDepositToAccount(
             LibTractor._user(),
             token,

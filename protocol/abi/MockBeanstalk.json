@@ -179,6 +179,25 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "underlying",
+        "type": "uint256"
+      }
+    ],
+    "name": "RestoreProtectedUnderlying",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "token",
         "type": "address"
       },
@@ -448,6 +467,44 @@
         "type": "address"
       }
     ],
+    "name": "getProtectedUnderlying",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "underlying",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      }
+    ],
+    "name": "getProtectedUnderlyingCustodian",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "custodian",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "unripeToken",
+        "type": "address"
+      }
+    ],
     "name": "getRecapFundedPercent",
     "outputs": [
       {
@@ -583,6 +640,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "restoreProtectedUnderlying",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {

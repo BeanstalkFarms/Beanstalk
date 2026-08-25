@@ -55,6 +55,10 @@ const {
 } = require("./scripts/bips.js");
 const { ebip9, ebip10, ebip11, ebip13, ebip14, ebip15, ebip19, ebip22 } = require("./scripts/ebips.js");
 const { impersonateMockArbitrumSys } = require("./scripts/impersonate.js");
+const {
+  prepareEnrootFacet,
+  prepareProtectedUnderlying
+} = require("./scripts/protectedUnderlying.js");
 
 //////////////////////// UTILITIES ////////////////////////
 
@@ -67,6 +71,43 @@ function getRemappings() {
 }
 
 //////////////////////// TASKS ////////////////////////
+
+task(
+  "prepareProtectedUnderlying",
+  "Preflight and deploy the protected Unripe LP facets, then write Safe-ready Diamond cut calldata"
+)
+  .addParam("amount", "Human-readable Well LP amount to move into protected custody")
+  .addOptionalParam(
+    "custodian",
+    "Safe allowed to restore protected underlying",
+    "0x2B25b6F1c75231E30e89EF670999E2A3B1029CcE"
+  )
+  .addOptionalParam("diamond", "Beanstalk Diamond address", L2_BEANSTALK)
+  .addFlag("confirm", "Deploy contracts after the read-only preflight")
+  .addFlag("fork", "Allow a localhost Arbitrum fork and use its funded deployer signer")
+  .setAction(async (args, hre) =>
+    prepareProtectedUnderlying({ hre, ...args, diamondAddress: args.diamond })
+  );
+
+task(
+  "prepareEnrootFacet",
+  "Deploy only EnrootFacet and append its selectors to an existing Safe-ready Diamond cut"
+)
+  .addParam("base", "Existing protected-underlying Diamond cut JSON")
+  .addOptionalParam("libsilo", "Existing LibSilo deployment")
+  .addOptionalParam("libtokensilo", "Existing LibTokenSilo deployment")
+  .addFlag("confirm", "Deploy EnrootFacet and write the updated Safe transaction")
+  .addFlag("fork", "Allow a localhost Arbitrum fork and use its funded deployer signer")
+  .setAction(async (args, hre) =>
+    prepareEnrootFacet({
+      hre,
+      baseArtifactPath: args.base,
+      libSilo: args.libsilo,
+      libTokenSilo: args.libtokensilo,
+      confirm: args.confirm,
+      fork: args.fork
+    })
+  );
 
 task("ripen")
   .addParam("amount", "The amount of Pods to ripen")

@@ -117,6 +117,108 @@ describe("Silo Enroot", function () {
       );
     });
 
+    describe("batch validation", async function () {
+      beforeEach(async function () {
+        await mockBeanstalk.deployStemsUpgrade();
+        await mockBeanstalk
+          .connect(owner)
+          .addUnderlying(UNRIPE_BEAN, to6("5000").sub(to6("10000").mul(toBN(pru)).div(to18("1"))));
+
+        this.stem0 = "-2000000";
+        this.stem1 = "0";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("5"), this.stem0, "927823", 0);
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("5"), this.stem1, "927823", 0);
+
+        await mockBeanstalk.setStalkAndRoots(
+          user.address,
+          "18558315646000000",
+          "18558315646000000000000000000"
+        );
+      });
+
+      it("rejects mismatched stems and amounts", async function () {
+        await expect(
+          beanstalk
+            .connect(user)
+            .enrootDeposits(UNRIPE_BEAN, [this.stem0, this.stem1], [to6("5")])
+        ).to.be.revertedWith("Silo: Crates, amounts are diff lengths.");
+      });
+
+      it("rejects a zero-amount row", async function () {
+        await expect(
+          beanstalk
+            .connect(user)
+            .enrootDeposits(UNRIPE_BEAN, [this.stem0, this.stem1], [to6("5"), 0])
+        ).to.be.revertedWith("Silo: Enroot amount is zero.");
+      });
+
+      it("rejects a zero-amount row before later row validation", async function () {
+        await expect(
+          beanstalk
+            .connect(user)
+            .enrootDeposits(
+              UNRIPE_BEAN,
+              [this.stem0, this.stem0, "-1000000"],
+              [1, to6("5").sub(1), 0]
+            )
+        ).to.be.revertedWith("Silo: Enroot amount is zero.");
+      });
+
+      it("rejects a phantom row without a positive deposit", async function () {
+        const phantomStem = "-1000000";
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, 0, phantomStem, 1, 0);
+
+        await expect(
+          beanstalk.connect(user).enrootDeposits(UNRIPE_BEAN, [phantomStem], [1])
+        ).to.be.revertedWith("Silo: Enroot deposit does not exist.");
+      });
+
+      it("rejects duplicate stems", async function () {
+        await expect(
+          beanstalk
+            .connect(user)
+            .enrootDeposits(UNRIPE_BEAN, [this.stem0, this.stem0], [to6("2"), to6("2")])
+        ).to.be.revertedWith("Silo: Enroot duplicate stem.");
+      });
+
+      it("rejects a stem above the stem tip", async function () {
+        const stemTip = await beanstalk.stemTipForToken(UNRIPE_BEAN);
+        const futureStem = stemTip.add(1);
+        await mockBeanstalk
+          .connect(user)
+          .depositAtStemAndBdv(UNRIPE_BEAN, to6("1"), futureStem, "185564", 0);
+
+        await expect(
+          beanstalk.connect(user).enrootDeposits(UNRIPE_BEAN, [futureStem], [to6("1")])
+        ).to.be.revertedWith("Silo: Enroot stem exceeds tip.");
+      });
+
+      it("enroots valid unique positive rows", async function () {
+        await expect(
+          beanstalk
+            .connect(user)
+            .enrootDeposits(
+              UNRIPE_BEAN,
+              [this.stem0, this.stem1],
+              [to6("5"), to6("5")]
+            )
+        ).to.not.be.reverted;
+
+        expect((await beanstalk.getDeposit(user.address, UNRIPE_BEAN, this.stem0))[0]).to.eq(
+          to6("5")
+        );
+        expect((await beanstalk.getDeposit(user.address, UNRIPE_BEAN, this.stem1))[0]).to.eq(
+          to6("5")
+        );
+      });
+    });
+
     describe("1 deposit, some", async function () {
       beforeEach(async function () {
         await mockBeanstalk.deployStemsUpgrade();
