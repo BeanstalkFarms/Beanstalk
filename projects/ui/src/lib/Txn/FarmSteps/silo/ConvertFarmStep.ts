@@ -6,7 +6,8 @@ import {
   TokenValue,
 } from '@beanstalk/sdk';
 import { ethers } from 'ethers';
-import { FarmStep, PlantAndDoX } from '~/lib/Txn/Interface';
+import FarmStep from '~/lib/Txn/Interface/FarmStep';
+import type PlantAndDoX from '~/lib/Txn/Interface/PlantAndDoX';
 
 export class ConvertFarmStep extends FarmStep {
   constructor(
@@ -54,11 +55,32 @@ export class ConvertFarmStep extends FarmStep {
     );
     console.debug('[ConvertFarmStep][conversion]: ', conversion);
 
-    const amountOutBN = await beanstalk.getAmountOut(
-      _tokenIn.address,
-      _tokenOut.address,
-      conversion.amount.toBlockchain()
-    );
+    const stems = conversion.crates.map((c) => c.stem.toString());
+    const amounts = conversion.crates.map((c) => c.amount.abs().toBlockchain());
+    const isUnripeLpToBean =
+      _tokenIn.equals(sdk.tokens.UNRIPE_BEAN_WSTETH) &&
+      _tokenOut.equals(sdk.tokens.UNRIPE_BEAN);
+
+    // EBIP-23 moved urLP backing into protected storage. The deployed getter
+    // still reads the old storage slot, while convert uses the combined backing.
+    const amountOutBN = isUnripeLpToBean
+      ? (
+          await beanstalk.callStatic.convert(
+            siloConvert.calculateEncoding(
+              _tokenIn,
+              _tokenOut,
+              amountIn,
+              _tokenOut.amount(0)
+            ),
+            stems,
+            amounts
+          )
+        ).toAmount
+      : await beanstalk.getAmountOut(
+          _tokenIn.address,
+          _tokenOut.address,
+          conversion.amount.toBlockchain()
+        );
 
     const amountOut = _tokenOut.fromBlockchain(amountOutBN);
     const minAmountOut = amountOut.pct(100 - slippage);
@@ -72,8 +94,8 @@ export class ConvertFarmStep extends FarmStep {
           amountIn,
           minAmountOut
         ),
-        conversion.crates.map((c) => c.stem.toString()),
-        conversion.crates.map((c) => c.amount.abs().toBlockchain()),
+        stems,
+        amounts,
       ]);
 
     return {
