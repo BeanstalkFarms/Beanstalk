@@ -1,10 +1,9 @@
-import { Token } from "@beanstalk/sdk-core";
+import type { Token } from "@beanstalk/sdk-core";
 import { Graph as GraphLib, alg } from "graphlib";
-import { Well } from "../Well";
+import type { Well } from "../Well";
 
 export class Graph {
   graph: GraphLib;
-  private tokens: Set<Token> = new Set<Token>();
 
   constructor() {
     this.graph = new GraphLib({
@@ -14,22 +13,29 @@ export class Graph {
     });
   }
 
+  getTokenKey(token: Token) {
+    const address = token.address || `native:${token.symbol.toLowerCase()}`;
+    return `${token.chainId}:${address.toLowerCase()}`;
+  }
+
   addNode(token: Token) {
-    if (this.tokens.has(token)) return;
-    this.graph.setNode(token.symbol, { token });
-    this.tokens.add(token);
+    const key = this.getTokenKey(token);
+    if (this.graph.hasNode(key)) return;
+    this.graph.setNode(key, { token });
   }
 
   addEdge(tokenA: Token, tokenB: Token, well?: Well) {
-    this.graph.setEdge(tokenA.symbol, tokenB.symbol, {
+    this.graph.setEdge(this.getTokenKey(tokenA), this.getTokenKey(tokenB), {
       well,
       from: tokenA,
       to: tokenB
     });
   }
 
-  searchGraph(start: string, end: string): string[] {
+  searchGraph(startToken: Token, endToken: Token): string[] {
     const path: string[] = [];
+    const start = this.getTokenKey(startToken);
+    const end = this.getTokenKey(endToken);
     let res = alg.dijkstra(this.graph, start);
 
     // target not found

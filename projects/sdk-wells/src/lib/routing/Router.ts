@@ -1,20 +1,25 @@
-import { Token } from "@beanstalk/sdk-core";
-import { Well } from "../Well";
+import type { Token } from "@beanstalk/sdk-core";
+import type { Well } from "../Well";
 import { Graph } from "./Graph";
 import { Route } from "./Route";
-import { WellsSDK } from "../WellsSDK";
+import type { WellsSDK } from "../WellsSDK";
 
 export class Router {
   private sdk: WellsSDK;
+  private readonly wellAllowlist?: Set<string>;
   public wells = new Set<Well>();
   public graph: Graph;
 
-  constructor(sdk: WellsSDK) {
+  constructor(sdk: WellsSDK, wellAllowlist?: Iterable<string>) {
     this.sdk = sdk;
+    this.wellAllowlist = wellAllowlist
+      ? new Set([...wellAllowlist].map((address) => address.toLowerCase()))
+      : undefined;
     this.graph = new Graph();
   }
 
   async addWell(well: Well) {
+    if (this.wellAllowlist && !this.wellAllowlist.has(well.address.toLowerCase())) return;
     if (this.wells.has(well)) return;
 
     const tokens = await well.getTokens();
@@ -28,7 +33,7 @@ export class Router {
     for (const token of tokens) {
       token.setSignerOrProvider(this.sdk.providerOrSigner);
       this.graph.addNode(token);
-      if (token.symbol === "WETH") WETH = token;
+      if (this.sdk.tokens.WETH && token.equals(this.sdk.tokens.WETH)) WETH = token;
     }
     // Add ETH
     const ETH = this.sdk.tokens.ETH;
@@ -57,7 +62,7 @@ export class Router {
   getRoute(fromToken: Token, toToken: Token) {
     const route = new Route();
 
-    let path = this.graph.searchGraph(fromToken.symbol, toToken.symbol);
+    let path = this.graph.searchGraph(fromToken, toToken);
     /**
      * At this point, path is an array of strings, for ex:
      * [ 'A', 'B', 'C', 'D' ]
@@ -90,7 +95,9 @@ export class Router {
       const edge = this.graph.graph.edge(e.v, e.w);
       const label = edge.label;
       const labelString = label ? ` [label="${label}"]` : "";
-      code += `\t"${e.v}" -> "${e.w}"${labelString}\n`;
+      const from = this.graph.graph.node(e.v)?.token?.symbol ?? e.v;
+      const to = this.graph.graph.node(e.w)?.token?.symbol ?? e.w;
+      code += `\t"${from}" -> "${to}"${labelString}\n`;
     });
     code += "}";
 

@@ -1,5 +1,5 @@
-import { Token } from "@beanstalk/sdk-core";
-import { Well } from "../Well";
+import type { Token } from "@beanstalk/sdk-core";
+import type { Well } from "../Well";
 
 export type RouteLeg = {
   from: Token;
