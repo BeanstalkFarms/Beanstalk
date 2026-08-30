@@ -8,9 +8,9 @@ export class SwapBuilder {
   private readonly sdk: WellsSDK;
   router: Router;
 
-  constructor(sdk: WellsSDK) {
+  constructor(sdk: WellsSDK, wellAllowlist?: Iterable<string>) {
     this.sdk = sdk;
-    this.router = new Router(sdk);
+    this.router = new Router(sdk, wellAllowlist);
   }
 
   async addWell(well: Well) {
