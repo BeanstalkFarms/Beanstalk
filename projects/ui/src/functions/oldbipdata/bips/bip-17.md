@@ -72,7 +72,7 @@ Anticipated Q2 2022 Bean Sprout Hires
     
     Responsibilities include:
     
-    - Liasing between Bean Sprout and Beanstalk Farms teams to facilitate clear and efficient cross-organizational workstreams
+    - Liaising between Bean Sprout and Beanstalk Farms teams to facilitate clear and efficient cross-organizational workstreams
     - Managing internal Bean Sprout processes
 
 ## Amounts
