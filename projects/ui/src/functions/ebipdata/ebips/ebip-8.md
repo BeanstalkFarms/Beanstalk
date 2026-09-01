@@ -34,7 +34,7 @@ Increment the total Seeds based on the sum of the BDV of each Enrooted Deposit i
 
 When removing an Unripe Deposit from the legacy Silo storage reference, remove the whole legacy Deposit and redeposit any excess in the regular Silo storage reference instead of leaving it in the legacy Deposit storage.
 
-Add the `payable` modifer to the `enrootDeposit(s)` functions.
+Add the `payable` modifier to the `enrootDeposit(s)` functions.
 
 All fixes were reviewed by Halborn.
 
