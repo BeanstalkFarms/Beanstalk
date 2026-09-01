@@ -1,17 +1,14 @@
 /* global __BEANSTALK_APP_VERSION__ */
 import React, { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { getRemoteBuildId } from '~/lib/AppVersion';
 
 const VERSION_URL = '/version.json';
 const INITIAL_CHECK_DELAY_MS = 30_000;
 const CHECK_INTERVAL_MS = 5 * 60_000;
 const FOCUS_CHECK_THROTTLE_MS = 60_000;
 
-type AppVersion = typeof __BEANSTALK_APP_VERSION__;
-
-const fetchLatestVersion = async (): Promise<
-  Partial<AppVersion> | undefined
-> => {
+const fetchLatestVersion = async (): Promise<unknown> => {
   const response = await fetch(`${VERSION_URL}?t=${Date.now()}`, {
     cache: 'no-store',
     headers: {
@@ -97,10 +94,10 @@ export default function AppVersionGuard() {
       isCheckingRef.current = true;
 
       try {
-        const latestVersion = await fetchLatestVersion();
+        const latestBuildId = getRemoteBuildId(await fetchLatestVersion());
         if (
-          latestVersion?.buildId &&
-          latestVersion.buildId !== __BEANSTALK_APP_VERSION__.buildId
+          latestBuildId &&
+          latestBuildId !== __BEANSTALK_APP_VERSION__.buildId
         ) {
           handleStaleVersion();
         }
