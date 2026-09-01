@@ -63,5 +63,5 @@ jobs:
       - name: Run tests
         run: yarn test
         env:
-          FORKING_RPC: ${{ secrets.ANVIL_FORK_URL }}
+          FORKING_RPC: ${{ secrets.ANVIL_ETHEREUM_FORK_URL }}
         working-directory: protocol
