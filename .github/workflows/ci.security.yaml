@@ -1,0 +1,22 @@
+name: Credential Scan
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  alchemy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Test credential scanner
+        run: node --test scripts/check-no-hardcoded-alchemy-keys.test.mjs
+      - name: Scan tracked files
+        run: node scripts/check-no-hardcoded-alchemy-keys.mjs

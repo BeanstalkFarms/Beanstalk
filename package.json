@@ -28,6 +28,7 @@
     "all:build": "yarn build",
     "test": "yarn sdk:test",
     "format": "yarn sdk:prettier",
+    "security:check-alchemy": "node scripts/check-no-hardcoded-alchemy-keys.mjs",
     "protocol:generate": "yarn workspace @beanstalk/protocol generate",
     "jest:clearcache": "jest --clearCache",
     "sdk:generate": "yarn workspace @beanstalk/sdk generate",
@@ -54,8 +55,8 @@
     "ex": "yarn workspace @beanstalk/examples x",
     "anvil-arbitrum": "yarn cli:anvil-arbitrum",
     "anvil-eth-mainnet": "yarn cli:anvil-eth-mainnet",
-    "anvil": "anvil --fork-url https://arb-mainnet.g.alchemy.com/v2/5ubn94zT7v7DnB5bNW1VOnoIbX5-AG2N --chain-id 1337",
-    "anvil4tests": "anvil --fork-url https://arb-mainnet.g.alchemy.com/v2/Kk7ktCQL5wz4v4AG8bR2Gun8TAASQ-qi  --chain-id 1337 --fork-block-number 18629000"
+    "anvil": "anvil --fork-url $ANVIL_ARBITRUM_FORK_URL --chain-id 1337",
+    "anvil4tests": "anvil --fork-url $ANVIL_ARBITRUM_FORK_URL --chain-id 1337 --fork-block-number 18629000"
   },
   "dependencies": {
     "prettier-plugin-solidity": "2.4.1"

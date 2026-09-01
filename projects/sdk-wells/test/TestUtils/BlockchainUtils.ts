@@ -12,10 +12,15 @@ export class BlockchainUtils {
   }
 
   async resetFork() {
+    const jsonRpcUrl = process.env.ANVIL_ETHEREUM_FORK_URL;
+    if (!jsonRpcUrl) {
+      throw new Error("ANVIL_ETHEREUM_FORK_URL is required to reset the fork");
+    }
+
     await this.sdk.provider.send("anvil_reset", [
       {
         forking: {
-          jsonRpcUrl: "https://eth-mainnet.g.alchemy.com/v2/f6piiDvMBMGRYvCOwLJFMD7cUjIvI1TP"
+          jsonRpcUrl
         }
       }
     ]);
@@ -96,7 +101,11 @@ export class BlockchainUtils {
     if (isTokenReverse) values.reverse();
 
     const index = ethers.utils.solidityKeccak256(["uint256", "uint256"], values);
-    await this.setStorageAt(_token.address, index.toString(), this.toBytes32(balanceAmount).toString());
+    await this.setStorageAt(
+      _token.address,
+      index.toString(),
+      this.toBytes32(balanceAmount).toString()
+    );
   }
 
   private async setStorageAt(address: string, index: string, value: string) {

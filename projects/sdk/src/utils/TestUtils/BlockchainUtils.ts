@@ -85,10 +85,15 @@ export class BlockchainUtils {
   }
 
   async resetFork() {
+    const jsonRpcUrl = process.env.ANVIL_ETHEREUM_FORK_URL;
+    if (!jsonRpcUrl) {
+      throw new Error("ANVIL_ETHEREUM_FORK_URL is required to reset the fork");
+    }
+
     await this.sdk.provider.send("anvil_reset", [
       {
         forking: {
-          jsonRpcUrl: "https://eth-mainnet.g.alchemy.com/v2/f6piiDvMBMGRYvCOwLJFMD7cUjIvI1TP"
+          jsonRpcUrl
         }
       }
     ]);

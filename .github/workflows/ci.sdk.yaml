@@ -32,8 +32,12 @@ jobs:
           version: nightly
       # TODO: Cache Anvil RPC calls between runs to speed up tests
       - name: Launch Anvil
-        run: yarn anvil4tests &
+        run: bash scripts/start-anvil-ci.sh yarn anvil4tests
+        env:
+          ANVIL_ARBITRUM_FORK_URL: ${{ secrets.ANVIL_ARBITRUM_FORK_URL }}
       - name: Build All
         run: yarn build
       - run: yarn sdk:test
+        env:
+          ANVIL_ETHEREUM_FORK_URL: ${{ secrets.ANVIL_ETHEREUM_FORK_URL }}
         working-directory: projects/sdk
