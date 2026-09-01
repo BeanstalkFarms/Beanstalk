@@ -31,7 +31,7 @@ jobs:
         with:
           version: nightly
       - name: Launch Anvil
-        run: anvil --fork-url $ANVIL_ETHEREUM_FORK_URL --chain-id 1337 &
+        run: bash scripts/start-anvil-ci.sh anvil --fork-url $ANVIL_ETHEREUM_FORK_URL --chain-id 1337
         env:
           ANVIL_ETHEREUM_FORK_URL: ${{ secrets.ANVIL_ETHEREUM_FORK_URL }}
       - name: Build All
