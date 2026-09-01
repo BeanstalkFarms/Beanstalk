@@ -15,8 +15,12 @@ import {
     findLatestReceiverApproval,
     fetchMigrationEventState,
     L2_MIGRATION_EVENT_FROM_BLOCK,
-    readCachedMigrationSource,
 } from '~/lib/L2Migration/events';
+import {
+    createRequestScope,
+    fetchL2MigrationData,
+    readStoredMigrationSource,
+} from '~/lib/L2Migration/requests';
 
 const L2_CLAIM_EVENT_POLL_INTERVAL = 5 * 60_000;
 
@@ -42,8 +46,8 @@ export default function L2Claim() {
     const account = useAccount();
     const sdk = useSdk();
     const cachedSourceAccount = useMemo(
-        () => readCachedMigrationSource(
-            window.localStorage.getItem('internalL2MigrationData'),
+        () => readStoredMigrationSource(
+            () => window.localStorage.getItem('internalL2MigrationData'),
             account
         ),
         [account]
@@ -65,17 +69,37 @@ export default function L2Claim() {
     const claimComplete = (hasDeposits || hasFert || hasPlots || hasFarmBalance)
         && ((hasDeposits === depositsClaimed) && (hasFert === fertilizerClaimed) && (hasPlots === plotsClaimed) && (hasFarmBalance === internalBalancesClaimed));
 
-    const isLoadingRef = useRef(false);
+    const eventRequestScopeRef = useRef(createRequestScope());
+
+    useEffect(() => {
+        setDeposits(undefined);
+        setFerts(undefined);
+        setPlots(undefined);
+        setFarmBalance(undefined);
+        setDepositsClaimed(false);
+        setPlotsClaimed(false);
+        setInternalBalancesClaimed(false);
+        setFertilizerClaimed(false);
+        setReceiverApproved(false);
+    }, [account, sourceAccount]);
 
     const getEvent = useCallback(async () => {
-        if (isLoadingRef.current || claimComplete || !account) return
-        isLoadingRef.current = true;
+        if (claimComplete || !account) return
+
+        const requestScope = eventRequestScopeRef.current;
+        const request = requestScope.begin(
+            `${account.toLowerCase()}:${sourceAccount?.toLowerCase() ?? 'discover'}`
+        );
+        if (!request) return;
+
         try {
             if (sourceAccount) {
                 const state = await fetchMigrationEventState(
                     sdk.contracts.beanstalk,
                     sourceAccount
                 );
+                if (!requestScope.isCurrent(request)) return;
+
                 setReceiverApproved(
                     state.receiver?.toLowerCase() === account.toLowerCase()
                 );
@@ -86,6 +110,8 @@ export default function L2Claim() {
             } else {
                 const receiverFilter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)']();
                 const logs = await sdk.contracts.beanstalk.queryFilter(receiverFilter, L2_MIGRATION_EVENT_FROM_BLOCK, 'latest');
+                if (!requestScope.isCurrent(request)) return;
+
                 const discoveredSource = findLatestReceiverApproval(logs, account);
                 if (discoveredSource) {
                     setDiscoveredMigration({
@@ -97,22 +123,34 @@ export default function L2Claim() {
                 }
                 setReceiverApproved(false);
             }
+        } catch (error) {
+            if (requestScope.isCurrent(request)) {
+                console.error('[l2claim] Failed to load migration events', error);
+            }
         } finally {
-            isLoadingRef.current = false;
+            requestScope.finish(request);
         }
     }, [sdk.contracts.beanstalk, sourceAccount, account, claimComplete]);
 
     useEffect(() => {
-        async function getMigrationData() {
-            if (!account || !sourceAccount) return
-            const migrationData = await fetch(`/.netlify/functions/l2migration?account=${sourceAccount}`)
-                .then((response) => response.json())
-            setDeposits(migrationData.deposits)
-            setFerts(migrationData.fertilizer)
-            setPlots(migrationData.plots)
-            setFarmBalance(migrationData.farmBalance)
-        };
-        getMigrationData();
+        if (!account || !sourceAccount) return;
+
+        const controller = new AbortController();
+        fetchL2MigrationData(sourceAccount, controller.signal)
+            .then((migrationData) => {
+                if (controller.signal.aborted) return;
+                setDeposits(migrationData.deposits);
+                setFerts(migrationData.fertilizer);
+                setPlots(migrationData.plots);
+                setFarmBalance(migrationData.farmBalance);
+            })
+            .catch((error) => {
+                if (!controller.signal.aborted) {
+                    console.error('[l2claim] Failed to load migration data', error);
+                }
+            });
+
+        return () => controller.abort();
     }, [account, sourceAccount]);
 
     useEffect(() => {

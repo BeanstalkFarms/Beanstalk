@@ -27,14 +27,14 @@ const reloadApp = () => {
   window.location.reload();
 };
 
-export default function AppVersionGuard() {
+export const useAppVersionGuard = (enabled = import.meta.env.PROD) => {
   const isCheckingRef = useRef(false);
   const isStaleRef = useRef(false);
   const hasNotifiedRef = useRef(false);
   const lastCheckAtRef = useRef(0);
 
   useEffect(() => {
-    if (!import.meta.env.PROD) {
+    if (!enabled) {
       return;
     }
 
@@ -46,11 +46,6 @@ export default function AppVersionGuard() {
       }
 
       isStaleRef.current = true;
-
-      if (document.visibilityState === 'hidden') {
-        reloadApp();
-        return;
-      }
 
       if (hasNotifiedRef.current) {
         return;
@@ -113,11 +108,6 @@ export default function AppVersionGuard() {
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isStaleRef.current) {
-        reloadApp();
-        return;
-      }
-
       if (document.visibilityState === 'visible') {
         checkForLatestVersion(true);
       }
@@ -148,7 +138,11 @@ export default function AppVersionGuard() {
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [enabled]);
+};
+
+export default function AppVersionGuard() {
+  useAppVersionGuard();
 
   return null;
 }
