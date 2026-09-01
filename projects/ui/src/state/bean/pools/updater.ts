@@ -12,7 +12,6 @@ import {
   Pool,
 } from '@beanstalk/sdk';
 import { chunkArray } from '~/util/UI';
-import { getExtractMulticallResult } from '~/util/Multicall';
 import { transform } from '~/util/BigNumber';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
 import { TokenMap } from '~/constants';
@@ -20,8 +19,6 @@ import { resetPools, updateBeanPools, UpdatePoolPayload } from './actions';
 import { updateDeltaB, updatePrice, updateSupply } from '../token/actions';
 
 const pageContext = '[bean/pools/useGetPools]';
-
-const extract = getExtractMulticallResult(pageContext);
 
 export const useFetchPools = () => {
   const dispatch = useDispatch();
@@ -38,13 +35,12 @@ export const useFetchPools = () => {
         const poolsArr = [...whitelistedPools.values()];
         const BEAN = sdk.tokens.BEAN;
 
-        const [priceResult, beanTotalSupply, totalDeltaB, lpResults] =
-          await Promise.all([
-            beanstalkPrice.price(),
-            BEAN.getContract().totalSupply().then(tokenResult(BEAN)),
-            beanstalk.totalDeltaB().then(tokenResult(BEAN)),
-            fetchPoolsData(sdk, poolsArr),
-          ]);
+        const {
+          priceResult,
+          beanTotalSupply,
+          totalDeltaB,
+          lpResults,
+        } = await fetchPoolsData(sdk, poolsArr);
 
         console.debug(`${pageContext} FETCH: `, {
           priceResult,
@@ -150,36 +146,68 @@ const PoolsUpdater = () => {
 export default PoolsUpdater;
 
 async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
-  const { beanstalk } = sdk.contracts;
+  const { beanstalk, beanstalkPrice } = sdk.contracts;
+  const BEAN = sdk.tokens.BEAN;
+  const beanContract = BEAN.getContract();
+  const clipboard = Clipboard.encode([]);
 
-  const calls: AdvancedPipeStruct[] = pools
+  const poolCalls: AdvancedPipeStruct[] = pools
     .map((pool) => {
       const deltaBCall = {
         target: beanstalk.address,
         callData: beanstalk.interface.encodeFunctionData('poolDeltaB', [
           pool.address,
         ]),
-        clipboard: Clipboard.encode([]),
+        clipboard,
       };
       const supplyCall = {
         target: pool.lpToken.address,
         callData: pool.lpToken
           .getContract()
           .interface.encodeFunctionData('totalSupply'),
-        clipboard: Clipboard.encode([]),
+        clipboard,
       };
 
       return [deltaBCall, supplyCall];
     })
     .flat();
 
+  const calls: AdvancedPipeStruct[] = [
+    {
+      target: beanstalkPrice.address,
+      callData: beanstalkPrice.interface.encodeFunctionData('price'),
+      clipboard,
+    },
+    {
+      target: beanContract.address,
+      callData: beanContract.interface.encodeFunctionData('totalSupply'),
+      clipboard,
+    },
+    {
+      target: beanstalk.address,
+      callData: beanstalk.interface.encodeFunctionData('totalDeltaB'),
+      clipboard,
+    },
+    ...poolCalls,
+  ];
+
   const result = await sdk.contracts.beanstalk.callStatic.advancedPipe(
     calls,
     '0'
   );
-  const chunkedByPool = chunkArray(result, 2);
+  const priceResult = beanstalkPrice.interface.decodeFunctionResult(
+    'price',
+    result[0]
+  )[0] as Awaited<ReturnType<typeof beanstalkPrice.price>>;
+  const beanTotalSupply = tokenResult(BEAN)(
+    beanContract.interface.decodeFunctionResult('totalSupply', result[1])[0]
+  );
+  const totalDeltaB = tokenResult(BEAN)(
+    beanstalk.interface.decodeFunctionResult('totalDeltaB', result[2])[0]
+  );
+  const chunkedByPool = chunkArray(result.slice(3), 2);
 
-  const datas = pools.reduce<
+  const lpResults = pools.reduce<
     TokenMap<{
       totalSupply: BigNumber;
       deltaB: BigNumber;
@@ -202,5 +230,10 @@ async function fetchPoolsData(sdk: BeanstalkSDK, pools: Pool[]) {
     return prev;
   }, {});
 
-  return datas;
+  return {
+    priceResult,
+    beanTotalSupply,
+    totalDeltaB,
+    lpResults,
+  };
 }

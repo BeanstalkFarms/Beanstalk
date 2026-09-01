@@ -37,3 +37,11 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare const __BEANSTALK_APP_VERSION__: {
+  buildId: string;
+  commit: string;
+  branch: string;
+  context: string;
+  builtAt: string;
+};

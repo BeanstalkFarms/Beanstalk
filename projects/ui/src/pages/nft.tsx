@@ -74,8 +74,9 @@ const NFTPage: FC<{}> = () => {
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   async function getNFTMetadataBatch(nftArray: any[], contractAddress: string) {
-    const nftMetadataBatchBaseURL =
-      'https://eth-mainnet.g.alchemy.com/nft/v3/f6piiDvMBMGRYvCOwLJFMD7cUjIvI1TP/getNFTMetadataBatch';
+    const nftMetadataBatchBaseURL = `https://eth-mainnet.g.alchemy.com/nft/v3/${
+      import.meta.env.VITE_ALCHEMY_API_KEY
+    }/getNFTMetadataBatch`;
 
     const nfts: any[] = [];
     let batchRequest: any[] = [];

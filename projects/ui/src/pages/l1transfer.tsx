@@ -52,6 +52,8 @@ import useNavHeight from '~/hooks/app/usePageDimensions';
 import useChainId from '~/hooks/chain/useChainId';
 import useChainState from '~/hooks/chain/useChainState';
 
+const L1_MIGRATION_READ_INTERVAL = 60_000;
+
 /// ---------------------------------------------------------------
 
 type TransferFormValues = {
@@ -523,7 +525,9 @@ const L1Transfer: FC<{}> = () => {
     args: [(account || ''), supportedAddresses],
     query: {
       enabled: Boolean(account),
-      refetchInterval: 10000
+      staleTime: L1_MIGRATION_READ_INTERVAL,
+      refetchInterval: L1_MIGRATION_READ_INTERVAL,
+      refetchIntervalInBackground: false,
     }
   });
 
@@ -549,7 +553,9 @@ const L1Transfer: FC<{}> = () => {
     contracts: allowanceCalls,
     query: {
       enabled: Boolean(account),
-      refetchInterval: 10000
+      staleTime: L1_MIGRATION_READ_INTERVAL,
+      refetchInterval: L1_MIGRATION_READ_INTERVAL,
+      refetchIntervalInBackground: false,
     }
   });
   const tokenAllowancesData = tokenAllowances.data as Array<{ result: bigint, status: string }>

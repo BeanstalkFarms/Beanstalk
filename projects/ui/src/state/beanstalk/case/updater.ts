@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { AdvancedPipeStruct, Clipboard } from '@beanstalk/sdk';
 import useSdk from '~/hooks/sdk';
 import { useAppSelector } from '~/state';
 import { ethersBNResult } from '~/util';
@@ -24,12 +25,47 @@ export const useUpdateBeanstalkCaseState = () => {
     }
 
     const bs = sdk.contracts.beanstalk;
-    const [deltaPodDemand, l2sr, podRate, largestLiqWell] = await Promise.all([
-      bs.getDeltaPodDemand().then(ethersBNResult(18)),
-      bs.getLiquidityToSupplyRatio().then(ethersBNResult(18)),
-      bs.getPodRate('0').then(ethersBNResult(18)),
-      bs.getLargestLiqWell(),
-    ]);
+    const common = {
+      target: bs.address,
+      clipboard: Clipboard.encode([]),
+    };
+
+    const calls: AdvancedPipeStruct[] = [
+      {
+        ...common,
+        callData: bs.interface.encodeFunctionData('getDeltaPodDemand'),
+      },
+      {
+        ...common,
+        callData: bs.interface.encodeFunctionData('getLiquidityToSupplyRatio'),
+      },
+      {
+        ...common,
+        callData: bs.interface.encodeFunctionData('getPodRate', ['0']),
+      },
+      {
+        ...common,
+        callData: bs.interface.encodeFunctionData('getLargestLiqWell'),
+      },
+    ];
+
+    const results = await bs.callStatic.advancedPipe(calls, '0');
+    const deltaPodDemand = ethersBNResult(18)(
+      bs.interface.decodeFunctionResult('getDeltaPodDemand', results[0])[0]
+    );
+    const l2sr = ethersBNResult(18)(
+      bs.interface.decodeFunctionResult(
+        'getLiquidityToSupplyRatio',
+        results[1]
+      )[0]
+    );
+    const podRate = ethersBNResult(18)(
+      bs.interface.decodeFunctionResult('getPodRate', results[2])[0]
+    );
+    const largestLiqWell = bs.interface.decodeFunctionResult(
+      'getLargestLiqWell',
+      results[3]
+    )[0];
 
     dispatch(
       updateBeanstalkCaseState({

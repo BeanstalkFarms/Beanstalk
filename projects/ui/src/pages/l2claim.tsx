@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Card, Link, Typography } from '@mui/material';
 import PageHeader from '~/components/Common/PageHeader';
 import { FontWeight } from '~/components/App/muiTheme';
@@ -11,12 +11,26 @@ import useChainState from '~/hooks/chain/useChainState';
 import { useSwitchChain } from 'wagmi';
 import useBanner from '~/hooks/app/useBanner';
 import useNavHeight from '~/hooks/app/usePageDimensions';
+import {
+    findLatestReceiverApproval,
+    fetchMigrationEventState,
+    L2_MIGRATION_EVENT_FROM_BLOCK,
+} from '~/lib/L2Migration/events';
+import {
+    createRequestScope,
+    fetchL2MigrationData,
+    readStoredMigrationSource,
+} from '~/lib/L2Migration/requests';
+
+const L2_CLAIM_EVENT_POLL_INTERVAL = 5 * 60_000;
 
 export default function L2Claim() {
 
-    const [sourceAccount, setSourceAccount] = useState<string | undefined>(undefined);
+    const [discoveredMigration, setDiscoveredMigration] = useState<{
+        receiver: string;
+        source: string;
+    }>();
 
-    const [needsMigration, setNeedsMigration] = useState<boolean>(false);
     const [deposits, setDeposits] = useState<any>(undefined);
     const [ferts, setFerts] = useState<any>(undefined);
     const [plots, setPlots] = useState<any>(undefined);
@@ -27,92 +41,131 @@ export default function L2Claim() {
     const [internalBalancesClaimed, setInternalBalancesClaimed] = useState(false);
     const [fertilizerClaimed, setFertilizerClaimed] = useState(false);
 
-    const [isLoading, setIsLoading] = useState(false);
-
     const [receiverApproved, setReceiverApproved] = useState<boolean>(false);
 
     const account = useAccount();
     const sdk = useSdk();
+    const cachedSourceAccount = useMemo(
+        () => readStoredMigrationSource(
+            () => window.localStorage.getItem('internalL2MigrationData'),
+            account
+        ),
+        [account]
+    );
+    const discoveredSourceAccount =
+        account && discoveredMigration?.receiver.toLowerCase() === account.toLowerCase()
+            ? discoveredMigration.source
+            : undefined;
+    const sourceAccount = discoveredSourceAccount ?? cachedSourceAccount;
 
     const { isArbitrum, isTestnet } = useChainState();
-    const { chains, error, isPending, switchChain } = useSwitchChain();
+    const { switchChain } = useSwitchChain();
 
     const hasDeposits = deposits ? Object.keys(deposits).length > 0 : false;
     const hasFert = ferts ? Object.keys(ferts).length > 0 : false;
     const hasPlots = plots ? Object.keys(plots).length > 0 : false;
     const hasFarmBalance = farmBalance ? Object.keys(farmBalance).length > 0 : false;
-
-    const getEvent = useCallback(async () => {
-        if (isLoading) return
-        setIsLoading(true)
-        if (sourceAccount) {
-            const filter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)'](sourceAccount);
-            const logs = await sdk.contracts.beanstalk.queryFilter(filter);
-            if (logs && logs.length > 0) {
-                setReceiverApproved(true);
-                setSourceAccount(logs[0].args[0]);
-            } else {
-                setReceiverApproved(false);
-            }
-
-            const depositsFilter = sdk.contracts.beanstalk.filters['L1DepositsMigrated(address,address,uint256[],uint256[],uint256[])'](sourceAccount);
-            const depositLogs = await sdk.contracts.beanstalk.queryFilter(depositsFilter);
-            (depositLogs && depositLogs.length > 0) ? setDepositsClaimed(true) : setDepositsClaimed(false);
-
-            const plotsFilter = sdk.contracts.beanstalk.filters['L1PlotsMigrated(address,address,uint256[],uint256[])'](sourceAccount);
-            const plotsLogs = await sdk.contracts.beanstalk.queryFilter(plotsFilter);
-            (plotsLogs && plotsLogs.length > 0) ? setPlotsClaimed(true) : setPlotsClaimed(false);
-
-            const internalBalancesFilter = sdk.contracts.beanstalk.filters['L1InternalBalancesMigrated(address,address,address[],uint256[])'](sourceAccount);
-            const internalLogs = await sdk.contracts.beanstalk.queryFilter(internalBalancesFilter);
-            (internalLogs && internalLogs.length > 0) ? setInternalBalancesClaimed(true) : setInternalBalancesClaimed(false);
-
-            const fertilizerFilter = sdk.contracts.beanstalk.filters['L1FertilizerMigrated(address,address,uint256[],uint128[],uint128)'](sourceAccount);
-            const fertilizerLogs = await sdk.contracts.beanstalk.queryFilter(fertilizerFilter);
-            (fertilizerLogs && fertilizerLogs.length > 0) ? setFertilizerClaimed(true) : setFertilizerClaimed(false);
-
-        } else {
-            const receiverFilter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)']();
-            const logs = await sdk.contracts.beanstalk.queryFilter(receiverFilter);
-            for (const log of logs) {
-                if (log.args.receiver.toLowerCase() === account) {
-                    setSourceAccount(log.args.owner);
-                    setReceiverApproved(true);
-                    setIsLoading(false);
-                    return
-                };
-            };
-            setReceiverApproved(false);
-        }
-        setIsLoading(false);
-    }, [sdk.contracts.beanstalk, sourceAccount, isLoading]);
-
-    useEffect(() => {
-        async function getMigrationData() {
-            if (!account) return
-            const migrationData = await fetch(`/.netlify/functions/l2migration?account=${sourceAccount}`)
-                .then((response) => response.json())
-            setNeedsMigration(migrationData.needsManualMigration)
-            setDeposits(migrationData.deposits)
-            setFerts(migrationData.fertilizer)
-            setPlots(migrationData.plots)
-            setFarmBalance(migrationData.farmBalance)
-        };
-        getMigrationData();
-    }, [account, sourceAccount]);
-
-    useEffect(() => {
-        const interval = setInterval(getEvent, 5000);
-        return () => clearInterval(interval);
-    }, [getEvent]);
-
-    useEffect(() => {
-        getEvent();
-    }, []);
-
     const claimEnabled = receiverApproved && (hasDeposits || hasFert || hasPlots || hasFarmBalance);
     const claimComplete = (hasDeposits || hasFert || hasPlots || hasFarmBalance)
         && ((hasDeposits === depositsClaimed) && (hasFert === fertilizerClaimed) && (hasPlots === plotsClaimed) && (hasFarmBalance === internalBalancesClaimed));
+
+    const eventRequestScopeRef = useRef(createRequestScope());
+
+    useEffect(() => {
+        setDeposits(undefined);
+        setFerts(undefined);
+        setPlots(undefined);
+        setFarmBalance(undefined);
+        setDepositsClaimed(false);
+        setPlotsClaimed(false);
+        setInternalBalancesClaimed(false);
+        setFertilizerClaimed(false);
+        setReceiverApproved(false);
+    }, [account, sourceAccount]);
+
+    const getEvent = useCallback(async () => {
+        if (claimComplete || !account) return
+
+        const requestScope = eventRequestScopeRef.current;
+        const request = requestScope.begin(
+            `${account.toLowerCase()}:${sourceAccount?.toLowerCase() ?? 'discover'}`
+        );
+        if (!request) return;
+
+        try {
+            if (sourceAccount) {
+                const state = await fetchMigrationEventState(
+                    sdk.contracts.beanstalk,
+                    sourceAccount
+                );
+                if (!requestScope.isCurrent(request)) return;
+
+                setReceiverApproved(
+                    state.receiver?.toLowerCase() === account.toLowerCase()
+                );
+                setDepositsClaimed(state.depositsClaimed);
+                setPlotsClaimed(state.plotsClaimed);
+                setInternalBalancesClaimed(state.internalBalancesClaimed);
+                setFertilizerClaimed(state.fertilizerClaimed);
+            } else {
+                const receiverFilter = sdk.contracts.beanstalk.filters['ReceiverApproved(address,address)']();
+                const logs = await sdk.contracts.beanstalk.queryFilter(receiverFilter, L2_MIGRATION_EVENT_FROM_BLOCK, 'latest');
+                if (!requestScope.isCurrent(request)) return;
+
+                const discoveredSource = findLatestReceiverApproval(logs, account);
+                if (discoveredSource) {
+                    setDiscoveredMigration({
+                        receiver: account,
+                        source: discoveredSource,
+                    });
+                    setReceiverApproved(true);
+                    return;
+                }
+                setReceiverApproved(false);
+            }
+        } catch (error) {
+            if (requestScope.isCurrent(request)) {
+                console.error('[l2claim] Failed to load migration events', error);
+            }
+        } finally {
+            requestScope.finish(request);
+        }
+    }, [sdk.contracts.beanstalk, sourceAccount, account, claimComplete]);
+
+    useEffect(() => {
+        if (!account || !sourceAccount) return;
+
+        const controller = new AbortController();
+        fetchL2MigrationData(sourceAccount, controller.signal)
+            .then((migrationData) => {
+                if (controller.signal.aborted) return;
+                setDeposits(migrationData.deposits);
+                setFerts(migrationData.fertilizer);
+                setPlots(migrationData.plots);
+                setFarmBalance(migrationData.farmBalance);
+            })
+            .catch((error) => {
+                if (!controller.signal.aborted) {
+                    console.error('[l2claim] Failed to load migration data', error);
+                }
+            });
+
+        return () => controller.abort();
+    }, [account, sourceAccount]);
+
+    useEffect(() => {
+        if (claimComplete) return;
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                getEvent();
+            }
+        }, L2_CLAIM_EVENT_POLL_INTERVAL);
+        return () => clearInterval(interval);
+    }, [getEvent, claimComplete]);
+
+    useEffect(() => {
+        getEvent();
+    }, [getEvent]);
 
     function onSubmit() {
 
@@ -207,7 +260,7 @@ export default function L2Claim() {
                                 flexDirection="row"
                                 gap={1}
                                 alignItems="center"
-                                href={'/'}
+                                href="/"
                             >
                                 <Typography variant="h4">Migrate another address</Typography>
                             </Link>
@@ -215,7 +268,7 @@ export default function L2Claim() {
                         :
                         <>
                             <Typography variant="h4" fontWeight={FontWeight.bold} padding={1}>
-                                {"Receive Delegated Balances from Mainnet"}
+                                Receive Delegated Balances from Mainnet
                             </Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 <Box
@@ -283,7 +336,7 @@ export default function L2Claim() {
                                     <Typography>{hasFert ? 'Fertilizer' : 'No Fertilizer'}</Typography>
                                 </Box>
                                 <Typography sx={{ padding: 1 }}>
-                                    This page checks Arbitrum One for the arrival of migration data every few seconds. The button below will automatically
+                                    This page checks Arbitrum One for the arrival of migration data every few minutes. The button below will automatically
                                     enable itself when this data becomes available.
                                 </Typography>
                                 <Button

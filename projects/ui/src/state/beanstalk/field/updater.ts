@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { AdvancedPipeStruct, Clipboard } from '@beanstalk/sdk';
 import { bigNumberResult, tokenResult } from '~/util';
 import { BEAN } from '~/constants/tokens';
 import useL2OnlyEffect from '~/hooks/chain/useL2OnlyEffect';
@@ -15,26 +16,77 @@ export const useFetchBeanstalkField = () => {
     if (beanstalk) {
       console.debug('[beanstalk/field/useBeanstalkField] FETCH');
 
-      // TODO: multicall?
-      const [
-        harvestableIndex,
-        podIndex,
-        soil,
-        weather,
-        adjustedTemperature,
-        maxTemperature,
-      ] = await Promise.all([
-        beanstalk.harvestableIndex('0').then(tokenResult(BEAN)), // FIXME
-        beanstalk.podIndex('0').then(tokenResult(BEAN)),
-        beanstalk.totalSoil().then(tokenResult(BEAN)),
-        beanstalk.weather().then((_weather) => ({
-          lastDSoil: tokenResult(BEAN)(_weather.lastDeltaSoil),
-          lastSowTime: bigNumberResult(_weather.lastSowTime),
-          thisSowTime: bigNumberResult(_weather.thisSowTime),
-        })),
-        beanstalk.temperature().then(tokenResult(BEAN)), // FIXME
-        beanstalk.maxTemperature().then(tokenResult(BEAN)), // FIXME
-      ]);
+      const common = {
+        target: beanstalk.address,
+        clipboard: Clipboard.encode([]),
+      };
+
+      const calls: AdvancedPipeStruct[] = [
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData(
+            'harvestableIndex',
+            ['0']
+          ),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('podIndex', ['0']),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('totalSoil'),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('weather'),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('temperature'),
+        },
+        {
+          ...common,
+          callData: beanstalk.interface.encodeFunctionData('maxTemperature'),
+        },
+      ];
+
+      const results = await beanstalk.callStatic.advancedPipe(calls, '0');
+      const _harvestableIndex = beanstalk.interface.decodeFunctionResult(
+        'harvestableIndex',
+        results[0]
+      )[0];
+      const _podIndex = beanstalk.interface.decodeFunctionResult(
+        'podIndex',
+        results[1]
+      )[0];
+      const _soil = beanstalk.interface.decodeFunctionResult(
+        'totalSoil',
+        results[2]
+      )[0];
+      const _weather = beanstalk.interface.decodeFunctionResult(
+        'weather',
+        results[3]
+      )[0];
+      const _adjustedTemperature = beanstalk.interface.decodeFunctionResult(
+        'temperature',
+        results[4]
+      )[0];
+      const _maxTemperature = beanstalk.interface.decodeFunctionResult(
+        'maxTemperature',
+        results[5]
+      )[0];
+
+      const harvestableIndex = tokenResult(BEAN)(_harvestableIndex);
+      const podIndex = tokenResult(BEAN)(_podIndex);
+      const soil = tokenResult(BEAN)(_soil);
+      const weather = {
+        lastDSoil: tokenResult(BEAN)(_weather.lastDeltaSoil),
+        lastSowTime: bigNumberResult(_weather.lastSowTime),
+        thisSowTime: bigNumberResult(_weather.thisSowTime),
+      };
+      const adjustedTemperature = tokenResult(BEAN)(_adjustedTemperature);
+      const maxTemperature = tokenResult(BEAN)(_maxTemperature);
 
       console.debug('[beanstalk/field/useBeanstalkField] RESULT', {
         harvestableIndex: harvestableIndex.toString(),

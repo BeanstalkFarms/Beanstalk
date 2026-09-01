@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import BigNumber from 'bignumber.js';
+import { AdvancedPipeStruct, Clipboard } from '@beanstalk/sdk';
 import { useProposalsLazyQuery } from '~/generated/graphql';
 import { AddressMap, MULTISIGS } from '~/constants';
 import { useBeanstalkContract } from '~/hooks/ledger/useContract';
@@ -31,13 +32,30 @@ export const useFetchBeanstalkGovernance = () => {
   /// Handlers
   const fetch = useCallback(async () => {
     if (beanstalk) {
+      const clipboard = Clipboard.encode([]);
+      const balanceCalls: AdvancedPipeStruct[] = MULTISIGS.map((address) => ({
+        target: beanstalk.address,
+        callData: beanstalk.interface.encodeFunctionData('getBalance', [
+          address,
+          BEAN.address,
+        ]),
+        clipboard,
+      }));
+
       const [proposalsResult, multisigBalances] = await Promise.all([
         getProposals(),
-        Promise.all(
-          MULTISIGS.map((address) =>
-            beanstalk.getBalance(address, BEAN.address).then(tokenResult(BEAN))
+        beanstalk.callStatic
+          .advancedPipe(balanceCalls, '0')
+          .then((results) =>
+            results.map((result) =>
+              tokenResult(BEAN)(
+                beanstalk.interface.decodeFunctionResult(
+                  'getBalance',
+                  result
+                )[0]
+              )
+            )
           )
-        ),
       ]);
 
       // Update proposals

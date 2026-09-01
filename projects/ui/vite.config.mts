@@ -1,4 +1,5 @@
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { execSync } from 'node:child_process';
 import path from 'path';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import react from '@vitejs/plugin-react';
@@ -18,11 +19,52 @@ type CSPData = {
   'frame-src': string[];
 };
 
+type AppVersion = {
+  buildId: string;
+  commit: string;
+  branch: string;
+  context: string;
+  builtAt: string;
+};
+
 function buildCSP(data: CSPData) {
   return Object.keys(data)
     .map((key) => `${key} ${data[key].join(' ')}`)
     .join(';');
 }
+
+const getGitCommit = () => {
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    return 'unknown';
+  }
+};
+
+const getAppVersion = (): AppVersion => {
+  const builtAt = new Date().toISOString();
+  const commit =
+    process.env.COMMIT_REF ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.CF_PAGES_COMMIT_SHA ||
+    process.env.GITHUB_SHA ||
+    getGitCommit();
+
+  return {
+    buildId:
+      process.env.VITE_APP_BUILD_ID ||
+      process.env.DEPLOY_ID ||
+      `${commit}-${builtAt}`,
+    commit,
+    branch:
+      process.env.BRANCH ||
+      process.env.VERCEL_GIT_COMMIT_REF ||
+      process.env.GITHUB_REF_NAME ||
+      '',
+    context: process.env.CONTEXT || process.env.VITE_NETLIFY_CONTEXT || '',
+    builtAt,
+  };
+};
 
 const CSP = buildCSP({
   'default-src': ["'self'"],
@@ -74,87 +116,103 @@ const CSP = buildCSP({
   ], // for walletconnect
 });
 
-// @ts-ignore
-export default defineConfig(({ command }) => ({
-  test: {
-    globals: true,
-  },
-  server: {
-    hmr: {
-      overlay: true,
+export default defineConfig(({ command }) => {
+  const appVersion = getAppVersion();
+
+  return {
+    define: {
+      __BEANSTALK_APP_VERSION__: JSON.stringify(appVersion),
     },
-    proxy: {
-      '/rff-api': {
-        target: RFF_STAGING_ORIGIN,
-        changeOrigin: true,
-        rewrite: (requestPath) => requestPath.replace(/^\/rff-api/, ''),
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyRequest) => {
-            proxyRequest.setHeader('Origin', RFF_UI_ORIGIN);
-          });
-          proxy.on('proxyRes', (proxyResponse) => {
-            const cookies = proxyResponse.headers['set-cookie'];
-            if (cookies) {
-              proxyResponse.headers['set-cookie'] = cookies.map((cookie) =>
-                cookie.replace('Path=/v1', 'Path=/rff-api/v1')
-              );
-            }
-          });
+    test: {
+      globals: true,
+    },
+    server: {
+      hmr: {
+        overlay: true,
+      },
+      proxy: {
+        '/rff-api': {
+          target: RFF_STAGING_ORIGIN,
+          changeOrigin: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/rff-api/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyRequest) => {
+              proxyRequest.setHeader('Origin', RFF_UI_ORIGIN);
+            });
+            proxy.on('proxyRes', (proxyResponse) => {
+              const cookies = proxyResponse.headers['set-cookie'];
+              if (cookies) {
+                proxyResponse.headers['set-cookie'] = cookies.map((cookie) =>
+                  cookie.replace('Path=/v1', 'Path=/rff-api/v1')
+                );
+              }
+            });
+          },
         },
       },
     },
-  },
-  plugins: [
-    react({
-      // This definition ensures that the `css` prop from Emotion
-      // works at build time. The one in tsconfig.json ensures that
-      // the IDE doesn't throw errors when using the prop.
-      jsxImportSource: '@emotion/react',
-      babel: {
-        compact: false,
-      },
-    }),
-    createHtmlPlugin({
-      minify: true,
-      inject: {
-        data: {
-          csp:
-            process.env.NODE_ENV === 'production' && !process.env.DISABLE_CSP
-              ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
-              : '',
+    plugins: [
+      react({
+        // This definition ensures that the `css` prop from Emotion
+        // works at build time. The one in tsconfig.json ensures that
+        // the IDE doesn't throw errors when using the prop.
+        jsxImportSource: '@emotion/react',
+        babel: {
+          compact: false,
         },
-      },
-    }),
-    splitVendorChunkPlugin(),
-    process.env.NODE_ENV === 'production' && analyze({ limit: 10 }),
-    process.env.NODE_ENV === 'production' &&
-      // There is a bug with this pluin's ESM imports, need to get the function off of .default
-      // @ts-ignore
-      removeHTMLAttributes.default({
-        include: ['**/*.tsx', '**/*.jsx'],
-        attributes: ['data-cy'],
-        exclude: 'node_modules',
       }),
-  ],
-  resolve: {
-    alias: [
       {
-        find: '~',
-        replacement: path.resolve(__dirname, 'src'),
+        name: 'app-version',
+        generateBundle() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'version.json',
+            source: `${JSON.stringify(appVersion)}\n`,
+          });
+        },
       },
-    ],
-  },
-  build: {
-    sourcemap: command === 'serve',
-    reportCompressedSize: true,
-    rollupOptions: {
-      plugins: [
+      createHtmlPlugin({
+        minify: true,
+        inject: {
+          data: {
+            csp:
+              process.env.NODE_ENV === 'production' && !process.env.DISABLE_CSP
+                ? `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`
+                : '',
+          },
+        },
+      }),
+      splitVendorChunkPlugin(),
+      process.env.NODE_ENV === 'production' && analyze({ limit: 10 }),
+      process.env.NODE_ENV === 'production' &&
+        // There is a bug with this plugin's ESM imports, need to get the function off of .default
         // @ts-ignore
-        strip({
-          functions: ['console.debug'],
-          include: '**/*.(ts|tsx)',
+        removeHTMLAttributes.default({
+          include: ['**/*.tsx', '**/*.jsx'],
+          attributes: ['data-cy'],
+          exclude: 'node_modules',
         }),
+    ],
+    resolve: {
+      alias: [
+        {
+          find: '~',
+          replacement: path.resolve(__dirname, 'src'),
+        },
       ],
     },
-  },
-}));
+    build: {
+      sourcemap: command === 'serve',
+      reportCompressedSize: true,
+      rollupOptions: {
+        plugins: [
+          // @ts-ignore
+          strip({
+            functions: ['console.debug'],
+            include: '**/*.(ts|tsx)',
+          }),
+        ],
+      },
+    },
+  };
+});
