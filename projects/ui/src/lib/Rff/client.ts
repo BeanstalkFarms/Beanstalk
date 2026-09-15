@@ -28,6 +28,7 @@ export type CreateRffRequestResponse = {
 };
 
 export type RffRuntimeConfig = {
+  turnstileSiteKey: string;
   chainId: number;
   safeAddress: Address;
   beanAddress: Address;
@@ -125,11 +126,12 @@ export class RffApiClient {
   }
 
   createSessionChallenge(
-    requester: Address
+    requester: Address,
+    turnstileToken: string
   ): Promise<{ challengeId: string; message: string; expiresAt: number }> {
     return this.request('/v1/session/challenge', {
       method: 'POST',
-      body: JSON.stringify({ requester }),
+      body: JSON.stringify({ requester, turnstileToken }),
     });
   }
 
@@ -145,7 +147,8 @@ export class RffApiClient {
 
   async createRequest(
     request: RffSwapRequest,
-    signature: Hex
+    signature: Hex,
+    turnstileToken: string
   ): Promise<CreateRffRequestResponse> {
     const response = await this.request<{
       requestId: Hex;
@@ -154,6 +157,7 @@ export class RffApiClient {
     }>('/v1/requests', {
       method: 'POST',
       body: JSON.stringify({
+        turnstileToken,
         request: {
           ...request,
           requestedAmountIn: request.requestedAmountIn.toString(),

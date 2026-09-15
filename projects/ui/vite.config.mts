@@ -94,6 +94,7 @@ const CSP = buildCSP({
     "'unsafe-inline'", // Required for Emotion
   ],
   'script-src': [
+    'https://challenges.cloudflare.com', // RFF wallet verification
     "'self'",
     '*.google-analytics.com',
     '*.googletagmanager.com',
@@ -111,6 +112,7 @@ const CSP = buildCSP({
     'https://*.ipfs.cf-ipfs.com/',
   ],
   'frame-src': [
+    'https://challenges.cloudflare.com', // RFF wallet verification
     'https://verify.walletconnect.com/',
     'https://verify.walletconnect.org',
   ], // for walletconnect
