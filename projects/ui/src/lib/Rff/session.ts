@@ -5,7 +5,8 @@ import { RffApiError } from './client';
 type SessionClient = {
   getSession: () => Promise<{ requester: Address }>;
   createSessionChallenge: (
-    requester: Address
+    requester: Address,
+    turnstileToken: string
   ) => Promise<{ challengeId: string; message: string; expiresAt: number }>;
   verifySession: (
     challengeId: string,
@@ -53,6 +54,7 @@ export class RffSessionManager {
 
   async ensureSession(input: {
     requester: Address;
+    getTurnstileToken: () => Promise<string>;
     signMessage: (message: string) => Promise<Hex>;
   }): Promise<void> {
     try {
@@ -64,7 +66,10 @@ export class RffSessionManager {
       if (!(error instanceof RffApiError) || error.status !== 401) throw error;
     }
 
-    const challenge = await this.client.createSessionChallenge(input.requester);
+    const challenge = await this.client.createSessionChallenge(
+      input.requester,
+      await input.getTurnstileToken()
+    );
     const signature = await input.signMessage(challenge.message);
     const session = await this.client.verifySession(
       challenge.challengeId,

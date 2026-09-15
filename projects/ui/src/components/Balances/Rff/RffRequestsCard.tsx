@@ -23,17 +23,11 @@ import WalletButton from '~/components/Common/Connection/WalletButton';
 import useAccount from '~/hooks/ledger/useAccount';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useSdk from '~/hooks/sdk';
-import {
-  rffQueryKeys,
-  useRffConfig,
-  useRffRequests,
-} from '~/hooks/rff/useRff';
+import useRffTurnstile from '~/hooks/rff/useRffTurnstile';
+import { rffQueryKeys, useRffConfig, useRffRequests } from '~/hooks/rff/useRff';
 import { rffApi } from '~/lib/Rff/runtime';
 import { RffApiError, type RffRequestRecord } from '~/lib/Rff/client';
-import {
-  BalanceMode,
-  buildCancelRffSwapTypedData,
-} from '~/lib/Rff/request';
+import { BalanceMode, buildCancelRffSwapTypedData } from '~/lib/Rff/request';
 import {
   RffSessionAccountMismatchError,
   RffSessionManager,
@@ -62,6 +56,7 @@ const RffRequestsCard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('request');
   const { data: config } = useRffConfig(!!account);
+  const turnstile = useRffTurnstile(config?.turnstileSiteKey, !!account);
   const requests = useRffRequests(account);
   const [verifying, setVerifying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -84,6 +79,7 @@ const RffRequestsCard: React.FC = () => {
     const session = new RffSessionManager(rffApi);
     await session.ensureSession({
       requester: account as Address,
+      getTurnstileToken: turnstile.getToken,
       signMessage: async (message) =>
         (await signer.signMessage(message)) as Hex,
     });
@@ -219,7 +215,10 @@ const RffRequestsCard: React.FC = () => {
                       alt=""
                       sx={{ width: 22, height: 22 }}
                     />
-                    <Typography color="text.primary" fontWeight="fontWeightBold">
+                    <Typography
+                      color="text.primary"
+                      fontWeight="fontWeightBold"
+                    >
                       {renderAmount(request.requestedAmountIn, request.tokenIn)}
                     </Typography>
                   </Stack>
@@ -236,10 +235,7 @@ const RffRequestsCard: React.FC = () => {
                   color={statusColor(request.status)}
                   variant="bodySmall"
                 >
-                  {requestStatusText(
-                    request.status,
-                    Number(request.deadline)
-                  )}
+                  {requestStatusText(request.status, Number(request.deadline))}
                 </Typography>
               </Stack>
             </Button>
@@ -285,10 +281,7 @@ const RffRequestsCard: React.FC = () => {
         <Stack direction="row" justifyContent="space-between" gap={2}>
           <Typography color="text.secondary">Minimum received</Typography>
           <Typography>
-            {renderAmount(
-              request.minAmountOutAtRequestedIn,
-              request.tokenOut
-            )}
+            {renderAmount(request.minAmountOutAtRequestedIn, request.tokenOut)}
           </Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" gap={2}>
@@ -359,6 +352,7 @@ const RffRequestsCard: React.FC = () => {
         {selectedId && !selected && !requests.isLoading ? (
           <Alert severity="warning">That request could not be found.</Alert>
         ) : null}
+        <div ref={turnstile.containerRef} />
         {actionError ? <Alert severity="error">{actionError}</Alert> : null}
       </Stack>
     </Card>

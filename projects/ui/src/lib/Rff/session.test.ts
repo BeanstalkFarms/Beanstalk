@@ -27,8 +27,7 @@ describe('RFF wallet session manager', () => {
       listRffRequestsForAccount(
         {
           getSession: async () => ({
-            requester:
-              '0x2222222222222222222222222222222222222222' as Address,
+            requester: '0x2222222222222222222222222222222222222222' as Address,
           }),
           listRequests: async () => {
             listed = true;
@@ -49,10 +48,9 @@ describe('RFF wallet session manager', () => {
           getSession: async () => {
             sessionCheck += 1;
             return {
-              requester:
-                (sessionCheck === 1
-                  ? REQUESTER
-                  : '0x2222222222222222222222222222222222222222') as Address,
+              requester: (sessionCheck === 1
+                ? REQUESTER
+                : '0x2222222222222222222222222222222222222222') as Address,
             };
           },
           listRequests: async () => ['wrong-wallet-request'],
@@ -81,6 +79,10 @@ describe('RFF wallet session manager', () => {
 
     await manager.ensureSession({
       requester: REQUESTER,
+      getTurnstileToken: async () => {
+        events.push('turnstile');
+        return 'challenge-token';
+      },
       signMessage: async () => {
         events.push('sign');
         return '0x1234';
@@ -97,7 +99,8 @@ describe('RFF wallet session manager', () => {
         events.push('check');
         throw new RffApiError('Authentication required', 401);
       },
-      createSessionChallenge: async (requester) => {
+      createSessionChallenge: async (requester, token) => {
+        expect(token).toBe('challenge-token');
         events.push(`challenge:${requester}`);
         return {
           challengeId: 'challenge-id',
@@ -113,6 +116,10 @@ describe('RFF wallet session manager', () => {
 
     await manager.ensureSession({
       requester: REQUESTER,
+      getTurnstileToken: async () => {
+        events.push('turnstile');
+        return 'challenge-token';
+      },
       signMessage: async (message) => {
         events.push(`sign:${message}`);
         return '0x1234';
@@ -121,6 +128,7 @@ describe('RFF wallet session manager', () => {
 
     expect(events).toEqual([
       'check',
+      'turnstile',
       `challenge:${REQUESTER}`,
       'sign:Beanstalk RFF authentication',
       'verify:challenge-id:0x1234',

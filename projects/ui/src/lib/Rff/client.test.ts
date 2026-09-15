@@ -24,6 +24,7 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: BEAN_ADDRESS,
         wstethAddress: WSTETH_ADDRESS,
+        turnstileSiteKey: 'test-site-key',
       })
     );
 
@@ -32,6 +33,7 @@ describe('RFF API client', () => {
       safeAddress: '0x1111111111111111111111111111111111111111',
       beanAddress: BEAN_ADDRESS,
       wstethAddress: WSTETH_ADDRESS,
+      turnstileSiteKey: 'test-site-key',
     });
   });
 
@@ -42,6 +44,7 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: BEAN_ADDRESS,
         wstethAddress: WSTETH_ADDRESS,
+        turnstileSiteKey: 'test-site-key',
       })
     );
     const wrongBean = new RffApiClient('https://rff.bean.money', async () =>
@@ -50,6 +53,7 @@ describe('RFF API client', () => {
         safeAddress: '0x1111111111111111111111111111111111111111',
         beanAddress: '0x2222222222222222222222222222222222222222',
         wstethAddress: WSTETH_ADDRESS,
+        turnstileSiteKey: 'test-site-key',
       })
     );
 
@@ -82,11 +86,15 @@ describe('RFF API client', () => {
       }
     );
 
-    const challenge = await client.createSessionChallenge(REQUEST.requester);
+    const challenge = await client.createSessionChallenge(
+      REQUEST.requester,
+      'challenge-token'
+    );
     await client.verifySession(challenge.challengeId, '0x1234');
 
     expect(JSON.parse(await captured[0]!.text())).toEqual({
       requester: REQUEST.requester,
+      turnstileToken: 'challenge-token',
     });
     expect(JSON.parse(await captured[1]!.text())).toEqual({
       challengeId: '0x1234',
@@ -122,11 +130,16 @@ describe('RFF API client', () => {
       }
     );
 
-    const response = await client.createRequest(REQUEST, '0x1234');
+    const response = await client.createRequest(
+      REQUEST,
+      '0x1234',
+      'request-token'
+    );
     const payload = JSON.parse(await captured!.text());
 
     expect(captured!.url).toBe('https://rff.bean.money/v1/requests');
     expect(captured!.credentials).toBe('include');
+    expect(payload.turnstileToken).toBe('request-token');
     expect(payload.request.requestedAmountIn).toBe('1000000');
     expect(payload.request.minAmountOutAtRequestedIn).toBe('300000000000000');
     expect(payload.request.nonce).toBe('12345');

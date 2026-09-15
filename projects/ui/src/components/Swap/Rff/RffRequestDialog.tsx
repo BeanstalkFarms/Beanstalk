@@ -18,20 +18,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 import { useNavigate } from 'react-router-dom';
 import type { Address, Hex } from 'viem';
-import {
-  useAccount as useWagmiAccount,
-  useSwitchChain,
-} from 'wagmi';
+import { useAccount as useWagmiAccount, useSwitchChain } from 'wagmi';
 
 import {
   StyledDialog,
   StyledDialogContent,
   StyledDialogTitle,
 } from '~/components/Common/Dialog';
-import {
-  TokenAdornment,
-  TokenSelectDialog,
-} from '~/components/Common/Form';
+import { TokenAdornment, TokenSelectDialog } from '~/components/Common/Form';
 import { BalanceFrom } from '~/components/Common/Form/BalanceFromRow';
 import { TokenSelectMode } from '~/components/Common/Form/TokenSelectDialog';
 import WalletButton from '~/components/Common/Connection/WalletButton';
@@ -40,6 +34,8 @@ import useAccount from '~/hooks/ledger/useAccount';
 import { useSigner } from '~/hooks/ledger/useSigner';
 import useSdk from '~/hooks/sdk';
 import type { TokenInstance } from '~/hooks/beanstalk/useTokens';
+import useRffTurnstile from '~/hooks/rff/useRffTurnstile';
+import { RffSessionManager } from '~/lib/Rff/session';
 import useRffApproval from '~/hooks/rff/useRffApproval';
 import { rffQueryKeys, useRffConfig } from '~/hooks/rff/useRff';
 import { rffApi } from '~/lib/Rff/runtime';
@@ -60,9 +56,7 @@ import {
   oracleAmountOut,
   recipientForConnectedAccount,
 } from './model';
-import RffRequestInfo, {
-  RffMinimumReceivedLabel,
-} from './RffRequestInfo';
+import RffRequestInfo, { RffMinimumReceivedLabel } from './RffRequestInfo';
 
 type Props = {
   open: boolean;
@@ -73,6 +67,7 @@ type Props = {
 const DEFAULT_SLIPPAGE_BPS = 100;
 
 function errorMessage(error: unknown): string {
+  if (typeof error === 'string' && error) return error;
   return error instanceof Error
     ? error.message
     : 'Something went wrong. Please try again.';
@@ -92,6 +87,7 @@ const RffRequestDialog: React.FC<Props> = ({
   const queryClient = useQueryClient();
   const balances = useFarmerBalances();
   const { data: config, error: configError } = useRffConfig(open);
+  const turnstile = useRffTurnstile(config?.turnstileSiteKey, open);
 
   const [tokenIn, setTokenIn] = useState(sdk.tokens.BEAN);
   const [source, setSource] = useState(BalanceFrom.EXTERNAL);
@@ -127,7 +123,10 @@ const RffRequestDialog: React.FC<Props> = ({
         setOraclePrices({ bean, wsteth, fetchedAt: Date.now() });
         setOracleError(null);
       } catch (error) {
-        if (active) setOracleError(new Error(errorMessage(error)));
+        if (active) {
+          setOraclePrices(null);
+          setOracleError(new Error(errorMessage(error)));
+        }
       } finally {
         if (active) setOracleLoading(false);
       }
@@ -191,15 +190,11 @@ const RffRequestDialog: React.FC<Props> = ({
     oraclePrices?.fetchedAt,
     Date.now()
   );
-  const quoteLoading =
-    amountIn > 0n &&
-    (oracleLoading ||
-      !oracleQuoteIsFresh ||
-      tokenInUsd.lte(0) ||
-      tokenOutUsd.lte(0));
+  const quoteLoading = amountIn > 0n && oracleLoading;
 
   const balanceIsEnough =
-    amountIn > 0n && tokenBalance.gte(tokenIn.fromBlockchain(amountIn).toHuman());
+    amountIn > 0n &&
+    tokenBalance.gte(tokenIn.fromBlockchain(amountIn).toHuman());
   const recipientIsValid = ethers.utils.isAddress(recipient);
   const sourceMode = balanceModeForSource(source);
   const isCorrectChain = !!config && isRffChain(chainId, config.chainId);
@@ -240,6 +235,12 @@ const RffRequestDialog: React.FC<Props> = ({
       if (!isCorrectChain) {
         throw new Error('Switch to Arbitrum One before submitting.');
       }
+      await new RffSessionManager(rffApi).ensureSession({
+        requester: account as Address,
+        signMessage: async (message) =>
+          (await signer.signMessage(message)) as Hex,
+        getTurnstileToken: turnstile.getToken,
+      });
       if (!isRffOracleQuoteFresh(oraclePrices?.fetchedAt, Date.now())) {
         throw new Error('Oracle prices are refreshing. Please try again.');
       }
@@ -268,7 +269,17 @@ const RffRequestDialog: React.FC<Props> = ({
         typedData.types as unknown as Record<string, ethers.TypedDataField[]>,
         typedData.message
       )) as Hex;
-      const response = await rffApi.createRequest(request, signature);
+      const turnstileToken = await turnstile.getToken();
+      if (!isRffOracleQuoteFresh(oraclePrices?.fetchedAt, Date.now())) {
+        throw new Error(
+          'Oracle prices expired while signing. Please review the refreshed estimate and try again.'
+        );
+      }
+      const response = await rffApi.createRequest(
+        request,
+        signature,
+        turnstileToken
+      );
       setRequestId(response.requestId);
       await queryClient.invalidateQueries({
         queryKey: rffQueryKeys.requests(account),
@@ -475,6 +486,7 @@ const RffRequestDialog: React.FC<Props> = ({
                 </Collapse>
               </Box>
 
+              <div ref={turnstile.containerRef} />
               {configError || oracleError || submitError || approval.error ? (
                 <Alert severity="error">
                   {errorMessage(
@@ -484,7 +496,11 @@ const RffRequestDialog: React.FC<Props> = ({
               ) : null}
 
               {!account ? (
-                <WalletButton showFullText variant="contained" color="primary" />
+                <WalletButton
+                  showFullText
+                  variant="contained"
+                  color="primary"
+                />
               ) : !isCorrectChain && config ? (
                 <Button
                   variant="contained"
