@@ -43,6 +43,8 @@ contract WellPrice {
         uint256[2] balances;
         uint256 price;
         uint256 liquidity;
+        uint256 beanLiquidity;
+        uint256 nonBeanLiquidity;
         int256 deltaB;
         uint256 lpUsd;
         uint256 lpBdv;
@@ -67,9 +69,9 @@ contract WellPrice {
         uint256 beanIndex = beanstalk.getBeanIndex(wellTokens);
         uint256 tknIndex = beanIndex == 0 ? 1 : 0;
 
-        // swap 1 bean of the opposite asset to get the usd price
+        // swap 1 bean of the opposite asset to get the bean price
         // price = amtOut/tknOutPrice
-        uint256 assetPrice = beanstalk.getUsdTokenPrice(pool.tokens[tknIndex]);
+        uint256 assetPrice = beanstalk.getUsdTokenPrice(pool.tokens[tknIndex]); // $1 gets assetPrice worth of tokens
         if (assetPrice > 0) {
             pool.price = well
                 .getSwapOut(wellTokens[beanIndex], wellTokens[tknIndex], 1e6)
@@ -78,8 +80,15 @@ contract WellPrice {
         }
 
         // liquidity is calculated by getting the usd value of the bean portion of the pool,
-        // and multiplying by 2 to get the total liquidity of the pool.
-        pool.liquidity = pool.balances[beanIndex].mul(pool.price).mul(2).div(PRICE_PRECISION);
+        // and the usd value of the non-bean portion of the pool.
+
+        pool.beanLiquidity = pool.balances[beanIndex].mul(pool.price).div(PRICE_PRECISION);
+        pool.nonBeanLiquidity = WELL_DECIMALS.div(assetPrice).mul(pool.balances[tknIndex]).div(
+            PRICE_PRECISION * PRICE_PRECISION
+        );
+
+        pool.liquidity = pool.beanLiquidity.add(pool.nonBeanLiquidity);
+
         // attempt to get deltaB, if it fails, set deltaB to 0.
         try beanstalk.poolCurrentDeltaB(wellAddress) returns (int256 deltaB) {
             pool.deltaB = deltaB;
