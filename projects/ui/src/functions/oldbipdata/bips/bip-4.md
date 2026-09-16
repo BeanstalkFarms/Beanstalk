@@ -34,7 +34,7 @@ Upon passage of this BIP and payment of 347,440 USDC, Trail of Bits will perform
 
 ### Paying for the Audit
 
-This BIP proposes a "Fundraiser" standard that will allow Beanstalk to raise money to pay for things in other stablecoins, without requiring sales on Uniswap. Instead, Fundraisers will first mint a pre-defined number of Beans, to be bought 1:1 for a pre-defined stablecoin. Each Bean purchased in exchange for 1 of the stablecoin will be sown at the current Weather, and the Pods received in exchange will be sent to the wallet that bought the Beans. Beacause all the Beans being Sown were minted as part of the Fundraiser, no Soil will be used to mint Pods by the FundraiserFacet. 
+This BIP proposes a "Fundraiser" standard that will allow Beanstalk to raise money to pay for things in other stablecoins, without requiring sales on Uniswap. Instead, Fundraisers will first mint a pre-defined number of Beans, to be bought 1:1 for a pre-defined stablecoin. Each Bean purchased in exchange for 1 of the stablecoin will be sown at the current Weather, and the Pods received in exchange will be sent to the wallet that bought the Beans. Because all the Beans being Sown were minted as part of the Fundraiser, no Soil will be used to mint Pods by the FundraiserFacet. 
 
 Fundraisers will be created by a BIP and will require:
 
