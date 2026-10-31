@@ -1,7 +1,6 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { ApolloError } from '@apollo/client';
 import { MinimumViableSnapshotQuery } from '~/hooks/beanstalk/useSeasonsQuery';
 import { TimeTabStateParams } from '~/hooks/app/useTimeTabState';
 import { toSeasonNumber } from '~/util/Season';
@@ -56,7 +55,7 @@ type BaseSeasonPlotProps = {
 export type QueryData = {
   data: BaseDataPoint[][];
   loading: boolean;
-  error: ApolloError[] | undefined;
+  error: unknown[] | undefined;
   keys: string[];
 };
 
@@ -126,7 +125,7 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
     const d = {
       value: _defaultValue ?? 0,
       season: _defaultSeason ?? 0,
-      date: _defaultDate ?? lastUpdateDate ? lastUpdateDate.date : new Date(),
+      date: _defaultDate ?? lastUpdateDate?.date ?? new Date(),
     };
     const getVal = chartProps.getDisplayValue;
     const seriesLen = seriesInput?.length;
@@ -140,7 +139,9 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
         d.season = toSeasonNumber(currDepositedAmount.season);
       }
     } else {
-      const lineData = seriesInput.map((s) => s[s.length - 1]);
+      const lineData = seriesInput
+        .filter((s) => s.length)
+        .map((s) => s[s.length - 1]);
       if (lineData && lineData.length) {
         d.value = getVal(lineData);
         const curr = lineData[0];
@@ -163,6 +164,10 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
   if (!seriesInput || !queryData) {
     return null;
   }
+  const hasSummary =
+    !queryData.error &&
+    (seriesInput.some((series) => series.length > 0) ||
+      (_defaultValue !== undefined && _defaultSeason !== undefined));
   const currentSeason = toSeasonNumber(
     displaySeason !== undefined ? displaySeason : defaults.season
   ).toFixed();
@@ -197,9 +202,11 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
             gap={statProps.gap}
             sx={statProps.sx ?? {}}
             isLoading={queryData?.loading}
-            amount={formatValue(displayValue ?? defaults.value)}
-            subtitle={`Season ${currentSeason}`}
-            secondSubtitle={currentDate ?? `${currentDate}`}
+            amount={
+              hasSummary ? formatValue(displayValue ?? defaults.value) : '—'
+            }
+            subtitle={hasSummary ? `Season ${currentSeason}` : ''}
+            secondSubtitle={hasSummary ? currentDate : ''}
           />
         )}
 
@@ -228,6 +235,11 @@ function BaseSeasonPlot<T extends MinimumViableSnapshotQuery>(props: Props<T>) {
               <Typography>
                 An error occurred while loading this data.
               </Typography>
+            </Stack>
+          }
+          empty={
+            <Stack sx={containerStyle}>
+              <Typography>No data available for this period.</Typography>
             </Stack>
           }
           success={

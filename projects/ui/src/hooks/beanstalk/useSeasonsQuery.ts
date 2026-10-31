@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 import { RESEED_SEASON } from '~/constants';
 import { DynamicSGQueryOption, SeasonsQueryFetchType } from '~/util/Graph';
 import { fetchApolloWithLimiter } from '~/util/Bottleneck';
-import { toSeasonNumber } from '~/util/Season';
 
 const PAGE_SIZE = 1000;
 
@@ -84,7 +83,8 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
   config: SeasonsQueryConfig,
   cachedConfig: SeasonsQueryConfig | null,
   range: SeasonRange,
-  fetchType: SeasonsQueryFetchType = 'both'
+  fetchType: SeasonsQueryFetchType = 'both',
+  enabled = true
 ) => {
   const { document, queryConfig } = config;
   const queryOptions = {
@@ -96,6 +96,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
 
   // prettier-ignore
   const query = useQuery({
+    enabled,
     queryKey: [name, queryOptions, _range, fetchType],
     queryFn: async () => {
       console.debug(`[useSeasonsQuery] initializing with range = ${range}`);
@@ -155,107 +156,61 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
             pushPromise(apolloClient.query(l1Config));
           }
           await Promise.all(promises);
-        } else if (cachedConfig) {
-          const opts = {
-            context: { subgraph: 'cache' },
-            query: cachedConfig.document,
-            variables: {
-              where: cachedConfig.where ?? ''
-            },
-          }
-
-          const apolloRequest = {
-            id: `${name}-${cachedConfig.where}-all`,
-            request: () => apolloClient.query({ ...opts, fetchPolicy: 'network-only' }),
-          }
-
-          const results = await fetchApolloWithLimiter([apolloRequest], {
-            throws: false,
-            partialData: true
-          });
-          results.forEach((result) => {
-            result.data?.seasons?.forEach((sd: any) => {
-              const seasonNum = toSeasonNumber(sd.season);
-              output[seasonNum] = { ...sd, season: seasonNum };
-            })
-          });
         } else {
-          let latestL2 = 0; // latest L2 season
-          let latestL1 = 0; // latest L1 season
-
-          if (fetchL2) {
-            console.debug('[useSeasonsQuery] run l2 config: ', l2Config);
-            pushPromise(apolloClient.query(l2Config), (data) => {
-              latestL2 = Math.max(latestL2, getSeasonNumber(data));
-            });
-          }
-          if (fetchL1) {
-            console.debug('[useSeasonsQuery] run l1 config', l1Config);
-            pushPromise(apolloClient.query(l1Config), (data) => {
-              latestL1 = Math.max(latestL1, getSeasonNumber(data));
-            });
-          }
-
-          await Promise.all(promises);
-
-          if (fetchL2) {
-            const cachedL2Data = readApolloCacheWithOptions(l2Config, {
-              season_lte: latestL1,
-              season_gt: RESEED_SEASON - 1,
-            });
-            cachedL2Data?.seasons.forEach((seasonData) => {
-              const seasonNum = getSeasonNumber(seasonData);
-              if (!Number.isNaN(seasonNum)) {
-                output[seasonNum] = { ...seasonData, season: seasonNum };
-                latestL2 = Math.max(Math.min(latestL2, seasonNum), 0);
-              }
-            });
-
-            const numQueries = calcNumQueries(latestL2, RESEED_SEASON - 1);
-            console.debug('[useSeasonsQuery]: l2 numQueries', numQueries);
-
-            /// Query Seasons from network
-            for (const fetchData of getQueriesWithNumQueries(
-              numQueries,
-              latestL1,
-              l1Config
-            )) {
-              pushPromise(fetchData());
+          let cacheLoaded = false;
+          if (cachedConfig) {
+            try {
+              const [result] = await fetchApolloWithLimiter([{
+                id: `${name}-${cachedConfig.where}-all`,
+                request: () => apolloClient.query<MinimumViableSnapshotQuery>({
+                  context: { subgraph: 'cache' },
+                  query: cachedConfig.document,
+                  variables: { where: cachedConfig.where ?? '' },
+                  fetchPolicy: 'network-only',
+                }),
+              }]);
+              if (!result?.data?.seasons) throw new Error('History cache returned no data');
+              result.data.seasons.forEach((sd) => {
+                const seasonNum = getSeasonNumber(sd);
+                if (Number.isFinite(seasonNum)) output[seasonNum] = { ...sd, season: seasonNum };
+              });
+              cacheLoaded = true;
+            } catch (error) {
+              console.warn('[useSeasonsQuery] history cache unavailable; using subgraph', error);
             }
           }
 
-          if (fetchL1) {
-            const cachedL1Data = readApolloCacheWithOptions(l1Config, {
-              season_lte: RESEED_SEASON - 1,
-              season_gt: 1,
-            });
-            cachedL1Data?.seasons.forEach((seasonData) => {
-              const seasonNum = getSeasonNumber(seasonData);
-              if (!Number.isNaN(seasonNum)) {
-                output[seasonNum] = { ...seasonData, season: seasonNum };
-                latestL1 = Math.max(Math.min(latestL1, seasonNum), 0);
+          if (!cacheLoaded) {
+            // Advance each chain independently using the oldest returned season.
+            // A sequential cursor also handles sparse histories without skipping pages.
+            const fetchHistory = async (options: QueryOptions, lower: number) => {
+              let cursor = Number(options.variables?.season_lte ?? INIT_SEASON_LTE);
+              while (cursor >= lower) {
+                const [result] = await fetchApolloWithLimiter([{
+                  id: `${name}-${options.context?.subgraph}-${cursor}`,
+                  request: () => apolloClient.query<MinimumViableSnapshotQuery>(
+                    mergeQueryOptions(options, { variables: { first: PAGE_SIZE, season_lte: cursor } })
+                  ),
+                }]);
+                const rows = result?.data?.seasons;
+                if (!rows) throw new Error('History subgraph returned no data');
+                let oldest = cursor + 1;
+                rows.forEach((row) => {
+                  const seasonNum = getSeasonNumber(row);
+                  if (Number.isFinite(seasonNum) && seasonNum >= lower && seasonNum <= cursor) {
+                    output[seasonNum] = { ...row, season: seasonNum };
+                    oldest = Math.min(oldest, seasonNum);
+                  }
+                });
+                if (rows.length < PAGE_SIZE || oldest <= lower) break;
+                if (oldest > cursor) throw new Error('History pagination did not advance');
+                cursor = oldest - 1;
               }
-            });
-
-            const numQueries = calcNumQueries(
-              latestL1,
-              l1Config.variables?.season_gt ?? 1
-            );
-            console.debug(
-              `[useSeasonsQuery] numQueries = ${numQueries}, seasonsQueryFrom = ${latestL1} `
-            );
-
-            /// Query Seasons from network
-            const queries = getQueriesWithNumQueries(
-              numQueries,
-              latestL1,
-              l1Config
-            );
-            for (const fetchData of queries) {
-              pushPromise(fetchData());
-            }
-
-            await Promise.all(promises);
+            };
+            await Promise.all([
+              ...(fetchL2 ? [fetchHistory(l2Config, RESEED_SEASON)] : []),
+              ...(fetchL1 ? [fetchHistory(l1Config, 1)] : []),
+            ]);
           }
         }
 
@@ -265,7 +220,7 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
         return seasonData;
       } catch (e) {
         console.error('e: ', e);
-        return [] as T['seasons'][number][];
+        throw e;
       }
     },
     select: (data) => {
@@ -284,67 +239,15 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
       ...query,
       error: query.error ?? undefined,
       data: { seasons: query.data ?? [] },
-      loading: query.isLoading,
+      loading: enabled && query.isLoading,
     }),
-    [query]
+    [query, enabled]
   );
 };
 
 export default useSeasonsQuery;
 
 // ---------- Helper Functions ----------
-
-function readApolloCacheWithOptions<T extends MinimumViableSnapshotQuery>(
-  baseConfig: QueryOptions<OperationVariables, T>,
-  variables: OperationVariables
-) {
-  const options = mergeQueryOptions(baseConfig, {
-    variables: {
-      ...variables,
-      first: 100_000,
-    },
-    fetchPolicy: 'cache-only',
-  });
-
-  const data = apolloClient.readQuery(options);
-  console.debug('[useSeasonsQuery] cache', { options, data });
-
-  return data;
-}
-
-function getQueriesWithNumQueries<T extends MinimumViableSnapshotQuery>(
-  numQueries: number,
-  latestSeason: number,
-  config: QueryOptions<OperationVariables, T>
-) {
-  const queriesAndOptions: (() => Promise<
-    ApolloQueryResult<MinimumViableSnapshotQuery>
-  >)[] = [];
-  for (let i = 0; i < numQueries; i += 1) {
-    const season = Math.max(0, latestSeason - i * PAGE_SIZE);
-
-    const options = mergeQueryOptions(config, {
-      variables: {
-        // first: season < 1000 ? season - 1 : 1000,
-        first: 1000,
-        season_lte: season,
-      },
-    });
-
-    const seasonGt = Math.max(0, season - PAGE_SIZE);
-    mergeVariableIfExists(options, 'season_gt', seasonGt);
-    mergeVariableIfExists(options, 'season_gte', seasonGt - 1);
-
-    console.debug('[getQueriesWithNumQueries] options', i, options);
-    queriesAndOptions.push(() => apolloClient.query(options));
-  }
-
-  return queriesAndOptions;
-}
-
-function calcNumQueries(upper: number, lower: number) {
-  return Math.ceil((upper - lower) / PAGE_SIZE);
-}
 
 function getNow2ReseedSeasonsDiff() {
   const now = Math.floor(new Date().getTime() / 1000);
@@ -430,16 +333,4 @@ function mergeQueryOptions<T extends MinimumViableSnapshotQuery>(
       ...b.context,
     },
   };
-}
-
-function mergeVariableIfExists<T extends MinimumViableSnapshotQuery>(
-  options: QueryOptions<OperationVariables, T>,
-  key: string,
-  value: any
-) {
-  if (!options.variables) return options;
-  if (key in options.variables) {
-    options.variables[key] = value;
-  }
-  return options;
 }
