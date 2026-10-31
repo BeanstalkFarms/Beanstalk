@@ -3,11 +3,8 @@ import { useCallback, useState, useEffect } from 'react';
 import keyBy from 'lodash/keyBy';
 import {
   HistoricalPodListingsQuery,
-  HistoricalPodListingsQueryResult,
   HistoricalPodOrdersQuery,
-  HistoricalPodOrdersQueryResult,
   MarketEventsQuery,
-  MarketEventsQueryResult,
   useHistoricalPodListingsLazyQuery,
   useHistoricalPodOrdersLazyQuery,
   useMarketEventsLazyQuery,
@@ -72,125 +69,101 @@ const useMarketActivityData = () => {
     fetchPolicy: 'network-only',
   });
 
-  // fetch
-  const _fetch = useCallback(
-    async () => {
-      setLoading(true);
-      setPage((p) => p + 1);
+  // Publish history only after both the event pages and their details succeed.
+  const _fetch = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    setPage((p) => p + 1);
 
-      let lastOutputLength = 0;
+    const podMarketEvents: MarketEventsQuery['marketEvents'] = [];
+    const podOrdersHistory: HistoricalPodOrdersQuery['podOrders'] = [];
+    const podListingsHistory: HistoricalPodListingsQuery['podListings'] = [];
+
+    try {
       let lastTimestamp = MAX_TIMESTAMP;
-      
-      const podMarketEvents: MarketEventsQuery["marketEvents"] = [];
-      const podOrdersHistoryIDs: HistoricalPodOrdersQuery["podOrders"] = [];
-      const podListingsHistoryIDs: HistoricalPodListingsQuery["podListings"] = [];
+      let lastOutputLength = 0;
+      do {
+        const events = await getMarketEvents({
+          variables: { events_first: 1000, events_timestamp_lt: lastTimestamp },
+        });
+        if (events.error || !events.data) {
+          throw events.error || new Error('Market events were not returned');
+        }
+        const batch = events.data.marketEvents;
+        lastOutputLength = batch.length;
+        podMarketEvents.push(...batch);
+        if (batch.length) {
+          lastTimestamp = batch[batch.length - 1].createdAt;
+        }
+      } while (lastOutputLength === 1000);
 
-      try {
-        do {
-          const events = await getMarketEvents({
-            variables: { events_first: 1000, events_timestamp_lt: lastTimestamp },
-          });
-          if (events.data?.marketEvents.length) {
-            podMarketEvents.push(...events.data.marketEvents);
-            lastOutputLength = events.data.marketEvents.length;
-            lastTimestamp = events.data.marketEvents[events.data.marketEvents.length - 1].createdAt;
-          };
-        } while ( lastOutputLength === 1000 );
-        setError(false);
-      } catch (e) {
-        setError(true);
-      }
- 
-      // run join query if we loaded any market events
-      if (podMarketEvents.length > 0) {
-        setMarketEvents(podMarketEvents);
-        // find IDs to join against
-        const [orderIDs, listingIDs] = podMarketEvents.reduce(
-          (prev: any, curr: any) => {
-            if (
-              curr.__typename === 'PodOrderFilled' ||
-              curr.__typename === 'PodOrderCancelled'
-            ) {
-              prev[0].push(curr.historyID);
-            } else if (
-              curr.__typename === 'PodListingFilled' ||
-              curr.__typename === 'PodListingCancelled'
-            ) {
-              prev[1].push(curr.historyID);
+      const orderIDs: string[] = [];
+      const listingIDs: string[] = [];
+      podMarketEvents.forEach((event) => {
+        if (
+          event.__typename === 'PodOrderFilled' ||
+          event.__typename === 'PodOrderCancelled'
+        ) {
+          if (event.historyID) orderIDs.push(event.historyID);
+        } else if (
+          event.__typename === 'PodListingFilled' ||
+          event.__typename === 'PodListingCancelled'
+        ) {
+          if (event.historyID) listingIDs.push(event.historyID);
+        }
+      });
+
+      const promises: Promise<void>[] = [];
+      for (let start = 0; start < orderIDs.length; start += 1000) {
+        promises.push(
+          getPodOrders({
+            variables: { historyIDs: orderIDs.slice(start, start + 1000) },
+          }).then((result) => {
+            if (result.error || !result.data) {
+              throw (
+                result.error || new Error('Historical orders were not returned')
+              );
             }
-            return prev;
-          },
-          [[], []]
+            podOrdersHistory.push(...result.data.podOrders);
+          })
         );
-
-        // lookup all of the orders and listings needed to join to the above query
-
-        const promises: Promise<any>[] = [];
-
-        const podOrdersRequests = Math.ceil(orderIDs.length / 1000);
-        const podListingsRequests = Math.ceil(listingIDs.length / 1000);
-
-        try {
-          for (let i = 0; i < podOrdersRequests; i += 1) {
-            const startPosition = i * 1000;
-            const amountToSplice = i !== podOrdersRequests - 1 ? 1000 : orderIDs.length % 1000;
-            const selectedPodOrders = orderIDs.slice(startPosition, startPosition + amountToSplice);
-            promises.push(
-              getPodOrders({
-                variables: {
-                  historyIDs: selectedPodOrders
-                }
-              }).then(
-                (r) => {
-                  if (r.data && r.data.podOrders.length) {
-                    podOrdersHistoryIDs.push(...r.data.podOrders);
-                  };
-                }
-              )
-            );
-          };
-
-          for (let i = 0; i < podListingsRequests; i += 1) {
-            const startPosition = i * 1000;
-            const amountToSplice = i !== podListingsRequests - 1 ? 1000 : listingIDs.length % 1000;
-            const selectedPodListings = listingIDs.slice(startPosition, startPosition + amountToSplice);
-            promises.push(
-              getPodListings({
-                variables: {
-                  historyIDs: selectedPodListings
-                }
-              })
-              .then(
-                (r) => {
-                  if (r.data && r.data.podListings.length) {
-                    podListingsHistoryIDs.push(...r.data.podListings)
-                  };
-                }
-              )
-            );
-          };
-          setError(false);
-        } catch (e) {
-          setError(true);
-        };
-
-
-        await Promise.all(promises);
-        setPodOrders(podOrdersHistoryIDs);
-        setPodListings(podListingsHistoryIDs);
       }
-
+      for (let start = 0; start < listingIDs.length; start += 1000) {
+        promises.push(
+          getPodListings({
+            variables: { historyIDs: listingIDs.slice(start, start + 1000) },
+          }).then((result) => {
+            if (result.error || !result.data) {
+              throw (
+                result.error ||
+                new Error('Historical listings were not returned')
+              );
+            }
+            podListingsHistory.push(...result.data.podListings);
+          })
+        );
+      }
+      await Promise.all(promises);
+      setPodOrders(podOrdersHistory);
+      setPodListings(podListingsHistory);
+      setMarketEvents(podMarketEvents);
+      setData([]);
+    } catch (e) {
+      setError(true);
+      setMarketEvents([]);
+      setPodOrders([]);
+      setPodListings([]);
+      setData([]);
+    } finally {
       setLoading(false);
-    },
-    [getMarketEvents, getPodListings, getPodOrders]
-  );
-
+    }
+  }, [getMarketEvents, getPodListings, getPodOrders]);
 
   // when all queries finish, process data
 
   useEffect(() => {
     const events = markEvents;
-    if (!loading && events?.length) {
+    if (!loading && !error && events?.length) {
       const podOrdersById = keyBy(podOrders, 'historyID');
       const podListingsById = keyBy(podListings, 'historyID');
 
@@ -199,7 +172,7 @@ const useMarketActivityData = () => {
       // The `marketplaceEvent` entity contains partial information about
       // Orders and Listings during Creation, but NO information during cancellations
       // and fills. In both cases, casting doesn't work because of missing data.
-      const parseEvent = (e: typeof events[number]) => {
+      const parseEvent = (e: (typeof events)[number]) => {
         switch (e.__typename) {
           case 'PodOrderCreated': {
             const pricePerPod = toTokenUnitsBN(e.pricePerPod, BEAN[1].decimals);
@@ -268,10 +241,7 @@ const useMarketActivityData = () => {
               new BigNumber(podOrder.pricePerPod || 0),
               BEAN[1].decimals
             );
-            const podAmountFilled = toTokenUnitsBN(
-              e.amount,
-              BEAN[1].decimals
-            );
+            const podAmountFilled = toTokenUnitsBN(e.amount, BEAN[1].decimals);
             const totalBeans = podAmountFilled.multipliedBy(pricePerPod).dp(6);
             return <MarketEvent>{
               id: podOrder.id,
@@ -386,6 +356,7 @@ const useMarketActivityData = () => {
     getUSD,
     harvestableIndex,
     loading,
+    error,
     podOrders,
     podListings,
     markEvents,
