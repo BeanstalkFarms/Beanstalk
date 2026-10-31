@@ -3,6 +3,7 @@
   "include": ["src"],
   "exclude": ["./src/generated/**/*", "dist"],
   "compilerOptions": {
+    "lib": ["esnext", "dom"],
     "rootDir": "./src",
     "outDir": "dist/js",
     "declaration": true,

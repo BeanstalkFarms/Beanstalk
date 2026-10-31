@@ -359,7 +359,8 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       where: `pool: "${BEAN_ETH_UNIV2_LP_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
     },
     SeasonRange.ALL,
-    'l1-only'
+    'l1-only',
+    timeTabParams[0][1] === SeasonRange.ALL
   );
   const beanLusdOld = useSeasonsQuery(
     'seasonalLiquidityBeanLUSDOld',
@@ -372,7 +373,8 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       where: `pool: "${BEAN_LUSD_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
     },
     SeasonRange.ALL,
-    'l1-only'
+    'l1-only',
+    timeTabParams[0][1] === SeasonRange.ALL
   );
   const beanCrv3Old = useSeasonsQuery(
     'seasonalLiquidityBeanCrv3Old',
@@ -385,20 +387,24 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       where: `pool: "${BEAN_CRV3_ADDRESSES[SupportedChainId.ETH_MAINNET]}"`,
     },
     SeasonRange.ALL,
-    'l1-only'
+    'l1-only',
+    timeTabParams[0][1] === SeasonRange.ALL
   );
 
-  const loading =
-    beanEthWell.loading ||
-    beanWstEthWell.loading ||
-    beanWeETHWell.loading ||
-    beanWBTCWell.loading ||
-    beanUSDCWell.loading ||
-    beanUSDTWell.loading ||
-    beanEthOld.loading ||
-    beanCrv3L1.loading ||
-    beanLusdOld.loading ||
-    beanCrv3Old.loading;
+  const activeQueries = [
+    beanEthWell,
+    beanWstEthWell,
+    beanWeETHWell,
+    beanWBTCWell,
+    beanUSDCWell,
+    beanUSDTWell,
+    beanCrv3L1,
+    ...(timeTabParams[0][1] === SeasonRange.ALL
+      ? [beanEthOld, beanLusdOld, beanCrv3Old]
+      : []),
+  ];
+  const loading = activeQueries.some((query) => query.loading);
+  const queryError = activeQueries.find((query) => query.error)?.error;
 
   const seasonData = useMemo(() => {
     if (timeTabParams[0][1] === SeasonRange.ALL) {
@@ -479,11 +485,11 @@ const LiquidityOverTime: FC<{} & CardProps> = ({ sx }) => {
       data: [processed.reverse()],
       loading: loading,
       keys: poolList.map((pool) => pool.address),
-      error: undefined,
+      error: queryError ? [queryError] : undefined,
     };
 
     return data;
-  }, [loading, season, seasonData, timeTabParams]);
+  }, [loading, season, seasonData, timeTabParams, queryError]);
 
   return (
     <Card sx={{ width: '100%', pt: 2, ...sx }}>
