@@ -30,8 +30,6 @@ export type MarketEvent = {
   hash: string;
 };
 
-export const MAX_TIMESTAMP = '9999999999999'; // 166 455 351 3803
-
 /**
  * Load historical market activity. This merges raw event date from `eventsQuery`
  * with parsed data from `ordersQuery` and `listingsQuery`.
@@ -57,7 +55,7 @@ const useMarketActivityData = () => {
     notifyOnNetworkStatusChange: true,
     variables: {
       events_first: 1000,
-      events_timestamp_lt: MAX_TIMESTAMP,
+      events_id_gt: '',
     },
   });
 
@@ -80,11 +78,12 @@ const useMarketActivityData = () => {
     const podListingsHistory: HistoricalPodListingsQuery['podListings'] = [];
 
     try {
-      let lastTimestamp = MAX_TIMESTAMP;
+      // IDs are unique; a timestamp cursor can skip events sharing a page boundary.
+      let lastID = '';
       let lastOutputLength = 0;
       do {
         const events = await getMarketEvents({
-          variables: { events_first: 1000, events_timestamp_lt: lastTimestamp },
+          variables: { events_first: 1000, events_id_gt: lastID },
         });
         if (events.error || !events.data) {
           throw events.error || new Error('Market events were not returned');
@@ -93,9 +92,17 @@ const useMarketActivityData = () => {
         lastOutputLength = batch.length;
         podMarketEvents.push(...batch);
         if (batch.length) {
-          lastTimestamp = batch[batch.length - 1].createdAt;
+          lastID = batch[batch.length - 1].id;
         }
       } while (lastOutputLength === 1000);
+
+      // Fetch in ID order for complete pagination, then display newest first.
+      // ID order also gives events with the same timestamp a stable tie-breaker.
+      podMarketEvents.sort(
+        (a, b) =>
+          Number(b.createdAt) - Number(a.createdAt) ||
+          (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+      );
 
       const orderIDs: string[] = [];
       const listingIDs: string[] = [];
