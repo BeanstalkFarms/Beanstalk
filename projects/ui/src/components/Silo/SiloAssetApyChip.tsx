@@ -30,7 +30,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
   metric,
   variant = 'default',
 }) => {
-  const { data: latestYield, loading: isLoading } = useAPY();
+  const { data: latestYield, loading: isLoading, error } = useAPY();
   const { BEAN: Bean } = useTokens();
   const isBean = metric === 'bean';
 
@@ -41,8 +41,27 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
     : ({ symbol: 'Stalk', logo: stalkIconBlue } as TokenInstance);
 
   function getDisplayString(val: BigNumber | null) {
-    return `${val ? (val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)) : '0.0'}%`;
+    if (error) return 'Unavailable';
+    if (!val || !val.isFinite()) return '—';
+    return `${val.gt(0) && val.lt(0.1) ? '< 0.1' : val.toFixed(1)}%`;
   }
+
+  function getTotalDisplay(val?: BigNumber) {
+    if (isLoading) return 'Loading…';
+    if (error) return 'Unavailable';
+    return val?.isFinite() ? displayFullBN(val, Bean.displayDecimals) : '—';
+  }
+
+  const missingAPY = isBean
+    ? !apys?.['24h'] || !apys?.['7d'] || !apys?.['30d']
+    : !apys?.['30d'];
+  const status = isLoading
+    ? 'Loading APY data…'
+    : error
+      ? 'APY data unavailable. Please try again later.'
+      : missingAPY
+        ? 'No APY data available for one or more periods.'
+        : null;
 
   return (
     <Tooltip
@@ -61,34 +80,19 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
                   <Stack width="33%">
                     <Typography variant="h4">24H</Typography>
                     <Typography variant="h4">
-                      {latestYield
-                        ? displayFullBN(
-                            latestYield.beansPerSeasonEMA24h,
-                            Bean.displayDecimals
-                          )
-                        : '0'}
+                      {getTotalDisplay(latestYield?.beansPerSeasonEMA24h)}
                     </Typography>
                   </Stack>
                   <Stack width="33%">
                     <Typography variant="h4">7D</Typography>
                     <Typography variant="h4">
-                      {latestYield
-                        ? displayFullBN(
-                            latestYield.beansPerSeasonEMA7d,
-                            Bean.displayDecimals
-                          )
-                        : '0'}
+                      {getTotalDisplay(latestYield?.beansPerSeasonEMA7d)}
                     </Typography>
                   </Stack>
                   <Stack width="33%">
                     <Typography variant="h4">30D</Typography>
                     <Typography variant="h4">
-                      {latestYield
-                        ? displayFullBN(
-                            latestYield.beansPerSeasonEMA30d,
-                            Bean.displayDecimals
-                          )
-                        : '0'}
+                      {getTotalDisplay(latestYield?.beansPerSeasonEMA30d)}
                     </Typography>
                   </Stack>
                 </Box>
@@ -106,6 +110,7 @@ const SiloAssetApyChip: FC<SiloAssetApyChipProps> = ({
               py: isBean ? 0.5 : 0,
             }}
           >
+            {status && <Typography variant="bodySmall">{status}</Typography>}
             {metric === 'bean' ? (
               <>
                 {' '}

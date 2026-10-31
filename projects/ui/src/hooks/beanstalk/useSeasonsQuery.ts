@@ -189,7 +189,13 @@ const useSeasonsQuery = <T extends MinimumViableSnapshotQuery>(
                 const [result] = await fetchApolloWithLimiter([{
                   id: `${name}-${options.context?.subgraph}-${cursor}`,
                   request: () => apolloClient.query<MinimumViableSnapshotQuery>(
-                    mergeQueryOptions(options, { variables: { first: PAGE_SIZE, season_lte: cursor } })
+                    // Pages must remain raw: network-only still runs Apollo's shared
+                    // season merge/read policies, which can return a previous page
+                    // for nested filters or another chain. React Query caches the result.
+                    mergeQueryOptions(options, {
+                      fetchPolicy: 'no-cache',
+                      variables: { first: PAGE_SIZE, season_lte: cursor },
+                    })
                   ),
                 }]);
                 const rows = result?.data?.seasons;
