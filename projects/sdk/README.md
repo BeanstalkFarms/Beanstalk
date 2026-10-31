@@ -88,3 +88,11 @@ await txr.wait();
 ## API Docs
 
 View full API [documentation](https://github.com/BeanstalkFarms/Beanstalk-SDK/blob/main/docs/README.md)
+
+## Building from source
+
+Build the SDK from the full monorepo checkout. GraphQL generation shares the
+committed `projects/ui/src/graph/schema-beanstalk.graphql` snapshot with the UI,
+so normal builds do not need the live subgraph. To deliberately update that
+snapshot, run `yarn workspace ui refresh:graphql` from the repository root,
+review the schema changes, and regenerate UI and SDK types before committing.

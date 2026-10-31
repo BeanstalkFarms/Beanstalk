@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
+set -e
 
-bs_root=$PROJECT_CWD
-ui_root=$bs_root/projects/ui
+bs_root=${PROJECT_CWD:?PROJECT_CWD must point to the repository root}
+ui_root="$bs_root/projects/ui"
 
-cd $ui_root
+cd "$ui_root"
 
 export VITE_NAME=$npm_package_name 
 export VITE_COMMIT_HASH=$COMMIT_REF 

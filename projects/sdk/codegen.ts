@@ -1,10 +1,9 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-import defaults from "./src/defaultSettings.json";
-
 const config: CodegenConfig = {
   overwrite: true,
-  schema: defaults.subgraphUrl,
+  // Share the committed Beanstalk snapshot with the UI; refresh explicitly there.
+  schema: "../ui/src/graph/schema-beanstalk.graphql",
   documents: "src/queries/**/*.graphql",
   generates: {
     "src/constants/generated-gql/graphql.ts": {

@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { buildSchema, graphql, parse, print } from 'graphql';
+import { addTypenameToDocument } from '@apollo/client/utilities';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   useMarketEventsLazyQuery,
@@ -64,25 +67,56 @@ function event(index: number, type = 'PodOrderCreated') {
     historyID: `history-${index}`,
     createdAt: String(10000 - index),
     hash: `hash-${index}`,
+    index: '0',
+    start: '0',
+    account: '0x0000000000000000000000000000000000000001',
+    fromFarmer: '0x0000000000000000000000000000000000000001',
+    toFarmer: '0x0000000000000000000000000000000000000002',
+    orderId: `order-${index}`,
+    maxHarvestableIndex: '1000000',
     amount: '1000000',
     pricePerPod: '500000',
     maxPlaceInLine: '1000000',
     placeInLine: '1000000',
   };
 }
+// Execute the production query against the checked-in schema so ordering and
+// cursor arguments, not call counts, determine which events the server returns.
+const schema = buildSchema(
+  readFileSync('src/graph/schema-beanstalk.graphql', 'utf8')
+);
+const marketQuery = readFileSync(
+  'src/components/Market/PodsV2/MarketEvents.graphql',
+  'utf8'
+);
 function pages(events: any[]) {
-  getEvents.mockImplementation(async () => {
-    // Bound a broken paginator so the suite reports the defect instead of hanging.
-    if (getEvents.mock.calls.length > 4)
+  getEvents.mockImplementation(async ({ variables }: any) => {
+    if (getEvents.mock.calls.length > 8)
       throw new Error('unexpected extra page');
-    return {
-      data: {
-        marketEvents: events.slice(
-          (getEvents.mock.calls.length - 1) * 1000,
-          getEvents.mock.calls.length * 1000
-        ),
+    const response = await graphql({
+      schema,
+      // Apollo adds __typename to every object selection.
+      source: print(addTypenameToDocument(parse(marketQuery))),
+      variableValues: variables,
+      rootValue: {
+        marketplaceEvents: ({ first, where, orderBy, orderDirection }: any) =>
+          events
+            .filter(
+              (item) =>
+                (where.createdAt_lt === undefined ||
+                  Number(item.createdAt) < Number(where.createdAt_lt)) &&
+                (where.id_gt === undefined || item.id > where.id_gt)
+            )
+            .sort((a, b) => {
+              const left = orderBy === 'id' ? a.id : Number(a.createdAt);
+              const right = orderBy === 'id' ? b.id : Number(b.createdAt);
+              const comparison = left < right ? -1 : left > right ? 1 : 0;
+              return orderDirection === 'desc' ? -comparison : comparison;
+            })
+            .slice(0, first),
       },
-    };
+    });
+    return { data: response.data, error: response.errors?.[0] };
   });
 }
 async function finish() {
@@ -150,8 +184,48 @@ describe('market history loading', () => {
       '0.5'
     );
   });
+  it.each([1001, 2501])(
+    'retains all %i events sharing one timestamp across page boundaries',
+    async (count) => {
+      pages(
+        Array.from({ length: count }, (_, i) => ({
+          ...event(i),
+          createdAt: '5000',
+        }))
+      );
+      await finish();
+      expect(result.error).toBe(false);
+      expect(result.data).toHaveLength(count);
+      expect(result.data.slice(0, 3).map((item) => item.eventId)).toEqual([
+        'event-0',
+        'event-1',
+        'event-10',
+      ]);
+      expect(new Set(result.data.map((item) => item.eventId)).size).toBe(count);
+    }
+  );
+  it('returns complete history newest first when IDs and timestamps disagree', async () => {
+    pages([
+      ...Array.from({ length: 1100 }, (_, i) => ({
+        ...event(i),
+        createdAt: '5000',
+      })),
+      { ...event(1100), id: 'z-newest', createdAt: '7000' },
+      { ...event(1101), id: 'a-oldest', createdAt: '1000' },
+    ]);
+    await finish();
+    expect(result.error).toBe(false);
+    expect(result.data).toHaveLength(1102);
+    expect(result.data[0].eventId).toBe('z-newest');
+    expect(result.data[1101].eventId).toBe('a-oldest');
+    expect(new Set(result.data.map((item) => item.eventId)).size).toBe(1102);
+  });
   it('ignores cancellation events without a history ID', async () => {
-    pages([{ ...event(0, 'PodOrderCancelled'), historyID: null }]);
+    getEvents.mockResolvedValue({
+      data: {
+        marketEvents: [{ ...event(0, 'PodOrderCancelled'), historyID: null }],
+      },
+    });
     await finish();
     expect(result.error).toBe(false);
     expect(result.data).toEqual([]);
@@ -170,6 +244,24 @@ describe('market history loading', () => {
         },
       })
       .mockRejectedValue(new Error('page unavailable'));
+    await finish();
+    expect(result.error).toBe(true);
+    expect(result.data).toEqual([]);
+  });
+  it('discards tied events if a later ID page returns an Apollo error', async () => {
+    pages(
+      Array.from({ length: 2501 }, (_, i) => ({
+        ...event(i),
+        createdAt: '5000',
+      }))
+    );
+    const successfulPage = getEvents.getMockImplementation()!;
+    getEvents.mockImplementation(async (...args: any[]) => {
+      const response = await successfulPage(...args);
+      return getEvents.mock.calls.length === 2
+        ? { ...response, error: new Error('page unavailable') }
+        : response;
+    });
     await finish();
     expect(result.error).toBe(true);
     expect(result.data).toEqual([]);
