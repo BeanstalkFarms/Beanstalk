@@ -43,7 +43,7 @@
 # Behind the scenes
 
     - When you run `builder.buildQuote`, that's when a `Route` object is created.
-    - Route object contains the steps needed to fulfill the swap, based on traversing the graph data strcuture that represents all the wells and their tokens. The steps are stored as an array of `RouteLeg`
+    - Route object contains the steps needed to fulfill the swap, based on traversing the graph data structure that represents all the wells and their tokens. The steps are stored as an array of `RouteLeg`
 
 ### Quote
 
