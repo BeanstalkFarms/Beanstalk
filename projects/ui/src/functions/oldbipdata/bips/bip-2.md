@@ -21,8 +21,8 @@ We propose modifications to Beanstalk so that Beans from harvests and claims tha
 
 We propose the following adjustments to the Beanstalk Weather Changes in the cases when $P > 1$ and $R^{D^*}$ < $R^D$:
 
-- When the demand for Soil is steady, the Weather Change is -1% (previouly 0%).
-- When the demand for Soil is increasing, the Weather Change is -3% (previouly 1%).
+- When the demand for Soil is steady, the Weather Change is -1% (previously 0%).
+- When the demand for Soil is increasing, the Weather Change is -3% (previously 1%).
 
 ![](https://i.imgur.com/tVtxAU9.png)
 
