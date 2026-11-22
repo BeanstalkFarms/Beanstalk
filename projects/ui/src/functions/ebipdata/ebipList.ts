@@ -269,4 +269,19 @@ export const ebipList = [
         id: '',
       }
     },
-  ];
+      {
+      id: 'ebip-24',
+      title: 'EBIP-24: Migrate Beanstalk’s Bug Bounty Program to Sherlock',
+      choices: [],
+      type: '',
+      state: 'closed',
+      start: 1795309116,
+      end: 1795309116,
+      scores: [],
+      scores_total: 0,
+      snapshot: '',
+      space: {
+        id: '',
+      }
+    },
+];

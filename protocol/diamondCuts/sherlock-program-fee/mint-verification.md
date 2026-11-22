@@ -31,8 +31,8 @@ The companion `safe-transaction-nonce-11.json` records the exact Safe payload cu
 - **Nonce:** 11
 - **Safe transaction hash:** `0x0bff467bac67727e749e049c23b4f0ff13b35112c26018ad5dde4c4b159a0a41`
 - **Operation:** 1, delegate call to the verified Safe MultiSendCallOnly deployment. Each of the two inner calls uses operation 0.
-- **Status:** Prepared in Safe Transaction Builder and awaiting the user's proposal signature as of November 17, 2026.
+- **Status:** Executed on November 22, 2026 at 00:58:36 UTC. [Arbitrum transaction](https://arbiscan.io/tx/0x31e1f3fb5aff4183466ae8e71bbc6c65267b13352c54a9fbf219c80f9f2e10e7).
 
 Re-simulate the exact imported batch before execution. If the initializer address already has code, verify its runtime hash and regenerate the batch without the deployment call. A mismatched runtime requires a new initializer address.
 
-The batch covers the fee mint. The sale, Sherlock payment, and any unused BEAN burn require separate transactions. The existing Immunefi bounty funds move separately from the old multisig after confirming the replacement Safe and the transfer balance. The prepared mint proposal is awaiting the user’s wallet signature. The BCM must resolve the applicable governance route before execution. [BCM process](https://docs.bean.money/almanac/governance/beanstalk/bcm-process#emergency-response-procedures)
+The batch covers the fee mint. The sale and Sherlock payment require separate transactions. The existing Immunefi bounty funds move separately from the old multisig after confirming the replacement Safe and the transfer balance. The mint executed successfully on November 22, 2026 at 00:58:36 UTC. The BCM must resolve the applicable governance route before execution. [BCM process](https://docs.bean.money/almanac/governance/beanstalk/bcm-process#emergency-response-procedures)
