@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ConnectKitButton, useModal } from "connectkit";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAccount, useSwitchChain } from "wagmi";
 
 import { ChainId, ChainResolver } from "@beanstalk/sdk-core";
 
@@ -74,6 +75,8 @@ export const ForceSupportedChainId = () => {
   const urlChainId = parseChainIdFromPath(location);
   const chainId = useSdkChainId();
   const chainIdErr = useChainErr();
+  const { isDisconnected } = useAccount();
+  const { chains, switchChain } = useSwitchChain();
 
   const { openSwitchNetworks, setOpen } = useModal();
 
@@ -108,6 +111,13 @@ export const ForceSupportedChainId = () => {
         ChainResolver.resolveToMainnetChainId(urlChainId) !==
           ChainResolver.resolveToMainnetChainId(chainId)
       ) {
+        if (isDisconnected && chains.some((chain) => chain.id === urlChainId)) {
+          // Without a wallet, Wagmi switches the public client used by the SDK.
+          // Only do this once reconnection has finished so we never switch a wallet implicitly.
+          switchChain({ chainId: urlChainId });
+          setChainErr(null);
+          return;
+        }
         setChainErr(ChainIdError.INCORRECT);
         return;
       }
@@ -116,7 +126,7 @@ export const ForceSupportedChainId = () => {
     if (!!chainIdErr) {
       setChainErr(null);
     }
-  }, [chainIdErr, location, urlChainId, chainId, setChainErr]);
+  }, [chainIdErr, location, urlChainId, chainId, setChainErr, isDisconnected, chains, switchChain]);
 
   return (
     <>
