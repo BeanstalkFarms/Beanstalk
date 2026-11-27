@@ -77,7 +77,7 @@ const loadFromChain = async (sdk: BeanstalkSDK, aquifer: Aquifer): Promise<WellA
     return addresses;
   } catch (e) {
     console.error("error loading wells from chain: ", e);
-    return [];
+    throw e;
   }
 };
 
