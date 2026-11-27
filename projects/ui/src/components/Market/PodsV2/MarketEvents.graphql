@@ -1,15 +1,11 @@
-query MarketEvents(
-  $events_first: Int = 1000,
-  $events_timestamp_lt: BigInt!
-) {
+query MarketEvents($events_first: Int = 1000, $events_id_gt: ID!) {
   marketEvents: marketplaceEvents(
-    orderBy: createdAt,
-    orderDirection: desc,
-    first: $events_first,
-    where: { 
-      createdAt_lt: $events_timestamp_lt
-    }
+    orderBy: id
+    orderDirection: asc
+    first: $events_first
+    where: { id_gt: $events_id_gt }
   ) {
+    id
     hash
     createdAt
     # --------

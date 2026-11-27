@@ -31,6 +31,26 @@ yarn build && yarn serve
 
 Serverless functions are built for deployment to Netlify. See the [Netlify CLI docs](https://docs.netlify.com/cli/get-started/) to get started.
 
+### GraphQL schemas
+
+Normal UI and SDK builds generate types from the committed schemas in `src/graph/`;
+they do not fetch schemas from live APIs. The SDK uses the same Beanstalk snapshot.
+After an intentional API schema change, refresh from this workspace:
+
+```sh
+yarn refresh:graphql
+yarn generate:graphql
+# From the repository root:
+yarn sdk:generate
+node --test scripts/offline-build.test.mjs
+```
+
+Review and commit the refreshed schema files together with any query changes.
+The refresh command requires the configured endpoints to be available and exits
+with an error if any refresh fails; review partial output before committing.
+Snapshot2 remains a checked-in legacy schema because its endpoint is retired.
+Builds still validate GraphQL documents, generate contract types, and run TypeScript.
+
 ### Environment
 ```
 # .env.local
