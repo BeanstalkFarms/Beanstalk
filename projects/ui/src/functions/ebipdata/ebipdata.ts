@@ -34,7 +34,7 @@ const _handler: Handler = async (event) => {
         });
 
         const output = {
-          ...ebipList[ebipNumber],
+          ...ebipList.find((proposal) => proposal.id === `ebip-${ebipNumber}`),
           body: ebipBody,
         };
     
