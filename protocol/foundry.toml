@@ -42,6 +42,7 @@ gas_reports = ['*']
 # Cache to `$HOME/.foundry/cache/<chain id>/<block number>`.
 no_storage_caching = false
 no_match_test = "testFork"
+no_match_contract = "Reseed|L1ReceiverFacetForkTest|L1ReceiverFacetTest|ReseedL1ReceiverFacetForkTest|ReseedFunctionalityTest"
 
 [profile.differential]
 match_test = "testDiff"

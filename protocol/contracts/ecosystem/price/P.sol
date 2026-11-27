@@ -8,6 +8,8 @@ contract P {
         uint256[2] balances;
         uint256 price;
         uint256 liquidity;
+        uint256 beanLiquidity;
+        uint256 nonBeanLiquidity;
         int256 deltaB;
         uint256 lpUsd;
         uint256 lpBdv;
